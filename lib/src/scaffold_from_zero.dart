@@ -9,8 +9,6 @@ import 'package:provider/provider.dart';
 
 
 
-//TODO 1 rename and package responsive_scaffold, responsive_draggable_scrollbar, responsive_drawer_menu, future_handling, ?LightweightTable into a separate package for usage in all projects
-
 //TODO 1 implement enhanced heroes
 //Widget fadeTransitionFlightShuttleBuilder(flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
 //  final Hero newHero = flightDirection == HeroFlightDirection.pop
@@ -235,7 +233,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                                     icon: Icon(Icons.menu),
                                     tooltip: "Abrir Menú",
                                     onPressed: () => _toggleDrawer(context, changeNotifier),
-                                    hoverColor: Colors.white.withOpacity(0.2),
+                                    hoverColor: Colors.white.withOpacity(0.1), //TODO 2 make this actually responsive that actually gets params from parent dark theme
                                   );
                                 }
                             ),
@@ -344,7 +342,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
               color: Theme.of(context).primaryColor,
               child: Theme(
                 data: Theme.of(context).copyWith(
-                  hoverColor: Colors.white.withOpacity(0.2),
+                  hoverColor: Colors.white.withOpacity(0.1), //TODO 2 make this actually responsive that actually gets params from parent dark theme
                   iconTheme: Theme.of(context).iconTheme.copyWith(
                     color: Colors.white,
                   ),
