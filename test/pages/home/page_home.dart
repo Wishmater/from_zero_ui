@@ -13,7 +13,7 @@ class PageHome extends StatelessWidget {
       ResponsiveDrawerMenuItem(
         title: "Scaffold FromZero",
         icon: Icons.subtitles,
-        route: "/lightweight_table",
+        route: "/scaffold",
       ),
       ResponsiveDrawerMenuItem(
         title: "Lightweight Table",
@@ -46,8 +46,8 @@ class PageHome extends StatelessWidget {
       secondaryAnimation: secondaryAnimation,
       title: Text("FromZero playground"),
       body: Container(),
-      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: tabs, compact: compact, selected: [0, 0],),
-      drawerFooterBuilder: (compact) => DrawerMenuFromZero(tabs: footerTabs, compact: compact, selected: [-1, -1],),
+      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: [0, 0],),
+      drawerFooterBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: [-1, -1], replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
     );
   }
 

@@ -3,6 +3,9 @@ import 'package:fluro/fluro.dart';
 import 'package:from_zero_ui/src/custom_fluro_router.dart' as my_fluro_router;
 
 import 'pages/home/page_home.dart';
+import 'pages/lightweight_table/page_lightweight_table.dart';
+import 'pages/scaffold/page_scaffold.dart';
+import 'pages/settings/page_settings.dart';
 
 
 class FluroRouter{
@@ -20,10 +23,38 @@ class FluroRouter{
   static void setupRouter() {
 
     router.define(
+      '/settings',
+      handler: my_fluro_router.Handler(
+        handlerFunc: (context, params, animation, secondaryAnimation) {
+          return PageSettings();
+        },
+      ),
+      transitionType: TransitionType.materialFullScreenDialog,
+    );
+
+    router.define(
       '/',
       handler: my_fluro_router.Handler(
         handlerFunc: (context, params, animation, secondaryAnimation) {
-          return PageHome();
+          return PageHome(animation: animation, secondaryAnimation: secondaryAnimation,);
+        },
+      ),
+    );
+
+    router.define(
+      '/scaffold',
+      handler: my_fluro_router.Handler(
+        handlerFunc: (context, params, animation, secondaryAnimation) {
+          return PageScaffold(animation: animation, secondaryAnimation: secondaryAnimation,);
+        },
+      ),
+    );
+
+    router.define(
+      '/lightweight_table',
+      handler: my_fluro_router.Handler(
+        handlerFunc: (context, params, animation, secondaryAnimation) {
+          return PageLightweightTable(animation: animation, secondaryAnimation: secondaryAnimation,);
         },
       ),
     );

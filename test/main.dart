@@ -62,7 +62,7 @@ class MyApp extends StatelessWidget {
                 ),
               );
             },
-            initialRoute: '/splash',
+            initialRoute: '/',
             onGenerateRoute: FluroRouter.router.generator,
           );
         },
