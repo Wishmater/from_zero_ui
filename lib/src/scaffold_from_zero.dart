@@ -156,34 +156,37 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         ),
 
         //DESKTOP DRAWER
-        displayMobileLayout || widget.drawerContentBuilder==null
-            ? SizedBox.shrink()
-            : widget.useCompactDrawerInsteadOfClose
-            ? Positioned(
-          left: 0,
-          child: AnimatedContainer(
+        FadeUpwardsFadeTransition(
+          routeAnimation: widget.animation ?? kAlwaysCompleteAnimation,
+          child: displayMobileLayout || widget.drawerContentBuilder==null
+              ? SizedBox.shrink()
+              : widget.useCompactDrawerInsteadOfClose
+              ? Positioned(
+            left: 0,
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: drawerAnimationDuration),
+              curve: drawerAnimationCurve,
+              width: changeNotifier.currentDrawerWidth,
+              height: height,
+              child: GestureDetector(
+                onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
+                onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
+                child: _getResponsiveDrawerContent(context, changeNotifier),
+              ),
+            ),
+          )
+              : AnimatedPositioned(
             duration: Duration(milliseconds: drawerAnimationDuration),
             curve: drawerAnimationCurve,
-            width: changeNotifier.currentDrawerWidth,
-            height: height,
+            left: changeNotifier.currentDrawerWidth-drawerWidth,
             child: GestureDetector(
               onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
               onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
-              child: _getResponsiveDrawerContent(context, changeNotifier),
-            ),
-          ),
-        )
-            : AnimatedPositioned(
-          duration: Duration(milliseconds: drawerAnimationDuration),
-          curve: drawerAnimationCurve,
-          left: changeNotifier.currentDrawerWidth-drawerWidth,
-          child: GestureDetector(
-            onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
-            onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
-            child: Container(
-              width: drawerWidth,
-              height: height,
-              child: _getResponsiveDrawerContent(context, changeNotifier),
+              child: Container(
+                width: drawerWidth,
+                height: height,
+                child: _getResponsiveDrawerContent(context, changeNotifier),
+              ),
             ),
           ),
         ),
