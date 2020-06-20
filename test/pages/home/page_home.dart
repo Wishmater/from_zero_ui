@@ -20,6 +20,16 @@ class PageHome extends StatelessWidget {
         icon: Icons.table_chart,
         route: "/lightweight_table",
       ),
+      ResponsiveDrawerMenuItem(
+        title: "Future Handling",
+        icon: Icons.refresh,
+        route: "/future_handling",
+      ),
+      ResponsiveDrawerMenuItem(
+        title: "heroes",
+        icon: Icons.person_pin_circle,
+        route: "/heroes",
+      ),
     ],
   ];
 

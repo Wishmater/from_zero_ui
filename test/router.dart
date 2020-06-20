@@ -2,6 +2,8 @@
 import 'package:fluro/fluro.dart';
 import 'package:from_zero_ui/src/custom_fluro_router.dart' as my_fluro_router;
 
+import 'pages/future_handling/page_future_handling.dart';
+import 'pages/heroes/page_heroes.dart';
 import 'pages/home/page_home.dart';
 import 'pages/lightweight_table/page_lightweight_table.dart';
 import 'pages/scaffold/page_scaffold.dart';
@@ -55,6 +57,24 @@ class FluroRouter{
       handler: my_fluro_router.Handler(
         handlerFunc: (context, params, animation, secondaryAnimation) {
           return PageLightweightTable(animation: animation, secondaryAnimation: secondaryAnimation,);
+        },
+      ),
+    );
+
+    router.define(
+      '/future_handling',
+      handler: my_fluro_router.Handler(
+        handlerFunc: (context, params, animation, secondaryAnimation) {
+          return PageFutureHandling(animation: animation, secondaryAnimation: secondaryAnimation,);
+        },
+      ),
+    );
+
+    router.define(
+      '/heroes',
+      handler: my_fluro_router.Handler(
+        handlerFunc: (context, params, animation, secondaryAnimation) {
+          return PageHeroes(animation: animation, secondaryAnimation: secondaryAnimation,);
         },
       ),
     );

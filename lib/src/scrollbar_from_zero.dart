@@ -9,13 +9,24 @@ class ScrollbarFromZero extends StatefulWidget {
   final ScrollController controller;
   final Widget child;
   final double minScrollbarHeight;
-
+  final double scrollbarWidthDesktop;
+  final double scrollbarWidthMobile;
+  final bool applyPaddingToChildrenOnDesktop;
+//TODO 1 ??? add support for horizontal scroll
+//TODO 2 expose options for scrollbarColor and iconColor
+//TODO 3 expose an option to consume events (default true)
   ScrollbarFromZero({
     Key key,
     @required this.controller,
     @required this.child,
     this.minScrollbarHeight = 64,
-  }) : super(key: key);
+    this.scrollbarWidthDesktop = 16,
+    this.scrollbarWidthMobile = 10,
+    this.applyPaddingToChildrenOnDesktop = true,
+  }) : super(key: key){
+    assert(controller != null);
+    assert(child != null);
+  }
 
   @override
   _ScrollbarFromZeroState createState() =>
@@ -100,74 +111,32 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        _updateMaxHeight(constraints, doSetState: false);
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Future.doWhile(() async{
-            _updateMaxScrollExtent(doSetState: true);
-            await (Future.delayed(Duration(milliseconds: 100)));
-            return !disposed;
+    return NotificationListener<ScrollNotification>(
+      onNotification: (notification) => true,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          _updateMaxHeight(constraints, doSetState: false);
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Future.doWhile(() async{
+              _updateMaxScrollExtent(doSetState: true);
+              await (Future.delayed(Duration(milliseconds: 100)));
+              return !disposed;
+            });
           });
-        });
-        // assumes maxHeight constraint here is the same as inside the scrollable viewport
-        if (height <= 0){
-
-          if (!kIsWeb && (Platform.isIOS || Platform.isAndroid)){
-            return DraggableScrollbar.rrect(
-              alwaysVisibleScrollThumb: false,
-              heightScrollThumb: height,
-              backgroundColor: Theme.of(context).accentColor,
-              controller: widget.controller,
-              child: widget.child,
-              scrollbarTimeToFade: Duration(seconds: 1),
-              scrollThumbBorderRadius: 0,
-              scrollThumbWidth: 6,
-              scrollThumbElevation: 2,
-            );
-          } else{
-            return(Stack(
-              children: [
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: Container(),
-                ),
-                DraggableScrollbar.rrect(
-                  alwaysVisibleScrollThumb: false,
-                  heightScrollThumb: height,
-                  backgroundColor: Theme.of(context).cardColor,
-                  controller: widget.controller,
-                  child: AnimatedPadding(
-                    duration: Duration(milliseconds: 150),
-                    curve: Curves.easeOutCubic,
-                    padding: const EdgeInsets.only(right: 0),
-                    child: widget.child,
-                  ),
-                  scrollbarTimeToFade: Duration(seconds: 1),
-                  scrollThumbBorderRadius: 4,
-                  scrollThumbWidth: 12,
-                  scrollThumbElevation: 2,
-                  showIcons: true,
-                ),
-              ],
-            ));
-          }
-
-        } else{
-
+          // assumes maxHeight constraint here is the same as inside the scrollable viewport
           // TODO 3 ??? web defaults to desktop mode
           if (!kIsWeb && (Platform.isIOS || Platform.isAndroid)){
 
-            return DraggableScrollbar.rrect(
+            return DraggableScrollbar.rrect( //TODO 2 better style mobile scrollbar
               alwaysVisibleScrollThumb: false,
               heightScrollThumb: height,
               backgroundColor: Theme.of(context).accentColor,
               controller: widget.controller,
               child: widget.child,
-              scrollbarTimeToFade: Duration(seconds: 1),
+              scrollbarTimeToFade: Duration(milliseconds: 2500),
               scrollThumbBorderRadius: 0,
-              scrollThumbWidth: 6,
-              scrollThumbElevation: 2,
+              scrollThumbWidth: widget.scrollbarWidthMobile,
+              scrollThumbElevation: 4,
             );
 
           } else{
@@ -177,7 +146,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: Container(
-                    width: 14,
+                    width: height>0 ? widget.scrollbarWidthDesktop : 0,
                     child: Column(
                       children: [
                         Flexible(
@@ -229,29 +198,30 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                   ),
                 ),
                 DraggableScrollbar.rrect(
-                  alwaysVisibleScrollThumb: true,
+                  alwaysVisibleScrollThumb: height>0,
                   heightScrollThumb: height,
                   backgroundColor: Theme.of(context).cardColor,
                   controller: widget.controller,
                   child: AnimatedPadding(
                     duration: Duration(milliseconds: 150),
                     curve: Curves.easeOutCubic,
-                    padding: const EdgeInsets.only(right: 13),
+                    padding: EdgeInsets.only(
+                        right: widget.applyPaddingToChildrenOnDesktop && height>0
+                            ? widget.scrollbarWidthDesktop : 0),
                     child: widget.child,
                   ),
                   scrollbarTimeToFade: Duration(seconds: 1),
                   scrollThumbBorderRadius: 4,
-                  scrollThumbWidth: 12,
-                  scrollThumbElevation: 2,
+                  scrollThumbWidth: widget.scrollbarWidthDesktop,
+                  scrollThumbElevation: 4,
                   showIcons: true,
                 ),
               ],
             );
 
           }
-
-        }
-      },
+        },
+      ),
     );
   }
 
