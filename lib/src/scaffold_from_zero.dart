@@ -1,4 +1,6 @@
 
+import 'dart:math';
+
 import 'package:animations/animations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -121,19 +123,22 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
               double fabPadding = (width-changeNotifier.currentDrawerWidth-ScaffoldFromZero.xLarge)/2 ;
               if (fabPadding < 12) fabPadding = width < ScaffoldFromZero.medium ? 0 : 12;
-              return Scaffold(
-                floatingActionButton: Padding(
-                  padding: EdgeInsets.only(bottom: width < ScaffoldFromZero.medium ? 0 : 12, right: fabPadding), //TODO TEST make fab always be on the edge of the usable surface,
-                  child: widget.floatingActionButton,
-                ),
-                drawer: displayMobileLayout && widget.drawerContentBuilder!=null ? Drawer(
-                  child: _getResponsiveDrawerContent(context, changeNotifier),
-                  elevation: drawerElevation,
-                ) : null,
-                body: Builder(
-                  builder: (context) {
-                    return _getBody(context, changeNotifier);
-                  },
+              return FadeUpwardsFadeTransition(
+                routeAnimation: widget.animation ?? kAlwaysCompleteAnimation,
+                child: Scaffold(
+                  floatingActionButton: Padding(
+                    padding: EdgeInsets.only(bottom: width < ScaffoldFromZero.medium ? 0 : 12, right: fabPadding), //TODO TEST make fab always be on the edge of the usable surface,
+                    child: widget.floatingActionButton,
+                  ),
+                  drawer: displayMobileLayout && widget.drawerContentBuilder!=null ? Drawer(
+                    child: _getResponsiveDrawerContent(context, changeNotifier),
+                    elevation: drawerElevation,
+                  ) : null,
+                  body: Builder(
+                    builder: (context) {
+                      return _getBody(context, changeNotifier);
+                    },
+                  ),
                 ),
               );
             }
@@ -156,37 +161,34 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         ),
 
         //DESKTOP DRAWER
-        FadeUpwardsFadeTransition(
-          routeAnimation: widget.animation ?? kAlwaysCompleteAnimation,
-          child: displayMobileLayout || widget.drawerContentBuilder==null
-              ? SizedBox.shrink()
-              : widget.useCompactDrawerInsteadOfClose
-              ? Positioned(
-            left: 0,
-            child: AnimatedContainer(
-              duration: Duration(milliseconds: drawerAnimationDuration),
-              curve: drawerAnimationCurve,
-              width: changeNotifier.currentDrawerWidth,
-              height: height,
-              child: GestureDetector(
-                onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
-                onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
-                child: _getResponsiveDrawerContent(context, changeNotifier),
-              ),
-            ),
-          )
-              : AnimatedPositioned(
+        displayMobileLayout || widget.drawerContentBuilder==null
+            ? SizedBox.shrink()
+            : widget.useCompactDrawerInsteadOfClose
+            ? Positioned(
+          left: 0,
+          child: AnimatedContainer(
             duration: Duration(milliseconds: drawerAnimationDuration),
             curve: drawerAnimationCurve,
-            left: changeNotifier.currentDrawerWidth-drawerWidth,
+            width: changeNotifier.currentDrawerWidth,
+            height: height,
             child: GestureDetector(
               onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
               onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
-              child: Container(
-                width: drawerWidth,
-                height: height,
-                child: _getResponsiveDrawerContent(context, changeNotifier),
-              ),
+              child: _getResponsiveDrawerContent(context, changeNotifier),
+            ),
+          ),
+        )
+            : AnimatedPositioned(
+          duration: Duration(milliseconds: drawerAnimationDuration),
+          curve: drawerAnimationCurve,
+          left: changeNotifier.currentDrawerWidth-drawerWidth,
+          child: GestureDetector(
+            onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
+            onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
+            child: Container(
+              width: drawerWidth,
+              height: height,
+              child: _getResponsiveDrawerContent(context, changeNotifier),
             ),
           ),
         ),
@@ -205,67 +207,57 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
               children: <Widget>[
 
                 //APPBAR
-                FadeUpwardsFadeTransition(
-                  routeAnimation: widget.animation ?? kAlwaysCompleteAnimation,
-                  child: SizedBox(
-                    height: widget.appbarHeight,
-                    child: AppBar(
-                      elevation: 0,
-                      automaticallyImplyLeading: widget.drawerContentBuilder==null,
-                      actions: widget.actions, // TODO 2 do something about overflowing actions
-                      titleSpacing: (!displayMobileLayout&&widget.useCompactDrawerInsteadOfClose)||widget.drawerContentBuilder==null ? 16 : 8,
-                      title: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: <Widget>[
+                SizedBox(
+                  height: widget.appbarHeight,
+                  child: AppBar(
+                    elevation: 0,
+                    automaticallyImplyLeading: widget.drawerContentBuilder==null,
+                    actions: widget.actions, // TODO 2 do something about overflowing actions
+                    titleSpacing: (!displayMobileLayout&&widget.useCompactDrawerInsteadOfClose)||widget.drawerContentBuilder==null ? 16 : 8,
+                    title: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
 
-                          //DRAWER HAMBURGER BUTTON (only if not using compact style)
-                          (!displayMobileLayout&&widget.useCompactDrawerInsteadOfClose)||widget.drawerContentBuilder==null ? SizedBox.shrink()
-                              : AnimatedOpacity(
-                            opacity: 1-changeNotifier.currentDrawerWidth/56<0 ? 0 : 1-changeNotifier.currentDrawerWidth/56,
+                        //DRAWER HAMBURGER BUTTON (only if not using compact style)
+                        (!displayMobileLayout&&widget.useCompactDrawerInsteadOfClose)||widget.drawerContentBuilder==null ? SizedBox.shrink()
+                            : AnimatedOpacity(
+                          opacity: 1-changeNotifier.currentDrawerWidth/56<0 ? 0 : 1-changeNotifier.currentDrawerWidth/56,
+                          duration: Duration(milliseconds: drawerAnimationDuration),
+                          curve: drawerAnimationCurve,
+                          child: AnimatedContainer(
+                            width: changeNotifier.currentDrawerWidth>56 ? 0: 56-changeNotifier.currentDrawerWidth,
                             duration: Duration(milliseconds: drawerAnimationDuration),
-                            curve: drawerAnimationCurve,
-                            child: AnimatedContainer(
-                              width: changeNotifier.currentDrawerWidth>56 ? 0: 56-changeNotifier.currentDrawerWidth,
-                              duration: Duration(milliseconds: drawerAnimationDuration),
-                              curve: Curves.easeOutCubic,
-                              padding: EdgeInsets.only(right: 8),
-                              alignment: Alignment.centerLeft,
-                              child: Builder(
-                                  builder: (context) {
-                                    return IconButton(
-                                      icon: Icon(Icons.menu),
-                                      tooltip: "Abrir Menú",
-                                      onPressed: () => _toggleDrawer(context, changeNotifier),
-                                      hoverColor: Colors.white.withOpacity(0.1), //TODO 2 make this actually responsive that actually gets params from parent dark theme
-                                    );
-                                  }
-                              ),
-                            ),
-                          ),
-
-                          //TITLE
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: AnimatedSwitcher(
-                                duration: Duration(milliseconds: 300),
-                                switchInCurve: Curves.easeOutCubic,
-                                switchOutCurve: Curves.easeInCubic,
-                                transitionBuilder: (child, animation) {
-                                  return ScaleTransition(
-                                    scale: animation,
-                                    child: child,
+                            curve: Curves.easeOutCubic,
+                            padding: EdgeInsets.only(right: 8),
+                            alignment: Alignment.centerLeft,
+                            child: Builder(
+                                builder: (context) {
+                                  return IconButton(
+                                    icon: Icon(Icons.menu),
+                                    tooltip: "Abrir Menú",
+                                    onPressed: () => _toggleDrawer(context, changeNotifier),
+                                    hoverColor: Colors.white.withOpacity(0.1), //TODO 2 make this actually responsive that actually gets params from parent dark theme
                                   );
-                                },
-                                child: widget.title,
-                              ),
+                                }
                             ),
                           ),
+                        ),
 
-                        ],
-                      ),
-                    )
-                  ),
+                        //TITLE
+                        Expanded(
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: SizeTransition(
+                              sizeFactor: widget.animation,
+                              axis: Axis.horizontal,
+                              child: widget.title,
+                            ),
+                          ),
+                        ),
+
+                      ],
+                    ),
+                  )
                 ),
 
                 //BODY
@@ -300,33 +292,27 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
         // custom shadows
         if (!displayMobileLayout)
-        FadeUpwardsFadeTransition(
-          routeAnimation: widget.animation ?? kAlwaysCompleteAnimation,
-          child: AnimatedContainer(
-            alignment: Alignment.centerLeft,
-            padding: EdgeInsets.only(top: widget.appbarHeight, left: changeNotifier.currentDrawerWidth),
-            duration: Duration(milliseconds: drawerAnimationDuration),
-            curve: drawerAnimationCurve,
-            child: SizedBox(
-              width: drawerElevation,
-              height: double.infinity,
-              child: CustomPaint(
-                painter: SimpleShadowPainter(direction: SimpleShadowPainter.right, shadowOpacity: 0.3),
-              ),
+        AnimatedContainer(
+          alignment: Alignment.centerLeft,
+          padding: EdgeInsets.only(top: widget.appbarHeight, left: changeNotifier.currentDrawerWidth),
+          duration: Duration(milliseconds: drawerAnimationDuration),
+          curve: drawerAnimationCurve,
+          child: SizedBox(
+            width: drawerElevation,
+            height: double.infinity,
+            child: CustomPaint(
+              painter: SimpleShadowPainter(direction: SimpleShadowPainter.right, shadowOpacity: 0.3),
             ),
           ),
         ),
-        FadeUpwardsFadeTransition(
-          routeAnimation: widget.animation ?? kAlwaysCompleteAnimation,
-          child: Container(
-            alignment: Alignment.topCenter,
-            padding: EdgeInsets.only(top: widget.appbarHeight),
-            child: SizedBox(
-              width: double.infinity,
-              height: appbarElevation,
-              child: CustomPaint(
-                painter: SimpleShadowPainter(direction: SimpleShadowPainter.down, shadowOpacity: 0.4),
-              ),
+        Container(
+          alignment: Alignment.topCenter,
+          padding: EdgeInsets.only(top: widget.appbarHeight),
+          child: SizedBox(
+            width: double.infinity,
+            height: appbarElevation,
+            child: CustomPaint(
+              painter: SimpleShadowPainter(direction: SimpleShadowPainter.down, shadowOpacity: 0.4),
             ),
           ),
         ),

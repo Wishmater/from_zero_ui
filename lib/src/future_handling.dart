@@ -160,11 +160,11 @@ class FutureBuilderFromZero<T> extends StatelessWidget {
   }
 
   Widget _defaultTransitionBuilder(Widget child, Animation<double> primaryAnimation, Animation<double> secondaryAnimation,){
-    return FadeThroughTransition(
+    return FadeThroughTransition( // TODO 2 ??? Make new child size animate from old one, to prevent size jumps
       animation: primaryAnimation,
       secondaryAnimation: secondaryAnimation,
-      child: child,
       fillColor: Colors.transparent,
+      child: child,
     );
   }
 

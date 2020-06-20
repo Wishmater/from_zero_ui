@@ -19,6 +19,7 @@ class FluroRouter{
 
   static var cache;
   static String addonHeroTag = '';
+  static String lastPageID;
 
 
 
