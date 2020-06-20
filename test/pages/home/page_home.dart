@@ -26,7 +26,7 @@ class PageHome extends StatelessWidget {
         route: "/future_handling",
       ),
       ResponsiveDrawerMenuItem(
-        title: "heroes",
+        title: "Heroes",
         icon: Icons.person_pin_circle,
         route: "/heroes",
       ),

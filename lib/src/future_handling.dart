@@ -1,7 +1,6 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
-//TODO 1 declare FutureBuilderFromZero (takes functions for rendering loading, error, done widgets (maybe even add some by default))
-//TODO 1 declare MultipleFutureBuilderFromZero
 
 class LoadingCard extends StatelessWidget {
 
@@ -32,9 +31,10 @@ class ErrorCard extends StatelessWidget {
 
   String title;
   String subtitle;
+  Widget icon;
   VoidCallback onRetry;
 
-  ErrorCard({this.title, this.subtitle, this.onRetry});
+  ErrorCard({this.title, this.subtitle, this.onRetry, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +45,7 @@ class ErrorCard extends StatelessWidget {
           title: title,
           subtitle: subtitle,
           onRetry: onRetry,
+          icon: icon,
         ),
       ),
     );
@@ -57,8 +58,9 @@ class ErrorSign extends StatelessWidget {
   String title;
   String subtitle;
   VoidCallback onRetry;
+  Widget icon;
 
-  ErrorSign({this.title, this.subtitle, this.onRetry});
+  ErrorSign({this.title, this.subtitle, this.onRetry, this.icon});
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +68,10 @@ class ErrorSign extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (icon!=null)
+            icon,
+          if (icon!=null)
+            SizedBox(height: 6,),
           Text(
             title,
             style: Theme.of(context).textTheme.headline6,
@@ -78,7 +84,7 @@ class ErrorSign extends StatelessWidget {
           SizedBox(height: 12,),
           if (onRetry!=null)
           RaisedButton(
-            child: Text("Reintentar"),
+            child: Text("Reintentar"), //TODO 3 internationalize
             onPressed: onRetry,
           ),
         ],
@@ -88,53 +94,77 @@ class ErrorSign extends StatelessWidget {
 
 }
 
-typedef MultipleAsyncWidgetBuilder<T> = Widget Function(BuildContext context, List<AsyncSnapshot<T>> snapshots);
-typedef BetterAsyncWidgetBuilder<T> = Widget Function(BuildContext context, List<AsyncSnapshot<T>> snapshots, Object error, List<T> resultados);
-class MultipleFutureBuilder<T> extends StatelessWidget {
+typedef SuccessBuilder<T> = Widget Function(BuildContext context, T result);
+typedef ErrorBuilder = Widget Function(BuildContext context, Object error);
+typedef LoadingBuilder = Widget Function(BuildContext context);
+class FutureBuilderFromZero<T> extends StatelessWidget {
 
-  final List<Future<T>> futures;
-  final MultipleAsyncWidgetBuilder<T> builder;
-  final BetterAsyncWidgetBuilder<T> betterBuilder;
+  final key;
+  final initialData;
+  final Future future;
+  final SuccessBuilder<T> successBuilder;
+  ErrorBuilder errorBuilder;
+  LoadingBuilder loadingBuilder;
+  PageTransitionSwitcherTransitionBuilder transitionBuilder;
 
-  MultipleFutureBuilder({@required this.futures, this.builder, this.betterBuilder})
-      : assert(builder!=null || betterBuilder!=null);
-
+  FutureBuilderFromZero({
+    this.key,
+    @required this.future,
+    @required this.successBuilder,
+    this.errorBuilder,
+    this.loadingBuilder,
+    this.initialData,
+  }) {
+    assert(successBuilder != null);
+    if (errorBuilder==null) errorBuilder = _defaultErrorBuilder;
+    if (loadingBuilder==null) loadingBuilder = _defaultLoadingBuilder;
+    if (transitionBuilder==null) transitionBuilder = _defaultTransitionBuilder;
+  }
 
   @override
   Widget build(BuildContext context) {
-    List<AsyncSnapshot<T>> snapshots = [];
-    return _getFutureBuilder(context, snapshots, 0);
+    return FutureBuilder(
+      key: key,
+      future: future,
+      initialData: initialData,
+      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        Widget result;
+        if (snapshot.connectionState == ConnectionState.done){
+          if (snapshot.hasData){
+            result = successBuilder(context, snapshot.data);
+          } else if (snapshot.hasError){
+            result = errorBuilder(context, snapshot.error);
+          }
+        } else{
+          result = loadingBuilder(context);
+        }
+        return PageTransitionSwitcher(
+          transitionBuilder: transitionBuilder,
+          child: result,
+          duration: Duration(milliseconds: 300),
+        );
+      },
+    );
   }
 
-  Widget _getFutureBuilder(context, List<AsyncSnapshot<T>> snapshots, int i){
-    if (i>=futures.length){
-      if (builder!=null){
-        return builder(context, snapshots);
-      } else{
-        List<T> resultados = [];
-        var error = null;
-        snapshots.forEach((element) {
-          if (element.connectionState == ConnectionState.done){
-            if (element.hasData){
-              resultados.add(element.data);
-            } else if (element.hasError){
-              error = element.error;
-            }
-          }
-        });
-        return betterBuilder(context, snapshots, error, resultados);
-      }
-    }
-    return FutureBuilder(
-      future: futures[i],
-      builder: (context, snapshot) {
-        if (i<snapshots.length){
-          snapshots[i] = snapshot;
-        } else{
-          snapshots.add(snapshot);
-        }
-        return _getFutureBuilder(context, snapshots, i+1);
-      },
+  Widget _defaultLoadingBuilder(context){
+    return LoadingSign();
+  }
+
+  Widget _defaultErrorBuilder(context, error){
+    return ErrorSign(
+      icon: Icon(Icons.error_outline, size: 64, color: Theme.of(context).errorColor,),
+      title: "Oops!",
+      subtitle: "Something went wrong...",
+    );
+  }
+
+  Widget _defaultTransitionBuilder(Widget child, Animation<double> primaryAnimation, Animation<double> secondaryAnimation,){
+    return FadeThroughTransition(
+      animation: primaryAnimation,
+      secondaryAnimation: secondaryAnimation,
+      child: child,
+      fillColor: Colors.transparent,
     );
   }
 

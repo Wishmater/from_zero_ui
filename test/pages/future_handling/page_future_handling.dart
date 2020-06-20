@@ -34,7 +34,29 @@ class PageFutureHandling extends StatelessWidget {
           child: Column(
             children: [
               SizedBox(height: 12,),
-
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: FutureBuilderFromZero(
+                    future: Future.delayed(Duration(seconds: 2)).then((value) => "Kappa"),
+                    successBuilder: (context, result) {
+                      return Center(child: Text("Succes :)\r\nValue: $result"));
+                    },
+                  ),
+                ),
+              ),
+              SizedBox(height: 12,),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: FutureBuilderFromZero(
+                    future: Future.delayed(Duration(seconds: 3)).then((value) => throw Exception()),
+                    successBuilder: (context, result) {
+                      return Center(child: Text("Succes :)\r\nValue: $result"));
+                    },
+                  ),
+                ),
+              ),
               SizedBox(height: 12,),
 
               SizedBox(height: 12,),
