@@ -1,7 +1,7 @@
 name: from_zero_ui
 description: UI generalizations and utility classes for working with flutter.
-version: 0.0.2
-author:
+version: 0.0.3
+author: David Alcalde
 homepage:
 
 environment:
@@ -13,6 +13,7 @@ dependencies:
   provider: ^4.1.3
   fluro: ^1.6.3
   animations: ^1.1.1
+  auto_size_text: ^2.1.0
 
 
 dev_dependencies:

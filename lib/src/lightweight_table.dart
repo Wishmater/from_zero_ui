@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'dart:math' as math;
@@ -46,6 +47,7 @@ class TableFromZero extends StatelessWidget {
   Widget horizontalDivider;
   Widget verticalDivider;
   List<Widget> actions;
+  int autoSizeTextMaxLines;
 
 
   TableFromZero.fromRowList({
@@ -81,6 +83,7 @@ class TableFromZero extends StatelessWidget {
     this.verticalDivider = const VerticalDivider(width: 1,),
     this.showFirstHorizontalDivider = true,
     this.actions,
+    this.autoSizeTextMaxLines = 1,
   });
   TableFromZero.fromColList({
     @required List<List<String>> cols,
@@ -115,6 +118,7 @@ class TableFromZero extends StatelessWidget {
     this.verticalDivider = const VerticalDivider(width: 1,),
     this.showFirstHorizontalDivider = true,
     this.actions,
+    this.autoSizeTextMaxLines = 1,
   }) {
     rows = [];
     if (cols!=null && cols.isNotEmpty){
@@ -161,6 +165,7 @@ class TableFromZero extends StatelessWidget {
     this.verticalDivider = const VerticalDivider(width: 1,),
     this.showFirstHorizontalDivider = true,
     this.actions,
+    this.autoSizeTextMaxLines = 1,
   }) {
     rows = [];
     json.forEach((element) {
@@ -289,10 +294,12 @@ class TableFromZero extends StatelessWidget {
                         child: Row(
                           children: [
                             Expanded(
-                              child: Text(
+                              child: AutoSizeText(
                                 columnNames[j],
                                 style: Theme.of(context).textTheme.subtitle2,
                                 textAlign: _getAlignment(j),
+                                maxLines: autoSizeTextMaxLines,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             if (sortedColumnIndex==j)
@@ -381,7 +388,7 @@ class TableFromZero extends StatelessWidget {
                     j--;
                   }
                 }
-                return Flexible( //TODO 2 use AutoResizeText and take a number for maxLines
+                return Flexible(
                   flex: _getFlex(j),
                   child: Container(
                     height: itemHeight,
@@ -389,10 +396,12 @@ class TableFromZero extends StatelessWidget {
                     padding: itemPadding,
                     child: Container(
                       width: double.infinity,
-                      child: Text(
+                      child: AutoSizeText(
                         rows[i][j]!=null ? rows[i][j] : "",
                         style: _getStyle(context, i, j),
                         textAlign: _getAlignment(j),
+                        maxLines: autoSizeTextMaxLines,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),

@@ -72,7 +72,18 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
                 ),
               ),
               SizedBox(height: 12,),
-
+              Card(
+                clipBehavior: Clip.hardEdge,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: FutureBuilderFromZero(
+                    future: Future.delayed(Duration(milliseconds: 10)).then((value) => "instant"),
+                    successBuilder: (context, result) {
+                      return Container(height: 600, child: Center(child: Text("Succes :)\r\nValue: $result")));
+                    },
+                  ),
+                ),
+              ),
               SizedBox(height: 12,),
             ],
           ),

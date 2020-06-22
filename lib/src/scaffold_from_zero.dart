@@ -8,10 +8,10 @@ import 'package:flutter/rendering.dart';
 import 'package:from_zero_ui/src/custom_painters.dart';
 import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 import 'package:from_zero_ui/src/scrollbar_from_zero.dart';
-import 'package:from_zero_ui/src/transitions.dart';
+import 'file:///C:/Workspaces/Flutter/from_zero_ui/lib/util/no_fading_material_transitions.dart';
 import 'package:provider/provider.dart';
-import 'no_fading_shared_axis_transition.dart' as no_fading_shared_axis_transition;
-import 'no_fading_fade_through_transition.dart' as no_fading_fade_through_transition;
+import '../util/no_fading_shared_axis_transition.dart' as no_fading_shared_axis_transition;
+import '../util/no_fading_fade_through_transition.dart' as no_fading_fade_through_transition;
 
 
 
@@ -198,6 +198,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
           ),
         ),
 
+
         //DESKTOP DRAWER
         displayMobileLayout || widget.drawerContentBuilder==null
             ? SizedBox.shrink()
@@ -274,7 +275,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                                     icon: Icon(Icons.menu),
                                     tooltip: "Abrir Menú",
                                     onPressed: () => _toggleDrawer(context, changeNotifier),
-                                    hoverColor: Colors.white.withOpacity(0.1), //TODO 2 make this actually responsive that actually gets params from parent dark theme
+                                    hoverColor: Colors.white.withOpacity(0.1), //TODO 2 make this actually responsive that actually gets params from parent dark theme (just use AppBar)
                                   );
                                 }
                             ),
@@ -308,11 +309,10 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                     child: AnimatedBuilder(
                       animation: secondaryAnimation,
                       builder: (context, child) {
-                        print (changeNotifier.animationType);
                         bool fadeAnim = changeNotifier.animationType==animationTypeSame;
                         bool sharedAnim = changeNotifier.animationType==animationTypeInner || changeNotifier.animationType==animationTypeOuter;
                         //TODO 3 implement animationType outer reverse
-                        return no_fading_shared_axis_transition.SharedAxisTransition( //TODO 3 make SharedAxisTransition work on previous widget as well
+                        return no_fading_shared_axis_transition.SharedAxisTransition(
                           animation: sharedAnim ? animation : kAlwaysCompleteAnimation,
                           secondaryAnimation: sharedAnim ? secondaryAnimation : kAlwaysDismissedAnimation,
                           child: no_fading_fade_through_transition.FadeThroughTransition(
@@ -422,7 +422,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                     if (canPop)
                       IconButton(
                         icon: Icon(Icons.arrow_back),
-                        tooltip: "Página Anterior",
+                        tooltip: "Página Anterior", //TODO 3 internationalize
                         onPressed: () async{
                           var navigator = Navigator.of(context);
                           if (displayMobileLayout)
@@ -442,6 +442,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
           ),
         ),
 
+
         //DRAWER CONTENT
         Expanded(
           child: Container(
@@ -459,11 +460,15 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: ScrollbarFromZero(
-                        controller: drawerContentScrollController,
-                        child: SingleChildScrollView(
+                      child: FadeUpwardsSlideTransition(
+                        routeAnimation: changeNotifier.animationType==animationTypeInner || changeNotifier.animationType==animationTypeOuter
+                            ? animation : kAlwaysCompleteAnimation,
+                        child: ScrollbarFromZero(
                           controller: drawerContentScrollController,
-                          child: widget.drawerContentBuilder(changeNotifier.currentDrawerWidth==compactDrawerWidth),
+                          child: SingleChildScrollView(
+                            controller: drawerContentScrollController,
+                            child: widget.drawerContentBuilder(changeNotifier.currentDrawerWidth==compactDrawerWidth),
+                          ),
                         ),
                       ),
                     ),

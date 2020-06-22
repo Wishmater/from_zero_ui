@@ -59,7 +59,7 @@ class Router {
       {bool replace = false,
         bool clearStack = false,
         TransitionType transition,
-        Duration transitionDuration = const Duration(milliseconds: 250),
+        Duration transitionDuration = const Duration(milliseconds: 300),
         RouteTransitionsBuilder transitionBuilder}) {
     RouteMatch routeMatch = matchRoute(context, path,
         transitionType: transition,
@@ -187,8 +187,8 @@ class Router {
             return handler.handlerFunc(context, parameters, animation, secondaryAnimation);
           },
           transitionDuration: transitionDuration,
-//          transitionsBuilder: routeTransitionsBuilder, TODO 3 all these changes should not be hardcoded
-        );
+//          transitionsBuilder: routeTransitionsBuilder,
+          );
       }
     };
     return RouteMatch(

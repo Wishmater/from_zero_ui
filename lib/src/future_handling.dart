@@ -174,7 +174,7 @@ class FutureBuilderFromZero<T> extends StatelessWidget {
   }
 
   Widget _defaultTransitionBuilder(Widget child, Animation<double> primaryAnimation, Animation<double> secondaryAnimation,){
-    return FadeThroughTransition( // TODO 2 ??? Make new child size animate from old one, to prevent size jumps
+    return FadeThroughTransition(
       animation: primaryAnimation,
       secondaryAnimation: secondaryAnimation,
       fillColor: Colors.transparent,
@@ -202,11 +202,14 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
 class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromChildSize> {
 
   GlobalKey globalKey = GlobalKey();
+  Size previouSize;
   Size size;
   bool skipNextCalculation = false;
+  int initialTimestamp;
 
   @override
   void initState() {
+    initialTimestamp = DateTime.now().millisecondsSinceEpoch;
     _addCalback(null);
   }
   @override
@@ -220,6 +223,7 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
         try {
           RenderBox renderBox = globalKey.currentContext.findRenderObject();
           setState(() {
+            previouSize = size;
             size = renderBox.size;
             skipNextCalculation = true;
           });
@@ -240,10 +244,19 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
             child: child,
           );
         } else{
+          double height = max(size.height, constraints.minHeight);
+          double width = max(size.width, constraints.minWidth);
+          double durationMult = 1;
+          if (previouSize != null){
+            double previousHeight = max(previouSize.height, constraints.minHeight);
+            double previousWidth = max(previouSize.width, constraints.minWidth);
+            durationMult = ((max((previousHeight-height).abs(), (previousWidth-width).abs()))/64).clamp(0.0, 1.0);
+          }
+          int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, widget.duration.inMilliseconds*durationMult).toInt();
           return AnimatedContainer(
-            height: max(size.height, constraints.minHeight),
-            width: max(size.width, constraints.minWidth),
-            duration: widget.duration,
+            height: height,
+            width: width,
+            duration: Duration(milliseconds: milliseconds),
             curve: widget.curve,
             child: OverflowBox(
               maxWidth: constraints.maxWidth,

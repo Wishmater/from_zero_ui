@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:from_zero_ui/src/custom_draggable_scrollbar.dart';
+import 'file:///C:/Workspaces/Flutter/from_zero_ui/lib/util/custom_draggable_scrollbar.dart';
 
 class ScrollbarFromZero extends StatefulWidget {
 
@@ -41,6 +41,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   double maxScrollExtent = 0;
   int topFlex = 0;
   bool disposed = false;
+  int initialTimestamp;
 
   @override
   void initState() {
@@ -51,6 +52,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     widget.controller.addListener(_onScrollListener);
     if (widget.controller.hasClients)
       widget.controller.position.addListener(_onScrollListener);
+    initialTimestamp = DateTime.now().millisecondsSinceEpoch;
   }
 
   @override
@@ -141,7 +143,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
           } else{
 
-            return Stack( //TODO 2 add padding right to children only on dektop mode
+            return Stack(
               children: <Widget>[
                 Align(
                   alignment: Alignment.centerRight,
@@ -203,7 +205,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                   backgroundColor: Theme.of(context).cardColor,
                   controller: widget.controller,
                   child: AnimatedPadding(
-                    duration: Duration(milliseconds: 150),
+                    duration: Duration(milliseconds: (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, 200)),
                     curve: Curves.easeOutCubic,
                     padding: EdgeInsets.only(
                         right: widget.applyPaddingToChildrenOnDesktop && height>0

@@ -59,14 +59,39 @@ class PageHome extends PageFromZero {
 
 class _PageHomeState extends State<PageHome> {
 
+  ScrollController controller = ScrollController();
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
       currentPage: widget,
       title: Text("FromZero playground"),
-      body: Container(),
+      body: _getPage(context),
       drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: [0, 0],),
       drawerFooterBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: [-1, -1], replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
+    );
+  }
+
+  Widget _getPage (BuildContext context){
+    return ScrollbarFromZero(
+      controller: controller,
+      child: SingleChildScrollView(
+        controller: controller,
+        child: ResponsiveHorizontalInsets(
+          child: Center(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(height: 12,),
+                Card(
+                  child: Container(height: 800, width: 600,),
+                ),
+                SizedBox(height: 12,),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

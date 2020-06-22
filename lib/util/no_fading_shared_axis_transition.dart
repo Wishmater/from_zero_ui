@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-// TODO(shihaohong): Remove DualTransitionBuilder once flutter/flutter's `stable`
 // branch contains DualTransitionBuilder.
 import 'package:animations/src/dual_transition_builder.dart' as dual_transition_builder;
 import 'package:animations/src/utils/curves.dart';

@@ -1,6 +1,6 @@
 import 'package:fluro/fluro.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:from_zero_ui/src/custom_fluro_router.dart' as my_fluro_router;
+import 'file:///C:/Workspaces/Flutter/from_zero_ui/lib/util/custom_fluro_router.dart' as my_fluro_router;
 
 
 typedef PageFromZero PageFromZeroCallback(

@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
       child: Consumer<ThemeParameters>(
         builder: (context, themeParameters, child) {
           return MaterialApp(
-            title: 'Cutrans CRM',
+            title: 'FromZero playground',
             debugShowCheckedModeBanner: false,
             themeMode: themeParameters.themeMode, //TODO 2 add another theme, a clear one to test appbar reactivity
             theme: lightTheme,
