@@ -54,7 +54,7 @@ class MyApp extends StatelessWidget {
               }
               return MultiProvider(
                 providers: [
-                  ChangeNotifierProvider (create: (context) => ResponsiveScaffoldChangeNotifier(),),
+                  ChangeNotifierProvider (create: (context) => ScaffoldFromZeroChangeNotifier(),),
                 ],
                 child: MediaQuery(
                   data: mediaQueryData,

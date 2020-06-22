@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 
@@ -103,6 +105,7 @@ class FutureBuilderFromZero<T> extends StatelessWidget {
   final initialData;
   final Future future;
   final SuccessBuilder<T> successBuilder;
+  final Duration duration;
   ErrorBuilder errorBuilder;
   LoadingBuilder loadingBuilder;
   PageTransitionSwitcherTransitionBuilder transitionBuilder;
@@ -114,12 +117,15 @@ class FutureBuilderFromZero<T> extends StatelessWidget {
     this.errorBuilder,
     this.loadingBuilder,
     this.initialData,
+    this.transitionBuilder,
+    this.duration = const Duration(milliseconds: 300),
   }) {
     assert(successBuilder != null);
     if (errorBuilder==null) errorBuilder = _defaultErrorBuilder;
     if (loadingBuilder==null) loadingBuilder = _defaultLoadingBuilder;
     if (transitionBuilder==null) transitionBuilder = _defaultTransitionBuilder;
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -129,19 +135,27 @@ class FutureBuilderFromZero<T> extends StatelessWidget {
       initialData: initialData,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
         Widget result;
+        int state = 0;
         if (snapshot.connectionState == ConnectionState.done){
           if (snapshot.hasData){
+            state = 1;
             result = successBuilder(context, snapshot.data);
           } else if (snapshot.hasError){
+            state = -1;
             result = errorBuilder(context, snapshot.error);
           }
         } else{
+          state = 0;
           result = loadingBuilder(context);
         }
-        return PageTransitionSwitcher(
-          transitionBuilder: transitionBuilder,
-          child: result,
-          duration: Duration(milliseconds: 300),
+        return AnimatedContainerFromChildSize(
+          duration: duration,
+          child: PageTransitionSwitcher(
+            key: ValueKey(state),
+            transitionBuilder: transitionBuilder,
+            child: Container(key: ValueKey(state), child: result),
+            duration: duration,
+          ),
         );
       },
     );
@@ -168,4 +182,80 @@ class FutureBuilderFromZero<T> extends StatelessWidget {
     );
   }
 
+}
+
+
+/// Only updates when a different child is given, like AnimatedSwitcher
+class AnimatedContainerFromChildSize extends StatefulWidget {
+
+  final Duration duration;
+  final Curve curve;
+  final Widget child;
+
+  AnimatedContainerFromChildSize({@required this.duration, this.curve = Curves.easeOutCubic, @required this.child});
+
+  @override
+  _AnimatedContainerFromChildSizeState createState() => _AnimatedContainerFromChildSizeState();
+
+}
+
+class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromChildSize> {
+
+  GlobalKey globalKey = GlobalKey();
+  Size size;
+  bool skipNextCalculation = false;
+
+  @override
+  void initState() {
+    _addCalback(null);
+  }
+  @override
+  void didUpdateWidget(AnimatedContainerFromChildSize oldWidget) {
+    _addCalback(oldWidget);
+  }
+
+  void _addCalback(AnimatedContainerFromChildSize oldWidget){
+    if (widget?.child != oldWidget?.child){
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        try {
+          RenderBox renderBox = globalKey.currentContext.findRenderObject();
+          setState(() {
+            size = renderBox.size;
+            skipNextCalculation = true;
+          });
+        } catch (_, __) {}
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        Widget child = Container(key: globalKey, child: widget.child,);
+        if (size == null){
+          return AnimatedContainer(
+            duration: widget.duration,
+            curve: widget.curve,
+            child: child,
+          );
+        } else{
+          return AnimatedContainer(
+            height: max(size.height, constraints.minHeight),
+            width: max(size.width, constraints.minWidth),
+            duration: widget.duration,
+            curve: widget.curve,
+            child: OverflowBox(
+              maxWidth: constraints.maxWidth,
+              maxHeight: constraints.maxHeight,
+              minWidth: constraints.minWidth,
+              minHeight: constraints.minHeight,
+              alignment: Alignment.topLeft,
+              child: child,
+            ),
+          );
+        }
+      },
+    );
+  }
 }

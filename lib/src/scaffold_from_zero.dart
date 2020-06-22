@@ -6,9 +6,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:from_zero_ui/src/custom_painters.dart';
+import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 import 'package:from_zero_ui/src/scrollbar_from_zero.dart';
 import 'package:from_zero_ui/src/transitions.dart';
 import 'package:provider/provider.dart';
+import 'no_fading_shared_axis_transition.dart' as no_fading_shared_axis_transition;
+import 'no_fading_fade_through_transition.dart' as no_fading_fade_through_transition;
 
 
 
@@ -34,13 +37,13 @@ typedef Widget DrawerContentBuilder(bool compact,);
 
 class ScaffoldFromZero extends StatefulWidget {
 
-  static String lastId = null;
-
   static const double small = 0;
   static const double medium = 612;
   static const double large = 848;
   static const double xLarge = 1280;
   static const List<double> sizes = [small, medium, large, xLarge];
+
+  static final GlobalKey bodyGlobalKey = GlobalKey();
 
   final Widget title;
   final List<Widget> actions;
@@ -52,9 +55,7 @@ class ScaffoldFromZero extends StatefulWidget {
   final bool useCompactDrawerInsteadOfClose;
   final double appbarHeight;
   final bool constraintBodyOnXLargeScreens;
-  final String id;
-  final Animation<double> animation;
-  final Animation<double> secondaryAnimation;
+  final PageFromZero currentPage;
 
 
   ScaffoldFromZero({
@@ -68,9 +69,7 @@ class ScaffoldFromZero extends StatefulWidget {
     this.useCompactDrawerInsteadOfClose = true,
     this.constraintBodyOnXLargeScreens = true,
     this.appbarHeight = 56, //TODO 3 increase appbarHeight with font size to avoid it breaking
-    this.id = "",
-    this.animation,
-    this.secondaryAnimation,
+    this.currentPage,
   });
 
   @override
@@ -87,6 +86,10 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
   static const double drawerWidth = 304;
   static const int drawerAnimationDuration = 300;
   static const drawerAnimationCurve = Curves.easeOutCubic;
+  static const int animationTypeSame = 0;
+  static const int animationTypeOther = 1;
+  static const int animationTypeInner = 2;
+  static const int animationTypeOuter = 3;
 
   double width;
   double height;
@@ -96,20 +99,52 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
   bool canPop;
 
 
+  get animation => widget.currentPage?.animation ?? kAlwaysCompleteAnimation;
+  get secondaryAnimation => widget.currentPage?.secondaryAnimation ?? kAlwaysDismissedAnimation;
+
+
 
   _ScaffoldFromZeroState(this.compactDrawerWidth);
-
 
   @override
   void initState() {
     super.initState();
+    FluroRouterFromZero.previousPage = widget.currentPage;
+    changeNotifier = Provider.of<ScaffoldFromZeroChangeNotifier>(context, listen: false);
+    _updateAnimationType(widget.currentPage, widget.currentPage?.previousPage);
+  }
 
+  @override
+  void dispose() {
+    super.dispose();
+    if (FluroRouterFromZero.previousPage == widget.currentPage){
+      FluroRouterFromZero.previousPage = widget.currentPage.previousPage;
+      _updateAnimationType(widget.currentPage?.previousPage, widget.currentPage?.previousPage?.previousPage);
+    }
+  }
+
+  ScaffoldFromZeroChangeNotifier changeNotifier;
+  void _updateAnimationType(PageFromZero currentPage, PageFromZero previousPage){
+    int animationType = animationTypeOther;
+    if (currentPage!=null && previousPage!=null) {
+      if (currentPage.pageScaffoldId == previousPage.pageScaffoldId) {
+        if (currentPage.pageScaffoldDepth > previousPage.pageScaffoldDepth) {
+          animationType = animationTypeInner;
+        } else if (currentPage.pageScaffoldDepth < previousPage.pageScaffoldDepth) {
+          animationType = animationTypeOuter;
+        } else {
+          animationType = animationTypeSame;
+        }
+      }
+    }
+    changeNotifier.animationTypeSILENT = animationType;
   }
 
   @override
   Widget build(BuildContext context) {
+
     if (canPop==null) canPop = Navigator.of(context).canPop();
-    return Consumer<ResponsiveScaffoldChangeNotifier>(
+    return Consumer<ScaffoldFromZeroChangeNotifier>(
       builder: (context, changeNotifier, child) {
         return LayoutBuilder(
             builder: (context, constraints) {
@@ -123,21 +158,24 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
               double fabPadding = (width-changeNotifier.currentDrawerWidth-ScaffoldFromZero.xLarge)/2 ;
               if (fabPadding < 12) fabPadding = width < ScaffoldFromZero.medium ? 0 : 12;
-              return FadeUpwardsFadeTransition(
-                routeAnimation: widget.animation ?? kAlwaysCompleteAnimation,
-                child: Scaffold(
-                  floatingActionButton: Padding(
-                    padding: EdgeInsets.only(bottom: width < ScaffoldFromZero.medium ? 0 : 12, right: fabPadding), //TODO TEST make fab always be on the edge of the usable surface,
-                    child: widget.floatingActionButton,
-                  ),
-                  drawer: displayMobileLayout && widget.drawerContentBuilder!=null ? Drawer(
-                    child: _getResponsiveDrawerContent(context, changeNotifier),
-                    elevation: drawerElevation,
-                  ) : null,
-                  body: Builder(
-                    builder: (context) {
-                      return _getBody(context, changeNotifier);
-                    },
+              return FadeUpwardsSlideTransition(
+                routeAnimation: changeNotifier.animationType==animationTypeOther ? animation : kAlwaysCompleteAnimation,
+                child: FadeUpwardsFadeTransition(
+                  routeAnimation: animation,
+                  child: Scaffold(
+                    floatingActionButton: Padding(
+                      padding: EdgeInsets.only(bottom: width < ScaffoldFromZero.medium ? 0 : 12, right: fabPadding), //TODO TEST make fab always be on the edge of the usable surface,
+                      child: widget.floatingActionButton,
+                    ),
+                    drawer: displayMobileLayout && widget.drawerContentBuilder!=null ? Drawer(
+                      child: _getResponsiveDrawerContent(context, changeNotifier),
+                      elevation: drawerElevation,
+                    ) : null,
+                    body: Builder(
+                      builder: (context) {
+                        return _getBody(context, changeNotifier);
+                      },
+                    ),
                   ),
                 ),
               );
@@ -147,7 +185,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
     );
   }
 
-  Widget _getBody(context, ResponsiveScaffoldChangeNotifier changeNotifier) {
+  Widget _getBody(context, ScaffoldFromZeroChangeNotifier changeNotifier) {
     return Stack(
       children: [
 
@@ -248,7 +286,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: SizeTransition(
-                              sizeFactor: widget.animation,
+                              sizeFactor: changeNotifier.animationType==animationTypeOther ? kAlwaysCompleteAnimation : animation,
                               axis: Axis.horizontal,
                               child: widget.title,
                             ),
@@ -267,9 +305,26 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                     alignment: Alignment.topCenter,
                     padding: EdgeInsets.only(top: widget.appbarHeight,),
                     width: widget.constraintBodyOnXLargeScreens ? ScaffoldFromZero.xLarge : double.infinity,
-                    child: FadeThroughTransition( //TODO 3 how to know if transitioning from a different id ResponsiveLayout to make a full transition
-                      animation: widget.animation ?? kAlwaysCompleteAnimation,
-                      secondaryAnimation: widget.secondaryAnimation ?? kAlwaysCompleteAnimation,
+                    child: AnimatedBuilder(
+                      animation: secondaryAnimation,
+                      builder: (context, child) {
+                        print (changeNotifier.animationType);
+                        bool fadeAnim = changeNotifier.animationType==animationTypeSame;
+                        bool sharedAnim = changeNotifier.animationType==animationTypeInner || changeNotifier.animationType==animationTypeOuter;
+                        //TODO 3 implement animationType outer reverse
+                        return no_fading_shared_axis_transition.SharedAxisTransition( //TODO 3 make SharedAxisTransition work on previous widget as well
+                          animation: sharedAnim ? animation : kAlwaysCompleteAnimation,
+                          secondaryAnimation: sharedAnim ? secondaryAnimation : kAlwaysDismissedAnimation,
+                          child: no_fading_fade_through_transition.FadeThroughTransition(
+                            animation: fadeAnim ? animation : kAlwaysCompleteAnimation,
+                            secondaryAnimation: fadeAnim ? secondaryAnimation : kAlwaysDismissedAnimation,
+                            child: child,
+                            fillColor: Colors.transparent,
+                          ),
+                          transitionType: no_fading_shared_axis_transition.SharedAxisTransitionType.scaled,
+                          fillColor: Colors.transparent,
+                        );
+                      },
                       child: widget.body,
                     ),
                   ),
@@ -321,7 +376,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
     );
   }
 
-  _getResponsiveDrawerContent(context, ResponsiveScaffoldChangeNotifier changeNotifier){
+  _getResponsiveDrawerContent(context, ScaffoldFromZeroChangeNotifier changeNotifier){
     return Column(
       children: <Widget>[
 
@@ -434,7 +489,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
     );
   }
 
-  _toggleDrawer(context, ResponsiveScaffoldChangeNotifier changeNotifier){
+  _toggleDrawer(context, ScaffoldFromZeroChangeNotifier changeNotifier){
     var scaffold = Scaffold.of(context);
     if (scaffold.hasDrawer){
       if (scaffold.isDrawerOpen){
@@ -451,14 +506,14 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
     }
   }
 
-  void onHorizontalDragUpdate (DragUpdateDetails details, ResponsiveScaffoldChangeNotifier changeNotifier) {
+  void onHorizontalDragUpdate (DragUpdateDetails details, ScaffoldFromZeroChangeNotifier changeNotifier) {
     double jump = changeNotifier.currentDrawerWidth + details.delta.dx;
     if (jump<compactDrawerWidth) jump = compactDrawerWidth;
     if (jump>drawerWidth) jump = drawerWidth;
     changeNotifier.currentDrawerWidth = jump;
   }
   static const double _kMinFlingVelocity = 365.0;
-  void onHorizontalDragEnd (DragEndDetails details, ResponsiveScaffoldChangeNotifier changeNotifier) {
+  void onHorizontalDragEnd (DragEndDetails details, ScaffoldFromZeroChangeNotifier changeNotifier) {
     double jump = changeNotifier.currentDrawerWidth;
     if (details.velocity.pixelsPerSecond.dx.abs() >= _kMinFlingVelocity){
       if (details.velocity.pixelsPerSecond.dx>0) jump = drawerWidth;
@@ -471,7 +526,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
 }
 
-class ResponsiveScaffoldChangeNotifier extends ChangeNotifier{
+class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
 
   double _currentDrawerWidth = 304;
 
@@ -484,7 +539,23 @@ class ResponsiveScaffoldChangeNotifier extends ChangeNotifier{
     _currentDrawerWidth = value;
   }
 
+  int _animationType;
+  int get animationType => _animationType;
+  set animationType(int value) {
+    _animationType = value;
+    notifyListeners();
+  }
+  set animationTypeSILENT(int value) {
+    _animationType = value;
+  }
+
+
 }
 
+class PreviousScaffoldChangeNotifier extends ChangeNotifier{
+
+
+
+}
 
 

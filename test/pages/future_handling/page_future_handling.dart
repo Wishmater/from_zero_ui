@@ -2,22 +2,33 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 
 import '../home/page_home.dart';
 
-class PageFutureHandling extends StatelessWidget {
+class PageFutureHandling extends PageFromZero {
 
-  final animation;
-  final secondaryAnimation;
+  @override
+  int get pageScaffoldDepth => 1;
+  @override
+  String get pageScaffoldId => "Home";
+
+  PageFutureHandling(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
+      : super(previousPage, animation, secondaryAnimation);
+
+  @override
+  _PageFutureHandlingState createState() => _PageFutureHandlingState();
+
+}
+
+class _PageFutureHandlingState extends State<PageFutureHandling> {
+
   final scrollController = ScrollController();
-
-  PageFutureHandling({this.animation, this.secondaryAnimation});
 
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      animation: animation,
-      secondaryAnimation: secondaryAnimation,
+      currentPage: widget,
       title: Text("Future Handling"),
       body: _getPage(context),
       drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: [0, 3],),
@@ -32,9 +43,11 @@ class PageFutureHandling extends StatelessWidget {
         child: SingleChildScrollView(
           controller: scrollController,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               SizedBox(height: 12,),
               Card(
+                clipBehavior: Clip.hardEdge,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: FutureBuilderFromZero(
@@ -47,6 +60,7 @@ class PageFutureHandling extends StatelessWidget {
               ),
               SizedBox(height: 12,),
               Card(
+                clipBehavior: Clip.hardEdge,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: FutureBuilderFromZero(

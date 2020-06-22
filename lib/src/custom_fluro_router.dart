@@ -111,7 +111,7 @@ class Router {
   RouteMatch matchRoute(BuildContext buildContext, String path,
       {RouteSettings routeSettings,
         TransitionType transitionType,
-        Duration transitionDuration = const Duration(milliseconds: 250),
+        Duration transitionDuration = const Duration(milliseconds: 300),
         RouteTransitionsBuilder transitionsBuilder}) {
     RouteSettings settingsToUse = routeSettings;
     if (routeSettings == null) {

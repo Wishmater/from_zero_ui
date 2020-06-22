@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 
-class PageHome extends StatelessWidget {
+class PageHome extends PageFromZero {
 
   static List<List<ResponsiveDrawerMenuItem>> tabs = [
     [
@@ -43,17 +44,25 @@ class PageHome extends StatelessWidget {
     ]
   ];
 
-  final animation;
-  final secondaryAnimation;
+  @override
+  int get pageScaffoldDepth => 1;
+  @override
+  String get pageScaffoldId => "Home";
 
+  PageHome(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
+      : super(previousPage, animation, secondaryAnimation);
 
-  PageHome({this.animation, this.secondaryAnimation});
+  @override
+  _PageHomeState createState() => _PageHomeState();
+
+}
+
+class _PageHomeState extends State<PageHome> {
 
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      animation: animation,
-      secondaryAnimation: secondaryAnimation,
+      currentPage: widget,
       title: Text("FromZero playground"),
       body: Container(),
       drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: [0, 0],),

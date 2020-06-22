@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 import '../home/page_home.dart';
 
-class PageLightweightTable extends StatefulWidget {
+class PageLightweightTable extends PageFromZero {
 
-  final animation;
-  final secondaryAnimation;
+  @override
+  int get pageScaffoldDepth => 1;
+  @override
+  String get pageScaffoldId => "Home";
 
-  PageLightweightTable({this.animation, this.secondaryAnimation});
+  PageLightweightTable(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
+      : super(previousPage, animation, secondaryAnimation);
 
   @override
   _PageLightweightTableState createState() => _PageLightweightTableState();
@@ -28,8 +32,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      animation: widget.animation,
-      secondaryAnimation: widget.secondaryAnimation,
+      currentPage: widget,
       title: Text("Lightweight Table"),
       body: _getPage(context),
       drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: [0, 2],),

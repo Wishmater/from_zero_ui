@@ -4,36 +4,34 @@ import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 
 import '../home/page_home.dart';
 
-class PageHeroes extends PageFromZero {
+class PageScaffoldInner extends PageFromZero {
 
   @override
-  int get pageScaffoldDepth => 1;
+  int get pageScaffoldDepth => 2;
   @override
   String get pageScaffoldId => "Home";
 
-  PageHeroes(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
+  PageScaffoldInner(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
       : super(previousPage, animation, secondaryAnimation);
 
   @override
-  _PageHeroesState createState() => _PageHeroesState();
+  _PageScaffoldInnerState createState() => _PageScaffoldInnerState();
 
 }
 
-class _PageHeroesState extends State<PageHeroes> {
+class _PageScaffoldInnerState extends State<PageScaffoldInner> {
 
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
       currentPage: widget,
-      title: Text("Heroes"),
-      body: _getPage(context),
-      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: [0, 4],),
+      title: Text("Inner Page"),
+      body: Center(
+        child: Card(child: FlutterLogo(size: 512,)),
+      ),
+      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: [0, -1],),
       drawerFooterBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: [-1, -1], replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
     );
-  }
-
-  Widget _getPage(context){
-    return Container();
   }
 
 }
