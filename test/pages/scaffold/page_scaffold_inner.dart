@@ -11,8 +11,8 @@ class PageScaffoldInner extends PageFromZero {
   @override
   String get pageScaffoldId => "Home";
 
-  PageScaffoldInner(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(previousPage, animation, secondaryAnimation);
+  PageScaffoldInner(Animation<double> animation, Animation<double> secondaryAnimation)
+      : super(animation, secondaryAnimation);
 
   @override
   _PageScaffoldInnerState createState() => _PageScaffoldInnerState();

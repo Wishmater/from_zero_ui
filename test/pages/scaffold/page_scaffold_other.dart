@@ -11,8 +11,8 @@ class PageScaffoldOther extends PageFromZero {
   @override
   String get pageScaffoldId => "Other 1234";
 
-  PageScaffoldOther(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(previousPage, animation, secondaryAnimation);
+  PageScaffoldOther(Animation<double> animation, Animation<double> secondaryAnimation)
+      : super(animation, secondaryAnimation);
 
   @override
   _PageScaffoldInnerState createState() => _PageScaffoldInnerState();

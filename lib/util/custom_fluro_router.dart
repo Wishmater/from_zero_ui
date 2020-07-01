@@ -13,20 +13,10 @@ import 'package:fluro/fluro.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:from_zero_ui/util/wait_for_frame_page_transition.dart';
+import '../src/fluro_router_from_zero.dart' as mine;
 
 
-
-///
-typedef Widget HandlerFunc(
-    BuildContext context, Map<String, List<String>> parameters,
-    Animation<double> animation, Animation<double> secondaryAnimation);
-
-///
-class Handler {
-  Handler({this.type = HandlerType.route, this.handlerFunc});
-  final HandlerType type;
-  final HandlerFunc handlerFunc;
-}
 
 
 class Router {
@@ -36,11 +26,11 @@ class Router {
   final RouteTree _routeTree = RouteTree();
 
   /// Generic handler for when a route has not been defined
-  Handler notFoundHandler;
+  mine.Handler notFoundHandler;
 
   /// Creates a [PageRoute] definition for the passed [RouteHandler]. You can optionally provide a default transition type.
   void define(String routePath,
-      {@required Handler handler, TransitionType transitionType}) {
+      {@required mine.Handler handler, TransitionType transitionType}) {
     _routeTree.addRoute(
       AppRoute(routePath, handler, transitionType: transitionType),
     );
@@ -119,7 +109,7 @@ class Router {
     }
     AppRouteMatch match = _routeTree.matchRoute(path);
     AppRoute route = match?.route;
-    Handler handler = (route != null ? route.handler : notFoundHandler);
+    mine.Handler handler = (route != null ? route.handler : notFoundHandler);
     var transition = transitionType;
     if (transitionType == null) {
       transition = route != null ? route.transitionType : TransitionType.native;
@@ -181,7 +171,8 @@ class Router {
         } else {
           routeTransitionsBuilder = _standardTransitionsBuilder(transition);
         }
-        return PageRouteBuilder<dynamic>(
+//        return PageRouteBuilder<dynamic>(
+        return PageRouteBuilderWaitForFrame<dynamic>(
           settings: routeSettings,
           pageBuilder: (BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) {
             return handler.handlerFunc(context, parameters, animation, secondaryAnimation);

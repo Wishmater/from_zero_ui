@@ -9,8 +9,8 @@ class PageSettings extends PageFromZero {
   @override
   String get pageScaffoldId => "Settings";
 
-  PageSettings(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(previousPage, animation, secondaryAnimation);
+  PageSettings(Animation<double> animation, Animation<double> secondaryAnimation)
+      : super(animation, secondaryAnimation);
 
   @override
   _PageSettingsState createState() => _PageSettingsState();

@@ -1,24 +1,36 @@
+import 'dart:math';
+
 import 'package:fluro/fluro.dart';
 import 'package:flutter/cupertino.dart';
-import 'file:///C:/Workspaces/Flutter/from_zero_ui/lib/util/custom_fluro_router.dart' as my_fluro_router;
+import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:provider/provider.dart';
+import '../util/custom_fluro_router.dart' as my_fluro_router;
 
 
 typedef PageFromZero PageFromZeroCallback(
     BuildContext context, Map<String, List<String>> parameters,
     Animation<double> animation, Animation<double> secondaryAnimation,
-    PageFromZero lastPage,
+//    PageFromZero previousPage,
 );
 
-class FluroRouterFromZero extends my_fluro_router.Router{
+typedef Widget HandlerFunc(
+    BuildContext context, Map<String, List<String>> parameters,
+    Animation<double> animation, Animation<double> secondaryAnimation);
 
-  static PageFromZero previousPage;
+class Handler {
+  Handler({this.type = HandlerType.route, this.handlerFunc});
+  final HandlerType type;
+  final HandlerFunc handlerFunc;
+}
+
+class FluroRouterFromZero extends my_fluro_router.Router{
 
   void defineRouteFromZero(String routePath, PageFromZeroCallback pageFromZeroCallback){
     define(
       routePath,
-      handler: my_fluro_router.Handler(
+      handler: Handler(
         handlerFunc: (context, params, animation, secondaryAnimation) {
-          PageFromZero newPage = pageFromZeroCallback(context, params, animation, secondaryAnimation, previousPage);
+          PageFromZero newPage = pageFromZeroCallback(context, params, animation, secondaryAnimation);
           return newPage;
         },
       ),
@@ -40,17 +52,9 @@ abstract class PageFromZero extends StatefulWidget{
   /// PageTransition secondaryAnimation
   final Animation<double> secondaryAnimation;
 
-  final PageFromZero previousPage;
-
-  final int randomId = DateTime.now().millisecondsSinceEpoch;
+  int randomId = 0;
 
 
-  PageFromZero(this.previousPage, this.animation, this.secondaryAnimation);
-
-
-//  @override
-//  bool operator == (dynamic other) => other is PageFromZero && this.randomId==other.randomId;
-//  @override
-//  int get hashCode => this.randomId;
+  PageFromZero(this.animation, this.secondaryAnimation) : super();
 
 }

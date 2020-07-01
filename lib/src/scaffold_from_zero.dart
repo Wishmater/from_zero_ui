@@ -5,32 +5,15 @@ import 'package:animations/animations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/custom_painters.dart';
 import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 import 'package:from_zero_ui/src/scrollbar_from_zero.dart';
-import 'file:///C:/Workspaces/Flutter/from_zero_ui/lib/util/no_fading_material_transitions.dart';
 import 'package:provider/provider.dart';
 import '../util/no_fading_shared_axis_transition.dart' as no_fading_shared_axis_transition;
 import '../util/no_fading_fade_through_transition.dart' as no_fading_fade_through_transition;
 
 
-
-//TODO 1 implement enhanced heroes
-//Widget fadeTransitionFlightShuttleBuilder(flightContext, animation, flightDirection, fromHeroContext, toHeroContext) {
-//  final Hero newHero = flightDirection == HeroFlightDirection.pop
-//      ? fromHeroContext.widget : toHeroContext.widget;
-//  final Hero oldHero = flightDirection == HeroFlightDirection.push
-//      ? fromHeroContext.widget : toHeroContext.widget;
-//  return Stack(
-//    children: <Widget>[
-//      oldHero.child,
-//      FadeTransition( // this could be any transition ever !!!
-//        opacity: animation,
-//        child: newHero.child,
-//      ),
-//    ],
-//  );
-//}
 
 
 typedef Widget DrawerContentBuilder(bool compact,);
@@ -42,8 +25,12 @@ class ScaffoldFromZero extends StatefulWidget {
   static const double large = 848;
   static const double xLarge = 1280;
   static const List<double> sizes = [small, medium, large, xLarge];
+  static const int animationTypeSame = 0;
+  static const int animationTypeOther = 1;
+  static const int animationTypeInner = 2;
+  static const int animationTypeOuter = 3;
 
-  static final GlobalKey bodyGlobalKey = GlobalKey();
+  final GlobalKey bodyGlobalKey = GlobalKey();
 
   final Widget title;
   final List<Widget> actions;
@@ -86,10 +73,6 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
   static const double drawerWidth = 304;
   static const int drawerAnimationDuration = 300;
   static const drawerAnimationCurve = Curves.easeOutCubic;
-  static const int animationTypeSame = 0;
-  static const int animationTypeOther = 1;
-  static const int animationTypeInner = 2;
-  static const int animationTypeOuter = 3;
 
   double width;
   double height;
@@ -97,6 +80,8 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
   double compactDrawerWidth;
   ScrollController drawerContentScrollController = ScrollController();
   bool canPop;
+  double previousWidth;
+  double previousHeight;
 
 
   get animation => widget.currentPage?.animation ?? kAlwaysCompleteAnimation;
@@ -106,39 +91,36 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
   _ScaffoldFromZeroState(this.compactDrawerWidth);
 
+
+  ScaffoldFromZeroChangeNotifier changeNotifier;
   @override
   void initState() {
     super.initState();
-    FluroRouterFromZero.previousPage = widget.currentPage;
+    if (widget.currentPage != null){
+      widget.currentPage.randomId  = DateTime.now().millisecondsSinceEpoch;
+    }
     changeNotifier = Provider.of<ScaffoldFromZeroChangeNotifier>(context, listen: false);
-    _updateAnimationType(widget.currentPage, widget.currentPage?.previousPage);
+    changeNotifier.pushPageToStack(widget.currentPage);
+    changeNotifier.pushScaffoldToStack(widget);
+    changeNotifier.updateStackRelatedVariables();
+  }
+
+  @override
+  void didUpdateWidget(ScaffoldFromZero oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.currentPage!=null && oldWidget.currentPage!=null){
+      widget.currentPage.randomId  = oldWidget.currentPage.randomId;
+    }
   }
 
   @override
   void dispose() {
     super.dispose();
-    if (FluroRouterFromZero.previousPage == widget.currentPage){
-      FluroRouterFromZero.previousPage = widget.currentPage.previousPage;
-      _updateAnimationType(widget.currentPage?.previousPage, widget.currentPage?.previousPage?.previousPage);
-    }
+    changeNotifier.popPageFromStack(widget.currentPage);
+    changeNotifier.popScaffoldFromStack(widget);
+    changeNotifier.updateStackRelatedVariables();
   }
 
-  ScaffoldFromZeroChangeNotifier changeNotifier;
-  void _updateAnimationType(PageFromZero currentPage, PageFromZero previousPage){
-    int animationType = animationTypeOther;
-    if (currentPage!=null && previousPage!=null) {
-      if (currentPage.pageScaffoldId == previousPage.pageScaffoldId) {
-        if (currentPage.pageScaffoldDepth > previousPage.pageScaffoldDepth) {
-          animationType = animationTypeInner;
-        } else if (currentPage.pageScaffoldDepth < previousPage.pageScaffoldDepth) {
-          animationType = animationTypeOuter;
-        } else {
-          animationType = animationTypeSame;
-        }
-      }
-    }
-    changeNotifier.animationTypeSILENT = animationType;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -150,16 +132,24 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
             builder: (context, constraints) {
               width = constraints.maxWidth;
               height = constraints.maxHeight;
+              if (width==0 && previousWidth!=null) width = previousWidth;
+              if (height==0 && previousHeight!=null) height = previousHeight;
               displayMobileLayout = width < ScaffoldFromZero.medium;
               if (displayMobileLayout || widget.drawerContentBuilder==null)
-                changeNotifier.currentDrawerWidthSILENT = 0;
-              else if (widget.drawerContentBuilder!=null && changeNotifier.currentDrawerWidth < compactDrawerWidth)
-                changeNotifier.currentDrawerWidthSILENT = compactDrawerWidth;
-
-              double fabPadding = (width-changeNotifier.currentDrawerWidth-ScaffoldFromZero.xLarge)/2 ;
+                changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, 0);
+              else if (widget.drawerContentBuilder!=null && changeNotifier.getCurrentDrawerWidth(widget.currentPage) < compactDrawerWidth)
+                changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, compactDrawerWidth);
+              else if (previousWidth!=null && previousWidth<ScaffoldFromZero.large && width>=ScaffoldFromZero.large){
+                changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, drawerWidth);
+              } else if (previousWidth!=null && previousWidth>=ScaffoldFromZero.large && width<ScaffoldFromZero.large){
+                changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, compactDrawerWidth);
+              }
+              previousWidth = width;
+              previousHeight = height;
+              double fabPadding = (width-changeNotifier.getCurrentDrawerWidth(widget.currentPage)-ScaffoldFromZero.xLarge)/2 ;
               if (fabPadding < 12) fabPadding = width < ScaffoldFromZero.medium ? 0 : 12;
               return FadeUpwardsSlideTransition(
-                routeAnimation: changeNotifier.animationType==animationTypeOther ? animation : kAlwaysCompleteAnimation,
+                routeAnimation: changeNotifier.animationType==ScaffoldFromZero.animationTypeOther ? animation : kAlwaysCompleteAnimation,
                 child: FadeUpwardsFadeTransition(
                   routeAnimation: animation,
                   child: Scaffold(
@@ -208,7 +198,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
           child: AnimatedContainer(
             duration: Duration(milliseconds: drawerAnimationDuration),
             curve: drawerAnimationCurve,
-            width: changeNotifier.currentDrawerWidth,
+            width: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
             height: height,
             child: GestureDetector(
               onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
@@ -220,7 +210,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
             : AnimatedPositioned(
           duration: Duration(milliseconds: drawerAnimationDuration),
           curve: drawerAnimationCurve,
-          left: changeNotifier.currentDrawerWidth-drawerWidth,
+          left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)-drawerWidth,
           child: GestureDetector(
             onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
             onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
@@ -236,11 +226,11 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         AnimatedPositioned(
           duration: Duration(milliseconds: drawerAnimationDuration),
           curve: drawerAnimationCurve,
-          left: changeNotifier.currentDrawerWidth,
+          left: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
           child: AnimatedContainer(
             duration: Duration(milliseconds: drawerAnimationDuration),
             curve: drawerAnimationCurve,
-            width: width-changeNotifier.currentDrawerWidth,
+            width: width-changeNotifier.getCurrentDrawerWidth(widget.currentPage),
             height: height,
             child: Stack(
               children: <Widget>[
@@ -260,11 +250,11 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                         //DRAWER HAMBURGER BUTTON (only if not using compact style)
                         (!displayMobileLayout&&widget.useCompactDrawerInsteadOfClose)||widget.drawerContentBuilder==null ? SizedBox.shrink()
                             : AnimatedOpacity(
-                          opacity: 1-changeNotifier.currentDrawerWidth/56<0 ? 0 : 1-changeNotifier.currentDrawerWidth/56,
+                          opacity: 1-changeNotifier.getCurrentDrawerWidth(widget.currentPage)/56<0 ? 0 : 1-changeNotifier.getCurrentDrawerWidth(widget.currentPage)/56,
                           duration: Duration(milliseconds: drawerAnimationDuration),
                           curve: drawerAnimationCurve,
                           child: AnimatedContainer(
-                            width: changeNotifier.currentDrawerWidth>56 ? 0: 56-changeNotifier.currentDrawerWidth,
+                            width: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>56 ? 0: 56-changeNotifier.getCurrentDrawerWidth(widget.currentPage),
                             duration: Duration(milliseconds: drawerAnimationDuration),
                             curve: Curves.easeOutCubic,
                             padding: EdgeInsets.only(right: 8),
@@ -286,10 +276,26 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                         Expanded(
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: SizeTransition(
-                              sizeFactor: changeNotifier.animationType==animationTypeOther ? kAlwaysCompleteAnimation : animation,
-                              axis: Axis.horizontal,
+                            child: AnimatedBuilder(
+                              animation: secondaryAnimation,
                               child: widget.title,
+                              builder: (context, child) {
+                                return AnimatedBuilder(
+                                  animation: animation,
+                                  child: child,
+                                  builder: (context, child) {
+                                    return ZoomedFadeInTransition(
+                                      animation: changeNotifier.titleAnimation ? ReverseAnimation(secondaryAnimation) : kAlwaysCompleteAnimation,
+                                      child: SizeTransition(
+                                        sizeFactor: changeNotifier.titleAnimation ? animation : kAlwaysCompleteAnimation,
+                                        axis: Axis.horizontal,
+                                        axisAlignment: 1,
+                                        child: child,
+                                      ),
+                                    );
+                                  },
+                                );
+                              }
                             ),
                           ),
                         ),
@@ -307,25 +313,36 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                     padding: EdgeInsets.only(top: widget.appbarHeight,),
                     width: widget.constraintBodyOnXLargeScreens ? ScaffoldFromZero.xLarge : double.infinity,
                     child: AnimatedBuilder(
-                      animation: secondaryAnimation,
+                      child: Container(key: widget.bodyGlobalKey, child: widget.body),
+                      animation: animation,
                       builder: (context, child) {
-                        bool fadeAnim = changeNotifier.animationType==animationTypeSame;
-                        bool sharedAnim = changeNotifier.animationType==animationTypeInner || changeNotifier.animationType==animationTypeOuter;
-                        //TODO 3 implement animationType outer reverse
-                        return no_fading_shared_axis_transition.SharedAxisTransition(
-                          animation: sharedAnim ? animation : kAlwaysCompleteAnimation,
-                          secondaryAnimation: sharedAnim ? secondaryAnimation : kAlwaysDismissedAnimation,
-                          child: no_fading_fade_through_transition.FadeThroughTransition(
-                            animation: fadeAnim ? animation : kAlwaysCompleteAnimation,
-                            secondaryAnimation: fadeAnim ? secondaryAnimation : kAlwaysDismissedAnimation,
-                            child: child,
-                            fillColor: Colors.transparent,
-                          ),
-                          transitionType: no_fading_shared_axis_transition.SharedAxisTransitionType.scaled,
-                          fillColor: Colors.transparent,
+                        return AnimatedBuilder(
+                          animation: secondaryAnimation,
+                          child: child,
+                          builder: (context, child) {
+                            if (changeNotifier.sharedAnim) {
+                              return no_fading_shared_axis_transition.SharedAxisTransition(
+                                animation: changeNotifier.animationType==ScaffoldFromZero.animationTypeOuter
+                                    ? ReverseAnimation(secondaryAnimation) : animation,
+                                secondaryAnimation: changeNotifier.animationType==ScaffoldFromZero.animationTypeOuter
+                                    ? ReverseAnimation(animation) : secondaryAnimation,
+                                child: child,
+                                transitionType: no_fading_shared_axis_transition.SharedAxisTransitionType.scaled,
+                                fillColor: Colors.transparent,
+                              );
+                            } else if (changeNotifier.fadeAnim) {
+                              return FadeThroughTransition(
+                                animation: animation,
+                                secondaryAnimation: secondaryAnimation,
+                                child: child,
+                                fillColor: Colors.transparent,
+                              );
+                            } else {
+                              return child;
+                            }
+                          },
                         );
-                      },
-                      child: widget.body,
+                      }
                     ),
                   ),
                 ),
@@ -349,7 +366,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         if (!displayMobileLayout)
         AnimatedContainer(
           alignment: Alignment.centerLeft,
-          padding: EdgeInsets.only(top: widget.appbarHeight, left: changeNotifier.currentDrawerWidth),
+          padding: EdgeInsets.only(top: widget.appbarHeight, left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)),
           duration: Duration(milliseconds: drawerAnimationDuration),
           curve: drawerAnimationCurve,
           child: SizedBox(
@@ -377,6 +394,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
   }
 
   _getResponsiveDrawerContent(context, ScaffoldFromZeroChangeNotifier changeNotifier){
+    Widget drawerContent = widget.drawerContentBuilder(changeNotifier.getCurrentDrawerWidth(widget.currentPage)==compactDrawerWidth);
     return Column(
       children: <Widget>[
 
@@ -406,7 +424,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                       padding: EdgeInsets.only(right: kIsWeb ? 4 : 8), // TODO WTFF dps are bigger in web ???
                       child: IconButton(
                         icon: Icon(widget.useCompactDrawerInsteadOfClose&&!displayMobileLayout ? Icons.menu : Icons.close),
-                        tooltip: changeNotifier.currentDrawerWidth>compactDrawerWidth||displayMobileLayout ? "Cerrar Menú" : "Abrir Menú",
+                        tooltip: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>compactDrawerWidth||displayMobileLayout ? "Cerrar Menú" : "Abrir Menú",
                         onPressed: (){
                           if (displayMobileLayout)
                             Navigator.of(context).pop();
@@ -417,7 +435,11 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                     ),
                     Expanded(child: Container()),
                     if (widget.drawerTitle!=null)
-                      Hero(tag: "responsive_drawer_title", child: widget.drawerTitle),
+                      Hero(
+                        tag: "responsive_drawer_title",
+                        child: widget.drawerTitle,
+                        flightShuttleBuilder: HeroesFromZero.fadeThroughFlightShuttleBuilder,
+                      ),
                     SizedBox(width: 8,),
                     if (canPop)
                       IconButton(
@@ -460,14 +482,30 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: FadeUpwardsSlideTransition(
-                        routeAnimation: changeNotifier.animationType==animationTypeInner || changeNotifier.animationType==animationTypeOuter
-                            ? animation : kAlwaysCompleteAnimation,
-                        child: ScrollbarFromZero(
+                      child: ScrollbarFromZero(
+                        controller: drawerContentScrollController,
+                        child: SingleChildScrollView(
                           controller: drawerContentScrollController,
-                          child: SingleChildScrollView(
-                            controller: drawerContentScrollController,
-                            child: widget.drawerContentBuilder(changeNotifier.currentDrawerWidth==compactDrawerWidth),
+                          child: AnimatedBuilder(
+                            animation: secondaryAnimation,
+                            child: drawerContent,
+                            builder: (context, child) {
+                              return AnimatedBuilder(
+                                animation: animation,
+                                child: child,
+                                builder: (context, child) {
+                                  return ZoomedFadeInTransition(
+                                    animation: changeNotifier.sharedAnim
+                                        ? ReverseAnimation(secondaryAnimation) : kAlwaysCompleteAnimation,
+                                    child: FadeUpwardsSlideTransition(
+                                      routeAnimation: changeNotifier.sharedAnim
+                                          ? animation : kAlwaysCompleteAnimation,
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                              );
+                            },
                           ),
                         ),
                       ),
@@ -478,7 +516,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                         children: <Widget>[
                           Divider(height: 1,),
                           SizedBox(height: 6,),
-                          widget.drawerFooterBuilder != null ? widget.drawerFooterBuilder(changeNotifier.currentDrawerWidth==compactDrawerWidth) : SizedBox.shrink(),
+                          widget.drawerFooterBuilder != null ? widget.drawerFooterBuilder(changeNotifier.getCurrentDrawerWidth(widget.currentPage)==compactDrawerWidth) : SizedBox.shrink(),
                           SizedBox(height: 12,),
                         ],
                       ),
@@ -503,45 +541,48 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         scaffold.openDrawer();
       }
     } else{
-      if (changeNotifier.currentDrawerWidth > compactDrawerWidth){
-        changeNotifier.currentDrawerWidth = compactDrawerWidth;
+      if (changeNotifier.getCurrentDrawerWidth(widget.currentPage) > compactDrawerWidth){
+        changeNotifier.setCurrentDrawerWidth(widget.currentPage, compactDrawerWidth);
       } else{
-        changeNotifier.currentDrawerWidth = drawerWidth;
+        changeNotifier.setCurrentDrawerWidth(widget.currentPage, drawerWidth);
       }
     }
   }
 
   void onHorizontalDragUpdate (DragUpdateDetails details, ScaffoldFromZeroChangeNotifier changeNotifier) {
-    double jump = changeNotifier.currentDrawerWidth + details.delta.dx;
+    double jump = changeNotifier.getCurrentDrawerWidth(widget.currentPage) + details.delta.dx;
     if (jump<compactDrawerWidth) jump = compactDrawerWidth;
     if (jump>drawerWidth) jump = drawerWidth;
-    changeNotifier.currentDrawerWidth = jump;
+    changeNotifier.setCurrentDrawerWidth(widget.currentPage, jump);
   }
   static const double _kMinFlingVelocity = 365.0;
   void onHorizontalDragEnd (DragEndDetails details, ScaffoldFromZeroChangeNotifier changeNotifier) {
-    double jump = changeNotifier.currentDrawerWidth;
+    double jump = changeNotifier.getCurrentDrawerWidth(widget.currentPage);
     if (details.velocity.pixelsPerSecond.dx.abs() >= _kMinFlingVelocity){
       if (details.velocity.pixelsPerSecond.dx>0) jump = drawerWidth;
       else jump = compactDrawerWidth;
     }
     else if (jump<drawerWidth/2) jump = compactDrawerWidth;
     else jump = drawerWidth;
-    changeNotifier.currentDrawerWidth = jump;
+    changeNotifier.setCurrentDrawerWidth(widget.currentPage, jump);
   }
 
 }
 
 class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
 
-  double _currentDrawerWidth = 304;
-
-  double get currentDrawerWidth => _currentDrawerWidth;
-  set currentDrawerWidth(double value) {
-    _currentDrawerWidth = value;
+  Map<String, double> _currentDrawerWidth = {};
+  double getCurrentDrawerWidth(PageFromZero page) {
+    if (!_currentDrawerWidth.containsKey(page.pageScaffoldId))
+      _currentDrawerWidth[page.pageScaffoldId] = 304;
+    return _currentDrawerWidth[page.pageScaffoldId];
+  }
+  setCurrentDrawerWidth(PageFromZero page, double value) {
+    _currentDrawerWidth[page.pageScaffoldId] = value;
     notifyListeners();
   }
-  set currentDrawerWidthSILENT(double value) {
-    _currentDrawerWidth = value;
+  setCurrentDrawerWidthSILENT(PageFromZero page, double value) {
+    _currentDrawerWidth[page.pageScaffoldId] = value;
   }
 
   int _animationType;
@@ -554,12 +595,63 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     _animationType = value;
   }
 
+  List<PageFromZero> _pagesStack = [];
+  List<PageFromZero> get pagesStack => _pagesStack;
+//  set pagesStack(List<PageFromZero> value) {
+//    _pagesStack = value;
+//  }
+  void pushPageToStack (PageFromZero page){
+    _pagesStack.add(page);
+  }
+  void popPageFromStack (PageFromZero page){
+    _pagesStack.removeWhere((element) => element.randomId==page.randomId);
+  }
 
-}
+  List<ScaffoldFromZero> _scaffoldsStack = [];
+  List<ScaffoldFromZero> get scaffoldsStack => _scaffoldsStack;
+//  set scaffoldsStack(List<ScaffoldFromZero> value) {
+//    _scaffoldsStack = value;
+//  }
+  void pushScaffoldToStack (ScaffoldFromZero scaffold){
+    _scaffoldsStack.add(scaffold);
+  }
+  void popScaffoldFromStack (ScaffoldFromZero scaffold){
+    _scaffoldsStack.removeWhere((element) => element.currentPage.randomId==scaffold.currentPage.randomId);
+  }
 
-class PreviousScaffoldChangeNotifier extends ChangeNotifier{
-
-
+  bool fadeAnim = false;
+  bool sharedAnim = false;
+  bool titleAnimation = false;
+  updateStackRelatedVariables(){
+    int animationType = ScaffoldFromZero.animationTypeOther;
+    PageFromZero currentPage, previousPage;
+    ScaffoldFromZero currentScaffold, previousScaffold;
+    try{
+      currentPage = _pagesStack[_pagesStack.length-1];
+      previousPage = _pagesStack[_pagesStack.length-2];
+      currentScaffold = _scaffoldsStack[scaffoldsStack.length-1];
+      previousScaffold = _scaffoldsStack[scaffoldsStack.length-2];
+    } catch(_, __) {}
+    if (currentPage!=null && previousPage!=null) {
+      if (currentPage.pageScaffoldId == previousPage.pageScaffoldId) {
+        if (currentPage.pageScaffoldDepth > previousPage.pageScaffoldDepth) {
+          animationType = ScaffoldFromZero.animationTypeInner;
+        } else if (currentPage.pageScaffoldDepth < previousPage.pageScaffoldDepth) {
+          animationType = ScaffoldFromZero.animationTypeOuter;
+        } else {
+          animationType = ScaffoldFromZero.animationTypeSame;
+        }
+      }
+    }
+    _animationType = animationType;
+    fadeAnim = animationType==ScaffoldFromZero.animationTypeSame;
+    sharedAnim = animationType==ScaffoldFromZero.animationTypeInner || animationType==ScaffoldFromZero.animationTypeOuter;
+    titleAnimation = animationType!=ScaffoldFromZero.animationTypeOther
+          && currentScaffold!=null && previousScaffold!=null
+          && currentScaffold.title!=previousScaffold.title
+          && (!(currentScaffold.title is Text) || !(previousScaffold.title is Text)
+              || (currentScaffold.title as Text).data != (previousScaffold.title as Text).data);
+  }
 
 }
 

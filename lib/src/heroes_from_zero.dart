@@ -12,22 +12,30 @@ abstract class HeroesFromZero{
         flightDirection == HeroFlightDirection.push
             ? fromHeroContext.widget
             : toHeroContext.widget;
-        Animation<double> newAnimation = CurvedAnimation(parent: animation, curve: Curves.linear); // TODO ??? maybe use easeOut curve
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            FittedBox(
-              fit: BoxFit.contain,
-              child: oldHero.child,
+        Animation<double> newAnimation = CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic);
+        return LayoutBuilder(
+          builder: (context, constraints) => OverflowBox(
+            minHeight: constraints.minHeight,
+            maxHeight: constraints.maxHeight,
+            minWidth: constraints.minWidth,
+            maxWidth: constraints.maxWidth,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                FittedBox(
+                  fit: BoxFit.contain,
+                  child: oldHero.child,
+                ),
+                FittedBox(
+                  fit: BoxFit.contain,
+                  child: FadeTransition(
+                    opacity: newAnimation,
+                    child: newHero.child,
+                  ),
+                ),
+              ],
             ),
-            FittedBox(
-              fit: BoxFit.contain,
-              child: FadeTransition(
-                opacity: newAnimation,
-                child: newHero.child,
-              ),
-            ),
-          ],
+          ),
         );
   };
 

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:from_zero_ui/src/exposed_transitions.dart';
 
 
 class LoadingCard extends StatelessWidget {
@@ -57,10 +58,10 @@ class ErrorCard extends StatelessWidget {
 
 class ErrorSign extends StatelessWidget {
 
-  String title;
-  String subtitle;
-  VoidCallback onRetry;
-  Widget icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onRetry;
+  final Widget icon;
 
   ErrorSign({this.title, this.subtitle, this.onRetry, this.icon});
 
@@ -96,22 +97,22 @@ class ErrorSign extends StatelessWidget {
 
 }
 
-typedef SuccessBuilder<T> = Widget Function(BuildContext context, T result);
+typedef SuccessBuilder<T> = Widget Function(BuildContext context, T data);
 typedef ErrorBuilder = Widget Function(BuildContext context, Object error);
 typedef LoadingBuilder = Widget Function(BuildContext context);
-class FutureBuilderFromZero<T> extends StatelessWidget {
+class FutureBuilderFromZero<T> extends StatefulWidget {
 
-  final key;
   final initialData;
   final Future future;
   final SuccessBuilder<T> successBuilder;
   final Duration duration;
+  final bool applyAnimatedContainerFromChildSize;
   ErrorBuilder errorBuilder;
   LoadingBuilder loadingBuilder;
-  PageTransitionSwitcherTransitionBuilder transitionBuilder;
+  AnimatedSwitcherTransitionBuilder transitionBuilder;
 
   FutureBuilderFromZero({
-    this.key,
+    Key key,
     @required this.future,
     @required this.successBuilder,
     this.errorBuilder,
@@ -119,47 +120,15 @@ class FutureBuilderFromZero<T> extends StatelessWidget {
     this.initialData,
     this.transitionBuilder,
     this.duration = const Duration(milliseconds: 300),
-  }) {
-    assert(successBuilder != null);
+    this.applyAnimatedContainerFromChildSize = false,
+  }) : super(key: key){
     if (errorBuilder==null) errorBuilder = _defaultErrorBuilder;
     if (loadingBuilder==null) loadingBuilder = _defaultLoadingBuilder;
     if (transitionBuilder==null) transitionBuilder = _defaultTransitionBuilder;
   }
 
-
   @override
-  Widget build(BuildContext context) {
-    return FutureBuilder(
-      key: key,
-      future: future,
-      initialData: initialData,
-      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-        Widget result;
-        int state = 0;
-        if (snapshot.connectionState == ConnectionState.done){
-          if (snapshot.hasData){
-            state = 1;
-            result = successBuilder(context, snapshot.data);
-          } else if (snapshot.hasError){
-            state = -1;
-            result = errorBuilder(context, snapshot.error);
-          }
-        } else{
-          state = 0;
-          result = loadingBuilder(context);
-        }
-        return AnimatedContainerFromChildSize(
-          duration: duration,
-          child: PageTransitionSwitcher(
-            key: ValueKey(state),
-            transitionBuilder: transitionBuilder,
-            child: Container(key: ValueKey(state), child: result),
-            duration: duration,
-          ),
-        );
-      },
-    );
-  }
+  _FutureBuilderFromZeroState<T> createState() => _FutureBuilderFromZeroState<T>();
 
   Widget _defaultLoadingBuilder(context){
     return LoadingSign();
@@ -173,12 +142,95 @@ class FutureBuilderFromZero<T> extends StatelessWidget {
     );
   }
 
-  Widget _defaultTransitionBuilder(Widget child, Animation<double> primaryAnimation, Animation<double> secondaryAnimation,){
-    return FadeThroughTransition(
-      animation: primaryAnimation,
-      secondaryAnimation: secondaryAnimation,
-      fillColor: Colors.transparent,
+  Widget _defaultTransitionBuilder(Widget child, Animation<double> animation){
+    return ZoomedFadeInFadeOutTransition(
+      animation: animation,
       child: child,
+    );
+  }
+
+}
+
+class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
+
+  bool skipFrame = false;
+  int initialTimestamp;
+
+  @override
+  void initState() {
+    super.initState();
+    initialTimestamp = DateTime.now().millisecondsSinceEpoch;
+  }
+
+  @override
+  void didUpdateWidget(FutureBuilderFromZero<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: widget.future,
+      initialData: widget.initialData,
+      builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
+        Widget result;
+        int state = 0;
+        if (snapshot.connectionState == ConnectionState.done){
+          skipFrame = true;
+          if (snapshot.hasData){
+            state = 1;
+            result = widget.successBuilder(context, snapshot.data);
+          } else if (snapshot.hasError){
+            state = -1;
+            result = widget.errorBuilder(context, snapshot.error);
+          }
+        } else{
+          if (skipFrame && (snapshot.hasData || snapshot.hasError)){
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+              try{setState(() {
+                skipFrame = false;
+              });}catch(_){}
+            });
+            if (snapshot.hasData){
+              state = 1;
+              result = widget.successBuilder(context, snapshot.data);
+            } else if (snapshot.hasError){
+              state = -1;
+              result = widget.errorBuilder(context, snapshot.error);
+            }
+          } else{
+            state = 0;
+            result = widget.loadingBuilder(context);
+          }
+        }
+        int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, widget.duration.inMilliseconds).toInt();
+        result = AnimatedSwitcher(
+          transitionBuilder: widget.transitionBuilder,
+          child: result,
+          duration: Duration(milliseconds: milliseconds),
+          layoutBuilder: (currentChild, previousChildren) {
+            return Stack( //TODO 3 fix overflow warning
+              overflow: Overflow.visible,
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: Stack(
+                    children: previousChildren,
+                  ),
+                ),
+                currentChild,
+              ],
+            );
+          },
+        );
+        if (widget.applyAnimatedContainerFromChildSize){
+          result = AnimatedContainerFromChildSize(
+            duration: widget.duration,
+            child: result,
+          );
+        }
+        return result;
+      },
     );
   }
 
@@ -203,7 +255,7 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
 
   GlobalKey globalKey = GlobalKey();
   Size previouSize;
-  Size size;
+  Size size; //TODO 3 use a provider for sizes to notify parents of changes and allow nesting
   bool skipNextCalculation = false;
   int initialTimestamp;
 
@@ -222,9 +274,10 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         try {
           RenderBox renderBox = globalKey.currentContext.findRenderObject();
+          previouSize = size;
+          size = renderBox.size;
+          if (size!=previouSize)
           setState(() {
-            previouSize = size;
-            size = renderBox.size;
             skipNextCalculation = true;
           });
         } catch (_, __) {}
@@ -236,6 +289,7 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
+        _addCalback(null);
         Widget child = Container(key: globalKey, child: widget.child,);
         if (size == null){
           return AnimatedContainer(
@@ -250,7 +304,7 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
           if (previouSize != null){
             double previousHeight = max(previouSize.height, constraints.minHeight);
             double previousWidth = max(previouSize.width, constraints.minWidth);
-            durationMult = ((max((previousHeight-height).abs(), (previousWidth-width).abs()))/64).clamp(0.0, 1.0);
+//            durationMult = ((max((previousHeight-height).abs(), (previousWidth-width).abs()))/64).clamp(0.0, 1.0); TODO 2 make this work right whrn called multiple times in succesion by LayoutBuilder
           }
           int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, widget.duration.inMilliseconds*durationMult).toInt();
           return AnimatedContainer(

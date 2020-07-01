@@ -11,8 +11,8 @@ class PageScaffold extends PageFromZero {
   @override
   String get pageScaffoldId => "Home";
 
-  PageScaffold(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(previousPage, animation, secondaryAnimation);
+  PageScaffold(Animation<double> animation, Animation<double> secondaryAnimation)
+      : super(animation, secondaryAnimation);
 
   @override
   _PageScaffoldState createState() => _PageScaffoldState();

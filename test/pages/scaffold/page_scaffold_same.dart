@@ -11,8 +11,8 @@ class PageScaffoldSame extends PageFromZero {
   @override
   String get pageScaffoldId => "Home";
 
-  PageScaffoldSame(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(previousPage, animation, secondaryAnimation);
+  PageScaffoldSame(Animation<double> animation, Animation<double> secondaryAnimation)
+      : super(animation, secondaryAnimation);
 
   @override
   _PageScaffoldInnerState createState() => _PageScaffoldInnerState();

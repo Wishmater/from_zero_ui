@@ -10,8 +10,8 @@ class PageLightweightTable extends PageFromZero {
   @override
   String get pageScaffoldId => "Home";
 
-  PageLightweightTable(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(previousPage, animation, secondaryAnimation);
+  PageLightweightTable(Animation<double> animation, Animation<double> secondaryAnimation)
+      : super(animation, secondaryAnimation);
 
   @override
   _PageLightweightTableState createState() => _PageLightweightTableState();
@@ -23,10 +23,6 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
   final ScrollController scrollController = ScrollController();
   final ScrollController tableScrollController = ScrollController();
   final ScrollController customScrollController = ScrollController();
-
-  int sortIndex = 0;
-  bool ascending = true;
-  List<bool> selected = List.generate(5, (index) => false);
 
 
   @override
@@ -54,60 +50,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
                   Card(
                     child: Padding(
                       padding: EdgeInsets.all(16),
-                      child: TableFromZero.fromRowList(
-                        layoutWidgetType: TableFromZero.column,
-                        columnNames: ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"],
-                        rows: [
-                          ["Dummy data", "Dummy data", "Dummy data", "Dummy data", "Dummy data",],
-                          ["Dummy data", "Dummy data", "Dummy data", "Dummy data", "Dummy data",],
-                          ["Dummy data", "Dummy data", "Dummy data", "Dummy data", "Dummy data",],
-                          ["Dummy data", "Dummy data", "Dummy data", "Dummy data", "Dummy data",],
-                          ["Dummy data", "Dummy data", "Dummy data", "Dummy data", "Dummy data",],
-                        ],
-                        colBackgroundColors: [null, null, null, Colors.green.withOpacity(0.4), Colors.red.withOpacity(0.4)],
-                        rowBackgroundColors: [null, null, null, null, Colors.indigo.withOpacity(0.4)],
-                        rowTakesPriorityOverColumn: false,
-                        columnAlignments: [null, null, null, null, TextAlign.right],
-                        colStyles: [null, null, null, null, Theme.of(context).textTheme.caption],
-                        rowStyles: [null, null, null, null, Theme.of(context).textTheme.headline6],
-                        columnFlexes: [2, 1, 1, 1, 1],
-                        onRowTap: (int i) {
-                          print("Row $i tapped");
-                        },
-                        onHeaderTap: (value) {
-                          if (value==sortIndex){
-                            setState(() {
-                              ascending = !ascending;
-                            });
-                          } else{
-                            setState(() {
-                              sortIndex = value;
-                              ascending = true;
-                            });
-                          }
-                        },
-                        onCheckBoxSelected: (i, focused) {
-                          setState(() {
-                            selected[i] = focused;
-                          });
-                        },
-                        onAllSelected: (value) {
-                          setState(() {
-                            selected = List.generate(selected.length, (index) => value);
-                          });
-                        },
-                        itemPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        sortedColumnIndex: sortIndex,
-                        sortedAscending: ascending,
-                        selectedRows: selected,
-                        verticalDivider: null,
-//                        horizontalDivider: null,
-                        showFirstHorizontalDivider: false,
-                        actions: [
-                          IconButton(icon: Icon(Icons.edit), tooltip: "Edit", splashRadius: 24, onPressed: (){ },),
-                          IconButton(icon: Icon(Icons.delete_forever), tooltip: "Delete", splashRadius: 24, onPressed: (){ },),
-                        ],
-                      ),
+                      child: ComplicatedTable(),
                     ),
                   ),
                   SizedBox(height: 12,),
@@ -123,7 +66,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
                           child: TableFromZero.fromRowList(
                             controller: tableScrollController,
                             columnNames: ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"],
-                            rows: List.generate(100, (index) => ["Dummy data", "Dummy data", "Dummy data", "Dummy data", "Dummy data",]),
+                            rows: List.generate(100, (index) => ["Dummy data " + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",]),
                             verticalPadding: 16,
                           ),
                         ),
@@ -152,7 +95,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
                               TableFromZero.fromRowList(
                                 layoutWidgetType: TableFromZero.sliverListViewBuilder,
                                 columnNames: ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"],
-                                rows: List.generate(100, (index) => ["Dummy data", "Dummy data", "Dummy data", "Dummy data", "Dummy data",]),
+                                rows: List.generate(100, (index) => ["Dummy data" + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",]),
                                 verticalPadding: 16,
                               ),
                             ],
@@ -170,4 +113,77 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
       ),
     );
   }
+}
+
+
+class ComplicatedTable extends StatefulWidget {
+
+  @override
+  _ComplicatedTableState createState() => _ComplicatedTableState();
+
+}
+
+class _ComplicatedTableState extends State<ComplicatedTable> {
+
+  List<bool> selected = List.generate(5, (index) => false);
+  List<int> rowsIds = List.generate(5, (index) => index);
+  List<List<String>> rows = [
+    ["Dummy data 0", "Dummy data", "Dummy data", "Dummy data", "Dummy data",],
+    ["Dummy data 1", "Dummy data", "Dummy data", "Dummy data", "Dummy data",],
+    ["Dummy data 2", "Dummy data", "Dummy data", "Dummy data", "Dummy data",],
+    ["Dummy data 3", "Dummy data", "Dummy data", "Dummy data", "Dummy data",],
+    ["Dummy data 4", "Dummy data", "Dummy data", "Dummy data", "Dummy data 64",],
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return TableFromZero.fromRowList(
+      layoutWidgetType: TableFromZero.animatedColumn,
+      columnNames: ["Col 1", "Col 2", "Col 3", "Col 4", "Very long column title 5"],
+      rows: rows,
+      rowIdsForAnimation: rowsIds,
+      colBackgroundColors: [null, null, null, Colors.green.withOpacity(0.4), Colors.red.withOpacity(0.4)],
+      rowBackgroundColors: [null, null, null, null, Colors.indigo.withOpacity(0.4)],
+      rowTakesPriorityOverColumn: false,
+      columnAlignments: [null, null, null, null, TextAlign.right],
+      colStyles: [null, null, null, null, Theme.of(context).textTheme.caption],
+      rowStyles: [null, null, null, null, Theme.of(context).textTheme.headline6],
+      columnFlexes: [2, 1, 1, 1, 1],
+      onRowTap: (RowModel row) {
+        print("Row ${row.values[0]} tapped");
+      },
+      onCheckBoxSelected: (row, focused) {
+        Future.delayed(Duration(seconds: 2)).then((value) {
+          setState(() {
+            selected[rowsIds.indexOf(row.id)] = focused;
+          });
+        });
+        setState(() {
+          selected[rowsIds.indexOf(row.id)] = null;
+        });
+      },
+      onAllSelected: (value) {
+        setState(() {
+          selected = List.generate(selected.length, (index) => value);
+        });
+      },
+      itemPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      initialSortedColumnIndex: 0,
+      selectedRows: selected,
+      verticalDivider: null,
+//                        horizontalDivider: null,
+      showFirstHorizontalDivider: false,
+      actions: [
+        IconButton(icon: Icon(Icons.edit), tooltip: "Edit", splashRadius: 24, onPressed: (){ },),
+        IconButton(icon: Icon(Icons.delete_forever), tooltip: "Delete", splashRadius: 24, onPressed: (){
+          setState(() {
+            rows.removeAt(2); //TODO 1 get index for the action
+            rowsIds.removeAt(2);
+            selected.removeAt(2);
+          });
+        },),
+      ],
+    );
+  }
+
 }

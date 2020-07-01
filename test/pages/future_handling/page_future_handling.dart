@@ -13,8 +13,8 @@ class PageFutureHandling extends PageFromZero {
   @override
   String get pageScaffoldId => "Home";
 
-  PageFutureHandling(PageFromZero previousPage, Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(previousPage, animation, secondaryAnimation);
+  PageFutureHandling(Animation<double> animation, Animation<double> secondaryAnimation)
+      : super(animation, secondaryAnimation);
 
   @override
   _PageFutureHandlingState createState() => _PageFutureHandlingState();
@@ -55,6 +55,7 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
                     successBuilder: (context, result) {
                       return Center(child: Text("Succes :)\r\nValue: $result"));
                     },
+                    applyAnimatedContainerFromChildSize: true,
                   ),
                 ),
               ),
@@ -68,6 +69,7 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
                     successBuilder: (context, result) {
                       return Center(child: Text("Succes :)\r\nValue: $result"));
                     },
+                    applyAnimatedContainerFromChildSize: true,
                   ),
                 ),
               ),
@@ -79,8 +81,9 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
                   child: FutureBuilderFromZero(
                     future: Future.delayed(Duration(milliseconds: 10)).then((value) => "instant"),
                     successBuilder: (context, result) {
-                      return Container(height: 600, child: Center(child: Text("Succes :)\r\nValue: $result")));
+                      return FlutterLogo(size: 600,);
                     },
+                    applyAnimatedContainerFromChildSize: true,
                   ),
                 ),
               ),
