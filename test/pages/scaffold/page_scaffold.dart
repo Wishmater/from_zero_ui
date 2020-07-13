@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
+import 'package:from_zero_ui/src/settings.dart';
+import 'package:provider/provider.dart';
 
+import '../../change_notifiers/theme_parameters.dart';
 import '../home/page_home.dart';
 
 class PageScaffold extends PageFromZero {
@@ -26,6 +29,7 @@ class _PageScaffoldState extends State<PageScaffold> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
+      themeParameters: Provider.of<ThemeParameters>(context, listen: false),
       currentPage: widget,
       title: Text("Scaffold FromZero"),
       body: _getPage(context),
@@ -69,7 +73,6 @@ class _PageScaffoldState extends State<PageScaffold> {
                           ),
                         ),
                         SizedBox(height: 16,),
-                        //TODO 3 test lower depth
                         Padding(
                           padding: const EdgeInsets.only(left: 16),
                           child: RaisedButton(

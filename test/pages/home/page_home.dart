@@ -1,6 +1,12 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/export.dart';
 import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
+import 'package:from_zero_ui/src/settings.dart';
+import 'package:provider/provider.dart';
+
+import '../../change_notifiers/theme_parameters.dart';
 
 class PageHome extends PageFromZero {
 
@@ -64,6 +70,9 @@ class _PageHomeState extends State<PageHome> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
+//      mainScrollController: controller,
+      scrollbarType: ScaffoldFromZero.scrollbarTypeOverAppbar,
+      appbarType: ScaffoldFromZero.appbarTypeQuickReturn,
       currentPage: widget,
       title: Text("FromZero playground"),
       body: _getPage(context),
@@ -73,22 +82,21 @@ class _PageHomeState extends State<PageHome> {
   }
 
   Widget _getPage (BuildContext context){
-    return ScrollbarFromZero(
+    return SingleChildScrollView(
       controller: controller,
-      child: SingleChildScrollView(
-        controller: controller,
-        child: ResponsiveHorizontalInsets(
-          child: Center(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: 12,),
-                Card(
-                  child: Container(height: 800, width: 600,),
-                ),
-                SizedBox(height: 12,),
-              ],
-            ),
+      child: ResponsiveHorizontalInsets(
+        child: Center(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              AppbarFiller(),
+              SizedBox(height: 12,),
+              Card(
+                clipBehavior: Clip.hardEdge,
+                child: Container(height: 1200, width: 600, color: Colors.red,),
+              ),
+              SizedBox(height: 12,),
+            ],
           ),
         ),
       ),

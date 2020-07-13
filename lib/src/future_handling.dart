@@ -21,6 +21,8 @@ class LoadingCard extends StatelessWidget {
 
 class LoadingSign extends StatelessWidget {
 
+  const LoadingSign();
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -119,12 +121,13 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
     this.loadingBuilder,
     this.initialData,
     this.transitionBuilder,
+    bool applyDefaultTransition = true,
     this.duration = const Duration(milliseconds: 300),
     this.applyAnimatedContainerFromChildSize = false,
   }) : super(key: key){
     if (errorBuilder==null) errorBuilder = _defaultErrorBuilder;
     if (loadingBuilder==null) loadingBuilder = _defaultLoadingBuilder;
-    if (transitionBuilder==null) transitionBuilder = _defaultTransitionBuilder;
+    if (transitionBuilder==null && applyDefaultTransition) transitionBuilder = _defaultTransitionBuilder;
   }
 
   @override
@@ -204,25 +207,29 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
           }
         }
         int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, widget.duration.inMilliseconds).toInt();
-        result = AnimatedSwitcher(
-          transitionBuilder: widget.transitionBuilder,
-          child: result,
-          duration: Duration(milliseconds: milliseconds),
-          layoutBuilder: (currentChild, previousChildren) {
-            return Stack( //TODO 3 fix overflow warning
-              overflow: Overflow.visible,
-              alignment: Alignment.center,
-              children: [
-                Positioned.fill(
-                  child: Stack(
-                    children: previousChildren,
+        if (widget.transitionBuilder != null){
+          result = AnimatedSwitcher(
+            transitionBuilder: widget.transitionBuilder,
+            child: result,
+            duration: Duration(milliseconds: milliseconds),
+            layoutBuilder: (currentChild, previousChildren) {
+              return Stack(
+                overflow: Overflow.visible,
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: OverflowBox(
+                      child: Stack(
+                        children: previousChildren,
+                      ),
+                    ),
                   ),
-                ),
-                currentChild,
-              ],
-            );
-          },
-        );
+                  currentChild,
+                ],
+              );
+            },
+          );
+        }
         if (widget.applyAnimatedContainerFromChildSize){
           result = AnimatedContainerFromChildSize(
             duration: widget.duration,

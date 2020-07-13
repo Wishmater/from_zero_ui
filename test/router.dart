@@ -1,4 +1,5 @@
 
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 
 import 'pages/future_handling/page_future_handling.dart';
@@ -25,12 +26,21 @@ class FluroRouter{
 
   static void setupRouter() {
 
+    router.define(
+      '/',
+      handler: Handler(
+        handlerFunc: (context, params, animation, secondaryAnimation){
+          return SplashPage(() async => '/home');
+        },
+      ),
+    );
+
 
     router.defineRouteFromZero('/settings', (context, parameters, animation, secondaryAnimation,)
         => PageSettings(animation, secondaryAnimation));
 
 
-    router.defineRouteFromZero('/', (context, parameters, animation, secondaryAnimation,)
+    router.defineRouteFromZero('/home', (context, parameters, animation, secondaryAnimation,)
         => PageHome(animation, secondaryAnimation));
 
 

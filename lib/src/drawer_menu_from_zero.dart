@@ -52,61 +52,113 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
         result.add(Divider());
       }
       result.addAll(
-          List.generate(tabs[i].length, (j) => Container(
-            color: selected[0]==i && selected[1]==j
-                ? Theme.of(context).brightness==Brightness.dark
-                    ? Theme.of(context).accentColor.withOpacity(0.05)
-                    : Theme.of(context).primaryColor.withOpacity(0.05)
-                : Colors.transparent,
-            child: ListTile(
-              selected: selected[0]==i && selected[1]==j,
-              title: Text(tabs[i][j].title),
-              contentPadding: EdgeInsets.all(0),
-              leading: AspectRatio(
-                aspectRatio: 1,
-                child: SizedBox.expand(
-                  child: widget.compact ? Tooltip(
-                    message: tabs[i][j].title,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Icon(tabs[i][j].icon,),
-                    ),
-                  ) : Padding(
-                    padding: const EdgeInsets.only(left: 6),
-                    child: Icon(tabs[i][j].icon,),
-                  ),
-                ),
-              ),
-              onTap: () {
-                if (i!=selected[0] || j!=selected[1]) {
-                  try{
-                    var scaffold = Scaffold.of(context);
-                    if (scaffold.hasDrawer)
-                      Navigator.of(context).pop();
-                  } catch(_, __){}
-                  if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPuhsing){
-                    if (selected[0]==0 && selected[1]==0){
-                      Navigator.pushNamed(context, tabs[i][j].route);
-                    } else{
-                      if (i==0 && j==0){ //&& pushedMain
-                        Navigator.pop(context);
-                      } else{
-                        Navigator.pushReplacementNamed(context, tabs[i][j].route);
-                      }
-                    }
-                  } else if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.neverReplaceInsteadOfPuhsing){
+          List.generate(tabs[i].length, (j) => DrawerMenuButtonFromZero(
+            title: tabs[i][j].title,
+            selected: selected[0]==i && selected[1]==j,
+            compact: widget.compact,
+            icon: Icon(tabs[i][j].icon,),
+            onTap: () {
+              if (i!=selected[0] || j!=selected[1]) {
+                try{
+                  var scaffold = Scaffold.of(context);
+                  if (scaffold.hasDrawer)
+                    Navigator.of(context).pop();
+                } catch(_, __){}
+                if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPuhsing){
+                  if (selected[0]==0 && selected[1]==0){
                     Navigator.pushNamed(context, tabs[i][j].route);
-                  } else if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.alwaysReplaceInsteadOfPuhsing){
-                    Navigator.pushReplacementNamed(context, tabs[i][j].route);
+                  } else{
+                    if (i==0 && j==0){ //&& pushedMain
+                      Navigator.pop(context);
+                    } else{
+                      Navigator.pushReplacementNamed(context, tabs[i][j].route);
+                    }
                   }
+                } else if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.neverReplaceInsteadOfPuhsing){
+                  Navigator.pushNamed(context, tabs[i][j].route);
+                } else if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.alwaysReplaceInsteadOfPuhsing){
+                  Navigator.pushReplacementNamed(context, tabs[i][j].route);
                 }
-
-              },
-            ),
+              }
+            },
           ))
       );
     }
     return result;
   }
 
+}
+
+
+class DrawerMenuButtonFromZero extends StatefulWidget {
+
+  final bool selected;
+  final bool compact;
+  final String title;
+  final String subtitle;
+  final Icon icon;
+  final GestureTapCallback onTap;
+  final Color selectedColor;
+
+  DrawerMenuButtonFromZero({this.selected=false, this.compact=false, this.title,
+      this.subtitle, this.icon, this.onTap, this.selectedColor});
+
+  @override
+  _DrawerMenuButtonFromZeroState createState() => _DrawerMenuButtonFromZeroState(selectedColor);
+
+}
+
+class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
+
+  Color selectedColor;
+
+  _DrawerMenuButtonFromZeroState(this.selectedColor);
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.selectedColor==null){
+      selectedColor = Theme.of(context).brightness==Brightness.dark
+          ? Theme.of(context).accentColor
+          : Theme.of(context).primaryColor;
+    }
+    return Container(
+      color: widget.selected
+          ? selectedColor.withOpacity(0.05)
+          : Colors.transparent,
+      child: ListTile(
+        selected: widget.selected,
+        title: Text(widget.title, style: TextStyle(
+          color: widget.selected ? selectedColor : Theme.of(context).textTheme.bodyText1.color
+        ),),
+        contentPadding: EdgeInsets.all(0),
+        leading: AspectRatio(
+          aspectRatio: 1,
+          child: Builder(
+            builder: (context) {
+              Widget result = SizedBox.expand(
+                child: widget.compact ? Tooltip(
+                  message: widget.title,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 6),
+                    child: widget.icon,
+                  ),
+                ) : Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: widget.icon,
+                ),
+              );
+              if (widget.selected) result = IconTheme(
+                data: Theme.of(context).iconTheme.copyWith(
+                  color: selectedColor,
+                ),
+                child: result,
+              );
+              return result;
+            }
+          ),
+        ),
+        onTap: widget.onTap,
+      ),
+    );
+  }
 }

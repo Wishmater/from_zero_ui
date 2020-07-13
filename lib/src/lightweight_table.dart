@@ -425,7 +425,7 @@ class _TableFromZeroState extends State<TableFromZero> {
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 16),
           child: ErrorSign(
-            icon: Icon(Icons.error_outline, size: 64, color: Theme.of(context).disabledColor,),
+            icon: Icon(MaterialCommunityIcons.clipboard_alert_outline, size: 64, color: Theme.of(context).disabledColor,),
             title: "No hay datos que mostrar...", //TODO 3 internationalize
             subtitle: filters.any((element) => element!=_EmptyFilter()) ? "Intente desactivar algunos filtros." : "No existen datos correspondientes a esta consulta.",
           ),

@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
+import 'package:from_zero_ui/src/settings.dart';
+import 'package:provider/provider.dart';
+
+import '../../change_notifiers/theme_parameters.dart';
 
 class PageSettings extends PageFromZero {
 
@@ -19,12 +23,42 @@ class PageSettings extends PageFromZero {
 
 class _PageSettingsState extends State<PageSettings> {
 
+  ScrollController controller = ScrollController();
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
       currentPage: widget,
       title: Text("Settings"),
-      body: Container(),
+      body: ScrollbarFromZero(
+        controller: controller,
+        child: SingleChildScrollView(
+          controller: controller,
+          child: Center(
+            child: Column(
+              children: [
+                SizedBox(height: 12,),
+                SizedBox(
+                  width: 512,
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Consumer<ThemeParameters>(
+                            builder: (context, value, child) => ThemeSwitcher(value),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

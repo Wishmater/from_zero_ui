@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 import 'package:from_zero_ui/src/heroes_from_zero.dart';
+import 'package:from_zero_ui/src/settings.dart';
+import 'package:provider/provider.dart';
 
+import '../../change_notifiers/theme_parameters.dart';
 import '../home/page_home.dart';
 
 class PageInnerHero extends PageFromZero {
@@ -25,6 +28,7 @@ class _PageHeroesState extends State<PageInnerHero> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
+      themeParameters: Provider.of<ThemeParameters>(context, listen: false),
       currentPage: widget,
       title: Text("Heroes"),
       body: _getPage(context),

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
+import 'package:from_zero_ui/src/settings.dart';
+import 'package:provider/provider.dart';
 
+import '../../change_notifiers/theme_parameters.dart';
 import '../home/page_home.dart';
 
 class PageScaffoldSame extends PageFromZero {
@@ -24,6 +27,7 @@ class _PageScaffoldInnerState extends State<PageScaffoldSame> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
+      themeParameters: Provider.of<ThemeParameters>(context, listen: false),
       currentPage: widget,
       title: Text("Inner Page"),
       body: Center(

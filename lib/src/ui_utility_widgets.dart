@@ -12,7 +12,7 @@ class ResponsiveHorizontalInsets extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < ScaffoldFromZero.medium ? 0 : 12),
+      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < ScaffoldFromZero.screenSizeMedium ? 0 : 12),
       child: child,
     );
   }
@@ -162,5 +162,144 @@ class _AnimatedEntryWidgetState extends State<AnimatedEntryWidget> with SingleTi
 
 }
 
-//TODO 3 move more stuff here
-//TODO 3 move logic that restricts screen usage on xLarge screens here
+class MaterialKeyValuePair extends StatelessWidget {
+
+  String title;
+  String value;
+  bool frame;
+
+
+  MaterialKeyValuePair({@required this.title, @required this.value, this.frame=false});
+
+  @override
+  Widget build(BuildContext context) {
+    if (frame){
+      return Stack(
+        fit: StackFit.passthrough,
+        children: [
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.caption,),
+              Stack(
+                fit: StackFit.passthrough,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 3, bottom: 1),
+                    child: Text(value,),
+                  ),
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 1),
+                        child: Divider(
+                          height: 1,
+                        ),
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: VerticalDivider(
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (title!=null)
+          Text(
+            title,
+            style: Theme.of(context).textTheme.caption,
+          ),
+        if (value!=null)
+          Text(
+            value,
+          ),
+      ],
+    );
+  }
+
+}
+
+class AppbarFiller extends StatelessWidget {
+
+  final height;
+
+  AppbarFiller({this.height=56});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      height: height+MediaQuery.of(context).padding.top,
+//      color: Theme.of(context).appBarTheme.color??Theme.of(context).primaryColor,
+    );
+  }
+}
+
+class OpacityGradient extends StatelessWidget {
+
+  static const left = 0;
+  static const right = 1;
+  static const top = 2;
+  static const bottom = 3;
+  static const horizontal = 4;
+  static const vertical = 5;
+  //TODO 3 implement all
+
+  final Widget child;
+  final int direction;
+  final double size;
+  final double percentage;
+
+
+  OpacityGradient({
+    @required this.child,
+    this.direction = vertical,
+    double size,
+    this.percentage,
+  }) :
+    assert(size==null || percentage==null, "Can't set both a hard size and a percentage."),
+    size = size==null&&percentage==null ? 16 : size
+  ;
+
+  @override
+  Widget build(BuildContext context) {
+    return ShaderMask(
+      shaderCallback: (bounds) => LinearGradient(
+        begin: direction==top || direction==bottom || direction==vertical
+            ? Alignment.topCenter : Alignment.centerLeft,
+        end: direction==top || direction==bottom || direction==vertical
+            ? Alignment.bottomCenter : Alignment.centerRight,
+        stops: [
+          0,
+          direction==bottom || direction==right ? 0
+              : size==null ? percentage
+              : size/(direction==top || direction==bottom || direction==vertical ? bounds.height : bounds.width),
+          direction==top || direction==left ? 1
+              : size==null ? 1-percentage
+              : 1-size/(direction==top || direction==bottom || direction==vertical ? bounds.height : bounds.width),
+          1,
+        ],
+        colors: [Colors.transparent, Colors.black, Colors.black, Colors.transparent],
+      ).createShader(Rect.fromLTRB(0, 0, bounds.width, bounds.height)),
+      blendMode: BlendMode.dstIn,
+      child: child,
+    );
+  }
+}
+
+

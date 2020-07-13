@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'file:///C:/Workspaces/Flutter/from_zero_ui/lib/util/custom_draggable_scrollbar.dart';
+import 'package:from_zero_ui/src/ui_utility_widgets.dart';
 
 class ScrollbarFromZero extends StatefulWidget {
 
@@ -12,6 +13,7 @@ class ScrollbarFromZero extends StatefulWidget {
   final double scrollbarWidthDesktop;
   final double scrollbarWidthMobile;
   final bool applyPaddingToChildrenOnDesktop;
+  final bool applyOpacityGradientToChildren;
 //TODO 1 ??? add support for horizontal scroll
 //TODO 2 expose options for scrollbarColor and iconColor
 //TODO 3 expose an option to consume events (default true)
@@ -23,10 +25,10 @@ class ScrollbarFromZero extends StatefulWidget {
     this.scrollbarWidthDesktop = 16,
     this.scrollbarWidthMobile = 10,
     this.applyPaddingToChildrenOnDesktop = true,
-  }) : super(key: key){
-    assert(controller != null);
-    assert(child != null);
-  }
+    bool applyOpacityGradientToChildren,
+  }) :  assert(child != null),
+        this.applyOpacityGradientToChildren = applyOpacityGradientToChildren ?? !applyPaddingToChildrenOnDesktop,
+        super(key: key);
 
   @override
   _ScrollbarFromZeroState createState() =>
@@ -46,19 +48,24 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   @override
   void initState() {
     super.initState();
-//    WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (widget.controller!=null){
+//      WidgetsBinding.instance.addPostFrameCallback((_) {
 //      _updateMaxScrollExtent();
 //    });
-    widget.controller.addListener(_onScrollListener);
-    if (widget.controller.hasClients)
-      widget.controller.position.addListener(_onScrollListener);
-    initialTimestamp = DateTime.now().millisecondsSinceEpoch;
+      widget.controller.addListener(_onScrollListener);
+      if (widget.controller.hasClients)
+        widget.controller.position.addListener(_onScrollListener);
+      initialTimestamp = DateTime.now().millisecondsSinceEpoch;
+    }
+
   }
 
   @override
   void dispose() {
-    disposed = true;
-    widget.controller.removeListener(_onScrollListener);
+    if (widget.controller!=null){
+      disposed = true;
+      widget.controller.removeListener(_onScrollListener);
+    }
     super.dispose();
   }
 
@@ -113,6 +120,16 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
   @override
   Widget build(BuildContext context) {
+    Widget child = widget.child;
+    if (widget.controller==null)
+      return child;
+
+    if (widget.applyOpacityGradientToChildren){
+      child = OpacityGradient(
+        child: child,
+      );
+    }
+
     return NotificationListener<ScrollNotification>(
       onNotification: (notification) => true,
       child: LayoutBuilder(
@@ -134,7 +151,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
               heightScrollThumb: height,
               backgroundColor: Theme.of(context).accentColor,
               controller: widget.controller,
-              child: widget.child,
+              child: child,
               scrollbarTimeToFade: Duration(milliseconds: 2500),
               scrollThumbBorderRadius: 0,
               scrollThumbWidth: widget.scrollbarWidthMobile,
@@ -154,7 +171,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                         Flexible(
                           flex: topFlex,
                           child: Material(
-                            color: Colors.grey,
+                            color: Theme.of(context).brightness==Brightness.light ? Colors.grey : Colors.grey.shade900,
                             child: InkWell(
                               child: Container(),
                               onTap: () {
@@ -176,7 +193,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                         Flexible(
                           flex: 100-topFlex,
                           child: Material(
-                            color: Colors.grey, //TODO 1 support dark mode
+                            color: Theme.of(context).brightness==Brightness.light ? Colors.grey : Colors.grey.shade900,
                             child: InkWell(
                               child: Container(),
                               onTap: () {
@@ -210,7 +227,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                     padding: EdgeInsets.only(
                         right: widget.applyPaddingToChildrenOnDesktop && height>0
                             ? widget.scrollbarWidthDesktop : 0),
-                    child: widget.child,
+                    child: child,
                   ),
                   scrollbarTimeToFade: Duration(seconds: 1),
                   scrollThumbBorderRadius: 4,
