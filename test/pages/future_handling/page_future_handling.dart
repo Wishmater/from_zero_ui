@@ -7,6 +7,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/export.dart';
 import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 import 'package:from_zero_ui/src/settings.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import '../../change_notifiers/theme_parameters.dart';
@@ -35,7 +36,7 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-//      mainScrollController: scrollController,
+      mainScrollController: scrollController,
       appbarType: ScaffoldFromZero.appbarTypeCollapse,
       currentPage: widget,
       title: Text("Future Handling"),
@@ -57,7 +58,7 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
                   childrenCount: 1,
                   themeParameters: Provider.of<ThemeParameters>(context, listen: false),
                   title: DateTime.now().millisecondsSinceEpoch.toString() + " Future Handling",
-                  path: Platform.environment["HOMEDRIVE"]+Platform.environment["HOMEPATH"]+"\\Documents\\Playground From Zero\\",
+                  path: getApplicationDocumentsDirectory().then((value) => value.absolute.path+"/Playground From Zero/"),
                 ),
               );
             },

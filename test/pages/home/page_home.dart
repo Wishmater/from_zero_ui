@@ -70,7 +70,7 @@ class _PageHomeState extends State<PageHome> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-//      mainScrollController: controller,
+      mainScrollController: controller,
       scrollbarType: ScaffoldFromZero.scrollbarTypeOverAppbar,
       appbarType: ScaffoldFromZero.appbarTypeQuickReturn,
       currentPage: widget,

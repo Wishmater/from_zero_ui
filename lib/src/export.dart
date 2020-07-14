@@ -6,27 +6,41 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/flushbar_helper.dart';
 import 'package:from_zero_ui/src/settings.dart';
 import 'package:from_zero_ui/util/my_arrow_page_indicator.dart' as my_arrow_page_indicator;
 import 'package:intl/intl.dart';
 import 'package:page_view_indicators/page_view_indicators.dart';
 import 'package:dartx/dartx.dart';
 import 'dart:ui' as ui;
-
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:url_launcher/url_launcher.dart';
 
 class Export extends StatefulWidget {
 
-  static const List<String> supportedFormats = ["PDF", "Imágenes"];
+  static const List<String> supportedFormats = ["PDF", "Imágenes (.png)"];
   static const List<String> defaultSizesUI = ["Carta", "A4", "4:3", "16:9",];
-  static const List<Size> defaultSizes = [Size(11.0*96, 8.5*96), Size(29.7*38, 21.0*38), Size(16.0*70, 12.0*70), Size(16.0*70, 9.0*70),];
+  static final List<PdfPageFormat> defaultFormats = [PdfPageFormat.letter, PdfPageFormat.a4,
+    PdfPageFormat(PdfPageFormat.a4.height*3/4, PdfPageFormat.a4.height),
+    PdfPageFormat(PdfPageFormat.a4.height*9/16, PdfPageFormat.a4.height),];
 
   final int childrenCount;
   final Widget Function(int index, int currentSize, bool portrait, double scale, int format) childBuilder;
   final AppParametersFromZero themeParameters;
-  final String path;
+  final Future<String> path;
   final String title;
+  final ThemeData exportThemeData;
 
-  Export({@required this.childBuilder, @required this.childrenCount, @required this.themeParameters, @required this.path, @required this.title});
+  Export({@required this.childBuilder, @required this.childrenCount, @required this.themeParameters, @required this.path, @required this.title})
+      :
+        this.exportThemeData =  themeParameters.lightTheme.copyWith(
+          cardTheme: CardTheme(
+            elevation: 0,
+            color: Colors.white,
+//            shape: Border.all(style: BorderStyle.none),
+          ),
+        );
 
   @override
   _ExportState createState() => _ExportState();
@@ -50,39 +64,78 @@ class _ExportState extends State<Export> {
     boundaryKeys = List.generate(widget.childrenCount, (index) => GlobalKey());
   }
 
-  int doneExports=0;
-  Future<void> _export([i=0]) async {
+  int doneExports = 0;
+  String directoryPath;
+  String filePath;
+  String pathUi;
+  Future<void> _export([i=0, pdf]) async {
     controller.jumpToPage(i);
+    if (format==0 && pdf==null){
+      pdf = pw.Document(
+        title: widget.title,
+      );
+    }
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) async{
-      await _executeExport(i);
+      await _executeExport(i, pdf);
       i++;
       doneExports++;
       if (i<widget.childrenCount) {
         WidgetsBinding.instance.addPostFrameCallback((timeStamp) async{
-          await _export(i);
+          await _export(i, pdf);
         });
       }
     });
   }
-  Future<void> _executeExport(i) async {
+  Future<void> _executeExport(i, pw.Document pdf) async {
     if (format==0){
-
+      Uint8List pngBytes = await _getImageBytes(await _getImage(boundaryKeys[i]));
+      pdf.addPage(
+        pw.Page(
+          pageFormat: Export.defaultFormats[currentSize],
+          margin: pw.EdgeInsets.all(0),
+          build: (context) => pw.Image(
+            PdfImage.file(pdf.document, bytes: pngBytes),
+          ),
+        )
+      );
+      if (i==widget.childrenCount-1){
+        final file = File((await widget.path)+widget.title+'.pdf');
+        await file.create(recursive: true);
+        if (filePath==null){
+          filePath = file.absolute.path;
+          directoryPath = file.parent.absolute.path;
+          pathUi = filePath.substring(filePath.indexOf("Document"));
+        }
+        await file.writeAsBytes(pdf.save());
+      }
     } else if (format==1){
-
+      File imgFile = File((await widget.path)+widget.title+(widget.childrenCount>1?' ${(i+1)}':'')+'.png');
+      await imgFile.create(recursive: true);
+      if (filePath==null){
+        filePath = imgFile.absolute.path;
+        directoryPath = imgFile.parent.absolute.path;
+        pathUi = filePath.substring(filePath.indexOf("Document"));
+      }
+      Uint8List pngBytes = await _getImageBytes(await _getImage(boundaryKeys[i]));
+      await imgFile.writeAsBytes(pngBytes);
     }
-    RenderRepaintBoundary boundary = boundaryKeys[i].currentContext.findRenderObject();
-    ui.Image image = await boundary.toImage(pixelRatio: 2/(2-scale));
+  }
+  Future<ui.Image> _getImage(GlobalKey boundaryKey) async{
+    RenderRepaintBoundary boundary = boundaryKey.currentContext.findRenderObject();
+    return await boundary.toImage(pixelRatio: 2/(2-scale));
+  }
+  Future<Uint8List> _getImageBytes(ui.Image image) async{
     ByteData byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    Uint8List pngBytes = byteData.buffer.asUint8List();
-    File imgFile = File(widget.path+widget.title+(widget.childrenCount>1?' ${(i+1)}':'')+'.png');
-    await imgFile.create(recursive: true);
-    await imgFile.writeAsBytes(pngBytes);
+    return byteData.buffer.asUint8List();
   }
 
   @override
   Widget build(BuildContext context) {
-    var size = Export.defaultSizes[currentSize];
-    if (portrait){
+    var size = Size(
+      Export.defaultFormats[currentSize].width/PdfPageFormat.inch*96*MediaQuery.of(context).devicePixelRatio,
+      Export.defaultFormats[currentSize].height/PdfPageFormat.inch*96*MediaQuery.of(context).devicePixelRatio,
+    );
+    if (!portrait){
       size = Size((2-scale)*size.height, (2-scale)*size.width);
     } else {
       size = Size((2-scale)*size.width, (2-scale)*size.height);
@@ -115,7 +168,7 @@ class _ExportState extends State<Export> {
                               itemCount: widget.childrenCount,
                               itemBuilder: (context, index) => Center(
                                 child: _PageWrapper(
-                                  themeParameters: widget.themeParameters,
+                                  themeData: widget.exportThemeData,
                                   child: widget.childBuilder(index, currentSize, portrait, scale, format,),
                                   globalKey: boundaryKeys[index],
                                   size: size,
@@ -217,10 +270,10 @@ class _ExportState extends State<Export> {
                         value: currentSize,
                         underline: SizedBox.shrink(),
                         dropdownColor: Theme.of(context).cardColor,
-                        selectedItemBuilder: (context) => List.generate(Export.defaultSizes.length, (index) =>
+                        selectedItemBuilder: (context) => List.generate(Export.defaultFormats.length, (index) =>
                             Center(child: MaterialKeyValuePair(title: "Tamaño", value: Export.defaultSizesUI[index])),
                         ),
-                        items: List.generate(Export.defaultSizes.length, (index) =>
+                        items: List.generate(Export.defaultFormats.length, (index) =>
                             DropdownMenuItem(
                               child: Text(Export.defaultSizesUI[index]),
                               value: index,
@@ -296,6 +349,44 @@ class _ExportState extends State<Export> {
                       }
                       Navigator.of(context).pop();
                       Navigator.of(context).pop();
+                      String path = await widget.path;
+                      if (Platform.isWindows){
+                        path = path.replaceAll("/", "\\");
+                      }
+                      var flush;
+                      flush = FlushbarHelperFromZero.createSuccess(
+                        title: "Archivo exportado con exito a",
+                        message:  pathUi,
+                        duration: 10.seconds,
+                        actions: [
+                          FlatButton(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Text("ABRIR", style: FlushbarHelperFromZero.recommendedSuccessButtonTextStyle,),
+                            ),
+                            onPressed: () async {
+                              flush.dismiss();
+                              return launch(filePath);
+                            },
+                            padding: EdgeInsets.all(0),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                          SizedBox(height: 6,),
+                          FlatButton(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                              child: Text("ABRIR CARPETA", style: FlushbarHelperFromZero.recommendedSuccessButtonTextStyle,),
+                            ),
+                            onPressed: () async {
+                              flush.dismiss();
+                              return launch(directoryPath);
+                            },
+                            padding: EdgeInsets.all(0),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          ),
+                        ],
+                      );
+                      flush.show(context);
                     },
                   ),
                   SizedBox(width: 12,)
@@ -316,41 +407,36 @@ class _PageWrapper extends StatelessWidget {
   final Widget child;
   final Size size;
   final Key globalKey;
-  final AppParametersFromZero themeParameters;
+  final ThemeData themeData;
 
-  _PageWrapper({this.scale, this.child, this.size, this.globalKey, this.themeParameters});
+  _PageWrapper({this.scale, this.child, this.size, this.globalKey, this.themeData});
 
   @override
   Widget build(BuildContext context) {
     return IgnorePointer(
-      child: MediaQuery(
-        data: MediaQuery.of(context).copyWith(
-          disableAnimations: true,
-          textScaleFactor: 1,
-        ),
-        child: Theme(
-          data: themeParameters.lightTheme.copyWith(
-            cardTheme: CardTheme(
-              elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: AspectRatio(
+          aspectRatio: size.width/size.height,
+          child: SizedBox.expand(
+            child: Container(
               color: Colors.white,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: AspectRatio(
-              aspectRatio: size.width/size.height,
-              child: SizedBox.expand(
-                child: Container(
-                  color: Colors.white,
-                  child: FittedBox(
-                    alignment: Alignment.center,
-                    fit: BoxFit.fitHeight,
-                    child: RepaintBoundary(
-                      key: globalKey,
-                      child: Padding(
-                        padding: EdgeInsets.all(32*(2-scale)),
-                        child: SizedBox.fromSize(
-                          size: size,
+              child: FittedBox(
+                alignment: Alignment.center,
+                fit: BoxFit.fitHeight,
+                child: RepaintBoundary(
+                  key: globalKey,
+                  child: MediaQuery(
+                    data: MediaQuery.of(context).copyWith(
+                      disableAnimations: true,
+                      textScaleFactor: 1,
+                    ),
+                    child: Theme(
+                      data: themeData,
+                      child: SizedBox.fromSize(
+                        size: size,
+                        child: Padding(
+                          padding: EdgeInsets.all(32*(2-scale)),
                           child: child,
                         ),
                       ),

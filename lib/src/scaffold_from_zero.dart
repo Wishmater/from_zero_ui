@@ -20,7 +20,10 @@ import 'package:dartx/dartx.dart';
 
 typedef Widget DrawerContentBuilder(bool compact,);
 
+
 class ScaffoldFromZero extends StatefulWidget {
+
+
 
   static const double screenSizeSmall = 0;
   static const double screenSizeMedium = 612;
@@ -512,7 +515,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         ),
 
         // CUSTOM SHADOWS (drawer right)
-        if (!displayMobileLayout)
+        if (!displayMobileLayout && widget.drawerContentBuilder!=null)
         Consumer<AppbarChangeNotifier>(
           builder: (context, appbarChangeNotifier, child) => AnimatedContainer(
             alignment: Alignment.centerLeft,

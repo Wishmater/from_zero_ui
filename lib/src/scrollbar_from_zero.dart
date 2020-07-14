@@ -230,7 +230,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                     child: child,
                   ),
                   scrollbarTimeToFade: Duration(seconds: 1),
-                  scrollThumbBorderRadius: 4,
+                  scrollThumbBorderRadius: 999999,
                   scrollThumbWidth: widget.scrollbarWidthDesktop,
                   scrollThumbElevation: 4,
                   showIcons: true,

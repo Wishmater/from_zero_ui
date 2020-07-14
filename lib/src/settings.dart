@@ -9,11 +9,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 
 Future<void> initHive(String subfolder) async{ //TODO 4 remove argument when manual Windows init is no longer needed
-  if (!Platform.isWindows){
-    await Hive.initFlutter();
-  } else{
-    Hive.init(Platform.environment["APPDATA"]+subfolder);
-  }
+  await Hive.initFlutter();
   await Hive.openBox("settings");
 }
 

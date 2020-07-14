@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/settings.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'change_notifiers/theme_parameters.dart';
 import 'router.dart';
 
 void main() async{
+
   await initHive("\\From Zero PlayGround\\hive\\");
   FluroRouter.setupRouter();
   runApp(MyApp());
