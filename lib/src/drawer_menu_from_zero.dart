@@ -117,27 +117,34 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
 
       } else{
 
-        final onTap = () {
+        final onTap = () async {
           if (i!=selected && tabs[i].route!=null) {
+            var navigator = Navigator.of(context);
             try{
               var scaffold = Scaffold.of(context);
-              if (scaffold.hasDrawer)
-                Navigator.of(context).pop();
+              if (scaffold.hasDrawer && scaffold.isDrawerOpen)
+                navigator.pop();
             } catch(_, __){}
             if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPuhsing){
               if (selected==0){
-                Navigator.pushNamed(context, tabs[i].route);
+                navigator.pushNamed(tabs[i].route);
               } else{
                 if (i==0){
-                  Navigator.pop(context);
+                  if (navigator.canPop() && (await ModalRoute.of(context).willPop()==RoutePopDisposition.pop)){
+                    navigator.pop();
+                  }
                 } else{
-                  Navigator.pushReplacementNamed(context, tabs[i].route);
+                  if (navigator.canPop() && (await ModalRoute.of(context).willPop()==RoutePopDisposition.pop)){
+                    navigator.pushReplacementNamed(tabs[i].route);
+                  }
                 }
               }
             } else if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.neverReplaceInsteadOfPuhsing){
-              Navigator.pushNamed(context, tabs[i].route);
+              navigator.pushNamed(tabs[i].route);
             } else if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.alwaysReplaceInsteadOfPuhsing){
-              Navigator.pushReplacementNamed(context, tabs[i].route);
+              if (navigator.canPop() && (await ModalRoute.of(context).willPop()==RoutePopDisposition.pop)){
+                navigator.pushReplacementNamed(tabs[i].route);
+              }
             }
             return true;
           }
@@ -166,7 +173,6 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
                       alignment: Alignment.centerLeft,
                       child: Container(
                         width: (widget.depth+1)*20.0,
-
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.only(topRight: Radius.circular(999999)),
                           color: Theme.of(context).dividerColor,
@@ -179,14 +185,15 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
                     compact: widget.compact,
                     selected: tabs[i].selectedChild,
                     depth: widget.depth+1,
-                    replaceInsteadOfPuhsing: widget.replaceInsteadOfPuhsing==DrawerMenuFromZero.neverReplaceInsteadOfPuhsing
-                        ? DrawerMenuFromZero.neverReplaceInsteadOfPuhsing : DrawerMenuFromZero.alwaysReplaceInsteadOfPuhsing,
+                    replaceInsteadOfPuhsing: widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPuhsing
+                        ? (selected==0 ? DrawerMenuFromZero.neverReplaceInsteadOfPuhsing : DrawerMenuFromZero.alwaysReplaceInsteadOfPuhsing)
+                        : widget.replaceInsteadOfPuhsing,
                   ),
                 ],
               ),
             ],
-            onExpansionChanged: (value) {
-              if (onTap() && value){
+            onExpansionChanged: (value) async {
+              if ((await onTap()) && value){
                 return false;
               }
               return true;

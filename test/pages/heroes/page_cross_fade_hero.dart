@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
@@ -47,26 +48,41 @@ class _PageHeroesState extends State<PageCrossFadeHero> {
   }
 
   Widget _getPage(context){
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Card(
-        child: Center(
-          child: Hero(
-            tag: "hero_test",
-            flightShuttleBuilder: HeroesFromZero.fadeThroughFlightShuttleBuilder,
-            child: Container(
-              color: Theme.of(context).accentColor,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    child: Text("Heroes Test", style: Theme.of(context).textTheme.headline3,),
-                  ),
-                  FlutterLogo(size: 512,),
-                ],
+    return WillPopScope(
+      onWillPop: () async => showModal(context: context, builder: (context) => AlertDialog(
+        title: Text("Sure?"),
+        actions: [
+          SimpleDialogOption(
+            child: Text("Cancel"),
+            onPressed: () => Navigator.pop(context, false),
+          ),
+          SimpleDialogOption(
+            child: Text("OK"),
+            onPressed: () => Navigator.pop(context, true),
+          ),
+        ],
+      ),),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Card(
+          child: Center(
+            child: Hero(
+              tag: "hero_test",
+              flightShuttleBuilder: HeroesFromZero.fadeThroughFlightShuttleBuilder,
+              child: Container(
+                color: Theme.of(context).accentColor,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                      child: Text("Heroes Test", style: Theme.of(context).textTheme.headline3,),
+                    ),
+                    FlutterLogo(size: 512,),
+                  ],
+                ),
               ),
             ),
           ),

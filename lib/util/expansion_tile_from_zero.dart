@@ -1,4 +1,6 @@
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 
@@ -73,7 +75,7 @@ class ExpansionTileFromZero extends StatefulWidget {
   /// When the tile starts expanding, this function is called with the value
   /// true. When the tile starts collapsing, this function is called with
   /// the value false.
-  final bool Function(bool) onExpansionChanged;
+  final FutureOr<bool> Function(bool) onExpansionChanged;
 
   /// The widgets that are displayed when the tile expands.
   ///
@@ -197,11 +199,11 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
     super.dispose();
   }
 
-  void _handleTap() {
+  void _handleTap() async {
     if (widget.onExpansionChanged == null){
       setExpanded(!_isExpanded);
     } else{
-      if (widget.onExpansionChanged(_isExpanded) ?? true){
+      if (await widget.onExpansionChanged(_isExpanded) ?? true){
         setExpanded(!_isExpanded);
       }
     }

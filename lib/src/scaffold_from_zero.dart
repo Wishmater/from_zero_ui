@@ -444,8 +444,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                                         tooltip: "Página Anterior", //TODO 3 internationalize
                                         onPressed: () async{
                                           var navigator = Navigator.of(context);
-                                          WillPopScope willPop = context.findAncestorWidgetOfExactType<WillPopScope>();
-                                          if (navigator.canPop() && (willPop==null || await willPop.onWillPop())){
+                                          if (navigator.canPop() && (await ModalRoute.of(context).willPop()==RoutePopDisposition.pop)){
                                             navigator.pop();
                                           }
                                         },
@@ -568,8 +567,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                           var navigator = Navigator.of(context);
                           if (displayMobileLayout)
                             navigator.pop();
-                          WillPopScope willPop = context.findAncestorWidgetOfExactType<WillPopScope>();
-                          if (navigator.canPop() && (willPop==null || await willPop.onWillPop())){
+                          if (navigator.canPop() && (await ModalRoute.of(context).willPop()==RoutePopDisposition.pop)){
                             navigator.pop();
                           }
                         },
