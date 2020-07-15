@@ -77,8 +77,7 @@ class PageHome extends PageFromZero {
   @override
   String get pageScaffoldId => "Home";
 
-  PageHome(Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(animation, secondaryAnimation);
+  PageHome();
 
   @override
   _PageHomeState createState() => _PageHomeState();

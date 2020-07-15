@@ -24,7 +24,6 @@ typedef Widget DrawerContentBuilder(bool compact,);
 class ScaffoldFromZero extends StatefulWidget {
 
 
-
   static const double screenSizeSmall = 0;
   static const double screenSizeMedium = 612;
   static const double screenSizeLarge = 848;
@@ -43,29 +42,36 @@ class ScaffoldFromZero extends StatefulWidget {
 
   final GlobalKey bodyGlobalKey = GlobalKey();
 
+  final Duration drawerAnimationDuration = 300.milliseconds; //TODO 3- allow coustomization of durations and curves of appbar and drawer animations (fix conflicts)
+  final drawerAnimationCurve = Curves.easeOutCubic;
+  final Duration appbarAnimationDuration = 300.milliseconds;
+  final appbarAnimationCurve = Curves.easeOutCubic;
+
+  final PageFromZero currentPage;
   final Widget title;
   final List<Widget> actions;
-  final Widget body;
-  final Widget floatingActionButton;
-  final DrawerContentBuilder drawerContentBuilder;
-  final DrawerContentBuilder drawerFooterBuilder;
-  final Widget drawerTitle;
-  final bool useCompactDrawerInsteadOfClose;
   final double appbarHeight;
-  final bool constraintBodyOnXLargeScreens;
-  final PageFromZero currentPage;
-  final AppParametersFromZero themeParameters;
-  final ScrollController mainScrollController;
+  final double appbarElevation;
   final int appbarType;
+  final ScrollController mainScrollController;
+  final int scrollbarType;
   final double collapsibleBackgroundHeight;
   final Color collapsibleBackgroundColor;
-  final int scrollbarType;
+  final Widget body;
   final bool bodyFloatsBelowAppbar;
-
+  final Widget floatingActionButton;
+  final double drawerWidth;
+  final double compactDrawerWidth;
+  final DrawerContentBuilder drawerContentBuilder;
+  final DrawerContentBuilder drawerFooterBuilder;
+  final DrawerContentBuilder drawerHeaderBuilder;
+  final Widget drawerTitle;
+  final double drawerElevation;
+  final bool useCompactDrawerInsteadOfClose;
+  final bool constraintBodyOnXLargeScreens;
 
 
   ScaffoldFromZero({
-    @deprecated this.themeParameters,
     this.title,
     this.actions,
     this.body,
@@ -83,44 +89,37 @@ class ScaffoldFromZero extends StatefulWidget {
     this.collapsibleBackgroundColor,
     int scrollbarType, //TODO 3 allow a way to customize scrollbar (maybe throug theme, or a theme-like widget)
     bool bodyFloatsBelowAppbar,
+    this.drawerHeaderBuilder,
+    double compactDrawerWidth,
+    this.drawerWidth = 304,
+    this.drawerElevation = 2,
+    this.appbarElevation = 4,
   }) : this.collapsibleBackgroundHeight = collapsibleBackgroundLength ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? -1 : appbarHeight*3),
   this.scrollbarType = scrollbarType ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? scrollbarTypeBellowAppbar : scrollbarTypeOverAppbar),
-  this.bodyFloatsBelowAppbar = bodyFloatsBelowAppbar ?? appbarType==ScaffoldFromZero.appbarTypeQuickReturn;
+  this.bodyFloatsBelowAppbar = bodyFloatsBelowAppbar ?? appbarType==ScaffoldFromZero.appbarTypeQuickReturn,
+  this.compactDrawerWidth = drawerContentBuilder==null ? 0 : useCompactDrawerInsteadOfClose ? 56 : 0;
 
   @override
-  _ScaffoldFromZeroState createState() => _ScaffoldFromZeroState(
-    drawerContentBuilder==null ? 0 : useCompactDrawerInsteadOfClose ? 56 : 0,
-  );
+  _ScaffoldFromZeroState createState() => _ScaffoldFromZeroState();
 
 }
 
 class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
-  static const double appbarElevation = 4;
-  static const double drawerElevation = 2;
-  static const double drawerWidth = 304;
-  static const int drawerAnimationDuration = 300;
-  static const drawerAnimationCurve = Curves.easeOutCubic;
-  static const int appbarAnimationDuration = 300;
-  static const appbarAnimationCurve = Curves.easeOutCubic;
 
   AppbarChangeNotifier _appbarChangeNotifier;
   double width;
   double height;
   bool displayMobileLayout;
-  double compactDrawerWidth;
   ScrollController drawerContentScrollController = ScrollController();
   bool canPop;
   double previousWidth;
   double previousHeight;
+  Animation animation;
+  Animation secondaryAnimation;
 
 
-  get animation => widget.currentPage?.animation ?? kAlwaysCompleteAnimation;
-  get secondaryAnimation => widget.currentPage?.secondaryAnimation ?? kAlwaysDismissedAnimation;
-
-
-
-  _ScaffoldFromZeroState(this.compactDrawerWidth);
+  _ScaffoldFromZeroState();
 
 
   ScaffoldFromZeroChangeNotifier changeNotifier;
@@ -168,7 +167,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
   @override
   Widget build(BuildContext context) {
 
-    if (_appbarChangeNotifier==null)
+    if (_appbarChangeNotifier==null){
       _appbarChangeNotifier = AppbarChangeNotifier(
         widget.appbarHeight,
         MediaQuery.of(context).padding.top,
@@ -176,7 +175,10 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         widget.appbarType,
         null,
       );
-    if (canPop==null) canPop = Navigator.of(context).canPop();
+      canPop = Navigator.of(context).canPop();
+      animation = ModalRoute.of(context).animation;
+      secondaryAnimation = ModalRoute.of(context).secondaryAnimation;
+    }
     return ChangeNotifierProvider.value(
       value: _appbarChangeNotifier,
       builder: (context, child) {
@@ -191,12 +193,12 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                   displayMobileLayout = width < ScaffoldFromZero.screenSizeMedium;
                   if (displayMobileLayout || widget.drawerContentBuilder==null)
                     changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, 0);
-                  else if (widget.drawerContentBuilder!=null && changeNotifier.getCurrentDrawerWidth(widget.currentPage) < compactDrawerWidth)
-                    changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, compactDrawerWidth);
+                  else if (widget.drawerContentBuilder!=null && changeNotifier.getCurrentDrawerWidth(widget.currentPage) < widget.compactDrawerWidth)
+                    changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, widget.compactDrawerWidth);
                   else if (previousWidth!=null && previousWidth<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
-                    changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, drawerWidth);
+                    changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, widget.drawerWidth);
                   } else if (previousWidth!=null && previousWidth>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
-                    changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, compactDrawerWidth);
+                    changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, widget.compactDrawerWidth);
                   }
                   previousWidth = width;
                   previousHeight = height;
@@ -210,13 +212,13 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                       child: Scaffold(
                         floatingActionButton: AnimatedPadding(
                           padding: EdgeInsets.only(bottom: width < ScaffoldFromZero.screenSizeMedium ? 0 : 12, right: fabPadding),
-                          duration: drawerAnimationDuration.milliseconds,
-                          curve: drawerAnimationCurve,
+                          duration: widget.drawerAnimationDuration,
+                          curve: widget.drawerAnimationCurve,
                           child: widget.floatingActionButton,
                         ),
                         drawer: displayMobileLayout && widget.drawerContentBuilder!=null ? Drawer(
                           child: _getResponsiveDrawerContent(context, changeNotifier),
-                          elevation: drawerElevation,
+                          elevation: widget.drawerElevation,
                         ) : null,
                         body: Builder(
                           builder: (context) {
@@ -242,8 +244,8 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         Consumer<AppbarChangeNotifier>(
           builder: (context, appbarChangeNotifier, child) {
             return AnimatedPositioned(
-              duration: appbarAnimationDuration.milliseconds,
-              curve: appbarAnimationCurve,
+              duration: widget.appbarAnimationDuration,
+              curve: widget.appbarAnimationCurve,
               top: appbarChangeNotifier.currentBackgroundOffset,
               width: width,
               height: appbarChangeNotifier.safeAreaOffset+appbarChangeNotifier.backgroundHeight,
@@ -271,8 +273,8 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         //BACKGROUND STRIPE TO PREVENT APPBAR TEARING WHEN CLOSE/OPEN DRAWER
         Consumer<AppbarChangeNotifier>(
           builder: (context, appbarChangeNotifier, child) => AnimatedContainer(
-            duration: appbarAnimationDuration.milliseconds,
-            curve: appbarAnimationCurve,
+            duration: widget.appbarAnimationDuration,
+            curve: widget.appbarAnimationCurve,
             height: appbarChangeNotifier.currentAppbarHeight,
             color: Theme.of(context).appBarTheme.color ?? Theme.of(context).primaryColor,
           ),
@@ -285,8 +287,8 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
             ? Positioned(
           left: 0,
           child: AnimatedContainer(
-            duration: Duration(milliseconds: drawerAnimationDuration),
-            curve: drawerAnimationCurve,
+            duration: widget.drawerAnimationDuration,
+            curve: widget.drawerAnimationCurve,
             width: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
             height: height,
             child: GestureDetector(
@@ -297,14 +299,14 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
           ),
         )
             : AnimatedPositioned(
-          duration: Duration(milliseconds: drawerAnimationDuration),
-          curve: drawerAnimationCurve,
-          left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)-drawerWidth,
+          duration: widget.drawerAnimationDuration,
+          curve: widget.drawerAnimationCurve,
+          left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)-widget.drawerWidth,
           child: GestureDetector(
             onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
             onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
             child: Container(
-              width: drawerWidth,
+              width: widget.drawerWidth,
               height: height,
               child: _getResponsiveDrawerContent(context, changeNotifier),
             ),
@@ -313,14 +315,14 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
         //CUSTOM SHADOWS (drawer appbar)
         AnimatedContainer(
-          duration: drawerAnimationDuration.milliseconds,
-          curve: drawerAnimationCurve,
+          duration: widget.drawerAnimationDuration,
+          curve: widget.drawerAnimationCurve,
           alignment: Alignment.topCenter,
           padding: EdgeInsets.only(top: widget.appbarHeight+Provider.of<AppbarChangeNotifier>(context, listen: false).safeAreaOffset,),
           width: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
           child: SizedBox(
             width: double.infinity,
-            height: appbarElevation,
+            height: widget.appbarElevation,
             child: CustomPaint(
               painter: SimpleShadowPainter(direction: SimpleShadowPainter.down, shadowOpacity: 0.3),
             ),
@@ -329,12 +331,12 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
         //APPBAR + BODY
         AnimatedPositioned(
-          duration: Duration(milliseconds: drawerAnimationDuration),
-          curve: drawerAnimationCurve,
+          duration: widget.drawerAnimationDuration,
+          curve: widget.drawerAnimationCurve,
           left: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
           child: AnimatedContainer(
-            duration: Duration(milliseconds: drawerAnimationDuration),
-            curve: drawerAnimationCurve,
+            duration: widget.drawerAnimationDuration,
+            curve: widget.drawerAnimationCurve,
             width: width-changeNotifier.getCurrentDrawerWidth(widget.currentPage),
             height: height,
             child: ScrollbarFromZero(
@@ -345,8 +347,8 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
                     //BODY
                     AnimatedPadding(
-                      duration: appbarAnimationDuration.milliseconds,
-                      curve: appbarAnimationCurve,
+                      duration: widget.appbarAnimationDuration,
+                      curve: widget.appbarAnimationCurve,
                       padding: EdgeInsets.only(top: widget.bodyFloatsBelowAppbar ? 0 : appbarChangeNotifier.currentAppbarHeight,),
                       child: ScrollbarFromZero(
                         controller: widget.scrollbarType==ScaffoldFromZero.scrollbarTypeBellowAppbar ? widget.mainScrollController : null,
@@ -394,13 +396,13 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
                     // CUSTOM SHADOWS (appbar)
                     AnimatedContainer(
-                      duration: appbarAnimationDuration.milliseconds,
-                      curve: appbarAnimationCurve,
+                      duration: widget.appbarAnimationDuration,
+                      curve: widget.appbarAnimationCurve,
                       alignment: Alignment.topCenter,
                       padding: EdgeInsets.only(top: appbarChangeNotifier.currentAppbarHeight,),
                       child: SizedBox(
                         width: double.infinity,
-                        height: appbarElevation,
+                        height: widget.appbarElevation,
                         child: CustomPaint(
                           painter: SimpleShadowPainter(direction: SimpleShadowPainter.down, shadowOpacity: 0.5),
                         ),
@@ -409,8 +411,8 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
                     //APPBAR
                     AnimatedPositioned(
-                      duration: appbarAnimationDuration.milliseconds,
-                      curve: appbarAnimationCurve,
+                      duration: widget.appbarAnimationDuration,
+                      curve: widget.appbarAnimationCurve,
                       top: appbarChangeNotifier.currentAppbarOffset,
                       height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
                       width: width-changeNotifier.getCurrentDrawerWidth(widget.currentPage),
@@ -428,11 +430,11 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                             (!displayMobileLayout&&widget.useCompactDrawerInsteadOfClose)||widget.drawerContentBuilder==null ? SizedBox.shrink()
                                 : AnimatedOpacity(
                               opacity: 1-changeNotifier.getCurrentDrawerWidth(widget.currentPage)/56<0 ? 0 : 1-changeNotifier.getCurrentDrawerWidth(widget.currentPage)/56,
-                              duration: Duration(milliseconds: drawerAnimationDuration),
-                              curve: drawerAnimationCurve,
+                              duration: widget.drawerAnimationDuration,
+                              curve: widget.drawerAnimationCurve,
                               child: AnimatedContainer(
                                 width: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>56 ? 0: 56-changeNotifier.getCurrentDrawerWidth(widget.currentPage),
-                                duration: Duration(milliseconds: drawerAnimationDuration),
+                                duration: widget.drawerAnimationDuration,
                                 curve: Curves.easeOutCubic,
                                 padding: EdgeInsets.only(right: 8),
                                 alignment: Alignment.centerLeft,
@@ -517,10 +519,10 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
           builder: (context, appbarChangeNotifier, child) => AnimatedContainer(
             alignment: Alignment.centerLeft,
             padding: EdgeInsets.only(top: appbarChangeNotifier.currentAppbarHeight, left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)),
-            duration: Duration(milliseconds: drawerAnimationDuration),
-            curve: drawerAnimationCurve,
+            duration: widget.drawerAnimationDuration,
+            curve: widget.drawerAnimationCurve,
             child: SizedBox(
-              width: drawerElevation,
+              width: widget.drawerElevation,
               height: double.infinity,
               child: CustomPaint(
                 painter: SimpleShadowPainter(direction: SimpleShadowPainter.right, shadowOpacity: 0.4),
@@ -534,7 +536,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
   }
 
   _getResponsiveDrawerContent(BuildContext context, ScaffoldFromZeroChangeNotifier changeNotifier){
-    Widget drawerContent = widget.drawerContentBuilder(changeNotifier.getCurrentDrawerWidth(widget.currentPage)==compactDrawerWidth);
+    Widget drawerContent = widget.drawerContentBuilder(changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth);
     AppbarChangeNotifier appbarChangeNotifier = Provider.of<AppbarChangeNotifier>(context, listen: false);
     return Column(
       children: <Widget>[
@@ -545,7 +547,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
           height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
           child: OverflowBox(
             minWidth: 0,
-            maxWidth: drawerWidth,
+            maxWidth: widget.drawerWidth,
             minHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
             maxHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
             alignment: Alignment.centerRight,
@@ -577,7 +579,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                     AnimatedPositioned(
                       left: canPop ? 56 : 0,
                       duration: 300.milliseconds,
-                      curve: drawerAnimationCurve,
+                      curve: widget.drawerAnimationCurve,
                       child: widget.drawerTitle,
                     ),
                   ],
@@ -589,7 +591,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                   padding: EdgeInsets.only(right: kIsWeb ? 4 : 8), // TODO 1 WTFF dps are bigger in web ??? this could be because of visualDensity TEST
                   child: IconButton(
                     icon: Icon(widget.useCompactDrawerInsteadOfClose&&!displayMobileLayout ? Icons.menu : Icons.close),
-                    tooltip: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>compactDrawerWidth||displayMobileLayout ? "Cerrar Menú" : "Abrir Menú",
+                    tooltip: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>widget.compactDrawerWidth||displayMobileLayout ? "Cerrar Menú" : "Abrir Menú",
                     onPressed: (){
                       if (displayMobileLayout)
                         Navigator.of(context).pop();
@@ -610,8 +612,8 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
             decoration: BoxDecoration(),
             clipBehavior: Clip.hardEdge,
             child: OverflowBox(
-              minWidth: drawerWidth,
-              maxWidth: drawerWidth,
+              minWidth: widget.drawerWidth,
+              maxWidth: widget.drawerWidth,
               minHeight: height-(appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset),
               maxHeight: height-(appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset),
               alignment: Alignment.bottomLeft,
@@ -655,7 +657,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                         children: <Widget>[
                           Divider(height: 1,),
                           SizedBox(height: 6,),
-                          widget.drawerFooterBuilder != null ? widget.drawerFooterBuilder(changeNotifier.getCurrentDrawerWidth(widget.currentPage)==compactDrawerWidth) : SizedBox.shrink(),
+                          widget.drawerFooterBuilder != null ? widget.drawerFooterBuilder(changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth) : SizedBox.shrink(),
                           SizedBox(height: 12,),
                         ],
                       ),
@@ -680,29 +682,29 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         scaffold.openDrawer();
       }
     } else{
-      if (changeNotifier.getCurrentDrawerWidth(widget.currentPage) > compactDrawerWidth){
-        changeNotifier.setCurrentDrawerWidth(widget.currentPage, compactDrawerWidth);
+      if (changeNotifier.getCurrentDrawerWidth(widget.currentPage) > widget.compactDrawerWidth){
+        changeNotifier.setCurrentDrawerWidth(widget.currentPage, widget.compactDrawerWidth);
       } else{
-        changeNotifier.setCurrentDrawerWidth(widget.currentPage, drawerWidth);
+        changeNotifier.setCurrentDrawerWidth(widget.currentPage, widget.drawerWidth);
       }
     }
   }
 
   void onHorizontalDragUpdate (DragUpdateDetails details, ScaffoldFromZeroChangeNotifier changeNotifier) {
     double jump = changeNotifier.getCurrentDrawerWidth(widget.currentPage) + details.delta.dx;
-    if (jump<compactDrawerWidth) jump = compactDrawerWidth;
-    if (jump>drawerWidth) jump = drawerWidth;
+    if (jump<widget.compactDrawerWidth) jump = widget.compactDrawerWidth;
+    if (jump>widget.drawerWidth) jump = widget.drawerWidth;
     changeNotifier.setCurrentDrawerWidth(widget.currentPage, jump);
   }
   static const double _kMinFlingVelocity = 365.0;
   void onHorizontalDragEnd (DragEndDetails details, ScaffoldFromZeroChangeNotifier changeNotifier) {
     double jump = changeNotifier.getCurrentDrawerWidth(widget.currentPage);
     if (details.velocity.pixelsPerSecond.dx.abs() >= _kMinFlingVelocity){
-      if (details.velocity.pixelsPerSecond.dx>0) jump = drawerWidth;
-      else jump = compactDrawerWidth;
+      if (details.velocity.pixelsPerSecond.dx>0) jump = widget.drawerWidth;
+      else jump = widget.compactDrawerWidth;
     }
-    else if (jump<drawerWidth/2) jump = compactDrawerWidth;
-    else jump = drawerWidth;
+    else if (jump<widget.drawerWidth/2) jump = widget.compactDrawerWidth;
+    else jump = widget.drawerWidth;
     changeNotifier.setCurrentDrawerWidth(widget.currentPage, jump);
   }
 

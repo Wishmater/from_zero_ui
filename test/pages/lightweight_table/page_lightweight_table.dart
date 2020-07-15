@@ -18,8 +18,7 @@ class PageLightweightTable extends PageFromZero {
   @override
   String get pageScaffoldId => "Home";
 
-  PageLightweightTable(Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(animation, secondaryAnimation);
+  PageLightweightTable();
 
   @override
   _PageLightweightTableState createState() => _PageLightweightTableState();

@@ -21,8 +21,7 @@ class PageHeroes extends PageFromZero {
   @override
   String get pageScaffoldId => "Home";
 
-  PageHeroes(Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(animation, secondaryAnimation);
+  PageHeroes();
 
   @override
   _PageHeroesState createState() => _PageHeroesState();
@@ -37,7 +36,6 @@ class _PageHeroesState extends State<PageHeroes> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      themeParameters: Provider.of<ThemeParameters>(context, listen: false),
       currentPage: widget,
       title: Text("Heroes"),
       body: _getPage(context),

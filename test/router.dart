@@ -37,41 +37,41 @@ class FluroRouter{
 
 
     router.defineRouteFromZero('/settings', (context, parameters, animation, secondaryAnimation,)
-        => PageSettings(animation, secondaryAnimation));
+        => PageSettings());
 
 
     router.defineRouteFromZero('/home', (context, parameters, animation, secondaryAnimation,)
-        => PageHome(animation, secondaryAnimation));
+        => PageHome());
 
 
     router.defineRouteFromZero('/scaffold', (context, parameters, animation, secondaryAnimation,)
-        => PageScaffold(animation, secondaryAnimation));
+        => PageScaffold());
     router.defineRouteFromZero('/scaffold/same', (context, parameters, animation, secondaryAnimation,)
-        => PageScaffoldSame(animation, secondaryAnimation));
+        => PageScaffoldSame());
     router.defineRouteFromZero('/scaffold/inner', (context, parameters, animation, secondaryAnimation,)
-        => PageScaffoldInner(animation, secondaryAnimation));
+        => PageScaffoldInner());
     router.defineRouteFromZero('/scaffold/other', (context, parameters, animation, secondaryAnimation,)
-        => PageScaffoldOther(animation, secondaryAnimation));
+        => PageScaffoldOther());
 
 
     router.defineRouteFromZero('/lightweight_table', (context, parameters, animation, secondaryAnimation,)
-        => PageLightweightTable(animation, secondaryAnimation));
+        => PageLightweightTable());
 
 
     router.defineRouteFromZero('/future_handling', (context, parameters, animation, secondaryAnimation,)
-        => PageFutureHandling(animation, secondaryAnimation));
+        => PageFutureHandling());
 
 
     router.defineRouteFromZero('/heroes', (context, parameters, animation, secondaryAnimation,)
-        => PageHeroes(animation, secondaryAnimation));
+        => PageHeroes());
     router.defineRouteFromZero('/heroes/normal', (context, parameters, animation, secondaryAnimation,)
-        => PageNormalHero(animation, secondaryAnimation));
+        => PageNormalHero());
     router.defineRouteFromZero('/heroes/fade', (context, parameters, animation, secondaryAnimation,)
-        => PageCrossFadeHero(animation, secondaryAnimation));
+        => PageCrossFadeHero());
     router.defineRouteFromZero('/heroes/custom', (context, parameters, animation, secondaryAnimation,)
-        => PageCustomHero(animation, secondaryAnimation));
+        => PageCustomHero());
     router.defineRouteFromZero('/heroes/inner', (context, parameters, animation, secondaryAnimation,)
-        => PageInnerHero(animation, secondaryAnimation));
+        => PageInnerHero());
 
 
   }

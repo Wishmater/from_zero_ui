@@ -20,8 +20,7 @@ class PageFutureHandling extends PageFromZero {
   @override
   String get pageScaffoldId => "Home";
 
-  PageFutureHandling(Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(animation, secondaryAnimation);
+  PageFutureHandling();
 
   @override
   _PageFutureHandlingState createState() => _PageFutureHandlingState();

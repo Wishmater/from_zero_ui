@@ -14,8 +14,7 @@ class PageScaffoldOther extends PageFromZero {
   @override
   String get pageScaffoldId => "Other 1234";
 
-  PageScaffoldOther(Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(animation, secondaryAnimation);
+  PageScaffoldOther();
 
   @override
   _PageScaffoldInnerState createState() => _PageScaffoldInnerState();
@@ -27,7 +26,6 @@ class _PageScaffoldInnerState extends State<PageScaffoldOther> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      themeParameters: Provider.of<ThemeParameters>(context, listen: false),
       currentPage: widget,
       title: Text("Inner Page"),
       body: Center(

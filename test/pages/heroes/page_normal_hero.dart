@@ -14,8 +14,7 @@ class PageNormalHero extends PageFromZero {
   @override
   String get pageScaffoldId => "Home";
 
-  PageNormalHero(Animation<double> animation, Animation<double> secondaryAnimation)
-      : super(animation, secondaryAnimation);
+  PageNormalHero();
 
   @override
   _PageHeroesState createState() => _PageHeroesState();
