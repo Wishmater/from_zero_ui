@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/expansion_tile_from_zero.dart';
+import 'package:from_zero_ui/util/my_popup_menu.dart' as my_popup_menu_button;
 
 class ResponsiveDrawerMenuDivider extends ResponsiveDrawerMenuItem{
 
-  ResponsiveDrawerMenuDivider({@required String title}) : super(
+  ResponsiveDrawerMenuDivider({String title}) : super(
     title: title,
   );
 
@@ -78,6 +79,16 @@ class DrawerMenuFromZero extends StatefulWidget {
 }
 
 class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
+
+  List<GlobalKey> _menuButtonKeys = [];
+
+  @override
+  void initState() {
+    super.initState();
+    widget.tabs.forEach((element) {
+      _menuButtonKeys.add(element.children==null ? null : GlobalKey());
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -152,52 +163,77 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
         };
         if (tabs[i].children!=null && tabs[i].children.isNotEmpty){
 
-          return ExpansionTileFromZero(
-            initiallyExpanded: selected==i || tabs[i].selectedChild!=null&&tabs[i].selectedChild>=0,
-            expanded: widget.compact ? false : null,
-            expandedAlignment: Alignment.topCenter,
-            title: DrawerMenuButtonFromZero(
-              title: tabs[i].title,
-              selected: selected==i,
-              compact: widget.compact,
-              icon: tabs[i].icon==null ? SizedBox.shrink() : Icon(tabs[i].icon,),
-              contentPadding: EdgeInsets.only(left: widget.depth*20.0),
+          return my_popup_menu_button.PopupMenuButton(
+            child: ExpansionTileFromZero(
+              initiallyExpanded: selected==i || tabs[i].selectedChild!=null&&tabs[i].selectedChild>=0,
+              expanded: widget.compact ? false : null,
+              expandedAlignment: Alignment.topCenter,
+              title: DrawerMenuButtonFromZero(
+                title: tabs[i].title,
+                selected: selected==i,
+                compact: widget.compact,
+                icon: tabs[i].icon==null ? SizedBox.shrink() : Icon(tabs[i].icon,),
+                contentPadding: EdgeInsets.only(left: widget.depth*20.0),
 //              dense: true,
-            ),
-            children: [
-              Stack(
-                children: [
-                  Positioned.fill(
-                    child: Container(
-                      padding: EdgeInsets.only(left: widget.depth*20.0),
-                      alignment: Alignment.centerLeft,
+              ),
+              children: [
+                Stack(
+                  children: [
+                    Positioned.fill(
                       child: Container(
-                        width: (widget.depth+1)*20.0,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.only(topRight: Radius.circular(999999)),
-                          color: Theme.of(context).dividerColor,
+                        padding: EdgeInsets.only(left: widget.depth*20.0),
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          width: (widget.depth+1)*20.0,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.only(topRight: Radius.circular(999999)),
+                            color: Theme.of(context).dividerColor,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  DrawerMenuFromZero(
-                    tabs: tabs[i].children,
-                    compact: widget.compact,
-                    selected: tabs[i].selectedChild,
-                    depth: widget.depth+1,
-                    replaceInsteadOfPuhsing: widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPuhsing
-                        ? (selected==0 ? DrawerMenuFromZero.neverReplaceInsteadOfPuhsing : DrawerMenuFromZero.alwaysReplaceInsteadOfPuhsing)
-                        : widget.replaceInsteadOfPuhsing,
-                  ),
-                ],
+                    DrawerMenuFromZero(
+                      tabs: tabs[i].children,
+                      compact: widget.compact,
+                      selected: tabs[i].selectedChild,
+                      depth: widget.depth+1,
+                      replaceInsteadOfPuhsing: widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPuhsing
+                          ? (selected==0 ? DrawerMenuFromZero.neverReplaceInsteadOfPuhsing : DrawerMenuFromZero.alwaysReplaceInsteadOfPuhsing)
+                          : widget.replaceInsteadOfPuhsing,
+                    ),
+                  ],
+                ),
+              ],
+              onExpansionChanged: (value) async {
+                if (widget.compact){
+                  if (!await onTap()){
+                    (_menuButtonKeys[i].currentState as my_popup_menu_button.PopupMenuButtonState).showButtonMenu();
+                  }
+                  return false;
+                } else{
+                  if ((await onTap()) && value){
+                    return false;
+                  }
+                  return true;
+                }
+              },
+            ),
+            key: _menuButtonKeys[i],
+            tooltip: "",
+            offset: Offset(57, 0),
+            menuHorizontalPadding: 0,
+//            menuVerticalPadding: 0,
+            itemBuilder: (context) => List.generate(widget.compact ? 1 : 0, (index) => my_popup_menu_button.PopupMenuItem(
+              enabled: false,
+              child: DrawerMenuFromZero(
+                tabs: tabs[i].children,
+                compact: false,
+                selected: tabs[i].selectedChild,
+                replaceInsteadOfPuhsing: widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPuhsing
+                    ? (selected==0 ? DrawerMenuFromZero.neverReplaceInsteadOfPuhsing : DrawerMenuFromZero.alwaysReplaceInsteadOfPuhsing)
+                    : widget.replaceInsteadOfPuhsing,
               ),
-            ],
-            onExpansionChanged: (value) async {
-              if ((await onTap()) && value){
-                return false;
-              }
-              return true;
-            },
+            )),
           );
 
         } else{

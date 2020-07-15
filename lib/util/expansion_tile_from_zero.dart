@@ -209,6 +209,7 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
     }
   }
   void setExpanded(bool expanded) {
+    if (widget.expanded!=null) expanded=widget.expanded;
     if (_isExpanded != expanded){
       setState(() {
         _isExpanded = expanded;

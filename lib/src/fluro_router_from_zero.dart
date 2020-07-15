@@ -28,7 +28,7 @@ class Handler {
 
 @deprecated
 class FluroRouterFromZero extends my_fluro_router.Router{
-
+  //TODO 1 remove this at some point and if needed, define it as an extension method to FluroRouter, also move everything in this file to ScaffoldFromZero
   @deprecated
   void defineRouteFromZero(String routePath, PageFromZeroCallback pageFromZeroCallback){
     define(

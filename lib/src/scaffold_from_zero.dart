@@ -42,7 +42,7 @@ class ScaffoldFromZero extends StatefulWidget {
 
   final GlobalKey bodyGlobalKey = GlobalKey();
 
-  final Duration drawerAnimationDuration = 300.milliseconds; //TODO 3- allow coustomization of durations and curves of appbar and drawer animations (fix conflicts)
+  final Duration drawerAnimationDuration = 300.milliseconds; //TODO 3- allow customization of durations and curves of appbar and drawer animations (fix conflicts)
   final drawerAnimationCurve = Curves.easeOutCubic;
   final Duration appbarAnimationDuration = 300.milliseconds;
   final appbarAnimationCurve = Curves.easeOutCubic;
@@ -64,10 +64,9 @@ class ScaffoldFromZero extends StatefulWidget {
   final double compactDrawerWidth;
   final DrawerContentBuilder drawerContentBuilder;
   final DrawerContentBuilder drawerFooterBuilder;
-  final DrawerContentBuilder drawerHeaderBuilder;
   final Widget drawerTitle;
   final double drawerElevation;
-  final bool useCompactDrawerInsteadOfClose;
+  final bool useCompactDrawerInsteadOfClose = true;
   final bool constraintBodyOnXLargeScreens;
 
 
@@ -79,7 +78,7 @@ class ScaffoldFromZero extends StatefulWidget {
     this.drawerContentBuilder,
     this.drawerFooterBuilder,
     this.drawerTitle,
-    this.useCompactDrawerInsteadOfClose = true,
+//    this.useCompactDrawerInsteadOfClose = true, //TODO 3- fix fully closable drawer and expose this option again
     this.constraintBodyOnXLargeScreens = true,
     this.appbarHeight = 56,
     this.currentPage,
@@ -89,7 +88,6 @@ class ScaffoldFromZero extends StatefulWidget {
     this.collapsibleBackgroundColor,
     int scrollbarType, //TODO 3 allow a way to customize scrollbar (maybe throug theme, or a theme-like widget)
     bool bodyFloatsBelowAppbar,
-    this.drawerHeaderBuilder,
     double compactDrawerWidth,
     this.drawerWidth = 304,
     this.drawerElevation = 2,
@@ -97,7 +95,7 @@ class ScaffoldFromZero extends StatefulWidget {
   }) : this.collapsibleBackgroundHeight = collapsibleBackgroundLength ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? -1 : appbarHeight*3),
   this.scrollbarType = scrollbarType ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? scrollbarTypeBellowAppbar : scrollbarTypeOverAppbar),
   this.bodyFloatsBelowAppbar = bodyFloatsBelowAppbar ?? appbarType==ScaffoldFromZero.appbarTypeQuickReturn,
-  this.compactDrawerWidth = drawerContentBuilder==null ? 0 : useCompactDrawerInsteadOfClose ? 56 : 0;
+  this.compactDrawerWidth = drawerContentBuilder==null ? 0 : 56; //useCompactDrawerInsteadOfClose ? 56 : 0
 
   @override
   _ScaffoldFromZeroState createState() => _ScaffoldFromZeroState();
@@ -191,11 +189,11 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                   if (width==0 && previousWidth!=null) width = previousWidth;
                   if (height==0 && previousHeight!=null) height = previousHeight;
                   displayMobileLayout = width < ScaffoldFromZero.screenSizeMedium;
-                  if (displayMobileLayout || widget.drawerContentBuilder==null)
+                  if (displayMobileLayout || widget.drawerContentBuilder==null) {
                     changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, 0);
-                  else if (widget.drawerContentBuilder!=null && changeNotifier.getCurrentDrawerWidth(widget.currentPage) < widget.compactDrawerWidth)
+                  } else if (widget.drawerContentBuilder!=null && changeNotifier.getCurrentDrawerWidth(widget.currentPage) < widget.compactDrawerWidth){
                     changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, widget.compactDrawerWidth);
-                  else if (previousWidth!=null && previousWidth<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
+                  } else if (previousWidth!=null && previousWidth<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
                     changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, widget.drawerWidth);
                   } else if (previousWidth!=null && previousWidth>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
                     changeNotifier.setCurrentDrawerWidthSILENT(widget.currentPage, widget.compactDrawerWidth);
@@ -543,66 +541,70 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
         //TODO 2 add a way to paint an unscrollable header that can stack over the drawer appbar (or not)
         //DRAWER APPBAR
-        SizedBox(
-          height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
-          child: OverflowBox(
-            minWidth: 0,
-            maxWidth: widget.drawerWidth,
-            minHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
-            maxHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
-            alignment: Alignment.centerRight,
-            child: AppBar(
-              elevation: 0,
-              automaticallyImplyLeading: false,
-              title: SizedBox(
-                height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
-                child: Stack(
-                  alignment: Alignment.centerLeft,
-                  children: [
-                    if (!displayMobileLayout && canPop)
-                    Positioned(
-                      left: -8,
+        Stack(
+          children: [
+            SizedBox(
+              height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
+              child: OverflowBox(
+                minWidth: 0,
+                maxWidth: widget.drawerWidth,
+                minHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
+                maxHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
+                alignment: Alignment.centerRight,
+                child: AppBar(
+                  elevation: 0,
+                  automaticallyImplyLeading: false,
+                  title: SizedBox(
+                    height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
+                    child: Stack(
+                      alignment: Alignment.centerLeft,
+                      children: [
+                        if (!displayMobileLayout && canPop)
+                        Positioned(
+                          left: -8,
+                          child: IconButton(
+                            icon: Icon(Icons.arrow_back),
+                            tooltip: "Página Anterior", //TODO 3 internationalize
+                            onPressed: () async{
+                              var navigator = Navigator.of(context);
+                              if (displayMobileLayout)
+                                navigator.pop();
+                              if (navigator.canPop() && (await ModalRoute.of(context).willPop()==RoutePopDisposition.pop)){
+                                navigator.pop();
+                              }
+                            },
+                          ),
+                        ),
+                        if(widget.drawerTitle!=null)
+                        AnimatedPositioned(
+                          left: canPop ? 56 : 0,
+                          duration: 300.milliseconds,
+                          curve: widget.drawerAnimationCurve,
+                          child: widget.drawerTitle,
+                        ),
+                      ],
+                    ),
+                  ),
+                  actions: [
+                    if (!displayMobileLayout)
+                    Padding(
+                      padding: EdgeInsets.only(right: kIsWeb ? 4 : 8), // TODO 1 WTFF dps are bigger in web ??? this could be because of visualDensity TEST
                       child: IconButton(
-                        icon: Icon(Icons.arrow_back),
-                        tooltip: "Página Anterior", //TODO 3 internationalize
-                        onPressed: () async{
-                          var navigator = Navigator.of(context);
+                        icon: Icon(widget.useCompactDrawerInsteadOfClose&&!displayMobileLayout ? Icons.menu : Icons.close),
+                        tooltip: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>widget.compactDrawerWidth||displayMobileLayout ? "Cerrar Menú" : "Abrir Menú",
+                        onPressed: (){
                           if (displayMobileLayout)
-                            navigator.pop();
-                          if (navigator.canPop() && (await ModalRoute.of(context).willPop()==RoutePopDisposition.pop)){
-                            navigator.pop();
-                          }
+                            Navigator.of(context).pop();
+                          else
+                            _toggleDrawer(context, changeNotifier);
                         },
                       ),
-                    ),
-                    if(widget.drawerTitle!=null)
-                    AnimatedPositioned(
-                      left: canPop ? 56 : 0,
-                      duration: 300.milliseconds,
-                      curve: widget.drawerAnimationCurve,
-                      child: widget.drawerTitle,
                     ),
                   ],
                 ),
               ),
-              actions: [
-                if (!displayMobileLayout)
-                Padding(
-                  padding: EdgeInsets.only(right: kIsWeb ? 4 : 8), // TODO 1 WTFF dps are bigger in web ??? this could be because of visualDensity TEST
-                  child: IconButton(
-                    icon: Icon(widget.useCompactDrawerInsteadOfClose&&!displayMobileLayout ? Icons.menu : Icons.close),
-                    tooltip: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>widget.compactDrawerWidth||displayMobileLayout ? "Cerrar Menú" : "Abrir Menú",
-                    onPressed: (){
-                      if (displayMobileLayout)
-                        Navigator.of(context).pop();
-                      else
-                        _toggleDrawer(context, changeNotifier);
-                    },
-                  ),
-                ),
-              ],
             ),
-          ),
+          ],
         ),
 
 
@@ -655,7 +657,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                       color: Theme.of(context).cardColor,
                       child: Column(
                         children: <Widget>[
-                          Divider(height: 1,),
+                          Divider(height: 3, thickness: 3,),
                           SizedBox(height: 6,),
                           widget.drawerFooterBuilder != null ? widget.drawerFooterBuilder(changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth) : SizedBox.shrink(),
                           SizedBox(height: 12,),
