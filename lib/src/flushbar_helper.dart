@@ -23,6 +23,7 @@ class FlushbarHelperFromZero {
     color: errorColor,
     fontWeight: FontWeight.bold,
   );
+  // TODO implement FlushbarButton ?? or pass the actions as String=>(){}
 
   /// Get a success notification flushbar.
   static Flushbar createSuccess(

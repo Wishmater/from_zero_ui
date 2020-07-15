@@ -41,7 +41,7 @@ class _PageHeroesState extends State<PageHeroes> {
       currentPage: widget,
       title: Text("Heroes"),
       body: _getPage(context),
-      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: [0, 4],),
+      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 3,),
       drawerFooterBuilder: (compact) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -63,7 +63,7 @@ class _PageHeroesState extends State<PageHeroes> {
               );
             },
           ),
-          DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: [-1, -1], replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
+          DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
         ],
       ),
     );

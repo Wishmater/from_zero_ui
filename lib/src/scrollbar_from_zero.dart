@@ -15,7 +15,7 @@ class ScrollbarFromZero extends StatefulWidget {
   final bool applyPaddingToChildrenOnDesktop;
   final bool applyOpacityGradientToChildren;
 //TODO 1 ??? add support for horizontal scroll
-//TODO 2 expose options for scrollbarColor and iconColor
+//TODO 3 expose options for scrollbarColor and iconColor
 //TODO 3 expose an option to consume events (default true)
   ScrollbarFromZero({
     Key key,
@@ -146,10 +146,10 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
           // TODO 3 ??? web defaults to desktop mode
           if (!kIsWeb && (Platform.isIOS || Platform.isAndroid)){
 
-            return DraggableScrollbar.rrect( //TODO 2 better style mobile scrollbar
+            return DraggableScrollbar.rrect(
               alwaysVisibleScrollThumb: false,
               heightScrollThumb: height,
-              backgroundColor: Theme.of(context).accentColor,
+              backgroundColor: Theme.of(context).highlightColor.withOpacity(1.0),
               controller: widget.controller,
               child: child,
               scrollbarTimeToFade: Duration(milliseconds: 2500),

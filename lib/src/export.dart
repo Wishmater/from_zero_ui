@@ -9,6 +9,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/flushbar_helper.dart';
 import 'package:from_zero_ui/src/settings.dart';
 import 'package:from_zero_ui/util/my_arrow_page_indicator.dart' as my_arrow_page_indicator;
+import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:page_view_indicators/page_view_indicators.dart';
 import 'package:dartx/dartx.dart';
@@ -49,12 +50,17 @@ class Export extends StatefulWidget {
 
 class _ExportState extends State<Export> {
 
+  int get currentSize => Hive.box("settings").get("export_size", defaultValue: 0);
+  set currentSize(int value) => Hive.box("settings").put("export_size", value);
+  int get format => Hive.box("settings").get("export_format", defaultValue: 0);
+  set format(int value) => Hive.box("settings").put("export_format", value);
+  bool get portrait => Hive.box("settings").get("export_portrait", defaultValue: true);
+  set portrait(bool value) => Hive.box("settings").put("export_portrait", value);
+  double get scale => Hive.box("settings").get("export_scale", defaultValue: 1.0);
+  set scale(double value) => Hive.box("settings").put("export_scale", value);
+
   GlobalKey pageViewKey = GlobalKey();
   List<GlobalKey> boundaryKeys;
-  int currentSize = 0;
-  int format = 0;
-  bool portrait = true;
-  double scale = 1;
   PageController controller = PageController(keepPage: true);
   final currentPageNotifier = ValueNotifier<int>(0);
 
@@ -88,10 +94,12 @@ class _ExportState extends State<Export> {
   }
   Future<void> _executeExport(i, pw.Document pdf) async {
     if (format==0){
+      var format = Export.defaultFormats[currentSize];
+      if (!portrait) format = PdfPageFormat(format.height, format.width);
       Uint8List pngBytes = await _getImageBytes(await _getImage(boundaryKeys[i]));
       pdf.addPage(
         pw.Page(
-          pageFormat: Export.defaultFormats[currentSize],
+          pageFormat: format,
           margin: pw.EdgeInsets.all(0),
           build: (context) => pw.Image(
             PdfImage.file(pdf.document, bytes: pngBytes),
@@ -335,7 +343,6 @@ class _ExportState extends State<Export> {
                       child: Text("Exportar",),
                     ),
                     onPressed: () async{
-                      //TODO 1 change flushbar helper declarations here and use it to show loading and done signs
                       showDialog(
                         context: context,
                         barrierDismissible: false,

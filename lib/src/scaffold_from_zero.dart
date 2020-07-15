@@ -214,10 +214,10 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                           curve: drawerAnimationCurve,
                           child: widget.floatingActionButton,
                         ),
-//                    drawer: displayMobileLayout && widget.drawerContentBuilder!=null ? Drawer(
-//                      child: _getResponsiveDrawerContent(context, changeNotifier),
-//                      elevation: drawerElevation,
-//                    ) : null, //TODO 1 readd this
+                        drawer: displayMobileLayout && widget.drawerContentBuilder!=null ? Drawer(
+                          child: _getResponsiveDrawerContent(context, changeNotifier),
+                          elevation: drawerElevation,
+                        ) : null,
                         body: Builder(
                           builder: (context) {
                             return _getBody(context, changeNotifier);
@@ -444,12 +444,10 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                                         tooltip: "Página Anterior", //TODO 3 internationalize
                                         onPressed: () async{
                                           var navigator = Navigator.of(context);
-                                          //TODO 2 implement a way to prevent route pop
-//                        Confirmation prevent = Provider.of<AppbarStatus>(context, listen: false).preventNavigationCallback;
-//                        if (prevent==null || await prevent()){
-                                          if (navigator.canPop())
+                                          WillPopScope willPop = context.findAncestorWidgetOfExactType<WillPopScope>();
+                                          if (navigator.canPop() && (willPop==null || await willPop.onWillPop())){
                                             navigator.pop();
-//                        }
+                                          }
                                         },
                                       );
                                     } else{
@@ -536,7 +534,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
     );
   }
 
-  _getResponsiveDrawerContent(context, ScaffoldFromZeroChangeNotifier changeNotifier){
+  _getResponsiveDrawerContent(BuildContext context, ScaffoldFromZeroChangeNotifier changeNotifier){
     Widget drawerContent = widget.drawerContentBuilder(changeNotifier.getCurrentDrawerWidth(widget.currentPage)==compactDrawerWidth);
     AppbarChangeNotifier appbarChangeNotifier = Provider.of<AppbarChangeNotifier>(context, listen: false);
     return Column(
@@ -570,12 +568,10 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                           var navigator = Navigator.of(context);
                           if (displayMobileLayout)
                             navigator.pop();
-                          //TODO 2 implement a way to prevent route pop
-//                        Confirmation prevent = Provider.of<AppbarStatus>(context, listen: false).preventNavigationCallback;
-//                        if (prevent==null || await prevent()){
-                          if (navigator.canPop())
+                          WillPopScope willPop = context.findAncestorWidgetOfExactType<WillPopScope>();
+                          if (navigator.canPop() && (willPop==null || await willPop.onWillPop())){
                             navigator.pop();
-//                        }
+                          }
                         },
                       ),
                     ),
@@ -592,7 +588,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
               actions: [
                 if (!displayMobileLayout)
                 Padding(
-                  padding: EdgeInsets.only(right: kIsWeb ? 4 : 8), // TODO 1 WTFF dps are bigger in web ???
+                  padding: EdgeInsets.only(right: kIsWeb ? 4 : 8), // TODO 1 WTFF dps are bigger in web ??? this could be because of visualDensity TEST
                   child: IconButton(
                     icon: Icon(widget.useCompactDrawerInsteadOfClose&&!displayMobileLayout ? Icons.menu : Icons.close),
                     tooltip: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>compactDrawerWidth||displayMobileLayout ? "Cerrar Menú" : "Abrir Menú",
@@ -872,7 +868,7 @@ class AppbarChangeNotifier extends ChangeNotifier{
       Future.doWhile(() async{
         await Future.delayed(80.milliseconds);
         WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-          if (!disposed && DateTime.now().millisecondsSinceEpoch - lastScrollUpdateTime > 500){ //TODO 1 only trigger once, not every time after
+          if (!disposed && DateTime.now().millisecondsSinceEpoch - lastScrollUpdateTime > 500){
             if (currentAppbarOffset>-(appbarHeight)/2) {
               expand();
             } else {

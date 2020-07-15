@@ -41,7 +41,7 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
       currentPage: widget,
       title: Text("Future Handling"),
       body: _getPage(context),
-      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: [0, 3],),
+      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 4,),
       drawerFooterBuilder: (compact) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -63,7 +63,7 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
               );
             },
           ),
-          DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: [-1, -1], replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
+          DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
         ],
       ),
       floatingActionButton: FloatingActionButton(

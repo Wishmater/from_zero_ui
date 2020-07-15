@@ -32,8 +32,17 @@ class _PageHeroesState extends State<PageInnerHero> {
       currentPage: widget,
       title: Text("Heroes"),
       body: _getPage(context),
-      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: [0, 4],),
-      drawerFooterBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: [-1, -1], replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
+      drawerContentBuilder: (compact) => DrawerMenuFromZero(
+        tabs: List.generate(PageHome.tabs.length, (index) {
+          if (PageHome.tabs[index].title=="Heroes") {
+            return PageHome.tabs[index].copyWith(selectedChild: 3);
+          }
+          return PageHome.tabs[index];
+        })
+        , compact: compact,
+        selected: -1,
+      ),
+      drawerFooterBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
     );
   }
 

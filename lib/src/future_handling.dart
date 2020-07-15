@@ -311,7 +311,7 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
           if (previouSize != null){
             double previousHeight = max(previouSize.height, constraints.minHeight);
             double previousWidth = max(previouSize.width, constraints.minWidth);
-//            durationMult = ((max((previousHeight-height).abs(), (previousWidth-width).abs()))/64).clamp(0.0, 1.0); TODO 2 make this work right whrn called multiple times in succesion by LayoutBuilder
+//            durationMult = ((max((previousHeight-height).abs(), (previousWidth-width).abs()))/64).clamp(0.0, 1.0); TODO 3 make this work right when called multiple times in succesion by LayoutBuilder
           }
           int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, widget.duration.inMilliseconds*durationMult).toInt();
           return AnimatedContainer(

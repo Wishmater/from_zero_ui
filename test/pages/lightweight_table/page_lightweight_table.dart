@@ -44,7 +44,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
       currentPage: widget,
       title: Text("Lightweight Table"),
       body: _getPage(context),
-      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: [0, 2],),
+      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 2,),
       drawerFooterBuilder: (compact) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -66,7 +66,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
               );
             },
           ),
-          DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: [-1, -1], replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
+          DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
         ],
       ),
     );
