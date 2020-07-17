@@ -7,11 +7,11 @@ class SimpleShadowPainter extends CustomPainter {
   static const int left = 3;
   static const int right = 4;
 
-  int direction;
-  double shadowOpacity;
-  double spreadPercentage;
+  final int direction;
+  final double shadowOpacity;
+  final double spreadPercentage;
 
-  SimpleShadowPainter({this.shadowOpacity = 1, this.direction = down, this.spreadPercentage = 1});
+  const SimpleShadowPainter({this.shadowOpacity = 1, this.direction = down, this.spreadPercentage = 1});
 
 
   @override

@@ -43,8 +43,8 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
       currentPage: widget,
       title: Text("Lightweight Table"),
       body: _getPage(context),
-      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 2,),
-      drawerFooterBuilder: (compact) => Column(
+      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 2,),
+      drawerFooterBuilder: (context, compact) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DrawerMenuButtonFromZero(

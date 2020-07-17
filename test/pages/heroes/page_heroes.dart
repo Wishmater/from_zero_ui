@@ -39,8 +39,8 @@ class _PageHeroesState extends State<PageHeroes> {
       currentPage: widget,
       title: Text("Heroes"),
       body: _getPage(context),
-      drawerContentBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 3,),
-      drawerFooterBuilder: (compact) => Column(
+      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 3,),
+      drawerFooterBuilder: (context, compact) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DrawerMenuButtonFromZero(

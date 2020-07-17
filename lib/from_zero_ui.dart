@@ -1,4 +1,5 @@
 
+export 'package:from_zero_ui/src/app_content_wrapper.dart';
 export 'package:from_zero_ui/src/scaffold_from_zero.dart';
 export 'package:from_zero_ui/src/scrollbar_from_zero.dart';
 export 'package:from_zero_ui/src/drawer_menu_from_zero.dart';

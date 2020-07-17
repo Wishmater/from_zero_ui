@@ -31,7 +31,7 @@ class _PageHeroesState extends State<PageCrossFadeHero> {
       currentPage: widget,
       title: Text("Heroes"),
       body: _getPage(context),
-      drawerContentBuilder: (compact) => DrawerMenuFromZero(
+      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
         tabs: List.generate(PageHome.tabs.length, (index) {
           if (PageHome.tabs[index].title=="Heroes") {
             return PageHome.tabs[index].copyWith(selectedChild: 1);
@@ -41,7 +41,7 @@ class _PageHeroesState extends State<PageCrossFadeHero> {
         , compact: compact,
         selected: -1,
       ),
-      drawerFooterBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
+      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
     );
   }
 

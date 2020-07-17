@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/appbar_from_zero.dart';
 import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
+import 'package:from_zero_ui/src/flushbar_helper.dart';
 import 'package:from_zero_ui/src/settings.dart';
 import 'package:provider/provider.dart';
 
@@ -31,12 +33,37 @@ class _PageScaffoldState extends State<PageScaffold> {
       currentPage: widget,
       title: Text("Scaffold FromZero"),
       body: _getPage(context),
-      drawerContentBuilder: (compact) => DrawerMenuFromZero(
+      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
         compact: compact,
         selected: 1,
         tabs: PageHome.tabs,
       ),
-      drawerFooterBuilder: (compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
+      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
+      actions: [
+        AppbarAction(
+          title: "Action 1",
+          icon: Icon(Icons.looks_one),
+          onTap: (){
+            FlushbarHelperFromZero.createSuccess(message: "Pog").show(context);
+          },
+        ),
+        AppbarAction(
+          title: "Action 2",
+          breakpoints: {
+            ScaffoldFromZero.screenSizeMedium: ActionState.button,
+          },
+          onTap: (){},
+        ),
+
+        AppbarAction(
+          title: "Search",
+          icon: Icon(Icons.search),
+          expandedBuilder: (context, title, icon) => Container(
+            width: 256,
+            color: Colors.green,
+          ),
+        ),
+      ],
     );
   }
 

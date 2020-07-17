@@ -206,7 +206,7 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
             result = widget.loadingBuilder(context);
           }
         }
-        int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, widget.duration.inMilliseconds).toInt();
+        int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds).toInt();
         if (widget.transitionBuilder != null){
           result = AnimatedSwitcher(
             transitionBuilder: widget.transitionBuilder,
@@ -269,14 +269,16 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
   @override
   void initState() {
     initialTimestamp = DateTime.now().millisecondsSinceEpoch;
-    _addCalback(null);
+    _addCallback(null);
+    super.initState();
   }
   @override
   void didUpdateWidget(AnimatedContainerFromChildSize oldWidget) {
-    _addCalback(oldWidget);
+    _addCallback(oldWidget);
+    super.didUpdateWidget(oldWidget);
   }
 
-  void _addCalback(AnimatedContainerFromChildSize oldWidget){
+  void _addCallback(AnimatedContainerFromChildSize oldWidget){
     if (widget?.child != oldWidget?.child){
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         try {
@@ -296,7 +298,7 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        _addCalback(null);
+        _addCallback(null);
         Widget child = Container(key: globalKey, child: widget.child,);
         if (size == null){
           return AnimatedContainer(
@@ -313,7 +315,7 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
             double previousWidth = max(previouSize.width, constraints.minWidth);
 //            durationMult = ((max((previousHeight-height).abs(), (previousWidth-width).abs()))/64).clamp(0.0, 1.0); TODO 3 make this work right when called multiple times in succesion by LayoutBuilder
           }
-          int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, widget.duration.inMilliseconds*durationMult).toInt();
+          int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds*durationMult).toInt();
           return AnimatedContainer(
             height: height,
             width: width,

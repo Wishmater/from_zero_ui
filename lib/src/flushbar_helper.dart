@@ -33,7 +33,7 @@ class FlushbarHelperFromZero {
         List<Widget> actions = const []}) {
     var flush;
     flush =  Flushbar(
-      titleText: Padding(
+      titleText: title==null ? null : Padding(
         padding: EdgeInsets.only(left: 6),
         child: Text(
           title,
@@ -42,7 +42,7 @@ class FlushbarHelperFromZero {
               fontWeight: FontWeight.bold),
         ),
       ),
-      messageText: Padding(
+      messageText: message==null ? null : Padding(
         padding: EdgeInsets.only(left: 6),
         child: Text(
           message,

@@ -33,12 +33,7 @@ class MyApp extends StatelessWidget {
             theme: themeParameters.lightTheme,
             darkTheme: themeParameters.darkTheme,
             builder: (context, child) {
-              return MultiProvider(
-                providers: [
-                  ChangeNotifierProvider (create: (context) => ScaffoldFromZeroChangeNotifier(),),
-                ],
-                child: child,
-              );
+              return FromZeroAppContentWrapper(child: child);
             },
             initialRoute: '/',
             onGenerateRoute: FluroRouter.router.generator,
