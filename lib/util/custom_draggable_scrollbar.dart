@@ -259,32 +259,33 @@ class DraggableScrollbar extends StatefulWidget {
           BoxConstraints labelConstraints,
         }) {
       final scrollThumb = Material(
-        type: MaterialType.transparency,
+        elevation: scrollThumbElevation,
+        color: Colors.transparent,
+        borderRadius: BorderRadius.all(Radius.circular(scrollThumbBorderRadius)),
         child: Padding(
           padding: EdgeInsets.only(left: 1, right: 2),
-          child: Material(
-            elevation: scrollThumbElevation,
-            child: Container(
-              constraints: BoxConstraints.tight(
-                Size(scrollThumbWidth-3, height),
-              ),
-              child: showIcons ? Stack(
-                children: <Widget>[
-                  Positioned(
-                    left: -4,
-                    top: 0,
-                    child: Icon(Icons.keyboard_arrow_up, size: scrollThumbWidth*1.275,),
-                  ),
-                  Positioned(
-                    left: -4,
-                    bottom: 0,
-                    child: Icon(Icons.keyboard_arrow_down, size: scrollThumbWidth*1.275,),
-                  ),
-                ],
-              ) : Container(),
+          child: Container(
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.all(Radius.circular(scrollThumbBorderRadius)),
             ),
-            color: backgroundColor,
-            borderRadius: BorderRadius.all(Radius.circular(scrollThumbBorderRadius)),
+            constraints: BoxConstraints.tight(
+              Size(scrollThumbWidth-3, height),
+            ),
+            child: showIcons ? Stack(
+              children: <Widget>[
+                Positioned(
+                  left: -4,
+                  top: 0,
+                  child: Icon(Icons.keyboard_arrow_up, size: scrollThumbWidth*1.275,),
+                ),
+                Positioned(
+                  left: -4,
+                  bottom: 0,
+                  child: Icon(Icons.keyboard_arrow_down, size: scrollThumbWidth*1.275,),
+                ),
+              ],
+            ) : Container(),
           ),
         ),
       );

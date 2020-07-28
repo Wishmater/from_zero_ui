@@ -52,8 +52,8 @@ class _PageHeroesState extends State<PageHeroes> {
               showModal(
                 context: context,
                 builder: (context) => Export(
-                  childBuilder: (ci, urrentSize, portrait, scale, format) => widgetToExport,
-                  childrenCount: 1,
+                  childBuilder: (context, i, urrentSize, portrait, scale, format) => widgetToExport,
+                  childrenCount: (currentSize, portrait, scale, format) => 1,
                   themeParameters: Provider.of<ThemeParameters>(context, listen: false),
                   title: DateTime.now().millisecondsSinceEpoch.toString() + " Heroes",
                   path: getApplicationDocumentsDirectory().then((value) => value.absolute.path+"/Playground From Zero/"),

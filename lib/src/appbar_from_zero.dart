@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:dartx/dartx.dart';
-import 'package:marquee/marquee.dart';
 
 
 enum ActionState {
@@ -28,6 +27,7 @@ class AppbarAction extends StatelessWidget{
   Widget Function(BuildContext context, String title, Widget icon, VoidCallback onTap) iconBuilder;
   Widget Function(BuildContext context, String title, Widget icon, VoidCallback onTap) buttonBuilder;
   Widget Function(BuildContext context, String title, Widget icon) expandedBuilder;
+  final bool centerExpanded;
 
   AppbarAction({
     this.onTap,
@@ -38,6 +38,7 @@ class AppbarAction extends StatelessWidget{
     this.iconBuilder,
     this.buttonBuilder,
     this.expandedBuilder,
+    this.centerExpanded = true,
   }){
     if (breakpoints==null) breakpoints = {
       0: icon==null ? ActionState.overflow : ActionState.icon,
@@ -206,8 +207,12 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
                     actions[i] = action.buttonBuilder(context, action.title, action.icon, _getOnTap(action));
                     break;
                   case ActionState.expanded:
-                    expanded.add(action.expandedBuilder(context, action.title, action.icon));
-                    removeIndices.add(i);
+                    if (action.centerExpanded){
+                      expanded.add(action.expandedBuilder(context, action.title, action.icon));
+                      removeIndices.add(i);
+                    } else{
+                      actions[i] = action.expandedBuilder(context, action.title, action.icon);
+                    }
                     break;
                 }
               }

@@ -48,6 +48,9 @@ class _PageSettingsState extends State<PageSettings> {
                           Consumer<ThemeParameters>(
                             builder: (context, value, child) => ThemeSwitcher(value),
                           ),
+                          Consumer<ThemeParameters>(
+                            builder: (context, value, child) => LocaleSwitcher(value),
+                          ),
                         ],
                       ),
                     ),

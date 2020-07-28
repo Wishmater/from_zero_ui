@@ -91,6 +91,9 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
         _updateHeight(doSetState: doSetState);
       }
     } catch(_, __){
+      maxScrollExtent = 0;
+      maxHeight = 0;
+      height = 0;
 //      print(widget.id + "     no scroll positions");
     }
   }
@@ -150,7 +153,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
               alwaysVisibleScrollThumb: false,
               heightScrollThumb: height,
               backgroundColor: Theme.of(context).highlightColor.withOpacity(1.0),
-              controller: widget.controller,
+              controller: widget.controller==null||!widget.controller.hasClients ? null : widget.controller,
               child: child,
               scrollbarTimeToFade: Duration(milliseconds: 2500),
               scrollThumbBorderRadius: 0,
@@ -220,7 +223,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                   alwaysVisibleScrollThumb: height>0,
                   heightScrollThumb: height,
                   backgroundColor: Theme.of(context).cardColor,
-                  controller: widget.controller,
+                  controller: widget.controller==null||!widget.controller.hasClients ? null : widget.controller,
                   child: AnimatedPadding(
                     duration: Duration(milliseconds: (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, 200)),
                     curve: Curves.easeOutCubic,
@@ -229,7 +232,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                             ? widget.scrollbarWidthDesktop : 0),
                     child: child,
                   ),
-                  scrollbarTimeToFade: Duration(seconds: 1),
+                  scrollbarTimeToFade: Duration(milliseconds: 1),
                   scrollThumbBorderRadius: 999999,
                   scrollThumbWidth: widget.scrollbarWidthDesktop,
                   scrollThumbElevation: 4,

@@ -20,9 +20,6 @@ class _FromZeroAppContentWrapperState extends State<FromZeroAppContentWrapper> {
   final screen = ScreenFromZero();
   final changeNotifier = ScaffoldFromZeroChangeNotifier();
 
-  var previousWidth;
-  var previousHeight;
-
   @override
   Widget build(BuildContext context) {
     //TODO 3 add restrictions to fontSize, uiScale logic, etc. here
@@ -39,25 +36,14 @@ class _FromZeroAppContentWrapperState extends State<FromZeroAppContentWrapper> {
           } else{
             screen.breakpoint = ScaffoldFromZero.screenSizeSmall;
           }
-          for (int i=0; i<changeNotifier.scaffoldsStack.length; i++){
-            var scaffold = changeNotifier.scaffoldsStack[i];
-            if (screen.displayMobileLayout || scaffold.drawerContentBuilder==null) {
-              changeNotifier.setCurrentDrawerWidth(scaffold.currentPage, 0);
-            } else if (scaffold.drawerContentBuilder!=null && changeNotifier.getCurrentDrawerWidth(scaffold.currentPage) < scaffold.compactDrawerWidth){
-              changeNotifier.setCurrentDrawerWidth(scaffold.currentPage, scaffold.compactDrawerWidth);
-            } else if (previousWidth!=null && previousWidth<ScaffoldFromZero.screenSizeLarge && constraints.maxWidth>=ScaffoldFromZero.screenSizeLarge){
-              changeNotifier.setCurrentDrawerWidth(scaffold.currentPage, scaffold.drawerWidth);
-            } else if (previousWidth!=null && previousWidth>=ScaffoldFromZero.screenSizeLarge && constraints.maxWidth<ScaffoldFromZero.screenSizeLarge){
-              changeNotifier.setCurrentDrawerWidth(scaffold.currentPage, scaffold.compactDrawerWidth);
-            }
-          }
-          previousWidth = constraints.maxWidth;
-          previousHeight = constraints.maxHeight;
+          changeNotifier._updateScaffolds(screen.displayMobileLayout, constraints.maxWidth);
+          changeNotifier._previousWidth = constraints.maxWidth;
+          changeNotifier._previousHeight = constraints.maxHeight;
         }
         return FittedBox(
           child: SizedBox(
-            width: previousWidth ?? 1280,
-            height: previousHeight ?? 720,
+            width: changeNotifier._previousWidth ?? 1280,
+            height: changeNotifier._previousHeight ?? 720,
             child: MultiProvider(
               providers: [
                 ChangeNotifierProvider.value(value: changeNotifier,),
@@ -98,13 +84,18 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
 
   Map<String, double> _currentDrawerWidth = {};
   double getCurrentDrawerWidth(PageFromZero page) {
-    if (!_currentDrawerWidth.containsKey(page.pageScaffoldId))
+    if (!_currentDrawerWidth.containsKey(page.pageScaffoldId)){
       _currentDrawerWidth[page.pageScaffoldId] = 304;
+      _blockNotify = true;
+      _updateScaffolds(_previousWidth<ScaffoldFromZero.screenSizeMedium, _previousWidth);
+      _blockNotify = false;
+    }
     return _currentDrawerWidth[page.pageScaffoldId];
   }
+  bool _blockNotify = false;
   setCurrentDrawerWidth(PageFromZero page, double value) {
     _currentDrawerWidth[page.pageScaffoldId] = value;
-    notifyListeners();
+    if (!_blockNotify) notifyListeners();
   }
 
   int _animationType = ScaffoldFromZero.animationTypeOther;
@@ -116,9 +107,6 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
 
   List<PageFromZero> _pagesStack = [];
   List<PageFromZero> get pagesStack => _pagesStack;
-//  set pagesStack(List<PageFromZero> value) {
-//    _pagesStack = value;
-//  }
   void pushPageToStack (PageFromZero page){
     _pagesStack.add(page);
   }
@@ -128,9 +116,6 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
 
   List<ScaffoldFromZero> _scaffoldsStack = [];
   List<ScaffoldFromZero> get scaffoldsStack => _scaffoldsStack;
-//  set scaffoldsStack(List<ScaffoldFromZero> value) {
-//    _scaffoldsStack = value;
-//  }
   void pushScaffoldToStack (ScaffoldFromZero scaffold){
     _scaffoldsStack.add(scaffold);
   }
@@ -138,10 +123,30 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     _scaffoldsStack.removeWhere((element) => element.currentPage.randomId==scaffold.currentPage.randomId);
   }
 
+  double _previousWidth;
+  double _previousHeight;
+  void _updateScaffolds(bool displayMobileLayout, double width){
+    for (int i=0; i<scaffoldsStack.length; i++){
+      _updateScaffold(i, displayMobileLayout, width);
+    }
+  }
+  void _updateScaffold(int index, bool displayMobileLayout, double width){
+    var scaffold = scaffoldsStack[index];
+    if (displayMobileLayout || scaffold.drawerContentBuilder==null) {
+      setCurrentDrawerWidth(scaffold.currentPage, 0);
+    } else if (scaffold.drawerContentBuilder!=null && getCurrentDrawerWidth(scaffold.currentPage) < scaffold.compactDrawerWidth){
+      setCurrentDrawerWidth(scaffold.currentPage, scaffold.compactDrawerWidth);
+    } else if (_previousWidth!=null && _previousWidth<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
+      setCurrentDrawerWidth(scaffold.currentPage, scaffold.drawerWidth);
+    } else if (_previousWidth!=null && _previousWidth>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
+      setCurrentDrawerWidth(scaffold.currentPage, scaffold.compactDrawerWidth);
+    }
+  }
+
   bool fadeAnim = false;
   bool sharedAnim = false;
   bool titleAnimation = false;
-  updateStackRelatedVariables(){
+  void updateStackRelatedVariables(){
     int animationType = ScaffoldFromZero.animationTypeOther;
     PageFromZero currentPage, previousPage;
     ScaffoldFromZero currentScaffold, previousScaffold;
@@ -167,9 +172,10 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     sharedAnim = animationType==ScaffoldFromZero.animationTypeInner || animationType==ScaffoldFromZero.animationTypeOuter;
     titleAnimation = animationType!=ScaffoldFromZero.animationTypeOther
         && currentScaffold!=null && previousScaffold!=null
-        && ((currentScaffold.title.key!=null && currentScaffold.title.key!=previousScaffold.title.key)
-            || (!(currentScaffold.title is Text) || !(previousScaffold.title is Text)
-                || (currentScaffold.title as Text).data != (previousScaffold.title as Text).data));
+        && !(  (currentScaffold.title.key!=null && previousScaffold.title.key!=null
+                && currentScaffold.title.key==previousScaffold.title.key)
+            || (currentScaffold.title is Text && previousScaffold.title is Text
+                && (currentScaffold.title as Text).data == (previousScaffold.title as Text).data));
   }
 
 }

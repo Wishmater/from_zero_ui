@@ -47,13 +47,24 @@ class _PageScaffoldState extends State<PageScaffold> {
             FlushbarHelperFromZero.createSuccess(message: "Pog").show(context);
           },
         ),
-        AppbarAction(
+        Builder(builder: (context) => AppbarAction(
           title: "Action 2",
           breakpoints: {
             ScaffoldFromZero.screenSizeMedium: ActionState.button,
           },
-          onTap: (){},
-        ),
+          onTap: (){
+            Scaffold.of(context).showSnackBar(SnackBar(
+              content: Text("pepeg"),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
+              width: 512,
+              behavior: SnackBarBehavior.floating,
+              action: SnackBarAction(label: "Do something", onPressed: (){},),
+//              margin: EdgeInsets.all(0),
+              padding: EdgeInsets.all(0),
+
+            ));
+          },
+        ),),
 
         AppbarAction(
           title: "Search",

@@ -302,4 +302,35 @@ class OpacityGradient extends StatelessWidget {
   }
 }
 
+class TextIcon extends StatelessWidget {
 
+  final String text;
+  final double width;
+  final double height;
+
+  TextIcon(
+      this.text,
+      {this.width = 24,
+      this.height = 24,}
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        width: width, height: height,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white,
+        ),
+        child: Center(
+          child: Text(
+            text.toUpperCase(),
+            style: Theme.of(context).textTheme.bodyText1.copyWith(color: Theme.of(context).cardColor),
+          ),
+        ),
+      ),
+    );
+  }
+
+}

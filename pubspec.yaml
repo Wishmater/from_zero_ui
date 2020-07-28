@@ -14,23 +14,23 @@ dependencies:
     sdk: flutter
 
   # * Language Extensions
-  dartx: ^0.4.2
+  dartx: ^0.5.0
   collection: ^1.14.13
   
   # * State Management
   fluro: ^1.6.3
-  provider: ^4.1.3
-  hive: ^1.4.1+1
-  hive_flutter: ^0.3.0+2
+  provider: ^4.3.1
+  hive: ^1.4.2
+  hive_flutter: ^0.3.1
   
   # * Widgets / UI
   flushbar: ^1.10.4
   auto_size_text: ^2.1.0
-  marquee: ^1.5.2
   page_view_indicators: ^1.3.1
   implicitly_animated_reorderable_list: ^0.2.3
   flutter_icons: ^1.1.0
   animations: ^1.1.1
+  extended_image: ^0.9.0
 
   # * Plugins
   url_launcher: ^5.5.0
@@ -44,18 +44,19 @@ dependencies:
     git:
       url: git://github.com/google/flutter-desktop-embedding.git
       path: plugins/flutter_plugins/path_provider_fde
-      ref: df66fbc163a54b4f852047ab991ce463be20b298 # 82296566f18becd353205e51096441d8a69c2186
+      ref: 9e9b68b67c2a2c0b82eed2224f709aff2ccbab7c # 82296566f18becd353205e51096441d8a69c2186
   url_launcher_fde:
     git:
       url: git://github.com/google/flutter-desktop-embedding.git
       path: plugins/flutter_plugins/url_launcher_fde
-      ref: df66fbc163a54b4f852047ab991ce463be20b298 # 82296566f18becd353205e51096441d8a69c2186
+      ref: 9e9b68b67c2a2c0b82eed2224f709aff2ccbab7c # 82296566f18becd353205e51096441d8a69c2186
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
 dependency_overrides:
-  path: ">=1.6.0 <2.0.0" # ! remove this when hive_flutter dependency problems are fixed
+#  path: ">=1.6.0 <2.0.0" # ! remove this when hive_flutter dependency problems are fixed
+#  collection: "^1.15.0-nullsafety" # ! remove this once dartx support newer versions of colletion
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -98,3 +99,6 @@ flutter:
   #
   # For details regarding fonts in packages, see
   # https://flutter.dev/custom-fonts/#from-packages
+
+  assets:
+    - assets/i18n/

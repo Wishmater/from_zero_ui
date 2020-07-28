@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/exposed_transitions.dart';
 
 
@@ -89,7 +90,7 @@ class ErrorSign extends StatelessWidget {
           SizedBox(height: 12,),
           if (onRetry!=null)
           RaisedButton(
-            child: Text("Reintentar"), //TODO 3 internationalize
+            child: Text(FromZeroLocalizations.of(context).translate("retry")), //TODO 3 internationalize
             onPressed: onRetry,
           ),
         ],
@@ -140,8 +141,8 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
   Widget _defaultErrorBuilder(context, error){
     return ErrorSign(
       icon: Icon(Icons.error_outline, size: 64, color: Theme.of(context).errorColor,),
-      title: "Oops!",
-      subtitle: "Something went wrong...",
+      title: FromZeroLocalizations.of(context).translate("error"),
+      subtitle: FromZeroLocalizations.of(context).translate("error_details"),
     );
   }
 

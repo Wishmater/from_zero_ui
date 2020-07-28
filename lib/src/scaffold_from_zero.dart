@@ -64,8 +64,11 @@ class ScaffoldFromZero extends StatefulWidget {
   final DrawerContentBuilder drawerFooterBuilder;
   final Widget drawerTitle;
   final double drawerElevation;
+  final double drawerAppbarElevation;
   final bool useCompactDrawerInsteadOfClose = true;
   final bool constraintBodyOnXLargeScreens;
+  final bool centerTitle;
+  final double drawerPaddingTop;
 
 
   ScaffoldFromZero({
@@ -84,12 +87,15 @@ class ScaffoldFromZero extends StatefulWidget {
     this.mainScrollController,
     double collapsibleBackgroundLength,
     this.collapsibleBackgroundColor,
-    int scrollbarType, //TODO 3 allow a way to customize scrollbar (maybe throug theme, or a theme-like widget)
+    int scrollbarType, //TODO 3 allow a way to customize scrollbar (maybe through Theme, or a theme-like widget)
     bool bodyFloatsBelowAppbar,
     double compactDrawerWidth,
     this.drawerWidth = 304,
     this.drawerElevation = 2,
-    this.appbarElevation = 4,
+    this.appbarElevation = 3,
+    this.drawerAppbarElevation = 3,
+    this.centerTitle = false,
+    this.drawerPaddingTop = 6,
   }) : this.collapsibleBackgroundHeight = collapsibleBackgroundLength ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? -1 : appbarHeight*3),
   this.scrollbarType = scrollbarType ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? scrollbarTypeBellowAppbar : scrollbarTypeOverAppbar),
   this.bodyFloatsBelowAppbar = bodyFloatsBelowAppbar ?? appbarType==ScaffoldFromZero.appbarTypeQuickReturn,
@@ -175,40 +181,43 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         ChangeNotifierProvider.value(value: _appbarChangeNotifier,),
       ],
       builder: (context, child) {
-        return Consumer2<ScaffoldFromZeroChangeNotifier, ScreenFromZero>(
-          builder: (context, changeNotifier, screen, child) {
-            return LayoutBuilder(
-              builder: (context, constraints) {
-                return FadeUpwardsSlideTransition(
-                  routeAnimation: changeNotifier.animationType==ScaffoldFromZero.animationTypeOther ? animation : kAlwaysCompleteAnimation,
-                  child: FadeUpwardsFadeTransition(
-                    routeAnimation: animation,
-                    child: Scaffold(
-                      floatingActionButton: AnimatedPadding(
-                        padding: EdgeInsets.only(
-                          bottom: screen.displayMobileLayout ? 0 : 12,
-                          right: screen.displayMobileLayout ? 0
-                              : 12 + ((constraints.maxWidth-changeNotifier.getCurrentDrawerWidth(widget.currentPage)-ScaffoldFromZero.screenSizeXLarge)/2).coerceIn(0),
-                        ),
-                        duration: widget.drawerAnimationDuration,
-                        curve: widget.drawerAnimationCurve,
-                        child: widget.floatingActionButton,
-                      ),
-                      drawer: screen.displayMobileLayout && widget.drawerContentBuilder!=null ? Drawer(
-                        child: _getResponsiveDrawerContent(context),
-                        elevation: widget.drawerElevation,
-                      ) : null,
-                      body: Builder(
-                        builder: (context) {
-                          return _getMainLayout(context);
-                        },
-                      ),
+        var drawerContent = _getResponsiveDrawerContent(context);
+        var body = _getMainLayout(context);
+        return FadeUpwardsSlideTransition(
+          routeAnimation: Provider.of<ScaffoldFromZeroChangeNotifier>(context, listen: false).animationType==ScaffoldFromZero.animationTypeOther ? animation : kAlwaysCompleteAnimation,
+          child: FadeUpwardsFadeTransition(
+            routeAnimation: animation,
+            child: Selector<ScreenFromZero, bool>(
+              selector: (context, screen) => screen.displayMobileLayout,
+              builder: (context, displayMobileLayout, child) {
+                return Scaffold(
+                    floatingActionButton: Consumer<ScaffoldFromZeroChangeNotifier>(
+                      builder: (context, changeNotifier, child) {
+                        return LayoutBuilder(
+                          builder: (context, constraints) {
+                            return AnimatedPadding(
+                              padding: EdgeInsets.only(
+                                bottom: displayMobileLayout ? 0 : 12,
+                                right: displayMobileLayout ? 0
+                                    : 12 + ((constraints.maxWidth-changeNotifier.getCurrentDrawerWidth(widget.currentPage)-ScaffoldFromZero.screenSizeXLarge)/2).coerceIn(0),
+                              ),
+                              duration: widget.drawerAnimationDuration,
+                              curve: widget.drawerAnimationCurve,
+                              child: widget.floatingActionButton,
+                            );
+                          },
+                        );
+                      },
                     ),
-                  ),
+                    drawer: displayMobileLayout && widget.drawerContentBuilder!=null ? Drawer(
+                      child: drawerContent,
+                      elevation: widget.drawerElevation*5,
+                    ) : null,
+                    body: body,
                 );
-              },
-            );
-          },
+              }
+            ),
+          ),
         );
       },
     );
@@ -216,7 +225,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
   Widget _mainLayout;
   Widget _getMainLayout(context) {
-    if (_mainLayout==null){
+//    if (_mainLayout==null){
       _mainLayout = Consumer2<ScaffoldFromZeroChangeNotifier, ScreenFromZero>(
         builder: (context, changeNotifier, screen, child) {
           return Stack(
@@ -250,87 +259,78 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                 ),
               ),
 
-              //DESKTOP DRAWER
-              screen.displayMobileLayout || widget.drawerContentBuilder==null
-                  ? SizedBox.shrink()
-                  : widget.useCompactDrawerInsteadOfClose
-                  ? AnimatedContainer(
-                duration: widget.drawerAnimationDuration,
-                curve: widget.drawerAnimationCurve,
-                width: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
-                child: GestureDetector(
-                  onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
-                  onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
-                  child: _getResponsiveDrawerContent(context),
-                ),
-              )
-                  : AnimatedPositioned(
-                duration: widget.drawerAnimationDuration,
-                curve: widget.drawerAnimationCurve,
-                left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)-widget.drawerWidth,
-                width: widget.drawerWidth,
-                top: 0, bottom: 0,
-                child: GestureDetector(
-                  onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
-                  onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
-                  child: _getResponsiveDrawerContent(context),
-                ),
-              ),
-
-              //CUSTOM SHADOWS (drawer appbar)
-              AnimatedContainer(
-                duration: widget.drawerAnimationDuration,
-                curve: widget.drawerAnimationCurve,
-                alignment: Alignment.topCenter,
-                padding: EdgeInsets.only(top: widget.appbarHeight+Provider.of<AppbarChangeNotifier>(context, listen: false).safeAreaOffset,),
-                width: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: widget.appbarElevation,
-                  child: const CustomPaint(
-                    painter: const SimpleShadowPainter(direction: SimpleShadowPainter.down, shadowOpacity: 0.3),
-                  ),
-                ),
-              ),
-
               //APPBAR + BODY
               AnimatedPositioned(
-                  duration: widget.drawerAnimationDuration,
-                  curve: widget.drawerAnimationCurve,
-                  left: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
-                  right: 0, top: 0, bottom: 0,
-                  child: _getBody(context)
+                duration: widget.drawerAnimationDuration,
+                curve: widget.drawerAnimationCurve,
+                left: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
+                right: 0, top: 0, bottom: 0,
+                child: _getBody(context),
               ),
 
               // CUSTOM SHADOWS (drawer right)
-              if (!screen.displayMobileLayout && widget.drawerContentBuilder!=null)
-                Consumer<AppbarChangeNotifier>(
-                  builder: (context, appbarChangeNotifier, child) => AnimatedContainer(
-                    alignment: Alignment.centerLeft,
-                    padding: EdgeInsets.only(top: appbarChangeNotifier.currentAppbarHeight, left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)),
-                    duration: widget.drawerAnimationDuration,
-                    curve: widget.drawerAnimationCurve,
-                    child: SizedBox(
-                      width: widget.drawerElevation,
-                      height: double.infinity,
-                      child: const CustomPaint(
-                        painter: const SimpleShadowPainter(direction: SimpleShadowPainter.right, shadowOpacity: 0.4),
+              Consumer<AppbarChangeNotifier>(
+                builder: (context, appbarChangeNotifier, child) {
+                  if (!screen.displayMobileLayout && widget.drawerContentBuilder!=null){
+                    return AnimatedContainer(
+                      alignment: Alignment.centerLeft,
+                      padding: EdgeInsets.only(top: appbarChangeNotifier.currentAppbarHeight, left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)),
+                      duration: widget.drawerAnimationDuration,
+                      curve: widget.drawerAnimationCurve,
+                      child: SizedBox(
+                        width: widget.drawerElevation,
+                        height: double.infinity,
+                        child: const CustomPaint(
+                          painter: const SimpleShadowPainter(direction: SimpleShadowPainter.right, shadowOpacity: 0.45),
+                        ),
                       ),
-                    ),
+                    );
+                  } else{
+                    return SizedBox.shrink();
+                  }
+                },
+              ),
+
+              //DESKTOP DRAWER
+              Container(
+                child: screen.displayMobileLayout || widget.drawerContentBuilder==null
+                    ? Container()
+                    : widget.useCompactDrawerInsteadOfClose
+                    ? AnimatedContainer(
+                  duration: widget.drawerAnimationDuration,
+                  curve: widget.drawerAnimationCurve,
+                  width: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
+                  child: GestureDetector(
+                    onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
+                    onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
+                    child: _getResponsiveDrawerContent(context),
+                  ),
+                )
+                    : AnimatedPositioned(
+                  duration: widget.drawerAnimationDuration,
+                  curve: widget.drawerAnimationCurve,
+                  left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)-widget.drawerWidth,
+                  width: widget.drawerWidth,
+                  top: 0, bottom: 0,
+                  child: GestureDetector(
+                    onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
+                    onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
+                    child: _getResponsiveDrawerContent(context),
                   ),
                 ),
+              ),
 
             ],
           );
         },
       );
-    }
+//    }
     return _mainLayout;
   }
 
   Widget _body;
   Widget _getBody (BuildContext context){
-    if (_body==null){
+//    if (_body==null){
       var changeNotifierNotListen = Provider.of<ScaffoldFromZeroChangeNotifier>(context, listen: false);
       _body = ScrollbarFromZero(
         controller: widget.scrollbarType==ScaffoldFromZero.scrollbarTypeOverAppbar ? widget.mainScrollController : null,
@@ -351,36 +351,36 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                       alignment: Alignment.topCenter,
                       width: widget.constraintBodyOnXLargeScreens ? ScaffoldFromZero.screenSizeXLarge : double.infinity,
                       child: AnimatedBuilder(
-                          child: Container(key: widget.bodyGlobalKey, child: widget.body),
-                          animation: animation,
-                          builder: (context, child) {
-                            return AnimatedBuilder(
-                              animation: secondaryAnimation,
-                              child: child,
-                              builder: (context, child) {
-                                if (changeNotifierNotListen.sharedAnim) {
-                                  return no_fading_shared_axis_transition.SharedAxisTransition(
-                                    animation: changeNotifierNotListen.animationType==ScaffoldFromZero.animationTypeOuter
-                                        ? ReverseAnimation(secondaryAnimation) : animation,
-                                    secondaryAnimation: changeNotifierNotListen.animationType==ScaffoldFromZero.animationTypeOuter
-                                        ? ReverseAnimation(animation) : secondaryAnimation,
-                                    child: child,
-                                    transitionType: no_fading_shared_axis_transition.SharedAxisTransitionType.scaled,
-                                    fillColor: Colors.transparent,
-                                  );
-                                } else if (changeNotifierNotListen.fadeAnim) {
-                                  return FadeThroughTransition(
-                                    animation: animation,
-                                    secondaryAnimation: secondaryAnimation,
-                                    child: child,
-                                    fillColor: Colors.transparent,
-                                  );
-                                } else {
-                                  return child;
-                                }
-                              },
-                            );
-                          }
+                        child: Container(key: widget.bodyGlobalKey, child: widget.body),
+                        animation: animation,
+                        builder: (context, child) {
+                          return AnimatedBuilder(
+                            animation: secondaryAnimation,
+                            child: child,
+                            builder: (context, child) {
+                              if (changeNotifierNotListen.sharedAnim) {
+                                return no_fading_shared_axis_transition.SharedAxisTransition(
+                                  animation: changeNotifierNotListen.animationType==ScaffoldFromZero.animationTypeOuter
+                                      ? ReverseAnimation(secondaryAnimation) : animation,
+                                  secondaryAnimation: changeNotifierNotListen.animationType==ScaffoldFromZero.animationTypeOuter
+                                      ? ReverseAnimation(animation) : secondaryAnimation,
+                                  child: child,
+                                  transitionType: no_fading_shared_axis_transition.SharedAxisTransitionType.scaled,
+                                  fillColor: Colors.transparent,
+                                );
+                              } else if (changeNotifierNotListen.fadeAnim) {
+                                return FadeThroughTransition(
+                                  animation: animation,
+                                  secondaryAnimation: secondaryAnimation,
+                                  child: child,
+                                  fillColor: Colors.transparent,
+                                );
+                              } else {
+                                return child;
+                              }
+                            },
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -397,7 +397,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                   width: double.infinity,
                   height: widget.appbarElevation,
                   child: const CustomPaint(
-                    painter: const SimpleShadowPainter(direction: SimpleShadowPainter.down, shadowOpacity: 0.5),
+                    painter: const SimpleShadowPainter(direction: SimpleShadowPainter.down, shadowOpacity: 0.6),
                   ),
                 ),
               ),
@@ -412,60 +412,86 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                 child: AppbarFromZero(
                   backgroundColor: (Theme.of(context).appBarTheme.color??Theme.of(context).primaryColor).withOpacity(0.9),
                   elevation: 0,
-                  actions: widget.actions, // TODO 2 do something about overflowing actions
+                  titleSpacing: 0,
+                  centerTitle: widget.centerTitle,
+                  actions: widget.actions,
                   title: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: <Widget>[
 
+                      SizedBox(width: 8,),
+
                       //DRAWER HAMBURGER BUTTON (only if not using compact style)
-                      !(canPop||widget.drawerContentBuilder!=null) ? SizedBox.shrink()
-                      : Consumer<ScaffoldFromZeroChangeNotifier>(
-                        builder: (context, changeNotifier, child) {
-                          return AnimatedOpacity(
-                            opacity: 1-changeNotifier.getCurrentDrawerWidth(widget.currentPage)/56<0 ? 0 : 1-changeNotifier.getCurrentDrawerWidth(widget.currentPage)/56,
-                            duration: widget.drawerAnimationDuration,
-                            curve: widget.drawerAnimationCurve,
-                            child: AnimatedContainer(
-                              width: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>56 ? 0: 56-changeNotifier.getCurrentDrawerWidth(widget.currentPage),
-                              height: widget.appbarHeight,
-                              duration: widget.drawerAnimationDuration,
-                              curve: Curves.easeOutCubic,
-                              alignment: Alignment.centerLeft,
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: Stack(
-                          children: [
-                            Positioned.fill(
-                              left: -36,
-                              child: Center(
-                                child: Consumer<ScreenFromZero>(
-                                  builder: (context, screen, child) {
-                                    if ((screen.displayMobileLayout||widget.drawerContentBuilder==null)&&canPop){
-                                      return IconButton(
-                                        icon: Icon(Icons.arrow_back),
-                                        tooltip: "Página Anterior", //TODO 3 internationalize
-                                        onPressed: () async{
-                                          var navigator = Navigator.of(context);
-                                          if (navigator.canPop() && (await ModalRoute.of(context).willPop()==RoutePopDisposition.pop)){
-                                            navigator.pop();
-                                          }
-                                        },
-                                      );
-                                    } else{
-                                      return IconButton(
-                                        icon: Icon(Icons.menu),
-                                        tooltip: "Abrir Menú",
-                                        onPressed: () => _toggleDrawer(context, changeNotifierNotListen),
-                                      );
-                                    }
-                                  },
+                      Selector<ScreenFromZero, bool>(
+                        selector: (context, screen) => screen.displayMobileLayout,
+                        builder: (context, displayMobileLayout, child) {
+                          if ((widget.useCompactDrawerInsteadOfClose && widget.drawerContentBuilder!=null && !displayMobileLayout)
+                              || (!canPop && widget.drawerContentBuilder==null)) {
+                            return SizedBox.shrink();
+                          } else{
+                            Widget result;
+                            if ((displayMobileLayout||widget.drawerContentBuilder==null)&&canPop){
+                              result = IconButton(
+                                icon: Icon(Icons.arrow_back),
+                                tooltip: FromZeroLocalizations.of(context).translate("back"),
+                                onPressed: () async{
+                                  var navigator = Navigator.of(context);
+                                  if (navigator.canPop() && (await ModalRoute.of(context).willPop()==RoutePopDisposition.pop)){
+                                    navigator.pop();
+                                  }
+                                },
+                              );
+                            } else{
+                              result = AnimatedBuilder(
+                                animation: secondaryAnimation ?? kAlwaysDismissedAnimation,
+                                builder: (context, child) => IconButton(
+                                  icon: AnimatedIcon(
+                                    progress: secondaryAnimation ?? kAlwaysDismissedAnimation,
+                                    icon: AnimatedIcons.menu_arrow,
+                                    color: (Theme.of(context).appBarTheme.brightness ?? Theme.of(context).primaryColorBrightness)
+                                        == Brightness.light ? Colors.black : Colors.white,
+                                  ),
+                                  tooltip: FromZeroLocalizations.of(context).translate("menu_open"),
+                                  onPressed: () => _toggleDrawer(context, changeNotifierNotListen),
                                 ),
-                              ),
-                            ),
-                          ],
-                        ),
+                              );
+                            }
+                            if (widget.useCompactDrawerInsteadOfClose){
+                              result = Container(
+                                width: 56,
+                                height: widget.appbarHeight,
+                                alignment: Alignment.centerLeft,
+                                child: result,
+                              );
+                            } else{
+                              result = Consumer<ScaffoldFromZeroChangeNotifier>(
+                                builder: (context, changeNotifier, child) {
+                                  return  AnimatedOpacity(
+                                    opacity: 1-changeNotifier.getCurrentDrawerWidth(widget.currentPage)/56<0 ? 0 : 1-changeNotifier.getCurrentDrawerWidth(widget.currentPage)/56,
+                                    duration: widget.drawerAnimationDuration,
+                                    curve: widget.drawerAnimationCurve,
+                                    child: AnimatedContainer(
+                                      width: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>56 ? 0 : 56-changeNotifier.getCurrentDrawerWidth(widget.currentPage),
+                                      height: widget.appbarHeight,
+                                      duration: widget.drawerAnimationDuration,
+                                      curve: Curves.easeOutCubic,
+                                      alignment: Alignment.centerLeft,
+                                      child: result,
+                                    ),
+                                  );
+                                }
+                              );
+                            }
+                            return result;
+                          }
+                        },
+                      ),
+
+                      Selector<ScreenFromZero, bool>(
+                        selector: (context, screen) => screen.displayMobileLayout,
+                        builder: (context, displayMobileLayout, child) {
+                          return displayMobileLayout ? SizedBox.shrink() : SizedBox(width: 8,);
+                        },
                       ),
 
                       //TITLE
@@ -484,7 +510,9 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                                   children: [
                                     Positioned.fill(
                                       left: Tween<double>(begin: -40.0, end: 0.0)
-                                          .evaluate(changeNotifierNotListen.titleAnimation ? animation : kAlwaysCompleteAnimation),
+                                          .evaluate(CurvedAnimation( curve: Curves.easeOutCubic,
+                                            parent: changeNotifierNotListen.titleAnimation ? animation : kAlwaysCompleteAnimation),
+                                          ),
                                       child: Align(
                                         alignment: Alignment.centerLeft,
                                         child: AnimatedBuilder(
@@ -513,9 +541,10 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
               ),
 
               //DESKTOP DRAWER OPEN GESTURE DETECTOR
-              Consumer<ScreenFromZero>(
-                builder: (context, screen, child) {
-                  return screen.displayMobileLayout||widget.drawerContentBuilder==null ? const SizedBox.shrink()
+              Selector<ScreenFromZero, bool>(
+                selector: (context, screen) => screen.displayMobileLayout,
+                builder: (context, displayMobileLayout, child) {
+                  return displayMobileLayout||widget.drawerContentBuilder==null ? const SizedBox.shrink()
                       : GestureDetector(
                     onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifierNotListen),
                     onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifierNotListen),
@@ -529,13 +558,13 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
           ),
         ),
       );
-    }
+//    }
     return _body;
   }
 
   Widget _drawerContent;
   _getResponsiveDrawerContent(BuildContext context){
-    if (_drawerContent==null){
+//    if (_drawerContent==null){
       AppbarChangeNotifier appbarChangeNotifier = Provider.of<AppbarChangeNotifier>(context, listen: false);
       var changeNotifierNotListen = Provider.of<ScaffoldFromZeroChangeNotifier>(context);
       _drawerContent = Column(
@@ -557,20 +586,21 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                     automaticallyImplyLeading: false,
                     title: SizedBox(
                       height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
-                      child: Consumer<ScreenFromZero>(
-                        builder: (context, screen, child) {
+                      child: Selector<ScreenFromZero, bool>(
+                        selector: (context, screen) => screen.displayMobileLayout,
+                        builder: (context, displayMobileLayout, child) {
                           return Stack(
                             alignment: Alignment.centerLeft,
                             children: [
-                              if (!screen.displayMobileLayout && canPop)
+                              if (!displayMobileLayout && canPop)
                                 Positioned(
                                   left: -8,
                                   child: IconButton(
                                     icon: Icon(Icons.arrow_back),
-                                    tooltip: "Página Anterior", //TODO 3 internationalize
+                                    tooltip: FromZeroLocalizations.of(context).translate("back"),
                                     onPressed: () async{
                                       var navigator = Navigator.of(context);
-                                      if (screen.displayMobileLayout)
+                                      if (displayMobileLayout)
                                         navigator.pop();
                                       if (navigator.canPop() && (await ModalRoute.of(context).willPop()==RoutePopDisposition.pop)){
                                         navigator.pop();
@@ -579,11 +609,15 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                                   ),
                                 ),
                               if(widget.drawerTitle!=null)
-                                AnimatedPositioned(
-                                  left: !screen.displayMobileLayout && canPop ? 56 : 0,
-                                  duration: 300.milliseconds,
-                                  curve: widget.drawerAnimationCurve,
-                                  child: widget.drawerTitle,
+                                Positioned(
+                                  left: !displayMobileLayout && canPop ? 40 : 0,
+                                  top: 0, bottom: 0,
+//                                  duration: 300.milliseconds,
+//                                  curve: widget.drawerAnimationCurve,
+                                  child: Hero(
+                                    tag: "scaffold-fz-drawer-title",
+                                    child: widget.drawerTitle,
+                                  ),
                                 ),
                             ],
                           );
@@ -598,7 +632,8 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                               padding: EdgeInsets.only(right: kIsWeb ? 4 : 8), // TODO 1 WTFF dps are bigger in web ??? this could be because of visualDensity TEST
                               child: IconButton(
                                 icon: Icon(widget.useCompactDrawerInsteadOfClose&&!screen.displayMobileLayout ? Icons.menu : Icons.close),
-                                tooltip: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>widget.compactDrawerWidth||screen.displayMobileLayout ? "Cerrar Menú" : "Abrir Menú",
+                                tooltip: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>widget.compactDrawerWidth||screen.displayMobileLayout
+                                    ? FromZeroLocalizations.of(context).translate("menu_close") : FromZeroLocalizations.of(context).translate("menu_open"),
                                 onPressed: (){
                                   if (screen.displayMobileLayout)
                                     Navigator.of(context).pop();
@@ -619,7 +654,6 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
             ],
           ),
 
-
           //DRAWER CONTENT
           Expanded(
             child: Container(
@@ -629,63 +663,85 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                 minWidth: widget.drawerWidth,
                 maxWidth: widget.drawerWidth,
                 alignment: Alignment.bottomLeft,
-                child: Material(
-                    color: Theme.of(context).cardColor,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: ScrollbarFromZero(
-                            controller: drawerContentScrollController,
-                            child: SingleChildScrollView(
+                child: Stack(
+                  children: [
+                    Material(
+                      color: Theme.of(context).cardColor,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Expanded(
+                            child: ScrollbarFromZero(
                               controller: drawerContentScrollController,
-                              child: AnimatedBuilder(
-                                animation: secondaryAnimation,
-                                child: Consumer<ScaffoldFromZeroChangeNotifier>(
-                                  builder: (context, changeNotifier, child) {
-                                    return _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth);
-                                  },
-                                ),
-                                builder: (context, child) {
-                                  return AnimatedBuilder(
-                                    animation: animation,
-                                    child: child,
-                                    builder: (context, child) {
-                                      return ZoomedFadeInTransition(
-                                        animation: changeNotifierNotListen.sharedAnim
-                                            ? ReverseAnimation(secondaryAnimation) : kAlwaysCompleteAnimation,
-                                        child: FadeUpwardsSlideTransition(
-                                          routeAnimation: changeNotifierNotListen.sharedAnim
-                                              ? animation : kAlwaysCompleteAnimation,
-                                          child: child,
-                                        ),
+                              child: SingleChildScrollView(
+                                controller: drawerContentScrollController,
+                                child: AnimatedBuilder(
+                                  animation: secondaryAnimation,
+                                  child: Consumer<ScaffoldFromZeroChangeNotifier>(
+                                    builder: (context, changeNotifier, child) {
+                                      return Padding(
+                                        padding: EdgeInsets.only(top: widget.drawerPaddingTop),
+                                        child: _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth),
                                       );
                                     },
-                                  );
-                                },
+                                  ),
+                                  builder: (context, child) {
+                                    return AnimatedBuilder(
+                                      animation: animation,
+                                      child: child,
+                                      builder: (context, child) {
+                                        return ZoomedFadeInTransition(
+                                          animation: changeNotifierNotListen.sharedAnim
+                                              ? ReverseAnimation(secondaryAnimation) : kAlwaysCompleteAnimation,
+                                          child: FadeUpwardsSlideTransition(
+                                            routeAnimation: changeNotifierNotListen.sharedAnim
+                                                ? animation : kAlwaysCompleteAnimation,
+                                            child: child,
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  },
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        Material(
-                          color: Theme.of(context).cardColor,
-                          child: Column(
-                            children: <Widget>[
-                              Divider(height: 3, thickness: 3,),
-                              SizedBox(height: 6,),
-                              widget.drawerFooterBuilder != null
-                                  ? Consumer<ScaffoldFromZeroChangeNotifier>(
-                                    builder: (context, changeNotifier, child) {
-                                      return _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth);
-                                    },
-                                  )
-                                  : SizedBox.shrink(),
-                              SizedBox(height: 12,),
-                            ],
+                          Material(
+                            color: Theme.of(context).cardColor,
+                            child: Column(
+                              children: <Widget>[
+                                Divider(height: 3, thickness: 3,),
+                                SizedBox(height: 8,),
+                                widget.drawerFooterBuilder != null
+                                    ? Consumer<ScaffoldFromZeroChangeNotifier>(
+                                  builder: (context, changeNotifier, child) {
+                                    return _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth);
+                                  },
+                                )
+                                    : SizedBox.shrink(),
+                                SizedBox(height: 12,),
+                              ],
+                            ),
                           ),
+                        ],
+                      ),
+                    ),
+
+                    //CUSTOM SHADOWS (drawer appbar)
+                    AnimatedContainer(
+                      duration: widget.drawerAnimationDuration,
+                      curve: widget.drawerAnimationCurve,
+                      alignment: Alignment.topCenter,
+                      width: widget.drawerWidth,
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: widget.drawerAppbarElevation,
+                        child: const CustomPaint(
+                          painter: const SimpleShadowPainter(direction: SimpleShadowPainter.down, shadowOpacity: 0.3),
                         ),
-                      ],
-                    )
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -693,7 +749,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 
         ],
       );
-    }
+//    }
     return _drawerContent;
   }
 

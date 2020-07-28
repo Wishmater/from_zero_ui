@@ -56,8 +56,8 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
               showModal(
                 context: context,
                 builder: (context) => Export(
-                  childBuilder: (i, currentSize, portrait, scale, format) => [col1, col2, col3][i],
-                  childrenCount: 3,
+                  childBuilder: (context, i, currentSize, portrait, scale, format) => [col1, col2, col3][i],
+                  childrenCount: (currentSize, portrait, scale, format) => 3,
                   themeParameters: Provider.of<ThemeParameters>(context, listen: false),
                   title: DateTime.now().millisecondsSinceEpoch.toString() + " Tables",
                   path: getApplicationDocumentsDirectory().then((value) => value.absolute.path+"/Playground From Zero/"),

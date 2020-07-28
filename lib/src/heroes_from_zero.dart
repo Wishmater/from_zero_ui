@@ -24,13 +24,23 @@ abstract class HeroesFromZero{
               children: [
                 FittedBox(
                   fit: BoxFit.contain,
-                  child: oldHero.child,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints.loose(
+                      Size(constraints.maxWidth, constraints.maxHeight),
+                    ),
+                    child: oldHero.child,
+                  ),
                 ),
                 FittedBox(
                   fit: BoxFit.contain,
                   child: FadeTransition(
                     opacity: newAnimation,
-                    child: newHero.child,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints.loose(
+                        Size(constraints.maxWidth, constraints.maxHeight),
+                      ),
+                      child: newHero.child,
+                    ),
                   ),
                 ),
               ],

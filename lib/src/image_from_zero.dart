@@ -38,13 +38,15 @@ class ImageFromZero extends StatelessWidget {
     this.heroTag,
     this.transitionBuilder,
     this.errorIcon = const Icon(Icons.broken_image),
-    this.errorTitle = "Failed to load image...",
+    this.errorTitle,
     String errorSubtitle,
     this.loadingWidget = const LoadingSign(),
     this.fullscreenType = fullscreenTypeOnImageClick,
     this.iconButtonAlignment = Alignment.topRight,
     this.actions = const [],
-  }) : this.errorSubtitle = errorSubtitle ?? (retryable ? "Check your connection and try again" : null);
+  }) :
+//        this.errorTitle = FromZeroLocalizations.of(context).translate("error_image"),
+        this.errorSubtitle = errorSubtitle ?? (retryable ? "Check your connection and try again" : null);
 
   @override
   Widget build(BuildContext context) {

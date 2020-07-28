@@ -53,8 +53,8 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
               showModal(
                 context: context,
                 builder: (context) => Export(
-                  childBuilder: (i, currentSize, portrait, scale, format) => widgetToExport,
-                  childrenCount: 1,
+                  childBuilder: (context, i, currentSize, portrait, scale, format) => widgetToExport,
+                  childrenCount: (currentSize, portrait, scale, format) => 1,
                   themeParameters: Provider.of<ThemeParameters>(context, listen: false),
                   title: DateTime.now().millisecondsSinceEpoch.toString() + " Future Handling",
                   path: getApplicationDocumentsDirectory().then((value) => value.absolute.path+"/Playground From Zero/"),

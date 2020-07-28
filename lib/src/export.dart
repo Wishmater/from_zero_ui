@@ -18,7 +18,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:url_launcher/url_launcher.dart';
 
-class Export extends StatefulWidget {
+class Export extends StatefulWidget { //TODO 3 internationalize
 
   static const List<String> supportedFormats = ["PDF", "Imágenes (.png)"];
   static const List<String> defaultSizesUI = ["Carta", "A4", "4:3", "16:9",];
@@ -26,8 +26,8 @@ class Export extends StatefulWidget {
     PdfPageFormat(PdfPageFormat.a4.height*3/4, PdfPageFormat.a4.height),
     PdfPageFormat(PdfPageFormat.a4.height*9/16, PdfPageFormat.a4.height),];
 
-  final int childrenCount;
-  final Widget Function(int index, int currentSize, bool portrait, double scale, int format) childBuilder;
+  final int Function(int currentSize, bool portrait, double scale, int format) childrenCount;
+  final Widget Function(BuildContext context, int index, int currentSize, bool portrait, double scale, int format) childBuilder;
   final AppParametersFromZero themeParameters;
   final Future<String> path;
   final String title;
@@ -67,7 +67,6 @@ class _ExportState extends State<Export> {
   @override
   void initState() {
     super.initState();
-    boundaryKeys = List.generate(widget.childrenCount, (index) => GlobalKey());
   }
 
   int doneExports = 0;
@@ -106,7 +105,7 @@ class _ExportState extends State<Export> {
           ),
         )
       );
-      if (i==widget.childrenCount-1){
+      if (i==widget.childrenCount(currentSize, portrait, scale, this.format,)-1){
         final file = File((await widget.path)+widget.title+'.pdf');
         await file.create(recursive: true);
         if (filePath==null){
@@ -117,7 +116,7 @@ class _ExportState extends State<Export> {
         await file.writeAsBytes(pdf.save());
       }
     } else if (format==1){
-      File imgFile = File((await widget.path)+widget.title+(widget.childrenCount>1?' ${(i+1)}':'')+'.png');
+      File imgFile = File((await widget.path)+widget.title+(widget.childrenCount(currentSize, portrait, scale, this.format,)>1?' ${(i+1)}':'')+'.png');
       await imgFile.create(recursive: true);
       if (filePath==null){
         filePath = imgFile.absolute.path;
@@ -139,6 +138,8 @@ class _ExportState extends State<Export> {
 
   @override
   Widget build(BuildContext context) {
+    boundaryKeys = List.generate(widget.childrenCount(currentSize, portrait, scale, format,),
+            (index) => GlobalKey());
     var size = Size(
       Export.defaultFormats[currentSize].width/PdfPageFormat.inch*96*MediaQuery.of(context).devicePixelRatio,
       Export.defaultFormats[currentSize].height/PdfPageFormat.inch*96*MediaQuery.of(context).devicePixelRatio,
@@ -173,11 +174,11 @@ class _ExportState extends State<Export> {
                             Widget result = PageView.builder(
                               key: pageViewKey,
                               controller: controller,
-                              itemCount: widget.childrenCount,
+                              itemCount: widget.childrenCount(currentSize, portrait, scale, format,),
                               itemBuilder: (context, index) => Center(
                                 child: _PageWrapper(
                                   themeData: widget.exportThemeData,
-                                  child: widget.childBuilder(index, currentSize, portrait, scale, format,),
+                                  child: widget.childBuilder(context, index, currentSize, portrait, scale, format,),
                                   globalKey: boundaryKeys[index],
                                   size: size,
                                   scale: scale,
@@ -191,7 +192,7 @@ class _ExportState extends State<Export> {
                                 isInside: true,
                                 pageController: controller,
                                 currentPageNotifier: currentPageNotifier,
-                                itemCount: widget.childrenCount,
+                                itemCount: widget.childrenCount(currentSize, portrait, scale, format,),
                                 child: result,
                               );
                             }
@@ -203,9 +204,9 @@ class _ExportState extends State<Export> {
 //                        "Vista Previa", //(Página ${controller.page}/${pages.length})
 //                        style: Theme.of(context).textTheme.caption.copyWith(color: Colors.black),
 //                      ),
-                      if(widget.childrenCount>1)
+                      if(widget.childrenCount(currentSize, portrait, scale, format,)>1)
                       CirclePageIndicator(
-                        itemCount: widget.childrenCount,
+                        itemCount: widget.childrenCount(currentSize, portrait, scale, format,),
                         currentPageNotifier: currentPageNotifier,
                         onPageSelected: (value) => controller.animateToPage(value, duration: 300.milliseconds, curve: Curves.easeOut),
                         size: 10,
@@ -351,7 +352,7 @@ class _ExportState extends State<Export> {
                         },
                       );
                       _export();
-                      while (doneExports<widget.childrenCount){
+                      while (doneExports<widget.childrenCount(currentSize, portrait, scale, format,)){
                         await Future.delayed(100.milliseconds);
                       }
                       Navigator.of(context).pop();

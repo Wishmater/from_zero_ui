@@ -14,7 +14,7 @@ typedef OnRowHoverCallback = void Function(RowModel row, bool focused);
 typedef OnHeaderHoverCallback = void Function(int i, bool focused);
 
 
-class TableFromZero extends StatefulWidget {
+class TableFromZero extends StatefulWidget { //TODO 2 internationalize
 
   static const int column = 0;
   static const int listViewBuilder = 1;

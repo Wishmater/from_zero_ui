@@ -12,7 +12,7 @@ class ThemeParameters extends AppParametersFromZero {
   ThemeData get defaultLightTheme => themes[2];
 
   List<Icon> get themeIcons => [Icon(MaterialCommunityIcons.theme_light_dark), Icon(Icons.check_box_outline_blank), Icon(Icons.wb_sunny), Icon(MaterialCommunityIcons.weather_night),];
-  List<String> get themeNames => ["System Theme", "Clear Theme", "Light Theme", "Dark Theme"];
+  get themeNames => (context) => ["System Theme", "Clear Theme", "Light Theme", "Dark Theme"];
   List<ThemeData> get themes => [
     null,
     ThemeData( // TODO 3 make static const ThemeData definitions on settings, meant to be used with .copyWith

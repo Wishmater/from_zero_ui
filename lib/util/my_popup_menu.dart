@@ -1143,7 +1143,7 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
     if (widget.child != null){
       Widget result = InkWell(
         onTap: widget.enabled ? showButtonMenu : null,
-        canRequestFocus: _canRequestFocus,
+        canRequestFocus: false,
         child: widget.child,
       );
       if (widget.tooltip!=""){
