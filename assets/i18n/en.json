@@ -1,0 +1,19 @@
+{
+    "theme": "Color Theme",
+    "light_theme": "Light Theme",
+    "dark_theme": "Dark Theme",
+    "default_theme": "System Default",
+    "language": "Language",
+    "language_default": "System Default",
+    "fullscreen": "Fullscreen",
+    "error": "Oops!",
+    "error_details": "Something went wrong...",
+    "retry": "Retry",
+    "error_image": "Failed to load image...",
+    "error_image_details": "Check your connection and try again",
+    "back": "Back",
+    "menu_open": "Open Drawer",
+    "menu_close": "Close Drawer"
+
+
+}

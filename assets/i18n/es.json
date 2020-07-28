@@ -1,0 +1,19 @@
+{
+    "theme": "Tema de Colores",
+    "light_theme": "Tema Claro",
+    "dark_theme": "Tema Oscuro",
+    "default_theme": "Por Defecto",
+    "language": "Idioma",
+    "language_default": "Por Defecto",
+    "fullscreen": "Fullscreen",
+    "error": "Error",
+    "error_details": "Algo salió mal...",
+    "retry": "Reintentar",
+    "error_image": "Error cargando imágen...",
+    "error_image_details": "Compruebe su conexión e inténtelo de nuevo",
+    "back": "Página Anterior",
+    "menu_open": "Abrir Menú",
+    "menu_close": "Cerrar Menú"
+
+
+}
