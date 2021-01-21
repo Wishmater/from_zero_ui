@@ -8,12 +8,18 @@
     "fullscreen": "Fullscreen",
     "error": "Error",
     "error_details": "Algo salió mal...",
-    "retry": "Reintentar",
-    "error_image": "Error cargando imágen...",
+    "retry": "REINTENTAR",
+    "error_image": "Error cargando imagen...",
     "error_image_details": "Compruebe su conexión e inténtelo de nuevo",
     "back": "Página Anterior",
     "menu_open": "Abrir Menú",
-    "menu_close": "Cerrar Menú"
-
+    "menu_close": "Cerrar Menú",
+    "downloading_update": "Descargando Actualización...",
+    "processing_update": "Procesando Actualización...",
+    "update_available": "Actualización Disponible",
+    "update_available_desc": "Una nueva versión de esta aplicación está disponible. ¿Quiere descargarla ahora?",
+    "cancel": "Cancelar",
+    "update": "Actualizar",
+    "restart_warning": "La aplicación será reiniciada cuando termine la actualización."
 
 }

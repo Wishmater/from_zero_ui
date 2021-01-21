@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:from_zero_ui/src/drawer_menu_from_zero.dart';
 
 
 
@@ -28,9 +29,9 @@ class ExpansionTileFromZero extends StatefulWidget {
   /// the tile to reveal or hide the [children]. The [initiallyExpanded] property must
   /// be non-null.
   const ExpansionTileFromZero({
-    Key key,
+    Key? key,
     this.leading,
-    @required this.title,
+    required this.title,
     this.subtitle,
     this.backgroundColor,
     this.onExpansionChanged,
@@ -43,9 +44,10 @@ class ExpansionTileFromZero extends StatefulWidget {
     this.expandedAlignment,
     this.childrenPadding,
     this.expanded,
-  }) : assert(initiallyExpanded != null),
-        assert(maintainState != null),
-        assert(
+    this.onPostExpansionChanged,
+    this.style,
+    this.actionPadding = EdgeInsets.zero,
+  }) :  assert(
         expandedCrossAxisAlignment != CrossAxisAlignment.baseline,
         'CrossAxisAlignment.baseline is not supported since the expanded children '
             'are aligned in a column, not a row. Try to use another constant.',
@@ -54,12 +56,15 @@ class ExpansionTileFromZero extends StatefulWidget {
 
 
 
-  final bool expanded;
+  final bool? expanded;
+  final void Function(bool)? onPostExpansionChanged;
+  final int? style;
+  final EdgeInsets actionPadding;
 
   /// A widget to display before the title.
   ///
   /// Typically a [CircleAvatar] widget.
-  final Widget leading;
+  final Widget? leading;
 
   /// The primary content of the list item.
   ///
@@ -69,7 +74,7 @@ class ExpansionTileFromZero extends StatefulWidget {
   /// Additional content displayed below the title.
   ///
   /// Typically a [Text] widget.
-  final Widget subtitle;
+  final Widget? subtitle;
 
   /// Called when the tile expands or collapses.
   /// Only if the function returns true will the expansion actually happen
@@ -77,7 +82,7 @@ class ExpansionTileFromZero extends StatefulWidget {
   /// When the tile starts expanding, this function is called with the value
   /// true. When the tile starts collapsing, this function is called with
   /// the value false.
-  final FutureOr<bool> Function(bool) onExpansionChanged;
+  final FutureOr<bool> Function(bool)? onExpansionChanged;
 
   /// The widgets that are displayed when the tile expands.
   ///
@@ -85,10 +90,10 @@ class ExpansionTileFromZero extends StatefulWidget {
   final List<Widget> children;
 
   /// The color to display behind the sublist when expanded.
-  final Color backgroundColor;
+  final Color? backgroundColor;
 
   /// A widget to display instead of a rotating arrow icon.
-  final Widget trailing;
+  final Widget? trailing;
 
   /// Specifies if the list tile is initially expanded (true) or collapsed (false, the default).
   final bool initiallyExpanded;
@@ -107,7 +112,7 @@ class ExpansionTileFromZero extends StatefulWidget {
   /// the expanded [children] widgets.
   ///
   /// When the value is null, the tile's padding is `EdgeInsets.symmetric(horizontal: 16.0)`.
-  final EdgeInsetsGeometry tilePadding;
+  final EdgeInsetsGeometry? tilePadding;
 
   /// Specifies the alignment of [children], which are arranged in a column when
   /// the tile is expanded.
@@ -123,7 +128,7 @@ class ExpansionTileFromZero extends StatefulWidget {
   /// The width of the column is the width of the widest child widget in [children].
   ///
   /// When the value is null, the value of `expandedAlignment` is [Alignment.center].
-  final Alignment expandedAlignment;
+  final Alignment? expandedAlignment;
 
   /// Specifies the alignment of each child within [children] when the tile is expanded.
   ///
@@ -139,12 +144,12 @@ class ExpansionTileFromZero extends StatefulWidget {
   /// instead.
   ///
   /// When the value is null, the value of `expandedCrossAxisAlignment` is [CrossAxisAlignment.center].
-  final CrossAxisAlignment expandedCrossAxisAlignment;
+  final CrossAxisAlignment? expandedCrossAxisAlignment;
 
   /// Specifies padding for [children].
   ///
   /// When the value is null, the value of `childrenPadding` is [EdgeInsets.zero].
-  final EdgeInsetsGeometry childrenPadding;
+  final EdgeInsetsGeometry? childrenPadding;
 
   @override
   _ExpansionTileFromZeroState createState() => _ExpansionTileFromZeroState();
@@ -153,20 +158,20 @@ class ExpansionTileFromZero extends StatefulWidget {
 class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with SingleTickerProviderStateMixin {
   static final Animatable<double> _easeOutTween = CurveTween(curve: Curves.easeOut);
   static final Animatable<double> _easeInTween = CurveTween(curve: Curves.easeIn);
-  static final Animatable<double> _halfTween = Tween<double>(begin: 0.0, end: 0.5);
+  late Animatable<double> _halfTween;
 
   final ColorTween _borderColorTween = ColorTween();
   final ColorTween _headerColorTween = ColorTween();
   final ColorTween _iconColorTween = ColorTween();
   final ColorTween _backgroundColorTween = ColorTween();
 
-  AnimationController _controller;
-  Animation<double> _iconTurns;
-  Animation<double> _heightFactor;
-  Animation<Color> _borderColor;
-  Animation<Color> _headerColor;
-  Animation<Color> _iconColor;
-  Animation<Color> _backgroundColor;
+  late AnimationController _controller;
+  late Animation<double> _iconTurns;
+  late Animation<double> _heightFactor;
+  late Animation<Color> _borderColor;
+  late Animation<Color> _headerColor;
+  late Animation<Color> _iconColor;
+  late Animation<Color> _backgroundColor;
 
   bool _isExpanded = false;
 
@@ -174,15 +179,19 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
   @override
   void initState() {
     super.initState();
+    _halfTween = widget.style==DrawerMenuFromZero.styleDrawerMenu
+        ? Tween<double>(begin: 0.0, end: 0.5)
+        : Tween<double>(begin: -0.25, end: 0.0);
+
     _controller = AnimationController(duration: _kExpand, vsync: this);
     _heightFactor = _controller.drive(_easeInTween);
     _iconTurns = _controller.drive(_halfTween.chain(_easeInTween));
-    _borderColor = _controller.drive(_borderColorTween.chain(_easeOutTween));
-    _headerColor = _controller.drive(_headerColorTween.chain(_easeInTween));
-    _iconColor = _controller.drive(_iconColorTween.chain(_easeInTween));
-    _backgroundColor = _controller.drive(_backgroundColorTween.chain(_easeOutTween));
+    _borderColor = _controller.drive(_borderColorTween.chain(_easeOutTween)) as Animation<Color>;
+    _headerColor = _controller.drive(_headerColorTween.chain(_easeInTween)) as Animation<Color>;
+    _iconColor = _controller.drive(_iconColorTween.chain(_easeInTween)) as Animation<Color>;
+    _backgroundColor = _controller.drive(_backgroundColorTween.chain(_easeOutTween)) as Animation<Color>;
 
-    _isExpanded = widget.expanded ?? (PageStorage.of(context)?.readState(context) as bool ?? widget.initiallyExpanded);
+    _isExpanded = widget.expanded ?? (PageStorage.of(context)?.readState(context) ?? widget.initiallyExpanded);
     if (_isExpanded)
       _controller.value = 1.0;
   }
@@ -191,7 +200,7 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
   void didUpdateWidget(ExpansionTileFromZero oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.expanded!=null) {
-      setExpanded(widget.expanded);
+      setExpanded(widget.expanded!);
     }
   }
 
@@ -205,13 +214,13 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
     if (widget.onExpansionChanged == null){
       setExpanded(!_isExpanded);
     } else{
-      if (await widget.onExpansionChanged(_isExpanded) ?? true){
+      if (await widget.onExpansionChanged!(_isExpanded)){
         setExpanded(!_isExpanded);
       }
     }
   }
-  void setExpanded(bool expanded) {
-    if (widget.expanded!=null) expanded=widget.expanded;
+  void setExpanded(bool expanded, [force=false]) {
+//    if (widget.expanded!=null) expanded=widget.expanded;
     if (_isExpanded != expanded){
       setState(() {
         _isExpanded = expanded;
@@ -227,22 +236,22 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
           });
         }
         PageStorage.of(context)?.writeState(context, _isExpanded);
+        widget.onPostExpansionChanged?.call(expanded);
       });
     }
-
   }
 
-  Widget _buildChildren(BuildContext context, Widget child) {
-    final Color borderSideColor = _borderColor.value ?? Colors.transparent;
+  Widget _buildChildren(BuildContext context, Widget? child) {
+    // final Color borderSideColor = _borderColor.value;
 
     return Container(
-      decoration: BoxDecoration(
-        color: _backgroundColor.value ?? Colors.transparent,
-        border: Border(
-          top: BorderSide(color: borderSideColor),
-          bottom: BorderSide(color: borderSideColor),
-        ),
-      ),
+      // decoration: BoxDecoration(
+      //   color: _backgroundColor.value,
+      //   border: Border(
+      //     top: BorderSide(color: borderSideColor),
+      //     bottom: BorderSide(color: borderSideColor),
+      //   ),
+      // ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
@@ -267,16 +276,41 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
             child: Stack(
               children: [
                 widget.title,
-                Positioned.fill(
-                  right: 12,
-                  child: Align(
-                    alignment: Alignment.centerRight,
-                    child: widget.trailing ?? RotationTransition(
-                      turns: _iconTurns,
-                      child: Icon(Icons.expand_more, color: _iconColor.value,),
+                Positioned(
+                  top: 0, bottom: 0,
+                  right: widget.style==DrawerMenuFromZero.styleDrawerMenu ? 4 : null,
+                  left: widget.style==DrawerMenuFromZero.styleTree ? 0 : null,
+                  child: Padding(
+                    padding: widget.actionPadding,
+                    child: IconButton(
+                      icon: widget.trailing ?? RotationTransition(
+                        turns: _iconTurns,
+                        child: Icon(Icons.expand_more, color: _iconColor.value, size: 26,),
+                      ),
+                      iconSize: 26,
+                      onPressed: () {
+                        setExpanded(!_isExpanded);
+                      },
+                      splashRadius: 28,
                     ),
                   ),
                 ),
+                if (widget.trailing==null && widget.style==DrawerMenuFromZero.styleTree && _isExpanded)
+                  Positioned(
+                    left: 10, right: 0, bottom: -1, top: -1,
+                    child: FractionallySizedBox(
+                      heightFactor: 0.5,
+                      alignment: Alignment.bottomLeft,
+                      child: Container(
+                        padding: EdgeInsets.only(top: 8, left: widget.actionPadding.left+10),
+                        alignment: Alignment.bottomLeft,
+                        child: VerticalDivider(
+                          thickness: 2, width: 2,
+                          color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Material.of(context)!.color!),
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -297,7 +331,7 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
     final ThemeData theme = Theme.of(context);
     _borderColorTween.end = theme.dividerColor;
     _headerColorTween
-      ..begin = theme.textTheme.subtitle1.color
+      ..begin = theme.textTheme.subtitle1!.color
       ..end = theme.accentColor;
     _iconColorTween
       ..begin = theme.unselectedWidgetColor

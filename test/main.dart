@@ -6,15 +6,15 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/settings.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import 'change_notifiers/theme_parameters.dart';
 import 'router.dart';
 
 void main() async{
+  WidgetsFlutterBinding.ensureInitialized();
+  print(await getApplicationDocumentsDirectory());
   await initHive();
-  await FromZeroLocalizations.delegate;
-  FluroRouter.setupRouter();
+  MyFluroRouter.setupRouter();
   runApp(MyApp());
 }
 
@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
               return FromZeroAppContentWrapper(child: child);
             },
             initialRoute: '/',
-            onGenerateRoute: FluroRouter.router.generator,
+            onGenerateRoute: MyFluroRouter.router.generator,
           );
         },
       ),

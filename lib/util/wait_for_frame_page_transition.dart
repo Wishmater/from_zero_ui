@@ -65,18 +65,18 @@ class AnimationControllerWaitForFrame extends AnimationController{
   );
 
   @override
-  TickerFuture forward({ double from }) {
+  TickerFuture forward({ double? from }) {
     FutureTickerFuture ft = FutureTickerFuture();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
       ft.tickerFuture = super.forward(from: from);
     });
     return ft;
   }
 
   @override
-  TickerFuture reverse({ double from }) {
+  TickerFuture reverse({ double? from }) {
     FutureTickerFuture ft = FutureTickerFuture();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
       ft.tickerFuture = super.reverse(from: from);
     });
     return ft;
@@ -89,12 +89,12 @@ class FutureTickerFuture implements TickerFuture{
 
   FutureTickerFuture();
 
-  TickerFuture _tickerFuture;
-  TickerFuture get tickerFuture => _tickerFuture;
-  set tickerFuture(TickerFuture value) {
+  TickerFuture? _tickerFuture;
+  TickerFuture? get tickerFuture => _tickerFuture;
+  set tickerFuture(TickerFuture? value) {
     _tickerFuture = value;
     callbacks.forEach((element) {
-      tickerFuture.whenCompleteOrCancel(element);
+      tickerFuture?.whenCompleteOrCancel(element);
     });
   }
 
@@ -102,38 +102,38 @@ class FutureTickerFuture implements TickerFuture{
   @override
   void whenCompleteOrCancel(VoidCallback callback) {
     if (tickerFuture!=null)
-      tickerFuture.whenCompleteOrCancel(callback);
+      tickerFuture!.whenCompleteOrCancel(callback);
     else
       callbacks.add(callback);
   }
 
   Future<void> get orCancel {
-    return tickerFuture.orCancel;
+    return tickerFuture!.orCancel;
   }
 
   @override
   Stream<void> asStream() {
-    return tickerFuture.asStream();
+    return tickerFuture!.asStream();
   }
 
   @override
-  Future<void> catchError(Function onError, { bool test(dynamic error) }) {
-    return tickerFuture.catchError(onError, test: test);
+  Future<void> catchError(Function onError, { bool test(Object error)? }) {
+    return tickerFuture!.catchError(onError, test: test);
   }
 
   @override
-  Future<R> then<R>(onValue, { Function onError }) {
-    return tickerFuture.then(onValue, onError: onError,);
+  Future<R> then<R>(onValue, { Function? onError }) {
+    return tickerFuture!.then(onValue, onError: onError,);
   }
 
   @override
-  Future<void> timeout(Duration timeLimit, { dynamic onTimeout() }) {
-    return tickerFuture.timeout(timeLimit, onTimeout: onTimeout);
+  Future<void> timeout(Duration timeLimit, { dynamic onTimeout()? }) {
+    return tickerFuture!.timeout(timeLimit, onTimeout: onTimeout);
   }
 
   @override
   Future<void> whenComplete(dynamic action()) {
-    return tickerFuture.whenComplete(action);
+    return tickerFuture!.whenComplete(action);
   }
 
   @override

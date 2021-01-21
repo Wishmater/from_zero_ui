@@ -6,14 +6,14 @@ import 'package:from_zero_ui/src/settings.dart';
 class ThemeParameters extends AppParametersFromZero {
 
   @override
-  ThemeData get defaultDarkTheme => themes[3];
+  ThemeData get defaultDarkTheme => themes[3]!;
 
   @override
-  ThemeData get defaultLightTheme => themes[2];
+  ThemeData get defaultLightTheme => themes[2]!;
 
   List<Icon> get themeIcons => [Icon(MaterialCommunityIcons.theme_light_dark), Icon(Icons.check_box_outline_blank), Icon(Icons.wb_sunny), Icon(MaterialCommunityIcons.weather_night),];
   get themeNames => (context) => ["System Theme", "Clear Theme", "Light Theme", "Dark Theme"];
-  List<ThemeData> get themes => [
+  List<ThemeData?> get themes => [
     null,
     ThemeData( // TODO 3 make static const ThemeData definitions on settings, meant to be used with .copyWith
       canvasColor: Colors.grey.shade300,
@@ -24,7 +24,7 @@ class ThemeParameters extends AppParametersFromZero {
       visualDensity: VisualDensity.compact,
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
-          color: Colors.grey[700].withOpacity(0.9),
+          color: Colors.grey.shade700.withOpacity(0.9),
           borderRadius: const BorderRadius.all(Radius.circular(999999)),
         )
       ),
@@ -42,7 +42,7 @@ class ThemeParameters extends AppParametersFromZero {
       visualDensity: VisualDensity.compact,
       tooltipTheme: TooltipThemeData(
           decoration: BoxDecoration(
-            color: Colors.grey[700].withOpacity(0.9),
+            color: Colors.grey.shade700.withOpacity(0.9),
             borderRadius: const BorderRadius.all(Radius.circular(999999)),
           )
       ),

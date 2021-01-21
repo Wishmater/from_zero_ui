@@ -5,8 +5,8 @@ class PopupMenuButton<T> extends StatefulWidget {
   ///
   /// The [itemBuilder] argument must not be null.
   const PopupMenuButton({
-    Key key,
-    @required this.itemBuilder,
+    Key? key,
+    required this.itemBuilder,
     this.initialValue,
     this.onSelected,
     this.onCanceled,
@@ -19,11 +19,9 @@ class PopupMenuButton<T> extends StatefulWidget {
     this.enabled = true,
     this.shape,
     this.color,
-    this.captureInheritedThemes = true,
   }) : assert(itemBuilder != null),
         assert(offset != null),
         assert(enabled != null),
-        assert(captureInheritedThemes != null),
         assert(!(child != null && icon != null),
         'You can only pass [child] or [icon], not both.'),
         super(key: key);
@@ -32,30 +30,30 @@ class PopupMenuButton<T> extends StatefulWidget {
   final PopupMenuItemBuilder<T> itemBuilder;
 
   /// The value of the menu item, if any, that should be highlighted when the menu opens.
-  final T initialValue;
+  final T? initialValue;
 
   /// Called when the user selects a value from the popup menu created by this button.
   ///
   /// If the popup menu is dismissed without selecting a value, [onCanceled] is
   /// called instead.
-  final PopupMenuItemSelected<T> onSelected;
+  final PopupMenuItemSelected<T>? onSelected;
 
   /// Called when the user dismisses the popup menu without selecting an item.
   ///
   /// If the user selects a value, [onSelected] is called instead.
-  final PopupMenuCanceled onCanceled;
+  final PopupMenuCanceled? onCanceled;
 
   /// Text that describes the action that will occur when the button is pressed.
   ///
   /// This text is displayed when the user long-presses on the button and is
   /// used for accessibility.
-  final String tooltip;
+  final String? tooltip;
 
   /// The z-coordinate at which to place the menu when open. This controls the
   /// size of the shadow below the menu.
   ///
   /// Defaults to 8, the appropriate elevation for popup menus.
-  final double elevation;
+  final double? elevation;
 
   /// Matches IconButton's 8 dps padding by default. In some cases, notably where
   /// this button appears as the trailing element of a list item, it's useful to be able
@@ -64,11 +62,11 @@ class PopupMenuButton<T> extends StatefulWidget {
 
   /// If provided, [child] is the widget used for this button
   /// and the button will utilize an [InkWell] for taps.
-  final Widget child;
+  final Widget? child;
 
   /// If provided, the [icon] is used for this button
   /// and the button will behave like an [IconButton].
-  final Widget icon;
+  final Widget? icon;
 
   /// The offset applied to the Popup Menu Button.
   ///
@@ -96,19 +94,14 @@ class PopupMenuButton<T> extends StatefulWidget {
   /// If [PopupMenuThemeData.shape] is also null, then the default shape for
   /// [MaterialType.card] is used. This default shape is a rectangle with
   /// rounded edges of BorderRadius.circular(2.0).
-  final ShapeBorder shape;
+  final ShapeBorder? shape;
 
   /// If provided, the background color used for the menu.
   ///
   /// If this property is null, then [PopupMenuThemeData.color] is used.
   /// If [PopupMenuThemeData.color] is also null, then
   /// Theme.of(context).cardColor is used.
-  final Color color;
-
-  /// If true (the default) then the menu will be wrapped with copies
-  /// of the [InheritedThemes], like [Theme] and [PopupMenuTheme], which
-  /// are defined above the [BuildContext] where the menu is shown.
-  final bool captureInheritedThemes;
+  final Color? color;
 
   @override
   PopupMenuButtonState<T> createState() => PopupMenuButtonState<T>();
@@ -130,7 +123,7 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
   void showButtonMenu() {
     final PopupMenuThemeData popupMenuTheme = PopupMenuTheme.of(context);
     final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Overlay.of(context)!.context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
       Rect.fromPoints(
         button.localToGlobal(widget.offset, ancestor: overlay),
@@ -149,18 +142,15 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
         position: position,
         shape: widget.shape ?? popupMenuTheme.shape,
         color: widget.color ?? popupMenuTheme.color,
-        captureInheritedThemes: widget.captureInheritedThemes,
       )
-          .then<void>((T newValue) {
+          .then<void>((T? newValue) {
         if (!mounted)
           return null;
         if (newValue == null) {
-          if (widget.onCanceled != null)
-            widget.onCanceled();
+          widget.onCanceled?.call();
           return null;
         }
-        if (widget.onSelected != null)
-          widget.onSelected(newValue);
+        widget.onSelected?.call(newValue);
       });
     }
   }
@@ -177,11 +167,10 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
       case TargetPlatform.macOS:
         return const Icon(Icons.more_horiz);
     }
-    return null;
   }
 
   bool get _canRequestFocus {
-    final NavigationMode mode = MediaQuery.of(context, nullOk: true)?.navigationMode ?? NavigationMode.traditional;
+    final NavigationMode mode = MediaQuery.of(context).navigationMode;
     switch (mode) {
       case NavigationMode.traditional:
         return widget.enabled;
@@ -189,7 +178,6 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
         return true;
     }
     assert(false, 'Navigation mode $mode not handled');
-    return null;
   }
 
   @override
@@ -211,7 +199,7 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
       padding: widget.padding,
       tooltip: widget.tooltip ?? MaterialLocalizations.of(context).showMenuTooltip,
       onPressed: widget.enabled ? showButtonMenu : null,
-      splashRadius: 24,
+      splashRadius: 18,
     );
   }
 }

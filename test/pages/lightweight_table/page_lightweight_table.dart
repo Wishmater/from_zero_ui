@@ -4,7 +4,6 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/export.dart';
-import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 import 'package:from_zero_ui/src/settings.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -27,12 +26,20 @@ class PageLightweightTable extends PageFromZero {
 
 class _PageLightweightTableState extends State<PageLightweightTable> {
 
-  Widget col1;
-  Widget col2;
-  Widget col3;
+  late Widget col1;
+  late Widget col2;
+  late Widget col3;
+  late TableFromZero table1;
+  late TableFromZero table2;
+  late TableFromZero table3;
   final ScrollController scrollController = ScrollController();
   final ScrollController tableScrollController = ScrollController();
   final ScrollController customScrollController = ScrollController();
+  List<TextEditingController?> textControllers = [
+    null,
+    null,
+    TextEditingController(text: "CustomScrollController"),
+  ];
 
 
   @override
@@ -44,9 +51,30 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
       title: Text("Lightweight Table"),
       body: _getPage(context),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 2,),
-      drawerFooterBuilder: (context, compact) => Column(
+      drawerFooterBuilder: (scaffoldContext, compact) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          DrawerMenuButtonFromZero(
+            selected: false,
+            compact: compact,
+            title: "Exportar Una Tabla (multipagina)",
+            icon: Icon(Icons.plus_one),
+            onTap: () {
+              showModal(
+                context: context,
+                builder: (context) => Export.scrollable(
+                  scaffoldContext: scaffoldContext,
+                  scrollableChildBuilder: (context, i, currentSize, portrait, scale, format, controller) => _getCol3(context, controller, col3RowKeys),
+                  scrollableStickyOffset: 48,
+                  significantWidgetsKeys: col3RowKeys,
+                  textEditingControllers: textControllers,
+                  themeParameters: Provider.of<ThemeParameters>(context, listen: false),
+                  title: DateTime.now().millisecondsSinceEpoch.toString() + " Tables",
+                  path: Export.getDefaultDirectoryPath('Playground From Zero'),
+                ),
+              );
+            },
+          ),
           DrawerMenuButtonFromZero(
             selected: false,
             compact: compact,
@@ -56,11 +84,17 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
               showModal(
                 context: context,
                 builder: (context) => Export(
+                  scaffoldContext: scaffoldContext,
                   childBuilder: (context, i, currentSize, portrait, scale, format) => [col1, col2, col3][i],
                   childrenCount: (currentSize, portrait, scale, format) => 3,
+                  textEditingControllers: textControllers,
                   themeParameters: Provider.of<ThemeParameters>(context, listen: false),
                   title: DateTime.now().millisecondsSinceEpoch.toString() + " Tables",
-                  path: getApplicationDocumentsDirectory().then((value) => value.absolute.path+"/Playground From Zero/"),
+                  path: Export.getDefaultDirectoryPath('Playground From Zero'),
+                  excelSheets: () => {
+                    'Table 2': table2,
+                    'Table 3': table3,
+                  },
                 ),
               );
             },
@@ -78,6 +112,23 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
         child: ComplicatedTable(),
       ),
     );
+    table2 = TableFromZero(
+      scrollController: tableScrollController,
+      verticalPadding: 16,
+      minWidth: 640,
+      applyStickyHeaders: true,
+      rows: List.generate(100, (index) => ["Dummy data " + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",]).map((e) {
+        return SimpleRowModel(
+          id: e,
+          values: e,
+        );
+      }).toList(),
+      columns: ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"].map((e) {
+        return SimpleColModel(
+          name: e,
+        );
+      }).toList(),
+    );
     col2 = Card(
       clipBehavior: Clip.hardEdge,
       child: ScrollbarFromZero(
@@ -85,12 +136,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
         applyPaddingToChildrenOnDesktop: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: TableFromZero.fromRowList(
-            controller: tableScrollController,
-            columnNames: ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"],
-            rows: List.generate(100, (index) => ["Dummy data " + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",]),
-            verticalPadding: 16,
-          ),
+          child: table2,
         ),
       ),
     );
@@ -99,27 +145,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
       child: ScrollbarFromZero(
         controller: customScrollController,
         applyPaddingToChildrenOnDesktop: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: CustomScrollView(
-            controller: customScrollController,
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 16, top: 16),
-                  child: Text("CustomScrollController", style: Theme.of(context).textTheme.headline4,),
-                ),
-              ),
-              TableFromZero.fromRowList(
-                layoutWidgetType: TableFromZero.sliverListViewBuilder,
-                columnNames: ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"],
-                rows: List.generate(100, (index) => ["Dummy data" + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",]),
-                verticalPadding: 16,
-              ),
-              SliverToBoxAdapter(child: SizedBox(height: 16,),),
-            ],
-          ),
-        ),
+        child: _getCol3(context, customScrollController),
       ),
     );
     Widget result = LayoutBuilder(
@@ -150,6 +176,58 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
     );
     return result;
   }
+
+  List<GlobalKey> col3RowKeys = List.generate(100, (index) => GlobalKey());
+  Widget _getCol3(BuildContext context, ScrollController controller, [List<Key>? rowKeys]){
+    if (rowKeys==null) rowKeys = List.generate(100, (index) => ValueKey(index));
+    table3 = TableFromZero(
+      layoutWidgetType: TableFromZero.sliverListViewBuilder,
+      headerHeight: 48,
+      horizontalDivider: null,
+      verticalDivider: null,
+      applyRowAlternativeColors: true,
+      columns: ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"].map((e) => SimpleColModel(
+        name: e,
+        filterEnabled: true,
+        width: e=="Col 1" ? 128 : null,
+        alignment: e=="Col 3" ? TextAlign.right : null,
+      )).toList(),
+      rows: List.generate(100, (index) => SimpleRowModel(
+        id: index,
+        height: 36,
+        rowKey: rowKeys![index],
+        values: ["Dummy data" + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",],
+      )),
+      verticalPadding: 16,
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: CustomScrollView(
+        controller: controller,
+        cacheExtent: double.infinity,
+        physics: NeverScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16, top: 16),
+              child: ValueListenableBuilder(
+                  valueListenable: textControllers[2]!,
+                  builder: (context, TextEditingValue value, child) {
+                    var v = value.text;
+                    if (context.findAncestorWidgetOfExactType<Export>()==null)
+                      v = "CustomScrollController";
+                    return Text(v, style: Theme.of(context).textTheme.headline3,);
+                  }
+              ),
+            ),
+          ),
+          table3,
+          SliverToBoxAdapter(child: SizedBox(height: 16,),),
+        ],
+      ),
+    );
+  }
+
 }
 
 
@@ -174,53 +252,54 @@ class _ComplicatedTableState extends State<ComplicatedTable> {
 
   @override
   Widget build(BuildContext context) {
-    return TableFromZero.fromRowList(
-      layoutWidgetType: TableFromZero.animatedColumn,
-      columnNames: ["Col 1", "Col 2", "Col 3", "Col 4", "Very long column title 5"],
-      rows: rows,
-      rowIdsForAnimation: rowsIds,
-      colBackgroundColors: [null, null, null, Colors.green.withOpacity(0.4), Colors.red.withOpacity(0.4)],
-      rowBackgroundColors: [null, null, null, null, Colors.indigo.withOpacity(0.4)],
-      rowTakesPriorityOverColumn: false,
-      columnAlignments: [null, null, null, null, TextAlign.right],
-      colStyles: [null, null, null, null, Theme.of(context).textTheme.caption],
-      rowStyles: [null, null, null, null, Theme.of(context).textTheme.headline6],
-      columnFlexes: [2, 1, 1, 1, 1],
-      onRowTap: (RowModel row) {
-        print("Row ${row.values[0]} tapped");
-      },
-      onCheckBoxSelected: (row, focused) {
-        Future.delayed(Duration(seconds: 2)).then((value) {
-          setState(() {
-            selected[rowsIds.indexOf(row.id)] = focused;
-          });
-        });
-        setState(() {
-          selected[rowsIds.indexOf(row.id)] = null;
-        });
-      },
-      onAllSelected: (value) {
-        setState(() {
-          selected = List.generate(selected.length, (index) => value);
-        });
-      },
-      itemPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      initialSortedColumnIndex: 0,
-      selectedRows: selected,
-      verticalDivider: null,
-//                        horizontalDivider: null,
-      showFirstHorizontalDivider: false,
-      actions: [
-        IconButton(icon: Icon(Icons.edit), tooltip: "Edit", splashRadius: 24, onPressed: (){ },),
-        IconButton(icon: Icon(Icons.delete_forever), tooltip: "Delete", splashRadius: 24, onPressed: (){
-          setState(() {
-            rows.removeAt(2);
-            rowsIds.removeAt(2);
-            selected.removeAt(2);
-          });
-        },),
-      ],
-    );
+    return SizedBox.shrink();
+//     return TableFromZero.fromRowList(
+//       layoutWidgetType: TableFromZero.animatedColumn,
+//       columnNames: ["Col 1", "Col 2", "Col 3", "Col 4", "Very long column title 5"],
+//       rows: rows,
+//       rowIdsForAnimation: rowsIds,
+//       colBackgroundColors: [null, null, null, Colors.green.withOpacity(0.4), Colors.red.withOpacity(0.4)],
+//       rowBackgroundColors: [null, null, null, null, Colors.indigo.withOpacity(0.4)],
+//       rowTakesPriorityOverColumn: false,
+//       columnAlignments: [null, null, null, null, TextAlign.right],
+//       colStyles: [null, null, null, null, Theme.of(context).textTheme.caption],
+//       rowStyles: [null, null, null, null, Theme.of(context).textTheme.headline6],
+//       columnFlexes: [2, 1, 1, 1, 1],
+//       onRowTap: (RowModel row) {
+//         print("Row ${row.values[0]} tapped");
+//       },
+//       onCheckBoxSelected: (row, focused) {
+//         Future.delayed(Duration(seconds: 2)).then((value) {
+//           setState(() {
+//             selected[rowsIds.indexOf(row.id)] = focused;
+//           });
+//         });
+//         setState(() {
+//           selected[rowsIds.indexOf(row.id)] = null;
+//         });
+//       },
+//       onAllSelected: (value) {
+//         setState(() {
+//           selected = List.generate(selected.length, (index) => value);
+//         });
+//       },
+//       itemPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+//       initialSortedColumnIndex: 0,
+//       selectedRows: selected,
+//       verticalDivider: null,
+// //                        horizontalDivider: null,
+//       showFirstHorizontalDivider: false,
+//       actions: [
+//         IconButton(icon: Icon(Icons.edit), tooltip: "Edit", splashRadius: 24, onPressed: (){ },),
+//         IconButton(icon: Icon(Icons.delete_forever), tooltip: "Delete", splashRadius: 24, onPressed: (){
+//           setState(() {
+//             rows.removeAt(2);
+//             rowsIds.removeAt(2);
+//             selected.removeAt(2);
+//           });
+//         },),
+//       ],
+//     );
   }
 
 }

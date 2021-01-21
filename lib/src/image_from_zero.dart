@@ -23,12 +23,12 @@ class ImageFromZero extends StatelessWidget {
   final Alignment iconButtonAlignment;
   final bool showLink;
   /// passing this parameters means the image is already inside a Hero widget and will use this same id for the fullscreen dialog
-  final String heroTag;
-  final String errorTitle;
-  final String errorSubtitle;
+  final String? heroTag;
+  final String? errorTitle;
+  final String? errorSubtitle;
   final Widget errorIcon;
   final Widget loadingWidget;
-  final AnimatedSwitcherTransitionBuilder transitionBuilder;
+  final AnimatedSwitcherTransitionBuilder? transitionBuilder;
   final List<Widget> actions;
   // TODO 2 implement download
 
@@ -39,14 +39,14 @@ class ImageFromZero extends StatelessWidget {
     this.transitionBuilder,
     this.errorIcon = const Icon(Icons.broken_image),
     this.errorTitle,
-    String errorSubtitle,
+    this.errorSubtitle,
     this.loadingWidget = const LoadingSign(),
     this.fullscreenType = fullscreenTypeOnImageClick,
     this.iconButtonAlignment = Alignment.topRight,
     this.actions = const [],
-  }) :
-//        this.errorTitle = FromZeroLocalizations.of(context).translate("error_image"),
-        this.errorSubtitle = errorSubtitle ?? (retryable ? "Check your connection and try again" : null);
+  });
+        // : this.errorTitle = errorTitle ?? FromZeroLocalizations.of(context).translate("error_image"),
+        // this.errorSubtitle = errorSubtitle ?? (retryable ? "Check your connection and try again" : '');
 
   @override
   Widget build(BuildContext context) {

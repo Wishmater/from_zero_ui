@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:provider/provider.dart';
@@ -62,16 +63,31 @@ class _FromZeroAppContentWrapperState extends State<FromZeroAppContentWrapper> {
 }
 
 
+abstract class PageFromZero extends StatefulWidget{
+
+  /// Use this to separate pages. Different page IDs will perform an animation in the whole Scaffold, instead of just the body
+  String get pageScaffoldId; // TODO 1 ????? maybe find a way to define this in pageRoute or something to deprecate PageFromZero and its whole mechanism
+  /// Scaffold will perform a SharedZAxisTransition if the depth is different (and not -1)
+  int get pageScaffoldDepth;
+
+
+  int randomId = 0;
+
+
+  PageFromZero({Key? key}) : super(key: key);
+
+}
+
 class ScreenFromZero extends ChangeNotifier{
 
-  bool _displayMobileLayout;
+  late bool _displayMobileLayout;
   bool get displayMobileLayout => _displayMobileLayout;
   set displayMobileLayout(bool value) {
     _displayMobileLayout = value;
     notifyListeners();
   }
 
-  double _breakpoint;
+  late double _breakpoint;
   double get breakpoint => _breakpoint;
   set breakpoint(double value) {
     _breakpoint = value;
@@ -80,23 +96,41 @@ class ScreenFromZero extends ChangeNotifier{
 
 }
 
+
 class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
+
+  Map<String, ValueNotifier<double>> drawerContentScrollOffsets = {};
+  Map<String, bool> isTreeNodeExpanded = {};
 
   Map<String, double> _currentDrawerWidth = {};
   double getCurrentDrawerWidth(PageFromZero page) {
     if (!_currentDrawerWidth.containsKey(page.pageScaffoldId)){
-      _currentDrawerWidth[page.pageScaffoldId] = 304;
+      ScaffoldFromZero scaffold = _scaffoldsStack[_pagesStack.indexOf(page)];
+      _currentDrawerWidth[page.pageScaffoldId] = scaffold.drawerWidth;
       _blockNotify = true;
-      _updateScaffolds(_previousWidth<ScaffoldFromZero.screenSizeMedium, _previousWidth);
+      _updateScaffolds(_previousWidth!<ScaffoldFromZero.screenSizeMedium, _previousWidth!);
       _blockNotify = false;
     }
-    return _currentDrawerWidth[page.pageScaffoldId];
+    return _currentDrawerWidth[page.pageScaffoldId] ?? 0;
   }
   bool _blockNotify = false;
   setCurrentDrawerWidth(PageFromZero page, double value) {
     _currentDrawerWidth[page.pageScaffoldId] = value;
     if (!_blockNotify) notifyListeners();
   }
+  void collapseDrawer(){
+    var scaffold = currentScaffold;
+    var page = currentPage;
+    setCurrentDrawerWidth(page, scaffold.compactDrawerWidth);
+  }
+  void expandDrawer(){
+    var scaffold = currentScaffold;
+    var page = currentPage;
+    setCurrentDrawerWidth(page, scaffold.drawerWidth);
+  }
+  bool get isExpanded => getCurrentDrawerWidth(currentPage)==currentScaffold.drawerWidth;
+  ScaffoldFromZero get currentScaffold => scaffoldsStack.last;
+  PageFromZero get currentPage => pagesStack.last;
 
   int _animationType = ScaffoldFromZero.animationTypeOther;
   int get animationType => _animationType;
@@ -123,8 +157,8 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     _scaffoldsStack.removeWhere((element) => element.currentPage.randomId==scaffold.currentPage.randomId);
   }
 
-  double _previousWidth;
-  double _previousHeight;
+  double? _previousWidth;
+  double? _previousHeight;
   void _updateScaffolds(bool displayMobileLayout, double width){
     for (int i=0; i<scaffoldsStack.length; i++){
       _updateScaffold(i, displayMobileLayout, width);
@@ -136,9 +170,9 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
       setCurrentDrawerWidth(scaffold.currentPage, 0);
     } else if (scaffold.drawerContentBuilder!=null && getCurrentDrawerWidth(scaffold.currentPage) < scaffold.compactDrawerWidth){
       setCurrentDrawerWidth(scaffold.currentPage, scaffold.compactDrawerWidth);
-    } else if (_previousWidth!=null && _previousWidth<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
+    } else if (_previousWidth!=null && _previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
       setCurrentDrawerWidth(scaffold.currentPage, scaffold.drawerWidth);
-    } else if (_previousWidth!=null && _previousWidth>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
+    } else if (_previousWidth!=null && _previousWidth!>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
       setCurrentDrawerWidth(scaffold.currentPage, scaffold.compactDrawerWidth);
     }
   }
@@ -148,8 +182,8 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
   bool titleAnimation = false;
   void updateStackRelatedVariables(){
     int animationType = ScaffoldFromZero.animationTypeOther;
-    PageFromZero currentPage, previousPage;
-    ScaffoldFromZero currentScaffold, previousScaffold;
+    PageFromZero? currentPage, previousPage;
+    ScaffoldFromZero? currentScaffold, previousScaffold;
     try{
       currentPage = _pagesStack[_pagesStack.length-1];
       previousPage = _pagesStack[_pagesStack.length-2];
@@ -172,8 +206,8 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     sharedAnim = animationType==ScaffoldFromZero.animationTypeInner || animationType==ScaffoldFromZero.animationTypeOuter;
     titleAnimation = animationType!=ScaffoldFromZero.animationTypeOther
         && currentScaffold!=null && previousScaffold!=null
-        && !(  (currentScaffold.title.key!=null && previousScaffold.title.key!=null
-                && currentScaffold.title.key==previousScaffold.title.key)
+        && !(  (currentScaffold.title?.key!=null && previousScaffold.title?.key!=null
+                && currentScaffold.title?.key==previousScaffold.title?.key)
             || (currentScaffold.title is Text && previousScaffold.title is Text
                 && (currentScaffold.title as Text).data == (previousScaffold.title as Text).data));
   }

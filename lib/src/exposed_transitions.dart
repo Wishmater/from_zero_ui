@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class ZoomedFadeInFadeOutTransition extends StatelessWidget {
-  const ZoomedFadeInFadeOutTransition({Key key, this.animation, this.child})
+  const ZoomedFadeInFadeOutTransition({Key? key, required this.animation, required this.child})
       : super(key: key);
 
   final Animation<double> animation;
@@ -14,20 +14,20 @@ class ZoomedFadeInFadeOutTransition extends StatelessWidget {
       forwardBuilder: (
           BuildContext context,
           Animation<double> animation,
-          Widget child,
+          Widget? child,
           ) {
         return ZoomedFadeInTransition(
           animation: animation,
-          child: child,
+          child: child!,
         );
       },
       reverseBuilder: (
           BuildContext context,
           Animation<double> animation,
-          Widget child,
+          Widget? child,
           ) {
         return FadeOutTransition(
-          child: child,
+          child: child!,
           animation: animation,
         );
       },
@@ -38,8 +38,8 @@ class ZoomedFadeInFadeOutTransition extends StatelessWidget {
 
 class ZoomedFadeInTransition extends StatelessWidget {
   const ZoomedFadeInTransition({
-    this.child,
-    this.animation,
+    required this.child,
+    required this.animation,
   });
 
   final Widget child;
@@ -87,8 +87,8 @@ class ZoomedFadeInTransition extends StatelessWidget {
 
 class FadeOutTransition extends StatelessWidget {
   const FadeOutTransition({
-    this.child,
-    this.animation,
+    required this.child,
+    required this.animation,
   });
 
   final Widget child;

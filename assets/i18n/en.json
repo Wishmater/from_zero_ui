@@ -8,12 +8,18 @@
     "fullscreen": "Fullscreen",
     "error": "Oops!",
     "error_details": "Something went wrong...",
-    "retry": "Retry",
+    "retry": "RETRY",
     "error_image": "Failed to load image...",
     "error_image_details": "Check your connection and try again",
     "back": "Back",
     "menu_open": "Open Drawer",
-    "menu_close": "Close Drawer"
-
+    "menu_close": "Close Drawer",
+    "downloading_update": "Downloading Update...",
+    "processing_update": "Processing Update...",
+    "update_available": "Update Available",
+    "update_available_desc": "A newer version of this app is available, do you want to download it now?",
+    "cancel": "Cancel",
+    "update": "Update",
+    "restart_warning": "The app will be restarted when update is finished."
 
 }

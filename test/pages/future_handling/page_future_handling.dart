@@ -5,7 +5,6 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/export.dart';
-import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 import 'package:from_zero_ui/src/settings.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -29,7 +28,7 @@ class PageFutureHandling extends PageFromZero {
 
 class _PageFutureHandlingState extends State<PageFutureHandling> {
 
-  Widget widgetToExport;
+  late Widget widgetToExport;
   final scrollController = ScrollController();
 
   @override
@@ -38,10 +37,16 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
       mainScrollController: scrollController,
       appbarType: ScaffoldFromZero.appbarTypeCollapse,
       currentPage: widget,
-      title: Text("Future Handling"),
+      title: Container(
+        height: 56,
+        width: 256,
+        color: Colors.red,
+        alignment: Alignment.center,
+        child: Text("Future Handling"),
+      ),
       body: _getPage(context),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 4,),
-      drawerFooterBuilder: (context, compact) => Column(
+      drawerFooterBuilder: (scaffoldContext, compact) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DrawerMenuButtonFromZero(
@@ -51,13 +56,14 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
             icon: Icon(Icons.file_download),
             onTap: () {
               showModal(
-                context: context,
+                context: scaffoldContext,
                 builder: (context) => Export(
+                  scaffoldContext: scaffoldContext,
                   childBuilder: (context, i, currentSize, portrait, scale, format) => widgetToExport,
                   childrenCount: (currentSize, portrait, scale, format) => 1,
                   themeParameters: Provider.of<ThemeParameters>(context, listen: false),
                   title: DateTime.now().millisecondsSinceEpoch.toString() + " Future Handling",
-                  path: getApplicationDocumentsDirectory().then((value) => value.absolute.path+"/Playground From Zero/"),
+                  path: Export.getDefaultDirectoryPath('Playground From Zero'),
                 ),
               );
             },
@@ -72,10 +78,10 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
     );
   }
 
-  GlobalKey widgetToExportKey;
+  // GlobalKey widgetToExportKey;
   Widget _getPage(context){
     widgetToExport = Column(
-      key: widgetToExportKey,
+      // key: widgetToExportKey,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SizedBox(height: 12,),

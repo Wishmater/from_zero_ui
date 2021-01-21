@@ -2,10 +2,10 @@ name: from_zero_ui
 description: UI generalizations and utility classes for working with flutter.
 version: 0.0.7
 author: David Alcalde
-homepage:
+#homepage:
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: ">=2.12.0-0 <3.0.0"
 
 dependencies:
   flutter:
@@ -18,9 +18,9 @@ dependencies:
   collection: ^1.14.13
   
   # * State Management
-  fluro: ^1.6.3
-  provider: ^4.3.1
-  hive: ^1.4.2
+  fluro: ^1.7.8
+  provider: ^4.3.2
+  hive: ^1.4.3
   hive_flutter: ^0.3.1
   
   # * Widgets / UI
@@ -29,34 +29,54 @@ dependencies:
   page_view_indicators: ^1.3.1
   implicitly_animated_reorderable_list: ^0.2.3
   flutter_icons: ^1.1.0
-  animations: ^1.1.1
-  extended_image: ^0.9.0
+  animations: ^1.1.2
+  extended_image: ^1.4.0
+  google_fonts: ^1.1.0
+  wave: ^0.1.0
+  flutter_sticky_header: ^0.5.0
+  sticky_headers: ^0.1.8+1
+  scroll_to_index: ^1.0.6
 
   # * Plugins
-  url_launcher: ^5.5.0
-  path_provider: ^1.6.11
+  url_launcher: ^5.7.10
+  path_provider: ^1.6.24
+  downloads_path_provider: ^0.1.0
+  platform_detect: ^1.4.0
+  permission_handler: ^5.0.1+1
+  open_file: ^3.0.1
+  excel: ^1.1.5
 
   # * Specific Utility
-  pdf: ^1.9.0
+  pdf: ^1.10.0 # ! TODO optimize imports. Not all apps will need this
+  dio: ^3.0.10
+  dio_retry: ^0.1.9-beta
 
   # ! temporal fde dependencies until official desktop support is stable
-  path_provider_fde:
+#  path_provider_fde:
+#    git:
+#      url: git://github.com/google/flutter-desktop-embedding.git
+#      path: plugins/flutter_plugins/path_provider_fde
+#      ref: 040f36c82b63e8764ec2fd97066767503a667b6d
+#  url_launcher_fde:
+#    git:
+#      url: git://github.com/google/flutter-desktop-embedding.git
+#      path: plugins/flutter_plugins/url_launcher_fde
+#      ref: 040f36c82b63e8764ec2fd97066767503a667b6d
+  window_size:
     git:
       url: git://github.com/google/flutter-desktop-embedding.git
-      path: plugins/flutter_plugins/path_provider_fde
-      ref: 9e9b68b67c2a2c0b82eed2224f709aff2ccbab7c # 82296566f18becd353205e51096441d8a69c2186
-  url_launcher_fde:
-    git:
-      url: git://github.com/google/flutter-desktop-embedding.git
-      path: plugins/flutter_plugins/url_launcher_fde
-      ref: 9e9b68b67c2a2c0b82eed2224f709aff2ccbab7c # 82296566f18becd353205e51096441d8a69c2186
+      path: plugins/window_size
+      ref: 040f36c82b63e8764ec2fd97066767503a667b6d
+
+      # 1feed8db2e5222af4e5d8495ac45135a2701c755
+      # 82296566f18becd353205e51096441d8a69c2186
+
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-dependency_overrides:
-#  path: ">=1.6.0 <2.0.0" # ! remove this when hive_flutter dependency problems are fixed
-#  collection: "^1.15.0-nullsafety" # ! remove this once dartx support newer versions of colletion
+#dependency_overrides:
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

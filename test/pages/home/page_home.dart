@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/app_update.dart';
 import 'package:from_zero_ui/src/appbar_from_zero.dart';
 import 'package:from_zero_ui/src/export.dart';
-import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
+import 'package:from_zero_ui/src/from_zero_logo.dart';
 import 'package:from_zero_ui/src/settings.dart';
 import 'package:provider/provider.dart';
 
@@ -15,7 +18,7 @@ class PageHome extends PageFromZero {
     ResponsiveDrawerMenuItem(
       title: "Home",
       icon: Icon(Icons.home),
-      route: "/",
+      route: "/home",
     ),
     ResponsiveDrawerMenuDivider(),
     ResponsiveDrawerMenuItem(
@@ -89,6 +92,19 @@ class _PageHomeState extends State<PageHome> {
 
   ScrollController controller = ScrollController();
 
+  static bool updateCalled = false;
+  @override
+  void initState() {
+//    if (!updateCalled){
+//      UpdateFromZero(
+//        1,
+//        'http://190.92.122.228:8080/update/cutrans_crm_ver.json',
+//        'http://190.92.122.228:8080/update/cutrans_crm.zip',
+//      ).checkUpdate().then((value) => value.promptUpdate(context));
+//    }
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
@@ -96,12 +112,20 @@ class _PageHomeState extends State<PageHome> {
       scrollbarType: ScaffoldFromZero.scrollbarTypeOverAppbar,
       appbarType: ScaffoldFromZero.appbarTypeQuickReturn,
       currentPage: widget,
-      title: Text("FromZero playground"),
+      title: Row(
+        children: [
+          Text("FromZero playground"),
+          Hero(
+            tag: 'title-hero',
+            child: Icon(Icons.ac_unit, color: Colors.white,),
+          )
+        ],
+      ),
       body: _getPage(context),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 0,),
       drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
       actions: [
-        AppbarAction(title: "Test Action", onTap: (){},)
+        AppbarAction(title: "Test Action", onTap: (appbarContext){},)
       ],
     );
   }
@@ -116,18 +140,31 @@ class _PageHomeState extends State<PageHome> {
             children: [
               AppbarFiller(),
               SizedBox(height: 12,),
+              AspectRatio(
+                aspectRatio: 4,
+                child: FromZeroBanner(logoSizePercentage: 0.8,),
+              ),
+              SizedBox(height: 12,),
               Card(
                 clipBehavior: Clip.hardEdge,
                 child: Container(height: 1200, width: 600, color: Colors.red,
                   child: Column(
                     children: [
+                      SizedBox(height: 16,),
+                      Text(Platform.script.toString()),
+                      SizedBox(height: 16,),
+                      AspectRatio(
+                        aspectRatio: 4,
+                        child: FromZeroBanner(logoSizePercentage: 0.8,),
+                      ),
+                      SizedBox(height: 32,),
                       RaisedButton(
                         child: Text("SCAFFOLD"),
                         onPressed: () {
                           Navigator.of(context).pushNamed("/scaffold");
                         },
                       ),
-                    ],  
+                    ],
                   ),
                 ),
               ),

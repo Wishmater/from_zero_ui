@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/appbar_from_zero.dart';
-import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
-import 'package:from_zero_ui/src/flushbar_helper.dart';
+import 'package:from_zero_ui/src/snackbar_helper.dart';
 import 'package:from_zero_ui/src/settings.dart';
 import 'package:provider/provider.dart';
 
@@ -31,7 +30,15 @@ class _PageScaffoldState extends State<PageScaffold> {
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
       currentPage: widget,
-      title: Text("Scaffold FromZero"),
+      title: Row(
+        children: [
+          Text("Scaffold FromZero"),
+          Hero(
+            tag: 'title-hero',
+            child: Icon(Icons.ac_unit, color: Colors.white,),
+          )
+        ],
+      ),
       body: _getPage(context),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
         compact: compact,
@@ -40,19 +47,61 @@ class _PageScaffoldState extends State<PageScaffold> {
       ),
       drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
       actions: [
-        AppbarAction(
-          title: "Action 1",
-          icon: Icon(Icons.looks_one),
-          onTap: (){
-            FlushbarHelperFromZero.createSuccess(message: "Pog").show(context);
-          },
+        Builder(
+          builder: (context) {
+            return AppbarAction(
+              title: "Action 1",
+              icon: Icon(Icons.looks_one),
+              onTap: (appbarContext){
+                SnackBarFromZero(
+                  context: context,
+                  type: SnackBarFromZero.info,
+                  title: Text("Title"),
+                  message: Text("Pog message..."),
+                  duration: Duration(seconds: 10),
+                  actions: [
+                    SnackBarAction(
+                      label: "Action",
+                      onPressed: (){
+                        SnackBarFromZero(
+                          context: context,
+                          type: SnackBarFromZero.info,
+                          title: Text("Action Pressed"),
+                        ).show(context);
+                      },
+                    ),
+//                    SnackBarAction(
+//                      label: "Action",
+//                      onPressed: (){
+//                        SnackBarFromZero(
+//                          context: context,
+//                          type: SnackBarFromZero.info,
+//                          title: Text("Action Pressed"),
+//                        ).show(context);
+//                      },
+//                    ),
+//                    SnackBarAction(
+//                      label: "Action",
+//                      onPressed: (){
+//                        SnackBarFromZero(
+//                          context: context,
+//                          type: SnackBarFromZero.info,
+//                          title: Text("Action Pressed"),
+//                        ).show(context);
+//                      },
+//                    ),
+                  ],
+                ).show(context);
+              },
+            );
+          }
         ),
         Builder(builder: (context) => AppbarAction(
           title: "Action 2",
           breakpoints: {
             ScaffoldFromZero.screenSizeMedium: ActionState.button,
           },
-          onTap: (){
+          onTap: (appbarContext){
             Scaffold.of(context).showSnackBar(SnackBar(
               content: Text("pepeg"),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),

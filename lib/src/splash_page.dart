@@ -1,11 +1,11 @@
 import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class SplashPage extends StatefulWidget {
 
-  final Future<String> Function() nextPageNameAccessor;
-  final Widget child;
+  final Future<String?> Function(BuildContext context) nextPageNameAccessor;
+  final Widget? child;
 
   SplashPage(
     this.nextPageNameAccessor,
@@ -22,16 +22,22 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    widget.nextPageNameAccessor().then((value) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pushNamedAndRemoveUntil(context, value,  (route) => false);
-      });
+    widget.nextPageNameAccessor(context).then((value) {
+      if (value!=null){
+        WidgetsBinding.instance?.addPostFrameCallback((_) {
+          Navigator.pushNamedAndRemoveUntil(context, value,  (route) => false);
+        });
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return widget.child ?? Container(color: Platform.isWindows ? Colors.black : Theme.of(context).canvasColor,);
+    return widget.child ?? Container(
+      color: kIsWeb ? Theme.of(context).canvasColor
+        : Platform.isWindows ? Colors.black
+        : Theme.of(context).canvasColor,
+    );
   }
 
 }

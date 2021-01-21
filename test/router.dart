@@ -1,6 +1,5 @@
 
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 
 import 'pages/future_handling/page_future_handling.dart';
 import 'pages/heroes/page_cross_fade_hero.dart';
@@ -16,63 +15,167 @@ import 'pages/scaffold/page_scaffold_other.dart';
 import 'pages/scaffold/page_scaffold_same.dart';
 import 'pages/settings/page_settings.dart';
 
+import 'package:fluro/fluro.dart';
 
-class FluroRouter{
 
-  static FluroRouterFromZero router = FluroRouterFromZero();
+class MyFluroRouter{
+
+  static FluroRouter router = FluroRouter();
 
   static var cache;
 
 
   static void setupRouter() {
 
-    router.define(
-      '/',
+    router.define('/',
       handler: Handler(
-        handlerFunc: (context, params, animation, secondaryAnimation){
-          return SplashPage(() async => '/home');
+        handlerFunc: (context, params){
+          return SplashPage((_) async => '/home');
         },
       ),
     );
 
 
-    router.defineRouteFromZero('/settings', (context, parameters, animation, secondaryAnimation,)
-        => PageSettings());
+    router.define('/settings',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageSettings();
+        },
+      ),
+    );
 
 
-    router.defineRouteFromZero('/home', (context, parameters, animation, secondaryAnimation,)
-        => PageHome());
+    router.define('/home',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageHome();
+        },
+      ),
+    );
 
 
-    router.defineRouteFromZero('/scaffold', (context, parameters, animation, secondaryAnimation,)
-        => PageScaffold());
-    router.defineRouteFromZero('/scaffold/same', (context, parameters, animation, secondaryAnimation,)
-        => PageScaffoldSame());
-    router.defineRouteFromZero('/scaffold/inner', (context, parameters, animation, secondaryAnimation,)
-        => PageScaffoldInner());
-    router.defineRouteFromZero('/scaffold/other', (context, parameters, animation, secondaryAnimation,)
-        => PageScaffoldOther());
+    router.define('/scaffold',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageScaffold();
+        },
+      ),
+    );
+    router.define('/scaffold/same',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageScaffoldSame();
+        },
+      ),
+    );
+    router.define('/scaffold/inner',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageScaffoldInner();
+        },
+      ),
+    );
+    router.define('/scaffold/other',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageScaffoldOther();
+        },
+      ),
+    );
 
 
-    router.defineRouteFromZero('/lightweight_table', (context, parameters, animation, secondaryAnimation,)
-        => PageLightweightTable());
+    router.define('/lightweight_table',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageLightweightTable();
+        },
+      ),
+    );
 
 
-    router.defineRouteFromZero('/future_handling', (context, parameters, animation, secondaryAnimation,)
-        => PageFutureHandling());
+    router.define('/future_handling',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageFutureHandling();
+        },
+      ),
+    );
 
 
-    router.defineRouteFromZero('/heroes', (context, parameters, animation, secondaryAnimation,)
-        => PageHeroes());
-    router.defineRouteFromZero('/heroes/normal', (context, parameters, animation, secondaryAnimation,)
-        => PageNormalHero());
-    router.defineRouteFromZero('/heroes/fade', (context, parameters, animation, secondaryAnimation,)
-        => PageCrossFadeHero());
-    router.defineRouteFromZero('/heroes/custom', (context, parameters, animation, secondaryAnimation,)
-        => PageCustomHero());
-    router.defineRouteFromZero('/heroes/inner', (context, parameters, animation, secondaryAnimation,)
-        => PageInnerHero());
-
+    router.define('/heroes',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageHeroes();
+        },
+      ),
+    );
+    router.define('/heroes/normal',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageNormalHero();
+        },
+      ),
+    );
+    router.define('/heroes/fade',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageCrossFadeHero();
+        },
+      ),
+    );
+    router.define('/heroes/custom',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageCustomHero();
+        },
+      ),
+    );
+    router.define('/heroes/inner',
+      transitionType: TransitionType.custom,
+      transitionDuration: Duration(milliseconds: 300),
+      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
+      handler: Handler(
+        handlerFunc: (context, params){
+          return PageInnerHero();
+        },
+      ),
+    );
 
   }
 

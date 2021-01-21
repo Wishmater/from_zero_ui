@@ -14,40 +14,35 @@ class AppbarAction extends StatelessWidget{
 
   /// callback called when icon/button/overflowMenuItem is clicked
   /// if null and expandedWidget!= null, will switch expanded
-  final VoidCallback onTap;
+  final void Function(BuildContext context)? onTap;
   final String title;
-  final Widget icon;
+  final Widget? icon;
 
   /// from each breakpoint up, the selected widget will be used
   /// defaults to overflow
-  Map<double, ActionState> breakpoints;
+  final Map<double, ActionState> breakpoints;
 
   /// optional callbacks to customize the look of the widget in its different states
-  Widget Function(BuildContext context, String title, Widget icon) overflowBuilder;
-  Widget Function(BuildContext context, String title, Widget icon, VoidCallback onTap) iconBuilder;
-  Widget Function(BuildContext context, String title, Widget icon, VoidCallback onTap) buttonBuilder;
-  Widget Function(BuildContext context, String title, Widget icon) expandedBuilder;
+  final Widget Function(BuildContext context, String title, Widget? icon) overflowBuilder;
+  final Widget Function(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap) iconBuilder;
+  final Widget Function(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap) buttonBuilder;
+  final Widget Function(BuildContext context, String title, Widget? icon)? expandedBuilder;
   final bool centerExpanded;
 
   AppbarAction({
     this.onTap,
-    @required this.title,
+    required this.title,
     this.icon,
-    this.breakpoints,
-    this.overflowBuilder,
-    this.iconBuilder,
-    this.buttonBuilder,
+    Map<double, ActionState>? breakpoints,
+    this.overflowBuilder = _defaultOverflowBuilder,
+    this.iconBuilder = _defaultIconBuilder,
+    this.buttonBuilder = _defaultButtonBuilder,
     this.expandedBuilder,
     this.centerExpanded = true,
-  }){
-    if (breakpoints==null) breakpoints = {
-      0: icon==null ? ActionState.overflow : ActionState.icon,
-      ScaffoldFromZero.screenSizeLarge: expandedBuilder==null ? ActionState.button : ActionState.expanded,
-    };
-    if (overflowBuilder==null) overflowBuilder = _defaultOverflowBuilder;
-    if (iconBuilder==null) iconBuilder = _defaultIconBuilder;
-    if (buttonBuilder==null) buttonBuilder = _defaultButtonBuilder;
-  }
+  }) : this.breakpoints = breakpoints ?? {
+    0: icon==null ? ActionState.overflow : ActionState.icon,
+    ScaffoldFromZero.screenSizeLarge: expandedBuilder==null ? ActionState.button : ActionState.expanded,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -56,40 +51,54 @@ class AppbarAction extends StatelessWidget{
         : iconBuilder(context, title, icon, onTap);
   }
 
-  Widget _defaultIconBuilder(BuildContext context, String title, Widget icon, VoidCallback onTap){
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: IconButton(
-        tooltip: title,
-        icon: icon,
-        onPressed: onTap,
-      ),
-    );
-  }
+}
 
-  Widget _defaultButtonBuilder(BuildContext context, String title, Widget icon, VoidCallback onTap){
-    return FlatButton(
-      onPressed: onTap,
-      colorBrightness: Theme.of(context).appBarTheme?.brightness ?? Theme.of(context).primaryColorBrightness,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(width: 6),
-          if (icon!=null)
-            icon,
-          if (icon!=null)
-            SizedBox(width: 8,),
-          Text(title, style: TextStyle(fontSize: 16),),
-          SizedBox(width: 6),
-        ],
-      ),
-    );
-  }
+Widget _defaultIconBuilder(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap){
+  return Padding(
+    padding: const EdgeInsets.symmetric(horizontal: 4),
+    child: IconButton(
+      tooltip: title,
+      icon: icon ?? SizedBox.shrink(),
+      onPressed: (){
+        onTap?.call(context);
+      },
+    ),
+  );
+}
 
-  Widget _defaultOverflowBuilder(BuildContext context, String title, Widget icon){
-    return Text(title);
-  }
+Widget _defaultButtonBuilder(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap){
+  return FlatButton(
+    onPressed: (){
+      onTap?.call(context);
+    },
+    colorBrightness: Theme.of(context).appBarTheme.brightness ?? Theme.of(context).primaryColorBrightness,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        SizedBox(width: 6),
+        if (icon!=null)
+          icon,
+        if (icon!=null)
+          SizedBox(width: 8,),
+        Text(title, style: TextStyle(fontSize: 16),),
+        SizedBox(width: 6),
+      ],
+    ),
+  );
+}
 
+Widget _defaultOverflowBuilder(BuildContext context, String title, Widget? icon){
+  return Row(
+    crossAxisAlignment: CrossAxisAlignment.center,
+    children: [
+      if (icon!=null) IconTheme(data: Theme.of(context).iconTheme.copyWith(color: Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white), child: icon,),
+      if (icon!=null) SizedBox(width: 16,),
+      Padding(
+        padding: EdgeInsets.only(bottom: 2),
+        child: Text(title, style: TextStyle(fontSize: 16),),
+      )
+    ],
+  );
 }
 
 
@@ -98,28 +107,32 @@ class AppbarFromZero extends StatefulWidget {
 //  final Widget leading;
   final Widget title;
   final List<Widget> actions;
-  final PreferredSizeWidget bottom;
-  final double elevation;
-  final Color shadowColor;
-  final ShapeBorder shape;
-  final Color backgroundColor;
-  final Brightness brightness;
-  final IconThemeData iconTheme;
-  final IconThemeData actionsIconTheme;
-  final TextTheme textTheme;
+  final PreferredSizeWidget? bottom;
+  final double? elevation;
+  final Color? shadowColor;
+  final ShapeBorder? shape;
+  final Color? backgroundColor;
+  final Brightness? brightness;
+  final IconThemeData? iconTheme;
+  final IconThemeData? actionsIconTheme;
+  final TextTheme? textTheme;
   final bool primary;
-  final bool centerTitle;
+  final bool? centerTitle;
   final bool excludeHeaderSemantics;
-  final double titleSpacing;
+  final double? titleSpacing;
   final double toolbarOpacity;
   final double bottomOpacity;
-  final double toolbarHeight;
+  final double? toolbarHeight;
+  final AppbarAction? initialExpandedAction;
+  final AppbarFromZeroController? controller;
+  final void Function(AppbarAction)? onExpanded;
+  final VoidCallback? onUnexpanded;
 
   AppbarFromZero({
-    Key key,
+    Key? key,
 //    this.leading,
-    Widget title,
-    List<Widget> actions,
+    this.title = const SizedBox.shrink(),
+    List<Widget>? actions,
     this.bottom,
     this.elevation,
     this.shadowColor,
@@ -136,9 +149,12 @@ class AppbarFromZero extends StatefulWidget {
     this.toolbarOpacity = 1.0,
     this.bottomOpacity = 1.0,
     this.toolbarHeight,
+    this.initialExpandedAction,
+    this.controller,
+    this.onExpanded,
+    this.onUnexpanded,
   }) :
         this.actions = actions ?? [],
-        this.title = title,
         super(key: key);
 
   @override
@@ -146,10 +162,31 @@ class AppbarFromZero extends StatefulWidget {
 
 }
 
+class AppbarFromZeroController {
+
+  void Function(AppbarAction? expanded)? setExpanded;
+
+}
 
 class _AppbarFromZeroState extends State<AppbarFromZero> {
 
-  AppbarAction forceExpanded;
+  AppbarAction? forceExpanded;
+
+  @override
+  void initState() {
+    super.initState();
+    forceExpanded = widget.initialExpandedAction;
+    widget.controller?.setExpanded = (newExpanded){
+      setState(() {
+        forceExpanded = newExpanded;
+        if (newExpanded==null){
+          widget.onUnexpanded?.call();
+        } else{
+          widget.onExpanded?.call(newExpanded);
+        }
+      });
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -160,6 +197,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
         } else{
           setState(() {
             forceExpanded = null;
+            widget.onUnexpanded?.call();
           });
           return false;
         }
@@ -173,7 +211,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
           if (forceExpanded!=null){
             ActionState state = ActionState.overflow;
             double biggestKey=-1;
-            forceExpanded.breakpoints.forEach((key, value) {
+            forceExpanded!.breakpoints.forEach((key, value) {
               if (key<constraints.maxWidth && key>biggestKey){
                 state = value;
                 biggestKey = key;
@@ -208,16 +246,16 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
                     break;
                   case ActionState.expanded:
                     if (action.centerExpanded){
-                      expanded.add(action.expandedBuilder(context, action.title, action.icon));
+                      expanded.add(action.expandedBuilder!.call(context, action.title, action.icon));
                       removeIndices.add(i);
                     } else{
-                      actions[i] = action.expandedBuilder(context, action.title, action.icon);
+                      actions[i] = action.expandedBuilder!.call(context, action.title, action.icon);
                     }
                     break;
                 }
               }
             }
-            removeIndices.forEach((element) {actions.removeAt(element);});
+            removeIndices.reversed.forEach((element) {actions.removeAt(element);});
             if (overflows.isNotEmpty){
               actions.add(PopupMenuButton<AppbarAction>(
                 icon: Icon(Icons.more_vert),
@@ -225,7 +263,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
                   value: overflows[index],
                   child: overflows[index].overflowBuilder(context, overflows[index].title, overflows[index].icon),
                 )),
-                onSelected: (value) => _getOnTap(value),
+                onSelected: (value) => _getOnTap(value)?.call(context),
               ));
             }
             if (actions.isNotEmpty) actions.add(SizedBox(width: 8,));
@@ -237,7 +275,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
               transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
+                opacity: Tween<double>(begin: -0.5, end: 1).animate(animation),
                 child: SlideTransition(
                   position: Tween<Offset>(begin: Offset(-1, 0), end: Offset.zero).animate(animation),
                   child: child,
@@ -275,14 +313,12 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
                 duration: 300.milliseconds,
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, animation) => SlideTransition(
-                  position: Tween<Offset>(begin: Offset(0, 0.5), end: Offset.zero).animate(animation),
-                  child: FadeTransition(
-                    opacity: animation,
-                    child: ScaleTransition(
-                      scale: animation,
-                      child: child,
-                    ),
+                transitionBuilder: (child, animation) => FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: animation,
+                    child: child,
+                    alignment: Alignment.bottomCenter,
                   ),
                 ),
                 child: SizedBox(
@@ -293,13 +329,14 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: forceExpanded==null ? expanded : [
                       Expanded(
-                        child: forceExpanded.expandedBuilder(context, forceExpanded.title, forceExpanded.icon),
+                        child: forceExpanded!.expandedBuilder!.call(context, forceExpanded!.title, forceExpanded!.icon),
                       ),
                       IconButton(
                         icon: Icon(Icons.close),
                         onPressed: () {
                           setState(() {
                             forceExpanded = null;
+                            widget.onUnexpanded?.call();
                           });
                         },
                       ),
@@ -331,11 +368,12 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
     );
   }
 
-  VoidCallback _getOnTap (AppbarAction action){
+  void Function(BuildContext context)? _getOnTap (AppbarAction action){
     if (action.onTap==null && action.expandedBuilder!=null){
-      return (){
+      return (context){
         setState(() {
           forceExpanded = action;
+          widget.onExpanded?.call(action);
         });
       };
     }

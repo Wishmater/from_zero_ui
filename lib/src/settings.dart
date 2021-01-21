@@ -6,26 +6,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/app_update.dart';
 import 'package:from_zero_ui/src/export.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:window_size/window_size.dart';
 
 Future<void> initHive() async{
   await Hive.initFlutter();
-  await Hive.openBox("settings");
+  File file = File ('update_temp_args.txt');
+  if (file.existsSync()){
+    final lines = file.readAsLinesSync();
+    file.delete();
+    setWindowTitle("Finishing Update...");
+    final maxSize = (await getCurrentScreen())!.frame;
+    setWindowFrame(Rect.fromCenter(
+        center: Offset(maxSize.width/2, maxSize.height/2),
+        width: 512, height: 112
+    ));
+    runApp(LoadingApp());
+    await UpdateFromZero.finishUpdate(
+        lines[0].replaceAll('%20', ' '),
+        lines[1].replaceAll('%20', ' '),);
+  } else{
+    await Hive.openBox("settings");
+  }
 }
 
 abstract class AppParametersFromZero extends ChangeNotifier {
 
   ThemeData get lightTheme => themes[selectedTheme]==null
-      || themes[selectedTheme].brightness!=Brightness.light
-      ? defaultLightTheme : themes[selectedTheme];
+      || themes[selectedTheme]!.brightness!=Brightness.light
+      ? defaultLightTheme : themes[selectedTheme]!;
   ThemeData get darkTheme => themes[selectedTheme]==null
-      || themes[selectedTheme].brightness!=Brightness.dark
-      ? defaultDarkTheme : themes[selectedTheme];
+      || themes[selectedTheme]!.brightness!=Brightness.dark
+      ? defaultDarkTheme : themes[selectedTheme]!;
   ThemeMode get themeMode => themes[selectedTheme]==null ?
-      ThemeMode.system : themes[selectedTheme].brightness==Brightness.light
+      ThemeMode.system : themes[selectedTheme]!.brightness==Brightness.light
       ? ThemeMode.light : ThemeMode.dark;
 
   ThemeData get defaultLightTheme;
@@ -39,7 +57,7 @@ abstract class AppParametersFromZero extends ChangeNotifier {
             FromZeroLocalizations.of(context).translate("light_theme"),
             FromZeroLocalizations.of(context).translate("dark_theme"),
           ];
-  List<ThemeData> get themes => [null, defaultLightTheme, defaultDarkTheme];
+  List<ThemeData?> get themes => [null, defaultLightTheme, defaultDarkTheme];
 
   int get selectedTheme => Hive.box("settings").get("theme", defaultValue: 0);
   set selectedTheme(int value) {
@@ -48,9 +66,9 @@ abstract class AppParametersFromZero extends ChangeNotifier {
   }
 
 
-  Locale get appLocale => supportedLocales[selectedLocale];
+  Locale? get appLocale => supportedLocales[selectedLocale];
 
-  List<Locale> get supportedLocales => [
+  List<Locale?> get supportedLocales => [
     null,
     Locale('en'),
     Locale('es'),
@@ -85,13 +103,13 @@ class FromZeroLocalizations {
   // Helper method to keep the code in the widgets concise
   // Localizations are accessed using an InheritedWidget "of" syntax
   static FromZeroLocalizations of(BuildContext context) {
-    return Localizations.of<FromZeroLocalizations>(context, FromZeroLocalizations);
+    return Localizations.of<FromZeroLocalizations>(context, FromZeroLocalizations)!;
   }
 
   // Static member to have a simple access to the delegate from the MaterialApp
   static const LocalizationsDelegate<FromZeroLocalizations> delegate = _FromZeroLocalizationsDelegate();
 
-  Map<String, String> _localizedStrings;
+  late Map<String, String> _localizedStrings;
 
   Future<bool> load() async {
     // Load the language JSON file from the "lang" folder
@@ -114,7 +132,7 @@ class FromZeroLocalizations {
 
   // This method will be called from every widget which needs a localized text
   String translate(String key) {
-    return _localizedStrings[key];
+    return _localizedStrings[key]!;
   }
 }
 
@@ -168,7 +186,7 @@ class ThemeSwitcher extends StatelessWidget {
         ),
       )),
       initialValue: themeParameters.selectedTheme,
-      onSelected: (value) => value!=themeParameters.selectedTheme ? themeParameters.selectedTheme = value : null,
+      onSelected: (int value) => value!=themeParameters.selectedTheme ? themeParameters.selectedTheme = value : null,
     );
   }
 
@@ -199,7 +217,78 @@ class LocaleSwitcher extends StatelessWidget {
         ),
       )),
       initialValue: themeParameters.selectedLocale,
-      onSelected: (value) => value!=themeParameters.selectedLocale ? themeParameters.selectedLocale = value : null,
+      onSelected: (int value) => value!=themeParameters.selectedLocale ? themeParameters.selectedLocale = value : null,
+    );
+  }
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+class LoadingApp extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: "Finishing Update...",
+      builder: (context, child) {
+        return Container(
+          color: Colors.white,
+          alignment: Alignment.center,
+//                child: Row(
+//                  mainAxisAlignment: MainAxisAlignment.center,
+//                  children: [
+//                    CircularProgressIndicator(
+//                      valueColor: ColorTween(begin: Theme.of(context).primaryColor, end: Theme.of(context).primaryColor).animate(kAlwaysDismissedAnimation),
+//                    ),
+//                    SizedBox(width: 16,),
+//                    Text(
+//                      "Procesando...",
+//                      style: Theme.of(context).textTheme.headline6,
+//                    ),
+//                  ],
+//                ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              LinearProgressIndicator(
+                valueColor: ColorTween(
+                    begin: Theme.of(context).primaryColor,
+                    end: Theme.of(context).primaryColor
+                ).animate(kAlwaysDismissedAnimation) as Animation<Color>,
+              ),
+              Expanded(
+                child: Text(
+                  "Finishing Update...",
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .headline6,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+      debugShowCheckedModeBanner: false,
     );
   }
 

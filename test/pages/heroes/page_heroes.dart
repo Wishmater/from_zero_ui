@@ -4,7 +4,6 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/export.dart';
-import 'package:from_zero_ui/src/fluro_router_from_zero.dart';
 import 'package:from_zero_ui/src/heroes_from_zero.dart';
 import 'package:from_zero_ui/src/settings.dart';
 import 'package:path_provider/path_provider.dart';
@@ -30,8 +29,8 @@ class PageHeroes extends PageFromZero {
 
 class _PageHeroesState extends State<PageHeroes> {
 
-  Widget widgetToExport;
-  HeroFlightShuttleBuilder shuttleBuilder;
+  late Widget widgetToExport;
+  HeroFlightShuttleBuilder? shuttleBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -51,8 +50,9 @@ class _PageHeroesState extends State<PageHeroes> {
             onTap: () {
               showModal(
                 context: context,
-                builder: (context) => Export(
-                  childBuilder: (context, i, urrentSize, portrait, scale, format) => widgetToExport,
+                builder: (scaffoldContext) => Export(
+                  scaffoldContext: scaffoldContext,
+                  childBuilder: (context, i, currentSize, portrait, scale, format) => widgetToExport,
                   childrenCount: (currentSize, portrait, scale, format) => 1,
                   themeParameters: Provider.of<ThemeParameters>(context, listen: false),
                   title: DateTime.now().millisecondsSinceEpoch.toString() + " Heroes",
@@ -85,7 +85,7 @@ class _PageHeroesState extends State<PageHeroes> {
                       setState(() {
                         shuttleBuilder = null;
                       });
-                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
                         Navigator.pushNamed(context, "/heroes/normal");
                       });
                     },
@@ -100,7 +100,7 @@ class _PageHeroesState extends State<PageHeroes> {
                       setState(() {
                         shuttleBuilder = HeroesFromZero.fadeThroughFlightShuttleBuilder;
                       });
-                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
                         Navigator.pushNamed(context, "/heroes/fade");
                       });
                     },
@@ -115,7 +115,7 @@ class _PageHeroesState extends State<PageHeroes> {
                       setState(() {
                         shuttleBuilder = null;
                       });
-                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
                         Navigator.pushNamed(context, "/heroes/custom");
                       });
                     },
@@ -130,7 +130,7 @@ class _PageHeroesState extends State<PageHeroes> {
                       setState(() {
                         shuttleBuilder = HeroesFromZero.fadeThroughFlightShuttleBuilder;
                       });
-                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
                         Navigator.pushNamed(context, "/heroes/inner");
                       });
                     },

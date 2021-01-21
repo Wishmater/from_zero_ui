@@ -63,7 +63,7 @@ import 'package:animations/src/dual_transition_builder.dart' as dual_transition_
 /// ```
 class FadeThroughPageTransitionsBuilder extends PageTransitionsBuilder {
   /// Creates a [FadeThroughPageTransitionsBuilder].
-  const FadeThroughPageTransitionsBuilder({this.fillColor});
+  const FadeThroughPageTransitionsBuilder({required this.fillColor});
 
   /// The color to use for the background color during the transition.
   ///
@@ -165,10 +165,10 @@ class FadeThroughTransition extends StatelessWidget {
   /// The [animation] and [secondaryAnimation] argument are required and must
   /// not be null.
   const FadeThroughTransition({
-    @required this.animation,
-    @required this.secondaryAnimation,
+    required this.animation,
+    required this.secondaryAnimation,
     this.fillColor,
-    this.child,
+    required this.child,
   })  : assert(animation != null),
         assert(secondaryAnimation != null);
 
@@ -192,7 +192,7 @@ class FadeThroughTransition extends StatelessWidget {
   /// The color to use for the background color during the transition.
   ///
   /// This defaults to the [Theme]'s [ThemeData.canvasColor].
-  final Color fillColor;
+  final Color? fillColor;
 
   /// The widget below this widget in the tree.
   ///
@@ -216,7 +216,7 @@ class FadeThroughTransition extends StatelessWidget {
 }
 
 class _ZoomedFadeInFadeOut extends StatelessWidget {
-  const _ZoomedFadeInFadeOut({Key key, this.animation, this.child})
+  const _ZoomedFadeInFadeOut({Key? key, required this.animation, required this.child})
       : super(key: key);
 
   final Animation<double> animation;
@@ -253,8 +253,8 @@ class _ZoomedFadeInFadeOut extends StatelessWidget {
 
 class _ZoomedFadeIn extends StatelessWidget {
   const _ZoomedFadeIn({
-    this.child,
-    this.animation,
+    required this.child,
+    required this.animation,
   });
 
   final Widget child;
@@ -287,8 +287,8 @@ class _ZoomedFadeIn extends StatelessWidget {
 
 class _FadeOut extends StatelessWidget {
   const _FadeOut({
-    this.child,
-    this.animation,
+    required this.child,
+    required this.animation,
   });
 
   final Widget child;

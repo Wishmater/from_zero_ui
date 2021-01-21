@@ -2,32 +2,33 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'file:///C:/Workspaces/Flutter/from_zero_ui/lib/util/custom_draggable_scrollbar.dart';
+import 'package:from_zero_ui/util/custom_draggable_scrollbar.dart';
 import 'package:from_zero_ui/src/ui_utility_widgets.dart';
 
 class ScrollbarFromZero extends StatefulWidget {
 
-  final ScrollController controller;
+  final ScrollController? controller;
   final Widget child;
   final double minScrollbarHeight;
   final double scrollbarWidthDesktop;
   final double scrollbarWidthMobile;
   final bool applyPaddingToChildrenOnDesktop;
   final bool applyOpacityGradientToChildren;
+  final bool assumeTheScrollBarWillShowOnDesktop;
 //TODO 1 ??? add support for horizontal scroll
 //TODO 3 expose options for scrollbarColor and iconColor
 //TODO 3 expose an option to consume events (default true)
   ScrollbarFromZero({
-    Key key,
-    @required this.controller,
-    @required this.child,
+    Key? key,
+    this.controller,
+    required this.child,
     this.minScrollbarHeight = 64,
     this.scrollbarWidthDesktop = 16,
     this.scrollbarWidthMobile = 10,
     this.applyPaddingToChildrenOnDesktop = true,
-    bool applyOpacityGradientToChildren,
-  }) :  assert(child != null),
-        this.applyOpacityGradientToChildren = applyOpacityGradientToChildren ?? !applyPaddingToChildrenOnDesktop,
+    this.assumeTheScrollBarWillShowOnDesktop = false,
+    bool? applyOpacityGradientToChildren,
+  }) :  this.applyOpacityGradientToChildren = applyOpacityGradientToChildren ?? !applyPaddingToChildrenOnDesktop,
         super(key: key);
 
   @override
@@ -43,37 +44,32 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   double maxScrollExtent = 0;
   int topFlex = 0;
   bool disposed = false;
-  int initialTimestamp;
+  late int initialTimestamp;
 
   @override
   void initState() {
     super.initState();
-    if (widget.controller!=null){
-//      WidgetsBinding.instance.addPostFrameCallback((_) {
+//    WidgetsBinding.instance?.addPostFrameCallback((_) {
 //      _updateMaxScrollExtent();
 //    });
-      widget.controller.addListener(_onScrollListener);
-      if (widget.controller.hasClients)
-        widget.controller.position.addListener(_onScrollListener);
-      initialTimestamp = DateTime.now().millisecondsSinceEpoch;
-    }
-
+    widget.controller?.addListener(_onScrollListener);
+    if (widget.controller?.hasClients ?? false)
+      widget.controller?.position.addListener(_onScrollListener);
+    initialTimestamp = DateTime.now().millisecondsSinceEpoch;
   }
 
   @override
   void dispose() {
-    if (widget.controller!=null){
-      disposed = true;
-      widget.controller.removeListener(_onScrollListener);
-    }
+    disposed = true;
+    widget.controller?.removeListener(_onScrollListener);
     super.dispose();
   }
 
   void _onScrollListener () {
     _updateMaxScrollExtent();
-    if (widget.controller.position.extentAfter>0){
+    if (widget.controller!.position.extentAfter>0){
       setState(() {
-        topFlex = 100*widget.controller.position.extentBefore ~/ widget.controller.position.maxScrollExtent;
+        topFlex = 100*widget.controller!.position.extentBefore ~/ widget.controller!.position.maxScrollExtent;
       });
     } else{
       setState(() {
@@ -85,8 +81,8 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   void _updateMaxScrollExtent({bool doSetState = true}){
 //    print(widget.id + " _updateMaxScrollExtent()");
     try {
-      if (widget.controller.position.maxScrollExtent != maxScrollExtent){
-        maxScrollExtent = widget.controller.position.maxScrollExtent;
+      if (widget.controller!.position.maxScrollExtent != maxScrollExtent){
+        maxScrollExtent = widget.controller!.position.maxScrollExtent;
 //        print("     maxScrollExtent = " + maxScrollExtent.toString());
         _updateHeight(doSetState: doSetState);
       }
@@ -112,11 +108,11 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     } else{
       height = maxHeight * (maxHeight / (maxHeight+maxScrollExtent));
       if (height<widget.minScrollbarHeight) height = widget.minScrollbarHeight;
-      if (doSetState)
-        setState(() {
-          height = height;
-        });
     }
+    if (doSetState)
+      setState(() {
+        height = height;
+      });
 //    print("     height = " + height.toString());
   }
 
@@ -138,7 +134,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           _updateMaxHeight(constraints, doSetState: false);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+          WidgetsBinding.instance?.addPostFrameCallback((_) {
             Future.doWhile(() async{
               _updateMaxScrollExtent(doSetState: true);
               await (Future.delayed(Duration(milliseconds: 100)));
@@ -146,19 +142,18 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
             });
           });
           // assumes maxHeight constraint here is the same as inside the scrollable viewport
-          // TODO 3 ??? web defaults to desktop mode
-          if (!kIsWeb && (Platform.isIOS || Platform.isAndroid)){
+          if (PlatformExtended.isMobile){
 
             return DraggableScrollbar.rrect(
               alwaysVisibleScrollThumb: false,
               heightScrollThumb: height,
-              backgroundColor: Theme.of(context).highlightColor.withOpacity(1.0),
-              controller: widget.controller==null||!widget.controller.hasClients ? null : widget.controller,
+              backgroundColor: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.33),
+              controller: widget.controller==null||!(widget.controller?.hasClients??false) ? null : widget.controller,
               child: child,
               scrollbarTimeToFade: Duration(milliseconds: 2500),
-              scrollThumbBorderRadius: 0,
+              scrollThumbBorderRadius: 999999,
               scrollThumbWidth: widget.scrollbarWidthMobile,
-              scrollThumbElevation: 4,
+              scrollThumbElevation: 0,
             );
 
           } else{
@@ -167,8 +162,12 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
               children: <Widget>[
                 Align(
                   alignment: Alignment.centerRight,
-                  child: Container(
+                  child: AnimatedContainer(
                     width: height>0 ? widget.scrollbarWidthDesktop : 0,
+//                    duration: Duration(milliseconds: 300+((DateTime.now().millisecondsSinceEpoch-initialTimestamp-200)*-1).clamp(0, 200)),
+//                    curve: Curves.easeInExpo,
+                    duration: Duration(milliseconds: (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, 200)),
+                    curve: Curves.easeInCubic,
                     child: Column(
                       children: [
                         Flexible(
@@ -178,12 +177,12 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                             child: InkWell(
                               child: Container(),
                               onTap: () {
-                                double jump = widget.controller.position.pixels - widget.controller.position.extentInside;
+                                double jump = widget.controller!.position.pixels - widget.controller!.position.extentInside;
                                 if (jump < 0) jump = 0;
                                 if (kIsWeb){
-                                  widget.controller.jumpTo(jump);
+                                  widget.controller!.jumpTo(jump);
                                 } else{
-                                  widget.controller.animateTo(
+                                  widget.controller!.animateTo(
                                     jump,
                                     duration: Duration(milliseconds: 300),
                                     curve: Curves.easeOutCubic,
@@ -200,12 +199,12 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                             child: InkWell(
                               child: Container(),
                               onTap: () {
-                                double jump = widget.controller.position.pixels + widget.controller.position.extentInside;
-                                if (jump > widget.controller.position.maxScrollExtent) jump = widget.controller.position.maxScrollExtent;
+                                double jump = widget.controller!.position.pixels + widget.controller!.position.extentInside;
+                                if (jump > widget.controller!.position.maxScrollExtent) jump = widget.controller!.position.maxScrollExtent;
                                 if (kIsWeb){
-                                  widget.controller.jumpTo(jump);
+                                  widget.controller!.jumpTo(jump);
                                 } else{
-                                  widget.controller.animateTo(
+                                  widget.controller!.animateTo(
                                     jump,
                                     duration: Duration(milliseconds: 300),
                                     curve: Curves.easeOutCubic,
@@ -223,12 +222,14 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                   alwaysVisibleScrollThumb: height>0,
                   heightScrollThumb: height,
                   backgroundColor: Theme.of(context).cardColor,
-                  controller: widget.controller==null||!widget.controller.hasClients ? null : widget.controller,
+                  controller: widget.controller==null||!widget.controller!.hasClients ? null : widget.controller,
                   child: AnimatedPadding(
+//                    duration: Duration(milliseconds: 300+((DateTime.now().millisecondsSinceEpoch-initialTimestamp-200)*-1).clamp(0, 200)),
+//                    curve: Curves.easeInExpo,
                     duration: Duration(milliseconds: (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, 200)),
-                    curve: Curves.easeOutCubic,
+                    curve: Curves.easeInCubic,
                     padding: EdgeInsets.only(
-                        right: widget.applyPaddingToChildrenOnDesktop && height>0
+                        right: widget.applyPaddingToChildrenOnDesktop && (height>0 || widget.assumeTheScrollBarWillShowOnDesktop)
                             ? widget.scrollbarWidthDesktop : 0),
                     child: child,
                   ),
