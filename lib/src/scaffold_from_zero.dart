@@ -423,11 +423,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                       duration: widget.drawerAnimationDuration,
                       curve: widget.drawerAnimationCurve,
                       width: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
-                      child: GestureDetector(
-                        onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
-                        onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
-                        child: _getResponsiveDrawerContent(context),
-                      ),
+                      child: _getResponsiveDrawerContent(context),
                     )
                     : AnimatedPositioned(
                       duration: widget.drawerAnimationDuration,
@@ -435,14 +431,22 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                       left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)-widget.drawerWidth,
                       width: widget.drawerWidth,
                       top: 0, bottom: 0,
-                      child: GestureDetector(
-                        onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
-                        onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
-                        child: _getResponsiveDrawerContent(context),
-                      ),
+                      child: _getResponsiveDrawerContent(context),
                     ),
               ),
 
+              //DESKTOP DRAWER OPEN GESTURE DETECTOR
+              screen.displayMobileLayout || widget.drawerContentBuilder==null
+                  ? Positioned(top: 0, bottom: 0, width: 0, child: Container(),)
+                  : Positioned(
+                top: 0, bottom: 0, left: 0, width: changeNotifier.getCurrentDrawerWidth(widget.currentPage)+18,
+                child: GestureDetector(
+                  onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
+                  onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
+                  behavior: HitTestBehavior.translucent,
+                  excludeFromSemantics: true,
+                ),
+              ),
             ],
           );
         },
@@ -639,20 +643,6 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                 ),
               ),
 
-              //DESKTOP DRAWER OPEN GESTURE DETECTOR
-              Selector<ScreenFromZero, bool>(
-                selector: (context, screen) => screen.displayMobileLayout,
-                builder: (context, displayMobileLayout, child) {
-                  return displayMobileLayout||widget.drawerContentBuilder==null ? const SizedBox.shrink()
-                      : GestureDetector(
-                    onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifierNotListen),
-                    onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifierNotListen),
-                    behavior: HitTestBehavior.translucent,
-                    excludeFromSemantics: true,
-                    child: Container(width: 18,),
-                  );
-                },
-              ),
             ],
           ),
         ),

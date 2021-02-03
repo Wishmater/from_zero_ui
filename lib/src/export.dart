@@ -248,7 +248,6 @@ class _ExportState extends State<Export> {
   late String filePath;
   late String pathUi;
   Future<void> _export(Size size, [i=0, pdf]) async {
-    doneExports = 0;
     if (format==2){
       return _executeExcelExport();
     }
@@ -287,21 +286,19 @@ class _ExportState extends State<Export> {
       if (i==widget.childrenCount!(currentSize, portrait, scale, this.format,)-1){
         final file = File((await widget.path)+widget.title+'.pdf');
         await file.create(recursive: true);
-        if (filePath==null){
-          filePath = file.absolute.path;
-          directoryPath = file.parent.absolute.path;
-          pathUi = filePath;
-          if (Platform.isWindows)
-            pathUi = pathUi.substring(filePath.indexOf("Document")).replaceAll('/', '\\');
-          if (Platform.isAndroid)
-            pathUi = "Downloads/Cutrans CRM/${filePath.substring(filePath.lastIndexOf(p.separator))}";
-        }
+        filePath = file.absolute.path;
+        directoryPath = file.parent.absolute.path;
+        pathUi = filePath;
+        if (Platform.isWindows)
+          pathUi = pathUi.substring(filePath.indexOf("Document")).replaceAll('/', '\\');
+        if (Platform.isAndroid)
+          pathUi = "Downloads/Cutrans CRM/${filePath.substring(filePath.lastIndexOf(p.separator))}";
         await file.writeAsBytes(pdf.save());
       }
     } else if (format==1){
       File imgFile = File((await widget.path)+widget.title+(widget.childrenCount!(currentSize, portrait, scale, this.format,)>1?' ${(i+1)}':'')+'.png');
       await imgFile.create(recursive: true);
-      if (filePath==null){
+      if (i==0){
         filePath = imgFile.absolute.path;
         directoryPath = imgFile.parent.absolute.path;
         pathUi = filePath;
@@ -706,8 +703,8 @@ class _ExportState extends State<Export> {
                                     return LoadingSign();
                                   },
                                 );
+                                doneExports = 0;
                                 _export(size);
-
                                 while (doneExports<widget.childrenCount!(currentSize, portrait, scale, format,)){
                                   await Future.delayed(100.milliseconds);
                                 }
@@ -879,6 +876,7 @@ class _PageWrapper extends StatelessWidget {
                 child: FittedBox(
                   alignment: Alignment.center,
                   fit: BoxFit.fitHeight,
+                  clipBehavior: Clip.none,
                   child: RepaintBoundary(
                     key: globalKey,
                     child: MediaQuery(

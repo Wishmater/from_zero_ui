@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:animations/animations.dart';
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_icons/flutter_icons.dart';
@@ -7,7 +10,6 @@ import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/my_sticky_header.dart';
 import 'package:from_zero_ui/util/small_splash_popup_menu_button.dart' as small_popup;
-import 'package:collection/algorithms.dart';
 import 'dart:async';
 
 import 'package:implicitly_animated_reorderable_list/implicitly_animated_reorderable_list.dart';
@@ -399,10 +401,28 @@ class _TableFromZeroState extends State<TableFromZero> {
                 if (result==null && widget.columns![j].flex==0){
                   return SizedBox.shrink();
                 }
-                result = Container(
-                  decoration: _getDecoration(row, -1, j, header: true),
-                  child: result,
-                );
+                if (!kIsWeb && Platform.isWindows){
+                  result = Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      Positioned(
+                        top: 0, bottom: -1,
+                        left: j==0 ? 0 : -1,
+                        right: j==cols-1 ? 0 : -1,
+                        child: Container(
+                          decoration: _getDecoration(row, -1, j, header: true),
+                        ),
+                      ),
+                      if (result!=null)
+                        result,
+                    ],
+                  );
+                } else{
+                  result = Container(
+                    decoration: _getDecoration(row, -1, j, header: true),
+                    child: result,
+                  );
+                }
                 if (addSizing){
                   if (widget.columns![j].width!=null){
                     result = SizedBox(width: widget.columns![j].width, child: result,);
@@ -719,10 +739,29 @@ class _TableFromZeroState extends State<TableFromZero> {
               if (result==null && widget.columns!=null && widget.columns![j].flex==0){
                 return SizedBox.shrink();
               }
-              result = Container(
-                decoration: _getDecoration(row, i, j),
-                child: result,
-              );
+              if (!kIsWeb && Platform.isWindows){
+                result = Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      top: i==0 ? 0 : -1,
+                      bottom: i==filtered.length-1 ? 0 : -1,
+                      left: j==0 ? 0 : -1,
+                      right: j==cols-1 ? 0 : -1,
+                      child: Container(
+                        decoration: _getDecoration(row, i, j),
+                      ),
+                    ),
+                    if (result!=null)
+                      result,
+                  ],
+                );
+              } else{
+                result = Container(
+                  decoration: _getDecoration(row, i, j),
+                  child: result,
+                );
+              }
               if (addSizing){
                 if (widget.columns!=null && widget.columns![j].width!=null){
                   result = SizedBox(width: widget.columns![j].width, child: result,);
