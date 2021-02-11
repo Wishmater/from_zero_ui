@@ -71,6 +71,8 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
   TableController? tableController;
   Alignment? alignmentWhenOverMaxWidth;
   final FutureOr<String>? exportPath;
+  final bool applyScrollToRowAddon;
+  final bool rowGestureDetectorCoversRowAddon;
 
   TableFromZero({
     required List<RowModel> rows,
@@ -108,6 +110,8 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
     this.tableController,
     this.alignmentWhenOverMaxWidth,
     this.exportPath,
+    this.applyScrollToRowAddon = true,
+    this.rowGestureDetectorCoversRowAddon = false,
   }) : this.rows = List.from(rows) {
     if (showHeaders && columns!=null){
       int actionsIndex = rows.indexWhere((element) => element.actions!=null);
@@ -708,128 +712,125 @@ class _TableFromZeroState extends State<TableFromZero> {
     }
 
     int cols = ((row.values.length-disabledColumnCount) + (row.onCheckBoxSelected==null ? 0 : 1)) * (widget.verticalDivider==null ? 1 : 2) + (widget.verticalDivider==null ? 0 : 1) + (row.actions==null ? 0 : 1);
+    final backgrounds = List.generate(cols, (j) {
+      Widget? result;
+      bool addSizing = true;
+      if (row.actions!=null && j==cols-1){
+        addSizing = false;
+        result = SizedBox(width: TableFromZero._checkmarkWidth*row.actions!.length, height: double.infinity,);
+      }
+      if (result==null && widget.verticalDivider!=null){
+        if (j%2==0) return Padding(
+          padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
+          child: widget.verticalDivider,
+        );
+        j = (j-1)~/2;
+      }
+      if (result==null && row.onCheckBoxSelected!=null){
+        if (j==0){
+          addSizing = false;
+          result = SizedBox(width: TableFromZero._checkmarkWidth, height: double.infinity,);
+        } else{
+          j--;
+        }
+      }
+      if (result==null && widget.columns!=null && widget.columns![j].flex==0){
+        return SizedBox.shrink();
+      }
+      if (!kIsWeb && Platform.isWindows){
+        result = Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              top: i==0 ? 0 : -1,
+              bottom: i==filtered.length-1 ? 0 : -1,
+              left: j==0 ? 0 : -1,
+              right: j==cols-1 ? 0 : -1,
+              child: Container(
+                decoration: _getDecoration(row, i, j),
+              ),
+            ),
+            if (result!=null)
+              result,
+          ],
+        );
+      } else{
+        result = Container(
+          decoration: _getDecoration(row, i, j),
+          child: result,
+        );
+      }
+      if (addSizing){
+        if (widget.columns!=null && widget.columns![j].width!=null){
+          result = SizedBox(width: widget.columns![j].width, child: result,);
+        } else{
+          result = Expanded(flex: _getFlex(j), child: result,);
+        }
+      }
+      return result;
+    });
+    final cells = List.generate(cols, (j) {
+      if (row.actions!=null && j==cols-1){
+        return SizedBox(
+          width: TableFromZero._checkmarkWidth*row.actions!.length,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: row.actions!,
+          ),
+        );
+      }
+      if (widget.verticalDivider!=null){
+        if (j%2==0) return Padding(
+          padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
+          child: widget.verticalDivider,
+        );
+        j = (j-1)~/2;
+      }
+      if (row.onCheckBoxSelected!=null){
+        if (j==0){
+          return SizedBox(
+            width: TableFromZero._checkmarkWidth,
+            child: LoadingCheckbox(
+              value: row.selected, onChanged: (value) => row.onCheckBoxSelected!(row, value),
+            ),
+          );
+        } else{
+          j--;
+        }
+      }
+      if (widget.columns!=null && widget.columns![j].flex==0){
+        return SizedBox.shrink();
+      }
+      Widget result = Container(
+        height: row.height,
+        alignment: Alignment.center,
+        padding: widget.itemPadding,
+        child: Container(
+            width: double.infinity,
+            child: (widget.cellBuilder??defaultCellBuilder)
+                .call(context, row, widget.columns==null?null:widget.columns![j], j)
+        ),
+      );
+      if (widget.columns!=null && widget.columns![j].width!=null){
+        return SizedBox(width: widget.columns![j].width, child: result,);
+      } else{
+        return Flexible(flex: _getFlex(j), child: result,);
+      }
+    });
     Widget result = Stack(
       key: row.rowKey,
       fit: StackFit.passthrough,
       children: [
         Positioned.fill(
           child: Row(
-            children: List.generate(cols, (j) {
-              Widget? result;
-              bool addSizing = true;
-              if (row.actions!=null && j==cols-1){
-                addSizing = false;
-                result = SizedBox(width: TableFromZero._checkmarkWidth*row.actions!.length, height: double.infinity,);
-              }
-              if (result==null && widget.verticalDivider!=null){
-                if (j%2==0) return Padding(
-                  padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
-                  child: widget.verticalDivider,
-                );
-                j = (j-1)~/2;
-              }
-              if (result==null && row.onCheckBoxSelected!=null){
-                if (j==0){
-                  addSizing = false;
-                  result = SizedBox(width: TableFromZero._checkmarkWidth, height: double.infinity,);
-                } else{
-                  j--;
-                }
-              }
-              if (result==null && widget.columns!=null && widget.columns![j].flex==0){
-                return SizedBox.shrink();
-              }
-              if (!kIsWeb && Platform.isWindows){
-                result = Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Positioned(
-                      top: i==0 ? 0 : -1,
-                      bottom: i==filtered.length-1 ? 0 : -1,
-                      left: j==0 ? 0 : -1,
-                      right: j==cols-1 ? 0 : -1,
-                      child: Container(
-                        decoration: _getDecoration(row, i, j),
-                      ),
-                    ),
-                    if (result!=null)
-                      result,
-                  ],
-                );
-              } else{
-                result = Container(
-                  decoration: _getDecoration(row, i, j),
-                  child: result,
-                );
-              }
-              if (addSizing){
-                if (widget.columns!=null && widget.columns![j].width!=null){
-                  result = SizedBox(width: widget.columns![j].width, child: result,);
-                } else{
-                  result = Expanded(flex: _getFlex(j), child: result,);
-                }
-              }
-              return result;
-            }),
+            children: backgrounds,
           ),
         ),
-        Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: row.onRowTap!=null ? () => row.onRowTap!(row) : null,
-            onDoubleTap: row.onRowDoubleTap!=null ? () => row.onRowDoubleTap!(row) : null,
-            onLongPress: row.onRowLongPress!=null ? () => row.onRowLongPress!(row) : null,
-            onHover: row.onRowHover!=null ? (value) => row.onRowHover!(row, value) : null,
-            child: Row(
-              children: List.generate(cols, (j) {
-                if (row.actions!=null && j==cols-1){
-                  return SizedBox(
-                    width: TableFromZero._checkmarkWidth*row.actions!.length,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: row.actions!,
-                    ),
-                  );
-                }
-                if (widget.verticalDivider!=null){
-                  if (j%2==0) return Padding(
-                    padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
-                    child: widget.verticalDivider,
-                  );
-                  j = (j-1)~/2;
-                }
-                if (row.onCheckBoxSelected!=null){
-                  if (j==0){
-                    return SizedBox(
-                      width: TableFromZero._checkmarkWidth,
-                      child: LoadingCheckbox(
-                        value: row.selected, onChanged: (value) => row.onCheckBoxSelected!(row, value),
-                      ),
-                    );
-                  } else{
-                    j--;
-                  }
-                }
-                if (widget.columns!=null && widget.columns![j].flex==0){
-                  return SizedBox.shrink();
-                }
-                Widget result = Container(
-                  height: row.height,
-                  alignment: Alignment.center,
-                  padding: widget.itemPadding,
-                  child: Container(
-                    width: double.infinity,
-                    child: (widget.cellBuilder??defaultCellBuilder)
-                        .call(context, row, widget.columns==null?null:widget.columns![j], j)
-                  ),
-                );
-                if (widget.columns!=null && widget.columns![j].width!=null){
-                  return SizedBox(width: widget.columns![j].width, child: result,);
-                } else{
-                  return Flexible(flex: _getFlex(j), child: result,);
-                }
-              }),
-            ),
+        _buildRowGestureDetector(
+          context: context,
+          row: row,
+          child: Row(
+            children: cells,
           ),
         ),
       ],
@@ -870,6 +871,25 @@ class _TableFromZeroState extends State<TableFromZero> {
         child: result,
       );
     }
+    if (widget.rowGestureDetectorCoversRowAddon){
+      result = Stack(
+        children: [
+          result,
+          Positioned.fill(
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                onTap: row.onRowTap!=null ? () => row.onRowTap!(row) : null,
+                onDoubleTap: row.onRowDoubleTap!=null ? () => row.onRowDoubleTap!(row) : null,
+                onLongPress: row.onRowLongPress!=null ? () => row.onRowLongPress!(row) : null,
+                onHover: row.onRowHover!=null ? (value) => row.onRowHover!(row, value) : null,
+                child: Container(),
+              ),
+            ),
+          )
+        ],
+      );
+    }
     if (widget.minWidth!=null || widget.maxWidth!=null){
       return LayoutBuilder(
         builder: (context, constraints) {
@@ -900,6 +920,18 @@ class _TableFromZeroState extends State<TableFromZero> {
       );
     }
     return result;
+  }
+  _buildRowGestureDetector({required BuildContext context, required RowModel row, required Widget child}) {
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: row.onRowTap!=null ? () => row.onRowTap!(row) : null,
+        onDoubleTap: row.onRowDoubleTap!=null ? () => row.onRowDoubleTap!(row) : null,
+        onLongPress: row.onRowLongPress!=null ? () => row.onRowLongPress!(row) : null,
+        onHover: row.onRowHover!=null ? (value) => row.onRowHover!(row, value) : null,
+        child: child,
+      ),
+    );
   }
 
   Widget defaultCellBuilder(BuildContext context, RowModel row, ColModel? col, int j){

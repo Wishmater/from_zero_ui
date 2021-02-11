@@ -183,7 +183,8 @@ class _ExportState extends State<Export> {
       widget.childrenCount = ((currentSize, bool portrait, double scale, int format){
         if (first){
           first = false;
-          WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
+          WidgetsBinding.instance?.addPostFrameCallback((timeStamp) async{
+            await Future.delayed(500.milliseconds);
             setState(() {});
           });
           return 1;
@@ -226,7 +227,7 @@ class _ExportState extends State<Export> {
 //          print (pageBottomPaddings);
           return jumpsSeparatingPages.length;
         } catch(e, st){
-//          print(e); print (st);
+          // print(e); print (st);
           lastSize = null;
           return 1;
         }
@@ -258,7 +259,9 @@ class _ExportState extends State<Export> {
       );
     }
     WidgetsBinding.instance?.addPostFrameCallback((timeStamp) async{
-      await Future.delayed(500.milliseconds);
+      await Future.delayed(100.milliseconds);
+      setState(() {});
+      await Future.delayed(400.milliseconds);
       await _executeExport(size, i, pdf);
       i++;
       doneExports++;
@@ -333,7 +336,8 @@ class _ExportState extends State<Export> {
         }
         if (row!=null && row.alwaysOnTop==null){
           for (var j = 0; j < row.values.length; ++j) {
-            ColModel? col = value.columns?[j];
+            // ColModel? col = value.columns?[j];
+            ColModel? col = value.columns==null ? null : value.columns![j];
             Color? backgroundColor;
             if (i==-1){
               backgroundColor = col?.backgroundColor;
