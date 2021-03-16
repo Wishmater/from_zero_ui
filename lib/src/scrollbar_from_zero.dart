@@ -160,61 +160,63 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
             return Stack(
               children: <Widget>[
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: AnimatedContainer(
-                    width: height>0 ? widget.scrollbarWidthDesktop : 0,
+                Positioned.fill(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: AnimatedContainer(
+                      width: height>0 ? widget.scrollbarWidthDesktop : 0,
 //                    duration: Duration(milliseconds: 300+((DateTime.now().millisecondsSinceEpoch-initialTimestamp-200)*-1).clamp(0, 200)),
 //                    curve: Curves.easeInExpo,
-                    duration: Duration(milliseconds: (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, 200)),
-                    curve: Curves.easeInCubic,
-                    child: Column(
-                      children: [
-                        Flexible(
-                          flex: topFlex,
-                          child: Material(
-                            color: Theme.of(context).brightness==Brightness.light ? Colors.grey : Colors.grey.shade900,
-                            child: InkWell(
-                              child: Container(),
-                              onTap: () {
-                                double jump = widget.controller!.position.pixels - widget.controller!.position.extentInside;
-                                if (jump < 0) jump = 0;
-                                if (kIsWeb){
-                                  widget.controller!.jumpTo(jump);
-                                } else{
-                                  widget.controller!.animateTo(
-                                    jump,
-                                    duration: Duration(milliseconds: 300),
-                                    curve: Curves.easeOutCubic,
-                                  );
-                                }
-                              },
+                      duration: Duration(milliseconds: (DateTime.now().millisecondsSinceEpoch-initialTimestamp-300).clamp(0, 200)),
+                      curve: Curves.easeInCubic,
+                      child: Column(
+                        children: [
+                          Flexible(
+                            flex: topFlex,
+                            child: Material(
+                              color: Theme.of(context).brightness==Brightness.light ? Colors.grey : Colors.grey.shade900,
+                              child: InkWell(
+                                child: Container(),
+                                onTap: () {
+                                  double jump = widget.controller!.position.pixels - widget.controller!.position.extentInside;
+                                  if (jump < 0) jump = 0;
+                                  if (kIsWeb){
+                                    widget.controller!.jumpTo(jump);
+                                  } else{
+                                    widget.controller!.animateTo(
+                                      jump,
+                                      duration: Duration(milliseconds: 300),
+                                      curve: Curves.easeOutCubic,
+                                    );
+                                  }
+                                },
+                              ),
                             ),
                           ),
-                        ),
-                        Flexible(
-                          flex: 100-topFlex,
-                          child: Material(
-                            color: Theme.of(context).brightness==Brightness.light ? Colors.grey : Colors.grey.shade900,
-                            child: InkWell(
-                              child: Container(),
-                              onTap: () {
-                                double jump = widget.controller!.position.pixels + widget.controller!.position.extentInside;
-                                if (jump > widget.controller!.position.maxScrollExtent) jump = widget.controller!.position.maxScrollExtent;
-                                if (kIsWeb){
-                                  widget.controller!.jumpTo(jump);
-                                } else{
-                                  widget.controller!.animateTo(
-                                    jump,
-                                    duration: Duration(milliseconds: 300),
-                                    curve: Curves.easeOutCubic,
-                                  );
-                                }
-                              },
+                          Flexible(
+                            flex: 100-topFlex,
+                            child: Material(
+                              color: Theme.of(context).brightness==Brightness.light ? Colors.grey : Colors.grey.shade900,
+                              child: InkWell(
+                                child: Container(),
+                                onTap: () {
+                                  double jump = widget.controller!.position.pixels + widget.controller!.position.extentInside;
+                                  if (jump > widget.controller!.position.maxScrollExtent) jump = widget.controller!.position.maxScrollExtent;
+                                  if (kIsWeb){
+                                    widget.controller!.jumpTo(jump);
+                                  } else{
+                                    widget.controller!.animateTo(
+                                      jump,
+                                      duration: Duration(milliseconds: 300),
+                                      curve: Curves.easeOutCubic,
+                                    );
+                                  }
+                                },
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

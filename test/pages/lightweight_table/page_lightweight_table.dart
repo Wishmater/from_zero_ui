@@ -91,10 +91,10 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
                   themeParameters: Provider.of<ThemeParameters>(context, listen: false),
                   title: DateTime.now().millisecondsSinceEpoch.toString() + " Tables",
                   path: Export.getDefaultDirectoryPath('Playground From Zero'),
-                  excelSheets: () => {
-                    'Table 2': table2,
-                    'Table 3': table3,
-                  },
+                  // excelSheets: () => {
+                  //   'Table 2': table2,
+                  //   'Table 3': table3,
+                  // },
                 ),
               );
             },
@@ -117,10 +117,21 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
       verticalPadding: 16,
       minWidth: 640,
       applyStickyHeaders: true,
+      applyScrollToRowAddon: false,
+      applyRowBackgroundToRowAddon: true,
+      applyRowAlternativeColors: true,
+      applyStickyHeadersToRowAddon: false,
+      rowGestureDetectorCoversRowAddon: true,
       rows: List.generate(100, (index) => ["Dummy data " + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",]).map((e) {
         return SimpleRowModel(
           id: e,
           values: e,
+          rowAddon: Text('ADDON ASDFG fsgfad gadfsgkadfs glasdnfgklanfsgAFSG DAFG AFSD GADSF GADFGA DFSG'),
+          onRowTap: (row){},
+          onCellTap: (row,) {},
+          actions: [
+            Container(width: 32, height: 32, color: Colors.red,),
+          ],
         );
       }).toList(),
       columns: ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"].map((e) {

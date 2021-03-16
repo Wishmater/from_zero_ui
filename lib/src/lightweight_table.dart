@@ -19,6 +19,8 @@ import 'package:scroll_to_index/scroll_to_index.dart';
 typedef OnRowHoverCallback = void Function(RowModel row, bool focused);
 typedef OnCheckBoxSelectedCallback = void Function(RowModel row, bool? focused);
 typedef OnHeaderHoverCallback = void Function(int i, bool focused);
+typedef OnCellTapCallback = ValueChanged<RowModel>? Function(int index,);
+typedef OnCellHoverCallback = OnRowHoverCallback? Function(int index,);
 
 
 class TableFromZero extends StatefulWidget { //TODO 2 internationalize
@@ -32,47 +34,47 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
 
   static const double _checkmarkWidth = 48;
 
-  List<RowModel> rows;
-  List<ColModel>? columns;
-  bool rowTakesPriorityOverColumn;
-  int layoutWidgetType;
-  EdgeInsets itemPadding;
-  bool showHeaders;
+  final List<RowModel> rows;
+  final List<ColModel>? columns;
+  final bool rowTakesPriorityOverColumn;
+  final int layoutWidgetType;
+  final EdgeInsets itemPadding;
+  final bool showHeaders;
   /// Only used if layoutWidgetType==listViewBuilder
-  ScrollController? scrollController;
+  final ScrollController? scrollController;
   /// Only used if layoutWidgetType==listViewBuilder
-  double verticalPadding;
-  double horizontalPadding;
-  ValueChanged<bool?>? onAllSelected;
-  int? initialSortedColumnIndex;
-  bool showFirstHorizontalDivider;
-  Widget? horizontalDivider;
-  Widget? verticalDivider;
-  int autoSizeTextMaxLines;
-  RowModel? headerRowModel;
-  double? headerHeight;
-  List<List<dynamic>>? availableFilters;
-  Widget Function(BuildContext context, RowModel row, ColModel? col, int j)? cellBuilder;
-  Widget Function(BuildContext context, int i, RowModel row)? rowBuilder;
-  bool applyStickyHeaders;
-  Widget? headerAddon;
-  bool applyRowAlternativeColors;
-  double? minWidth;
-  double? maxWidth;
-  bool applyMinWidthToHeaderAddon;
-  bool applyMaxWidthToHeaderAddon;
-  bool applyTooltipToCells;
-  Color? headerRowColor;
-  TextStyle? defaultTextStyle;
-  ScrollController? mainScrollController;
-  double stickyOffset;
-  bool forceColumnToLayoutAllChildren;
-  List<RowModel> Function(List<RowModel>)? onFilter;
-  TableController? tableController;
-  Alignment? alignmentWhenOverMaxWidth;
+  final double verticalPadding;
+  final double horizontalPadding;
+  final ValueChanged<bool?>? onAllSelected;
+  final int? initialSortedColumnIndex;
+  final bool showFirstHorizontalDivider;
+  @deprecated final Widget? horizontalDivider;
+  @deprecated final Widget? verticalDivider;
+  final int autoSizeTextMaxLines;
+  final double? headerHeight;
+  final Widget Function(BuildContext context, RowModel row, ColModel? col, int j)? cellBuilder;
+  final Widget Function(BuildContext context, int i, RowModel row)? rowBuilder;
+  final bool applyStickyHeaders;
+  final Widget? headerAddon;
+  final bool applyRowAlternativeColors;
+  final double? minWidth;
+  final double? maxWidth;
+  final bool applyMinWidthToHeaderAddon;
+  final bool applyMaxWidthToHeaderAddon;
+  final bool applyTooltipToCells;
+  final Color? headerRowColor;
+  final TextStyle? defaultTextStyle;
+  final ScrollController? mainScrollController;
+  final double stickyOffset;
+  final bool forceColumnToLayoutAllChildren;
+  final List<RowModel> Function(List<RowModel>)? onFilter;
+  final TableController? tableController;
+  final Alignment? alignmentWhenOverMaxWidth;
   final FutureOr<String>? exportPath;
   final bool applyScrollToRowAddon;
   final bool rowGestureDetectorCoversRowAddon;
+  final bool applyStickyHeadersToRowAddon;
+  final bool applyRowBackgroundToRowAddon;
 
   TableFromZero({
     required List<RowModel> rows,
@@ -86,8 +88,8 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
     this.itemPadding = const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
     this.initialSortedColumnIndex,
     this.onAllSelected,
-    this.horizontalDivider = const Divider(height: 1, color: const Color(0xFF757575),),
-    this.verticalDivider = const VerticalDivider(width: 1, color: const Color(0xFF757575),),
+    @deprecated this.horizontalDivider, //const Divider(height: 1, color: const Color(0xFF757575),),
+    @deprecated this.verticalDivider,   //const VerticalDivider(width: 1, color: const Color(0xFF757575),),
     this.showFirstHorizontalDivider = true,
     this.autoSizeTextMaxLines = 1,
     this.cellBuilder,
@@ -95,7 +97,7 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
     this.headerHeight,
     this.applyStickyHeaders = true,
     this.headerAddon,
-    this.applyRowAlternativeColors = false,
+    this.applyRowAlternativeColors = true,
     this.minWidth,
     this.maxWidth,
     this.applyMinWidthToHeaderAddon = true,
@@ -111,79 +113,68 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
     this.alignmentWhenOverMaxWidth,
     this.exportPath,
     this.applyScrollToRowAddon = true,
-    this.rowGestureDetectorCoversRowAddon = false,
-  }) : this.rows = List.from(rows) {
-    if (showHeaders && columns!=null){
-      int actionsIndex = rows.indexWhere((element) => element.actions!=null);
-      headerRowModel = SimpleRowModel(
-        id: "header_row",
-        values: List.generate(columns!.length, (index) => columns![index].name),
-        onCheckBoxSelected: rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null,
-        actions: actionsIndex!=-1 ? List.generate(rows[actionsIndex].actions!.length, (index) => SizedBox.shrink()) : null,
-        selected: true,
-        height: headerHeight ?? 38,
-      );
-      availableFilters = [];
-      for (int i=0; i<columns!.length; i++){
-        List<dynamic> available = [];
-        if (columns![i].filterEnabled==true){
-          rows.forEach((element) {
-            if (!available.contains(element.values[i]))
-              available.add(element.values[i]);
-          });
-        }
-        availableFilters!.add(available);
-      }
-    }
-  }
+    this.rowGestureDetectorCoversRowAddon = true,
+    bool? applyStickyHeadersToRowAddon,
+    bool? applyRowBackgroundToRowAddon,
+    Key? key,
+  }) :  this.rows = List.from(rows),
+        this.applyStickyHeadersToRowAddon = applyStickyHeadersToRowAddon??applyStickyHeaders,
+        this.applyRowBackgroundToRowAddon = applyRowBackgroundToRowAddon??applyScrollToRowAddon,
+        super(key: key,);
 
   @override
-  _TableFromZeroState createState() => _TableFromZeroState(initialSortedColumnIndex);
+  TableFromZeroState createState() => TableFromZeroState();
 
 }
 
 
-class _TableFromZeroState extends State<TableFromZero> {
+class TableFromZeroState extends State<TableFromZero> {
 
   late List<RowModel> sorted;
   late List<RowModel> filtered;
+
   late List<dynamic> _filters;
   List<dynamic> get filters => widget.tableController?.filters ?? _filters;
   set filters(List<dynamic> value) {
-    _filters = value;
+    if (widget.tableController==null) {
+      _filters = value;
+    } else {
+      widget.tableController!.filters = value;
+    }
   }
 
-  int? sortedColumnIndex;
-  bool sortedAscending = true;
+  int? _sortedColumnIndex;
+  int? get sortedColumnIndex => widget.tableController==null ? _sortedColumnIndex : widget.tableController!.sortedColumnIndex;
+  set sortedColumnIndex (int? value) {
+    if (widget.tableController==null) {
+      _sortedColumnIndex = value;
+    } else {
+      widget.tableController!.sortedColumnIndex = value;
+    }
+  }
+
+  bool _sortedAscending = true;
+  bool get sortedAscending => widget.tableController==null ? _sortedAscending : widget.tableController!.sortedAscending;
+  set sortedAscending (bool value){
+    if (widget.tableController==null) {
+      _sortedAscending = value;
+    } else {
+      widget.tableController!.sortedAscending = value;
+    }
+  }
+
   late ScrollController _scrollController;
   late TrackingScrollController sharedController;
+  List<List<dynamic>> availableFilters = [];
+  RowModel? headerRowModel;
 
-  _TableFromZeroState(this.sortedColumnIndex);
+  TableFromZeroState();
 
   double lastPosition = 0;
   bool lockScrollUpdates = false;
   @override
   void initState() {
     super.initState();
-    if (widget.tableController!=null){
-      widget.tableController!._filter = (){
-        if (mounted){
-          setState(() {
-            filter();
-          });
-        }
-      };
-    }
-    if (widget.tableController?.filters==null) {
-      if (widget.tableController?.initialFilters==null){
-        _filters = List.generate(widget.columns?.length ?? 0, (index) => EmptyFilter());
-      } else{
-        _filters = List.generate(widget.columns?.length ?? 0, (index) => widget.tableController!.initialFilters![index] ?? EmptyFilter());
-      }
-    }
-    if (sortedColumnIndex!=null && sortedColumnIndex!>=0) sortedAscending = widget.columns![sortedColumnIndex!].defaultSortAscending ?? true;
-    sorted = List.from(widget.rows);
-    _scrollController = widget.scrollController ?? ScrollController();
     sharedController = TrackingScrollController();
     sharedController.addListener(() {
       if (!lockScrollUpdates){
@@ -203,13 +194,80 @@ class _TableFromZeroState extends State<TableFromZero> {
         lockScrollUpdates = false;
       }
     });
-    sort();
+    init();
   }
 
   @override
   void didUpdateWidget(TableFromZero oldWidget) {
     super.didUpdateWidget(oldWidget);
+    init();
+  }
+
+  void init() {
     sorted = List.from(widget.rows);
+    if (widget.initialSortedColumnIndex!=null && widget.initialSortedColumnIndex!>=0 && widget.tableController?.sortedColumnIndex==null) sortedAscending = widget.columns![widget.initialSortedColumnIndex!].defaultSortAscending ?? true;
+    if (sortedColumnIndex==null) sortedColumnIndex = widget.initialSortedColumnIndex;
+    if (widget.showHeaders && widget.columns!=null){
+      int actionsIndex = widget.rows.indexWhere((element) => element.actions!=null);
+      headerRowModel = SimpleRowModel(
+        id: "header_row",
+        values: List.generate(widget.columns!.length, (index) => widget.columns![index].name),
+        onCheckBoxSelected: widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null,
+        actions: actionsIndex!=-1 ? List.generate(widget.rows[actionsIndex].actions!.length, (index) => SizedBox.shrink()) : null,
+        selected: true,
+        height: widget.headerHeight ?? 38,
+        onCellTap: (j) {
+          return widget.columns![j].onHeaderTap!=null
+              ||widget.columns![j].sortEnabled==true ? (row,) {
+            if (widget.columns![j].sortEnabled==true){
+              if (sortedColumnIndex==j) {
+                setState(() {
+                  sortedAscending = !sortedAscending;
+                  sort();
+                });
+              } else {
+                setState(() {
+                  sortedColumnIndex = j;
+                  sortedAscending = widget.columns![j].defaultSortAscending ?? true;
+                  sort();
+                });
+              }
+            }
+            if (widget.columns![j].onHeaderTap!=null){
+              widget.columns![j].onHeaderTap!(j);
+            }
+          } : null;
+        },
+      );
+      availableFilters = [];
+      for (int i=0; i<widget.columns!.length; i++){
+        List<dynamic> available = [];
+        if (widget.columns![i].filterEnabled==true){
+          widget.rows.forEach((element) {
+            if (!available.contains(element.values[i]))
+              available.add(element.values[i]);
+          });
+        }
+        availableFilters.add(available);
+      }
+    }
+    if (widget.tableController!=null){
+      widget.tableController!._filter = (){
+        if (mounted){
+          setState(() {
+            filter();
+          });
+        }
+      };
+    }
+    if (widget.tableController?.filters==null) {
+      if (widget.tableController?.initialFilters==null){
+        filters = List.generate(widget.columns?.length ?? 0, (index) => EmptyFilter());
+      } else{
+        filters = List.generate(widget.columns?.length ?? 0, (index) => widget.tableController!.initialFilters![index] ?? EmptyFilter());
+      }
+    }
+    _scrollController = widget.scrollController ?? ScrollController();
     sort();
   }
 
@@ -279,9 +337,9 @@ class _TableFromZeroState extends State<TableFromZero> {
       } else{
         result = SizedBox.shrink();
       }
-      if (widget.applyStickyHeaders && widget.showHeaders && widget.columns!=null){
+      if (widget.applyStickyHeaders && widget.showHeaders && widget.columns!=null && headerRowModel!=null){
         result = StickyHeader(
-          header: _getHeaderRow(context),
+          header: _getRow(context, -1, headerRowModel!,),
           content: result,
           stickOffset: widget.stickyOffset,
           controller: widget.mainScrollController,
@@ -341,9 +399,9 @@ class _TableFromZeroState extends State<TableFromZero> {
       } else{
         result = SizedBox.shrink();
       }
-      if (widget.showHeaders && widget.columns!=null){
+      if (widget.showHeaders && widget.columns!=null && headerRowModel!=null){
         result = SliverStickyHeader(
-          header: _getHeaderRow(context),
+          header: _getRow(context, -1, headerRowModel!),
           sliver: result,
           sticky: widget.applyStickyHeaders,
         );
@@ -368,328 +426,9 @@ class _TableFromZeroState extends State<TableFromZero> {
     return result;
   }
 
-  Widget _getHeaderRow(BuildContext context){
-    if (widget.headerRowModel==null) SizedBox.shrink();
-    bool export = context.findAncestorWidgetOfExactType<Export>()!=null;
-    final row = widget.headerRowModel!;
-    int cols = ((row.values.length-disabledColumnCount) + (row.onCheckBoxSelected==null ? 0 : 1)) * (widget.verticalDivider==null ? 1 : 2) + (widget.verticalDivider==null ? 0 : 1) + (row.actions==null ? 0 : 1);
-    Widget result =  Container(
-      color: Material.of(context)!.color,
-      child: Stack(
-        fit: StackFit.passthrough,
-        children: [
-          Positioned.fill(
-            child: Row(
-              children: List.generate(cols, (j) {
-                Widget? result;
-                bool addSizing = true;
-                if (row.actions!=null && j==cols-1){
-                  addSizing = false;
-                  result = SizedBox(width: TableFromZero._checkmarkWidth*row.actions!.length, height: double.infinity,);
-                }
-                if (result==null && widget.verticalDivider!=null){
-                  if (j%2==0) return Padding(
-                    padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
-                    child: widget.verticalDivider,
-                  );
-                  j = (j-1)~/2;
-                }
-                if (result==null && row.onCheckBoxSelected!=null){
-                  if (j==0){
-                    addSizing = false;
-                    result = SizedBox(width: TableFromZero._checkmarkWidth, height: double.infinity,);
-                  } else{
-                    j--;
-                  }
-                }
-                if (result==null && widget.columns![j].flex==0){
-                  return SizedBox.shrink();
-                }
-                if (!kIsWeb && Platform.isWindows){
-                  result = Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Positioned(
-                        top: 0, bottom: -1,
-                        left: j==0 ? 0 : -1,
-                        right: j==cols-1 ? 0 : -1,
-                        child: Container(
-                          decoration: _getDecoration(row, -1, j, header: true),
-                        ),
-                      ),
-                      if (result!=null)
-                        result,
-                    ],
-                  );
-                } else{
-                  result = Container(
-                    decoration: _getDecoration(row, -1, j, header: true),
-                    child: result,
-                  );
-                }
-                if (addSizing){
-                  if (widget.columns![j].width!=null){
-                    result = SizedBox(width: widget.columns![j].width, child: result,);
-                  } else{
-                    result = Flexible(flex: _getFlex(j), child: result,);
-                  }
-                }
-                return result;
-              }),
-            ),
-          ),
-          Material(
-            type: MaterialType.transparency,
-            child: Row(
-              children: List.generate(cols, (j) {
-                if (row.actions!=null && j==cols-1){
-                  return SizedBox(width: TableFromZero._checkmarkWidth*row.actions!.length,);
-                }
-                if (widget.verticalDivider!=null){
-                  if (j%2==0) return Padding(
-                    padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
-                    child: widget.verticalDivider,
-                  );
-                  j = (j-1)~/2;
-                }
-                if (row.onCheckBoxSelected!=null){
-                  if (j==0){
-                    if (widget.onAllSelected!=null && (filtered.length>2||!(filtered[1] is _ErrorRow))){
-                      return SizedBox(
-                        width: TableFromZero._checkmarkWidth,
-                        child: LoadingCheckbox(
-                          value: filtered.any((element) => element.selected==null) ? null : !filtered.any((element) => element.selected==false),
-                          onChanged: widget.onAllSelected!,
-                        ),
-                      );
-                    } else{
-                      return SizedBox(width: TableFromZero._checkmarkWidth,);
-                    }
-                  } else{
-                    j--;
-                  }
-                }
-                if (widget.columns![j].flex==0){
-                  return SizedBox.shrink();
-                }
-                Widget result = InkWell(
-                  onTap: widget.columns![j].onHeaderTap!=null||widget.columns![j].sortEnabled==true ? () {
-                    if (widget.columns![j].sortEnabled==true){
-                      if (sortedColumnIndex==j) {
-                        setState(() {
-                          sortedAscending = !(sortedAscending==null||sortedAscending);
-                          sort();
-                        });
-                      } else {
-                        setState(() {
-                          sortedColumnIndex = j;
-                          sortedAscending = widget.columns![j].defaultSortAscending ?? true;
-                          sort();
-                        });
-                      }
-                    }
-                    if (widget.columns![j].onHeaderTap!=null){
-                      widget.columns![j].onHeaderTap!(j);
-                    }
-                  } : null,
-                  onDoubleTap: widget.columns![j].onHeaderDoubleTap!=null ? () => widget.columns![j].onHeaderDoubleTap!(j) : null,
-                  onLongPress: widget.columns![j].onHeaderLongPress!=null ? () => widget.columns![j].onHeaderLongPress!(j) : null,
-                  onHover: widget.columns![j].onHeaderHover!=null ? (value) => widget.columns![j].onHeaderHover!(j, value) : null,
-                  child: Container(
-                    width: double.infinity,
-                    height: row.height,
-                    alignment: _getAlignment(j)==TextAlign.right ? Alignment.centerRight
-                        : _getAlignment(j)==TextAlign.center ? Alignment.center
-                        : Alignment.centerLeft,
-                    child: Stack(
-                      overflow: Overflow.visible,
-                      children: [
-                        AnimatedPadding(
-                          duration: Duration(milliseconds: 300),
-                          curve: Curves.easeOut,
-                          padding: EdgeInsets.only(
-                            left: widget.itemPadding.left + (!export && sortedColumnIndex==j ? 15 : 4),
-                            right: widget.itemPadding.right + (!export && widget.columns![j].filterEnabled==true ? 10 : 4),
-                            top: widget.itemPadding.top,
-                            bottom: widget.itemPadding.bottom,
-                          ),
-                          child: AutoSizeText(
-                            widget.columns![j].name,
-                            style: Theme.of(context).textTheme.subtitle2,
-                            textAlign: _getAlignment(j),
-                            maxLines: widget.autoSizeTextMaxLines,
-                            minFontSize: 14,
-                            overflowReplacement: Tooltip(
-                              message: widget.columns![j].name,
-                              waitDuration: Duration(milliseconds: 0),
-                              verticalOffset: -16,
-                              child: AutoSizeText(
-                                widget.columns![j].name,
-                                style: Theme.of(context).textTheme.subtitle2,
-                                textAlign: _getAlignment(j),
-                                maxLines: widget.autoSizeTextMaxLines,
-                                softWrap: widget.autoSizeTextMaxLines>1,
-                                overflow: widget.autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: -4, width: 32, top: 0, bottom: 0,
-                          child: OverflowBox(
-                            maxHeight: row.height, maxWidth: 32,
-                            alignment: Alignment.center,
-                            child: AnimatedSwitcher(
-                              duration: Duration(milliseconds: 300),
-                              switchInCurve: Curves.easeOut,
-                              child: (!export && sortedColumnIndex==j) ? Icon(
-                                sortedAscending==null||sortedAscending ? MaterialCommunityIcons.sort_ascending : MaterialCommunityIcons.sort_descending,
-                                key: ValueKey(sortedAscending==null||sortedAscending),
-//                                color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
-                                color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
-                              ) : SizedBox(height: 24,),
-                              transitionBuilder: (child, animation) => ScaleTransition(
-                                scale: animation,
-                                child: FadeTransition(opacity: animation, child: child,),
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (!export && widget.columns![j].filterEnabled==true)
-                          Positioned(
-                            right: -16, width: 48, top: 0, bottom: 0,
-                            child: OverflowBox(
-                              maxHeight: row.height, maxWidth: 48,
-                              alignment: Alignment.center,
-                              child: Material(
-                                type: MaterialType.transparency,
-                                child: small_popup.PopupMenuButton<dynamic>(
-                                  icon: Icon(filters[j]==EmptyFilter() ? MaterialCommunityIcons.filter_outline : MaterialCommunityIcons.filter,
-//                                    color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
-                                    color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
-                                  ),
-                                  itemBuilder: (context) => List.generate(
-                                    widget.availableFilters![j].length+1,
-                                        (index) => PopupMenuItem(
-                                      child: Text(index==0 ? "  --sin filtro--" : widget.availableFilters![j][index-1].toString()),
-                                      value: index==0 ? EmptyFilter() : widget.availableFilters![j][index-1].toString(),
-                                    ),
-                                  ),
-                                  onSelected: (value) {
-                                    setState(() {
-                                      filters[j] = value;
-                                      filter();
-                                    });
-                                  },
-                                  initialValue: filters[j],
-                                  tooltip: "Filtros", //TODO 3 internationalize
-                                ),
-                              ),
-                            )
-                          ),
-                      ],
-                    ),
-                  ),
-                );
-                if (widget.columns![j].width!=null){
-                  return SizedBox(width: widget.columns![j].width, child: result,);
-                } else{
-                  return Flexible(flex: _getFlex(j), child: result,);
-                }
-              }),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (widget.horizontalDivider!=null){
-      result = Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if(widget.showFirstHorizontalDivider) widget.horizontalDivider!,
-          result,
-          widget.horizontalDivider!,
-        ],
-      );
-    }
-    if (widget.horizontalPadding>0){
-      result = Padding(
-        padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
-        child: result,
-      );
-    }
-    if (widget.headerAddon!=null && (widget.applyMinWidthToHeaderAddon||widget.minWidth==null)){
-      Widget headerAddon = widget.maxWidth==null||!widget.applyMaxWidthToHeaderAddon ? widget.headerAddon!
-          : Align(
-            alignment: widget.alignmentWhenOverMaxWidth ?? Alignment.center,
-            child: ConstrainedBox(constraints: BoxConstraints(maxWidth: widget.maxWidth!), child: widget.headerAddon,),
-          );
-      result = Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
-            child: headerAddon,
-          ),
-          result,
-        ],
-      );
-    }
-    if (widget.minWidth!=null || widget.maxWidth!=null){
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          Widget r;
-          if (widget.minWidth!=null&&constraints.maxWidth<widget.minWidth! || widget.maxWidth!=null&&constraints.maxWidth>widget.maxWidth!){
-            r = ScrollOpacityGradient(
-              maxSize: 0,
-              scrollController: sharedController,
-              direction: OpacityGradient.horizontal,
-              child: NotificationListener<ScrollNotification>(
-                onNotification: (notification) => true,
-                child: Align(
-                  alignment: widget.alignmentWhenOverMaxWidth ?? Alignment.center,
-                  child: SingleChildScrollView(
-                    controller: sharedController,
-                    scrollDirection: Axis.horizontal,
-                    child: Container(
-                      width: (widget.minWidth!=null&&constraints.maxWidth<widget.minWidth!) ? widget.minWidth : widget.maxWidth,
-                      child: result,
-                    ),
-                  ),
-                ),
-              ),
-            );
-          } else{
-            r = result;
-          }
-          if (widget.headerAddon!=null && !widget.applyMinWidthToHeaderAddon){
-            Widget headerAddon = widget.maxWidth==null||!widget.applyMaxWidthToHeaderAddon ? widget.headerAddon!
-                : Align(
-                  alignment: widget.alignmentWhenOverMaxWidth ?? Alignment.center,
-                  child: ConstrainedBox(constraints: BoxConstraints(maxWidth: widget.maxWidth!), child: widget.headerAddon,),
-                );
-            r = Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                headerAddon,
-                r,
-              ],
-            );
-          }
-          return r;
-        },
-      );
-    }
-    return result;
-  }
-
 
   Widget _getRow(BuildContext context, int i, RowModel row){
-    if (widget.rowBuilder==null){
+    if (i<0 || widget.rowBuilder==null){
       return _defaultGetRow(context, i, row);
     } else{
       return widget.rowBuilder!(context, i, row);
@@ -711,215 +450,305 @@ class _TableFromZeroState extends State<TableFromZero> {
       );
     }
 
+    int maxFlex = 0;
+    for (var j = 0; j < row.values.length; ++j) {
+      maxFlex += _getFlex(j);
+    }
     int cols = ((row.values.length-disabledColumnCount) + (row.onCheckBoxSelected==null ? 0 : 1)) * (widget.verticalDivider==null ? 1 : 2) + (widget.verticalDivider==null ? 0 : 1) + (row.actions==null ? 0 : 1);
-    final backgrounds = List.generate(cols, (j) {
-      Widget? result;
-      bool addSizing = true;
-      if (row.actions!=null && j==cols-1){
-        addSizing = false;
-        result = SizedBox(width: TableFromZero._checkmarkWidth*row.actions!.length, height: double.infinity,);
-      }
-      if (result==null && widget.verticalDivider!=null){
-        if (j%2==0) return Padding(
-          padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
-          child: widget.verticalDivider,
-        );
-        j = (j-1)~/2;
-      }
-      if (result==null && row.onCheckBoxSelected!=null){
-        if (j==0){
+
+    final builder = (BuildContext context, BoxConstraints? constraints) {
+      final decorationBuilder = (BuildContext context, int j) {
+        Widget? result;
+        bool addSizing = true;
+        if (row.actions!=null && j==cols-1){
           addSizing = false;
-          result = SizedBox(width: TableFromZero._checkmarkWidth, height: double.infinity,);
+          result = SizedBox(width: TableFromZero._checkmarkWidth*row.actions!.length, height: double.infinity,);
+        }
+        if (result==null && widget.verticalDivider!=null){
+          if (j%2==0) return Padding(
+            padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
+            child: widget.verticalDivider,
+          );
+          j = (j-1)~/2;
+        }
+        if (result==null && row.onCheckBoxSelected!=null){
+          if (j==0){
+            addSizing = false;
+            result = SizedBox(width: TableFromZero._checkmarkWidth, height: double.infinity,);
+          } else{
+            j--;
+          }
+        }
+        if (result==null && widget.columns!=null && widget.columns![j].flex==0){
+          return SizedBox.shrink();
+        }
+        if (!kIsWeb && Platform.isWindows){
+          result = Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned(
+                top: i<=0 ? 0 : -1,
+                bottom: i==filtered.length-1 ? 0 : -1,
+                left: j==0 ? 0 : -1,
+                right: j==cols-1 ? 0 : -1,
+                child: Container(
+                  decoration: _getDecoration(row, i, j),
+                ),
+              ),
+              if (result!=null)
+                result,
+            ],
+          );
         } else{
-          j--;
+          result = Container(
+            decoration: _getDecoration(row, i, j),
+            child: result,
+          );
+        }
+        if (addSizing){
+          if (widget.columns!=null && widget.columns![j].width!=null){
+            result = SizedBox(width: widget.columns![j].width, child: result,);
+          } else{
+            if (constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
+              return SizedBox(width: widget.minWidth! * (_getFlex(j)/maxFlex), child: result,);
+            } else {
+              return Expanded(flex: _getFlex(j), child: result,);
+            }
+          }
+        }
+        return result;
+      };
+      final cellBuilder = (BuildContext context, int j) {
+        if (row.actions!=null && j==cols-1){
+          return SizedBox(
+            width: TableFromZero._checkmarkWidth*row.actions!.length,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: row.actions!,
+            ),
+          );
+        }
+        if (widget.verticalDivider!=null){
+          if (j%2==0) return Padding(
+            padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
+            child: widget.verticalDivider,
+          );
+          j = (j-1)~/2;
+        }
+        if (row.onCheckBoxSelected!=null){
+          if (j==0){
+            return SizedBox(
+              width: TableFromZero._checkmarkWidth,
+              child: LoadingCheckbox(
+                value: i<0 ? widget.rows.every((element) => element.selected==true) : row.selected,
+                onChanged: (value) => row.onCheckBoxSelected!(row, value),
+              ),
+            );
+          } else{
+            j--;
+          }
+        }
+        if (widget.columns!=null && widget.columns![j].flex==0){
+          return SizedBox.shrink();
+        }
+        Widget result = Container(
+          height: row.height,
+          alignment: Alignment.center,
+          padding: i==-1 ? null : widget.itemPadding,
+          child: Container(
+              width: double.infinity,
+              child: (i<0 ? defaultHeaderCellBuilder : widget.cellBuilder??defaultCellBuilder)
+                  .call(context, row, widget.columns==null?null:widget.columns![j], j)
+          ),
+        );
+        if (row.onCellTap!=null || row.onCellDoubleTap!=null || row.onCellLongPress!=null || row.onCellHover!=null){
+          result = InkWell(
+            onTap: row.onCellTap!=null&&row.onCellTap!(j)!=null ? () => row.onCellTap!(j)!.call(row) : null,
+            onDoubleTap: row.onCellDoubleTap!=null&&row.onCellDoubleTap!(j)!=null ? () => row.onCellDoubleTap!(j)!.call(row) : null,
+            onLongPress: row.onCellLongPress!=null&&row.onCellLongPress!(j)!=null ? () => row.onCellLongPress!(j)!.call(row) : null,
+            onHover: row.onCellHover!=null&&row.onCellHover!(j)!=null ? (value) => row.onCellHover!(j)!.call(row, value) : null,
+            child: result,
+          );
+        }
+        if (widget.columns!=null && widget.columns![j].width!=null){
+          return SizedBox(width: widget.columns![j].width, child: result,);
+        } else {
+          if (constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
+            return SizedBox(width: (widget.minWidth! * (_getFlex(j)/maxFlex)), child: result,);
+          } else {
+            return Flexible(flex: _getFlex(j), child: result,);
+          }
+        }
+      };
+      Widget background;
+      Widget result;
+      if (constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
+        background = SizedBox(
+          height: row.height + widget.itemPadding.vertical,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) => true,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              controller: sharedController,
+              itemBuilder: decorationBuilder,
+              itemCount: cols,
+              padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
+            ),
+          ),
+        );
+        result = SizedBox(
+          height: row.height + widget.itemPadding.vertical,
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) => true,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              controller: sharedController,
+              itemBuilder: cellBuilder,
+              itemCount: cols,
+              padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
+            ),
+          ),
+        );
+      } else {
+        background = Row(
+          children: List.generate(cols, (j) => decorationBuilder(context, j)),
+        );
+        result = Row(
+          children: List.generate(cols, (j) => cellBuilder(context, j)),
+        );
+        if (widget.horizontalPadding>0){
+          background = Padding(
+            padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
+            child: background,
+          );
+          result = Padding(
+            padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
+            child: result,
+          );
         }
       }
-      if (result==null && widget.columns!=null && widget.columns![j].flex==0){
-        return SizedBox.shrink();
-      }
-      if (!kIsWeb && Platform.isWindows){
-        result = Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned(
-              top: i==0 ? 0 : -1,
-              bottom: i==filtered.length-1 ? 0 : -1,
-              left: j==0 ? 0 : -1,
-              right: j==cols-1 ? 0 : -1,
-              child: Container(
-                decoration: _getDecoration(row, i, j),
-              ),
-            ),
-            if (result!=null)
-              result,
-          ],
-        );
-      } else{
-        result = Container(
-          decoration: _getDecoration(row, i, j),
+      if (!widget.rowGestureDetectorCoversRowAddon){
+        result = _buildRowGestureDetector(
+          context: context,
+          row: row,
           child: result,
         );
       }
-      if (addSizing){
-        if (widget.columns!=null && widget.columns![j].width!=null){
-          result = SizedBox(width: widget.columns![j].width, child: result,);
-        } else{
-          result = Expanded(flex: _getFlex(j), child: result,);
-        }
-      }
-      return result;
-    });
-    final cells = List.generate(cols, (j) {
-      if (row.actions!=null && j==cols-1){
-        return SizedBox(
-          width: TableFromZero._checkmarkWidth*row.actions!.length,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: row.actions!,
-          ),
+      if (!widget.applyRowBackgroundToRowAddon) {
+        result = Stack(
+          key: row.rowKey,
+          children: [
+            Positioned.fill(child: background,),
+            result,
+          ],
         );
       }
-      if (widget.verticalDivider!=null){
-        if (j%2==0) return Padding(
-          padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
-          child: widget.verticalDivider,
-        );
-        j = (j-1)~/2;
-      }
-      if (row.onCheckBoxSelected!=null){
-        if (j==0){
-          return SizedBox(
-            width: TableFromZero._checkmarkWidth,
-            child: LoadingCheckbox(
-              value: row.selected, onChanged: (value) => row.onCheckBoxSelected!(row, value),
+      if (i==-1 && widget.headerAddon!=null) {
+        Widget addon = widget.headerAddon!;
+        if (widget.applyMinWidthToHeaderAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
+          addon = NotificationListener<ScrollNotification>(
+            onNotification: (notification) => true,
+            child: SingleChildScrollView(
+              controller: sharedController,
+              scrollDirection: Axis.horizontal,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
+                child: SizedBox(
+                  width: widget.minWidth!,
+                  child: addon,
+                ),
+              ),
             ),
           );
-        } else{
-          j--;
         }
-      }
-      if (widget.columns!=null && widget.columns![j].flex==0){
-        return SizedBox.shrink();
-      }
-      Widget result = Container(
-        height: row.height,
-        alignment: Alignment.center,
-        padding: widget.itemPadding,
-        child: Container(
-            width: double.infinity,
-            child: (widget.cellBuilder??defaultCellBuilder)
-                .call(context, row, widget.columns==null?null:widget.columns![j], j)
-        ),
-      );
-      if (widget.columns!=null && widget.columns![j].width!=null){
-        return SizedBox(width: widget.columns![j].width, child: result,);
-      } else{
-        return Flexible(flex: _getFlex(j), child: result,);
-      }
-    });
-    Widget result = Stack(
-      key: row.rowKey,
-      fit: StackFit.passthrough,
-      children: [
-        Positioned.fill(
-          child: Row(
-            children: backgrounds,
-          ),
-        ),
-        _buildRowGestureDetector(
-          context: context,
-          row: row,
-          child: Row(
-            children: cells,
-          ),
-        ),
-      ],
-    );
-
-    if (row.rowAddon!=null){
-      if (widget.applyStickyHeaders){
-        result = StickyHeader(
-          controller: widget.mainScrollController,
-          header: result,
-          content: row.rowAddon!,
-          stickOffset: i==0 ? 0 : widget.stickyOffset+widget.headerRowModel!.height,
-        );
-      } else{
         result = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
           children: [
+            addon,
             result,
-            row.rowAddon!
           ],
         );
       }
-    }
-
-    if (widget.horizontalDivider!=null)
-    result = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        result,
-        widget.horizontalDivider!,
-      ],
-    );
-    if (widget.horizontalPadding>0){
-      result = Padding(
-        padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
-        child: result,
-      );
-    }
-    if (widget.rowGestureDetectorCoversRowAddon){
-      result = Stack(
-        children: [
-          result,
-          Positioned.fill(
-            child: Material(
-              type: MaterialType.transparency,
-              child: InkWell(
-                onTap: row.onRowTap!=null ? () => row.onRowTap!(row) : null,
-                onDoubleTap: row.onRowDoubleTap!=null ? () => row.onRowDoubleTap!(row) : null,
-                onLongPress: row.onRowLongPress!=null ? () => row.onRowLongPress!(row) : null,
-                onHover: row.onRowHover!=null ? (value) => row.onRowHover!(row, value) : null,
-                child: Container(),
+      if (row.rowAddon!=null) {
+        Widget addon = row.rowAddon!;
+        if (widget.applyScrollToRowAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
+          addon = NotificationListener<ScrollNotification>(
+            onNotification: (notification) => true,
+            child: SingleChildScrollView(
+              controller: sharedController,
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(
+                width: widget.minWidth!,
+                child: addon,
               ),
             ),
-          )
-        ],
-      );
-    }
+          );
+        }
+        if (widget.applyStickyHeadersToRowAddon){
+          result = StickyHeader(
+            controller: widget.mainScrollController,
+            header: result,
+            content: addon,
+            stickOffset: i==0 ? 0 : widget.stickyOffset+headerRowModel!.height,
+          );
+        } else{
+          result = Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              result,
+              addon,
+            ],
+          );
+        }
+      }
+      if (widget.rowGestureDetectorCoversRowAddon){
+        result = _buildRowGestureDetector(
+          context: context,
+          row: row,
+          child: result,
+        );
+      }
+      if (widget.applyRowBackgroundToRowAddon) {
+        result = Stack(
+          key: row.rowKey,
+          children: [
+            Positioned.fill(child: background,),
+            result,
+          ],
+        );
+      }
+      if (widget.horizontalDivider!=null) {
+        result = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            result,
+            widget.horizontalDivider!,
+          ],
+        );
+      }
+      if (constraints!=null) {
+        if (widget.minWidth!=null && constraints.maxWidth<widget.minWidth!){
+          result = ScrollOpacityGradient(
+            scrollController: sharedController,
+            direction: OpacityGradient.horizontal,
+            child: result,
+          );
+        } else if(widget.maxWidth!=null && constraints.maxWidth>widget.maxWidth!) {
+          result = Center(child: SizedBox(width: widget.maxWidth!, child: result,),);
+        }
+      }
+      return result;
+    };
+
     if (widget.minWidth!=null || widget.maxWidth!=null){
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          if (widget.minWidth!=null&&constraints.maxWidth<widget.minWidth! || widget.maxWidth!=null&&constraints.maxWidth>widget.maxWidth!){
-            return ScrollOpacityGradient(
-//                size: widget.horizontalPadding,
-              scrollController: sharedController,
-              direction: OpacityGradient.horizontal,
-                child: NotificationListener<ScrollNotification>(
-                  onNotification: (notification) => true,
-                  child: Align(
-                    alignment: widget.alignmentWhenOverMaxWidth ?? Alignment.center,
-                    child: SingleChildScrollView(
-                      controller: sharedController,
-                      scrollDirection: Axis.horizontal,
-                      child: Container(
-                        width: (widget.minWidth!=null&&constraints.maxWidth<widget.minWidth!) ? widget.minWidth : widget.maxWidth,
-                        child: result,
-                      ),
-                    ),
-                  ),
-                ),
-            );
-          } else{
-            return result;
-          }
-        },
-      );
+      return LayoutBuilder(builder: builder,);
+    } else {
+      return builder(context, null);
     }
-    return result;
+
   }
   _buildRowGestureDetector({required BuildContext context, required RowModel row, required Widget child}) {
     return Material(
@@ -934,7 +763,106 @@ class _TableFromZeroState extends State<TableFromZero> {
     );
   }
 
-  Widget defaultCellBuilder(BuildContext context, RowModel row, ColModel? col, int j){
+  Widget defaultHeaderCellBuilder(BuildContext context, RowModel row, ColModel? col, int j) {
+    String message = row.values[j]!=null ? row.values[j].toString() : "";
+    bool export = context.findAncestorWidgetOfExactType<Export>()!=null;
+    Widget result = Align(
+      alignment: _getAlignment(j)==TextAlign.center ? Alignment.center
+          : _getAlignment(j)==TextAlign.left||_getAlignment(j)==TextAlign.start ? Alignment.centerLeft
+          : Alignment.centerRight,
+      child: Stack(
+        overflow: Overflow.visible,
+        children: [
+          AnimatedPadding(
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+            padding: EdgeInsets.only(
+              left: widget.itemPadding.left + (!export && sortedColumnIndex==j ? 15 : 4),
+              right: widget.itemPadding.right + (!export && widget.columns![j].filterEnabled==true ? 10 : 4),
+              top: widget.itemPadding.top,
+              bottom: widget.itemPadding.bottom,
+            ),
+            child: AutoSizeText(
+              widget.columns![j].name,
+              style: Theme.of(context).textTheme.subtitle2,
+              textAlign: _getAlignment(j),
+              maxLines: widget.autoSizeTextMaxLines,
+              minFontSize: 14,
+              overflowReplacement: Tooltip(
+                message: widget.columns![j].name,
+                waitDuration: Duration(milliseconds: 0),
+                verticalOffset: -16,
+                child: AutoSizeText(
+                  widget.columns![j].name,
+                  style: Theme.of(context).textTheme.subtitle2,
+                  textAlign: _getAlignment(j),
+                  maxLines: widget.autoSizeTextMaxLines,
+                  softWrap: widget.autoSizeTextMaxLines>1,
+                  overflow: widget.autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            left: -4, width: 32, top: 0, bottom: 0,
+            child: OverflowBox(
+              maxHeight: row.height, maxWidth: 32,
+              alignment: Alignment.center,
+              child: AnimatedSwitcher(
+                duration: Duration(milliseconds: 300),
+                switchInCurve: Curves.easeOut,
+                child: (!export && sortedColumnIndex==j) ? Icon(
+                  sortedAscending ? MaterialCommunityIcons.sort_ascending : MaterialCommunityIcons.sort_descending,
+                  key: ValueKey(sortedAscending),
+//                                color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
+                  color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                ) : SizedBox(height: 24,),
+                transitionBuilder: (child, animation) => ScaleTransition(
+                  scale: animation,
+                  child: FadeTransition(opacity: animation, child: child,),
+                ),
+              ),
+            ),
+          ),
+          if (!export && widget.columns![j].filterEnabled==true)
+            Positioned(
+                right: -16, width: 48, top: 0, bottom: 0,
+                child: OverflowBox(
+                  maxHeight: row.height, maxWidth: 48,
+                  alignment: Alignment.center,
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: small_popup.PopupMenuButton<dynamic>(
+                      icon: Icon(filters[j]==EmptyFilter() ? MaterialCommunityIcons.filter_outline : MaterialCommunityIcons.filter,
+//                                    color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
+                        color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                      ),
+                      itemBuilder: (context) => List.generate(
+                        availableFilters[j].length+1,
+                            (index) => PopupMenuItem(
+                          child: Text(index==0 ? "  --sin filtro--" : availableFilters[j][index-1].toString()),
+                          value: index==0 ? EmptyFilter() : availableFilters[j][index-1].toString(),
+                        ),
+                      ),
+                      onSelected: (value) {
+                        setState(() {
+                          filters[j] = value;
+                          filter();
+                        });
+                      },
+                      initialValue: filters[j],
+                      tooltip: "Filtros", //TODO 3 internationalize
+                    ),
+                  ),
+                )
+            ),
+        ],
+      ),
+    );
+    return result;
+  }
+
+  Widget defaultCellBuilder(BuildContext context, RowModel row, ColModel? col, int j) {
     String message = row.values[j]!=null ? row.values[j].toString() : "";
     Widget result = AutoSizeText(
       message,
@@ -959,7 +887,8 @@ class _TableFromZeroState extends State<TableFromZero> {
     return result;
   }
 
-  BoxDecoration _getDecoration(RowModel row, int i, int j, {bool header=false}){
+  BoxDecoration _getDecoration(RowModel row, int i, int j,){
+    bool header = i < 0;
     Color? backgroundColor = _getBackgroundColor(row, i, j, header);
     bool applyDarker = i>=0 && widget.applyRowAlternativeColors==true
         && _shouldApplyDarkerBackground(backgroundColor, row, i, j, header);
@@ -969,14 +898,16 @@ class _TableFromZeroState extends State<TableFromZero> {
     if (backgroundColor==null){
       backgroundColor = Material.of(context)!.color;
     }
-    if (header){
-      backgroundColor =  backgroundColor!.withOpacity(backgroundColor.opacity*(0.5));
-    }
-    if (backgroundColor!.opacity<1){
-      backgroundColor = Color.alphaBlend(backgroundColor, Material.of(context)!.color!);
-    }
-    if(applyDarker){
-      backgroundColor = Color.alphaBlend(backgroundColor.withOpacity(0.965), Colors.black);
+    if (backgroundColor!=null) {
+      if (header){
+        backgroundColor =  backgroundColor.withOpacity(backgroundColor.opacity*(0.5));
+      }
+      if (backgroundColor.opacity<1 && Material.of(context)!.color!=null){
+        backgroundColor = Color.alphaBlend(backgroundColor, Material.of(context)!.color!);
+      }
+      if(applyDarker){
+        backgroundColor = Color.alphaBlend(backgroundColor.withOpacity(0.965), Colors.black);
+      }
     }
     return BoxDecoration(color: backgroundColor);
 //    List<double> stops = [0, 0.1, 0.55, 1,];
@@ -1071,7 +1002,10 @@ class _TableFromZeroState extends State<TableFromZero> {
     filtered = sorted.where((element) {
       bool pass = true;
       for (int i=0; i<filters.length && pass; i++){
-        pass = filters[i]==EmptyFilter() || filters[i]==element.values[i];
+        pass = filters[i]==EmptyFilter()
+            || (widget.columns![i].filterUsesContains==true && filters[i].toString().isNotEmpty
+                ? element.values[i].toString().contains(filters[i].toString())
+                : filters[i]==element.values[i]);
       }
       return pass;
     }).toList();
@@ -1097,6 +1031,10 @@ abstract class RowModel{
   ValueChanged<RowModel>? get onRowDoubleTap => null;
   ValueChanged<RowModel>? get onRowLongPress => null;
   OnRowHoverCallback? get onRowHover => null;
+  OnCellTapCallback? get onCellTap => null;
+  OnCellTapCallback? get onCellDoubleTap => null;
+  OnCellTapCallback? get onCellLongPress => null;
+  OnCellHoverCallback? get onCellHover => null;
   OnCheckBoxSelectedCallback? get onCheckBoxSelected => null;
   List<Widget>? get actions => null;
   Widget? get rowAddon => null;
@@ -1121,6 +1059,7 @@ abstract class ColModel{
   bool? get defaultSortAscending => null;
   bool? get sortEnabled => true;
   bool? get filterEnabled => null;
+  bool? get filterUsesContains => null;
 }
 
 class SimpleRowModel extends RowModel{
@@ -1135,6 +1074,10 @@ class SimpleRowModel extends RowModel{
   ValueChanged<RowModel>? onRowDoubleTap;
   ValueChanged<RowModel>? onRowLongPress;
   OnRowHoverCallback? onRowHover;
+  OnCellTapCallback? onCellTap;
+  OnCellTapCallback? onCellDoubleTap;
+  OnCellTapCallback? onCellLongPress;
+  OnCellHoverCallback? onCellHover;
   OnCheckBoxSelectedCallback? onCheckBoxSelected;
   List<Widget>? actions;
   Widget? rowAddon;
@@ -1155,6 +1098,10 @@ class SimpleRowModel extends RowModel{
     this.actions,
     this.rowAddon,
     this.alwaysOnTop,
+    this.onCellTap,
+    this.onCellDoubleTap,
+    this.onCellLongPress,
+    this.onCellHover,
   });
   SimpleRowModel copywith({
     dynamic? id,
@@ -1172,6 +1119,10 @@ class SimpleRowModel extends RowModel{
     List<Widget>? actions,
     Widget? rowAddon,
     bool? alwaysOnTop,
+    OnCellTapCallback? onCellTap,
+    OnCellTapCallback? onCellDoubleTap,
+    OnCellTapCallback? onCellLongPress,
+    OnCellHoverCallback? onCellHover,
   }) {
     return SimpleRowModel(
       id: id ?? this.id,
@@ -1188,7 +1139,10 @@ class SimpleRowModel extends RowModel{
       onCheckBoxSelected: onCheckBoxSelected ?? this.onCheckBoxSelected,
       actions: actions ?? this.actions,
       rowAddon: rowAddon ?? this.rowAddon,
-      alwaysOnTop: alwaysOnTop ?? this.alwaysOnTop,
+      onCellTap: onCellTap ?? this.onCellTap,
+      onCellDoubleTap: onCellDoubleTap ?? this.onCellDoubleTap,
+      onCellLongPress: onCellLongPress ?? this.onCellLongPress,
+      onCellHover: onCellHover ?? this.onCellHover,
     );
   }
 }
@@ -1206,6 +1160,7 @@ class SimpleColModel extends ColModel{
   bool? defaultSortAscending;
   bool? sortEnabled;
   bool? filterEnabled;
+  bool? filterUsesContains;
   SimpleColModel({
     required this.name,
     this.backgroundColor,
@@ -1220,6 +1175,7 @@ class SimpleColModel extends ColModel{
     this.defaultSortAscending,
     this.sortEnabled = true,
     this.filterEnabled,
+    this.filterUsesContains,
   });
   SimpleColModel copyWith({
     String? name,
@@ -1235,6 +1191,7 @@ class SimpleColModel extends ColModel{
     bool? defaultSortAscending,
     bool? sortEnabled,
     bool? filterEnabled,
+    bool? filterUsesContains,
   }){
     return SimpleColModel(
       name: name ?? this.name,
@@ -1250,6 +1207,7 @@ class SimpleColModel extends ColModel{
       defaultSortAscending: defaultSortAscending ?? this.defaultSortAscending,
       sortEnabled: sortEnabled ?? this.sortEnabled,
       filterEnabled: filterEnabled ?? this.filterEnabled,
+      filterUsesContains: filterUsesContains ?? this.filterUsesContains,
     );
   }
 }
@@ -1274,6 +1232,13 @@ class _ErrorRow extends RowModel{
 
 class TableController {
 
+  TableController({
+    this.initialFilters,
+    this.filters,
+    this.sortedAscending = true,
+    this.sortedColumnIndex,
+  });
+
   Map<int, dynamic>? initialFilters;
 
   VoidCallback? _filter;
@@ -1281,11 +1246,10 @@ class TableController {
     _filter?.call();
   }
 
-  List<dynamic>? _filters;
-  List<dynamic>? get filters => _filters;
-  set filters(List<dynamic>? value) {
-    _filters = value;
-    filter();
-  }
+  List<dynamic>? filters;
+
+  bool sortedAscending;
+
+  int? sortedColumnIndex;
 
 }

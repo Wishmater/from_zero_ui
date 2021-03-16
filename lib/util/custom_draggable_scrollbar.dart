@@ -459,25 +459,27 @@ class _DraggableScrollbarState extends State<DraggableScrollbar>
                 RepaintBoundary(
                   child: widget.child,
                 ),
-                RepaintBoundary(
-                    child: GestureDetector(
-                      onVerticalDragStart: _onVerticalDragStart,
-                      onVerticalDragUpdate: _onVerticalDragUpdate,
-                      onVerticalDragEnd: _onVerticalDragEnd,
-                      child: Container(
-                        alignment: Alignment.topRight,
-                        margin: EdgeInsets.only(top: _barOffset),
-                        padding: widget.padding,
-                        child: widget.scrollThumbBuilder(
-                          widget.backgroundColor,
-                          _thumbAnimation,
-                          _labelAnimation,
-                          widget.heightScrollThumb,
-                          labelText: labelText,
-                          labelConstraints: widget.labelConstraints,
+                Positioned.fill(
+                  child: RepaintBoundary(
+                      child: GestureDetector(
+                        onVerticalDragStart: _onVerticalDragStart,
+                        onVerticalDragUpdate: _onVerticalDragUpdate,
+                        onVerticalDragEnd: _onVerticalDragEnd,
+                        child: Container(
+                          alignment: Alignment.topRight,
+                          margin: EdgeInsets.only(top: _barOffset.clamp(0, double.infinity)),
+                          padding: widget.padding,
+                          child: widget.scrollThumbBuilder(
+                            widget.backgroundColor,
+                            _thumbAnimation,
+                            _labelAnimation,
+                            widget.heightScrollThumb,
+                            labelText: labelText,
+                            labelConstraints: widget.labelConstraints,
+                          ),
                         ),
-                      ),
-                    )),
+                      )),
+                ),
               ],
             ),
           );

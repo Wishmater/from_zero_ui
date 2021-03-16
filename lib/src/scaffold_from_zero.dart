@@ -122,7 +122,9 @@ class ScaffoldFromZero extends StatefulWidget {
     this.assumeTheScrollBarWillShowOnDesktop = false,
     Widget Function(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen)? titleTransitionBuilder,
     Widget Function(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen)? drawerContentTransitionBuilder,
-  }) :  this.collapsibleBackgroundHeight = collapsibleBackgroundLength ?? (appbarType==ScaffoldFromZero.appbarTypeStatic||appbarHeight==null ? -1 : appbarHeight*3),
+  }) :
+        // this.appbarType = appbarType ?? (title==null&&(actions==null||actions.isEmpty)&&drawerContentBuilder==null ? appbarTypeNone : appbarTypeStatic),
+        this.collapsibleBackgroundHeight = collapsibleBackgroundLength ?? (appbarType==ScaffoldFromZero.appbarTypeStatic||appbarHeight==null ? -1 : appbarHeight*3),
         this.scrollbarType = scrollbarType ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? scrollbarTypeBellowAppbar : scrollbarTypeOverAppbar),
         this.bodyFloatsBelowAppbar = bodyFloatsBelowAppbar ?? appbarType==ScaffoldFromZero.appbarTypeQuickReturn,
         this.compactDrawerWidth = drawerContentBuilder==null||!useCompactDrawerInsteadOfClose ? 0 : 56,

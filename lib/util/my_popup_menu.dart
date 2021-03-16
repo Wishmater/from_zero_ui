@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 
 // Examples can assume:
 // enum Commands { heroAndScholar, hurricaneCame }
@@ -526,25 +527,37 @@ class _PopupMenu<T> extends StatelessWidget {
     final CurveTween width = CurveTween(curve: Interval(0.0, unit));
     final CurveTween height = CurveTween(curve: Interval(0.0, unit * route!.items.length));
 
+    final ScrollController scrollController = ScrollController();
+
     final Widget child = ConstrainedBox(
       constraints: BoxConstraints(
         minWidth: _kMenuMinWidth,
         maxWidth: _kMenuMaxWidth,
       ),
-      child: IntrinsicWidth(
-        stepWidth: _kMenuWidthStep,
-        child: Semantics(
-          scopesRoute: true,
-          namesRoute: true,
-          explicitChildNodes: true,
-          label: semanticLabel,
-          child: SingleChildScrollView(
+
+      child: Semantics(
+        scopesRoute: true,
+        namesRoute: true,
+        explicitChildNodes: true,
+        label: semanticLabel,
+        child: ScrollbarFromZero(
+          controller: scrollController,
+          child: ListView(
+            shrinkWrap: true,
+            controller: scrollController,
             padding: EdgeInsets.symmetric(
                 vertical: _kMenuVerticalPadding
             ),
-            child: ListBody(children: children),
+            children: children,
           ),
         ),
+
+        // child: SingleChildScrollView(
+        //   padding: EdgeInsets.symmetric(
+        //       vertical: _kMenuVerticalPadding
+        //   ),
+        //   child: ListBody(children: children),
+        // ),
       ),
     );
 
@@ -558,6 +571,7 @@ class _PopupMenu<T> extends StatelessWidget {
             color: route!.color ?? popupMenuTheme.color,
             type: MaterialType.card,
             elevation: route!.elevation ?? popupMenuTheme.elevation ?? 8.0,
+            clipBehavior: Clip.hardEdge,
             child: Align(
               alignment: AlignmentDirectional.topEnd,
               widthFactor: width.evaluate(route!.animation!),
@@ -681,7 +695,7 @@ class _PopupMenuRoute<T> extends PopupRoute<T> {
     this.color,
     this.showMenuContext,
     this.captureInheritedThemes,
-  }) : itemSizes = [];
+  }) : itemSizes = List.generate(items.length, (index) => Size.zero);
 
   final RelativeRect? position;
   final List<PopupMenuEntry<T?>> items;

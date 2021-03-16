@@ -49,7 +49,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
   final BuildContext? scaffoldContext;
   final Widget? dummyChild;
   final List<GlobalKey>? significantWidgetsKeys;
-  final Map<String, TableFromZero>? Function()? excelSheets;
+  final Map<String, GlobalKey<TableFromZeroState>>? Function()? excelSheets;
 
   Export.scrollable({
     Key? key,
@@ -203,9 +203,11 @@ class _ExportState extends State<Export> {
           double totalHeight = position.maxScrollExtent+position.viewportDimension;
           List<double> significantWidgetVisibleAtStartOffsets = [0];
           widget.significantWidgetsKeys!.forEach((element) {
-            final object = element.currentContext!.findRenderObject();
-            final viewport = RenderAbstractViewport.of(object);
-            significantWidgetVisibleAtStartOffsets.add(viewport!.getOffsetToReveal(object!, 0.0).offset);
+            if (element.currentContext!=null) {
+              final object = element.currentContext!.findRenderObject();
+              final viewport = RenderAbstractViewport.of(object);
+              significantWidgetVisibleAtStartOffsets.add(viewport!.getOffsetToReveal(object!, 0.0).offset);
+            }
           });
           significantWidgetVisibleAtStartOffsets.add(position.maxScrollExtent + position.viewportDimension);
           significantWidgetVisibleAtStartOffsets.sort();
@@ -327,17 +329,20 @@ class _ExportState extends State<Export> {
     var excel = Excel.createExcel();
     widget.excelSheets!()!.forEach((key, value) {
       Sheet sheetObject = excel[key];
-      for (var i = -1; i < value.rows.length; ++i) {
+      for (var i = value.currentState!.widget.columns==null ? 0 : -1; i < value.currentState!.filtered.length; ++i) {
         RowModel? row;
         if (i==-1) {
-          row = value.headerRowModel;
+          row = SimpleRowModel(
+            id: value.currentState!.widget.columns,
+            values: value.currentState!.widget.columns!.map((e) => e.name).toList(),
+          );
         } else{
-          row = value.rows[i];
+          row = value.currentState!.filtered[i];
         }
         if (row!=null && row.alwaysOnTop==null){
           for (var j = 0; j < row.values.length; ++j) {
             // ColModel? col = value.columns?[j];
-            ColModel? col = value.columns==null ? null : value.columns![j];
+            ColModel? col = value.currentState!.widget.columns==null ? null : value.currentState!.widget.columns![j];
             Color? backgroundColor;
             if (i==-1){
               backgroundColor = col?.backgroundColor;
@@ -345,7 +350,7 @@ class _ExportState extends State<Export> {
                 backgroundColor = backgroundColor.withOpacity(backgroundColor.opacity*0.5);
               }
             } else{
-              if (value.rowTakesPriorityOverColumn){
+              if (value.currentState!.widget.rowTakesPriorityOverColumn){
                 backgroundColor = row.backgroundColor ?? col?.backgroundColor;
               } else{
                 backgroundColor = col?.backgroundColor ?? row.backgroundColor;
@@ -355,7 +360,7 @@ class _ExportState extends State<Export> {
               backgroundColor = Color.alphaBlend(backgroundColor, Colors.white);
             }
             TextStyle? style;
-            if (value.rowTakesPriorityOverColumn){
+            if (value.currentState!.widget.rowTakesPriorityOverColumn){
               style = row.textStyle ?? col?.textStyle;
             } else{
               style = col?.textStyle ?? row.textStyle;

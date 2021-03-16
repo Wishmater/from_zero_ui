@@ -195,10 +195,18 @@ class MaterialKeyValuePair extends StatelessWidget {
 
   String? title;
   String? value;
+  TextStyle? titleStyle;
+  TextStyle? valueStyle;
   bool frame;
 
 
-  MaterialKeyValuePair({required this.title, required this.value, this.frame=false});
+  MaterialKeyValuePair({
+    required this.title,
+    required this.value,
+    this.frame=false,
+    this.titleStyle,
+    this.valueStyle,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -211,14 +219,14 @@ class MaterialKeyValuePair extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (title!=null)
-                Text(title!, style: Theme.of(context).textTheme.caption,),
+                Text(title!, style: titleStyle ?? Theme.of(context).textTheme.caption,),
               Stack(
                 fit: StackFit.passthrough,
                 children: [
                   if (value!=null)
                     Padding(
                       padding: const EdgeInsets.only(left: 3, bottom: 1),
-                      child: Text(value!,),
+                      child: Text(value!, style: valueStyle,),
                     ),
                   Positioned.fill(
                     child: Align(
@@ -253,11 +261,12 @@ class MaterialKeyValuePair extends StatelessWidget {
         if (title!=null)
           Text(
             title!,
-            style: Theme.of(context).textTheme.caption,
+            style: titleStyle ?? Theme.of(context).textTheme.caption,
           ),
         if (value!=null)
           Text(
             value!,
+            style: valueStyle,
           ),
       ],
     );
