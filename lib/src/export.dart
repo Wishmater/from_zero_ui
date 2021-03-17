@@ -787,34 +787,33 @@ class _ExportState extends State<Export> {
                           ),
                           textColor: Colors.blue,
                           onPressed: () async{
-                            Navigator.of(context).push(
-                              TransparentMaterialPageRoute( //TransparentMaterialPageRoute
-                                builder: (_){
-                                  int index = currentPageNotifier.value;
-                                  return RawKeyboardListener(
-                                    focusNode: FocusNode(),
-                                    autofocus: true,
-                                    onKey: (value) {
-                                      if (PlatformExtended.isWindows && value.logicalKey != LogicalKeyboardKey.escape){
-                                        Navigator.of(context).pop();
-                                      }
+                            showModal(
+                              context: context,
+                              builder: (context) {
+                                int index = currentPageNotifier.value;
+                                return RawKeyboardListener(
+                                  focusNode: FocusNode(),
+                                  autofocus: true,
+                                  onKey: (value) {
+                                    if (PlatformExtended.isWindows && value.logicalKey != LogicalKeyboardKey.escape){
+                                      Navigator.of(context).pop();
+                                    }
+                                  },
+                                  child: GestureDetector(
+                                    onTapDown: (details) {
+                                      Navigator.of(context).pop();
                                     },
-                                    child: GestureDetector(
-                                      onTapDown: (details) {
-                                        Navigator.of(context).pop();
-                                      },
-                                      child: Container(
-                                        color: Colors.black87,
-                                        alignment: Alignment.center,
-                                        child: Export.dummy(
-                                          themeParameters: widget.themeParameters,
-                                          dummyChild: _getChild(index, size, null),
-                                        ),
+                                    child: Container(
+                                      color: Colors.black87,
+                                      alignment: Alignment.center,
+                                      child: Export.dummy(
+                                        themeParameters: widget.themeParameters,
+                                        dummyChild: _getChild(index, size, null),
                                       ),
                                     ),
-                                  );
-                                },
-                              ),
+                                  ),
+                                );
+                              },
                             );
                           },
                         ),

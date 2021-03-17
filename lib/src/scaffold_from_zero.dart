@@ -366,7 +366,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                     top: appbarChangeNotifier.currentBackgroundOffset,
                     height: appbarChangeNotifier.safeAreaOffset+appbarChangeNotifier.backgroundHeight,
                     left: 0, right: 0,
-                    child: child,
+                    child: child!,
                   );
                 },
                 child: Container(

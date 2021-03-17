@@ -4,9 +4,6 @@
 
 import 'package:flutter/material.dart';
 
-// branch contains DualTransitionBuilder.
-import 'package:animations/src/dual_transition_builder.dart' as dual_transition_builder;
-
 /// Used by [PageTransitionsTheme] to define a page route transition animation
 /// in which the outgoing page fades out, then the incoming page fades in and
 /// scale up.
@@ -224,25 +221,25 @@ class _ZoomedFadeInFadeOut extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return dual_transition_builder.DualTransitionBuilder(
+    return DualTransitionBuilder(
       animation: animation,
       forwardBuilder: (
           BuildContext context,
           Animation<double> animation,
-          Widget child,
+          Widget? child,
           ) {
         return _ZoomedFadeIn(
           animation: animation,
-          child: child,
+          child: child!,
         );
       },
       reverseBuilder: (
           BuildContext context,
           Animation<double> animation,
-          Widget child,
+          Widget? child,
           ) {
         return _FadeOut(
-          child: child,
+          child: child!,
           animation: animation,
         );
       },

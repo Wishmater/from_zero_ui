@@ -7,8 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
-// branch contains DualTransitionBuilder.
-import 'package:animations/src/dual_transition_builder.dart' as dual_transition_builder;
 
 /// Determines which type of shared axis transition is used.
 enum SharedAxisTransitionType {
@@ -238,56 +236,56 @@ class SharedAxisTransition extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color color = fillColor ?? Theme.of(context).canvasColor;
-    return dual_transition_builder.DualTransitionBuilder(
+    return DualTransitionBuilder(
       animation: animation,
       forwardBuilder: (
           BuildContext context,
           Animation<double> animation,
-          Widget child,
+          Widget? child,
           ) {
         return _EnterTransition(
           animation: animation,
           transitionType: transitionType,
-          child: child,
+          child: child!,
         );
       },
       reverseBuilder: (
           BuildContext context,
           Animation<double> animation,
-          Widget child,
+          Widget? child,
           ) {
         return _ExitTransition(
           animation: animation,
           transitionType: transitionType,
           reverse: true,
           fillColor: color,
-          child: child,
+          child: child!,
         );
       },
-      child: dual_transition_builder.DualTransitionBuilder(
+      child: DualTransitionBuilder(
         animation: ReverseAnimation(secondaryAnimation),
         forwardBuilder: (
             BuildContext context,
             Animation<double> animation,
-            Widget child,
+            Widget? child,
             ) {
           return _EnterTransition(
             animation: animation,
             transitionType: transitionType,
             reverse: true,
-            child: child,
+            child: child!,
           );
         },
         reverseBuilder: (
             BuildContext context,
             Animation<double> animation,
-            Widget child,
+            Widget? child,
             ) {
           return _ExitTransition(
             animation: animation,
             transitionType: transitionType,
             fillColor: color,
-            child: child,
+            child: child!,
           );
         },
         child: child,

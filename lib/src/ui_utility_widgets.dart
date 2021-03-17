@@ -106,7 +106,7 @@ class LoadingCheckbox extends StatelessWidget{
     }
     if (pageTransitionBuilder!=null)
       return PageTransitionSwitcher(
-        transitionBuilder: pageTransitionBuilder,
+        transitionBuilder: pageTransitionBuilder!,
         duration: transitionDuration,
         child: result,
       );

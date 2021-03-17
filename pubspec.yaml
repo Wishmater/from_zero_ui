@@ -14,42 +14,44 @@ dependencies:
     sdk: flutter
 
   # * Language Extensions
-  dartx: ^0.5.0
-  collection: ^1.14.13
+  dartx: ^0.7.0
+  collection: ^1.15.0
   
   # * State Management
-  fluro: ^1.7.8
-  provider: ^4.3.2
-  hive: ^1.4.3
-  hive_flutter: ^0.3.1
+  fluro: ^2.0.3
+  provider: ^5.0.0
+  hive: ^2.0.0
+  hive_flutter: ^1.0.0
   
   # * Widgets / UI
   flushbar: ^1.10.4
   auto_size_text: ^2.1.0
-  page_view_indicators: ^1.3.1
-  implicitly_animated_reorderable_list: ^0.2.3
+  page_view_indicators: ^2.0.0
+  implicitly_animated_reorderable_list: ^0.3.2
   flutter_icons: ^1.1.0
-  animations: ^1.1.2
-  extended_image: ^1.4.0
-  google_fonts: ^1.1.0
+  animations: ^2.0.0
+  extended_image: ^3.0.0
+  google_fonts: ^2.0.0
   wave: ^0.1.0
   flutter_sticky_header: ^0.5.0
-  sticky_headers: ^0.1.8+1
-  scroll_to_index: ^1.0.6
+  sticky_headers: ^0.2.0
+  scroll_to_index: ^2.0.0
 
   # * Plugins
-  url_launcher: ^5.7.10
-  path_provider: ^1.6.24
+  url_launcher: ^6.0.2
+  path_provider: ^2.0.1
   downloads_path_provider: ^0.1.0
   platform_detect: ^1.4.0
-  permission_handler: ^5.0.1+1
-  open_file: ^3.0.1
+  permission_handler: ^6.1.0
+  open_file: ^3.1.0
   excel: ^1.1.5
 
   # * Specific Utility
   pdf: ^1.10.0 # ! TODO optimize imports. Not all apps will need this
   dio: ^3.0.10
   dio_retry: ^0.1.9-beta
+
+
 
   # ! temporal fde dependencies until official desktop support is stable
 #  path_provider_fde:
@@ -76,7 +78,9 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-#dependency_overrides:
+dependency_overrides:
+  http_parser: ^4.0.0
+  crypto: ^3.0.0
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

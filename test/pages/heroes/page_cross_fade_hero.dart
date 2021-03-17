@@ -46,7 +46,7 @@ class _PageHeroesState extends State<PageCrossFadeHero> {
 
   Widget _getPage(context){
     return WillPopScope(
-      onWillPop: () async => showModal(context: context, builder: (context) => AlertDialog(
+      onWillPop: () async => await showModal(context: context, builder: (context) => AlertDialog(
         title: Text("Sure?"),
         actions: [
           SimpleDialogOption(
