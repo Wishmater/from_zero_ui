@@ -276,7 +276,7 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
                   ),
                 ), tabs, i,
               ),
-              trailing: tabs[i].customExpansionTileTrailing,
+              trailing: tabs[i].customExpansionTileTrailing ?? (tabs[i].forcePopup ? SizedBox.shrink() : null),
               children: [
                 Stack(
                   overflow: Overflow.visible,

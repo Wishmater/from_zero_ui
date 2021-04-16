@@ -22,12 +22,12 @@ class ScrollbarFromZero extends StatefulWidget {
     Key? key,
     this.controller,
     required this.child,
-    this.minScrollbarHeight = 64,
-    this.scrollbarWidthDesktop = 16,
-    this.scrollbarWidthMobile = 10,
-    this.applyPaddingToChildrenOnDesktop = true,
-    this.assumeTheScrollBarWillShowOnDesktop = false,
-    bool? applyOpacityGradientToChildren,
+    @deprecated this.minScrollbarHeight = 64,
+    @deprecated this.scrollbarWidthDesktop = 16,
+    @deprecated this.scrollbarWidthMobile = 10,
+    @deprecated this.applyPaddingToChildrenOnDesktop = true,
+    @deprecated this.assumeTheScrollBarWillShowOnDesktop = false,
+    @deprecated bool? applyOpacityGradientToChildren,
   }) :  this.applyOpacityGradientToChildren = applyOpacityGradientToChildren ?? !applyPaddingToChildrenOnDesktop,
         super(key: key);
 
@@ -36,6 +36,43 @@ class ScrollbarFromZero extends StatefulWidget {
       _ScrollbarFromZeroState();
 
 }
+
+
+// class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     widget.controller?.addListener(() {
+//       if (mounted) {
+//         setState(() {
+
+//         });
+//       }
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return LayoutBuilder(
+//       builder: (context, constraints) {
+//         if (widget.controller==null) {
+//           return widget.child;
+//         }
+//         return NotificationListener<ScrollNotification>(
+//           onNotification: (notification) => true,
+//           child: Scrollbar(
+//             controller: widget.controller,
+//             child: widget.child,
+//           ),
+//         );
+//       },
+//     );
+//   }
+
+// }
+
+
 
 class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
@@ -47,21 +84,36 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   late int initialTimestamp;
 
   @override
+  void didUpdateWidget(covariant ScrollbarFromZero oldWidget) {
+    removeListeners(oldWidget.controller);
+    addListeners(widget.controller);
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   void initState() {
     super.initState();
 //    WidgetsBinding.instance?.addPostFrameCallback((_) {
 //      _updateMaxScrollExtent();
 //    });
-    widget.controller?.addListener(_onScrollListener);
-    if (widget.controller?.hasClients ?? false)
-      widget.controller?.position.addListener(_onScrollListener);
+    addListeners(widget.controller);
     initialTimestamp = DateTime.now().millisecondsSinceEpoch;
+  }
+
+  void addListeners(ScrollController? controller){
+    controller?.addListener(_onScrollListener);
+    if (controller?.hasClients ?? false)
+      controller?.position.addListener(_onScrollListener);
+  }
+
+  void removeListeners(ScrollController? controller) {
+    controller?.removeListener(_onScrollListener);
   }
 
   @override
   void dispose() {
     disposed = true;
-    widget.controller?.removeListener(_onScrollListener);
+    removeListeners(widget.controller);
     super.dispose();
   }
 

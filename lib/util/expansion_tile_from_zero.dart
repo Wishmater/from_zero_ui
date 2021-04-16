@@ -276,25 +276,26 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
             child: Stack(
               children: [
                 widget.title,
-                Positioned(
-                  top: 0, bottom: 0,
-                  right: widget.style==DrawerMenuFromZero.styleDrawerMenu ? 4 : null,
-                  left: widget.style==DrawerMenuFromZero.styleTree ? 0 : null,
-                  child: Padding(
-                    padding: widget.actionPadding,
-                    child: IconButton(
-                      icon: widget.trailing ?? RotationTransition(
-                        turns: _iconTurns,
-                        child: Icon(Icons.expand_more, color: _iconColor.value, size: 26,),
+                if (!(widget.trailing is SizedBox))
+                  Positioned(
+                    top: 0, bottom: 0,
+                    right: widget.style==DrawerMenuFromZero.styleDrawerMenu ? 4 : null,
+                    left: widget.style==DrawerMenuFromZero.styleTree ? 0 : null,
+                    child: Padding(
+                      padding: widget.actionPadding,
+                      child: IconButton(
+                        icon: widget.trailing ?? RotationTransition(
+                          turns: _iconTurns,
+                          child: Icon(Icons.expand_more, color: _iconColor.value, size: 26,),
+                        ),
+                        iconSize: 26,
+                        onPressed: () {
+                          setExpanded(!_isExpanded);
+                        },
+                        splashRadius: 28,
                       ),
-                      iconSize: 26,
-                      onPressed: () {
-                        setExpanded(!_isExpanded);
-                      },
-                      splashRadius: 28,
                     ),
                   ),
-                ),
                 if (widget.trailing==null && widget.style==DrawerMenuFromZero.styleTree && _isExpanded)
                   Positioned(
                     left: 10, right: 0, bottom: -1, top: -1,

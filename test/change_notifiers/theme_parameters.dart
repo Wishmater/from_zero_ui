@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/material/theme_data.dart';
 import 'package:flutter_icons/flutter_icons.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/settings.dart';
 
 class ThemeParameters extends AppParametersFromZero {
@@ -26,7 +27,27 @@ class ThemeParameters extends AppParametersFromZero {
         decoration: BoxDecoration(
           color: Colors.grey.shade700.withOpacity(0.9),
           borderRadius: const BorderRadius.all(Radius.circular(999999)),
-        )
+        ),
+        padding: EdgeInsets.fromLTRB(12, 4, 12, 6),
+        textStyle: TextStyle(
+          fontSize: 16,
+          color: Colors.white,
+        ),
+      ),
+      scrollbarTheme: ScrollbarThemeData(
+        isAlwaysShown: PlatformExtended.isDesktop,
+        showTrackOnHover: true,
+        crossAxisMargin: 0,
+        mainAxisMargin: 0,
+        thumbColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.dragged)) {
+            return Colors.black54;
+          }
+          if (states.contains(MaterialState.hovered)) {
+            return Colors.black45;
+          }
+          return Colors.black38;
+        }),
       ),
       primaryColorBrightness: Brightness.light,
       appBarTheme: AppBarTheme(
@@ -41,10 +62,30 @@ class ThemeParameters extends AppParametersFromZero {
       accentColor: Colors.orangeAccent.shade700,
       visualDensity: VisualDensity.compact,
       tooltipTheme: TooltipThemeData(
-          decoration: BoxDecoration(
-            color: Colors.grey.shade700.withOpacity(0.9),
-            borderRadius: const BorderRadius.all(Radius.circular(999999)),
-          )
+        decoration: BoxDecoration(
+          color: Colors.grey.shade700.withOpacity(0.9),
+          borderRadius: const BorderRadius.all(Radius.circular(999999)),
+        ),
+        padding: EdgeInsets.fromLTRB(12, 4, 12, 6),
+        textStyle: TextStyle(
+          fontSize: 16,
+          color: Colors.white,
+        ),
+      ),
+      scrollbarTheme: ScrollbarThemeData(
+        isAlwaysShown: PlatformExtended.isDesktop,
+        showTrackOnHover: true,
+        crossAxisMargin: 0,
+        mainAxisMargin: 0,
+        thumbColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.dragged)) {
+            return Colors.black54;
+          }
+          if (states.contains(MaterialState.hovered)) {
+            return Colors.black45;
+          }
+          return Colors.black38;
+        }),
       ),
     ),
     ThemeData(
@@ -52,10 +93,21 @@ class ThemeParameters extends AppParametersFromZero {
       accentColor: Colors.orangeAccent.shade700,
       visualDensity: VisualDensity.compact,
       tooltipTheme: TooltipThemeData(
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.9),
-            borderRadius: const BorderRadius.all(Radius.circular(999999)),
-          )
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.9),
+          borderRadius: const BorderRadius.all(Radius.circular(999999)),
+        ),
+        padding: EdgeInsets.fromLTRB(12, 4, 12, 6),
+        textStyle: TextStyle(
+          fontSize: 16,
+          color: Colors.black,
+        ),
+      ),
+      scrollbarTheme: ScrollbarThemeData(
+        isAlwaysShown: PlatformExtended.isDesktop,
+        showTrackOnHover: true,
+        crossAxisMargin: 0,
+        mainAxisMargin: 0,
       ),
     ),
   ];

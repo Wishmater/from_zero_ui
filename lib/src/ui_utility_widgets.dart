@@ -7,6 +7,7 @@ import 'package:flutter/rendering.dart';
 import 'package:from_zero_ui/src/scaffold_from_zero.dart';
 import 'package:flutter/foundation.dart';
 import 'package:from_zero_ui/util/platform_web_impl.dart';
+import 'package:provider/provider.dart';
 
 
 class ResponsiveHorizontalInsetsSliver extends StatelessWidget {
@@ -198,6 +199,7 @@ class MaterialKeyValuePair extends StatelessWidget {
   TextStyle? titleStyle;
   TextStyle? valueStyle;
   bool frame;
+  double padding;
 
 
   MaterialKeyValuePair({
@@ -206,6 +208,7 @@ class MaterialKeyValuePair extends StatelessWidget {
     this.frame=false,
     this.titleStyle,
     this.valueStyle,
+    this.padding = 0,
   });
 
   @override
@@ -263,6 +266,7 @@ class MaterialKeyValuePair extends StatelessWidget {
             title!,
             style: titleStyle ?? Theme.of(context).textTheme.caption,
           ),
+        SizedBox(height: padding,),
         if (value!=null)
           Text(
             value!,
@@ -464,36 +468,23 @@ class TitleTextBackground extends StatelessWidget {
       fit: StackFit.passthrough,
       children: <Widget>[
         Positioned.fill(
-          child: Row(
-            children: <Widget>[
-              Container(
-                width: horizontalPadding,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              double stopPercentage = (horizontalPadding/constraints.maxWidth).clamp(0, 1);
+              return Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
                       backgroundColor.withOpacity(0),
                       backgroundColor.withOpacity(0.8),
-                    ],
-                  ),
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  color: backgroundColor.withOpacity(0.8),
-                ),
-              ),
-              Container(
-                width: horizontalPadding,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
                       backgroundColor.withOpacity(0.8),
                       backgroundColor.withOpacity(0),
                     ],
+                    stops: [0, stopPercentage, 1-stopPercentage, 1,],
                   ),
                 ),
-              ),
-            ],
+              );
+            },
           ),
         ),
         Material(
@@ -512,6 +503,111 @@ class TitleTextBackground extends StatelessWidget {
 
 }
 
+class ChangeNotifierBuilder<T extends ChangeNotifier> extends StatelessWidget{
+
+  final T changeNotifier;
+  final Widget? child;
+  final Widget Function(BuildContext context, T value, Widget? child) builder;
+
+  ChangeNotifierBuilder({
+    required this.changeNotifier,
+    this.child,
+    required this.builder,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider<T>.value(
+      value: changeNotifier,
+      child: child,
+      builder: (context, child) {
+        return Consumer<T>(
+          builder: builder,
+          child: child,
+        );
+      },
+    );
+  }
+
+}
+
+class ChangeNotifierSelectorBuilder<A extends ChangeNotifier, S> extends StatelessWidget{
+
+  final A changeNotifier;
+  final Widget? child;
+  final ValueWidgetBuilder<S> builder;
+  final S Function(BuildContext, A) selector;
+
+  ChangeNotifierSelectorBuilder({
+    required this.changeNotifier,
+    required this.selector,
+    this.child,
+    required this.builder,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider<A>.value(
+      value: changeNotifier,
+      child: child,
+      builder: (context, child) {
+        return Selector<A, S>(
+          selector: selector,
+          builder: builder,
+          child: child,
+        );
+      },
+    );
+  }
+
+}
+
+typedef Widget InitiallyAnimatedWidgetBuilder(AnimationController animationController, Widget? child);
+class InitiallyAnimatedWidget extends StatefulWidget {
+
+  InitiallyAnimatedWidgetBuilder builder;
+  Duration duration;
+  Widget? child;
+
+  InitiallyAnimatedWidget({
+    Key? key,
+    required this.builder,
+    required this.duration,
+    this.child,
+  }) : super(key: key);
+
+  @override
+  _InitiallyAnimatedWidgetState createState() => _InitiallyAnimatedWidgetState();
+
+}
+class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with SingleTickerProviderStateMixin {
+
+  late AnimationController animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    animationController = AnimationController(
+        vsync: this,
+        duration: widget.duration
+    );
+    animationController.forward();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: animationController,
+      child: widget.child,
+      builder: (context, child) {
+        return widget.builder(animationController, widget.child);
+      },
+    );
+  }
+
+}
 
 class PlatformExtended {
 

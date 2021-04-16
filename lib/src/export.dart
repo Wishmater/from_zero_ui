@@ -124,7 +124,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
         super(key: key);
 
   @override
-  _ExportState createState() => _ExportState();
+  ExportState createState() => ExportState();
 
   static Future<String> getDefaultDirectoryPath([String? addon]) async{
     String? result;
@@ -144,7 +144,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
 
 }
 
-class _ExportState extends State<Export> {
+class ExportState extends State<Export> {
 
   List<String> get supportedFormats => ["PDF", "PNG", if(widget.excelSheets?.call()!=null) 'Excel'];
 
@@ -245,6 +245,8 @@ class _ExportState extends State<Export> {
     currentPageNotifier.dispose();
     super.dispose();
   }
+
+  late Future<void> Function() export;
 
   int doneExports = 0;
   late String directoryPath;
@@ -445,6 +447,22 @@ class _ExportState extends State<Export> {
     } else {
       size = Size(mult*size.width, mult*size.height);
     }
+    export = () async {
+      if (!Platform.isAndroid || (await Permission.storage.request().isGranted)){
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) {
+            return LoadingSign();
+          },
+        );
+        doneExports = 0;
+        _export(size);
+        while (doneExports<widget.childrenCount!(currentSize, portrait, scale, format,)){
+          await Future.delayed(100.milliseconds);
+        }
+      }
+    };
     return Dialog(
       insetPadding: EdgeInsets.all(16),
       child: Container(
@@ -704,20 +722,7 @@ class _ExportState extends State<Export> {
                             ),
                             textColor: Colors.blue,
                             onPressed: () async{
-                              if (!Platform.isAndroid || (await Permission.storage.request().isGranted)){
-                                showDialog(
-                                  context: context,
-                                  barrierDismissible: false,
-                                  builder: (context) {
-                                    return LoadingSign();
-                                  },
-                                );
-                                doneExports = 0;
-                                _export(size);
-                                while (doneExports<widget.childrenCount!(currentSize, portrait, scale, format,)){
-                                  await Future.delayed(100.milliseconds);
-                                }
-                              }
+                              await export();
                               Navigator.of(context).pop();
                               if (filePath!=null){
                                 Navigator.of(context).pop();

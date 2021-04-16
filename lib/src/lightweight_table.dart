@@ -17,7 +17,7 @@ import 'package:implicitly_animated_reorderable_list/transitions.dart';
 import 'package:scroll_to_index/scroll_to_index.dart';
 
 typedef OnRowHoverCallback = void Function(RowModel row, bool focused);
-typedef OnCheckBoxSelectedCallback = void Function(RowModel row, bool? focused);
+typedef OnCheckBoxSelectedCallback = bool? Function(RowModel row, bool? focused);
 typedef OnHeaderHoverCallback = void Function(int i, bool focused);
 typedef OnCellTapCallback = ValueChanged<RowModel>? Function(int index,);
 typedef OnCellHoverCallback = OnRowHoverCallback? Function(int index,);
@@ -45,7 +45,7 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
   /// Only used if layoutWidgetType==listViewBuilder
   final double verticalPadding;
   final double horizontalPadding;
-  final ValueChanged<bool?>? onAllSelected;
+  final bool? Function(bool? value, List<RowModel> filtered)? onAllSelected;
   final int? initialSortedColumnIndex;
   final bool showFirstHorizontalDivider;
   @deprecated final Widget? horizontalDivider;
@@ -75,6 +75,7 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
   final bool rowGestureDetectorCoversRowAddon;
   final bool applyStickyHeadersToRowAddon;
   final bool applyRowBackgroundToRowAddon;
+  final Widget? errorWidget;
 
   TableFromZero({
     required List<RowModel> rows,
@@ -114,6 +115,7 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
     this.exportPath,
     this.applyScrollToRowAddon = true,
     this.rowGestureDetectorCoversRowAddon = true,
+    this.errorWidget,
     bool? applyStickyHeadersToRowAddon,
     bool? applyRowBackgroundToRowAddon,
     Key? key,
@@ -127,6 +129,16 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
 
 }
 
+
+
+class TrackingScrollControllerFixedPosition extends TrackingScrollController {
+
+  ScrollPosition get position {
+    assert(positions.isNotEmpty, 'ScrollController not attached to any scroll views.');
+    return positions.first;
+  }
+
+}
 
 class TableFromZeroState extends State<TableFromZero> {
 
@@ -164,7 +176,7 @@ class TableFromZeroState extends State<TableFromZero> {
   }
 
   late ScrollController _scrollController;
-  late TrackingScrollController sharedController;
+  late TrackingScrollControllerFixedPosition sharedController;
   List<List<dynamic>> availableFilters = [];
   RowModel? headerRowModel;
 
@@ -175,7 +187,7 @@ class TableFromZeroState extends State<TableFromZero> {
   @override
   void initState() {
     super.initState();
-    sharedController = TrackingScrollController();
+    sharedController = TrackingScrollControllerFixedPosition();
     sharedController.addListener(() {
       if (!lockScrollUpdates){
         double? newPosition;
@@ -310,7 +322,7 @@ class TableFromZeroState extends State<TableFromZero> {
               position: Tween<Offset>(begin: Offset(-0.33, 0), end: Offset(0, 0)).animate(animation),
               child: SizeFadeTransition(
                 sizeFraction: 0.7,
-                curve: Curves.easeInOut,
+                curve: Curves.easeOutCubic,
                 animation: animation,
                 child: _getRow(context, index, item),
               ),
@@ -372,7 +384,7 @@ class TableFromZeroState extends State<TableFromZero> {
               position: Tween<Offset>(begin: Offset(-0.33, 0), end: Offset(0, 0)).animate(animation),
               child: SizeFadeTransition(
                 sizeFraction: 0.7,
-                curve: Curves.easeInOut,
+                curve: Curves.easeOutCubic,
                 animation: animation,
                 child: _getRow(context, index, item),
               ),
@@ -406,8 +418,29 @@ class TableFromZeroState extends State<TableFromZero> {
           sticky: widget.applyStickyHeaders,
         );
       }
+      // bool showingHeaders = widget.showHeaders && widget.columns!=null && headerRowModel!=null;
+      // result = SliverStickyHeader(
+      //   header: ScrollbarFromZero(
+      //     controller: sharedController,
+      //     child: Align(
+      //       alignment: ,
+      //       child: showingHeaders ? _getRow(context, -1, headerRowModel!)
+      //           : SingleChildScrollView(
+      //             controller: sharedController,
+      //             scrollDirection: Axis.horizontal,
+      //             child: Container(),
+      //           ),
+      //     ),
+      //   ),
+      //   sliver: SliverPadding(
+      //     padding: EdgeInsets.only(top: (showingHeaders?headerRowModel!.height:0), bottom: 12,),
+      //     sliver: result,
+      //   ),
+      //   overlapsContent: true,
+      //   sticky: widget.applyStickyHeaders,
+      // );
       result = SliverPadding(
-        padding: EdgeInsets.symmetric(vertical: widget.verticalPadding,),
+        padding: EdgeInsets.only(top: widget.verticalPadding, bottom: widget.verticalPadding,),
         sliver: result,
       );
       if (widget.layoutWidgetType==TableFromZero.listViewBuilder
@@ -422,7 +455,6 @@ class TableFromZeroState extends State<TableFromZero> {
       }
 
     }
-
     return result;
   }
 
@@ -438,7 +470,7 @@ class TableFromZeroState extends State<TableFromZero> {
 
     if (row is _ErrorRow){
       return AnimatedEntryWidget(
-        child: Padding(
+        child: widget.errorWidget ?? Padding(
           padding: EdgeInsets.symmetric(vertical: 16),
           child: ErrorSign(
             icon: Icon(MaterialCommunityIcons.clipboard_alert_outline, size: 64, color: Theme.of(context).disabledColor,),
@@ -446,7 +478,7 @@ class TableFromZeroState extends State<TableFromZero> {
             subtitle: filters.any((element) => element!=EmptyFilter()) ? "Intente desactivar algunos filtros." : "No existen datos correspondientes a esta consulta.",
           ),
         ),
-        transitionBuilder: (child, animation) => SizeFadeTransition(animation: animation, child: child, sizeFraction: 0.7, curve: Curves.easeOut,),
+        transitionBuilder: (child, animation) => SizeFadeTransition(animation: animation, child: child, sizeFraction: 0.7, curve: Curves.easeOutCubic,),
       );
     }
 
@@ -535,13 +567,27 @@ class TableFromZeroState extends State<TableFromZero> {
           );
           j = (j-1)~/2;
         }
-        if (row.onCheckBoxSelected!=null){
+        if (i>=0&&row.onCheckBoxSelected!=null || widget.onAllSelected!=null){
           if (j==0){
             return SizedBox(
               width: TableFromZero._checkmarkWidth,
-              child: LoadingCheckbox(
-                value: i<0 ? widget.rows.every((element) => element.selected==true) : row.selected,
-                onChanged: (value) => row.onCheckBoxSelected!(row, value),
+              child: StatefulBuilder(
+                builder: (context, checkboxSetState) {
+                  return LoadingCheckbox(
+                    value: i<0 ? filtered.every((element) => element.selected==true) : row.selected,
+                    onChanged: (value) {
+                      if (i<0) {
+                        if (widget.onAllSelected!(value, filtered) ?? false) {
+                          setState(() {});
+                        }
+                      } else {
+                        if (row.onCheckBoxSelected!(row, value) ?? false) {
+                          setState(() {});
+                        }
+                      }
+                    },
+                  );
+                },
               ),
             );
           } else{
@@ -586,7 +632,7 @@ class TableFromZeroState extends State<TableFromZero> {
         background = SizedBox(
           height: row.height + widget.itemPadding.vertical,
           child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) => true,
+            onNotification: (notification) => i>=0,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               controller: sharedController,
@@ -599,7 +645,7 @@ class TableFromZeroState extends State<TableFromZero> {
         result = SizedBox(
           height: row.height + widget.itemPadding.vertical,
           child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) => true,
+            onNotification: (notification) => i>=0,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               controller: sharedController,
@@ -636,7 +682,7 @@ class TableFromZeroState extends State<TableFromZero> {
       }
       if (!widget.applyRowBackgroundToRowAddon) {
         result = Stack(
-          key: row.rowKey,
+          key: row.rowKey ?? ValueKey(row.id),
           children: [
             Positioned.fill(child: background,),
             result,
@@ -647,7 +693,7 @@ class TableFromZeroState extends State<TableFromZero> {
         Widget addon = widget.headerAddon!;
         if (widget.applyMinWidthToHeaderAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
           addon = NotificationListener<ScrollNotification>(
-            onNotification: (notification) => true,
+            onNotification: (notification) => i>=0,
             child: SingleChildScrollView(
               controller: sharedController,
               scrollDirection: Axis.horizontal,
@@ -674,7 +720,7 @@ class TableFromZeroState extends State<TableFromZero> {
         Widget addon = row.rowAddon!;
         if (widget.applyScrollToRowAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
           addon = NotificationListener<ScrollNotification>(
-            onNotification: (notification) => true,
+            onNotification: (notification) => i>=0,
             child: SingleChildScrollView(
               controller: sharedController,
               scrollDirection: Axis.horizontal,
@@ -712,7 +758,7 @@ class TableFromZeroState extends State<TableFromZero> {
       }
       if (widget.applyRowBackgroundToRowAddon) {
         result = Stack(
-          key: row.rowKey,
+          key: row.rowKey ?? ValueKey(row.id),
           children: [
             Positioned.fill(child: background,),
             result,
@@ -730,7 +776,7 @@ class TableFromZeroState extends State<TableFromZero> {
         );
       }
       if (constraints!=null) {
-        if (widget.minWidth!=null && constraints.maxWidth<widget.minWidth!){
+        if (i>=0 && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!){
           result = ScrollOpacityGradient(
             scrollController: sharedController,
             direction: OpacityGradient.horizontal,
@@ -890,7 +936,7 @@ class TableFromZeroState extends State<TableFromZero> {
   BoxDecoration _getDecoration(RowModel row, int i, int j,){
     bool header = i < 0;
     Color? backgroundColor = _getBackgroundColor(row, i, j, header);
-    bool applyDarker = i>=0 && widget.applyRowAlternativeColors==true
+    bool applyDarker = widget.applyRowAlternativeColors==true
         && _shouldApplyDarkerBackground(backgroundColor, row, i, j, header);
     if (header){
       backgroundColor = backgroundColor ?? widget.headerRowColor;
@@ -949,9 +995,11 @@ class TableFromZeroState extends State<TableFromZero> {
   }
   bool _shouldApplyDarkerBackground(Color? current, RowModel row, int i, int j, bool header){
 //    if (filtered[i]!=row) return false;
-    if (i==0){
+    if (i<=0) {
       return false;
-    } else{
+    } else if (i > filtered.length) {
+      return i.isOdd;
+    } else {
       Color? previous = _getBackgroundColor(filtered[i-1], i-1, j, header);
       if (previous!=current) return false;
       return !_shouldApplyDarkerBackground(previous, filtered[i-1], i-1, j, header);
@@ -992,7 +1040,7 @@ class TableFromZeroState extends State<TableFromZero> {
           if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
           if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1;
         }
-        return sortedAscending==null || sortedAscending
+        return sortedAscending
             ? a.values[sortedColumnIndex!]!.compareTo(b.values[sortedColumnIndex!])
             : b.values[sortedColumnIndex!]!.compareTo(a.values[sortedColumnIndex!]);
       }));
