@@ -503,6 +503,38 @@ class TitleTextBackground extends StatelessWidget {
 
 }
 
+
+class IconButtonBackground extends StatelessWidget {
+
+  Widget child;
+
+  IconButtonBackground({required this.child,});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(666)),
+        gradient: RadialGradient(
+            colors: [
+              (Theme.of(context).brightness==Brightness.light
+                  ? Colors.grey.shade100 : Color.fromRGBO(55, 55, 55, 1)).withOpacity(0.8),
+              (Theme.of(context).brightness==Brightness.light
+                  ? Colors.grey.shade100 : Color.fromRGBO(55, 55, 55, 1)).withOpacity(0),
+            ],
+            stops: [
+              0.5,
+              1
+            ]
+        ),
+      ),
+      child: child,
+    );
+  }
+
+}
+
+
 class ChangeNotifierBuilder<T extends ChangeNotifier> extends StatelessWidget{
 
   final T changeNotifier;
@@ -591,7 +623,7 @@ class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with 
     super.initState();
     animationController = AnimationController(
         vsync: this,
-        duration: widget.duration
+        duration: widget.duration,
     );
     animationController.forward();
   }

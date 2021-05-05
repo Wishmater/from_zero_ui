@@ -120,7 +120,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
       applyScrollToRowAddon: false,
       applyRowBackgroundToRowAddon: true,
       applyRowAlternativeColors: true,
-      applyStickyHeadersToRowAddon: false,
+      // applyStickyHeadersToRowAddon: false,
       rowGestureDetectorCoversRowAddon: true,
       rows: List.generate(100, (index) => ["Dummy data " + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",]).map((e) {
         return SimpleRowModel(

@@ -23,7 +23,7 @@ typedef OnCellTapCallback = ValueChanged<RowModel>? Function(int index,);
 typedef OnCellHoverCallback = OnRowHoverCallback? Function(int index,);
 
 
-class TableFromZero extends StatefulWidget { //TODO 2 internationalize
+class TableFromZero extends StatefulWidget {
 
   @deprecated static const int column = 0;
   static const int listViewBuilder = 1;
@@ -53,10 +53,11 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
   final int autoSizeTextMaxLines;
   final double? headerHeight;
   final Widget Function(BuildContext context, RowModel row, ColModel? col, int j)? cellBuilder;
-  final Widget Function(BuildContext context, int i, RowModel row)? rowBuilder;
+  final Widget Function(BuildContext context, RowModel row)? rowBuilder;
   final bool applyStickyHeaders;
   final Widget? headerAddon;
   final bool applyRowAlternativeColors;
+  final bool useSmartRowAlternativeColors;
   final double? minWidth;
   final double? maxWidth;
   final bool applyMinWidthToHeaderAddon;
@@ -116,6 +117,7 @@ class TableFromZero extends StatefulWidget { //TODO 2 internationalize
     this.applyScrollToRowAddon = true,
     this.rowGestureDetectorCoversRowAddon = true,
     this.errorWidget,
+    this.useSmartRowAlternativeColors = true,
     bool? applyStickyHeadersToRowAddon,
     bool? applyRowBackgroundToRowAddon,
     Key? key,
@@ -224,7 +226,7 @@ class TableFromZeroState extends State<TableFromZero> {
       headerRowModel = SimpleRowModel(
         id: "header_row",
         values: List.generate(widget.columns!.length, (index) => widget.columns![index].name),
-        onCheckBoxSelected: widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null,
+        onCheckBoxSelected:  widget.onAllSelected!=null||widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null,
         actions: actionsIndex!=-1 ? List.generate(widget.rows[actionsIndex].actions!.length, (index) => SizedBox.shrink()) : null,
         selected: true,
         height: widget.headerHeight ?? 38,
@@ -300,11 +302,11 @@ class TableFromZeroState extends State<TableFromZero> {
           result = Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: List.generate(childCount, (i) => _getRow(context, i, filtered[i])),
+            children: List.generate(childCount, (i) => _getRow(context, filtered[i])),
           );
         } else {
           result = ListView.builder(
-            itemBuilder: (context, i) => _getRow(context, i, filtered[i]),
+            itemBuilder: (context, i) => _getRow(context, filtered[i]),
             itemCount: childCount,
             shrinkWrap: widget.layoutWidgetType == TableFromZero.column,
             controller: _scrollController,
@@ -324,7 +326,7 @@ class TableFromZeroState extends State<TableFromZero> {
                 sizeFraction: 0.7,
                 curve: Curves.easeOutCubic,
                 animation: animation,
-                child: _getRow(context, index, item),
+                child: _getRow(context, item),
               ),
             );
           },
@@ -340,7 +342,7 @@ class TableFromZeroState extends State<TableFromZero> {
               position: Tween<Offset>(begin: Offset(-0.10, 0), end: Offset(0, 0)).animate(animation),
               child: FadeTransition(
                 opacity: animation,
-                child: _getRow(context, 1, item),
+                child: _getRow(context, item),
               ),
             );
           },
@@ -350,11 +352,42 @@ class TableFromZeroState extends State<TableFromZero> {
         result = SizedBox.shrink();
       }
       if (widget.applyStickyHeaders && widget.showHeaders && widget.columns!=null && headerRowModel!=null){
-        result = StickyHeader(
-          header: _getRow(context, -1, headerRowModel!,),
+        final header = _getRow(context, headerRowModel!,);
+        result = StickyHeaderBuilder(
           content: result,
-          stickOffset: widget.stickyOffset,
           controller: widget.mainScrollController,
+          stickOffset: widget.stickyOffset,
+          builder: (context, state) {
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                header,
+                if (state<0)
+                  Positioned(
+                    left: 0, right: 0, bottom: -2,
+                    child: InitiallyAnimatedWidget(
+                      duration: Duration(milliseconds: 300,),
+                      builder: (animationController, child) {
+                        return Opacity(
+                          opacity: CurveTween(curve: Curves.easeOutCubic).evaluate(animationController),
+                          child: Center(
+                            child: SizedBox(
+                              width: widget.maxWidth ?? double.infinity, height: 2,
+                              child: const CustomPaint(
+                                painter: const SimpleShadowPainter(
+                                  direction: SimpleShadowPainter.down,
+                                  shadowOpacity: 0.2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            );
+          },
         );
       }
       result = Padding(
@@ -369,7 +402,7 @@ class TableFromZeroState extends State<TableFromZero> {
           || widget.layoutWidgetType==TableFromZero.sliverListViewBuilder){
         result = SliverList(
           delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int i) => _getRow(context, i, filtered[i]),
+                (BuildContext context, int i) => _getRow(context, filtered[i]),
             childCount: childCount,
           ),
         );
@@ -386,7 +419,7 @@ class TableFromZeroState extends State<TableFromZero> {
                 sizeFraction: 0.7,
                 curve: Curves.easeOutCubic,
                 animation: animation,
-                child: _getRow(context, index, item),
+                child: _getRow(context, item),
               ),
             );
           },
@@ -402,7 +435,7 @@ class TableFromZeroState extends State<TableFromZero> {
               position: Tween<Offset>(begin: Offset(-0.10, 0), end: Offset(0, 0)).animate(animation),
               child: FadeTransition(
                 opacity: animation,
-                child: _getRow(context, 1, item),
+                child: _getRow(context, item),
               ),
             );
           },
@@ -412,10 +445,41 @@ class TableFromZeroState extends State<TableFromZero> {
         result = SizedBox.shrink();
       }
       if (widget.showHeaders && widget.columns!=null && headerRowModel!=null){
-        result = SliverStickyHeader(
-          header: _getRow(context, -1, headerRowModel!),
+        final header = _getRow(context, headerRowModel!);
+        result = SliverStickyHeader.builder(
           sliver: result,
           sticky: widget.applyStickyHeaders,
+          builder: (context, state) {
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                header,
+                if (state.isPinned)
+                  Positioned(
+                    left: 0, right: 0, bottom: -2,
+                    child: InitiallyAnimatedWidget(
+                      duration: Duration(milliseconds: 300,),
+                      builder: (animationController, child) {
+                        return Opacity(
+                          opacity: CurveTween(curve: Curves.easeOutCubic).evaluate(animationController),
+                          child: Center(
+                            child: SizedBox(
+                              width: widget.maxWidth ?? double.infinity, height: 2,
+                              child: const CustomPaint(
+                                painter: const SimpleShadowPainter(
+                                  direction: SimpleShadowPainter.down,
+                                  shadowOpacity: 0.2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            );
+          },
         );
       }
       // bool showingHeaders = widget.showHeaders && widget.columns!=null && headerRowModel!=null;
@@ -459,14 +523,14 @@ class TableFromZeroState extends State<TableFromZero> {
   }
 
 
-  Widget _getRow(BuildContext context, int i, RowModel row){
-    if (i<0 || widget.rowBuilder==null){
-      return _defaultGetRow(context, i, row);
+  Widget _getRow(BuildContext context, RowModel row){
+    if (row==headerRowModel || widget.rowBuilder==null){
+      return _defaultGetRow(context, row);
     } else{
-      return widget.rowBuilder!(context, i, row);
+      return widget.rowBuilder!(context, row);
     }
   }
-  Widget _defaultGetRow(BuildContext context, int i, RowModel row){
+  Widget _defaultGetRow(BuildContext context, RowModel row){
 
     if (row is _ErrorRow){
       return AnimatedEntryWidget(
@@ -474,7 +538,7 @@ class TableFromZeroState extends State<TableFromZero> {
           padding: EdgeInsets.symmetric(vertical: 16),
           child: ErrorSign(
             icon: Icon(MaterialCommunityIcons.clipboard_alert_outline, size: 64, color: Theme.of(context).disabledColor,),
-            title: "No hay datos que mostrar...", //TODO 3 internationalize
+            title: "No hay datos que mostrar...",
             subtitle: filters.any((element) => element!=EmptyFilter()) ? "Intente desactivar algunos filtros." : "No existen datos correspondientes a esta consulta.",
           ),
         ),
@@ -519,12 +583,12 @@ class TableFromZeroState extends State<TableFromZero> {
             clipBehavior: Clip.none,
             children: [
               Positioned(
-                top: i<=0 ? 0 : -1,
-                bottom: i==filtered.length-1 ? 0 : -1,
+                top: row==headerRowModel ? 0 : -1,
+                bottom: -1, // bottom: i==filtered.length-1 ? 0 : -1,
                 left: j==0 ? 0 : -1,
                 right: j==cols-1 ? 0 : -1,
                 child: Container(
-                  decoration: _getDecoration(row, i, j),
+                  decoration: _getDecoration(row, j),
                 ),
               ),
               if (result!=null)
@@ -533,7 +597,7 @@ class TableFromZeroState extends State<TableFromZero> {
           );
         } else{
           result = Container(
-            decoration: _getDecoration(row, i, j),
+            decoration: _getDecoration(row, j),
             child: result,
           );
         }
@@ -567,16 +631,16 @@ class TableFromZeroState extends State<TableFromZero> {
           );
           j = (j-1)~/2;
         }
-        if (i>=0&&row.onCheckBoxSelected!=null || widget.onAllSelected!=null){
+        if (row.onCheckBoxSelected!=null){
           if (j==0){
             return SizedBox(
               width: TableFromZero._checkmarkWidth,
               child: StatefulBuilder(
                 builder: (context, checkboxSetState) {
                   return LoadingCheckbox(
-                    value: i<0 ? filtered.every((element) => element.selected==true) : row.selected,
+                    value: row==headerRowModel ? filtered.every((element) => element.selected==true) : row.selected,
                     onChanged: (value) {
-                      if (i<0) {
+                      if (row==headerRowModel) {
                         if (widget.onAllSelected!(value, filtered) ?? false) {
                           setState(() {});
                         }
@@ -600,10 +664,10 @@ class TableFromZeroState extends State<TableFromZero> {
         Widget result = Container(
           height: row.height,
           alignment: Alignment.center,
-          padding: i==-1 ? null : widget.itemPadding,
+          padding: row==headerRowModel ? null : widget.itemPadding,
           child: Container(
               width: double.infinity,
-              child: (i<0 ? defaultHeaderCellBuilder : widget.cellBuilder??defaultCellBuilder)
+              child: (row==headerRowModel ? defaultHeaderCellBuilder : widget.cellBuilder??defaultCellBuilder)
                   .call(context, row, widget.columns==null?null:widget.columns![j], j)
           ),
         );
@@ -632,7 +696,7 @@ class TableFromZeroState extends State<TableFromZero> {
         background = SizedBox(
           height: row.height + widget.itemPadding.vertical,
           child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) => i>=0,
+            onNotification: (notification) => row!=headerRowModel,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               controller: sharedController,
@@ -645,7 +709,7 @@ class TableFromZeroState extends State<TableFromZero> {
         result = SizedBox(
           height: row.height + widget.itemPadding.vertical,
           child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) => i>=0,
+            onNotification: (notification) => row!=headerRowModel,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               controller: sharedController,
@@ -689,11 +753,11 @@ class TableFromZeroState extends State<TableFromZero> {
           ],
         );
       }
-      if (i==-1 && widget.headerAddon!=null) {
+      if (row==headerRowModel && widget.headerAddon!=null) {
         Widget addon = widget.headerAddon!;
         if (widget.applyMinWidthToHeaderAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
           addon = NotificationListener<ScrollNotification>(
-            onNotification: (notification) => i>=0,
+            onNotification: (notification) => row!=headerRowModel,
             child: SingleChildScrollView(
               controller: sharedController,
               scrollDirection: Axis.horizontal,
@@ -720,7 +784,7 @@ class TableFromZeroState extends State<TableFromZero> {
         Widget addon = row.rowAddon!;
         if (widget.applyScrollToRowAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
           addon = NotificationListener<ScrollNotification>(
-            onNotification: (notification) => i>=0,
+            onNotification: (notification) => row!=headerRowModel,
             child: SingleChildScrollView(
               controller: sharedController,
               scrollDirection: Axis.horizontal,
@@ -736,7 +800,7 @@ class TableFromZeroState extends State<TableFromZero> {
             controller: widget.mainScrollController,
             header: result,
             content: addon,
-            stickOffset: i==0 ? 0 : widget.stickyOffset+headerRowModel!.height,
+            stickOffset: filtered.indexOf(row)==0 ? 0 : widget.stickyOffset+headerRowModel!.height,
           );
         } else{
           result = Column(
@@ -776,7 +840,7 @@ class TableFromZeroState extends State<TableFromZero> {
         );
       }
       if (constraints!=null) {
-        if (i>=0 && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!){
+        if (row!=headerRowModel && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!){
           result = ScrollOpacityGradient(
             scrollController: sharedController,
             direction: OpacityGradient.horizontal,
@@ -897,7 +961,7 @@ class TableFromZeroState extends State<TableFromZero> {
                         });
                       },
                       initialValue: filters[j],
-                      tooltip: "Filtros", //TODO 3 internationalize
+                      tooltip: "Filtros",
                     ),
                   ),
                 )
@@ -933,11 +997,11 @@ class TableFromZeroState extends State<TableFromZero> {
     return result;
   }
 
-  BoxDecoration _getDecoration(RowModel row, int i, int j,){
-    bool header = i < 0;
-    Color? backgroundColor = _getBackgroundColor(row, i, j, header);
+  BoxDecoration _getDecoration(RowModel row, int j,){
+    bool header = row==headerRowModel;
+    Color? backgroundColor = _getBackgroundColor(row, j, header);
     bool applyDarker = widget.applyRowAlternativeColors==true
-        && _shouldApplyDarkerBackground(backgroundColor, row, i, j, header);
+        && _shouldApplyDarkerBackground(backgroundColor, row, j, header);
     if (header){
       backgroundColor = backgroundColor ?? widget.headerRowColor;
     }
@@ -958,9 +1022,9 @@ class TableFromZeroState extends State<TableFromZero> {
     return BoxDecoration(color: backgroundColor);
 //    List<double> stops = [0, 0.1, 0.55, 1,];
 //    if (_getAlignment(j)==TextAlign.right)
-//      stops = [0, 0.45, 0.9, 1,]; //TODO 3 make gradient edges take the exact same lenght as padding
+//      stops = [0, 0.45, 0.9, 1,];
 //    return backgroundColor!=null ? BoxDecoration(
-//        gradient: LinearGradient( //TODO 3 add an option to disable gradient
+//        gradient: LinearGradient(
 //            colors: [
 //              backgroundColor.withOpacity(0),
 //              backgroundColor.withOpacity(backgroundColor.opacity*(header ? 0.5 : 1)),
@@ -976,7 +1040,7 @@ class TableFromZeroState extends State<TableFromZero> {
 //
 //    }
   }
-  Color? _getBackgroundColor(RowModel row, int i, int j, bool header){
+  Color? _getBackgroundColor(RowModel row, int j, bool header){
     Color? backgroundColor;
     if (header){
       backgroundColor = widget.columns!=null && j<widget.columns!.length ? widget.columns![j].backgroundColor : null;
@@ -993,16 +1057,17 @@ class TableFromZeroState extends State<TableFromZero> {
     }
     return backgroundColor;
   }
-  bool _shouldApplyDarkerBackground(Color? current, RowModel row, int i, int j, bool header){
+  bool _shouldApplyDarkerBackground(Color? current, RowModel row, int j, bool header){
 //    if (filtered[i]!=row) return false;
+    int i = filtered.indexOf(row);
     if (i<=0) {
       return false;
-    } else if (i > filtered.length) {
+    } else if (!widget.useSmartRowAlternativeColors || i > filtered.length) {
       return i.isOdd;
     } else {
-      Color? previous = _getBackgroundColor(filtered[i-1], i-1, j, header);
+      Color? previous = _getBackgroundColor(filtered[i-1], j, header);
       if (previous!=current) return false;
-      return !_shouldApplyDarkerBackground(previous, filtered[i-1], i-1, j, header);
+      return !_shouldApplyDarkerBackground(previous, filtered[i-1], j, header);
     }
   }
 

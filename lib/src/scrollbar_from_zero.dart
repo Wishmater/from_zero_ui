@@ -85,9 +85,10 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
   @override
   void didUpdateWidget(covariant ScrollbarFromZero oldWidget) {
+    super.didUpdateWidget(oldWidget);
     removeListeners(oldWidget.controller);
     addListeners(widget.controller);
-    super.didUpdateWidget(oldWidget);
+    _onScrollListener();
   }
 
   @override
@@ -119,6 +120,16 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
   void _onScrollListener () {
     _updateMaxScrollExtent();
+    if (widget.controller==null) {
+      setState(() {});
+      return;
+    }
+    if (!widget.controller!.hasClients) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        _onScrollListener();
+      });
+      return;
+    }
     if (widget.controller!.position.extentAfter>0){
       setState(() {
         topFlex = 100*widget.controller!.position.extentBefore ~/ widget.controller!.position.maxScrollExtent;

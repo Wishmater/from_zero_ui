@@ -4,7 +4,7 @@ export 'package:from_zero_ui/src/appbar_from_zero.dart';
 export 'package:from_zero_ui/src/scaffold_from_zero.dart';
 export 'package:from_zero_ui/src/scrollbar_from_zero.dart';
 export 'package:from_zero_ui/src/drawer_menu_from_zero.dart';
-// export 'package:from_zero_ui/src/image_from_zero.dart';
+export 'package:from_zero_ui/src/image_from_zero.dart';
 export 'package:from_zero_ui/src/snackbar_helper.dart';
 export 'package:from_zero_ui/src/settings.dart';
 export 'package:from_zero_ui/src/app_update.dart';

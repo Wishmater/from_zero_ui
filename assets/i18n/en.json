@@ -20,6 +20,6 @@
     "update_available_desc": "A newer version of this app is available, do you want to download it now?",
     "cancel": "Cancel",
     "update": "Update",
-    "restart_warning": "The app will be restarted when update is finished."
-
+    "restart_warning": "The app will be restarted when update is finished.",
+    "close": "Close"
 }
