@@ -93,10 +93,12 @@ Widget _defaultOverflowBuilder(BuildContext context, String title, Widget? icon)
     children: [
       if (icon!=null) IconTheme(data: Theme.of(context).iconTheme.copyWith(color: Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white), child: icon,),
       if (icon!=null) SizedBox(width: 16,),
-      Padding(
-        padding: EdgeInsets.only(bottom: 2),
-        child: Text(title, style: TextStyle(fontSize: 16),),
-      )
+      Expanded(
+        child: Padding(
+          padding: EdgeInsets.only(bottom: 2),
+          child: Text(title, style: TextStyle(fontSize: 16),),
+        ),
+      ),
     ],
   );
 }

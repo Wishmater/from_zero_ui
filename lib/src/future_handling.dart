@@ -39,17 +39,27 @@ class ErrorCard extends StatelessWidget {
   String? subtitle;
   Widget? icon;
   VoidCallback? onRetry;
+  EdgeInsets padding;
 
-  ErrorCard({required this.title, this.subtitle, this.onRetry, this.icon});
+  ErrorCard({
+    required this.title,
+    this.subtitle,
+    this.onRetry,
+    this.icon,
+    this.padding = EdgeInsets.zero,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: ErrorSign(
-        title: title,
-        subtitle: subtitle,
-        onRetry: onRetry,
-        icon: icon,
+      child: Padding(
+        padding: padding,
+        child: ErrorSign(
+          title: title,
+          subtitle: subtitle,
+          onRetry: onRetry,
+          icon: icon,
+        ),
       ),
     );
   }
@@ -67,37 +77,40 @@ class ErrorSign extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon!=null)
-              icon!,
-            if (icon!=null)
-              SizedBox(height: 6,),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headline6,
-              textAlign: TextAlign.center,
-            ),
-            if (subtitle!=null)
-              SizedBox(height: 12,),
-            if (subtitle!=null)
+    return IconTheme(
+      data: Theme.of(context).iconTheme.copyWith(size: 64, color: Theme.of(context).errorColor,),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon!=null)
+                icon!,
+              if (icon!=null)
+                SizedBox(height: 6,),
               Text(
-                subtitle!,
-                style: Theme.of(context).textTheme.bodyText1,
+                title,
+                style: Theme.of(context).textTheme.headline6,
                 textAlign: TextAlign.center,
               ),
-            if (onRetry!=null)
-              SizedBox(height: 12,),
-            if (onRetry!=null)
-              RaisedButton(
-                child: Text(FromZeroLocalizations.of(context).translate("retry")), //TODO 3 internationalize
-                onPressed: onRetry,
-              ),
-          ],
+              if (subtitle!=null)
+                SizedBox(height: 12,),
+              if (subtitle!=null)
+                Text(
+                  subtitle!,
+                  style: Theme.of(context).textTheme.bodyText1,
+                  textAlign: TextAlign.center,
+                ),
+              if (onRetry!=null)
+                SizedBox(height: 12,),
+              if (onRetry!=null)
+                RaisedButton(
+                  child: Text(FromZeroLocalizations.of(context).translate("retry")), //TODO 3 internationalize
+                  onPressed: onRetry,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -114,7 +127,7 @@ Widget _defaultLoadingBuilder(context){
 
 Widget _defaultErrorBuilder(context, error){
   return ErrorSign(
-    icon: Icon(Icons.error_outline, size: 64, color: Theme.of(context).errorColor,),
+    icon: Icon(Icons.error_outline), //size: 64, color: Theme.of(context).errorColor,
     title: FromZeroLocalizations.of(context).translate("error"),
     subtitle: FromZeroLocalizations.of(context).translate("error_details"),
   );
@@ -126,6 +139,12 @@ Widget _defaultTransitionBuilder(Widget child, Animation<double> animation){
     child: child,
   );
 }
+
+Widget _noneTransitionBuilder(Widget child, Animation<double> animation){
+  return child;
+}
+
+
 class FutureBuilderFromZero<T> extends StatefulWidget {
 
   final initialData;
@@ -145,12 +164,14 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
     this.errorBuilder: _defaultErrorBuilder,
     this.loadingBuilder: _defaultLoadingBuilder,
     this.initialData,
-    this.transitionBuilder: _defaultTransitionBuilder,
+    AnimatedSwitcherTransitionBuilder? transitionBuilder,
     this.keepPreviousDataWhileLoading = false,
     bool applyDefaultTransition = true,
-    this.duration = const Duration(milliseconds: 300),
+    Duration? duration,
     this.applyAnimatedContainerFromChildSize = false,
-  }) : super(key: key);
+  }) :  transitionBuilder = transitionBuilder ?? (applyDefaultTransition ? _defaultTransitionBuilder : _noneTransitionBuilder),
+        duration = duration ?? (applyDefaultTransition ? const Duration(milliseconds: 300) : Duration.zero),
+        super(key: key);
 
   @override
   _FutureBuilderFromZeroState<T> createState() => _FutureBuilderFromZeroState<T>();
@@ -267,6 +288,11 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
   @override
   _AnimatedContainerFromChildSizeState createState() => _AnimatedContainerFromChildSizeState();
 
+}
+
+class Export extends StatelessWidget {
+  // !!! TODO !!! fix export web issues and move it here or a lot of stuff will break
+  Widget build(context) { return Container(); }
 }
 
 class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromChildSize> {

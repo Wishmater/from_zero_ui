@@ -8,8 +8,12 @@ import 'package:provider/provider.dart';
 class FromZeroAppContentWrapper extends StatefulWidget {
 
   final child;
+  final bool drawerOpenByDefaultOnDesktop;
 
-  FromZeroAppContentWrapper({this.child});
+  FromZeroAppContentWrapper({
+    this.child,
+    this.drawerOpenByDefaultOnDesktop = true,
+  });
 
   @override
   _FromZeroAppContentWrapperState createState() => _FromZeroAppContentWrapperState();
@@ -18,8 +22,17 @@ class FromZeroAppContentWrapper extends StatefulWidget {
 
 class _FromZeroAppContentWrapperState extends State<FromZeroAppContentWrapper> {
 
-  final screen = ScreenFromZero();
-  final changeNotifier = ScaffoldFromZeroChangeNotifier();
+  late final ScreenFromZero screen;
+  late final ScaffoldFromZeroChangeNotifier changeNotifier;
+
+  @override
+  void initState() {
+    super.initState();
+    screen = ScreenFromZero();
+    changeNotifier = ScaffoldFromZeroChangeNotifier(
+      drawerOpenByDefaultOnDesktop: widget.drawerOpenByDefaultOnDesktop,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +112,12 @@ class ScreenFromZero extends ChangeNotifier{
 
 class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
 
+  final bool drawerOpenByDefaultOnDesktop;
+
+  ScaffoldFromZeroChangeNotifier({
+    this.drawerOpenByDefaultOnDesktop = true,
+  });
+
   Map<String, ValueNotifier<double>> drawerContentScrollOffsets = {};
   Map<String, bool> isTreeNodeExpanded = {};
 
@@ -106,7 +125,9 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
   double getCurrentDrawerWidth(PageFromZero page) {
     if (!_currentDrawerWidth.containsKey(page.pageScaffoldId)){
       ScaffoldFromZero scaffold = _scaffoldsStack[_pagesStack.indexOf(page)];
-      _currentDrawerWidth[page.pageScaffoldId] = scaffold.drawerWidth;
+      _currentDrawerWidth[page.pageScaffoldId] =
+          drawerOpenByDefaultOnDesktop  ? scaffold.drawerWidth
+                                        : scaffold.compactDrawerWidth;
       _blockNotify = true;
       _updateScaffolds(_previousWidth!<ScaffoldFromZero.screenSizeMedium, _previousWidth!);
       _blockNotify = false;

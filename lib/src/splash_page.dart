@@ -27,6 +27,7 @@ class _SplashPageState extends State<SplashPage> {
         WidgetsBinding.instance?.addPostFrameCallback((_) {
           Navigator.pushNamedAndRemoveUntil(context, value,  (route) => false);
         });
+        WidgetsBinding.instance?.scheduleFrame();
       }
     });
   }

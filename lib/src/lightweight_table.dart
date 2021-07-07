@@ -64,6 +64,7 @@ class TableFromZero extends StatefulWidget {
   final bool applyMaxWidthToHeaderAddon;
   final bool applyTooltipToCells;
   final Color? headerRowColor;
+  final bool applyHalfOpacityToHeaderColor;
   final TextStyle? defaultTextStyle;
   final ScrollController? mainScrollController;
   final double stickyOffset;
@@ -106,6 +107,7 @@ class TableFromZero extends StatefulWidget {
     this.applyMaxWidthToHeaderAddon = true,
     this.applyTooltipToCells = false,
     this.headerRowColor,
+    this.applyHalfOpacityToHeaderColor = true,
     this.defaultTextStyle,
     this.mainScrollController,
     this.stickyOffset = 0,
@@ -1009,8 +1011,8 @@ class TableFromZeroState extends State<TableFromZero> {
       backgroundColor = Material.of(context)!.color;
     }
     if (backgroundColor!=null) {
-      if (header){
-        backgroundColor =  backgroundColor.withOpacity(backgroundColor.opacity*(0.5));
+      if (widget.applyHalfOpacityToHeaderColor && header){
+        backgroundColor = backgroundColor.withOpacity(backgroundColor.opacity*(0.5));
       }
       if (backgroundColor.opacity<1 && Material.of(context)!.color!=null){
         backgroundColor = Color.alphaBlend(backgroundColor, Material.of(context)!.color!);

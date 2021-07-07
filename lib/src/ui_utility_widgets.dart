@@ -628,6 +628,11 @@ class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with 
     animationController.forward();
   }
 
+  void dispose() {
+    animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(

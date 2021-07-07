@@ -1,36 +1,44 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/painting.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_update.dart';
-import 'package:from_zero_ui/src/export.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:window_size/window_size.dart';
 
-Future<void> initHive() async{
-  await Hive.initFlutter();
-  File file = File ('update_temp_args.txt');
-  if (file.existsSync()){
-    final lines = file.readAsLinesSync();
-    file.delete();
-    setWindowTitle("Finishing Update...");
-    final maxSize = (await getCurrentScreen())!.frame;
-    setWindowFrame(Rect.fromCenter(
-        center: Offset(maxSize.width/2, maxSize.height/2),
-        width: 512, height: 112
-    ));
-    runApp(LoadingApp());
-    await UpdateFromZero.finishUpdate(
+bool alreadyInitedHive = false;
+Future<void> initHive([String? subdir]) async{
+  if (!alreadyInitedHive) {
+    alreadyInitedHive = true;
+    await Hive.initFlutter(subdir);
+  }
+  if (kIsWeb) {
+    await Hive.openBox("settings");
+  } else {
+    File file = File ('update_temp_args.txt');
+    if (file.existsSync()){
+      final lines = file.readAsLinesSync();
+      file.delete();
+      setWindowTitle("Finishing Update...");
+      final maxSize = (await getCurrentScreen())!.frame;
+      setWindowFrame(Rect.fromCenter(
+          center: Offset(maxSize.width/2, maxSize.height/2),
+          width: 512, height: 112
+      ));
+      runApp(LoadingApp());
+      await UpdateFromZero.finishUpdate(
         lines[0].replaceAll('%20', ' '),
         lines[1].replaceAll('%20', ' '),);
-  } else{
-    await Hive.openBox("settings");
+    } else{
+      await Hive.openBox("settings");
+    }
   }
 }
 

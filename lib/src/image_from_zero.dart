@@ -3,6 +3,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:extended_image/extended_image.dart';
+import 'dart:math';
 
 
 enum FullscreenType {
@@ -10,6 +11,12 @@ enum FullscreenType {
   onClick,
   asAction,
   onClickAndAsAction,
+}
+
+enum ImageSourceType {
+  assets,
+  file,
+  network,
 }
 
 class ImageFromZero extends StatefulWidget {
@@ -22,6 +29,8 @@ class ImageFromZero extends StatefulWidget {
   double maxScale;
   double minScale;
   bool retryable;
+  bool expand;
+  ImageSourceType sourceType;
 
   ImageFromZero({
     required this.url,
@@ -32,7 +41,12 @@ class ImageFromZero extends StatefulWidget {
     this.maxScale = 2.5,
     this.minScale = 0.8,
     this.retryable = false,
-  }) : fullscreenActions = fullscreenActions??actions;
+    this.expand = false,
+    ImageSourceType? sourceType,
+  })  : fullscreenActions = fullscreenActions??actions,
+        this.sourceType = sourceType ?? (url.length>=6 && url.substring(0, 6)=="assets" ? ImageSourceType.assets
+                                        : url.length>=4 && url.substring(0, 4)=="http" ? ImageSourceType.network
+                                        : ImageSourceType.file);
 
   @override
   _ImageFromZeroState createState() => _ImageFromZeroState();
@@ -62,25 +76,28 @@ class ImageFromZero extends StatefulWidget {
                     pageGestureAxis: SlideAxis.both);
               },
               slideAxis: SlideAxis.both,
-              child: ImageFromZero(
-                url: url,
-                fullscreenType: FullscreenType.none,
-                actions: [
-                  IconButtonBackground(
-                    child: IconButton(
-                      icon: Icon(Icons.close),
-                      tooltip: FromZeroLocalizations.of(context).translate('close'),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
+              child: SafeArea(
+                child: ImageFromZero(
+                  url: url,
+                  fullscreenType: FullscreenType.none,
+                  expand: true,
+                  actions: [
+                    IconButtonBackground(
+                      child: IconButton(
+                        icon: Icon(Icons.close),
+                        tooltip: FromZeroLocalizations.of(context).translate('close'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
                     ),
-                  ),
-                  ...actions
-                ],
-                gesturesEnabled: gesturesEnabled,
-                maxScale: maxScale,
-                minScale: minScale,
-                retryable: retryable,
+                    ...actions
+                  ],
+                  gesturesEnabled: gesturesEnabled,
+                  maxScale: maxScale,
+                  minScale: minScale,
+                  retryable: retryable,
+                ),
               ),
             ),
           );
@@ -126,21 +143,31 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
 
   @override
   Widget build(BuildContext context) {
-    final assets = widget.url.length>=6 && widget.url.substring(0, 6)=="assets";
     Widget result;
-    if (assets){
+    // return Image.asset(widget.url);
+    if (widget.sourceType==ImageSourceType.assets){
       result = ExtendedImage.asset( //TODO 3 why only this breaks on size change
         widget.url,
         fit: BoxFit.contain,
         enableSlideOutPage: true,
-        // enableLoadState: false,
-        // gaplessPlayback: true,
+        enableLoadState: false,
+        gaplessPlayback: true,
         loadStateChanged: _loadStateChanged,
         mode: widget.gesturesEnabled ? ExtendedImageMode.gesture : ExtendedImageMode.none,
         onDoubleTap: widget.gesturesEnabled ? _onDoubleTap : null,
         extendedImageGestureKey: extendedImageGestureKey,
       );
-    } else{
+    } else if (widget.sourceType==ImageSourceType.file) {
+      result = ExtendedImage.file(
+        getFileCompilingWebAsNull(widget.url)!,
+        fit: BoxFit.contain,
+        enableSlideOutPage: true,
+        loadStateChanged: _loadStateChanged,
+        mode: widget.gesturesEnabled ? ExtendedImageMode.gesture : ExtendedImageMode.none,
+        onDoubleTap: widget.gesturesEnabled ? _onDoubleTap : null,
+        extendedImageGestureKey: extendedImageGestureKey,
+      );
+    } else {
       result = ExtendedImage.network(
         widget.url,
         fit: BoxFit.contain,
@@ -173,8 +200,10 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
   Widget _loadStateChanged(ExtendedImageState state) {
     switch (state.extendedImageLoadState) {
       case LoadState.loading:
-        animate = true;
-        _controller.reset();
+        if (widget.sourceType==ImageSourceType.network) {
+          animate = true;
+          _controller.reset();
+        }
         return Center(child: CircularProgressIndicator());
 
     ///if you don't want override completed widget
@@ -188,75 +217,74 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
         } else{
           _controller.value = 1;
         }
-        var stacks = <Widget>[
-          Positioned.fill(
-            child: state.completedWidget,
-          ),
-        ];
-//        var stacks = <Widget>[
-//          Positioned.fill(
-//            child: GestureDetector(
-//              child: state.completedWidget,
-//              onTap: () {
-//                Navigator.of(context).push(
-//                  TransparentMaterialPageRoute(
-//                    builder: (_){
-//                      return _getGestureImage(url);
-//                    },
-//                  ),
-//                );
-//              },
-//            ),
-//          ),
-//        ];
-        if (widget.retryable) {
-          stacks.add(Material(
+        Widget result = state.completedWidget;
+        if (widget.fullscreenType==FullscreenType.onClick || widget.fullscreenType==FullscreenType.onClickAndAsAction) {
+          result = Material(
             type: MaterialType.transparency,
-            child: Stack(
-              children: <Widget>[
-                Positioned(
-                  top: 6,
-                  right: 6,
-                  child: Column(
-                    children: widget.fullscreenType==FullscreenType.asAction
-                        ||widget.fullscreenType==FullscreenType.onClickAndAsAction ? [
-                      IconButtonBackground(
-                        child: IconButton(
-                          icon: Icon(Icons.fullscreen),
-                          tooltip: FromZeroLocalizations.of(context).translate('fullscreen'),
-                          onPressed: () {
-                            widget.pushFullscreenImage(
-                              context: context,
-                              url: widget.url,
-                              actions: widget.fullscreenActions,
-                              maxScale: widget.maxScale,
-                              minScale: widget.minScale,
-                              retryable: widget.retryable,
-                              gesturesEnabled: true,
-                            );
-                          },
+            child: InkWell(
+              onTap: () {
+                _pushFullscreen(context);
+              },
+              child: result,
+            ),
+          );
+        }
+        if (widget.expand) {
+          result = Positioned.fill(child: result,);
+        }
+        result = FadeTransition(
+          opacity: _animation,
+          child: Stack(
+            children: [
+              result,
+              // if (widget.retryable)
+              Positioned.fill(
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final maxSize = max(constraints.maxHeight, constraints.maxWidth);
+                    if (maxSize<128) {
+                      return SizedBox.shrink();
+                    }
+                    return Material(
+                      type: MaterialType.transparency,
+                      child: Container(
+                        alignment: Alignment.topRight,
+                        padding: EdgeInsets.all(maxSize<256 ? 0 : 8),
+                        child: Column(
+                              children: widget.fullscreenType==FullscreenType.asAction
+                                  ||widget.fullscreenType==FullscreenType.onClickAndAsAction ? [
+                                      IconButtonBackground(
+                                        child: IconButton(
+                                          icon: Icon(Icons.fullscreen),
+                                          tooltip: FromZeroLocalizations.of(context).translate('fullscreen'),
+                                          onPressed: () {
+                                            _pushFullscreen(context);
+                                          },
+                                        ),
+                                      ),
+                                      ...widget.actions,
+                                  ] : widget.actions,
                         ),
                       ),
-                      ...widget.actions,
-                    ] : widget.actions,
-                  ),
+                    );
+                  },
                 ),
-              ],
-            ),
-          ));
-        }
-        return FadeTransition(
-          opacity: _animation,
-          child: SizedBox.expand(
-            child: Stack(
-              children: stacks,
-            ),
+              ),
+            ],
           ),
         );
+        if (widget.expand) {
+          result = SizedBox.expand(
+            child: result,
+          );
+        }
+        return result;
 
       case LoadState.failed:
         animate = true;
         _controller.reset();
+        print(state.lastException);
+        print(state.lastStack);
         return ErrorSign(
           title: FromZeroLocalizations.of(context).translate('error_image'),
           icon: Icon(Icons.broken_image, size: 64,),
@@ -303,6 +331,18 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
         .addListener(_doubleClickAnimationListener!);
 
     _doubleClickAnimationController.forward();
+  }
+
+  void _pushFullscreen(BuildContext context) {
+    widget.pushFullscreenImage(
+      context: context,
+      url: widget.url,
+      actions: widget.fullscreenActions,
+      maxScale: widget.maxScale,
+      minScale: widget.minScale,
+      retryable: widget.retryable,
+      gesturesEnabled: true,
+    );
   }
 
 }

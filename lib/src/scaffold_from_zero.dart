@@ -68,6 +68,7 @@ class ScaffoldFromZero extends StatefulWidget {
   final DrawerContentBuilder? drawerContentBuilder;
   final DrawerContentBuilder? drawerFooterBuilder;
   final Widget? drawerTitle;
+  final bool centerDrawerTitle;
   final double drawerElevation;
   final double drawerAppbarElevation;
   final Color? drawerBackgroundColor;
@@ -80,6 +81,7 @@ class ScaffoldFromZero extends StatefulWidget {
   final bool applyHeroToDrawerTitle;
   final bool alwaysShowHamburgerButtonOnMobile;
   final bool assumeTheScrollBarWillShowOnDesktop;
+  final bool useMobileScrollbarOnDesktop;
   final Widget Function(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen) titleTransitionBuilder;
   final Widget Function(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen) drawerContentTransitionBuilder;
 
@@ -120,11 +122,13 @@ class ScaffoldFromZero extends StatefulWidget {
     this.applyHeroToDrawerTitle = true,
     this.alwaysShowHamburgerButtonOnMobile = false,
     this.assumeTheScrollBarWillShowOnDesktop = false,
+    this.useMobileScrollbarOnDesktop = false,
+    this.centerDrawerTitle = false,
     Widget Function(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen)? titleTransitionBuilder,
     Widget Function(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen)? drawerContentTransitionBuilder,
   }) :
         // this.appbarType = appbarType ?? (title==null&&(actions==null||actions.isEmpty)&&drawerContentBuilder==null ? appbarTypeNone : appbarTypeStatic),
-        this.collapsibleBackgroundHeight = collapsibleBackgroundLength ?? (appbarType==ScaffoldFromZero.appbarTypeStatic||appbarHeight==null ? -1 : appbarHeight*3),
+        this.collapsibleBackgroundHeight = collapsibleBackgroundLength ?? (appbarType==ScaffoldFromZero.appbarTypeStatic||appbarHeight==null ? -1 : appbarHeight*4),
         this.scrollbarType = scrollbarType ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? scrollbarTypeBellowAppbar : scrollbarTypeOverAppbar),
         this.bodyFloatsBelowAppbar = bodyFloatsBelowAppbar ?? appbarType==ScaffoldFromZero.appbarTypeQuickReturn,
         this.compactDrawerWidth = drawerContentBuilder==null||!useCompactDrawerInsteadOfClose ? 0 : 56,
@@ -247,7 +251,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
       if (mounted && drawerContentScrollController.hasClients){
         lockListenToDrawerScroll = true;
         _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.value
-            = drawerContentScrollController.position.pixels;
+        = drawerContentScrollController.position.pixels;
       }
     });
     _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.addListener(() {
@@ -262,6 +266,15 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
   void didUpdateWidget(ScaffoldFromZero oldWidget) {
     super.didUpdateWidget(oldWidget);
     widget.currentPage.randomId  = oldWidget.currentPage.randomId;
+    if (widget.mainScrollController!=oldWidget.mainScrollController) {
+      oldWidget.mainScrollController?.removeListener(_handleScroll);
+      if (widget.mainScrollController!=null) {
+        widget.mainScrollController?.addListener(_handleScroll);
+        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+          _handleScroll();
+        });
+      }
+    }
   }
 
   @override
@@ -462,6 +475,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 //    if (_body==null){
       var changeNotifierNotListen = Provider.of<ScaffoldFromZeroChangeNotifier>(context, listen: false);
       _body = ScrollbarFromZero(
+        useMobileScrollbarOnDesktop: widget.useMobileScrollbarOnDesktop,
         assumeTheScrollBarWillShowOnDesktop: widget.assumeTheScrollBarWillShowOnDesktop,
         controller: widget.scrollbarType==ScaffoldFromZero.scrollbarTypeOverAppbar ? widget.mainScrollController : null,
         child: Consumer<AppbarChangeNotifier>(
@@ -474,6 +488,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                 curve: widget.appbarAnimationCurve,
                 padding: EdgeInsets.only(top: widget.bodyFloatsBelowAppbar ? 0 : appbarChangeNotifier.currentAppbarHeight,),
                 child: ScrollbarFromZero(
+                  useMobileScrollbarOnDesktop: widget.useMobileScrollbarOnDesktop,
                   assumeTheScrollBarWillShowOnDesktop: widget.assumeTheScrollBarWillShowOnDesktop,
                   controller: widget.scrollbarType==ScaffoldFromZero.scrollbarTypeBellowAppbar ? widget.mainScrollController : null,
                   child: Align(
@@ -554,6 +569,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                   centerTitle: widget.centerTitle,
                   actions: widget.actions,
                   initialExpandedAction: widget.initialExpandedAction,
+                  toolbarHeight: widget.appbarHeight,
                   title: Row(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -675,6 +691,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                   child: AppBar(
                     elevation: 0,
                     automaticallyImplyLeading: false,
+                    toolbarHeight: widget.appbarHeight,
                     title: SizedBox(
                       height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
                       child: Selector<ScreenFromZero, bool>(
@@ -703,6 +720,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                               if(widget.drawerTitle!=null)
                                 Positioned(
                                   left: !displayMobileLayout && canPop ? 40 : 0,
+                                  right: widget.centerDrawerTitle ? 0 : null,
                                   top: 0, bottom: 0,
 //                                  duration: 300.milliseconds,
 //                                  curve: widget.drawerAnimationCurve,
@@ -763,6 +781,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                         children: [
                           Expanded(
                             child: ScrollbarFromZero(
+                              useMobileScrollbarOnDesktop: widget.useMobileScrollbarOnDesktop,
                               controller: drawerContentScrollController,
                               child: SingleChildScrollView(
                                 clipBehavior: Clip.none,
@@ -928,6 +947,7 @@ class AppbarChangeNotifier extends ChangeNotifier{
   int? lastScrollUpdateTime; //TODO 1 wait for the scroll gesture to end instead of the timer
   void handleMainScrollerControllerCall(ScrollController scrollController){
     if (appbarType==ScaffoldFromZero.appbarTypeStatic) return;
+    if (!scrollController.hasClients) return;
 
     var currentPosition = scrollController.position.pixels;
     if (appbarType==ScaffoldFromZero.appbarTypeCollapse)

@@ -15,6 +15,7 @@ class ScrollbarFromZero extends StatefulWidget {
   final bool applyPaddingToChildrenOnDesktop;
   final bool applyOpacityGradientToChildren;
   final bool assumeTheScrollBarWillShowOnDesktop;
+  final bool useMobileScrollbarOnDesktop;
 //TODO 1 ??? add support for horizontal scroll
 //TODO 3 expose options for scrollbarColor and iconColor
 //TODO 3 expose an option to consume events (default true)
@@ -22,6 +23,7 @@ class ScrollbarFromZero extends StatefulWidget {
     Key? key,
     this.controller,
     required this.child,
+    this.useMobileScrollbarOnDesktop = false,
     @deprecated this.minScrollbarHeight = 64,
     @deprecated this.scrollbarWidthDesktop = 16,
     @deprecated this.scrollbarWidthMobile = 10,
@@ -88,7 +90,9 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     super.didUpdateWidget(oldWidget);
     removeListeners(oldWidget.controller);
     addListeners(widget.controller);
-    _onScrollListener();
+    WidgetsBinding.instance?.addPostFrameCallback((_) {
+      _onScrollListener();
+    });
   }
 
   @override
@@ -119,6 +123,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   }
 
   void _onScrollListener () {
+    WidgetsBinding.instance!.scheduleFrame();
     _updateMaxScrollExtent();
     if (widget.controller==null) {
       setState(() {});
@@ -205,22 +210,29 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
             });
           });
           // assumes maxHeight constraint here is the same as inside the scrollable viewport
-          if (PlatformExtended.isMobile){
+          if (widget.useMobileScrollbarOnDesktop || PlatformExtended.isMobile){
 
-            return DraggableScrollbar.rrect(
-              alwaysVisibleScrollThumb: false,
-              heightScrollThumb: height,
-              backgroundColor: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.33),
-              controller: widget.controller==null||!(widget.controller?.hasClients??false) ? null : widget.controller,
+            return Scrollbar(
+              controller: widget.controller,
+              isAlwaysShown: (widget.controller?.hasClients??false) ? null : false,
               child: child,
-              scrollbarTimeToFade: Duration(milliseconds: 2500),
-              scrollThumbBorderRadius: 999999,
-              scrollThumbWidth: widget.scrollbarWidthMobile,
-              scrollThumbElevation: 0,
+              // scrollbarTimeToFade: Duration(milliseconds: 2500),
             );
+            // return DraggableScrollbar.rrect(
+            //   alwaysVisibleScrollThumb: !PlatformExtended.isMobile,
+            //   heightScrollThumb: height,
+            //   backgroundColor: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.33),
+            //   controller: widget.controller==null||!(widget.controller?.hasClients??false) ? null : widget.controller,
+            //   child: child,
+            //   scrollbarTimeToFade: Duration(milliseconds: 2500),
+            //   scrollThumbBorderRadius: 999999,
+            //   scrollThumbWidth: widget.scrollbarWidthMobile,
+            //   scrollThumbElevation: 0,
+            // );
 
           } else{
 
+            // TODO also implement desktop scrollbar with default scrollbar, that has WAY less bugs
             return Stack(
               children: <Widget>[
                 Positioned.fill(
