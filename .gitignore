@@ -76,7 +76,7 @@ build/
 
 
 # ignore platform-specific folders, they are default anyways
-/windows
-/android
-/web
-/FromZero logo
+/windows/
+/android/
+/web/
+/FromZero logo/
