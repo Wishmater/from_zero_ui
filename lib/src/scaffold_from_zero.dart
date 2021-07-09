@@ -244,22 +244,20 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
     if (_changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]==null){
       _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId] = ValueNotifier(0);
     }
-    drawerContentScrollController = ScrollController(
-        initialScrollOffset: _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.value ?? 0,
-    );
-    drawerContentScrollController.addListener(() {
-      if (mounted && drawerContentScrollController.hasClients){
-        lockListenToDrawerScroll = true;
-        _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.value
-        = drawerContentScrollController.position.pixels;
-      }
-    });
     _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.addListener(() {
       if (!lockListenToDrawerScroll && mounted && drawerContentScrollController.hasClients){
         drawerContentScrollController.jumpTo(_changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.value ?? 0);
         lockListenToDrawerScroll = false;
       }
     });
+  }
+
+  void _onDrawerScroll() {
+    if (mounted && drawerContentScrollController.hasClients){
+      lockListenToDrawerScroll = true;
+      _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.value
+      = drawerContentScrollController.position.pixels;
+    }
   }
 
   @override
@@ -674,6 +672,10 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
 //    if (_drawerContent==null){
       AppbarChangeNotifier appbarChangeNotifier = Provider.of<AppbarChangeNotifier>(context, listen: false);
       var changeNotifierNotListen = Provider.of<ScaffoldFromZeroChangeNotifier>(context);
+      drawerContentScrollController = ScrollController(
+        initialScrollOffset: _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.value ?? 0,
+      );
+      drawerContentScrollController.addListener(_onDrawerScroll);
       _drawerContent = Column(
         children: <Widget>[
 

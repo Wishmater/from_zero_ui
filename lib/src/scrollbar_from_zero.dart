@@ -197,41 +197,30 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
       );
     }
 
-    return NotificationListener<ScrollNotification>(
-      onNotification: (notification) => true,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          _updateMaxHeight(constraints, doSetState: false);
-          WidgetsBinding.instance?.addPostFrameCallback((_) {
-            Future.doWhile(() async{
-              _updateMaxScrollExtent(doSetState: true);
-              await (Future.delayed(Duration(milliseconds: 100)));
-              return !disposed;
+    if (widget.useMobileScrollbarOnDesktop || PlatformExtended.isMobile){
+
+      return Scrollbar(
+        key: ValueKey(widget.controller?.hasClients),
+        controller: widget.controller,
+        isAlwaysShown: (widget.controller?.hasClients??false) ? null : false,
+        notificationPredicate: (notification) => true,
+        child: child,
+      );
+
+    } else {
+
+      return NotificationListener<ScrollNotification>(
+        onNotification: (notification) => true,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            _updateMaxHeight(constraints, doSetState: false);
+            WidgetsBinding.instance?.addPostFrameCallback((_) {
+              Future.doWhile(() async{
+                _updateMaxScrollExtent(doSetState: true);
+                await (Future.delayed(Duration(milliseconds: 100)));
+                return !disposed;
+              });
             });
-          });
-          // assumes maxHeight constraint here is the same as inside the scrollable viewport
-          if (widget.useMobileScrollbarOnDesktop || PlatformExtended.isMobile){
-
-            return Scrollbar(
-              controller: widget.controller,
-              isAlwaysShown: (widget.controller?.hasClients??false) ? null : false,
-              child: child,
-              // scrollbarTimeToFade: Duration(milliseconds: 2500),
-            );
-            // return DraggableScrollbar.rrect(
-            //   alwaysVisibleScrollThumb: !PlatformExtended.isMobile,
-            //   heightScrollThumb: height,
-            //   backgroundColor: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.33),
-            //   controller: widget.controller==null||!(widget.controller?.hasClients??false) ? null : widget.controller,
-            //   child: child,
-            //   scrollbarTimeToFade: Duration(milliseconds: 2500),
-            //   scrollThumbBorderRadius: 999999,
-            //   scrollThumbWidth: widget.scrollbarWidthMobile,
-            //   scrollThumbElevation: 0,
-            // );
-
-          } else{
-
             // TODO also implement desktop scrollbar with default scrollbar, that has WAY less bugs
             return Stack(
               children: <Widget>[
@@ -318,11 +307,11 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
                 ),
               ],
             );
+          },
+        ),
+      );
 
-          }
-        },
-      ),
-    );
+    }
   }
 
 }
