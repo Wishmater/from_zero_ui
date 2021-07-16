@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/snackbar_host_from_zero.dart';
 import 'package:provider/provider.dart';
 
 /// Put this widget in the builder method of your MaterialApp.
@@ -64,7 +65,9 @@ class _FromZeroAppContentWrapperState extends State<FromZeroAppContentWrapper> {
                 ChangeNotifierProvider.value(value: screen,),
               ],
               builder: (context, _) {
-                return widget.child;
+                return SnackBarHostFromZero(
+                  child: widget.child,
+                );
               },
             ),
           ),

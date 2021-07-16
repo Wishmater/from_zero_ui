@@ -45,6 +45,9 @@ dependencies:
   permission_handler: ^6.1.0
   open_file: ^3.1.0
 
+  # * Update
+  archive: ^3.1.2
+
   # * Specific Utility
   dio: ^3.0.10
   dio_retry: ^0.1.9-beta

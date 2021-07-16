@@ -32,7 +32,22 @@ class FormattedNum with Comparable{
 
 }
 
-class ValueString<T extends Comparable> with Comparable{
+
+abstract class ContainsValue {
+  dynamic get value;
+}
+
+class SimpleValueString  implements ContainsValue {
+  var value;
+  var string;
+  SimpleValueString(this.value, this.string);
+  @override
+  String toString() {
+    return string.toString();
+  }
+}
+
+class ValueString<T extends Comparable> with Comparable implements ContainsValue {
 
   T value;
   var string;

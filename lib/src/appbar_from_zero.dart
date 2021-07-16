@@ -34,9 +34,9 @@ class AppbarAction extends StatelessWidget{
     required this.title,
     this.icon,
     Map<double, ActionState>? breakpoints,
-    this.overflowBuilder = _defaultOverflowBuilder,
-    this.iconBuilder = _defaultIconBuilder,
-    this.buttonBuilder = _defaultButtonBuilder,
+    this.overflowBuilder = defaultOverflowBuilder,
+    this.iconBuilder = defaultIconBuilder,
+    this.buttonBuilder = defaultButtonBuilder,
     this.expandedBuilder,
     this.centerExpanded = true,
   }) : this.breakpoints = breakpoints ?? {
@@ -53,7 +53,7 @@ class AppbarAction extends StatelessWidget{
 
 }
 
-Widget _defaultIconBuilder(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap){
+Widget defaultIconBuilder(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap){
   return Padding(
     padding: const EdgeInsets.symmetric(horizontal: 4),
     child: IconButton(
@@ -66,7 +66,7 @@ Widget _defaultIconBuilder(BuildContext context, String title, Widget? icon, voi
   );
 }
 
-Widget _defaultButtonBuilder(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap){
+Widget defaultButtonBuilder(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap){
   return FlatButton(
     onPressed: (){
       onTap?.call(context);
@@ -87,7 +87,7 @@ Widget _defaultButtonBuilder(BuildContext context, String title, Widget? icon, v
   );
 }
 
-Widget _defaultOverflowBuilder(BuildContext context, String title, Widget? icon){
+Widget defaultOverflowBuilder(BuildContext context, String title, Widget? icon){
   return Row(
     crossAxisAlignment: CrossAxisAlignment.center,
     children: [

@@ -21,5 +21,9 @@
     "cancel": "Cancel",
     "update": "Update",
     "restart_warning": "The app will be restarted when update is finished.",
-    "close": "Close"
+    "close": "Close",
+    "search...": "Search...",
+    "clear": "Clear"
+
+
 }

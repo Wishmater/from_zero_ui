@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_update.dart';
 import 'package:from_zero_ui/src/appbar_from_zero.dart';
-import 'package:from_zero_ui/src/export.dart';
 import 'package:from_zero_ui/src/from_zero_logo.dart';
 import 'package:from_zero_ui/src/settings.dart';
 import 'package:provider/provider.dart';

@@ -24,7 +24,7 @@ class ResponsiveDrawerMenuItem{
   final Map<String, dynamic>? arguments;
   final Widget? icon;
   final List<ResponsiveDrawerMenuItem>? children; //TODO 2 implement multilevel / children
-  final int selectedChild;
+  int selectedChild;
   final bool Function()? onTap;
   final bool executeBothOnTapAndDefaultOnTap;
   final bool forcePopup;
@@ -90,7 +90,7 @@ class DrawerMenuFromZero extends StatefulWidget {
   static const int styleTree = 1;
 
   final List<ResponsiveDrawerMenuItem> tabs;
-  late int selected;
+  final int selected;
   final bool compact;
   final int replaceInsteadOfPuhsing;
   final int depth;
@@ -99,10 +99,11 @@ class DrawerMenuFromZero extends StatefulWidget {
   final String? homeRoute;
   final int style;
   final List<bool> paintPreviousTreeLines;
+  final bool inferSelected;
 
   DrawerMenuFromZero({
     required this.tabs,
-    int selected = 0,
+    this.selected = -1,
     this.compact = false,
     this.replaceInsteadOfPuhsing = exceptRootReplaceInsteadOfPuhsing,
     this.depth = 0,
@@ -110,15 +111,9 @@ class DrawerMenuFromZero extends StatefulWidget {
     this.popup = false,
     this.style = styleDrawerMenu,
     this.paintPreviousTreeLines = const[],
+    this.inferSelected = true,
     String? homeRoute,
-  }) : this.homeRoute = homeRoute ?? tabs[0].route {
-    for (int i=0; i<=selected && i<tabs.length; i++){
-      if (tabs[i] is ResponsiveDrawerMenuDivider){
-        selected++;
-      }
-    }
-    this.selected = selected;
-  }
+  }) : this.homeRoute = homeRoute ?? tabs[0].route;
 
   @override
   _DrawerMenuFromZeroState createState() => _DrawerMenuFromZeroState();
@@ -141,16 +136,56 @@ class DrawerMenuFromZero extends StatefulWidget {
 class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
 
   Map<int, GlobalKey> _menuButtonKeys = {};
+  late List<ResponsiveDrawerMenuItem> _tabs;
+  late int _selected;
+  bool pendingUpdate = false;
 
   @override
   void initState() {
     super.initState();
+    pendingUpdate = true;
+  }
+
+  @override
+  void didUpdateWidget(covariant DrawerMenuFromZero oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    pendingUpdate = true;
+  }
+
+  void _updateTabs() {
+    _tabs = widget.tabs;
+    _selected = widget.selected;
+    if (widget.selected<0 && widget.inferSelected) {
+      try {
+        List<String> paths = ModalRoute.of(context)!.settings.name!.split('/')..removeWhere((e) => e.isEmpty);
+        String cumulativePath = '';
+        for (var i = 0; i < paths.length; ++i) {
+          cumulativePath += '/${paths[i]}';
+          if (i==0) {
+            _selected = _tabs.indexWhere((e) => e.route==cumulativePath);
+          } else {
+            ResponsiveDrawerMenuItem item = _tabs[_selected];
+            for (var j = 0; j < i-1; ++j) {
+              item = item.children![item.selectedChild];
+            }
+            if (item.selectedChild>=0) break;
+            item.selectedChild = item.children?.indexWhere((e) => e.route==cumulativePath) ?? -1;
+          }
+        }
+      } catch (e, st) {
+        print(e);
+        print(st);
+      }
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (pendingUpdate) {
+      _updateTabs();
+    }
     return Column(
-      children: _getWidgets(context, widget.tabs, widget.selected),
+      children: _getWidgets(context, _tabs, _selected),
     );
   }
 
@@ -299,6 +334,7 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
                       tabs: tabs[i].children!,
                       compact: widget.compact,
                       selected: tabs[i].selectedChild,
+                      inferSelected: false,
                       depth: widget.depth+1,
                       replaceInsteadOfPuhsing: widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPuhsing
                           ? (selected==0 ? DrawerMenuFromZero.neverReplaceInsteadOfPuhsing : DrawerMenuFromZero.alwaysReplaceInsteadOfPuhsing)
@@ -341,6 +377,7 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
                 tabs: tabs[i].children!,
                 compact: false,
                 selected: tabs[i].selectedChild,
+                inferSelected: false,
                 paddingRight: 16,
                 replaceInsteadOfPuhsing: widget.replaceInsteadOfPuhsing,
                 homeRoute: widget.homeRoute,

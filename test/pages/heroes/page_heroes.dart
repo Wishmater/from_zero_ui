@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/export.dart';
 import 'package:from_zero_ui/src/heroes_from_zero.dart';
 import 'package:from_zero_ui/src/settings.dart';
 import 'package:path_provider/path_provider.dart';
@@ -42,25 +41,25 @@ class _PageHeroesState extends State<PageHeroes> {
       drawerFooterBuilder: (context, compact) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          DrawerMenuButtonFromZero(
-            selected: false,
-            compact: compact,
-            title: "Exportar",
-            icon: Icon(Icons.file_download),
-            onTap: () {
-              showModal(
-                context: context,
-                builder: (scaffoldContext) => Export(
-                  scaffoldContext: scaffoldContext,
-                  childBuilder: (context, i, currentSize, portrait, scale, format) => widgetToExport,
-                  childrenCount: (currentSize, portrait, scale, format) => 1,
-                  themeParameters: Provider.of<ThemeParameters>(context, listen: false),
-                  title: DateTime.now().millisecondsSinceEpoch.toString() + " Heroes",
-                  path: getApplicationDocumentsDirectory().then((value) => value.absolute.path+"/Playground From Zero/"),
-                ),
-              );
-            },
-          ),
+          // DrawerMenuButtonFromZero(
+          //   selected: false,
+          //   compact: compact,
+          //   title: "Exportar",
+          //   icon: Icon(Icons.file_download),
+          //   onTap: () {
+          //     showModal(
+          //       context: context,
+          //       builder: (scaffoldContext) => Export(
+          //         scaffoldContext: scaffoldContext,
+          //         childBuilder: (context, i, currentSize, portrait, scale, format) => widgetToExport,
+          //         childrenCount: (currentSize, portrait, scale, format) => 1,
+          //         themeParameters: Provider.of<ThemeParameters>(context, listen: false),
+          //         title: DateTime.now().millisecondsSinceEpoch.toString() + " Heroes",
+          //         path: getApplicationDocumentsDirectory().then((value) => value.absolute.path+"/Playground From Zero/"),
+          //       ),
+          //     );
+          //   },
+          // ),
           DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
         ],
       ),

@@ -4,16 +4,18 @@ export 'package:from_zero_ui/src/appbar_from_zero.dart';
 export 'package:from_zero_ui/src/scaffold_from_zero.dart';
 export 'package:from_zero_ui/src/scrollbar_from_zero.dart';
 export 'package:from_zero_ui/src/combo_from_zero.dart';
+export 'package:from_zero_ui/src/date_picker_from_zero.dart';
 export 'package:from_zero_ui/src/drawer_menu_from_zero.dart';
 export 'package:from_zero_ui/src/image_from_zero.dart';
-export 'package:from_zero_ui/src/snackbar_helper.dart';
+export 'package:from_zero_ui/src/snackbar_from_zero.dart';
 export 'package:from_zero_ui/src/settings.dart';
 export 'package:from_zero_ui/src/app_update.dart';
 
 export 'package:from_zero_ui/src/splash_page.dart';
 export 'package:from_zero_ui/src/future_handling.dart';
 export 'package:from_zero_ui/src/ui_utility_widgets.dart';
-export 'package:from_zero_ui/src/lightweight_table.dart';
+export 'package:from_zero_ui/src/table_from_zero.dart';
+export 'package:from_zero_ui/src/table_from_zero_models.dart';
 export 'package:from_zero_ui/src/heroes_from_zero.dart';
 
 export 'package:from_zero_ui/src/web_compile_file.dart';

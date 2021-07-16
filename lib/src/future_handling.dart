@@ -78,7 +78,7 @@ class ErrorSign extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconTheme(
-      data: Theme.of(context).iconTheme.copyWith(size: 64, color: Theme.of(context).errorColor,),
+      data: Theme.of(context).iconTheme.copyWith(size: 64, color: Theme.of(context).disabledColor,),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Center(
