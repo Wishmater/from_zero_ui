@@ -1,0 +1,847 @@
+import 'package:animations/animations.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/dao.dart';
+
+
+typedef Widget RowActionBuilder(DAO e);
+
+
+class OneToManyRelationField extends Field<String> {
+
+  DAO objectTemplate;
+  Future<List<DAO>>? futureObjects;
+  String? id;
+  bool collapsed;
+  List<DAO>? dbObjects;
+  bool allowMultipleSelection;
+  bool tableCellsEditable;
+  bool collapsible;
+  bool showActionEdit;
+  bool showActionDuplicate;
+  bool showActionDelete;
+  List<RowActionBuilder> extraRowActionBuilders; //TODO 3 also allow global action builders
+  bool showEditDialogOnAdd;
+  Key? tableKey;
+  Widget Function(Object? e, Object? st)? futureErrorWidgetBuilder;
+  Object? futureError;
+  Object? futureStackTrace;
+  Widget? tableErrorWidget;
+
+  List<DAO>? _objects;
+  List<DAO>? get objects => _objects;
+  set objects(List<DAO>? value) {
+    _objects = value;
+    notifyListeners();
+  }
+  void addListeners() {
+    _objects?.forEach((element) {
+      element.addListener(notifyListeners);
+    });
+  }
+
+  ValueNotifier<Map<DAO, bool>> selectedObjects = ValueNotifier({});
+  ValueNotifier<List<DAO>?> filtered = ValueNotifier(null);
+
+
+  OneToManyRelationField({
+    required String uiName,
+    required this.objectTemplate,
+    this.id,
+    bool clearable = true, /// Unused in table
+    bool enabled = true, //TODO implement enabled
+    bool hidden = false,
+    bool? tableCellsEditable,
+    double maxWidth = double.infinity,
+    List<DAO>? objects,
+    List<DAO>? dbObjects,
+    this.futureObjects,
+    this.collapsed = false,
+    this.allowMultipleSelection = true,
+    this.collapsible = true,
+    this.showActionEdit = true,
+    this.showActionDuplicate = true,
+    this.showActionDelete = true,
+    this.extraRowActionBuilders = const [],
+    bool? showEditDialogOnAdd,
+    String? hint,
+    this.tableKey,
+    this.tableErrorWidget,
+    this.futureErrorWidgetBuilder,
+    double? tableColumnWidth,
+  }) :  assert(objects==null || futureObjects==null),
+        _objects = objects,
+        dbObjects = dbObjects ?? List.from(objects ?? []),
+        showEditDialogOnAdd = showEditDialogOnAdd ?? objectTemplate.onSave!=null,
+        tableCellsEditable = tableCellsEditable ?? objectTemplate.onSave!=null,
+        super(
+          uiName: uiName,
+          value: '',
+          dbValue: '',
+          enabled: enabled,
+          clearable: clearable,
+          hidden: hidden,
+          maxWidth: maxWidth,
+          hint: hint,
+          tableColumnWidth: tableColumnWidth,
+        ) {
+    addListeners();
+    if (futureObjects!=null) {
+      futureObjects!.then((o) {
+        this.objects = List.from(o);
+        this.dbObjects = List.from(o);
+        notifyListeners();
+      }).onError((error, stackTrace) {
+        this.futureError = error;
+        this.futureStackTrace = stackTrace;
+        notifyListeners();
+      });
+    }
+  }
+
+  @override
+  bool get isEditted {
+    bool editted = objects?.length != dbObjects?.length;
+    for (var i = 0; !editted && i < (objects?.length??0); ++i) {
+      editted = objects?[i] != dbObjects?[i];
+    }
+    if (!editted) {
+      editted = objects==null || objects!.any((element) => element.isEditted);
+    }
+    return editted;
+  }
+
+  @override
+  OneToManyRelationField copyWith({
+    String? uiName,
+    String? value,
+    String? dbValue,
+    String? hint,
+    bool? clearable,
+    bool? enabled,
+    bool? hidden,
+    double? maxWidth,
+    DAO? objectTemplate,
+    String? id,
+    Future<List<DAO>>? futureObjects,
+    List<DAO>? objects,
+    List<DAO>? dbObjects,
+    double? tableColumnWidth,
+  }) {
+    return OneToManyRelationField(
+      uiName: uiName??this.uiName,
+      enabled: enabled??this.enabled,
+      clearable: clearable??this.clearable,
+      hidden: hidden??this.hidden,
+      maxWidth: maxWidth??this.maxWidth,
+      objectTemplate: objectTemplate??this.objectTemplate,
+      id: id??this.id,
+      objects: objects??this.objects?.map((e) => e.copyWith()).toList(),
+      dbObjects: dbObjects??objects??this.dbObjects?.map((e) => e.copyWith()).toList(),
+      futureObjects: (objects??this.objects)!=null ? null : futureObjects??this.futureObjects,
+      hint: hint??this.hint,
+      tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
+    );
+  }
+
+  void revertChanges() {
+    objects = dbObjects?.map((e) => e.copyWith()).toList();
+    notifyListeners();
+  }
+  
+  void addRow(context) async {
+    final newObj = objectTemplate.copyWith();
+    bool add = true;
+    if (showEditDialogOnAdd) {
+      add = await newObj.maybeEdit(context);
+    }
+    if (add) {
+      newObj.addListener(notifyListeners);
+      objects!.add(newObj);
+      notifyListeners();
+    }
+  }
+  
+  void duplicate(List<DAO> elements) {
+    if (objects!=null) {
+      elements.forEach((e) {
+        int index = objects!.indexOf(e);
+        if (index<0) {
+          objects!.add(e.copyWith());
+        } else {
+          objects!.insert(index+1, e.copyWith());
+        }
+      });
+      notifyListeners();
+    }
+  }
+  
+
+  @override
+  List<Widget> buildFieldEditorWidgets(BuildContext context, {
+    bool addCard=true,
+    bool asSliver = true,
+    bool expandToFillContainer = true,
+    bool autofocus = false, /// unused
+  }) {
+    Widget result;
+    if (hidden) {
+      result = SizedBox.shrink();
+      if (asSliver) {
+        result = SliverToBoxAdapter(child: result,);
+      }
+      return [result];
+    }
+    double width = 48*((showActionDelete?1:0) + (showActionDuplicate?1:0) + (showActionEdit?1:0));
+    objectTemplate.props.forEach((key, value) {
+      width += value.tableColumnWidth ?? 192;
+    });
+    final buttonChild = Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.add),
+        SizedBox(width: 8,),
+        Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}', style: TextStyle(fontSize: 16),),
+        SizedBox(width: 8,),
+      ],
+    );
+    result = ChangeNotifierBuilder(
+      changeNotifier: this,
+      builder: (context, v, child) {
+        if (collapsed || objects==null) {
+          Widget result;
+          if (collapsed) {
+            result = Center(
+              child: SizedBox(
+                width: maxWidth==double.infinity ? width : maxWidth,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _getTableHeader(context),
+                    InitiallyAnimatedWidget(
+                      duration: Duration(milliseconds: 300),
+                      builder: (animationController, child) {
+                        return Container(
+                          color: Material.of(context)!.color ?? Theme.of(context).cardColor,
+                          height: 128*CurveTween(curve: Curves.easeInCubic).chain(Tween(begin: 1.0, end: 0.0,)).evaluate(animationController),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          } else if (futureError!=null) {
+            result = Center(
+              child: SizedBox(
+                  width: maxWidth==double.infinity ? width : maxWidth,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _getTableHeader(context),
+                      futureErrorWidgetBuilder?.call(futureError, futureStackTrace)
+                          ?? defaultErrorBuilder(context, futureError, futureStackTrace),
+                    ],
+                  )
+              ),
+            );
+          } else {
+            result = Center(
+              child: SizedBox(
+                width: maxWidth==double.infinity ? width : maxWidth,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _getTableHeader(context),
+                    SizedBox(height: 96, child: LoadingSign()),
+                  ],
+                )
+              ),
+            );
+          }
+          if (asSliver) {
+            result = SliverToBoxAdapter(
+              child: result,
+            );
+          }
+          return result;
+        }
+        return TableFromZero(
+          key: tableKey ?? ValueKey(objects!.isNotEmpty),
+          maxWidth: maxWidth==double.infinity ? width : maxWidth,
+          minWidth: width,
+          layoutWidgetType: asSliver
+              ? objects!.length<=10 ? TableFromZero.sliverAnimatedListViewBuilder : TableFromZero.sliverListViewBuilder
+              : !expandToFillContainer
+                  ? TableFromZero.column
+                  : objects!.length<=10 ? TableFromZero.animatedListViewBuilder : TableFromZero.listViewBuilder,
+          applyMinWidthToHeaderAddon: false,
+          verticalPadding: 0,
+          useSmartRowAlternativeColors: false,
+          columns: objectTemplate.props.values.map((e) => e.getColModel()).toList(),
+          rows: objects!.map((e) {
+            // e.props.remove(columnName);
+            return SimpleRowModel(
+              id: e,
+              values: objectTemplate.props.keys.map((k) => e.props[k]).toList(),
+              height: tableCellsEditable ? 64 : 42,
+              actions: [
+                ...extraRowActionBuilders.map((builder) => builder(e)).toList(),
+                if (showActionEdit)
+                  IconButton(
+                    icon: Icon(Icons.edit_outlined),
+                    tooltip: FromZeroLocalizations.of(context).translate('edit'),
+                    onPressed: () async {
+                      if (await e.maybeEdit(context)) {
+                        notifyListeners();
+                      }
+                    },
+                  ),
+                if (showActionDuplicate)
+                  IconButton(
+                    icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
+                    tooltip: FromZeroLocalizations.of(context).translate('duplicate'),
+                    onPressed: () {
+                      duplicate([e]);
+                    },
+                  ),
+                if (showActionDelete)
+                  IconButton(
+                    icon: Icon(Icons.delete_forever_outlined),
+                    tooltip: FromZeroLocalizations.of(context).translate('delete'),
+                    onPressed: () {
+                      maybeDelete(context, [e]);
+                    },
+                  ),
+              ],
+              selected: allowMultipleSelection ? (selectedObjects.value[e]??false) : null,
+              backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
+              onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
+                selectedObjects.value[row.id] = focused??false;
+                selectedObjects.notifyListeners();
+                notifyListeners();
+              } : null,
+            );
+          }).toList(),
+          cellBuilder: tableCellsEditable ? (context, row, col, j) {
+            final widgets = (row.values[j] as Field).buildFieldEditorWidgets(context);
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              children: widgets.map((widget) {
+                return Expanded(
+                  child: widget is SliverToBoxAdapter ? widget.child! : widget,
+                );
+              }).toList(),
+            );
+          } : null,
+          onFilter: (rows) {
+            filtered.value = rows.map((e) => e.id as DAO).toList();
+            return rows;
+          },
+          onAllSelected: allowMultipleSelection ? (value, rows) {
+            filtered.value = rows.map((e) => e.id as DAO).toList();
+            filtered.value!.forEach((element) {
+              selectedObjects.value[element] = value??false;
+              selectedObjects.notifyListeners();
+            });
+            notifyListeners();
+          } : null,
+          errorWidget: tableErrorWidget
+              ?? Center(
+                child: Container(
+                  color: Material.of(context)!.color ?? Theme.of(context).cardColor,
+                  width: maxWidth==double.infinity ? width : maxWidth,
+                  child: ErrorSign(
+                    title: FromZeroLocalizations.of(context).translate('no_data'),
+                    subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
+                  ),
+                ),
+              ),
+              headerAddon: _getTableHeader(context),
+            );
+      }
+    );
+    // if (addCard) {
+    //   result = Card(
+    //     clipBehavior: Clip.hardEdge,
+    //     child: result,
+    //   );
+    // }
+    List<Widget> resultList = [
+      SizedBox(height: 1,),
+      result,
+      ChangeNotifierBuilder(
+        changeNotifier: this,
+        builder: (context, value, child) {
+          if (collapsed || objects==null) {
+            return SizedBox.shrink();
+          }
+          return Center(
+            child: Transform.translate(
+              offset: Offset(0, -12),
+              child: Container(
+                width: maxWidth==double.infinity ? width : maxWidth,
+                color: Material.of(context)!.color ?? Theme.of(context).cardColor,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 12,
+                    ),
+                    TextButton(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 10, bottom: 10,),
+                        child: Center(child: buttonChild),
+                      ),
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.blue.withOpacity(0.2),
+                      ),
+                      onPressed: () => addRow(context),
+                    ),
+                    SizedBox(
+                      height: 12,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+      SizedBox(height: 1,),
+    ];
+    if (asSliver) {
+      resultList = resultList.map((e) => (e==result) ? e : SliverToBoxAdapter(child: e,)).toList();
+    }
+    return resultList;
+  }
+
+  Widget _getTableHeader(BuildContext context) {
+    return ValueListenableBuilder(
+      valueListenable: filtered,
+      builder: (context, List<DAO>? filtered, child) {
+        List<DAO>? currentSelected = filtered?.where((element) => selectedObjects.value[element]==true).toList();
+        List<Widget> actions = [];
+        if (filtered!=null && currentSelected!=null) {
+          actions = [
+            if (!collapsed && currentSelected.length>0 && showActionEdit)
+              AppbarAction(
+                icon: IconBackground(
+                  color: Theme.of(context).accentColor.withOpacity(0.25),
+                  child: Icon(Icons.edit_outlined),
+                ),
+                title: '${FromZeroLocalizations.of(context).translate('edit')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
+                onTap: (context) {
+                  maybeEditMultiple(context, currentSelected);
+                },
+              ),
+            if (!collapsed && currentSelected.length>0 && showActionDuplicate)
+              AppbarAction(
+                icon: IconBackground(
+                  color: Theme.of(context).accentColor.withOpacity(0.25),
+                  child: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
+                ),
+                title: '${FromZeroLocalizations.of(context).translate('duplicate')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
+                onTap: (context) {
+                  duplicate(currentSelected);
+                },
+              ),
+            if (!collapsed && currentSelected.length>0 && showActionDelete)
+              AppbarAction(
+                icon: IconBackground(
+                  color: Theme.of(context).accentColor.withOpacity(0.25),
+                  child: Icon(Icons.delete_forever_outlined),
+                ),
+                title: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
+                onTap: (context) {
+                  maybeDelete(context, currentSelected);
+                },
+              ),
+            if (!collapsed && currentSelected.length>0)
+              AppbarAction(
+                icon: IconBackground(
+                  color: Theme.of(context).accentColor.withOpacity(0.25),
+                  child: Icon(Icons.cancel_outlined),
+                ),
+                title: FromZeroLocalizations.of(context).translate('cancel_selection'),
+                onTap: (context) {
+                  selectedObjects.value = {};
+                  notifyListeners();
+                },
+              ),
+            if (!collapsed)
+              AppbarAction(
+                title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
+                icon: Icon(Icons.add),
+                onTap: (context) {
+                  addRow(context);
+                },
+              ),
+          ];
+        }
+        return Theme(
+          data: Theme.of(context).copyWith(
+            appBarTheme: AppBarTheme(
+
+              // iconTheme: Theme.of(context).iconTheme,
+              // textTheme: Theme.of(context).textTheme,
+              // backgroundColor: Material.of(context)!.color ?? Theme.of(context).cardColor,
+            ),
+          ),
+          child: AppbarFromZero(
+            titleSpacing: 0,
+            title: Row(
+              children: [
+                SizedBox(width: 9,),
+                collapsible ? IconButton(
+                  icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
+                  onPressed: () {
+                    collapsed = !collapsed;
+                    notifyListeners();
+                  },
+                ) : SizedBox(width: allowMultipleSelection ? 41 : 0,),
+                SizedBox(width: 9,),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(uiName,
+                      style: Theme.of(context).textTheme.headline6?.copyWith(color: Theme.of(context).appBarTheme.brightness==Brightness.light ? Colors.black : Colors.white,),
+                    ),
+                    if (filtered!=null)
+                      ValueListenableBuilder<Map<DAO, bool>>(
+                        valueListenable: selectedObjects,
+                        builder: (context, selectedObjects, child) {
+                          int count = filtered.where((element) => selectedObjects[element]==true).length;
+                          Widget result;
+                          if (objects==null) {
+                            result = SizedBox.shrink();
+                          } else {
+                            final objects = collapsed ? this.objects : filtered;
+                            if (collapsed || count==0) {
+                              result = Text(objects!.length==0 ? FromZeroLocalizations.of(context).translate('no_elements')
+                                  : '${objects.length} ${objects.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
+                                                                          : FromZeroLocalizations.of(context).translate('element_sing')}',
+                                // key: ValueKey('normal'),
+                                style: Theme.of(context).textTheme.caption?.copyWith(color: Theme.of(context).appBarTheme.brightness==Brightness.light ? Colors.black : Colors.white,),
+                              );
+                            } else {
+                              result = Text('$count ${count>1 ? FromZeroLocalizations.of(context).translate('selected_plur')
+                                                              : FromZeroLocalizations.of(context).translate('selected_sing')}',
+                                // key: ValueKey('selected'),
+                                style: Theme.of(context).textTheme.caption?.copyWith(color: Theme.of(context).accentColor.withOpacity(0.9)),
+                              );
+                            }
+                          }
+                          return AnimatedSwitcher(
+                            duration: Duration(milliseconds: 300),
+                            switchInCurve: Curves.easeOutCubic,
+                            child: result,
+                            transitionBuilder: (child, animation) {
+                              return SizeTransition(
+                                axisAlignment: -1,
+                                sizeFactor: animation,
+                                child: child,
+                              );
+                            },
+                          );
+                        },
+                      ),
+                  ],
+                ),
+              ],
+            ),
+            elevation: 0,
+            actions: actions,
+          ),
+        );
+      },
+    );
+  }
+
+  void maybeDelete(BuildContext context, List<DAO> elements,) async {
+    if (elements.isEmpty) return;
+    bool? delete = await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(FromZeroLocalizations.of(context).translate('confirm_delete_title')),
+          content: Text('${FromZeroLocalizations.of(context).translate('confirm_delete_desc')} ${elements.length} ${elements.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
+                                                                                                                                      : FromZeroLocalizations.of(context).translate('element_sing')}?'),
+          // TODO 2 show more details about elements to be deleted
+          actions: [
+            FlatButton(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+              textColor: Theme.of(context).textTheme.caption!.color,
+              onPressed: () {
+                Navigator.of(context).pop(false); // Dismiss alert dialog
+              },
+            ),
+            FlatButton(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(FromZeroLocalizations.of(context).translate('delete_caps'),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+              textColor: Colors.red,
+              onPressed: () {
+                Navigator.of(context).pop(true); // Dismiss alert dialog
+              },
+            ),
+            SizedBox(width: 2,),
+          ],
+        );
+      },
+    );
+    if (delete??false) {
+      if (elements.length>1) {
+        throw new UnimplementedError('multiple deletion handling not implemented');
+      }
+      if (await elements.first.delete(context)) {
+        elements.forEach((e) {
+          objects!.remove(e);
+        });
+      }
+      notifyListeners();
+    }
+  }
+
+  static void maybeEditMultiple(BuildContext context, List<DAO> elements) async {
+    // TODO 3 test this well, rework it visually to be like maybeEdit
+    Map<String, Field> props = {};
+    elements.first.props.forEach((key, value) {
+      props[key] = value.copyWith(
+        hint: FromZeroLocalizations.of(context).translate('selected_plurkeep_value'),
+      ) ..value = null
+        ..dbValue = null;
+    });
+    final DAO dao = elements.first.copyWith(
+      props: props,
+    );
+    ScrollController scrollController = ScrollController();
+    bool? confirm = await showModal(
+      context: context,
+      builder: (context) {
+        return WillPopScope(
+          onWillPop: () async {
+            if (!dao.isEditted) return true;
+            bool? pop = await showModal(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text(FromZeroLocalizations.of(context).translate('confirm_close_title')),
+                  content: Text(FromZeroLocalizations.of(context).translate('confirm_close_desc')),
+                  actions: [
+                    FlatButton(
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      textColor: Theme.of(context).textTheme.caption!.color,
+                      onPressed: () {
+                        Navigator.of(context).pop(false); // Dismiss alert dialog
+                      },
+                    ),
+                    ChangeNotifierBuilder(
+                      changeNotifier: dao,
+                      builder: (context, value, child) {
+                        return FlatButton(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(FromZeroLocalizations.of(context).translate('close_caps'),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          textColor: Colors.red,
+                          onPressed: () {
+                            Navigator.of(context).pop(true); // Dismiss alert dialog
+                          },
+                        );
+                      },
+                    ),
+                    SizedBox(width: 2,),
+                  ],
+                );
+              },
+            );
+            return pop??false;
+          },
+          child: Center(
+            child: SizedBox(
+              width: 512+128,
+              child: Dialog(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 24, left: 32, right: 32,),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Editar mútiples elementos',
+                            style: Theme.of(context).textTheme.headline6,
+                          ),
+                          SizedBox(height: 12,),
+                          Text('${FromZeroLocalizations.of(context).translate('edit_multiple_desc1')} ${elements.length} ${elements.length>1  ? FromZeroLocalizations.of(context).translate('element_plur')
+                                                                                                                                              : FromZeroLocalizations.of(context).translate('element_sing')} ${FromZeroLocalizations.of(context).translate('edit_multiple_desc2')}',
+                            style: Theme.of(context).textTheme.bodyText1,
+                          ),
+                        ],
+                      ),
+                    ),
+                    ScrollbarFromZero(
+                      controller: scrollController,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: CustomScrollView(
+                          controller: scrollController,
+                          shrinkWrap: true,
+                          slivers: dao.buildFormWidgets(context, showActionButtons: false,),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12, right: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          FlatButton(
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            textColor: Theme.of(context).textTheme.caption!.color,
+                            onPressed: () {
+                              Navigator.of(context).maybePop(); // Dismiss alert dialog
+                            },
+                          ),
+                          ChangeNotifierBuilder(
+                            changeNotifier: dao,
+                            builder: (context, value, child) {
+                              return FlatButton(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                                textColor: Colors.blue,
+                                onPressed: dao.isEditted ? () async {
+                                  bool? edit = await showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      return AlertDialog(
+                                        title: Text(FromZeroLocalizations.of(context).translate('confirm_save_title')),
+                                        content: Text('${FromZeroLocalizations.of(context).translate('edit_multiple_confirm')} ${elements.length} ${elements.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
+                                                                                                                                                                      : FromZeroLocalizations.of(context).translate('element_sing')}?'),
+                                        actions: [
+                                          FlatButton(
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
+                                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                              ),
+                                            ),
+                                            textColor: Theme.of(context).textTheme.caption!.color,
+                                            onPressed: () {
+                                              Navigator.of(context).pop(false); // Dismiss alert dialog
+                                            },
+                                          ),
+                                          FlatButton(
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
+                                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                              ),
+                                            ),
+                                            textColor: Colors.blue,
+                                            onPressed: () {
+                                              Navigator.of(context).pop(true); // Dismiss alert dialog
+                                            },
+                                          ),
+                                          SizedBox(width: 2,),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                  if (edit??false) {
+                                    Navigator.of(context).pop(true);
+                                  }
+                                } : null,
+                              );
+                            },
+                          ),
+                          SizedBox(width: 2,),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    if (confirm??false) {
+      dao.props.forEach((key, value) {
+        if (value.isEditted) {
+          elements.forEach((e) {
+            e.props[key]?.value = value.value;
+          });
+        }
+      });
+    }
+  }
+
+}
+
+
+
+class IconBackground extends StatelessWidget {
+
+  final Color color;
+  final Widget child;
+  final double overflowSize;
+
+  IconBackground({
+    required this.color,
+    required this.child,
+    this.overflowSize = 16,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Positioned(
+          top: -overflowSize, bottom: -overflowSize, left: -overflowSize, right: -overflowSize,
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                colors: [color, color, color.withOpacity(0)],
+                stops: [0, 0.5, 1],
+              ),
+            ),
+          ),
+        ),
+        child,
+      ],
+    );
+  }
+
+}

@@ -119,13 +119,15 @@ class ErrorSign extends StatelessWidget {
 }
 
 typedef SuccessBuilder<T> = Widget Function(BuildContext context, T data);
-typedef ErrorBuilder = Widget Function(BuildContext context, Object? error);
+typedef ErrorBuilder = Widget Function(BuildContext context, Object? error, Object? stackTrace);
 typedef LoadingBuilder = Widget Function(BuildContext context);
 Widget _defaultLoadingBuilder(context){
   return LoadingSign();
 }
 
-Widget _defaultErrorBuilder(context, error){
+Widget defaultErrorBuilder(context, error, stackTrace){
+  print(error);
+  print(stackTrace);
   return ErrorSign(
     icon: Icon(Icons.error_outline), //size: 64, color: Theme.of(context).errorColor,
     title: FromZeroLocalizations.of(context).translate("error"),
@@ -161,7 +163,7 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
     Key? key,
     required this.future,
     required this.successBuilder,
-    this.errorBuilder: _defaultErrorBuilder,
+    this.errorBuilder: defaultErrorBuilder,
     this.loadingBuilder: _defaultLoadingBuilder,
     this.initialData,
     AnimatedSwitcherTransitionBuilder? transitionBuilder,
@@ -209,7 +211,7 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
             result = widget.successBuilder(context, snapshot.data);
           } else {
             state = -1;
-            result = widget.errorBuilder(context, snapshot.hasError ? snapshot.error : "Forever Loading");
+            result = widget.errorBuilder(context, snapshot.hasError ? snapshot.error : "Forever Loading", snapshot.hasError ? snapshot.stackTrace : '',);
           }
         } else{
           if (skipFrame && (snapshot.hasData || snapshot.hasError)){
@@ -223,7 +225,7 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
               result = widget.successBuilder(context, snapshot.data);
             } else {
               state = -1;
-              result = widget.errorBuilder(context, snapshot.error);
+              result = widget.errorBuilder(context, snapshot.error, snapshot.stackTrace);
             }
           } else{
             state = 0;
