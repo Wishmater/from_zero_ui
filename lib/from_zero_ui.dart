@@ -11,6 +11,13 @@ export 'package:from_zero_ui/src/snackbar_from_zero.dart';
 export 'package:from_zero_ui/src/settings.dart';
 export 'package:from_zero_ui/src/app_update.dart';
 
+export 'package:from_zero_ui/src/dao.dart';
+export 'package:from_zero_ui/src/field_string.dart';
+export 'package:from_zero_ui/src/field_combo.dart';
+export 'package:from_zero_ui/src/field_num.dart';
+export 'package:from_zero_ui/src/field_date.dart';
+export 'package:from_zero_ui/src/field_one_to_many.dart';
+
 export 'package:from_zero_ui/src/splash_page.dart';
 export 'package:from_zero_ui/src/future_handling.dart';
 export 'package:from_zero_ui/src/ui_utility_widgets.dart';

@@ -30,7 +30,6 @@ class TableFromZero extends StatefulWidget {
   static const int column = 0;
   static const int listViewBuilder = 1;
   static const int sliverListViewBuilder = 2;
-  static const int animatedColumn = 3;
   static const int animatedListViewBuilder = 4;
   static const int sliverAnimatedListViewBuilder = 5;
 
@@ -71,7 +70,6 @@ class TableFromZero extends StatefulWidget {
   final TextStyle? defaultTextStyle;
   final ScrollController? mainScrollController;
   final double stickyOffset;
-  final bool forceColumnToLayoutAllChildren;
   final List<RowModel> Function(List<RowModel>)? onFilter;
   final TableController? tableController;
   final Alignment? alignmentWhenOverMaxWidth;
@@ -117,7 +115,6 @@ class TableFromZero extends StatefulWidget {
     this.mainScrollController,
     this.stickyOffset = 0,
     this.onFilter,
-    this.forceColumnToLayoutAllChildren = false,
     this.tableController,
     this.alignmentWhenOverMaxWidth,
     this.exportPath,
@@ -319,34 +316,29 @@ class TableFromZeroState extends State<TableFromZero> {
     Widget result;
 
     // Hack to be able to apply widget.stickyOffset
-    if (widget.stickyOffset!=0 && (widget.layoutWidgetType==TableFromZero.listViewBuilder
-        || widget.layoutWidgetType==TableFromZero.column
-        || widget.layoutWidgetType==TableFromZero.animatedColumn
-        || widget.layoutWidgetType==TableFromZero.animatedListViewBuilder)){
+    if (widget.layoutWidgetType==TableFromZero.column || (widget.stickyOffset!=0 &&
+        (widget.layoutWidgetType==TableFromZero.column
+        || widget.layoutWidgetType==TableFromZero.animatedListViewBuilder))){
 
-      if (widget.layoutWidgetType==TableFromZero.listViewBuilder
-          || widget.layoutWidgetType==TableFromZero.column){
-        if (widget.layoutWidgetType==TableFromZero.column && (widget.forceColumnToLayoutAllChildren)){
-          result = Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: List.generate(childCount, (i) => _getRow(context, filtered[i])),
-          );
-        } else {
-          result = ListView.builder(
-            itemBuilder: (context, i) => _getRow(context, filtered[i]),
-            itemCount: childCount,
-            shrinkWrap: widget.layoutWidgetType == TableFromZero.column,
-            controller: widget.scrollController,
-            itemExtent: widget.rowHeightForScrollingCalculation ?? (filtered.isEmpty ? null : filtered.first.height),
-          );
-        }
-      } else if (widget.layoutWidgetType==TableFromZero.animatedColumn
-          || widget.layoutWidgetType==TableFromZero.animatedListViewBuilder){
+      if (widget.layoutWidgetType==TableFromZero.column){
+        result = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: List.generate(childCount, (i) => _getRow(context, filtered[i])),
+        );
+      } else if (widget.layoutWidgetType==TableFromZero.listViewBuilder) {
+        result = ListView.builder(
+          itemBuilder: (context, i) => _getRow(context, filtered[i]),
+          itemCount: childCount,
+          shrinkWrap: widget.layoutWidgetType == TableFromZero.column,
+          controller: widget.scrollController,
+          itemExtent: widget.rowHeightForScrollingCalculation ?? (filtered.isEmpty ? null : filtered.first.height),
+        );
+      } else if (widget.layoutWidgetType==TableFromZero.animatedListViewBuilder){
         result = ImplicitlyAnimatedList<RowModel>(
           items: filtered,
           areItemsTheSame: (a, b) => a==b,
-          shrinkWrap: widget.layoutWidgetType==TableFromZero.animatedColumn,
+          shrinkWrap: true,
           controller: widget.scrollController,
           itemBuilder: (context, animation, item, index) {
             return SlideTransition(
@@ -437,7 +429,6 @@ class TableFromZeroState extends State<TableFromZero> {
           ),
         );
       } else if (widget.layoutWidgetType==TableFromZero.sliverAnimatedListViewBuilder
-          || widget.layoutWidgetType==TableFromZero.animatedColumn
           || widget.layoutWidgetType==TableFromZero.animatedListViewBuilder){
         result = SliverImplicitlyAnimatedList<RowModel>(
           items: filtered,
@@ -539,11 +530,10 @@ class TableFromZeroState extends State<TableFromZero> {
       );
       if (widget.layoutWidgetType==TableFromZero.listViewBuilder
           || widget.layoutWidgetType==TableFromZero.column
-          || widget.layoutWidgetType==TableFromZero.animatedColumn
           || widget.layoutWidgetType==TableFromZero.animatedListViewBuilder){
         result = CustomScrollView(
           controller: widget.scrollController,
-          shrinkWrap: widget.layoutWidgetType==TableFromZero.column||widget.layoutWidgetType==TableFromZero.animatedColumn,
+          shrinkWrap: true,
           slivers: [result],
         );
       }
@@ -571,8 +561,9 @@ class TableFromZeroState extends State<TableFromZero> {
             padding: EdgeInsets.symmetric(vertical: 16),
             child: widget.errorWidget ?? ErrorSign(
               icon: Icon(MaterialCommunityIcons.clipboard_alert_outline, size: 64, color: Theme.of(context).disabledColor,),
-              title: "No hay datos que mostrar...",
-              subtitle: filtersApplied.where((e) => e).isNotEmpty ? "Intente desactivar algunos filtros." : "No existen datos correspondientes a esta consulta.",
+              title: FromZeroLocalizations.of(context).translate('no_data'),
+              subtitle: filtersApplied.where((e) => e).isNotEmpty ? FromZeroLocalizations.of(context).translate('no_data_filters')
+                                                                  : FromZeroLocalizations.of(context).translate('no_data_desc'),
             ),
           ),
         ),
@@ -990,7 +981,7 @@ class TableFromZeroState extends State<TableFromZero> {
                         color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
                       ),
                       splashRadius: 20,
-                      tooltip: "Filtros",
+                      tooltip: FromZeroLocalizations.of(context).translate('filters'),
                       onPressed: () async {
                         ScrollController filtersScrollController = ScrollController();
                         TableController filterTableController = TableController();
@@ -1075,7 +1066,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                               SliverToBoxAdapter(child: Padding(
                                                 padding: const EdgeInsets.only(top: 4.0),
                                                 child: Center(
-                                                  child: Text('Filtros',
+                                                  child: Text(FromZeroLocalizations.of(context).translate('filters'),
                                                     style: Theme.of(context).textTheme.subtitle1,
                                                     textAlign: TextAlign.center,
                                                   ),
@@ -1090,12 +1081,12 @@ class TableFromZeroState extends State<TableFromZero> {
                                                     children: [
                                                       Padding(
                                                         padding: const EdgeInsets.only(left: 4,),
-                                                        child: Text('Filtros de Condición',
+                                                        child: Text(FromZeroLocalizations.of(context).translate('condition_filters'),
                                                           style: Theme.of(context).textTheme.subtitle1,
                                                         ),
                                                       ),
                                                       PopupMenuButton<ConditionFilter>(
-                                                        tooltip: 'Añadir Filtro de Condición',
+                                                        tooltip: FromZeroLocalizations.of(context).translate('add_condition_filter'),
                                                         offset: Offset(128, 32),
                                                         child: Padding(
                                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
@@ -1104,7 +1095,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                                             children: [
                                                               Icon(Icons.add, color: Colors.blue,),
                                                               SizedBox(width: 6,),
-                                                              Text('Añadir',
+                                                              Text(FromZeroLocalizations.of(context).translate('add'),
                                                                 style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.blue,),
                                                               ),
                                                             ],
@@ -1131,7 +1122,9 @@ class TableFromZeroState extends State<TableFromZero> {
                                               if (conditionFilters[j].isEmpty)
                                                 SliverToBoxAdapter(child: Padding(
                                                   padding: EdgeInsets.only(left: 24, bottom: 8,),
-                                                  child: Text ('-ninguno-', style: Theme.of(context).textTheme.caption,),
+                                                  child: Text (FromZeroLocalizations.of(context).translate('none'),
+                                                    style: Theme.of(context).textTheme.caption,
+                                                  ),
                                                 ),),
                                               SliverList(
                                                 delegate: SliverChildListDelegate.fixed(
@@ -1200,7 +1193,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                                               });
                                                             },
                                                             decoration: InputDecoration(
-                                                              labelText: 'Buscar',
+                                                              labelText: FromZeroLocalizations.of(context).translate('search...'),
                                                               contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
                                                               labelStyle: TextStyle(height: 0.2),
                                                               suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
@@ -1212,7 +1205,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                                           children: [
                                                             Expanded(
                                                               child: TextButton(
-                                                                child: Text('Seleccionar Todos'),
+                                                                child: Text(FromZeroLocalizations.of(context).translate('select_all')),
                                                                 onPressed: () {
                                                                   modified = true;
                                                                   filterPopupSetState(() {
@@ -1226,7 +1219,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                                             ),
                                                             Expanded(
                                                               child: TextButton(
-                                                                child: Text('Limpiar Selección'),
+                                                                child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
                                                                 onPressed: () {
                                                                   modified = true;
                                                                   filterPopupSetState(() {
