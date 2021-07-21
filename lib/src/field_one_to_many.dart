@@ -24,6 +24,7 @@ class OneToManyRelationField extends Field<String> {
   bool showActionDelete;
   List<RowActionBuilder> extraRowActionBuilders; //TODO 3 also allow global action builders
   bool showEditDialogOnAdd;
+  bool showAddButtonAtEndOfTable;
   Key? tableKey;
   Widget Function(Object? e, Object? st)? futureErrorWidgetBuilder;
   Object? futureError;
@@ -65,6 +66,7 @@ class OneToManyRelationField extends Field<String> {
     this.showActionDuplicate = true,
     this.showActionDelete = true,
     this.extraRowActionBuilders = const [],
+    this.showAddButtonAtEndOfTable = false,
     bool? showEditDialogOnAdd,
     String? hint,
     this.tableKey,
@@ -373,43 +375,44 @@ class OneToManyRelationField extends Field<String> {
     List<Widget> resultList = [
       SizedBox(height: 1,),
       result,
-      ChangeNotifierBuilder(
-        changeNotifier: this,
-        builder: (context, value, child) {
-          if (collapsed || objects==null) {
-            return SizedBox.shrink();
-          }
-          return Center(
-            child: Transform.translate(
-              offset: Offset(0, -12),
-              child: Container(
-                width: maxWidth==double.infinity ? width : maxWidth,
-                color: Material.of(context)!.color ?? Theme.of(context).cardColor,
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 12,
-                    ),
-                    TextButton(
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 10, bottom: 10,),
-                        child: Center(child: buttonChild),
+      if (showAddButtonAtEndOfTable)
+        ChangeNotifierBuilder(
+          changeNotifier: this,
+          builder: (context, value, child) {
+            if (collapsed || objects==null) {
+              return SizedBox.shrink();
+            }
+            return Center(
+              child: Transform.translate(
+                offset: Offset(0, -12),
+                child: Container(
+                  width: maxWidth==double.infinity ? width : maxWidth,
+                  color: Material.of(context)!.color ?? Theme.of(context).cardColor,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 12,
                       ),
-                      style: TextButton.styleFrom(
-                        backgroundColor: Colors.blue.withOpacity(0.2),
+                      TextButton(
+                        child: Padding(
+                          padding: const EdgeInsets.only(top: 10, bottom: 10,),
+                          child: Center(child: buttonChild),
+                        ),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.blue.withOpacity(0.2),
+                        ),
+                        onPressed: () => addRow(context),
                       ),
-                      onPressed: () => addRow(context),
-                    ),
-                    SizedBox(
-                      height: 12,
-                    ),
-                  ],
+                      SizedBox(
+                        height: 12,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        },
-      ),
+            );
+          },
+        ),
       SizedBox(height: 1,),
     ];
     if (asSliver) {
@@ -605,11 +608,19 @@ class OneToManyRelationField extends Field<String> {
       if (elements.length>1) {
         throw new UnimplementedError('multiple deletion handling not implemented');
       }
+      showModal(
+        context: context,
+        configuration: const FadeScaleTransitionConfiguration(barrierDismissible: false,),
+        builder: (context) {
+          return LoadingSign();
+        },
+      );
       if (await elements.first.delete(context)) {
         elements.forEach((e) {
           objects!.remove(e);
         });
       }
+      Navigator.of(context).pop();
       notifyListeners();
     }
   }

@@ -475,29 +475,28 @@ class TableFromZeroState extends State<TableFromZero> {
               clipBehavior: Clip.none,
               children: [
                 header,
-                if (state.isPinned)
-                  Positioned(
-                    left: 0, right: 0, bottom: -2,
-                    child: InitiallyAnimatedWidget(
-                      duration: Duration(milliseconds: 300,),
-                      builder: (animationController, child) {
-                        return Opacity(
-                          opacity: CurveTween(curve: Curves.easeOutCubic).evaluate(animationController),
-                          child: Center(
-                            child: SizedBox(
-                              width: widget.maxWidth ?? double.infinity, height: 2,
-                              child: const CustomPaint(
-                                painter: const SimpleShadowPainter(
-                                  direction: SimpleShadowPainter.down,
-                                  shadowOpacity: 0.2,
-                                ),
+                Positioned(
+                  left: 0, right: 0, bottom: -2,
+                  child: !state.isPinned ? SizedBox.shrink() : InitiallyAnimatedWidget(
+                    duration: Duration(milliseconds: 300,),
+                    builder: (animationController, child) {
+                      return Opacity(
+                        opacity: CurveTween(curve: Curves.easeOutCubic).evaluate(animationController),
+                        child: Center(
+                          child: SizedBox(
+                            width: widget.maxWidth ?? double.infinity, height: 2,
+                            child: const CustomPaint(
+                              painter: const SimpleShadowPainter(
+                                direction: SimpleShadowPainter.down,
+                                shadowOpacity: 0.2,
                               ),
                             ),
                           ),
-                        );
-                      },
-                    ),
+                        ),
+                      );
+                    },
                   ),
+                ),
               ],
             );
           },
@@ -721,7 +720,7 @@ class TableFromZeroState extends State<TableFromZero> {
         background = SizedBox(
           height: row.height + widget.itemPadding.vertical,
           child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) => row!=headerRowModel,
+            onNotification: (notification) => true,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               controller: sharedController,
@@ -733,16 +732,24 @@ class TableFromZeroState extends State<TableFromZero> {
         );
         result = SizedBox(
           height: row.height + widget.itemPadding.vertical,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) => row!=headerRowModel,
-            child: ListView.builder(
-              scrollDirection: Axis.horizontal,
-              controller: sharedController,
-              itemBuilder: cellBuilder,
-              itemCount: cols,
-              padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
-            ),
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            controller: sharedController,
+            itemBuilder: cellBuilder,
+            itemCount: cols,
+            padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
           ),
+        );
+        if (row==headerRowModel) {
+          result = ScrollbarFromZero(
+            controller: sharedController,
+            moveBackAndForthToForceTriggerScrollbar: true,
+            child: result,
+          );
+        }
+        result = NotificationListener<ScrollNotification>(
+          onNotification: (notification) => true,
+          child: result,
         );
       } else {
         background = Row(
@@ -782,7 +789,7 @@ class TableFromZeroState extends State<TableFromZero> {
         Widget addon = widget.headerAddon!;
         if (widget.applyMinWidthToHeaderAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
           addon = NotificationListener<ScrollNotification>(
-            onNotification: (notification) => row!=headerRowModel,
+            onNotification: (notification) => true,
             child: SingleChildScrollView(
               controller: sharedController,
               scrollDirection: Axis.horizontal,
@@ -809,7 +816,7 @@ class TableFromZeroState extends State<TableFromZero> {
         Widget addon = row.rowAddon!;
         if (widget.applyScrollToRowAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
           addon = NotificationListener<ScrollNotification>(
-            onNotification: (notification) => row!=headerRowModel,
+            onNotification: (notification) => true,
             child: SingleChildScrollView(
               controller: sharedController,
               scrollDirection: Axis.horizontal,

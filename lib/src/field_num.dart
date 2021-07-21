@@ -168,14 +168,16 @@ class NumField extends Field<num> {
           if (enabled && clearable)
             Positioned(
               right: -4, top: 6, bottom: 0,
-              child: Center(
-                child: IconButton(
-                  icon: Icon(Icons.close),
-                  tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                  onPressed: () {
-                    value = null;
-                    controller.clear();
-                  },
+              child: ExcludeFocus(
+                child: Center(
+                  child: IconButton(
+                    icon: Icon(Icons.close),
+                    tooltip: FromZeroLocalizations.of(context).translate('clear'),
+                    onPressed: () {
+                      value = null;
+                      controller.clear();
+                    },
+                  ),
                 ),
               ),
             ),

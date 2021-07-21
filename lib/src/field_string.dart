@@ -42,8 +42,8 @@ class StringField extends Field<String> {
     this.inputDecoration,
     this.inputFormatters,
     double? tableColumnWidth,
-  }) :  minLines = minLines ?? (type==StringFieldType.short ? null : 2),
-        maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 10),
+  }) :  minLines = minLines ?? (type==StringFieldType.short ? null : 3),
+        maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
         controller = TextEditingController(text: value),
         super(
           uiName: uiName,
@@ -142,7 +142,6 @@ class StringField extends Field<String> {
     bool largeHorizontally = false,
     bool autofocus = false,
   }) {
-    // TODO 3 add scrollbar to textfield
     Widget result = NotificationListener<ScrollNotification>(
       onNotification: (notification) => true,
       child: Stack(
@@ -152,7 +151,7 @@ class StringField extends Field<String> {
             enabled: enabled,
             autofocus: autofocus,
             minLines: minLines,
-            maxLines: maxLines,
+            maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
             onChanged: (v) {
               value = v;
             },
@@ -169,13 +168,15 @@ class StringField extends Field<String> {
           if (enabled && clearable)
             Positioned(
               right: -4, top: 6, bottom: 0,
-              child: Center(
-                child: IconButton(
-                  icon: Icon(Icons.close),
-                  tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                  onPressed: () {
-                    value = '';
-                  },
+              child: ExcludeFocus(
+                child: Center(
+                  child: IconButton(
+                    icon: Icon(Icons.close),
+                    tooltip: FromZeroLocalizations.of(context).translate('clear'),
+                    onPressed: () {
+                      value = '';
+                    },
+                  ),
                 ),
               ),
             ),

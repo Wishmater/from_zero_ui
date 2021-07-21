@@ -232,7 +232,7 @@ class _SnackBarFromZeroState extends State<SnackBarFromZero> with TickerProvider
             });
           }
           return LinearProgressIndicator(
-            value: animationController!.value,
+            value: 1 - animationController!.value,
             valueColor: AlwaysStoppedAnimation(actionColor),
             backgroundColor: widget.type==null ? null : SnackBarFromZero.softColors[widget.type!],
           );

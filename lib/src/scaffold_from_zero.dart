@@ -11,7 +11,7 @@ import 'package:from_zero_ui/src/appbar_from_zero.dart';
 import 'package:from_zero_ui/src/custom_painters.dart';
 import 'package:from_zero_ui/src/scrollbar_from_zero.dart';
 import 'package:provider/provider.dart';
-import '../util/no_fading_shared_axis_transition.dart' as no_fading_shared_axis_transition;
+import 'package:from_zero_ui/util/no_fading_shared_axis_transition.dart' as no_fading_shared_axis_transition;
 import 'package:dartx/dartx.dart';
 
 
@@ -37,8 +37,6 @@ class ScaffoldFromZero extends StatefulWidget {
   static const int scrollbarTypeNone = 7001;
   static const int scrollbarTypeBellowAppbar = 7002;
   static const int scrollbarTypeOverAppbar = 7003;
-
-  final GlobalKey bodyGlobalKey = GlobalKey();
 
   final Duration drawerAnimationDuration = 300.milliseconds; //TODO 3- allow customization of durations and curves of appbar and drawer animations (fix conflicts)
   final drawerAnimationCurve = Curves.easeOutCubic;
@@ -221,6 +219,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
   late bool canPop;
   late Animation<double> animation;
   late Animation<double> secondaryAnimation;
+  final GlobalKey bodyGlobalKey = GlobalKey();
 
 
   _ScaffoldFromZeroState();
@@ -469,7 +468,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         alignment: Alignment.topCenter,
         width: widget.constraintBodyOnXLargeScreens ? ScaffoldFromZero.screenSizeXLarge : double.infinity,
         child: AnimatedBuilder(
-          child: Container(key: widget.bodyGlobalKey, child: widget.body),
+          child: Container(key: bodyGlobalKey, child: widget.body),
           animation: animation,
           builder: (context, child) {
             return AnimatedBuilder(
@@ -775,45 +774,27 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                     child: Column(
                       children: [
                         Expanded(
-                          child: SingleChildScrollView(
-                            clipBehavior: Clip.none,
+                          child: ScrollbarFromZero(
                             controller: drawerContentScrollController,
-                            child: Padding(
-                              padding: EdgeInsets.only(top: widget.drawerPaddingTop),
-                              child:  Consumer<ScaffoldFromZeroChangeNotifier>(
-                                builder: (context, changeNotifier, child) {
-                                  Widget result = _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth);
-                                  if (widget.animateDrawer){
-                                    result = widget.drawerContentTransitionBuilder(result, animation, secondaryAnimation, changeNotifierNotListen,);
-                                  }
-                                  return result;
-                                },
+                            applyOpacityGradientToChildren: false,
+                            child: SingleChildScrollView(
+                              clipBehavior: Clip.none,
+                              controller: drawerContentScrollController,
+                              child: Padding(
+                                padding: EdgeInsets.only(top: widget.drawerPaddingTop),
+                                child:  Consumer<ScaffoldFromZeroChangeNotifier>(
+                                  builder: (context, changeNotifier, child) {
+                                    Widget result = _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth);
+                                    if (widget.animateDrawer){
+                                      result = widget.drawerContentTransitionBuilder(result, animation, secondaryAnimation, changeNotifierNotListen,);
+                                    }
+                                    return result;
+                                  },
+                                ),
                               ),
                             ),
                           ),
                         ),
-                        // Expanded(
-                        //   child: ScrollbarFromZero(
-                        //     controller: drawerContentScrollController,
-                        //     applyOpacityGradientToChildren: false,
-                        //     child: SingleChildScrollView(
-                        //       clipBehavior: Clip.none,
-                        //       controller: drawerContentScrollController,
-                        //       child: Padding(
-                        //         padding: EdgeInsets.only(top: widget.drawerPaddingTop),
-                        //         child:  Consumer<ScaffoldFromZeroChangeNotifier>(
-                        //           builder: (context, changeNotifier, child) {
-                        //             Widget result = _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth);
-                        //             if (widget.animateDrawer){
-                        //               result = widget.drawerContentTransitionBuilder(result, animation, secondaryAnimation, changeNotifierNotListen,);
-                        //             }
-                        //             return result;
-                        //           },
-                        //         ),
-                        //       ),
-                        //     ),
-                        //   ),
-                        // ),
                         widget.drawerFooterBuilder != null
                             ? Consumer<ScaffoldFromZeroChangeNotifier>(
                           builder: (context, changeNotifier, child) {

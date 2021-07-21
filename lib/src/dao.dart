@@ -6,7 +6,7 @@ import 'package:dartx/dartx.dart';
 import 'field_one_to_many.dart';
 
 
-typedef Future<bool?> OnSaveCallback(DAO e);
+typedef Future<bool?> OnSaveCallback(BuildContext context, DAO e);
 
 
 class DAO extends ChangeNotifier implements Comparable {
@@ -144,7 +144,13 @@ class DAO extends ChangeNotifier implements Comparable {
     bool updateDbValuesAfterSuccessfulSave=true,
   }) async {
     bool newInstance = id==null;
-    bool success = (await onSave?.call(this)) ?? true;
+    bool success = false;
+    try {
+      success = (await onSave?.call(context, this)) ?? true;
+    } catch (e, st) {
+      success = false;
+      print(e); print(st);
+    }
     if (updateDbValuesAfterSuccessfulSave && success) {
       props.forEach((key, value) {
         value.dbValue = value.value;
@@ -162,7 +168,13 @@ class DAO extends ChangeNotifier implements Comparable {
   }
 
   Future<bool> delete(context) async {
-    bool success = (await onDelete?.call(this)) ?? true;
+    bool success = false;
+    try {
+      success = (await onDelete?.call(context, this)) ?? true;
+    } catch (e, st) {
+      success = false;
+      print(e); print(st);
+    }
     SnackBarFromZero(
       context: context,
       type: success ? SnackBarFromZero.success : SnackBarFromZero.error,
@@ -220,51 +232,59 @@ class DAO extends ChangeNotifier implements Comparable {
     if (props.values.where((e) => e is OneToManyRelationField).isNotEmpty) {
       expandToFillContainer = true;
     }
-    List<Widget> formWidgets = buildFormWidgets(context,
-      showCancelActionToPop: true,
-      expandToFillContainer: expandToFillContainer,
-      asSlivers: false,
-    );
-    List<Widget> formFields = formWidgets.sublist(0, formWidgets.length-2);
-    List<Widget> formActions = formWidgets.sublist(formWidgets.length-2);
-    ScrollController scrollController = ScrollController();
-    Widget content = Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
-          child: Text('${id==null ? FromZeroLocalizations.of(context).translate("add")
-                                  : FromZeroLocalizations.of(context).translate("edit")} $classUiName',
-            style: Theme.of(context).textTheme.headline6,
-          ),
-        ),
-        Expanded(
-          child: ScrollbarFromZero(
-            controller: scrollController,
-            child: ScrollOpacityGradient(
-              scrollController: scrollController,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: formFields,
+    Widget content = ChangeNotifierBuilder(
+      changeNotifier: this,
+      builder: (context, value, child) {
+        List<Widget> formWidgets = buildFormWidgets(context,
+          showCancelActionToPop: true,
+          expandToFillContainer: expandToFillContainer,
+          asSlivers: false,
+        );
+        List<Widget> formFields = formWidgets.sublist(0, formWidgets.length-2);
+        List<Widget> formActions = formWidgets.sublist(formWidgets.length-2);
+        ScrollController scrollController = ScrollController();
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
+              child: Text('${id==null ? FromZeroLocalizations.of(context).translate("add")
+                  : FromZeroLocalizations.of(context).translate("edit")} $classUiName',
+                style: Theme.of(context).textTheme.headline6,
+              ),
+            ),
+            Expanded(
+              child: ScrollbarFromZero(
+                controller: scrollController,
+                child: ScrollOpacityGradient(
+                  scrollController: scrollController,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      child: FocusTraversalGroup(
+                        policy: WidgetOrderTraversalPolicy(),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: formFields,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: formActions,
-          ),
-        ),
-      ],
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: formActions,
+              ),
+            ),
+          ],
+        );
+      },
     );
     if (!expandToFillContainer) {
       content = IntrinsicHeight(
@@ -292,7 +312,7 @@ class DAO extends ChangeNotifier implements Comparable {
   }
 
 
-  List<Widget> buildFormWidgets(BuildContext baseContext, {
+  List<Widget> buildFormWidgets(BuildContext context, {
     bool asSlivers=true,
     bool showActionButtons=true,
     bool popAfterSuccessfulSave=true,
@@ -304,7 +324,7 @@ class DAO extends ChangeNotifier implements Comparable {
     List<Widget> result = [
       SizedBox(height: 12,),
       ...props.values.map((e) {
-        final result = e.buildFieldEditorWidgets(baseContext,
+        final result = e.buildFieldEditorWidgets(context,
           addCard: true,
           asSliver: asSlivers,
           expandToFillContainer: expandToFillContainer,
@@ -330,124 +350,119 @@ class DAO extends ChangeNotifier implements Comparable {
         SizedBox(height: 6,),
       if (showActionButtons)
         Center(
-          child: ChangeNotifierBuilder<DAO>(
-            changeNotifier: this,
-            builder: (context, value, child) {
-              return WillPopScope(
-                onWillPop: () async {
-                  if (!isEditted) return true;
-                  bool? pop = (await showModal(
-                    context: context,
-                    builder: (modalContext) {
-                      return AlertDialog(
-                        title: Text(FromZeroLocalizations.of(context).translate("confirm_close_title")),
-                        content: Text(FromZeroLocalizations.of(context).translate("confirm_close_desc")),
-                        actions: [
-                          FlatButton(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            textColor: Theme.of(context).textTheme.caption!.color,
-                            onPressed: () {
-                              Navigator.of(modalContext).pop(false); // Dismiss alert dialog
-                            },
+          child: WillPopScope(
+            onWillPop: () async {
+              if (!isEditted) return true;
+              bool? pop = (await showModal(
+                context: context,
+                builder: (modalContext) {
+                  return AlertDialog(
+                    title: Text(FromZeroLocalizations.of(context).translate("confirm_close_title")),
+                    content: Text(FromZeroLocalizations.of(context).translate("confirm_close_desc")),
+                    actions: [
+                      FlatButton(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                           ),
-                          FlatButton(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            textColor: Colors.red,
-                            onPressed: () {
-                              Navigator.of(modalContext).pop(true); // Dismiss alert dialog
-                            },
+                        ),
+                        textColor: Theme.of(context).textTheme.caption!.color,
+                        onPressed: () {
+                          Navigator.of(modalContext).pop(false); // Dismiss alert dialog
+                        },
+                      ),
+                      FlatButton(
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                           ),
-                          SizedBox(width: 2,),
-                        ],
-                      );
-                    },
-                  )) ?? false;
-                  if (pop) {
-                    revertChanges();
-                  }
-                  return pop;
+                        ),
+                        textColor: Colors.red,
+                        onPressed: () {
+                          Navigator.of(modalContext).pop(true); // Dismiss alert dialog
+                        },
+                      ),
+                      SizedBox(width: 2,),
+                    ],
+                  );
                 },
-                child: ResponsiveHorizontalInsets(
-                  child: SizedBox(
-                    width: 512,
-                    child: Row(
-                      children: [
-                        if (showCancelActionToPop)
-                          Expanded(
-                            child: FlatButton(
-                              child: Padding(
-                                padding: const EdgeInsets.all(6.0),
-                                child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                              textColor: Theme.of(context).textTheme.caption!.color,
-                              onPressed: () {
-                                Navigator.of(context).maybePop(false); // Dismiss alert dialog
-                              },
-                            ),
-                          ),
-                        if (showCancelActionToPop)
-                          SizedBox(width: 12,),
-                        Expanded(
-                          child: ElevatedButton(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              child: Text(FromZeroLocalizations.of(context).translate("reverse_changes_caps"),
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600,),
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              primary: Colors.grey,
-                            ),
-                            onPressed: isEditted ? () {
-                              maybeRevertChanges(context);
-                            } : null,
-                          ),
-                        ),
-                        SizedBox(width: 12,),
-                        Expanded(
-                          child: ElevatedButton(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 4),
-                              child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600,),
-                              ),
-                            ),
-                            onPressed: isEditted ? () async {
-                              showModal(
-                                context: context,
-                                configuration: const FadeScaleTransitionConfiguration(barrierDismissible: false,),
-                                builder: (context) {
-                                  return LoadingSign();
-                                },
-                              );
-                              bool success = await maybeSave(baseContext);
-                              Navigator.of(context).pop();
-                              if (success) {
-                                if (popAfterSuccessfulSave) {
-                                  Navigator.of(context).pop(true);
-                                }
-                              }
-                            } : null,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              );
+              )) ?? false;
+              if (pop) {
+                revertChanges();
+              }
+              return pop;
             },
+            child: ResponsiveHorizontalInsets(
+              child: SizedBox(
+                width: 512,
+                child: Row(
+                  children: [
+                    if (showCancelActionToPop)
+                      Expanded(
+                        child: FlatButton(
+                          child: Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
+                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          textColor: Theme.of(context).textTheme.caption!.color,
+                          onPressed: () {
+                            Navigator.of(context).maybePop(false); // Dismiss alert dialog
+                          },
+                        ),
+                      ),
+                    if (showCancelActionToPop)
+                      SizedBox(width: 12,),
+                    Expanded(
+                      child: ElevatedButton(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(FromZeroLocalizations.of(context).translate("reverse_changes_caps"),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600,),
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          primary: Colors.grey,
+                        ),
+                        onPressed: isEditted ? () {
+                          maybeRevertChanges(context);
+                        } : null,
+                      ),
+                    ),
+                    SizedBox(width: 12,),
+                    Expanded(
+                      child: ElevatedButton(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600,),
+                          ),
+                        ),
+                        onPressed: isEditted ? () async {
+                          showModal(
+                            context: context,
+                            configuration: const FadeScaleTransitionConfiguration(barrierDismissible: false,),
+                            builder: (context) {
+                              return LoadingSign();
+                            },
+                          );
+                          bool success = await maybeSave(context);
+                          Navigator.of(context).pop();
+                          if (success) {
+                            if (popAfterSuccessfulSave) {
+                              Navigator.of(context).pop(true);
+                            }
+                          }
+                        } : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       if (showActionButtons)

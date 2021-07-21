@@ -15,6 +15,7 @@ class ScrollbarFromZero extends StatefulWidget {
   final bool? applyOpacityGradientToChildren;
   final int? opacityGradientDirection;
   final double opacityGradientSize;
+  final bool moveBackAndForthToForceTriggerScrollbar;
 
   ScrollbarFromZero({
     Key? key,
@@ -29,6 +30,7 @@ class ScrollbarFromZero extends StatefulWidget {
     this.thickness,
     this.hoverThickness,
     this.showTrackOnHover,
+    this.moveBackAndForthToForceTriggerScrollbar = false,
   }) :  super(key: key);
 
   @override
@@ -46,18 +48,16 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     super.didUpdateWidget(oldWidget);
     removeListeners(oldWidget.controller);
     addListeners(widget.controller);
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      _onScrollListener();
-    });
+    built = false;
+    _onScrollListener();
   }
 
   @override
   void initState() {
     super.initState();
-   WidgetsBinding.instance?.addPostFrameCallback((_) {
-     _onScrollListener ();
-   });
     addListeners(widget.controller);
+    built = false;
+    _onScrollListener ();
   }
 
   void addListeners(ScrollController? controller){
@@ -76,17 +76,26 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     super.dispose();
   }
 
-  void _onScrollListener () {
+  bool built = false;
+  void _onScrollListener () async {
+    await Future.delayed(Duration(milliseconds: 400));
+    if (built) return;
     if (widget.controller!=null) {
       if (!widget.controller!.hasClients) {
-        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) async {
-          await Future.delayed(Duration(milliseconds: 500));
-          _onScrollListener();
-        });
-        // return;
+        _onScrollListener();
+        return;
       }
-      WidgetsBinding.instance!.scheduleFrame();
-      setState(() {});
+      if (mounted) {
+        built = true;
+        if (widget.moveBackAndForthToForceTriggerScrollbar) {
+          final pixels = widget.controller!.position.pixels;
+          widget.controller!.jumpTo(pixels+1);
+          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+            widget.controller!.jumpTo(pixels);
+          });
+        }
+        setState(() {});
+      }
     }
   }
 
@@ -119,6 +128,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
         );
       }
     }
+    print (toString() + ' - ' + built.toString());
 
     return Scrollbar(
       controller: widget.controller,

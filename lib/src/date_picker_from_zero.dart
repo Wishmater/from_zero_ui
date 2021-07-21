@@ -163,28 +163,30 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
         if (widget.enabled && widget.clearable)
           Positioned(
             right: 8, top: 0, bottom: 0,
-            child: Center(
-                child: AnimatedSwitcher(
-                  duration: Duration(milliseconds: 300),
-                  switchInCurve: Curves.easeOutCubic,
-                  transitionBuilder: (child, animation) {
-                    return SizeTransition(
-                      sizeFactor: animation,
-                      child: FadeTransition(
-                        opacity: animation,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: widget.value!=null ? IconButton(
-                    icon: Icon(Icons.close),
-                    tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                    splashRadius: 20,
-                    onPressed: () {
-                      widget.onSelected?.call(null);
+            child: ExcludeFocus(
+              child: Center(
+                  child: AnimatedSwitcher(
+                    duration: Duration(milliseconds: 300),
+                    switchInCurve: Curves.easeOutCubic,
+                    transitionBuilder: (child, animation) {
+                      return SizeTransition(
+                        sizeFactor: animation,
+                        child: FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                      );
                     },
-                  ) : SizedBox.shrink(),
-                )
+                    child: widget.value!=null ? IconButton(
+                      icon: Icon(Icons.close),
+                      tooltip: FromZeroLocalizations.of(context).translate('clear'),
+                      splashRadius: 20,
+                      onPressed: () {
+                        widget.onSelected?.call(null);
+                      },
+                    ) : SizedBox.shrink(),
+                  )
+              ),
             ),
           ),
       ],
