@@ -84,6 +84,7 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
 
   GlobalKey buttonKey = GlobalKey();
 
+  final buttonFocusNode = FocusNode();
   @override
   Widget build(BuildContext context) {
     Widget child;
@@ -101,7 +102,9 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
         OutlineButton(
           key: buttonKey,
           child: child,
+          focusNode: buttonFocusNode,
           onPressed: widget.enabled ? () async {
+            buttonFocusNode.requestFocus();
             Widget child = Card(
               clipBehavior: Clip.hardEdge,
               child: DatePickerFromZeroPopup(

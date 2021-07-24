@@ -71,7 +71,10 @@ class _SnackBarHostFromZeroState extends State<SnackBarHostFromZero> {
                         position: Tween<Offset>(begin: Offset(0, 1), end: Offset.zero,).animate(animation),
                         child: FadeTransition(
                           opacity: CurvedAnimation(parent: animation, curve: Interval(0, 0.5,),),
-                          child: child,
+                          child: ScaleTransition(
+                            scale: Tween<double>(begin: 0.66, end: 1,).animate(animation),
+                            child: child,
+                          ),
                         ),
                       );
                     },

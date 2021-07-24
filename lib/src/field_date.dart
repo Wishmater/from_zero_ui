@@ -18,11 +18,14 @@ class DateField extends Field<DateTime> {
     DateTime? dbValue,
     bool clearable = true,
     bool enabled = true,
-    bool hidden = false,
     double maxWidth = 512,
     DateFormat? formatter,
     String? hint,
     double? tableColumnWidth,
+    bool? hidden,
+    bool? hiddenInTable,
+    bool? hiddenInView,
+    bool? hiddenInForm,
   }) :  this.firstDate = firstDate ?? DateTime(1900),
         this.lastDate = lastDate ?? DateTime(2200),
         this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY),
@@ -32,10 +35,13 @@ class DateField extends Field<DateTime> {
           dbValue: dbValue,
           clearable: clearable,
           enabled: enabled,
-          hidden: hidden,
           maxWidth: maxWidth,
           hint: hint,
           tableColumnWidth: tableColumnWidth,
+          hidden: hidden,
+          hiddenInTable: hiddenInTable,
+          hiddenInView: hiddenInView,
+          hiddenInForm: hiddenInForm,
         );
 
   @override
@@ -45,12 +51,15 @@ class DateField extends Field<DateTime> {
     DateTime? dbValue,
     bool? clearable,
     bool? enabled,
-    bool? hidden,
     double? maxWidth,
     DateTime? firstDate,
     DateTime? lastDate,
     String? hint,
     double? tableColumnWidth,
+    bool? hidden,
+    bool? hiddenInTable,
+    bool? hiddenInView,
+    bool? hiddenInForm,
   }) {
     return DateField(
       uiName: uiName??this.uiName,
@@ -58,12 +67,14 @@ class DateField extends Field<DateTime> {
       dbValue: dbValue??this.dbValue,
       clearable: clearable??this.clearable,
       enabled: enabled??this.enabled,
-      hidden: hidden??this.hidden,
       maxWidth: maxWidth??this.maxWidth,
       firstDate: firstDate??this.firstDate,
       lastDate: lastDate??this.lastDate,
       hint: hint??this.hint,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
+      hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
+      hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
+      hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
     );
   }
 
@@ -75,10 +86,10 @@ class DateField extends Field<DateTime> {
     bool addCard=false,
     bool asSliver = true,
     expandToFillContainer: true,
-    bool autofocus = false,
+    FocusNode? focusNode, /// unused
   }) {
     Widget result;
-    if (hidden) {
+    if (hiddenInForm) {
       result = SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);

@@ -9,6 +9,7 @@ class ComboField<T extends DAO> extends Field<T> {
   final Future<List<T>>? futurePossibleValues;
   final bool showSearchBox;
   final ExtraWidgetBuilder<T>? extraWidget;
+  final DAO? newObjectTemplate;
 
   ComboField({
     required String uiName,
@@ -16,7 +17,6 @@ class ComboField<T extends DAO> extends Field<T> {
     T? dbValue,
     bool clearable = true,
     bool enabled = true,
-    bool hidden = false,
     double maxWidth = 512,
     String? hint,
     this.possibleValues,
@@ -24,6 +24,11 @@ class ComboField<T extends DAO> extends Field<T> {
     this.showSearchBox = true,
     this.extraWidget,
     double? tableColumnWidth,
+    bool? hidden,
+    bool? hiddenInTable,
+    bool? hiddenInView,
+    bool? hiddenInForm,
+    this.newObjectTemplate,
   }) :  assert(possibleValues!=null || futurePossibleValues!=null),
         super(
           uiName: uiName,
@@ -31,10 +36,13 @@ class ComboField<T extends DAO> extends Field<T> {
           dbValue: dbValue,
           clearable: clearable,
           enabled: enabled,
-          hidden: hidden,
           maxWidth: maxWidth,
           hint: hint,
           tableColumnWidth: tableColumnWidth,
+          hidden: hidden,
+          hiddenInTable: hiddenInTable,
+          hiddenInView: hiddenInView,
+          hiddenInForm: hiddenInForm,
         );
 
   @override
@@ -44,7 +52,6 @@ class ComboField<T extends DAO> extends Field<T> {
     T? dbValue,
     bool? clearable,
     bool? enabled,
-    bool? hidden,
     double? maxWidth,
     List<T>? possibleValues,
     Future<List<T>>? futurePossibleValues,
@@ -52,6 +59,11 @@ class ComboField<T extends DAO> extends Field<T> {
     bool? showSearchBox,
     ExtraWidgetBuilder<T>? extraWidget,
     double? tableColumnWidth,
+    bool? hidden,
+    bool? hiddenInTable,
+    bool? hiddenInView,
+    bool? hiddenInForm,
+    DAO? newObjectTemplate,
   }) {
     return ComboField(
       uiName: uiName??this.uiName,
@@ -59,7 +71,6 @@ class ComboField<T extends DAO> extends Field<T> {
       dbValue: dbValue??this.dbValue,
       clearable: clearable??this.clearable,
       enabled: enabled??this.enabled,
-      hidden: hidden??this.hidden,
       maxWidth: maxWidth??this.maxWidth,
       possibleValues: possibleValues??this.possibleValues,
       futurePossibleValues: futurePossibleValues??this.futurePossibleValues,
@@ -67,6 +78,10 @@ class ComboField<T extends DAO> extends Field<T> {
       showSearchBox: showSearchBox??this.showSearchBox,
       extraWidget: extraWidget??this.extraWidget,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
+      hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
+      hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
+      hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
+      newObjectTemplate: newObjectTemplate ?? this.newObjectTemplate,
     );
   }
 
@@ -75,10 +90,10 @@ class ComboField<T extends DAO> extends Field<T> {
     bool addCard=false,
     bool asSliver = true,
     expandToFillContainer: true,
-    bool autofocus = false,
+    FocusNode? focusNode, /// unused
   }) {
     Widget result;
-    if (hidden) {
+    if (hiddenInForm) {
       result = SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);
@@ -116,6 +131,57 @@ class ComboField<T extends DAO> extends Field<T> {
     bool expandToFillContainer = true,
     bool largeHorizontally = false,
   }) {
+    ExtraWidgetBuilder<T>? extraWidget;
+    if (newObjectTemplate?.onSave!=null) {
+      extraWidget = (context, onSelected) {
+        final oldOnSave = newObjectTemplate!.onSave!;
+        final newOnSave = (context, e) async {
+          DAO? newDAO = await oldOnSave(context, e);
+          if (newDAO!=null) {
+            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+              onSelected?.call(newDAO as T);
+              Navigator.of(context).pop(true);
+            });
+          }
+          return newDAO;
+        };
+        final emptyDAO = newObjectTemplate!.copyWith(
+          onSave: newOnSave,
+        );
+        return Column (
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (this.extraWidget!=null)
+              this.extraWidget!(context, onSelected),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2,),
+                child: TextButton(
+                  onPressed: () async {
+                     emptyDAO.maybeEdit(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6,),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 6),
+                        Icon(Icons.add),
+                        SizedBox(width: 6,),
+                        Text('New ${emptyDAO.classUiName}', style: TextStyle(fontSize: 16),),
+                        SizedBox(width: 6),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      };
+    }
     Widget result = ChangeNotifierBuilder(
       changeNotifier: this,
       builder: (context, v, child) {
@@ -131,8 +197,7 @@ class ComboField<T extends DAO> extends Field<T> {
           onSelected: _onSelected,
           popupWidth: maxWidth,
           buttonChildBuilder: _buttonContentBuilder,
-          extraWidget: extraWidget,
-          // autofocus: autofocus, //TODO implement autofocus in ComboFromZero
+          extraWidget: extraWidget ?? this.extraWidget,
         );
       },
     );

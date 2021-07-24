@@ -102,6 +102,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
     }
   }
 
+  final buttonFocusNode = FocusNode();
   @override
   Widget build(BuildContext context) {
     if (possibleValues==null) {
@@ -117,12 +118,15 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
     } else {
       child = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable);
     }
+
     return Stack(
       children: [
         OutlineButton(
           key: buttonKey,
           child: child,
+          focusNode: buttonFocusNode,
           onPressed: widget.enabled ? () async {
+            buttonFocusNode.requestFocus();
             Widget child = Card(
               clipBehavior: Clip.hardEdge,
               child: ComboFromZeroPopup<T>(
@@ -335,6 +339,12 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                 Navigator.of(context).pop(true);
               }
             },
+            trailing: value is DAO ? IconButton(
+              icon: Icon(Icons.remove_red_eye),
+              onPressed: () {
+                (value as DAO).pushViewDialog(context);
+              },
+            ) : null,
           );
         },
       ),

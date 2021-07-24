@@ -33,7 +33,6 @@ class StringField extends Field<String> {
     String? dbValue,
     bool clearable = true,
     bool enabled = true,
-    bool hidden = false,
     double? maxWidth,
     String? hint,
     this.type = StringFieldType.short,
@@ -42,6 +41,10 @@ class StringField extends Field<String> {
     this.inputDecoration,
     this.inputFormatters,
     double? tableColumnWidth,
+    bool? hidden,
+    bool? hiddenInTable,
+    bool? hiddenInView,
+    bool? hiddenInForm,
   }) :  minLines = minLines ?? (type==StringFieldType.short ? null : 3),
         maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
         controller = TextEditingController(text: value),
@@ -51,10 +54,13 @@ class StringField extends Field<String> {
           dbValue: dbValue ?? value ?? '',
           clearable: clearable,
           enabled: enabled,
-          hidden: hidden,
           hint: hint,
           maxWidth: maxWidth ?? (type==StringFieldType.short ? 512 : 512), //768
           tableColumnWidth: tableColumnWidth,
+          hidden: hidden,
+          hiddenInTable: hiddenInTable,
+          hiddenInView: hiddenInView,
+          hiddenInForm: hiddenInForm,
         );
 
 
@@ -66,13 +72,16 @@ class StringField extends Field<String> {
     String? hint,
     bool? clearable,
     bool? enabled,
-    bool? hidden,
     double? maxWidth,
     StringFieldType? type,
     int? minLines,
     int? maxLines,
     InputDecoration? inputDecoration,
     double? tableColumnWidth,
+    bool? hidden,
+    bool? hiddenInTable,
+    bool? hiddenInView,
+    bool? hiddenInForm,
   }) {
     return StringField(
       uiName: uiName??this.uiName,
@@ -80,7 +89,6 @@ class StringField extends Field<String> {
       dbValue: dbValue??this.dbValue,
       clearable: clearable??this.clearable,
       enabled: enabled??this.enabled,
-      hidden: hidden??this.hidden,
       maxWidth: maxWidth??this.maxWidth,
       type: type??this.type,
       minLines: minLines??this.minLines,
@@ -88,6 +96,9 @@ class StringField extends Field<String> {
       inputDecoration: inputDecoration??this.inputDecoration,
       hint: hint??this.hint,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
+      hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
+      hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
+      hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
     );
   }
 
@@ -96,10 +107,10 @@ class StringField extends Field<String> {
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
-    bool autofocus = false,
+    FocusNode? focusNode,
   }) {
     Widget result;
-    if (hidden) {
+    if (hiddenInForm) {
       result = SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);
@@ -115,7 +126,7 @@ class StringField extends Field<String> {
             expandToFillContainer: expandToFillContainer,
             largeVertically: constraints.maxHeight>64,
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
-            autofocus: autofocus,
+            focusNode: focusNode,
           );
         },
       );
@@ -124,7 +135,7 @@ class StringField extends Field<String> {
         addCard: addCard,
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
-        autofocus: autofocus,
+        focusNode: focusNode,
       );
     }
     if (asSliver) {
@@ -140,7 +151,7 @@ class StringField extends Field<String> {
     bool expandToFillContainer = true,
     bool largeVertically = true,
     bool largeHorizontally = false,
-    bool autofocus = false,
+    FocusNode? focusNode,
   }) {
     Widget result = NotificationListener<ScrollNotification>(
       onNotification: (notification) => true,
@@ -149,7 +160,7 @@ class StringField extends Field<String> {
           TextFormField(
             controller: controller,
             enabled: enabled,
-            autofocus: autofocus,
+            focusNode: focusNode,
             minLines: minLines,
             maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
             onChanged: (v) {

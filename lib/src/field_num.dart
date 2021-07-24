@@ -26,13 +26,16 @@ class NumField extends Field<num> {
     num? dbValue,
     bool clearable = true,
     bool enabled = true,
-    bool hidden = false,
     this.formatter,
     this.inputDecoration,
     this.digitsAfterComma = 0,
     double? maxWidth,
     String? hint,
     double? tableColumnWidth,
+    bool? hidden,
+    bool? hiddenInTable,
+    bool? hiddenInView,
+    bool? hiddenInForm,
   }) :  controller = TextEditingController(text: toStringStatic(value, formatter)),
         super(
           uiName: uiName,
@@ -40,10 +43,13 @@ class NumField extends Field<num> {
           dbValue: dbValue,
           clearable: clearable,
           enabled: enabled,
-          hidden: hidden,
           hint: hint,
           maxWidth: 512, //768
           tableColumnWidth: tableColumnWidth,
+          hidden: hidden,
+          hiddenInTable: hiddenInTable,
+          hiddenInView: hiddenInView,
+          hiddenInForm: hiddenInForm,
         );
 
   @override
@@ -63,10 +69,13 @@ class NumField extends Field<num> {
     String? hint,
     bool? clearable,
     bool? enabled,
-    bool? hidden,
     double? maxWidth,
     int? digitsAfterComma,
     double? tableColumnWidth,
+    bool? hidden,
+    bool? hiddenInTable,
+    bool? hiddenInView,
+    bool? hiddenInForm,
   }) {
     return NumField(
       uiName: uiName??this.uiName,
@@ -74,12 +83,14 @@ class NumField extends Field<num> {
       dbValue: dbValue??this.dbValue,
       clearable: clearable??this.clearable,
       enabled: enabled??this.enabled,
-      hidden: hidden??this.hidden,
       formatter: formatter??this.formatter,
       maxWidth: maxWidth??this.maxWidth,
       hint: hint??this.hint,
       digitsAfterComma: digitsAfterComma??this.digitsAfterComma,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
+      hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
+      hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
+      hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
     );
   }
 
@@ -97,10 +108,10 @@ class NumField extends Field<num> {
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
-    bool autofocus = false,
+    FocusNode? focusNode,
   }) {
     Widget result;
-    if (hidden) {
+    if (hiddenInForm) {
       result = SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);
@@ -116,7 +127,7 @@ class NumField extends Field<num> {
             expandToFillContainer: expandToFillContainer,
             largeVertically: constraints.maxHeight>64,
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
-            autofocus: autofocus,
+            focusNode: focusNode,
           );
         },
       );
@@ -125,7 +136,7 @@ class NumField extends Field<num> {
         addCard: addCard,
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
-        autofocus: autofocus,
+        focusNode: focusNode,
       );
     }
     if (asSliver) {
@@ -141,7 +152,7 @@ class NumField extends Field<num> {
     bool expandToFillContainer = true,
     bool largeVertically = true,
     bool largeHorizontally = false,
-    bool autofocus = false,
+    FocusNode? focusNode,
   }) {
     Widget result = NotificationListener<ScrollNotification>(
       onNotification: (notification) => true,
@@ -150,7 +161,7 @@ class NumField extends Field<num> {
           TextFormField(
             controller: controller,
             enabled: enabled,
-            autofocus: autofocus,
+            focusNode: focusNode,
             onChanged: (v) {
               value = _getTextVal(v);
             },

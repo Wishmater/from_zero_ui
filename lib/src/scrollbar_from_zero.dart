@@ -128,7 +128,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
         );
       }
     }
-    print (toString() + ' - ' + built.toString());
+    // print (toString() + ' - ' + built.toString());
 
     return Scrollbar(
       controller: widget.controller,

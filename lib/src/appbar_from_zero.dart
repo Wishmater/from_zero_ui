@@ -221,8 +221,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
             });
             if (state==ActionState.expanded)
               forceExpanded = null;
-          }
-          if(forceExpanded==null){
+          } else if (forceExpanded==null){
             actions = List.from(widget.actions);
             for (int i=0; i<actions.length; i++){
               if (actions[i] is AppbarAction){

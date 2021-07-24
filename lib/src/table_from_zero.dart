@@ -35,6 +35,7 @@ class TableFromZero extends StatefulWidget {
 
   static const double _checkmarkWidth = 48;
 
+  final bool enabled;
   final List<RowModel> rows;
   final List<ColModel>? columns;
   final bool rowTakesPriorityOverColumn;
@@ -83,6 +84,7 @@ class TableFromZero extends StatefulWidget {
 
   TableFromZero({
     required List<RowModel> rows,
+    this.enabled = true,
     this.columns,
     this.layoutWidgetType = listViewBuilder,
     this.scrollController,
@@ -238,7 +240,7 @@ class TableFromZeroState extends State<TableFromZero> {
     sorted = List.from(widget.rows);
     if (widget.initialSortedColumnIndex!=null && widget.initialSortedColumnIndex!>=0 && widget.tableController?.sortedColumnIndex==null) sortedAscending = widget.columns![widget.initialSortedColumnIndex!].defaultSortAscending ?? true;
     if (sortedColumnIndex==null) sortedColumnIndex = widget.initialSortedColumnIndex;
-    if (widget.showHeaders && widget.columns!=null){
+    if (widget.columns!=null){
       int actionsIndex = widget.rows.indexWhere((element) => element.actions!=null);
       headerRowModel = SimpleRowModel(
         id: "header_row",
@@ -372,8 +374,22 @@ class TableFromZeroState extends State<TableFromZero> {
       } else{
         result = SizedBox.shrink();
       }
-      if (widget.applyStickyHeaders && widget.showHeaders && widget.columns!=null && headerRowModel!=null){
-        final header = _getRow(context, headerRowModel!,);
+      bool showHeaders = widget.showHeaders && widget.columns!=null && headerRowModel!=null;
+      Widget header;
+      if (showHeaders) {
+         header = _getRow(context, headerRowModel!);
+      } else {
+        header = _getHeaderAddonWidget(context);
+        if (widget.maxWidth!=null) {
+          header = Center(
+            child: SizedBox(
+              width: widget.maxWidth,
+              child: header,
+            ),
+          );
+        }
+      }
+      if (widget.applyStickyHeaders && (showHeaders || widget.headerAddon!=null)){
         result = StickyHeaderBuilder(
           content: result,
           controller: widget.mainScrollController,
@@ -465,8 +481,22 @@ class TableFromZeroState extends State<TableFromZero> {
       } else{
         result = SizedBox.shrink();
       }
-      if (widget.showHeaders && widget.columns!=null && headerRowModel!=null){
-        final header = _getRow(context, headerRowModel!);
+      bool showHeaders = widget.showHeaders && widget.columns!=null && headerRowModel!=null;
+      Widget header;
+      if (showHeaders) {
+        header = _getRow(context, headerRowModel!);
+      } else {
+        header = _getHeaderAddonWidget(context);
+        if (widget.maxWidth!=null) {
+          header = Center(
+            child: SizedBox(
+              width: widget.maxWidth,
+              child: header,
+            ),
+          );
+        }
+      }
+      if (showHeaders || widget.headerAddon!=null){
         result = SliverStickyHeader.builder(
           sliver: result,
           sticky: widget.applyStickyHeaders,
@@ -541,6 +571,27 @@ class TableFromZeroState extends State<TableFromZero> {
     return result;
   }
 
+
+  Widget _getHeaderAddonWidget(BuildContext context, [BoxConstraints? constraints]) {
+    Widget addon = widget.headerAddon!;
+    if (widget.applyMinWidthToHeaderAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
+      addon = NotificationListener<ScrollNotification>(
+        onNotification: (notification) => true,
+        child: SingleChildScrollView(
+          controller: sharedController,
+          scrollDirection: Axis.horizontal,
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
+            child: SizedBox(
+              width: widget.minWidth!,
+              child: addon,
+            ),
+          ),
+        ),
+      );
+    }
+    return addon;
+  }
 
   Widget _getRow(BuildContext context, RowModel row){
     if (row==headerRowModel){
@@ -697,10 +748,10 @@ class TableFromZeroState extends State<TableFromZero> {
         );
         if (row.onCellTap!=null || row.onCellDoubleTap!=null || row.onCellLongPress!=null || row.onCellHover!=null){
           result = InkWell(
-            onTap: row.onCellTap!=null&&row.onCellTap!(j)!=null ? () => row.onCellTap!(j)!.call(row) : null,
-            onDoubleTap: row.onCellDoubleTap!=null&&row.onCellDoubleTap!(j)!=null ? () => row.onCellDoubleTap!(j)!.call(row) : null,
-            onLongPress: row.onCellLongPress!=null&&row.onCellLongPress!(j)!=null ? () => row.onCellLongPress!(j)!.call(row) : null,
-            onHover: row.onCellHover!=null&&row.onCellHover!(j)!=null ? (value) => row.onCellHover!(j)!.call(row, value) : null,
+            onTap: widget.enabled&&row.onCellTap!=null&&row.onCellTap!(j)!=null ? () => row.onCellTap!(j)!.call(row) : null,
+            onDoubleTap: widget.enabled&&row.onCellDoubleTap!=null&&row.onCellDoubleTap!(j)!=null ? () => row.onCellDoubleTap!(j)!.call(row) : null,
+            onLongPress: widget.enabled&&row.onCellLongPress!=null&&row.onCellLongPress!(j)!=null ? () => row.onCellLongPress!(j)!.call(row) : null,
+            onHover: widget.enabled&&row.onCellHover!=null&&row.onCellHover!(j)!=null ? (value) => row.onCellHover!(j)!.call(row, value) : null,
             child: result,
           );
         }
@@ -786,23 +837,7 @@ class TableFromZeroState extends State<TableFromZero> {
         );
       }
       if (row==headerRowModel && widget.headerAddon!=null) {
-        Widget addon = widget.headerAddon!;
-        if (widget.applyMinWidthToHeaderAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
-          addon = NotificationListener<ScrollNotification>(
-            onNotification: (notification) => true,
-            child: SingleChildScrollView(
-              controller: sharedController,
-              scrollDirection: Axis.horizontal,
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
-                child: SizedBox(
-                  width: widget.minWidth!,
-                  child: addon,
-                ),
-              ),
-            ),
-          );
-        }
+        Widget addon = _getHeaderAddonWidget(context, constraints);
         result = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
@@ -872,7 +907,7 @@ class TableFromZeroState extends State<TableFromZero> {
         );
       }
       if (constraints!=null) {
-        if (row!=headerRowModel && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!){
+        if (widget.minWidth!=null && constraints.maxWidth<widget.minWidth!){
           result = ScrollOpacityGradient(
             scrollController: sharedController,
             direction: OpacityGradient.horizontal,
@@ -885,6 +920,9 @@ class TableFromZeroState extends State<TableFromZero> {
       return result;
     };
 
+    // bool intrinsicDimensions = context.findAncestorWidgetOfExactType<IntrinsicHeight>()!=null
+    //     || context.findAncestorWidgetOfExactType<IntrinsicWidth>()!=null;
+    // if (!intrinsicDimensions && (widget.minWidth!=null || widget.maxWidth!=null)){
     if (widget.minWidth!=null || widget.maxWidth!=null){
       return LayoutBuilder(builder: builder,);
     } else {
@@ -896,15 +934,15 @@ class TableFromZeroState extends State<TableFromZero> {
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
-        onTap: row.onRowTap!=null ? () => row.onRowTap!(row)
+        onTap: widget.enabled&&row.onRowTap!=null ? () => row.onRowTap!(row)
             : row.onCheckBoxSelected!=null && row!=headerRowModel ? () {
                 if (row.onCheckBoxSelected!(row, !(row.selected??false)) ?? false) {
                   setState(() {});
                 }
               } : null,
-        onDoubleTap: row.onRowDoubleTap!=null ? () => row.onRowDoubleTap!(row) : null,
-        onLongPress: row.onRowLongPress!=null ? () => row.onRowLongPress!(row) : null,
-        onHover: row.onRowHover!=null ? (value) => row.onRowHover!(row, value) : null,
+        onDoubleTap: widget.enabled&&row.onRowDoubleTap!=null ? () => row.onRowDoubleTap!(row) : null,
+        onLongPress: widget.enabled&&row.onRowLongPress!=null ? () => row.onRowLongPress!(row) : null,
+        onHover: widget.enabled&&row.onRowHover!=null ? (value) => row.onRowHover!(row, value) : null,
         child: child,
       ),
     );
@@ -974,7 +1012,7 @@ class TableFromZeroState extends State<TableFromZero> {
               ),
             ),
           ),
-          if (!export && widget.columns![j].filterEnabled==true)
+          if (widget.enabled && !export && widget.columns![j].filterEnabled==true)
             Positioned(
                 right: -16, width: 48, top: 0, bottom: 0,
                 child: OverflowBox(
