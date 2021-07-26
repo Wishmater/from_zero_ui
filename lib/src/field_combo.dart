@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao.dart';
+import 'package:from_zero_ui/src/field.dart';
+import 'package:from_zero_ui/src/field_validators.dart';
 
 
 class ComboField<T extends DAO> extends Field<T> {
@@ -10,6 +12,11 @@ class ComboField<T extends DAO> extends Field<T> {
   final bool showSearchBox;
   final ExtraWidgetBuilder<T>? extraWidget;
   final DAO? newObjectTemplate;
+
+  set value(T? v) {
+    passedFirstEdit = true;
+    super.value = v;
+  }
 
   ComboField({
     required String uiName,
@@ -29,6 +36,8 @@ class ComboField<T extends DAO> extends Field<T> {
     bool? hiddenInView,
     bool? hiddenInForm,
     this.newObjectTemplate,
+    List<FieldValidator<T>> validators = const[],
+    bool validateOnlyOnConfirm = false,
   }) :  assert(possibleValues!=null || futurePossibleValues!=null),
         super(
           uiName: uiName,
@@ -43,6 +52,8 @@ class ComboField<T extends DAO> extends Field<T> {
           hiddenInTable: hiddenInTable,
           hiddenInView: hiddenInView,
           hiddenInForm: hiddenInForm,
+          validators: validators,
+        validateOnlyOnConfirm: validateOnlyOnConfirm,
         );
 
   @override
@@ -64,8 +75,10 @@ class ComboField<T extends DAO> extends Field<T> {
     bool? hiddenInView,
     bool? hiddenInForm,
     DAO? newObjectTemplate,
+    List<FieldValidator<T>>? validators,
+    bool? validateOnlyOnConfirm,
   }) {
-    return ComboField(
+    return ComboField<T>(
       uiName: uiName??this.uiName,
       value: value??this.value,
       dbValue: dbValue??this.dbValue,
@@ -82,6 +95,8 @@ class ComboField<T extends DAO> extends Field<T> {
       hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
       hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
       newObjectTemplate: newObjectTemplate ?? this.newObjectTemplate,
+      validators: validators ?? this.validators,
+      validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
     );
   }
 
@@ -208,12 +223,23 @@ class ComboField<T extends DAO> extends Field<T> {
       );
     }
     result = Padding(
+      key: fieldGlobalKey,
       padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
       child: Center(
         child: SizedBox(
           width: maxWidth,
-          height: 64,
-          child: result,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 64,
+                child: result,
+              ),
+              if (validationErrors.isNotEmpty)
+                ValidationMessage(errors: validationErrors),
+            ],
+          ),
         ),
       ),
     );

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao.dart';
+import 'package:from_zero_ui/src/field_validators.dart';
 import 'package:intl/intl.dart';
+import 'package:from_zero_ui/src/field.dart';
 
 
 class DateField extends Field<DateTime> {
@@ -9,6 +11,11 @@ class DateField extends Field<DateTime> {
   DateFormat formatter;
   DateTime firstDate;
   DateTime lastDate;
+
+  set value(DateTime? v) {
+    passedFirstEdit = true;
+    super.value = v;
+  }
 
   DateField({
     required String uiName,
@@ -26,6 +33,8 @@ class DateField extends Field<DateTime> {
     bool? hiddenInTable,
     bool? hiddenInView,
     bool? hiddenInForm,
+    List<FieldValidator<DateTime>> validators = const[],
+    bool validateOnlyOnConfirm = false,
   }) :  this.firstDate = firstDate ?? DateTime(1900),
         this.lastDate = lastDate ?? DateTime(2200),
         this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY),
@@ -42,6 +51,8 @@ class DateField extends Field<DateTime> {
           hiddenInTable: hiddenInTable,
           hiddenInView: hiddenInView,
           hiddenInForm: hiddenInForm,
+          validators: validators,
+          validateOnlyOnConfirm: validateOnlyOnConfirm,
         );
 
   @override
@@ -60,6 +71,8 @@ class DateField extends Field<DateTime> {
     bool? hiddenInTable,
     bool? hiddenInView,
     bool? hiddenInForm,
+    List<FieldValidator<DateTime>>? validators,
+    bool? validateOnlyOnConfirm,
   }) {
     return DateField(
       uiName: uiName??this.uiName,
@@ -75,6 +88,8 @@ class DateField extends Field<DateTime> {
       hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
       hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
       hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
+      validators: validators ?? this.validators,
+      validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
     );
   }
 
@@ -155,12 +170,23 @@ class DateField extends Field<DateTime> {
       );
     }
     result = Padding(
+      key: fieldGlobalKey,
       padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
       child: Center(
         child: SizedBox(
           width: maxWidth,
-          height: 64,
-          child: result,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 64,
+                child: result,
+              ),
+              if (validationErrors.isNotEmpty)
+                ValidationMessage(errors: validationErrors),
+            ],
+          ),
         ),
       ),
     );

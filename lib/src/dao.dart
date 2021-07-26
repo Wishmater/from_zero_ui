@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:dartx/dartx.dart';
+import 'package:from_zero_ui/src/field.dart';
 import 'field_one_to_many.dart';
 
 
@@ -26,6 +27,9 @@ class DAO extends ChangeNotifier implements Comparable {
   bool useIntrinsicHeightForViewDialog;
   double viewDialogWidth;
   double formDialogWidth;
+  bool viewDialogLinksToInnerDAOs;
+  bool viewDialogShowsViewButtons;
+  bool? viewDialogShowsEditButton;
 
   DAO({
     required this.classUiName,
@@ -39,6 +43,9 @@ class DAO extends ChangeNotifier implements Comparable {
     this.useIntrinsicHeightForViewDialog = true,
     this.viewDialogWidth = 512,
     this.formDialogWidth = 640,
+    this.viewDialogLinksToInnerDAOs = true,
+    this.viewDialogShowsViewButtons = true,
+    this.viewDialogShowsEditButton,
   }) :  this.classUiNamePlural = classUiNamePlural ?? classUiName,
         props = props ?? const {} {
         this.props.forEach((key, value) {
@@ -66,6 +73,9 @@ class DAO extends ChangeNotifier implements Comparable {
     bool? useIntrinsicHeightForViewDialog,
     double? viewDialogWidth,
     double? formDialogWidth,
+    bool? viewDialogLinksToInnerDAOs,
+    bool? viewDialogShowsViewButtons,
+    bool? viewDialogShowsEditButton,
   }) {
     final result = DAO(
       id: id??this.id,
@@ -79,6 +89,9 @@ class DAO extends ChangeNotifier implements Comparable {
       useIntrinsicHeightForViewDialog: useIntrinsicHeightForViewDialog??this.useIntrinsicHeightForViewDialog,
       viewDialogWidth: viewDialogWidth??this.viewDialogWidth,
       formDialogWidth: formDialogWidth??this.formDialogWidth,
+      viewDialogLinksToInnerDAOs: viewDialogLinksToInnerDAOs??this.viewDialogLinksToInnerDAOs,
+      viewDialogShowsViewButtons: viewDialogShowsViewButtons??this.viewDialogShowsViewButtons,
+      viewDialogShowsEditButton: viewDialogShowsEditButton??this.viewDialogShowsEditButton,
     );
     result._selfUpdateListeners = _selfUpdateListeners;
     return result;
@@ -114,6 +127,18 @@ class DAO extends ChangeNotifier implements Comparable {
       value.revertChanges();
     });
     notifyListeners();
+  }
+
+  bool validate(context) {
+    bool success = true;
+    props.values.forEach((e) {
+      bool v = e.validate(context, this);
+      if (success) {
+        success = v;
+      }
+    });
+    notifyListeners();
+    return success;
   }
 
   Future<bool> maybeSave(BuildContext context, {
@@ -171,6 +196,20 @@ class DAO extends ChangeNotifier implements Comparable {
     bool updateDbValuesAfterSuccessfulSave=true,
     bool showDefaultSnackBar=true,
   }) async {
+    props.values.forEach((e) {
+      e.passedFirstEdit = true;
+    });
+    bool validation = validate(context);
+    if (!validation) {
+      try {
+        Scrollable.ensureVisible(props.values.firstWhere((e) => e.validationErrors.isNotEmpty).fieldGlobalKey.currentContext!,
+          duration: Duration(milliseconds: 500),
+          curve: Curves.easeOutCubic,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtStart,
+        );
+      } catch(_) {}
+      return false;
+    }
     bool newInstance = id==null || id==-1;
     bool success = false;
     try {
@@ -260,6 +299,10 @@ class DAO extends ChangeNotifier implements Comparable {
   }
 
   Future<bool> maybeEdit(BuildContext context, {bool showDefaultSnackBars=true}) async {
+    props.values.forEach((e) {
+      e.passedFirstEdit = false;
+      e.validationErrors = [];
+    });
     bool expandToFillContainer = false;
     if (props.values.where((e) => e is OneToManyRelationField).isNotEmpty) {
       expandToFillContainer = true;
@@ -268,6 +311,11 @@ class DAO extends ChangeNotifier implements Comparable {
     Widget content = ChangeNotifierBuilder(
       changeNotifier: this,
       builder: (context, value, child) {
+        props.values.forEach((e) {
+          if (e.passedFirstEdit && !e.validateOnlyOnConfirm) {
+            e.validate(context, this);
+          }
+        });
         List<Widget> formWidgets = buildFormWidgets(context,
           showCancelActionToPop: true,
           expandToFillContainer: expandToFillContainer,
@@ -364,13 +412,23 @@ class DAO extends ChangeNotifier implements Comparable {
             Padding(
               padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Text(uiName,
-                      style: Theme.of(context).textTheme.headline6,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(uiName,
+                          style: Theme.of(context).textTheme.headline6,
+                        ),
+                        if (uiName.isNotEmpty)
+                          Text(classUiName,
+                            style: Theme.of(context).textTheme.subtitle2,
+                          ),
+                      ],
                     ),
                   ),
-                  if (showEditButton ?? onSave!=null)
+                  if (showEditButton ?? viewDialogShowsEditButton ?? onSave!=null)
                     TextButton(
                       onPressed: () {
                         maybeEdit(context);
@@ -452,10 +510,13 @@ class DAO extends ChangeNotifier implements Comparable {
         child: Column(
           children: props.values.where((e) => !e.hiddenInView).map((e) {
             clear = !clear;
-            return Container(
+            return Material(
               color: clear ? Theme.of(context).cardColor
                   : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
-              child: e.buildViewWidget(context),
+              child: e.buildViewWidget(context,
+                linkToInnerDAOs: this.viewDialogLinksToInnerDAOs,
+                showViewButtons: this.viewDialogShowsViewButtons,
+              ),
             );
           }).toList(),
         ),
@@ -633,181 +694,6 @@ class DAO extends ChangeNotifier implements Comparable {
 
 
 
-class Field<T extends Comparable> extends ChangeNotifier implements Comparable, ContainsValue {
 
-  String uiName;
-  String? hint;
-  T? dbValue;
-  bool clearable;
-  bool enabled;
-  bool hiddenInTable;
-  bool hiddenInView;
-  bool hiddenInForm;
-  double maxWidth;
-  FocusNode? focusNode;
-  double? tableColumnWidth;
-
-  T? _value;
-  T? get value => _value;
-  set value(T? value) {
-    if (_value!=value) {
-      _value = value;
-      notifyListeners();
-    }
-  }
-
-  Field({
-    required this.uiName,
-    T? value,
-    T? dbValue,
-    this.enabled = true,
-    this.clearable = true,
-    this.maxWidth = 512,
-    this.hint,
-    this.focusNode,
-    this.tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
-  }) :  _value = value,
-        dbValue = dbValue ?? value,
-        this.hiddenInTable = hiddenInTable ?? hidden ?? false,
-        this.hiddenInView = hiddenInView ?? hidden ?? false,
-        this.hiddenInForm = hiddenInForm ?? hidden ?? false;
-
-
-  Field copyWith({
-    String? uiName,
-    T? value,
-    T? dbValue,
-    bool? enabled,
-    bool? clearable,
-    double? maxWidth,
-    String? hint,
-    double? tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
-  }) {
-    return Field(
-      uiName: uiName??this.uiName,
-      value: value??this.value,
-      dbValue: dbValue??this.dbValue,
-      enabled: enabled??this.enabled,
-      clearable: clearable??this.clearable,
-      maxWidth: maxWidth??this.maxWidth,
-      hint: hint??this.hint,
-      tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
-      hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
-      hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
-      hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
-    );
-  }
-
-  @override
-  String toString() => value==null ? '' : value.toString();
-
-  @override
-  bool operator == (dynamic other) => other is Field<T> && this.value==other.value;
-
-  @override
-  int get hashCode => value.hashCode;
-
-  bool get isEditted => value!=dbValue;
-
-  @override
-  int compareTo(other) => other is Field ? value==null||(value is String && (value as String).isEmpty) ? 1 : value!.compareTo(other.value) : 1;
-
-  List<Widget> buildFieldEditorWidgets(BuildContext context, {
-    bool addCard = false,
-    bool asSliver = true,
-    bool expandToFillContainer = true,
-    FocusNode? focusNode,
-  }) {
-    Widget result;
-    if (hiddenInForm) {
-      result = SizedBox.shrink();
-      if (asSliver) {
-        result = SliverToBoxAdapter(child: result,);
-      }
-      return [result];
-    }
-    result = ListTile(
-      leading: Icon(Icons.error_outline),
-      title: Text('Unimplemented Widget for type: ${T.toString()}'),
-    );
-    if (addCard) {
-      result = Card(
-        child: Padding(
-          padding: EdgeInsets.only(left: 12, right: 12,),
-          child: result,
-        ),
-      );
-    }
-    result = ResponsiveHorizontalInsets(
-      child: Center(
-        child: SizedBox(
-          width: maxWidth,
-          child: result,
-        ),
-      ),
-    );
-    if (asSliver) {
-      result = SliverToBoxAdapter(
-        child: result,
-      );
-    }
-    return [result];
-  }
-
-  Widget buildViewWidget(BuildContext context) {
-    if (hiddenInView) {
-      return SizedBox.shrink();
-    }
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-      child: Row(
-        children: [
-          // TODO this probably wont do well on a mobile layout
-          Expanded(
-            flex: 1000000,
-            child: Text(uiName,
-              style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
-              ),
-              textAlign: TextAlign.right,
-            ),
-          ),
-          Container(
-            height: 24,
-            child: VerticalDivider(width: 16,),
-          ),
-          Expanded(
-            flex: 1618034,
-            child: Text(toString(),
-              style: Theme.of(context).textTheme.subtitle1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void revertChanges() {
-    value = dbValue;
-    notifyListeners();
-  }
-
-  SimpleColModel getColModel() {
-    return SimpleColModel(
-      name: uiName,
-      filterEnabled: true,
-      width: tableColumnWidth,
-    );
-  }
-
-}
 
 

@@ -5,6 +5,9 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao.dart';
+import 'package:from_zero_ui/src/field.dart';
+import 'package:from_zero_ui/src/field_validators.dart';
+import 'package:dartx/dartx.dart';
 
 
 typedef Widget RowActionBuilder(DAO e);
@@ -15,8 +18,10 @@ class OneToManyRelationField extends Field<String> {
   DAO objectTemplate;
   List<DAO>? dbObjects;
   Future<List<DAO>>? futureObjects;
+  TableController? tableController;
   Future<List<DAO>> Function(BuildContext context)? availableObjectsPoolGetter;
   bool allowDuplicateObjectsFromAvailablePool;
+  bool showObjectsFromAvailablePoolAsTable;
   bool allowAddNew;
   bool collapsed;
   bool allowMultipleSelection;
@@ -62,6 +67,7 @@ class OneToManyRelationField extends Field<String> {
     required this.objectTemplate,
     this.availableObjectsPoolGetter,
     this.allowDuplicateObjectsFromAvailablePool = false,
+    this.showObjectsFromAvailablePoolAsTable = false,
     this.allowAddNew = true,
     bool clearable = true, /// Unused in table
     bool enabled = true, //TODO implement enabled
@@ -70,6 +76,7 @@ class OneToManyRelationField extends Field<String> {
     List<DAO>? objects,
     List<DAO>? dbObjects,
     this.futureObjects,
+    this.tableController,
     this.collapsed = false,
     this.allowMultipleSelection = false,
     this.collapsible = true,
@@ -95,6 +102,8 @@ class OneToManyRelationField extends Field<String> {
     bool? hiddenInForm,
     this.initialSortColumn,
     this.onRowTap,
+    List<FieldValidator<String>> validators = const[],
+    bool validateOnlyOnConfirm = false,
   }) :  assert(objects==null || futureObjects==null),
         _objects = objects,
         dbObjects = dbObjects ?? List.from(objects ?? []),
@@ -116,6 +125,8 @@ class OneToManyRelationField extends Field<String> {
           hiddenInTable: hiddenInTable,
           hiddenInView: hiddenInView,
           hiddenInForm: hiddenInForm,
+          validators: validators,
+          validateOnlyOnConfirm: validateOnlyOnConfirm,
         ) {
     addListeners();
     WidgetsBinding.instance!.addPostFrameCallback((timeStamp) async {
@@ -174,6 +185,7 @@ class OneToManyRelationField extends Field<String> {
     bool? showTableHeaders,
     Future<List<DAO>> Function(BuildContext contex)? availableObjectsPoolGetter,
     bool? allowDuplicateObjectsFromAvailablePool,
+    bool? showObjectsFromAvailablePoolAsTable,
     bool? allowAddNew,
     List<RowActionBuilder>? extraRowActionBuilders,
     int? initialSortColumn,
@@ -184,6 +196,9 @@ class OneToManyRelationField extends Field<String> {
     bool? showEditDialogOnAdd,
     Widget? tableErrorWidget,
     bool? showDefaultSnackBars,
+    List<FieldValidator<String>>? validators,
+    bool? validateOnlyOnConfirm,
+    TableController? tableController,
   }) {
     return OneToManyRelationField(
       uiName: uiName??this.uiName,
@@ -217,6 +232,10 @@ class OneToManyRelationField extends Field<String> {
       showEditDialogOnAdd: showEditDialogOnAdd ?? this.showEditDialogOnAdd,
       tableErrorWidget: tableErrorWidget ?? this.tableErrorWidget,
       showDefaultSnackBars: showDefaultSnackBars ?? this.showDefaultSnackBars,
+      validators: validators ?? this.validators,
+      validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
+      showObjectsFromAvailablePoolAsTable: showObjectsFromAvailablePoolAsTable ?? this.showObjectsFromAvailablePoolAsTable,
+      tableController: tableController ?? this.tableController,
     );
   }
 
@@ -232,62 +251,65 @@ class OneToManyRelationField extends Field<String> {
       if (!allowDuplicateObjectsFromAvailablePool) {
         availableObjects = availableObjects.then((v) => v.where((e) => !objects!.contains(e)).toList());
       }
-      final previousOnSave = emptyDAO.onSave;
-      if (previousOnSave!=null) {
-        final newOnSave;
-        newOnSave = (context, e) async {
-          DAO? newDAO = await previousOnSave(context, e);
-          if (newDAO!=null) {
-            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-              Navigator.of(context).pop(newDAO);
-            });
-          }
-          return newDAO;
-        };
-        emptyDAO = emptyDAO.copyWith(
-          onSave: newOnSave,
-        );
-      }
-      Widget content = ChangeNotifierBuilder(
-        changeNotifier: this,
-        builder: (context, value, child) {
-          ScrollController scrollController = ScrollController();
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
-                child: Text('${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
-                  style: Theme.of(context).textTheme.headline6,
+      DAO? selected;
+      if (showObjectsFromAvailablePoolAsTable) {
+        final previousOnSave = emptyDAO.onSave;
+        if (previousOnSave!=null) {
+          final newOnSave;
+          newOnSave = (context, e) async {
+            DAO? newDAO = await previousOnSave(context, e);
+            if (newDAO!=null) {
+              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                Navigator.of(context).pop(newDAO);
+              });
+            }
+            return newDAO;
+          };
+          emptyDAO = emptyDAO.copyWith(
+            onSave: newOnSave,
+          );
+        }
+        Widget content = ChangeNotifierBuilder(
+          changeNotifier: this,
+          builder: (context, value, child) {
+            ScrollController scrollController = ScrollController();
+            return Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
+                  child: Text('${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
+                    style: Theme.of(context).textTheme.headline6,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: ScrollbarFromZero(
-                  controller: scrollController,
-                  child: ScrollOpacityGradient(
-                    scrollController: scrollController,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: SingleChildScrollView(
-                        controller: scrollController,
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 16, bottom: 32),
-                          child: Column(
-                            children: OneToManyRelationField(
-                              uiName: emptyDAO.classUiNamePlural,
-                              objectTemplate: emptyDAO,
-                              tableCellsEditable: false,
-                              collapsible: false,
-                              showActionDelete: false,
-                              futureObjects: availableObjects,
-                              allowAddNew: emptyDAO.onSave!=null,
-                              onRowTap: (value) {
-                                Navigator.of(context).pop(value.id);
-                              },
-                            ).buildFieldEditorWidgets(context,
-                              expandToFillContainer: true,
-                              asSliver: false,
+                Expanded(
+                  child: ScrollbarFromZero(
+                    controller: scrollController,
+                    child: ScrollOpacityGradient(
+                      scrollController: scrollController,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          child: Padding(
+                            padding: const EdgeInsets.only(top: 16, bottom: 32),
+                            child: Column(
+                              children: OneToManyRelationField(
+                                uiName: emptyDAO.classUiNamePlural,
+                                objectTemplate: emptyDAO,
+                                tableCellsEditable: false,
+                                collapsible: false,
+                                showActionDelete: false,
+                                futureObjects: availableObjects,
+                                allowAddNew: allowAddNew && emptyDAO.onSave!=null,
+                                onRowTap: (value) {
+                                  Navigator.of(context).pop(value.id);
+                                },
+                              ).buildFieldEditorWidgets(context,
+                                expandToFillContainer: true,
+                                asSliver: false,
+                              ),
                             ),
                           ),
                         ),
@@ -295,53 +317,136 @@ class OneToManyRelationField extends Field<String> {
                     ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    FlatButton(
-                      child: Padding(
-                        padding: const EdgeInsets.all(6.0),
-                        child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      FlatButton(
+                        child: Padding(
+                          padding: const EdgeInsets.all(6.0),
+                          child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
                         ),
+                        textColor: Theme.of(context).textTheme.caption!.color,
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Dismiss alert dialog
+                        },
                       ),
-                      textColor: Theme.of(context).textTheme.caption!.color,
-                      onPressed: () {
-                        Navigator.of(context).pop(); // Dismiss alert dialog
-                      },
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
-      );
-      DAO? selected = await showModal(
-        context: context,
-        builder: (modalContext) {
-          return Center(
-            child: SizedBox(
-              width: 512+128,
-              child: Padding(
-                padding: EdgeInsets.all(8),
-                child: Dialog(
-                  clipBehavior: Clip.hardEdge,
-                  child: Container(
-                    color: Theme.of(context).canvasColor,
-                    child: content,
+              ],
+            );
+          },
+        );
+        selected = await showModal(
+          context: context,
+          builder: (modalContext) {
+            return Center(
+              child: SizedBox(
+                width: 512+128,
+                child: Padding(
+                  padding: EdgeInsets.all(8),
+                  child: Dialog(
+                    clipBehavior: Clip.hardEdge,
+                    child: Container(
+                      color: Theme.of(context).canvasColor,
+                      child: content,
+                    ),
                   ),
                 ),
               ),
-            ),
-          );
-        },
-      );
+            );
+          },
+        );
+      } else {
+        final objects = await availableObjects;
+        await showDialog<bool>(
+          context: context,
+          barrierColor: Colors.black.withOpacity(0.2),
+          builder: (context) {
+            final animation = CurvedAnimation(
+              parent: ModalRoute.of(context)!.animation!,
+              curve: Curves.easeInOutCubic,
+            );
+            Offset? referencePosition;
+            Size? referenceSize;
+            try {
+              RenderBox box = headerGlobalKey.currentContext!.findRenderObject()! as RenderBox;
+              referencePosition = box.localToGlobal(Offset.zero); //this is global position
+              referenceSize = box.size;
+            } catch(_) {}
+            return CustomSingleChildLayout(
+              delegate: DropdownChildLayoutDelegate(
+                referencePosition: referencePosition,
+                referenceSize: referenceSize,
+                align: DropdownChildLayoutDelegateAlign.bottomRight
+              ),
+              child: AnimatedBuilder(
+                animation: animation,
+                builder: (context, child) {
+                  return SizedBox(
+                    width: 312,
+                    child: ClipRect(
+                      clipper: RectPercentageClipper(
+                        widthPercent: (animation.value*2.0).clamp(0.0, 1),
+                      ),
+                      child: child,
+                    ),
+                  );
+                },
+                child: SizeTransition(
+                  sizeFactor: animation,
+                  axis: Axis.vertical,
+                  axisAlignment: 0,
+                  child: Card(
+                    clipBehavior: Clip.hardEdge,
+                    child: ComboFromZeroPopup<DAO>(
+                      possibleValues: objects,
+                      onSelected: (value) {
+                        selected = value;
+                      },
+                      showSearchBox: true,
+                      title: '${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
+                      extraWidget: allowAddNew ? (context, onSelected) {
+                        return Align(
+                          alignment: Alignment.centerLeft,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2,),
+                            child: TextButton(
+                              onPressed: () async {
+                                emptyDAO.maybeEdit(context);
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 6,),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    SizedBox(width: 6),
+                                    Icon(Icons.add),
+                                    SizedBox(width: 6,),
+                                    Text('New ${emptyDAO.classUiName}', style: TextStyle(fontSize: 16),),
+                                    SizedBox(width: 6),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      } : null,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      }
       if (selected!=null) {
-        _add(selected);
+        _add(selected!);
       }
     } else {
       bool add = true;
@@ -356,6 +461,7 @@ class OneToManyRelationField extends Field<String> {
   void _add (DAO dao) {
     dao.addListener(notifyListeners);
     objects!.add(dao);
+    passedFirstEdit = true;
     notifyListeners();
   }
   
@@ -369,11 +475,13 @@ class OneToManyRelationField extends Field<String> {
           objects!.insert(index+1, e.copyWith());
         }
       });
+      passedFirstEdit = true;
       notifyListeners();
     }
   }
   
 
+  final headerGlobalKey = GlobalKey();
   @override
   List<Widget> buildFieldEditorWidgets(BuildContext context, {
     bool addCard=true,
@@ -395,6 +503,7 @@ class OneToManyRelationField extends Field<String> {
       width += value.tableColumnWidth ?? 192;
     });
     result = ChangeNotifierBuilder(
+      key: fieldGlobalKey,
       changeNotifier: this,
       builder: (context, v, child) {
         if (collapsed || objects==null) {
@@ -460,6 +569,7 @@ class OneToManyRelationField extends Field<String> {
           maxWidth: maxWidth==double.infinity ? width : maxWidth,
           minWidth: width,
           initialSortedColumnIndex: initialSortColumn ?? 0,
+          tableController: tableController,
           layoutWidgetType: asSliver
               ? objects!.length<=10 ? TableFromZero.sliverAnimatedListViewBuilder : TableFromZero.sliverListViewBuilder
               : !expandToFillContainer
@@ -495,6 +605,7 @@ class OneToManyRelationField extends Field<String> {
                     tooltip: FromZeroLocalizations.of(context).translate('edit'),
                     onPressed: () async {
                       if (await e.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars)) {
+                        passedFirstEdit = true;
                         notifyListeners();
                       }
                     },
@@ -511,8 +622,11 @@ class OneToManyRelationField extends Field<String> {
                   IconButton(
                     icon: Icon(Icons.delete_forever_outlined),
                     tooltip: FromZeroLocalizations.of(context).translate('delete'),
-                    onPressed: () {
-                      maybeDelete(context, [e]);
+                    onPressed: () async {
+                      if (await maybeDelete(context, [e])) {
+                        passedFirstEdit = true;
+                        notifyListeners();
+                      }
                     },
                   ),
               ],
@@ -573,7 +687,7 @@ class OneToManyRelationField extends Field<String> {
     List<Widget> resultList = [
       SizedBox(height: 1,),
       result,
-      if (allowAddNew && showAddButtonAtEndOfTable)
+      if ((allowAddNew||availableObjectsPoolGetter!=null) && showAddButtonAtEndOfTable)
         ChangeNotifierBuilder(
           changeNotifier: this,
           builder: (context, value, child) {
@@ -622,6 +736,8 @@ class OneToManyRelationField extends Field<String> {
             );
           },
         ),
+      if (validationErrors.isNotEmpty)
+        ValidationMessage(errors: validationErrors),
       SizedBox(height: 1,),
     ];
     if (asSliver) {
@@ -631,7 +747,10 @@ class OneToManyRelationField extends Field<String> {
   }
 
 
-  Widget buildViewWidget(BuildContext context) {
+  Widget buildViewWidget(BuildContext context, {
+    bool linkToInnerDAOs=true,
+    bool showViewButtons=true,
+  }) {
     if (hiddenInView) {
       return SizedBox.shrink();
     }
@@ -661,10 +780,13 @@ class OneToManyRelationField extends Field<String> {
           Expanded(
             flex: 1618034,
             child: uiNames==null ? SizedBox.shrink() : Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: uiNames.map((e) {
-                return Text(e,
-                  style: Theme.of(context).textTheme.subtitle1,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: uiNames.mapIndexed((i, e) {
+                return InkWell(
+                  onTap: () => linkToInnerDAOs ? objects![i].pushViewDialog(context) : null,
+                  child: Text(e,
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
                 );
               }).toList(),
             ),
@@ -728,7 +850,7 @@ class OneToManyRelationField extends Field<String> {
                   notifyListeners();
                 },
               ),
-            if (allowAddNew && !collapsed && currentSelected.length==0)
+            if ((allowAddNew||availableObjectsPoolGetter!=null) && !collapsed && currentSelected.length==0)
               AppbarAction(
                 title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
                 icon: Icon(Icons.add),
@@ -753,6 +875,7 @@ class OneToManyRelationField extends Field<String> {
           ),
           child: AppbarFromZero(
             titleSpacing: 0,
+            key: headerGlobalKey,
             title: Row(
               children: [
                 SizedBox(width: 9,),
@@ -822,8 +945,8 @@ class OneToManyRelationField extends Field<String> {
     );
   }
 
-  void maybeDelete(BuildContext context, List<DAO> elements,) async {
-    if (elements.isEmpty) return;
+  Future<bool> maybeDelete(BuildContext context, List<DAO> elements,) async {
+    if (elements.isEmpty) return false;
     bool? delete = skipDeleteConfirmation || (await showDialog(
       context: context,
       builder: (context) {
@@ -863,9 +986,13 @@ class OneToManyRelationField extends Field<String> {
       },
     ) ?? false);
     if (delete) {
+      bool result = false;
       if (availableObjectsPoolGetter!=null) {
         elements.forEach((e) {
-          objects!.remove(e);
+          bool v = objects!.remove(e);
+          if (!result) {
+            result = v;
+          }
         });
         notifyListeners();
       } else {
@@ -882,13 +1009,18 @@ class OneToManyRelationField extends Field<String> {
         bool confirm = await elements.first.delete(context, showDefaultSnackBar: showDefaultSnackBars);
         if (confirm) {
           elements.forEach((e) {
-            objects!.remove(e);
+            bool v = objects!.remove(e);
+            if (!result) {
+              result = v;
+            }
           });
         }
         Navigator.of(context).pop();
         notifyListeners();
       }
+      return result;
     }
+    return false;
   }
 
   static void maybeEditMultiple(BuildContext context, List<DAO> elements) async {

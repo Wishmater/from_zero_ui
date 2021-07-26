@@ -16,6 +16,7 @@ dependencies:
   # * Language Extensions
   dartx: ^0.7.0
   collection: ^1.15.0
+  email_validator: ^2.0.1
   
   # * State Management
   fluro: ^2.0.3

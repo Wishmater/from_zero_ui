@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao.dart';
+import 'package:from_zero_ui/src/field.dart';
+import 'package:from_zero_ui/src/field_validators.dart';
 
 enum StringFieldType {
   short,
@@ -16,6 +18,8 @@ class StringField extends Field<String> {
   int? maxLines;
   InputDecoration? inputDecoration;
   List<TextInputFormatter>? inputFormatters;
+  bool obfuscate;
+  bool showObfuscationToggleButton; // TODO implement obfuscation toggle button
 
   set value(String? v) {
     super.value = v ?? '';
@@ -38,6 +42,8 @@ class StringField extends Field<String> {
     this.type = StringFieldType.short,
     int? minLines,
     int? maxLines,
+    this.obfuscate = false,
+    bool? showObfuscationToggleButton,
     this.inputDecoration,
     this.inputFormatters,
     double? tableColumnWidth,
@@ -45,9 +51,12 @@ class StringField extends Field<String> {
     bool? hiddenInTable,
     bool? hiddenInView,
     bool? hiddenInForm,
-  }) :  minLines = minLines ?? (type==StringFieldType.short ? null : 3),
-        maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
-        controller = TextEditingController(text: value),
+    List<FieldValidator<String>> validators = const[],
+    bool validateOnlyOnConfirm = false,
+  }) :  this.minLines = minLines ?? (type==StringFieldType.short ? null : 3),
+        this.maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
+        this.showObfuscationToggleButton = showObfuscationToggleButton ?? obfuscate,
+        this.controller = TextEditingController(text: value),
         super(
           uiName: uiName,
           value: value ?? '',
@@ -61,6 +70,8 @@ class StringField extends Field<String> {
           hiddenInTable: hiddenInTable,
           hiddenInView: hiddenInView,
           hiddenInForm: hiddenInForm,
+          validators: validators,
+          validateOnlyOnConfirm: validateOnlyOnConfirm,
         );
 
 
@@ -82,6 +93,8 @@ class StringField extends Field<String> {
     bool? hiddenInTable,
     bool? hiddenInView,
     bool? hiddenInForm,
+    List<FieldValidator<String>>? validators,
+    bool? validateOnlyOnConfirm,
   }) {
     return StringField(
       uiName: uiName??this.uiName,
@@ -99,6 +112,8 @@ class StringField extends Field<String> {
       hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
       hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
       hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
+      validators: validators ?? this.validators,
+      validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
     );
   }
 
@@ -145,6 +160,7 @@ class StringField extends Field<String> {
     }
     return [result];
   }
+  FocusNode _focusNode = FocusNode();
   Widget _buildFieldEditorWidget(BuildContext context, {
     bool addCard=false,
     bool asSliver = true,
@@ -153,6 +169,15 @@ class StringField extends Field<String> {
     bool largeHorizontally = false,
     FocusNode? focusNode,
   }) {
+    if (focusNode==null) {
+      focusNode = _focusNode;
+    }
+    focusNode.addListener(() {
+      if (!passedFirstEdit && !focusNode!.hasFocus) {
+        passedFirstEdit = true;
+        notifyListeners();
+      }
+    });
     Widget result = NotificationListener<ScrollNotification>(
       onNotification: (notification) => true,
       child: Stack(
@@ -163,6 +188,7 @@ class StringField extends Field<String> {
             focusNode: focusNode,
             minLines: minLines,
             maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
+            obscureText: obfuscate,
             onChanged: (v) {
               value = v;
             },
@@ -203,11 +229,20 @@ class StringField extends Field<String> {
       );
     }
     return Padding(
+      key: fieldGlobalKey,
       padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
       child: Center(
         child: SizedBox(
           width: maxWidth,
-          child: result,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              result,
+              if (validationErrors.isNotEmpty)
+                ValidationMessage(errors: validationErrors),
+            ],
+          ),
         ),
       ),
     );

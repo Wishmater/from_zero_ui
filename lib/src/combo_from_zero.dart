@@ -314,6 +314,11 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                           filter();
                         });
                       },
+                      onFieldSubmitted: (value) {
+                        if (filtered.length==1) {
+                          _select(filtered.first);
+                        }
+                      },
                     ),
                   ),
                 ],
@@ -334,10 +339,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
             selected: widget.value==filtered[index],
             selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
             onTap: (){
-              bool? pop = widget.onSelected?.call(filtered[index]);
-              if (pop??true) {
-                Navigator.of(context).pop(true);
-              }
+              _select(filtered[index]);
             },
             trailing: value is DAO ? IconButton(
               icon: Icon(Icons.remove_red_eye),
@@ -349,6 +351,13 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
         },
       ),
     );
+  }
+
+  void _select(T e) {
+    bool? pop = widget.onSelected?.call(e);
+    if (pop??true) {
+      Navigator.of(context).pop(true);
+    }
   }
 
 }
@@ -384,7 +393,7 @@ class DropdownChildLayoutDelegate extends SingleChildLayoutDelegate {
     if (referencePosition!=null && referenceSize!=null) {
       double x = (referencePosition!.dx-4).clamp(0, size.width-childSize.width);
       if (align==DropdownChildLayoutDelegateAlign.topRight || align==DropdownChildLayoutDelegateAlign.bottomRight) {
-        x += referenceSize!.width;
+        x += referenceSize!.width-childSize.width;
       }
       double y = referencePosition!.dy;
       if (align==DropdownChildLayoutDelegateAlign.bottomLeft || align==DropdownChildLayoutDelegateAlign.bottomRight) {

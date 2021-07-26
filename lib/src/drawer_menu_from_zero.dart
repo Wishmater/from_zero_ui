@@ -164,6 +164,9 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
           if (i==0) {
             _selected = _tabs.indexWhere((e) => e.route==cumulativePath);
           } else {
+            if (_selected<0) {
+              break;
+            }
             ResponsiveDrawerMenuItem item = _tabs[_selected];
             for (var j = 0; j < i-1; ++j) {
               item = item.children![item.selectedChild];

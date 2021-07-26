@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao.dart';
+import 'package:from_zero_ui/src/field_validators.dart';
 import 'package:intl/intl.dart';
+import 'package:from_zero_ui/src/field.dart';
 
 
 class NumField extends Field<num> {
@@ -36,6 +38,8 @@ class NumField extends Field<num> {
     bool? hiddenInTable,
     bool? hiddenInView,
     bool? hiddenInForm,
+    List<FieldValidator<num>> validators = const[],
+    bool validateOnlyOnConfirm = false,
   }) :  controller = TextEditingController(text: toStringStatic(value, formatter)),
         super(
           uiName: uiName,
@@ -50,6 +54,8 @@ class NumField extends Field<num> {
           hiddenInTable: hiddenInTable,
           hiddenInView: hiddenInView,
           hiddenInForm: hiddenInForm,
+          validators: validators,
+          validateOnlyOnConfirm: validateOnlyOnConfirm,
         );
 
   @override
@@ -76,6 +82,8 @@ class NumField extends Field<num> {
     bool? hiddenInTable,
     bool? hiddenInView,
     bool? hiddenInForm,
+    List<FieldValidator<num>>? validators,
+    bool? validateOnlyOnConfirm,
   }) {
     return NumField(
       uiName: uiName??this.uiName,
@@ -91,6 +99,8 @@ class NumField extends Field<num> {
       hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
       hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
       hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
+      validators: validators ?? this.validators,
+      validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
     );
   }
 
@@ -146,6 +156,7 @@ class NumField extends Field<num> {
     }
     return [result];
   }
+  FocusNode _focusNode = FocusNode();
   Widget _buildFieldEditorWidget(BuildContext context, {
     bool addCard=false,
     bool asSliver = true,
@@ -154,6 +165,15 @@ class NumField extends Field<num> {
     bool largeHorizontally = false,
     FocusNode? focusNode,
   }) {
+    if (focusNode==null) {
+      focusNode = _focusNode;
+    }
+    focusNode.addListener(() {
+      if (!passedFirstEdit && !focusNode!.hasFocus) {
+        passedFirstEdit = true;
+        notifyListeners();
+      }
+    });
     Widget result = NotificationListener<ScrollNotification>(
       onNotification: (notification) => true,
       child: Stack(
@@ -204,11 +224,20 @@ class NumField extends Field<num> {
       );
     }
     return Padding(
+      key: fieldGlobalKey,
       padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
       child: Center(
         child: SizedBox(
           width: maxWidth,
-          child: result,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              result,
+              if (validationErrors.isNotEmpty)
+                ValidationMessage(errors: validationErrors),
+            ],
+          ),
         ),
       ),
     );

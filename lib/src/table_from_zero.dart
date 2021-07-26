@@ -999,7 +999,7 @@ class TableFromZeroState extends State<TableFromZero> {
               child: AnimatedSwitcher(
                 duration: Duration(milliseconds: 300),
                 switchInCurve: Curves.easeOut,
-                child: (!export && sortedColumnIndex==j) ? Icon(
+                child: (widget.enabled && !export && sortedColumnIndex==j) ? Icon(
                   sortedAscending ? MaterialCommunityIcons.sort_ascending : MaterialCommunityIcons.sort_descending,
                   key: ValueKey(sortedAscending),
 //                                color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
