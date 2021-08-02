@@ -8,6 +8,7 @@ export 'package:from_zero_ui/src/date_picker_from_zero.dart';
 export 'package:from_zero_ui/src/drawer_menu_from_zero.dart';
 export 'package:from_zero_ui/src/image_from_zero.dart';
 export 'package:from_zero_ui/src/snackbar_from_zero.dart';
+export 'package:from_zero_ui/src/snackbar_host_from_zero.dart';
 export 'package:from_zero_ui/src/settings.dart';
 export 'package:from_zero_ui/src/app_update.dart';
 
@@ -27,7 +28,8 @@ export 'package:from_zero_ui/src/table_from_zero.dart';
 export 'package:from_zero_ui/src/table_from_zero_models.dart';
 export 'package:from_zero_ui/src/heroes_from_zero.dart';
 
-export 'package:from_zero_ui/src/web_compile_file.dart';
+export 'package:from_zero_ui/src/export.dart';
+
 export 'package:from_zero_ui/src/exposed_transitions.dart';
 export 'package:from_zero_ui/util/no_fading_material_transitions.dart';
 //export 'package:from_zero_ui/util/no_fading_fade_through_transition.dart'; //conflicts with original namespace

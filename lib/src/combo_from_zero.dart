@@ -22,10 +22,11 @@ class ComboFromZero<T> extends StatefulWidget {
   final String? hint;
   final bool enabled;
   final bool clearable;
+  final bool sort;
   final ButtonChildBuilder<T>? buttonChildBuilder;
   final double popupWidth;
-  final DAOGetter? daoGetter;
   final ExtraWidgetBuilder<T>? extraWidget;
+  final FocusNode? focusNode;
 
   ComboFromZero({
     this.value,
@@ -39,9 +40,10 @@ class ComboFromZero<T> extends StatefulWidget {
     this.buttonChildBuilder,
     this.enabled = true,
     this.clearable = true,
+    this.sort = true,
     this.popupWidth = 312,
-    this.daoGetter,
     this.extraWidget,
+    this.focusNode,
   }) :  assert(possibleValues!=null || futurePossibleValues!=null);
 
   @override
@@ -92,132 +94,177 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
   @override
   void initState() {
     super.initState();
-    possibleValues = widget.possibleValues;
-    if (widget.futurePossibleValues!=null) {
-      widget.futurePossibleValues!.then((value) {
+    init();
+  }
+  @override
+  void didUpdateWidget(covariant ComboFromZero<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.possibleValues!=widget.possibleValues) {
+      init();
+    } else if (oldWidget.futurePossibleValues!=widget.futurePossibleValues) {
+      init();
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
         setState(() {
-          possibleValues = value;
+          possibleValues = (widget.possibleValues==null ? null : List.from(widget.possibleValues!));
         });
       });
     }
   }
+  void init() async {
+    possibleValues = (widget.possibleValues==null ? null : List.from(widget.possibleValues!)) ?? possibleValues;
+    if (widget.sort) sort();
+    if (widget.futurePossibleValues!=null) {
+      possibleValues = List.from(await widget.futurePossibleValues!);
+      if (widget.sort) sort();
+      setState(() {});
+    }
+  }
+  void sort() {
+    if (possibleValues!=null) {
+      possibleValues!.sort((a, b) {
+        return a.toString().compareTo(b.toString());
+      });
+    }
+  }
 
-  final buttonFocusNode = FocusNode();
+  late final buttonFocusNode = widget.focusNode ?? FocusNode();
   @override
   Widget build(BuildContext context) {
+    Widget result;
     if (possibleValues==null) {
-      return Center(child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2,)));
-    }
-    Widget child;
-    if (widget.buttonChildBuilder==null) {
-      dynamic value = widget.value;
-      if (value!=null && widget.daoGetter!=null) {
-        value = widget.daoGetter!(value);
-      }
-      child = ComboFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, value, widget.enabled, widget.clearable);
-    } else {
-      child = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable);
-    }
-
-    return Stack(
-      children: [
-        OutlineButton(
-          key: buttonKey,
-          child: child,
-          focusNode: buttonFocusNode,
-          onPressed: widget.enabled ? () async {
-            buttonFocusNode.requestFocus();
-            Widget child = Card(
-              clipBehavior: Clip.hardEdge,
-              child: ComboFromZeroPopup<T>(
-                possibleValues: possibleValues!,
-                onSelected: widget.onSelected,
-                onCanceled: widget.onCanceled,
-                value: widget.value,
-                showSearchBox: widget.showSearchBox,
-                title: widget.title,
-                daoGetter: widget.daoGetter,
-                extraWidget: widget.extraWidget,
-              ),
-            );
-            bool? accepted = await showDialog<bool>(
-              context: context,
-              barrierColor: Colors.black.withOpacity(0.2),
-              builder: (context) {
-                final animation = CurvedAnimation(
-                  parent: ModalRoute.of(context)!.animation!,
-                  curve: Curves.easeInOutCubic,
-                );
-                Offset? referencePosition;
-                Size? referenceSize;
-                try {
-                  RenderBox box = buttonKey.currentContext!.findRenderObject()! as RenderBox;
-                  referencePosition = box.localToGlobal(Offset.zero); //this is global position
-                  referenceSize = box.size;
-                } catch(_) {}
-                return CustomSingleChildLayout(
-                  delegate: DropdownChildLayoutDelegate(
-                    referencePosition: referencePosition,
-                    referenceSize: referenceSize,
-                  ),
-                  child: AnimatedBuilder(
-                    animation: animation,
-                    builder: (context, child) {
-                      return SizedBox(
-                        width: referenceSize==null ? widget.popupWidth : (referenceSize.width+8).clamp(312, double.infinity),
-                        child: ClipRect(
-                          clipper: RectPercentageClipper(
-                            widthPercent: (animation.value*2.0).clamp(0.0, 1),
-                          ),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: SizeTransition(
-                      sizeFactor: animation,
-                      axis: Axis.vertical,
-                      axisAlignment: 0,
-                      child: child,
-                    ),
-                  ),
-                );
-              },
-            );
-            if (accepted!=true) {
-              widget.onCanceled?.call();
-            }
-          } : null,
-        ),
-        if (widget.enabled && widget.clearable)
-          Positioned(
-            right: 8, top: 0, bottom: 0,
-            child: ExcludeFocus(
-              child: Center(
-                child: AnimatedSwitcher(
-                  duration: Duration(milliseconds: 300),
-                  switchInCurve: Curves.easeOutCubic,
-                  transitionBuilder: (child, animation) {
-                    return SizeTransition(
-                      sizeFactor: animation,
-                      child: FadeTransition(
-                        opacity: animation,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: widget.value!=null ? IconButton(
-                    icon: Icon(Icons.close),
-                    tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                    splashRadius: 20,
-                    onPressed: () {
-                      widget.onSelected?.call(null);
-                    },
-                  ) : SizedBox.shrink(),
-                )
-              ),
+      result = SizedBox(
+        width: 64,
+        height: 38,
+        child: Center(
+          child: SizedBox(
+            width: 26,
+            height: 26,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
             ),
           ),
-      ],
+        ),
+      );
+    } else {
+      Widget child;
+      if (widget.buttonChildBuilder==null) {
+        child = ComboFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable);
+      } else {
+        child = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable);
+      }
+      result = Stack(
+        children: [
+          OutlineButton(
+            key: buttonKey,
+            child: child,
+            focusNode: buttonFocusNode,
+            onPressed: widget.enabled ? () async {
+              buttonFocusNode.requestFocus();
+              Widget child = Card(
+                clipBehavior: Clip.hardEdge,
+                child: ComboFromZeroPopup<T>(
+                  possibleValues: possibleValues!,
+                  onSelected: widget.onSelected,
+                  onCanceled: widget.onCanceled,
+                  value: widget.value,
+                  showSearchBox: widget.showSearchBox,
+                  title: widget.title,
+                  extraWidget: widget.extraWidget,
+                ),
+              );
+              bool? accepted = await showDialog<bool>(
+                context: context,
+                barrierColor: Colors.black.withOpacity(0.2),
+                builder: (context) {
+                  final animation = CurvedAnimation(
+                    parent: ModalRoute.of(context)!.animation!,
+                    curve: Curves.easeInOutCubic,
+                  );
+                  Offset? referencePosition;
+                  Size? referenceSize;
+                  try {
+                    RenderBox box = buttonKey.currentContext!.findRenderObject()! as RenderBox;
+                    referencePosition = box.localToGlobal(Offset.zero); //this is global position
+                    referenceSize = box.size;
+                  } catch(_) {}
+                  return CustomSingleChildLayout(
+                    delegate: DropdownChildLayoutDelegate(
+                      referencePosition: referencePosition,
+                      referenceSize: referenceSize,
+                    ),
+                    child: AnimatedBuilder(
+                      animation: animation,
+                      builder: (context, child) {
+                        return SizedBox(
+                          width: referenceSize==null ? widget.popupWidth : (referenceSize.width+8).clamp(312, double.infinity),
+                          child: ClipRect(
+                            clipper: RectPercentageClipper(
+                              widthPercent: (animation.value*2.0).clamp(0.0, 1),
+                            ),
+                            child: child, // TODO add AnimatedContainerFromChildSize
+                          ),
+                        );
+                      },
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        axis: Axis.vertical,
+                        axisAlignment: 0,
+                        child: child,
+                      ),
+                    ),
+                  );
+                },
+              );
+              if (accepted!=true) {
+                widget.onCanceled?.call();
+              }
+            } : null,
+          ),
+          if (widget.enabled && widget.clearable)
+            Positioned(
+              right: 8, top: 0, bottom: 0,
+              child: ExcludeFocus(
+                child: Center(
+                    child: AnimatedSwitcher(
+                      duration: Duration(milliseconds: 300),
+                      switchInCurve: Curves.easeOutCubic,
+                      transitionBuilder: (child, animation) {
+                        return SizeTransition(
+                          sizeFactor: animation,
+                          child: FadeTransition(
+                            opacity: animation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: widget.value!=null ? IconButton(
+                        icon: Icon(Icons.close),
+                        tooltip: FromZeroLocalizations.of(context).translate('clear'),
+                        splashRadius: 20,
+                        onPressed: () {
+                          widget.onSelected?.call(null);
+                        },
+                      ) : SizedBox.shrink(),
+                    )
+                ),
+              ),
+            ),
+        ],
+      );
+    }
+    return result;
+    // TODO apply transition switcher, solve problems with duplicate key and stack constraints
+    return PageTransitionSwitcher(
+      child: result,
+      duration: Duration(milliseconds: 300,),
+      transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
+        return FadeThroughTransition(
+          child: child,
+          fillColor: Colors.transparent,
+          animation: primaryAnimation,
+          secondaryAnimation: secondaryAnimation,
+        );
+      },
     );
   }
 
@@ -233,7 +280,6 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
   final OnPopupItemSelected<T>? onSelected;
   final bool showSearchBox;
   final String? title;
-  final DAOGetter? daoGetter;
   final ExtraWidgetBuilder<T>? extraWidget;
 
   ComboFromZeroPopup({
@@ -243,7 +289,6 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
     this.onCanceled,
     this.showSearchBox=true,
     this.title,
-    this.daoGetter,
     this.extraWidget,
   });
 
@@ -265,7 +310,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
   }
 
   void filter() {
-    filtered = widget.possibleValues as List<T>;
+    filtered = widget.possibleValues;
     if (searchQuery!=null) {
       filtered = filtered.where((element) => element.toString().toUpperCase().contains(searchQuery!.toUpperCase())).toList();
     }
@@ -275,80 +320,78 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
   Widget build(BuildContext context) {
     return ScrollbarFromZero(
       controller: popupScrollController,
-      child: ListView.builder(
-        controller: popupScrollController,
-        shrinkWrap: true,
-        itemCount: filtered.length + 1,
-        padding: EdgeInsets.only(bottom: 12,),
-        itemBuilder: (context, index) {
-          if (index==0) {
-            if (widget.showSearchBox) {
-              return Column(
-                children: [
-                  if (widget.title!=null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Center(
-                        child: Text(widget.title!,
-                          style: Theme.of(context).textTheme.subtitle1,
-                          textAlign: TextAlign.center,
+      child: AnimatedContainerFromChildSize(
+        child: CustomScrollView(
+          controller: popupScrollController,
+          shrinkWrap: true,
+          slivers: [
+            TableFromZero(
+              layoutWidgetType: TableFromZero.sliverListViewBuilder,
+              showHeaders: false,
+              horizontalPadding: 8,
+              rows: filtered.map((e) {
+                return SimpleRowModel(
+                  id: e,
+                  values: [e.toString()],
+                  backgroundColor: widget.value==e ? Theme.of(context).toggleableActiveColor.withOpacity(0.1) : null,
+                  onRowTap: (value) {
+                    _select(e);
+                  },
+                  actions: e is DAO ? [IconButton(
+                    icon: Icon(Icons.remove_red_eye),
+                    onPressed: () {
+                      e.pushViewDialog(context);
+                    },
+                  )] : null
+                );
+              }).toList(),
+              headerAddon: widget.showSearchBox ? Container(
+                color: Theme.of(context).cardColor,
+                child: Column(
+                  children: [
+                    if (widget.title!=null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Center(
+                          child: Text(widget.title!,
+                            style: Theme.of(context).textTheme.subtitle1,
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
-                    ),
-                  if (widget.extraWidget!=null)
-                    widget.extraWidget!(context, widget.onSelected,),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0, left: 12, right: 12,),
-                    child: TextFormField(
-                      initialValue: searchQuery,
-                      autofocus: PlatformExtended.isDesktop,
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
-                        labelText: FromZeroLocalizations.of(context).translate('search...'),
-                        labelStyle: TextStyle(height: 1.5),
-                        suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
+                    if (widget.extraWidget!=null)
+                      widget.extraWidget!(context, widget.onSelected,),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, left: 12, right: 12,),
+                      child: TextFormField(
+                        initialValue: searchQuery,
+                        autofocus: PlatformExtended.isDesktop,
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
+                          labelText: FromZeroLocalizations.of(context).translate('search...'),
+                          labelStyle: TextStyle(height: 1.5),
+                          suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            searchQuery = value;
+                            filter();
+                          });
+                        },
+                        onFieldSubmitted: (value) {
+                          if (filtered.length==1) {
+                            _select(filtered.first);
+                          }
+                        },
                       ),
-                      onChanged: (value) {
-                        setState(() {
-                          searchQuery = value;
-                          filter();
-                        });
-                      },
-                      onFieldSubmitted: (value) {
-                        if (filtered.length==1) {
-                          _select(filtered.first);
-                        }
-                      },
                     ),
-                  ),
-                ],
-              );
-            } else{
-              return SizedBox(height: 12,);
-            }
-          } else {
-            index--;
-          }
-          dynamic value = filtered[index];
-          if (widget.daoGetter!=null) {
-            value = widget.daoGetter!(value);
-          }
-          return ListTile(
-            title: Text(value.toString(), style: Theme.of(context).textTheme.subtitle1,),
-            dense: true,
-            selected: widget.value==filtered[index],
-            selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.1),
-            onTap: (){
-              _select(filtered[index]);
-            },
-            trailing: value is DAO ? IconButton(
-              icon: Icon(Icons.remove_red_eye),
-              onPressed: () {
-                (value as DAO).pushViewDialog(context);
-              },
-            ) : null,
-          );
-        },
+                  ],
+                ),
+              ) : null,
+            ),
+            SliverToBoxAdapter(child: SizedBox(height: 12,),),
+          ],
+        ),
       ),
     );
   }

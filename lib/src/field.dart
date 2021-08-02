@@ -209,8 +209,10 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(toString(),
-                    style: Theme.of(context).textTheme.subtitle1,
+                  Expanded(
+                    child: Text(toString(),
+                      style: Theme.of(context).textTheme.subtitle1,
+                    ),
                   ),
                   if (showViewButtons && (value is DAO))
                     IconButton(

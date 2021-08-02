@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/snackbar_host_from_zero.dart';
 import 'package:provider/provider.dart';
@@ -38,41 +39,44 @@ class _FromZeroAppContentWrapperState extends State<FromZeroAppContentWrapper> {
   @override
   Widget build(BuildContext context) {
     //TODO 3 add restrictions to fontSize, uiScale logic, etc. here
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth>0){
-          screen.displayMobileLayout = constraints.maxWidth < ScaffoldFromZero.screenSizeMedium;
-          if (constraints.maxWidth>=ScaffoldFromZero.screenSizeXLarge){
-            screen.breakpoint = ScaffoldFromZero.screenSizeXLarge;
-          } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeLarge){
-            screen.breakpoint = ScaffoldFromZero.screenSizeLarge;
-          } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium){
-            screen.breakpoint = ScaffoldFromZero.screenSizeMedium;
-          } else{
-            screen.breakpoint = ScaffoldFromZero.screenSizeSmall;
+    return ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth>0){
+            screen.displayMobileLayout = constraints.maxWidth < ScaffoldFromZero.screenSizeMedium;
+            if (constraints.maxWidth>=ScaffoldFromZero.screenSizeXLarge){
+              screen.breakpoint = ScaffoldFromZero.screenSizeXLarge;
+            } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeLarge){
+              screen.breakpoint = ScaffoldFromZero.screenSizeLarge;
+            } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium){
+              screen.breakpoint = ScaffoldFromZero.screenSizeMedium;
+            } else{
+              screen.breakpoint = ScaffoldFromZero.screenSizeSmall;
+            }
+            changeNotifier._updateScaffolds(screen.displayMobileLayout, constraints.maxWidth);
+            changeNotifier._previousWidth = constraints.maxWidth;
+            changeNotifier._previousHeight = constraints.maxHeight;
           }
-          changeNotifier._updateScaffolds(screen.displayMobileLayout, constraints.maxWidth);
-          changeNotifier._previousWidth = constraints.maxWidth;
-          changeNotifier._previousHeight = constraints.maxHeight;
-        }
-        return FittedBox(
-          child: SizedBox(
-            width: changeNotifier._previousWidth ?? 1280,
-            height: changeNotifier._previousHeight ?? 720,
-            child: MultiProvider(
-              providers: [
-                ChangeNotifierProvider.value(value: changeNotifier,),
-                ChangeNotifierProvider.value(value: screen,),
-              ],
-              builder: (context, _) {
-                return SnackBarHostFromZero(
-                  child: widget.child,
-                );
-              },
+          return FittedBox(
+            child: SizedBox(
+              width: changeNotifier._previousWidth ?? 1280,
+              height: changeNotifier._previousHeight ?? 720,
+              child: MultiProvider(
+                providers: [
+                  ChangeNotifierProvider.value(value: changeNotifier,),
+                  ChangeNotifierProvider.value(value: screen,),
+                ],
+                builder: (context, _) {
+                  return SnackBarHostFromZero(
+                    child: widget.child,
+                  );
+                },
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 

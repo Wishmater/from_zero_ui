@@ -23,6 +23,7 @@ class DatePickerFromZero extends StatefulWidget {
   final double popupWidth;
   final DAOGetter? daoGetter;
   final bool clearable;
+  final FocusNode? focusNode;
 
   DatePickerFromZero({
     this.value,
@@ -38,6 +39,7 @@ class DatePickerFromZero extends StatefulWidget {
     this.clearable = true,
     this.popupWidth = 312,
     this.daoGetter,
+    this.focusNode,
   }) :  this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY);
 
   @override
@@ -84,7 +86,7 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
 
   GlobalKey buttonKey = GlobalKey();
 
-  final buttonFocusNode = FocusNode();
+  late final buttonFocusNode = widget.focusNode ?? FocusNode();
   @override
   Widget build(BuildContext context) {
     Widget child;

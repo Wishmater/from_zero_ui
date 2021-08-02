@@ -45,6 +45,8 @@ dependencies:
   platform_detect: ^1.4.0
   permission_handler: ^6.1.0
   open_file: ^3.1.0
+  pdf: ^1.10.0
+  excel: ^1.1.5
 
   # * Update
   archive: ^3.1.2
@@ -83,6 +85,7 @@ dev_dependencies:
 dependency_overrides:
   http_parser: ^4.0.0
   crypto: ^3.0.0
+  archive: ^3.1.2
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -2,7 +2,7 @@ import 'package:intl/intl.dart';
 
 
 
-class FormattedNum with Comparable{
+class FormattedNum with Comparable implements ContainsValue{
 
   num value;
   NumberFormat formatter;
@@ -37,7 +37,7 @@ abstract class ContainsValue {
   dynamic get value;
 }
 
-class SimpleValueString  implements ContainsValue {
+class SimpleValueString implements ContainsValue {
   var value;
   var string;
   SimpleValueString(this.value, this.string);

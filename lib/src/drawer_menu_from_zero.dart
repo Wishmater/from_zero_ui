@@ -23,8 +23,8 @@ class ResponsiveDrawerMenuItem{
   final String? route;
   final Map<String, dynamic>? arguments;
   final Widget? icon;
-  final List<ResponsiveDrawerMenuItem>? children; //TODO 2 implement multilevel / children
-  int selectedChild;
+  final List<ResponsiveDrawerMenuItem>? children;
+  final int selectedChild;
   final bool Function()? onTap;
   final bool executeBothOnTapAndDefaultOnTap;
   final bool forcePopup;
@@ -55,24 +55,40 @@ class ResponsiveDrawerMenuItem{
   });
 
   ResponsiveDrawerMenuItem copyWith({
-    title,
-    icon,
-    route,
-    children,
-    selectedChild,
-    subtitle,
-    onTap,
-    forcePopup,
+    String? title,
+    String? subtitle,
+    String? subtitleRight,
+    String? route,
+    Map<String, dynamic>? arguments,
+    Widget? icon,
+    List<ResponsiveDrawerMenuItem>? children,
+    int? selectedChild,
+    bool Function()? onTap,
+    bool? executeBothOnTapAndDefaultOnTap,
+    bool? forcePopup,
+    bool? defaultExpanded,
+    Widget? customExpansionTileTrailing,
+    bool? dense,
+    double? titleHorizontalOffset,
+    Key? itemKey,
   }){
     return ResponsiveDrawerMenuItem(
       title: title ?? this.title,
       subtitle: subtitle ?? this.subtitle,
-      icon: icon ?? this.icon,
+      subtitleRight: subtitleRight ?? this.subtitleRight,
       route: route ?? this.route,
-      onTap: onTap ?? this.onTap,
+      arguments: arguments ?? this.arguments,
+      icon: icon ?? this.icon,
       children: children ?? this.children,
       selectedChild: selectedChild ?? this.selectedChild,
+      onTap: onTap ?? this.onTap,
+      executeBothOnTapAndDefaultOnTap: executeBothOnTapAndDefaultOnTap ?? this.executeBothOnTapAndDefaultOnTap,
       forcePopup: forcePopup ?? this.forcePopup,
+      defaultExpanded: defaultExpanded ?? this.defaultExpanded,
+      customExpansionTileTrailing: customExpansionTileTrailing ?? this.customExpansionTileTrailing,
+      dense: dense ?? this.dense,
+      titleHorizontalOffset: titleHorizontalOffset ?? this.titleHorizontalOffset,
+      itemKey: itemKey ?? this.itemKey,
     );
   }
 
@@ -82,17 +98,18 @@ class ResponsiveDrawerMenuItem{
 
 class DrawerMenuFromZero extends StatefulWidget {
 
-  static const int alwaysReplaceInsteadOfPuhsing = 1;
-  static const int neverReplaceInsteadOfPuhsing = 2;
-  static const int exceptRootReplaceInsteadOfPuhsing = 0;
+  static const int alwaysReplaceInsteadOfPushing = 1;
+  static const int neverReplaceInsteadOfPushing = 2;
+  static const int exceptRootReplaceInsteadOfPushing = 0;
 
   static const int styleDrawerMenu = 0;
   static const int styleTree = 1;
 
+  final List<ResponsiveDrawerMenuItem>? parentTabs; /// Only used for smart pushing algorithm
   final List<ResponsiveDrawerMenuItem> tabs;
   final int selected;
   final bool compact;
-  final int replaceInsteadOfPuhsing;
+  final int replaceInsteadOfPushing;
   final int depth;
   final double paddingRight;
   final bool popup;
@@ -103,9 +120,10 @@ class DrawerMenuFromZero extends StatefulWidget {
 
   DrawerMenuFromZero({
     required this.tabs,
+    this.parentTabs,
     this.selected = -1,
     this.compact = false,
-    this.replaceInsteadOfPuhsing = exceptRootReplaceInsteadOfPuhsing,
+    this.replaceInsteadOfPushing = exceptRootReplaceInsteadOfPushing,
     this.depth = 0,
     this.paddingRight = 0,
     this.popup = false,
@@ -153,12 +171,23 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
   }
 
   void _updateTabs() {
-    _tabs = widget.tabs;
+    _tabs = List.from(widget.tabs);
     _selected = widget.selected;
     if (widget.selected<0 && widget.inferSelected) {
       try {
         List<String> paths = ModalRoute.of(context)!.settings.name!.split('/')..removeWhere((e) => e.isEmpty);
         String cumulativePath = '';
+        if (widget.homeRoute!=null) {
+          List<String> homeRoutePaths = widget.homeRoute!.split('/')..removeWhere((e) => e.isEmpty);
+          if (homeRoutePaths.isNotEmpty) {
+            homeRoutePaths.removeLast();
+            while (homeRoutePaths.isNotEmpty && homeRoutePaths[0]==paths[0]) {
+              cumulativePath += '/${paths[0]}';
+              homeRoutePaths.removeAt(0);
+              paths.removeAt(0);
+            }
+          }
+        }
         for (var i = 0; i < paths.length; ++i) {
           cumulativePath += '/${paths[i]}';
           if (i==0) {
@@ -172,7 +201,9 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
               item = item.children![item.selectedChild];
             }
             if (item.selectedChild>=0) break;
-            item.selectedChild = item.children?.indexWhere((e) => e.route==cumulativePath) ?? -1;
+            _tabs[_selected] = item.copyWith(
+              selectedChild: item.children?.indexWhere((e) => e.route==cumulativePath) ?? -1,
+            );
           }
         }
       } catch (e, st) {
@@ -244,7 +275,8 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
                   if (scaffold.hasDrawer && scaffold.isDrawerOpen)
                     navigator.pop();
                 } catch(_, __){}
-                if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPuhsing){
+                if (widget.replaceInsteadOfPushing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPushing){
+                  // TODO ! this will break if the homeRoute is NOT in the stack
                   if (selected>=0 && tabs[selected].route==widget.homeRoute){
                     navigator.pushNamed(tabs[i].route!, arguments: tabs[i].arguments);
                   } else{
@@ -258,16 +290,30 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
                       }
                     }
                   }
-                } else if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.neverReplaceInsteadOfPuhsing){
+                } else if (widget.replaceInsteadOfPushing == DrawerMenuFromZero.neverReplaceInsteadOfPushing){
                   navigator.pushNamed(tabs[i].route!, arguments: tabs[i].arguments);
-                } else if (widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.alwaysReplaceInsteadOfPuhsing){
+                } else if (widget.replaceInsteadOfPushing == DrawerMenuFromZero.alwaysReplaceInsteadOfPushing){
                   if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
+                    List<String> routes = [];
+                    if (widget.homeRoute!=null) {
+                      routes.add(widget.homeRoute!);
+                    }
+                    Function(List<ResponsiveDrawerMenuItem>)? addRoutes;
+                    addRoutes = (List<ResponsiveDrawerMenuItem> items) {
+                      items.forEach((e) {
+                        if (e.route!=null) {
+                          routes.add(e.route!);
+                        }
+                        addRoutes!(e.children ?? []);
+                      });
+                    };
+                    addRoutes(widget.parentTabs ?? _tabs);
                     bool passed = false;
                     navigator.pushNamedAndRemoveUntil(
                       tabs[i].route!,
-                      (Route<dynamic> route){
+                      (Route<dynamic> route) {
                         if (passed || route.isFirst) return true;
-                        if (route.settings.name==widget.homeRoute){
+                        if (routes.contains(route.settings.name)){
                           passed = true;
                         }
                         return false;
@@ -339,10 +385,12 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
                       selected: tabs[i].selectedChild,
                       inferSelected: false,
                       depth: widget.depth+1,
-                      replaceInsteadOfPuhsing: widget.replaceInsteadOfPuhsing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPuhsing
-                          ? (selected==0 ? DrawerMenuFromZero.neverReplaceInsteadOfPuhsing : DrawerMenuFromZero.alwaysReplaceInsteadOfPuhsing)
-                          : widget.replaceInsteadOfPuhsing,
+                      replaceInsteadOfPushing: widget.replaceInsteadOfPushing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPushing
+                          ? (selected==0 ? DrawerMenuFromZero.neverReplaceInsteadOfPushing : DrawerMenuFromZero.alwaysReplaceInsteadOfPushing)
+                          : widget.replaceInsteadOfPushing,
                       style: widget.style,
+                      homeRoute: widget.homeRoute,
+                      parentTabs: widget.parentTabs ?? _tabs,
                       paintPreviousTreeLines: [...widget.paintPreviousTreeLines, i!=tabs.length-1,],
                     ),
                   ],
@@ -382,8 +430,9 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
                 selected: tabs[i].selectedChild,
                 inferSelected: false,
                 paddingRight: 16,
-                replaceInsteadOfPuhsing: widget.replaceInsteadOfPuhsing,
+                replaceInsteadOfPushing: widget.replaceInsteadOfPushing,
                 homeRoute: widget.homeRoute,
+                parentTabs: widget.parentTabs ?? _tabs,
                 style: widget.style,
               ),
             )),

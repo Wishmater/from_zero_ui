@@ -45,7 +45,7 @@ class _PageScaffoldState extends State<PageScaffold> {
         selected: 1,
         tabs: PageHome.tabs,
       ),
-      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
+      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
       actions: [
         Builder(
           builder: (context) {

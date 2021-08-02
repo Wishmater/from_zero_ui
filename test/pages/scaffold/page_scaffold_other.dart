@@ -187,7 +187,7 @@ class _PageScaffoldInnerState extends State<PageScaffoldOther> {
         ),
       ],
         compact: compact, selected: -1, style: DrawerMenuFromZero.styleTree,),
-      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
+      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
     );
   }
 

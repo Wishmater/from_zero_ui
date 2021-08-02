@@ -10,7 +10,9 @@ abstract class ConditionFilter {
   bool extra;
   String getUiName(BuildContext context);
   String getExtraUiName(BuildContext context);
-  bool isAllowed(dynamic? value);
+  String getExtraUiTooltip(BuildContext context);
+  bool isAllowed(dynamic value);
+  late FocusNode focusNode = FocusNode();
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,});
 }
 
@@ -48,7 +50,8 @@ abstract class FilterText extends ConditionFilter {
         clipBehavior: Clip.none,
         children: [
           TextFormField(
-            autofocus: true,
+            autofocus: PlatformExtended.isDesktop,
+            focusNode: focusNode,
             initialValue: query,
             onChanged: (v) {
               query = v;
@@ -68,27 +71,43 @@ abstract class FilterText extends ConditionFilter {
             ),
           ),
           Positioned(
-            right: 36, top: 0, bottom: 0,
+            right: 38, top: 0, bottom: 0,
             child: Center(
               child: Tooltip(
-                message: getExtraUiName(context),
-                child: StatefulBuilder(
-                  builder: (context, checkboxSetState) {
-                    return Checkbox(
-                      value: extra,
-                      onChanged: (value) {
-                        extra = value??false;
-                        checkboxSetState((){});
-                        onValueChanged?.call();
-                      },
-                    );
-                  },
+                message: getExtraUiTooltip(context),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      top: 0, left: -32, right: -32,
+                      child: Center(
+                        child: Text(getExtraUiName(context),
+                          style: Theme.of(context).textTheme.caption!.copyWith(height: 1.2),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: StatefulBuilder(
+                        builder: (context, checkboxSetState) {
+                          return Checkbox(
+                            value: extra,
+                            onChanged: (value) {
+                              extra = value??false;
+                              checkboxSetState((){});
+                              onValueChanged?.call();
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
           Positioned(
-            right: 0, top: 0, bottom: 0,
+            right: 2, top: 0, bottom: 0,
             child: Center(
               child: IconButton(
                 icon: Icon(Icons.close),
@@ -129,9 +148,11 @@ class FilterTextContains extends FilterText {
     String query = '',
   }) : super(extra: inverse, query: query,);
   @override
-  String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_text_contains'); //Text contains
+  String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_text_contains');
   @override
-  String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse'); //Reverse
+  String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse');
+  @override
+  String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse_tooltip');
   @override
   bool isAllowed(value) {
     bool result = value.toString().toUpperCase().contains(query.toUpperCase());
@@ -147,9 +168,11 @@ class FilterTextStartsWith extends FilterText {
     String query = '',
   }) : super(extra: inverse, query: query,);
   @override
-  String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_text_begins'); //Text starts with
+  String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_text_begins');
   @override
-  String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse'); //Reverse
+  String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse');
+  @override
+  String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse_tooltip');
   @override
   bool isAllowed(value) {
     bool result = value.toString().toUpperCase().startsWith(query.toUpperCase());
@@ -165,9 +188,11 @@ class FilterTextEndsWith extends FilterText {
     String query = '',
   }) : super(extra: inverse, query: query,);
   @override
-  String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_text_ends'); //Text ends with
+  String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_text_ends');
   @override
-  String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse'); //Reverse
+  String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse');
+  @override
+  String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse_tooltip');
   @override
   bool isAllowed(value) {
     bool result = value.toString().toUpperCase().endsWith(query.toUpperCase());
@@ -193,7 +218,8 @@ abstract class FilterNumber extends ConditionFilter {
         clipBehavior: Clip.none,
         children: [
           TextFormField(
-            autofocus: true,
+            autofocus: PlatformExtended.isDesktop,
+            focusNode: focusNode,
             initialValue: query==null ? '' : query.toString(),
             onChanged: (v) {
               try {
@@ -219,27 +245,43 @@ abstract class FilterNumber extends ConditionFilter {
             ),
           ),
           Positioned(
-            right: 36, top: 0, bottom: 0,
+            right: 38, top: 0, bottom: 0,
             child: Center(
               child: Tooltip(
-                message: getExtraUiName(context),
-                child: StatefulBuilder(
-                  builder: (context, checkboxSetState) {
-                    return Checkbox(
-                      value: extra,
-                      onChanged: (value) {
-                        extra = value??false;
-                        checkboxSetState((){});
-                        onValueChanged?.call();
-                      },
-                    );
-                  },
+                message: getExtraUiTooltip(context),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      top: 0, left: -32, right: -32,
+                      child: Center(
+                        child: Text(getExtraUiName(context),
+                          style: Theme.of(context).textTheme.caption!.copyWith(height: 1.2),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: StatefulBuilder(
+                        builder: (context, checkboxSetState) {
+                          return Checkbox(
+                            value: extra,
+                            onChanged: (value) {
+                              extra = value??false;
+                              checkboxSetState((){});
+                              onValueChanged?.call();
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
           Positioned(
-            right: 0, top: 0, bottom: 0,
+            right: 2, top: 0, bottom: 0,
             child: Center(
               child: IconButton(
                 icon: Icon(Icons.close),
@@ -282,9 +324,11 @@ class FilterNumberGreaterThan extends FilterNumber {
     num? query,
   }) : super(extra: inclusive, query: query,);
   @override
-  String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_number_greater'); //Number greater than
+  String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_number_greater');
   @override
-  String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('include'); //Inclusive
+  String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('include');
+  @override
+  String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
   @override
   bool isAllowed(v) {
     if (query==null) return true;
@@ -302,9 +346,11 @@ class FilterNumberLessThan extends FilterNumber {
     num? query,
   }) : super(extra: inclusive, query: query,);
   @override
-  String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_number_less'); //Number less than
+  String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_number_less');
   @override
-  String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('include'); //Inclusive
+  String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('include');
+  @override
+  String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
   @override
   bool isAllowed(v) {
     if (query==null) return true;
@@ -336,6 +382,7 @@ abstract class FilterDate extends ConditionFilter {
               return DatePickerFromZero(
                 value: query,
                 clearable: false,
+                focusNode: focusNode,
                 title: getUiName(context),
                 formatter: DateFormat.yMMMMd(),
                 firstDate: DateTime(1900),
@@ -371,27 +418,43 @@ abstract class FilterDate extends ConditionFilter {
             },
           ),
           Positioned(
-            right: 36, top: 0, bottom: 0,
+            right: 38, top: 0, bottom: 0,
             child: Center(
               child: Tooltip(
-                message: getExtraUiName(context),
-                child: StatefulBuilder(
-                  builder: (context, checkboxSetState) {
-                    return Checkbox(
-                      value: extra,
-                      onChanged: (value) {
-                        extra = value??false;
-                        checkboxSetState((){});
-                        onValueChanged?.call();
-                      },
-                    );
-                  },
+                message: getExtraUiTooltip(context),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      top: 0, left: -32, right: -32,
+                      child: Center(
+                        child: Text(getExtraUiName(context),
+                          style: Theme.of(context).textTheme.caption!.copyWith(height: 1.2),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: StatefulBuilder(
+                        builder: (context, checkboxSetState) {
+                          return Checkbox(
+                            value: extra,
+                            onChanged: (value) {
+                              extra = value??false;
+                              checkboxSetState((){});
+                              onValueChanged?.call();
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
           Positioned(
-            right: 0, top: 0, bottom: 0,
+            right: 2, top: 0, bottom: 0,
             child: Center(
               child: IconButton(
                 icon: Icon(Icons.close),
@@ -442,6 +505,8 @@ class FilterDateAfter extends FilterDate {
   @override
   String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('include');
   @override
+  String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
+  @override
   bool isAllowed(v) {
     if (query==null) return true;
     final value = (v is ContainsValue) ? v.value : v;
@@ -461,6 +526,8 @@ class FilterDateBefore extends FilterDate {
   String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_date_before');
   @override
   String getExtraUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('include');
+  @override
+  String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
   @override
   bool isAllowed(v) {
     if (query==null) return true;

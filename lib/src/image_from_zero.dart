@@ -5,6 +5,8 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:extended_image/extended_image.dart';
 import 'dart:math';
 
+import 'package:from_zero_ui/src/web_compile_file.dart';
+
 
 enum FullscreenType {
   none,

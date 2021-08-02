@@ -16,6 +16,7 @@ class ScrollbarFromZero extends StatefulWidget {
   final int? opacityGradientDirection;
   final double opacityGradientSize;
   final bool moveBackAndForthToForceTriggerScrollbar;
+  final bool addPaddingOnDesktop;
 
   ScrollbarFromZero({
     Key? key,
@@ -31,6 +32,7 @@ class ScrollbarFromZero extends StatefulWidget {
     this.hoverThickness,
     this.showTrackOnHover,
     this.moveBackAndForthToForceTriggerScrollbar = false,
+    this.addPaddingOnDesktop = false,
   }) :  super(key: key);
 
   @override
@@ -57,7 +59,18 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     super.initState();
     addListeners(widget.controller);
     built = false;
-    _onScrollListener ();
+    _onScrollListener();
+    listenPeriodically();
+  }
+
+  // TODO if a notification could be received on change position.maxScrollExtent, there would be no need to listen periodically
+  void listenPeriodically() async {
+    while (mounted) {
+      if (built) {
+        _onScrollListener();
+      }
+      await Future.delayed(Duration(milliseconds: 1000));
+    }
   }
 
   void addListeners(ScrollController? controller){
@@ -77,25 +90,33 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   }
 
   bool built = false;
+  bool showing = false;
+  double maxScrollExtent = 0;
   void _onScrollListener () async {
     await Future.delayed(Duration(milliseconds: 400));
-    if (built) return;
-    if (widget.controller!=null) {
+    if (mounted && widget.controller!=null) {
       if (!widget.controller!.hasClients) {
         _onScrollListener();
         return;
       }
-      if (mounted) {
-        built = true;
-        if (widget.moveBackAndForthToForceTriggerScrollbar) {
-          final pixels = widget.controller!.position.pixels;
-          widget.controller!.jumpTo(pixels+1);
-          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-            widget.controller!.jumpTo(pixels);
-          });
-        }
+      double maxScrollExtent = widget.controller!.position.maxScrollExtent;
+      bool showing = maxScrollExtent > 0;
+      if (!built || maxScrollExtent!=this.maxScrollExtent) {
+        widget.controller!.position.didUpdateScrollPositionBy(0);
+      }
+      if (!built || showing!=this.showing) {
         setState(() {});
       }
+      if (!built && widget.moveBackAndForthToForceTriggerScrollbar) {
+        final pixels = widget.controller!.position.pixels;
+        widget.controller!.jumpTo(pixels+0.1);
+        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+          widget.controller!.jumpTo(pixels);
+        });
+      }
+      built = true;
+      this.maxScrollExtent = maxScrollExtent;
+      this.showing = showing;
     }
   }
 
@@ -104,9 +125,6 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   Widget build(BuildContext context) {
 
     Widget child = widget.child;
-
-    // if (widget.controller==null)
-    //   return child;
 
     if (widget.applyOpacityGradientToChildren ?? widget.controller!=null){
       if (widget.controller!=null) {
@@ -128,11 +146,26 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
         );
       }
     }
-    // print (toString() + ' - ' + built.toString());
+
+    if (widget.addPaddingOnDesktop) {
+      //TODO implement add padding on desktop functionality
+      // allow to set background color
+      // find a way to reduce the scrollbar gesture detector size
+      child = Row(
+        children: [
+          Expanded(child: child,),
+          AnimatedContainer(
+            duration: Duration(milliseconds: 300),
+            curve: Curves.easeOutCubic,
+            width: showing ? 12 : 0,
+          ),
+        ],
+      );
+    }
 
     return Scrollbar(
       controller: widget.controller,
-      isAlwaysShown: (widget.controller?.hasClients??false)
+      isAlwaysShown: (showing && (widget.controller?.hasClients??false))
           ? (widget.isAlwaysShown ?? Theme.of(context).scrollbarTheme.isAlwaysShown)
           : false,
       notificationPredicate: widget.notificationPredicate ?? (notification) => true,
@@ -140,7 +173,10 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
       thickness: widget.thickness,
       hoverThickness: widget.hoverThickness,
       showTrackOnHover: widget.showTrackOnHover,
-      child: child,
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) => widget.controller==null,
+        child: child,
+      ),
     );
 
   }

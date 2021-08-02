@@ -67,7 +67,7 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
           //     );
           //   },
           // ),
-          DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPuhsing: DrawerMenuFromZero.neverReplaceInsteadOfPuhsing,),
+          DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
         ],
       ),
       floatingActionButton: FloatingActionButton(

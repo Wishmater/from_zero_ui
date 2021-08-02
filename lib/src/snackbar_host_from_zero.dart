@@ -1,31 +1,56 @@
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/src/snackbar_from_zero.dart';
 import 'package:provider/provider.dart';
 
 
+class SnackBarControllerFromZero {
+
+  SnackBarControllerFromZero({
+    required this.host,
+    required this.snackBar,
+  });
+
+  SnackBarHostControllerFromZero host;
+  SnackBarFromZero snackBar;
+
+  Completer<void> _closedCompleter = Completer();
+  Future<void> get closed => _closedCompleter.future;
+
+  void dismiss() {
+    host.dismiss(snackBar);
+  }
+
+}
+
+
 class SnackBarHostControllerFromZero extends ChangeNotifier {
 
-  List<SnackBarFromZero> _snackbarQueue = [];
+  List<SnackBarFromZero> _snackBarQueue = [];
 
   void show(SnackBarFromZero o) {
-    _snackbarQueue.add(o);
+    _snackBarQueue.add(o);
     notifyListeners();
   }
 
   void dismiss(SnackBarFromZero o) {
-    _snackbarQueue.remove(o);
+    _snackBarQueue.remove(o);
+    o.controller?._closedCompleter.complete();
     notifyListeners();
   }
 
   void dismissFirst(){
-    _snackbarQueue.removeAt(0);
-    notifyListeners();
+    if (_snackBarQueue.isNotEmpty) {
+      dismiss(_snackBarQueue.first);
+    }
   }
 
   void dismissAll() {
-    _snackbarQueue.clear();
-    notifyListeners();
+    for (var i = 0; i < _snackBarQueue.length; ++i) {
+      dismiss(_snackBarQueue[i]);
+    }
   }
 
 }
@@ -78,7 +103,7 @@ class _SnackBarHostFromZeroState extends State<SnackBarHostFromZero> {
                         ),
                       );
                     },
-                    child: controller._snackbarQueue.isEmpty ? SizedBox.shrink() : controller._snackbarQueue.first,
+                    child: controller._snackBarQueue.isEmpty ? SizedBox.shrink() : controller._snackBarQueue.first,
                   ),
                 ),
               ],

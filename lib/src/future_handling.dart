@@ -292,15 +292,11 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
 
 }
 
-class Export extends StatelessWidget {
-  // !!! TODO !!! fix export web issues and move it here or a lot of stuff will break
-  Widget build(context) { return Container(); }
-}
 
 class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromChildSize> {
 
   GlobalKey globalKey = GlobalKey();
-  late Size previouSize;
+  Size? previousSize;
   Size? size; //TODO 3 use a provider for sizes to notify parents of changes and allow nesting
   bool skipNextCalculation = false;
   late int initialTimestamp;
@@ -324,13 +320,14 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
       WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
         try {
           RenderBox renderBox = globalKey.currentContext!.findRenderObject() as RenderBox;
-          previouSize = size!;
+          previousSize = size;
           size = renderBox.size;
-          if (size!=previouSize)
-          setState(() {
-            skipNextCalculation = true;
-          });
-        } catch (_, __) {}
+          if (size!=previousSize) {
+            setState(() {
+              skipNextCalculation = true;
+            });
+          }
+        } catch (_, __) { }
       });
     }
   }
@@ -352,9 +349,9 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
           double height = max(size!.height, constraints.minHeight);
           double width = max(size!.width, constraints.minWidth);
           double durationMult = 1;
-          if (previouSize != null){
-            double previousHeight = max(previouSize.height, constraints.minHeight);
-            double previousWidth = max(previouSize.width, constraints.minWidth);
+          if (previousSize != null){
+            double previousHeight = max(previousSize!.height, constraints.minHeight);
+            double previousWidth = max(previousSize!.width, constraints.minWidth);
 //            durationMult = ((max((previousHeight-height).abs(), (previousWidth-width).abs()))/64).clamp(0.0, 1.0); TODO 3 make this work right when called multiple times in succesion by LayoutBuilder
           }
           int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds*durationMult).toInt();

@@ -5,21 +5,6 @@ import 'package:from_zero_ui/src/snackbar_host_from_zero.dart';
 import 'package:provider/provider.dart';
 
 
-class SnackBarControllerFromZero {
-
-  SnackBarControllerFromZero({
-    required this.host,
-    required this.snackbar,
-  });
-
-  SnackBarHostControllerFromZero host;
-  SnackBarFromZero snackbar;
-
-  void dismiss() {
-    host.dismiss(snackbar);
-  }
-
-}
 
 class SnackBarFromZero extends StatefulWidget {
 
@@ -88,7 +73,7 @@ class SnackBarFromZero extends StatefulWidget {
     final host = Provider.of<SnackBarHostControllerFromZero>(context??this.context, listen: false);
     controller = SnackBarControllerFromZero(
       host: host,
-      snackbar: this,
+      snackBar: this,
     );
     host.show(this);
     return controller!;

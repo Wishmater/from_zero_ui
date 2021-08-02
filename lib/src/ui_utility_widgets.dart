@@ -4,38 +4,58 @@ import 'dart:math';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:from_zero_ui/src/app_content_wrapper.dart';
+import 'package:from_zero_ui/src/exposed_transitions.dart';
 import 'package:from_zero_ui/src/scaffold_from_zero.dart';
 import 'package:flutter/foundation.dart';
 import 'package:from_zero_ui/util/platform_web_impl.dart';
 import 'package:provider/provider.dart';
+import 'package:dartx/dartx.dart';
 
 
 class ResponsiveHorizontalInsetsSliver extends StatelessWidget {
 
   final Widget sliver;
+  final double padding;
+  /// Screen width required to add padding
+  final double breakpoint;
 
-  ResponsiveHorizontalInsetsSliver({Key? key, required this.sliver}) : super(key: key);
+  ResponsiveHorizontalInsetsSliver({
+    Key? key,
+    required this.sliver,
+    this.padding = 12,
+    this.breakpoint = ScaffoldFromZero.screenSizeMedium,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return SliverPadding(
-      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < ScaffoldFromZero.screenSizeMedium ? 0 : 12),
+      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < breakpoint ? 0 : padding),
       sliver: sliver,
     );
   }
 
 }
 
+
 class ResponsiveHorizontalInsets extends StatelessWidget {
 
   final Widget child;
+  final double padding;
+  /// Screen width required to add padding
+  final double breakpoint;
 
-  ResponsiveHorizontalInsets({Key? key, required this.child}) : super(key: key);
+  ResponsiveHorizontalInsets({
+    Key? key,
+    required this.child,
+    this.padding = 12,
+    this.breakpoint = ScaffoldFromZero.screenSizeMedium,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < ScaffoldFromZero.screenSizeLarge ? 0 : 12),
+      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < breakpoint ? 0 : padding),
       child: child,
     );
   }
@@ -59,7 +79,7 @@ class LoadingCheckbox extends StatelessWidget{
   final Widget loadingWidget;
   final Duration transitionDuration;
   final Key? key;
-  PageTransitionSwitcherTransitionBuilder? pageTransitionBuilder;
+  final PageTransitionSwitcherTransitionBuilder? pageTransitionBuilder;
   AnimatedSwitcherTransitionBuilder? transitionBuilder;
 
   LoadingCheckbox({
@@ -119,88 +139,29 @@ class LoadingCheckbox extends StatelessWidget{
       );
   }
 
-  AnimatedSwitcherTransitionBuilder _defaultTransitionBuilder
-      = (Widget child, Animation<double> animation)
-    => ScaleTransition(scale: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic), child: child,);
+  AnimatedSwitcherTransitionBuilder _defaultTransitionBuilder = (Widget child, Animation<double> animation)
+      => ScaleTransition(scale: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic), child: child,);
 
-
-  PageTransitionSwitcherTransitionBuilder _defaultPageTransitionBuilder
-      = (child, primaryAnimation, secondaryAnimation) {
-    return FadeThroughTransition(
-      animation: primaryAnimation,
-      secondaryAnimation: secondaryAnimation,
-      fillColor: Colors.transparent,
-      child: child,
-    );
-  };
+  // PageTransitionSwitcherTransitionBuilder _defaultPageTransitionBuilder = (child, primaryAnimation, secondaryAnimation) {
+  //   return FadeThroughTransition(
+  //     animation: primaryAnimation,
+  //     secondaryAnimation: secondaryAnimation,
+  //     fillColor: Colors.transparent,
+  //     child: child,
+  //   );
+  // };
 
 }
 
-class AnimatedEntryWidget extends StatefulWidget {
-
-  Widget child;
-  AnimatedSwitcherTransitionBuilder? transitionBuilder;
-  Duration duration;
-  Curve curve;
-
-  AnimatedEntryWidget({
-    Key? key,
-    required this.child,
-    this.transitionBuilder,
-    this.duration = const Duration(milliseconds: 300),
-    this.curve = Curves.linear,
-  }): super(key: key) {
-    if (transitionBuilder==null) transitionBuilder = (child, animation){
-      return FadeTransition(opacity: animation, child: child,);
-    };
-  }
-
-  @override
-  _AnimatedEntryWidgetState createState() => _AnimatedEntryWidgetState();
-
-}
-
-class _AnimatedEntryWidgetState extends State<AnimatedEntryWidget> with SingleTickerProviderStateMixin{
-
-  late AnimationController controller;
-  late Animation<double> animation;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
-    controller.forward(from: 0);
-    animation = CurvedAnimation(
-      parent: controller,
-      curve: widget.curve,
-    );
-  }
-
-  @override
-  void dispose(){
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.transitionBuilder!(widget.child, animation);
-  }
-
-}
 
 class MaterialKeyValuePair extends StatelessWidget {
 
-  String? title;
-  String? value;
-  TextStyle? titleStyle;
-  TextStyle? valueStyle;
-  bool frame;
-  double padding;
-
+  final String? title;
+  final String? value;
+  final TextStyle? titleStyle;
+  final TextStyle? valueStyle;
+  final bool frame;
+  final double padding;
 
   MaterialKeyValuePair({
     required this.title,
@@ -213,7 +174,7 @@ class MaterialKeyValuePair extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (frame){
+    if (frame) {
       return Stack(
         fit: StackFit.passthrough,
         children: [
@@ -309,13 +270,11 @@ class OpacityGradient extends StatelessWidget {
   static const bottom = 3;
   static const horizontal = 4;
   static const vertical = 5;
-  //TODO 3 implement all
 
   final Widget child;
   final int direction;
   final double? size;
   final double? percentage;
-
 
   OpacityGradient({
     required this.child,
@@ -354,6 +313,7 @@ class OpacityGradient extends StatelessWidget {
   }
 }
 
+
 class ScrollOpacityGradient extends StatefulWidget {
 
   final ScrollController scrollController;
@@ -372,7 +332,6 @@ class ScrollOpacityGradient extends StatefulWidget {
   _ScrollOpacityGradientState createState() => _ScrollOpacityGradientState();
 
 }
-
 class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
 
   @override
@@ -416,6 +375,175 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
   }
 
 }
+
+
+class OverflowScroll extends StatefulWidget {
+
+  final ScrollController? scrollController;
+  /// Autoscroll speed in pixels per second if null, disable autoscroll
+  final double? autoscrollSpeed;
+  final double opacityGradientSize;
+  final Duration autoscrollWaitTime;
+  final Duration initialAutoscrollWaitTime;
+  final Axis scrollDirection;
+  final Widget child;
+
+  OverflowScroll({
+    required this.child,
+    this.scrollController,
+    this.autoscrollSpeed = 64,
+    this.opacityGradientSize = 16,
+    this.autoscrollWaitTime = const Duration(seconds: 5),
+    this.initialAutoscrollWaitTime = const Duration(seconds: 3),
+    this.scrollDirection = Axis.horizontal,
+    Key? key,
+  }): super(key: key);
+
+  @override
+  _OverflowScrollState createState() => _OverflowScrollState();
+
+}
+class _OverflowScrollState extends State<OverflowScroll> {
+
+  late ScrollController scrollController;
+
+  @override
+  void initState() {
+    scrollController = widget.scrollController ?? ScrollController();
+    if (widget.autoscrollSpeed!=null && widget.autoscrollSpeed!>0){
+      _scroll(true, widget.initialAutoscrollWaitTime);
+    }
+    super.initState();
+  }
+
+  void _scroll([bool forward=true, Duration? waitDuration]) async{
+    await Future.delayed(waitDuration ?? widget.autoscrollWaitTime);
+    try {
+      Duration duration = (1000*scrollController.position.maxScrollExtent/widget.autoscrollSpeed!).milliseconds;
+      if (forward){
+        await scrollController.animateTo(scrollController.position.maxScrollExtent, duration: duration, curve: Curves.linear);
+      } else{
+        await scrollController.animateTo(0, duration: duration, curve: Curves.linear);
+      }
+      _scroll(!forward);
+    } catch(_){}
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget result;
+    result = NotificationListener(
+      onNotification: (notification) => true,
+      child: SingleChildScrollView(
+        controller: scrollController,
+        scrollDirection: widget.scrollDirection,
+        child: widget.child,
+      ),
+    );
+    if (widget.opacityGradientSize>0) {
+      result = ScrollOpacityGradient(
+        scrollController: scrollController,
+        direction: widget.scrollDirection==Axis.horizontal ? OpacityGradient.horizontal : OpacityGradient.vertical,
+        maxSize: widget.opacityGradientSize,
+        child: result,
+      );
+    }
+    return result;
+  }
+
+}
+
+
+class ReturnToTopButton extends StatefulWidget {
+
+  final ScrollController scrollController;
+  final Widget child;
+  final Widget? icon;
+  final Duration? duration;
+  final VoidCallback? onTap;
+
+  ReturnToTopButton({
+    required this.scrollController,
+    required this.child,
+    this.onTap,
+    this.icon,
+    this.duration=const Duration(milliseconds: 300)
+  });
+
+  @override
+  _ReturnToTopButtonState createState() => _ReturnToTopButtonState();
+
+}
+class _ReturnToTopButtonState extends State<ReturnToTopButton> {
+
+  @override
+  void initState() {
+    super.initState();
+    widget.scrollController.addListener(update);
+  }
+
+  @override
+  void didUpdateWidget(ReturnToTopButton oldWidget) {
+    oldWidget.scrollController.removeListener(update);
+    widget.scrollController.addListener(update);
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
+  void dispose() {
+    widget.scrollController.removeListener(update);
+    super.dispose();
+  }
+
+  void update(){
+    setState(() {
+
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    bool show = false;
+    try {
+      show = widget.scrollController.position.pixels > 256;
+    } catch(_){}
+    double space = 16;
+    try{
+      space = Provider.of<ScreenFromZero>(context).displayMobileLayout ? 16 : 32;
+    } catch(_){}
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        widget.child,
+        Positioned(
+          bottom: space, right: space,
+          child: AnimatedSwitcher(
+            duration: Duration(milliseconds: 300),
+            switchInCurve: Curves.easeOutCubic,
+            transitionBuilder: (child, animation) => SlideTransition(
+              position: Tween(begin: Offset(0, 1), end: Offset.zero,).animate(animation),
+              child: ZoomedFadeInTransition(animation: animation, child: child,),
+            ),
+            child: !show ? SizedBox.shrink() : FloatingActionButton(
+              child: widget.icon ?? Icon(Icons.arrow_upward, color: Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white,),
+              tooltip: "Regresar al Principio", // TODO internationalize
+              backgroundColor: Theme.of(context).primaryColor,
+              onPressed: widget.onTap ?? () {
+                if (widget.duration==null){
+                  widget.scrollController.jumpTo(0);
+                } else{
+                  widget.scrollController.animateTo(0, duration: widget.duration!, curve: Curves.easeOutCubic);
+                }
+              },
+            ),
+          ),
+        )
+      ],
+    );
+  }
+
+}
+
 
 class TextIcon extends StatelessWidget {
 
@@ -506,7 +634,7 @@ class TitleTextBackground extends StatelessWidget {
 
 class IconButtonBackground extends StatelessWidget {
 
-  Widget child;
+  final Widget child;
 
   IconButtonBackground({required this.child,});
 
@@ -564,6 +692,7 @@ class ChangeNotifierBuilder<T extends ChangeNotifier> extends StatelessWidget{
 
 }
 
+
 class ChangeNotifierSelectorBuilder<A extends ChangeNotifier, S> extends StatelessWidget{
 
   final A changeNotifier;
@@ -596,17 +725,20 @@ class ChangeNotifierSelectorBuilder<A extends ChangeNotifier, S> extends Statele
 
 }
 
-typedef Widget InitiallyAnimatedWidgetBuilder(AnimationController animationController, Widget? child);
+
+typedef Widget InitiallyAnimatedWidgetBuilder(Animation<double> animation, Widget? child);
 class InitiallyAnimatedWidget extends StatefulWidget {
 
-  InitiallyAnimatedWidgetBuilder builder;
-  Duration duration;
-  Widget? child;
+  final InitiallyAnimatedWidgetBuilder builder;
+  final Duration duration;
+  final Curve curve;
+  final Widget? child;
 
   InitiallyAnimatedWidget({
     Key? key,
     required this.builder,
     required this.duration,
+    this.curve = Curves.linear,
     this.child,
   }) : super(key: key);
 
@@ -617,13 +749,18 @@ class InitiallyAnimatedWidget extends StatefulWidget {
 class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with SingleTickerProviderStateMixin {
 
   late AnimationController animationController;
+  late Animation<double> animation;
 
   @override
   void initState() {
     super.initState();
     animationController = AnimationController(
-        vsync: this,
-        duration: widget.duration,
+      vsync: this,
+      duration: widget.duration,
+    );
+    animation = CurvedAnimation(
+      parent: animationController,
+      curve: widget.curve,
     );
     animationController.forward();
   }
@@ -639,12 +776,13 @@ class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with 
       animation: animationController,
       child: widget.child,
       builder: (context, child) {
-        return widget.builder(animationController, widget.child);
+        return widget.builder(animation, widget.child);
       },
     );
   }
 
 }
+
 
 class PlatformExtended {
 
