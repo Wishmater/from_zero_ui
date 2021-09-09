@@ -32,6 +32,9 @@ class ImageFromZero extends StatefulWidget {
   double minScale;
   bool retryable;
   bool expand;
+  bool renderAsHtmlOnWebToAvoidCors;
+  bool removeHighlightAndHoverFromPicInkWell;
+  bool applySafeAreaToActions;
   ImageSourceType sourceType;
 
   ImageFromZero({
@@ -44,6 +47,9 @@ class ImageFromZero extends StatefulWidget {
     this.minScale = 0.8,
     this.retryable = false,
     this.expand = false,
+    this.renderAsHtmlOnWebToAvoidCors = false,
+    this.removeHighlightAndHoverFromPicInkWell = false,
+    this.applySafeAreaToActions = false,
     ImageSourceType? sourceType,
   })  : fullscreenActions = fullscreenActions??actions,
         this.sourceType = sourceType ?? (url.length>=6 && url.substring(0, 6)=="assets" ? ImageSourceType.assets
@@ -61,6 +67,7 @@ class ImageFromZero extends StatefulWidget {
     double maxScale = 2.5,
     double minScale = 0.8,
     bool retryable = false,
+    bool applySafeAreaToActions = true,
   }) {
     Navigator.of(context).push(
       PageRouteBuilder(
@@ -78,28 +85,27 @@ class ImageFromZero extends StatefulWidget {
                     pageGestureAxis: SlideAxis.both);
               },
               slideAxis: SlideAxis.both,
-              child: SafeArea(
-                child: ImageFromZero(
-                  url: url,
-                  fullscreenType: FullscreenType.none,
-                  expand: true,
-                  actions: [
-                    IconButtonBackground(
-                      child: IconButton(
-                        icon: Icon(Icons.close),
-                        tooltip: FromZeroLocalizations.of(context).translate('close'),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                      ),
+              child: ImageFromZero(
+                url: url,
+                fullscreenType: FullscreenType.none,
+                expand: true,
+                applySafeAreaToActions: applySafeAreaToActions,
+                gesturesEnabled: gesturesEnabled,
+                maxScale: maxScale,
+                minScale: minScale,
+                retryable: retryable,
+                actions: [
+                  IconButtonBackground(
+                    child: IconButton(
+                      icon: Icon(Icons.close),
+                      tooltip: FromZeroLocalizations.of(context).translate('close'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
                     ),
-                    ...actions
-                  ],
-                  gesturesEnabled: gesturesEnabled,
-                  maxScale: maxScale,
-                  minScale: minScale,
-                  retryable: retryable,
-                ),
+                  ),
+                  ...actions
+                ],
               ),
             ),
           );
@@ -220,17 +226,21 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
           _controller.value = 1;
         }
         Widget result = state.completedWidget;
-        if (widget.fullscreenType==FullscreenType.onClick || widget.fullscreenType==FullscreenType.onClickAndAsAction) {
-          result = Material(
-            type: MaterialType.transparency,
-            child: InkWell(
-              onTap: () {
-                _pushFullscreen(context);
-              },
-              child: result,
-            ),
-          );
-        }
+        // if (widget.fullscreenType==FullscreenType.onClick || widget.fullscreenType==FullscreenType.onClickAndAsAction) {
+        //   result = Stack(
+        //     children: [
+        //       result,
+        //       Material(
+        //         type: MaterialType.transparency,
+        //         child: InkWell(
+        //           onTap: () {
+        //             _pushFullscreen(context);
+        //           },
+        //         ),
+        //       ),
+        //     ],
+        //   );
+        // }
         if (widget.expand) {
           result = Positioned.fill(child: result,);
         }
@@ -239,7 +249,19 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
           child: Stack(
             children: [
               result,
-              // if (widget.retryable)
+              if (widget.fullscreenType==FullscreenType.onClick || widget.fullscreenType==FullscreenType.onClickAndAsAction)
+                Positioned.fill(
+                  child: Material(
+                    type: MaterialType.transparency,
+                    child: InkWell(
+                      highlightColor: widget.removeHighlightAndHoverFromPicInkWell ? Colors.transparent : null,
+                      hoverColor: widget.removeHighlightAndHoverFromPicInkWell ? Colors.transparent : null,
+                      onTap: () {
+                        _pushFullscreen(context);
+                      },
+                    ),
+                  ),
+                ),
               Positioned.fill(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -247,26 +269,32 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
                     if (maxSize<128) {
                       return SizedBox.shrink();
                     }
+                    Widget actions = Column(
+                        children: widget.fullscreenType==FullscreenType.asAction
+                                    || widget.fullscreenType==FullscreenType.onClickAndAsAction
+                            ? [IconButtonBackground(
+                                child: IconButton(
+                                  icon: Icon(Icons.fullscreen),
+                                  tooltip: FromZeroLocalizations.of(context).translate('fullscreen'),
+                                  onPressed: () {
+                                    _pushFullscreen(context);
+                                  },
+                                ),
+                              ),
+                              ...widget.actions,
+                            ] : widget.actions,
+                    );
+                    if (widget.applySafeAreaToActions) {
+                      actions = SafeArea(
+                        child: actions,
+                      );
+                    }
                     return Material(
                       type: MaterialType.transparency,
                       child: Container(
                         alignment: Alignment.topRight,
                         padding: EdgeInsets.all(maxSize<256 ? 0 : 8),
-                        child: Column(
-                              children: widget.fullscreenType==FullscreenType.asAction
-                                  ||widget.fullscreenType==FullscreenType.onClickAndAsAction ? [
-                                      IconButtonBackground(
-                                        child: IconButton(
-                                          icon: Icon(Icons.fullscreen),
-                                          tooltip: FromZeroLocalizations.of(context).translate('fullscreen'),
-                                          onPressed: () {
-                                            _pushFullscreen(context);
-                                          },
-                                        ),
-                                      ),
-                                      ...widget.actions,
-                                  ] : widget.actions,
-                        ),
+                        child: actions,
                       ),
                     );
                   },

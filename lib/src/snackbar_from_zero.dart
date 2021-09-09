@@ -41,14 +41,16 @@ class SnackBarFromZero extends StatefulWidget {
   final Widget? title;
   final Widget? message;
   final Widget? content; /// Overrides title and message
+  final Widget? progressIndicator;
   final List<Widget>? actions;
-  // final Widget? progressIndicator;
   final double? width;
   final Widget? widget; /// Overrides everything else
+  final VoidCallback? onCancel;
   SnackBarControllerFromZero? controller;
 
 
   SnackBarFromZero({
+    Key? key,
     required this.context,
     this.type,
     this.behaviour,
@@ -58,10 +60,11 @@ class SnackBarFromZero extends StatefulWidget {
     this.title,
     this.message,
     this.content,
+    this.progressIndicator,
     this.actions,
-    // this.progressIndicator,
     this.widget,
-  });
+    this.onCancel,
+  })  : super(key: key,);
 
   @override
   _SnackBarFromZeroState createState() => _SnackBarFromZeroState();
@@ -94,7 +97,8 @@ class _SnackBarFromZeroState extends State<SnackBarFromZero> with TickerProvider
   @override
   void initState() {
     super.initState();
-    if (widget.duration!=null) {
+    widget.controller?.setState = setState;
+    if (widget.duration!=null && widget.progressIndicator==null) {
       animationController = AnimationController(
         vsync: this,
         duration: widget.duration,
@@ -111,19 +115,20 @@ class _SnackBarFromZeroState extends State<SnackBarFromZero> with TickerProvider
 
   @override
   Widget build(BuildContext context) {
+    int? type = widget.controller?.type ?? widget.type;
     if (widget.widget!=null) {
       return widget.widget!;
     }
-    Color actionColor = widget.type==null
+    Color actionColor = type==null
         ? Theme.of(context).brightness==Brightness.light
             ? Theme.of(context).primaryColor
             : Theme.of(context).accentColor
-        : SnackBarFromZero.colors[widget.type!];
+        : SnackBarFromZero.colors[type];
     Widget result = Row(
       children: [
         SizedBox(width: 8,),
-        if (widget.icon!=null || widget.type!=null)
-          widget.icon ?? SnackBarFromZero.icons[widget.type!],
+        if (widget.icon!=null || type!=null)
+          widget.icon ?? SnackBarFromZero.icons[type!],
         SizedBox(width: 8,),
         Expanded(
           child: widget.content ?? Column(
@@ -139,10 +144,10 @@ class _SnackBarFromZeroState extends State<SnackBarFromZero> with TickerProvider
               SizedBox(height: 2,),
               if (widget.message!=null)
                 DefaultTextStyle(
-                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 14),
+                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12),
                   child: widget.message!,
                 ),
-              SizedBox(height: 6,),
+              SizedBox(height: 8,),
             ],
           ),
         ),
@@ -169,8 +174,11 @@ class _SnackBarFromZeroState extends State<SnackBarFromZero> with TickerProvider
                             widget.dismiss();
                             action.onPressed();
                           },
-                          child: Text(action.label.toUpperCase(),
-                            style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Text(action.label.toUpperCase(),
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                            ),
                           ),
                           textColor: action.textColor ?? actionColor,
                           disabledTextColor: action.disabledTextColor ?? Theme.of(context).disabledColor,
@@ -190,11 +198,12 @@ class _SnackBarFromZeroState extends State<SnackBarFromZero> with TickerProvider
             ),
           ),
         SizedBox(
-          width: 36, height: double.infinity,
+          width: 42, height: double.infinity,
           child: FlatButton(
             padding: EdgeInsets.only(right: 16),
             child: Icon(Icons.close, size: 24,),
             onPressed: () {
+              widget.onCancel?.call();
               widget.dismiss();
             },
           ),
@@ -202,27 +211,31 @@ class _SnackBarFromZeroState extends State<SnackBarFromZero> with TickerProvider
       ],
     );
     Widget progressIndicator;
-    if (animationController==null) {
-      progressIndicator = LinearProgressIndicator(
-        valueColor: AlwaysStoppedAnimation(actionColor),
-        backgroundColor: widget.type==null ? null : SnackBarFromZero.softColors[widget.type!],
-      );
+    if (widget.progressIndicator!=null) {
+      progressIndicator = widget.progressIndicator!;
     } else {
-      progressIndicator = AnimatedBuilder(
-        animation: animationController!,
-        builder: (context, child) {
-          if (animationController!.isCompleted) {
-            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-              widget.dismiss();
-            });
-          }
-          return LinearProgressIndicator(
-            value: 1 - animationController!.value,
-            valueColor: AlwaysStoppedAnimation(actionColor),
-            backgroundColor: widget.type==null ? null : SnackBarFromZero.softColors[widget.type!],
-          );
-        },
-      );
+      if (animationController==null) {
+        progressIndicator = LinearProgressIndicator(
+          valueColor: AlwaysStoppedAnimation(actionColor),
+          backgroundColor: type==null ? null : SnackBarFromZero.softColors[type],
+        );
+      } else {
+        progressIndicator = AnimatedBuilder(
+          animation: animationController!,
+          builder: (context, child) {
+            if (animationController!.isCompleted) {
+              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                widget.dismiss();
+              });
+            }
+            return LinearProgressIndicator(
+              value: 1 - animationController!.value,
+              valueColor: AlwaysStoppedAnimation(actionColor),
+              backgroundColor: type==null ? null : SnackBarFromZero.softColors[type],
+            );
+          },
+        );
+      }
     }
     result = IntrinsicHeight(
       child: Column(
@@ -233,8 +246,8 @@ class _SnackBarFromZeroState extends State<SnackBarFromZero> with TickerProvider
       ),
     );
     final fixed = widget.behaviour!=SnackBarFromZero.behaviourFloating && (widget.behaviour==SnackBarFromZero.behaviourFixed || Provider.of<ScreenFromZero>(context).displayMobileLayout);
-    Color backgroundColor = widget.type==null ? Theme.of(context).cardColor
-        : Color.alphaBlend(SnackBarFromZero.colors[widget.type!].withOpacity(0.066), Theme.of(context).cardColor);
+    Color backgroundColor = type==null ? Theme.of(context).cardColor
+        : Color.alphaBlend(SnackBarFromZero.colors[type].withOpacity(0.066), Theme.of(context).cardColor);
     if (fixed) {
       result = Material(
         color: backgroundColor,

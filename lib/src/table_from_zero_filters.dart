@@ -11,7 +11,7 @@ abstract class ConditionFilter {
   String getUiName(BuildContext context);
   String getExtraUiName(BuildContext context);
   String getExtraUiTooltip(BuildContext context);
-  bool isAllowed(dynamic value);
+  bool isAllowed(dynamic value, List<dynamic> values, int index);
   late FocusNode focusNode = FocusNode();
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,});
 }
@@ -154,7 +154,7 @@ class FilterTextContains extends FilterText {
   @override
   String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse_tooltip');
   @override
-  bool isAllowed(value) {
+  bool isAllowed(value, values, index) {
     bool result = value.toString().toUpperCase().contains(query.toUpperCase());
     if (extra) result = !result;
     return result;
@@ -174,7 +174,7 @@ class FilterTextStartsWith extends FilterText {
   @override
   String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse_tooltip');
   @override
-  bool isAllowed(value) {
+  bool isAllowed(value, values, index) {
     bool result = value.toString().toUpperCase().startsWith(query.toUpperCase());
     if (extra) result = !result;
     return result;
@@ -194,7 +194,7 @@ class FilterTextEndsWith extends FilterText {
   @override
   String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse_tooltip');
   @override
-  bool isAllowed(value) {
+  bool isAllowed(value, values, index) {
     bool result = value.toString().toUpperCase().endsWith(query.toUpperCase());
     if (extra) result = !result;
     return result;
@@ -330,7 +330,7 @@ class FilterNumberGreaterThan extends FilterNumber {
   @override
   String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
   @override
-  bool isAllowed(v) {
+  bool isAllowed(v, values, index) {
     if (query==null) return true;
     final value = (v is ContainsValue) ? v.value : v;
     if (!(value is num)) return false;
@@ -352,7 +352,7 @@ class FilterNumberLessThan extends FilterNumber {
   @override
   String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
   @override
-  bool isAllowed(v) {
+  bool isAllowed(v, values, index) {
     if (query==null) return true;
     final value = (v is ContainsValue) ? v.value : v;
     if (!(value is num)) return false;
@@ -507,7 +507,7 @@ class FilterDateAfter extends FilterDate {
   @override
   String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
   @override
-  bool isAllowed(v) {
+  bool isAllowed(v, values, index) {
     if (query==null) return true;
     final value = (v is ContainsValue) ? v.value : v;
     if (!(value is DateTime)) return false;
@@ -529,7 +529,7 @@ class FilterDateBefore extends FilterDate {
   @override
   String getExtraUiTooltip(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
   @override
-  bool isAllowed(v) {
+  bool isAllowed(v, values, index) {
     if (query==null) return true;
     final value = (v is ContainsValue) ? v.value : v;
     if (!(value is DateTime)) return false;

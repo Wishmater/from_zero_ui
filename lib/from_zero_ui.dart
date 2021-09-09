@@ -21,6 +21,7 @@ export 'package:from_zero_ui/src/field_date.dart';
 export 'package:from_zero_ui/src/field_one_to_many.dart';
 export 'package:from_zero_ui/src/field_validators.dart';
 
+export 'package:from_zero_ui/src/file_saver_from_zero.dart';
 export 'package:from_zero_ui/src/splash_page.dart';
 export 'package:from_zero_ui/src/future_handling.dart';
 export 'package:from_zero_ui/src/ui_utility_widgets.dart';

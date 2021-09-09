@@ -32,9 +32,9 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     PdfPageFormat(PdfPageFormat.a4.height*3/4, PdfPageFormat.a4.height),
     PdfPageFormat(PdfPageFormat.a4.height*9/16, PdfPageFormat.a4.height),];
 
-  int Function(int currentSize, bool portrait, double scale, int format)? childrenCount;
-  final Widget Function(BuildContext context, int index, int currentSize, bool portrait, double scale, int format)? childBuilder;
-  final Widget Function(BuildContext context, int index, int currentSize, bool portrait, double scale, int format, ScrollController scrollController)? scrollableChildBuilder;
+  int Function(int currentSize, bool portrait, double scale, String format)? childrenCount;
+  final Widget Function(BuildContext context, int index, int currentSize, bool portrait, double scale, String format)? childBuilder;
+  final Widget Function(BuildContext context, int index, int currentSize, bool portrait, double scale, String format, ScrollController scrollController)? scrollableChildBuilder;
   final double scrollableStickyOffset;
   final AppParametersFromZero themeParameters;
   final FutureOr<String> path;
@@ -47,6 +47,8 @@ class Export extends StatefulWidget { //TODO 3 internationalize
   final Widget? dummyChild;
   final List<GlobalKey>? significantWidgetsKeys;
   final Map<String, GlobalKey<TableFromZeroState>>? Function()? excelSheets;
+  final bool isPdfFormatAvailable;
+  final bool isPngFormatAvailable;
 
   Export.scrollable({
     Key? key,
@@ -62,6 +64,8 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     this.dummyChild,
     this.significantWidgetsKeys,
     this.excelSheets,
+    this.isPdfFormatAvailable = true,
+    this.isPngFormatAvailable = true,
   })  : this.showTitle = showTitle ?? textEditingControllers==null ? true : false,
         this.exportThemeData =  themeParameters.lightTheme.copyWith(
           canvasColor: Colors.white,
@@ -78,6 +82,8 @@ class Export extends StatefulWidget { //TODO 3 internationalize
   Export.dummy({
     required this.dummyChild,
     required this.themeParameters,
+    this.isPdfFormatAvailable = true,
+    this.isPngFormatAvailable = true,
   }) :  childBuilder = null,
         childrenCount = null,
         path = '',
@@ -106,6 +112,8 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     this.actions = const [],
     this.dummyChild,
     this.significantWidgetsKeys,
+    this.isPdfFormatAvailable = true,
+    this.isPngFormatAvailable = true,
   })  : this.showTitle = showTitle ?? textEditingControllers==null ? true : false,
         this.exportThemeData =  themeParameters.lightTheme.copyWith(
           canvasColor: Colors.white,
@@ -143,7 +151,11 @@ class Export extends StatefulWidget { //TODO 3 internationalize
 
 class ExportState extends State<Export> {
 
-  List<String> get supportedFormats => ["PDF", "PNG", if(widget.excelSheets?.call()!=null) 'Excel'];
+  List<String> get supportedFormats => [
+    if (widget.isPdfFormatAvailable) "PDF",
+    if (widget.isPngFormatAvailable) "PNG",
+    if (widget.excelSheets?.call()!=null) 'Excel',
+  ];
 
   // int get currentSize => Hive.box("settings").get("export_size", defaultValue: 0);
   // set currentSize(int value) => Hive.box("settings").put("export_size", value);
@@ -154,7 +166,8 @@ class ExportState extends State<Export> {
   // double get scale => Hive.box("settings").get("export_scale", defaultValue: 1.0);
   // set scale(double value) => Hive.box("settings").put("export_scale", value);
   int currentSize = 0;
-  int format = 0;
+  int formatIndex = 0;
+  String get format => supportedFormats[formatIndex];
   bool portrait = true;
   double scale = 1;
 
@@ -176,13 +189,20 @@ class ExportState extends State<Export> {
   @override
   void initState() {
     super.initState();
+    if (supportedFormats.length==1 && supportedFormats.first=='Excel') {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        _onExportButtonPressed();
+      });
+    }
     if (widget.scrollableChildBuilder!=null){
-      widget.childrenCount = ((currentSize, bool portrait, double scale, int format){
+      widget.childrenCount = ((currentSize, bool portrait, double scale, String format){
         if (first){
           first = false;
           WidgetsBinding.instance?.addPostFrameCallback((timeStamp) async{
             await Future.delayed(500.milliseconds);
-            setState(() {});
+            if (mounted) {
+              setState(() {});
+            }
           });
           return 1;
         }
@@ -245,16 +265,59 @@ class ExportState extends State<Export> {
 
   late Future<void> Function() export;
 
+
+  void _onExportButtonPressed() async{
+    await export();
+    Navigator.of(context).pop();
+    if (filePath!=null){
+      Navigator.of(context).pop();
+      String path = await widget.path;
+      if (Platform.isWindows){
+        path = path.replaceAll("/", "\\");
+      }
+      SnackBarFromZero(
+        context: widget.scaffoldContext!,
+        type: SnackBarFromZero.success,
+        title: Text("Archivo exportado con exito a"),
+        message: Text(pathUi),
+        duration: 10.seconds,
+        actions: [
+          SnackBarAction(
+            label: "ABRIR",
+            onPressed: () async {
+              if (Platform.isAndroid){
+                OpenFile.open(filePath);
+              } else{
+                await launch(filePath);
+              }
+            },
+          ),
+          if (Platform.isWindows)
+            SnackBarAction(
+              label: "ABRIR CARPETA",
+              onPressed: () async {
+                if (Platform.isAndroid){
+                  OpenFile.open(directoryPath);
+                } else{
+                  await launch(directoryPath);
+                }
+              },
+            ),
+        ],
+      ).show();
+    }
+  }
+
   int doneExports = 0;
   late String directoryPath;
   late String filePath;
   late String pathUi;
   Future<void> _export(Size size, [i=0, pdf]) async {
-    if (format==2){
+    if (format=='Excel'){
       return _executeExcelExport();
     }
     controller.jumpToPage(i);
-    if (format==0 && pdf==null){
+    if (format=='PDF' && pdf==null){
       pdf = pw.Document(
         title: widget.title,
       );
@@ -274,7 +337,7 @@ class ExportState extends State<Export> {
     });
   }
   Future<void> _executeExport(Size size, i, pw.Document pdf) async {
-    if (format==0){
+    if (format=='PDF'){
       var format = Export.defaultFormats[currentSize];
       if (!portrait) format = PdfPageFormat(format.height, format.width);
       Uint8List pngBytes = await _getImageBytes(size, await _getImage(size, boundaryKeys[i]));
@@ -291,7 +354,7 @@ class ExportState extends State<Export> {
         final file = File((await widget.path)+widget.title+'.pdf');
         await file.create(recursive: true);
         filePath = file.absolute.path;
-        directoryPath = file.parent.absolute.path;
+        directoryPath = file.parent.absolute.path; // TODO always use saverFromZero to save
         pathUi = filePath;
         if (Platform.isWindows)
           pathUi = pathUi.substring(filePath.indexOf("Document")).replaceAll('/', '\\');
@@ -299,7 +362,7 @@ class ExportState extends State<Export> {
           pathUi = "Downloads/Cutrans CRM/${filePath.substring(filePath.lastIndexOf(p.separator))}";
         await file.writeAsBytes(pdf.save());
       }
-    } else if (format==1){
+    } else if (format=='PNG'){
       File imgFile = File((await widget.path)+widget.title+(widget.childrenCount!(currentSize, portrait, scale, this.format,)>1?' ${(i+1)}':'')+'.png');
       await imgFile.create(recursive: true);
       if (i==0){
@@ -483,7 +546,7 @@ class ExportState extends State<Export> {
                       Expanded(
                         child: LayoutBuilder(
                           builder: (context, constraints) {
-                            if (format==2){
+                            if (format=='Excel'){
                               return Center(
                                 child: Text('Vista previa no disponible'),
                               );
@@ -596,7 +659,7 @@ class ExportState extends State<Export> {
                     OutlineButton(
                       onPressed: (){},
                       child: DropdownButton(
-                        value: format,
+                        value: formatIndex,
                         underline: SizedBox.shrink(),
                         dropdownColor: Theme.of(context).cardColor,
                         selectedItemBuilder: (context) => List.generate(supportedFormats.length, (index) =>
@@ -610,13 +673,13 @@ class ExportState extends State<Export> {
                         ),
                         onChanged: (value) {
                           setState(() {
-                            format = value as int;
+                            formatIndex = value as int;
                           });
                         },
                       ),
                     ),
                     OutlineButton( //TODO 3 streamline this DropdownFromZero (with maybe some other options to control width and such)
-                      onPressed: format==2 ? null : (){},
+                      onPressed: format=='Excel' ? null : (){},
                       child: DropdownButton(
                         value: portrait,
                         underline: SizedBox.shrink(),
@@ -635,7 +698,7 @@ class ExportState extends State<Export> {
                             value: false,
                           ),
                         ],
-                        onChanged: format==2 ? null : (value) {
+                        onChanged: format=='Excel' ? null : (value) {
                           setState(() {
                             portrait = value as bool;
                           });
@@ -643,7 +706,7 @@ class ExportState extends State<Export> {
                       ),
                     ),
                     OutlineButton(
-                      onPressed: format==2 ? null : (){},
+                      onPressed: format=='Excel' ? null : (){},
                       child: DropdownButton(
                         value: currentSize,
                         underline: SizedBox.shrink(),
@@ -657,7 +720,7 @@ class ExportState extends State<Export> {
                               value: index,
                             ),
                         ),
-                        onChanged: format==2 ? null : (value) {
+                        onChanged: format=='Excel' ? null : (value) {
                           setState(() {
                             currentSize = value as int;
                           });
@@ -684,7 +747,7 @@ class ExportState extends State<Export> {
                               label: "Zoom: "+NumberFormat("###,###,###,###,##0%").format(scale),
                               min: 0.5,
                               max: 1.5,
-                              onChanged: format==2 ? null : (value) {
+                              onChanged: format=='Excel' ? null : (value) {
                                 setState(() {
                                   scale = value;
                                 });
@@ -718,47 +781,7 @@ class ExportState extends State<Export> {
                               child: Text("EXPORTAR", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
                             ),
                             textColor: Colors.blue,
-                            onPressed: () async{
-                              await export();
-                              Navigator.of(context).pop();
-                              if (filePath!=null){
-                                Navigator.of(context).pop();
-                                String path = await widget.path;
-                                if (Platform.isWindows){
-                                  path = path.replaceAll("/", "\\");
-                                }
-                                SnackBarFromZero(
-                                  context: widget.scaffoldContext!,
-                                  type: SnackBarFromZero.success,
-                                  title: Text("Archivo exportado con exito a"),
-                                  message: Text(pathUi),
-                                  duration: 10.seconds,
-                                  actions: [
-                                    SnackBarAction(
-                                      label: "ABRIR",
-                                      onPressed: () async {
-                                        if (Platform.isAndroid){
-                                          OpenFile.open(filePath);
-                                        } else{
-                                          await launch(filePath);
-                                        }
-                                      },
-                                    ),
-                                    if (Platform.isWindows)
-                                      SnackBarAction(
-                                        label: "ABRIR CARPETA",
-                                        onPressed: () async {
-                                          if (Platform.isAndroid){
-                                            OpenFile.open(directoryPath);
-                                          } else{
-                                            await launch(directoryPath);
-                                          }
-                                        },
-                                      ),
-                                  ],
-                                ).show();
-                              }
-                            },
+                            onPressed: _onExportButtonPressed,
                           ),
                           SizedBox(width: 6,),
                           FlatButton(

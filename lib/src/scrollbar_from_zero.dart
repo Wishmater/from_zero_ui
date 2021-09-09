@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/src/ui_utility_widgets.dart';
+import 'package:from_zero_ui/src/export.dart';
 
 
 class ScrollbarFromZero extends StatefulWidget {
@@ -45,13 +46,19 @@ class ScrollbarFromZero extends StatefulWidget {
 
 class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
+  bool built = false;
+  bool canBeScrolled = false;
+  bool isAlwaysShown = false;
+  double maxScrollExtent = 0;
+  bool anotherScrollHappened = false;
+
   @override
   void didUpdateWidget(covariant ScrollbarFromZero oldWidget) {
     super.didUpdateWidget(oldWidget);
     removeListeners(oldWidget.controller);
     addListeners(widget.controller);
-    built = false;
-    _onScrollListener();
+    // built = false;
+    _onChildSizeChangeListener();
   }
 
   @override
@@ -59,16 +66,16 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     super.initState();
     addListeners(widget.controller);
     built = false;
-    _onScrollListener();
-    listenPeriodically();
+    // _onScrollListener();
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      listenPeriodically();
+    });
   }
 
   // TODO if a notification could be received on change position.maxScrollExtent, there would be no need to listen periodically
   void listenPeriodically() async {
     while (mounted) {
-      if (built) {
-        _onScrollListener();
-      }
+      _onChildSizeChangeListener();
       await Future.delayed(Duration(milliseconds: 1000));
     }
   }
@@ -89,35 +96,45 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     super.dispose();
   }
 
-  bool built = false;
-  bool showing = false;
-  double maxScrollExtent = 0;
-  void _onScrollListener () async {
-    await Future.delayed(Duration(milliseconds: 400));
-    if (mounted && widget.controller!=null) {
-      if (!widget.controller!.hasClients) {
-        _onScrollListener();
-        return;
+  void _onScrollListener () {
+    try { maxScrollExtent = widget.controller!.position.maxScrollExtent; } catch(_){}
+  }
+
+  void _onChildSizeChangeListener () async {
+    try {
+      if (mounted && widget.controller!=null) {
+        if (!widget.controller!.hasClients) {
+          // await Future.delayed(Duration(milliseconds: 400));
+          // _onChildSizeChangeListener();
+          return;
+        }
+        double maxScrollExtent = widget.controller!.position.maxScrollExtent;
+        bool canBeScrolled = maxScrollExtent > 0;
+        if (!built || canBeScrolled!=this.canBeScrolled) {
+          setState(() {
+            this.canBeScrolled = canBeScrolled;
+          });
+        }
+        if (!built || canBeScrolled!=this.canBeScrolled || (isAlwaysShown && maxScrollExtent!=this.maxScrollExtent)) {
+          widget.controller!.position.didUpdateScrollPositionBy(0);
+          anotherScrollHappened = false;
+          Future.delayed(Duration(milliseconds: 500)).then((value) {
+            if (!isAlwaysShown && !anotherScrollHappened) {
+              try { widget.controller!.position.didEndScroll(); } catch(_) {}
+            }
+          });
+        }
+        if (!built && widget.moveBackAndForthToForceTriggerScrollbar) {
+          final pixels = widget.controller!.position.pixels;
+          widget.controller!.jumpTo(pixels+0.1);
+          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+            try { widget.controller!.jumpTo(pixels); } catch (_) {}
+          });
+        }
+        built = true;
+        this.maxScrollExtent = maxScrollExtent;
       }
-      double maxScrollExtent = widget.controller!.position.maxScrollExtent;
-      bool showing = maxScrollExtent > 0;
-      if (!built || maxScrollExtent!=this.maxScrollExtent) {
-        widget.controller!.position.didUpdateScrollPositionBy(0);
-      }
-      if (!built || showing!=this.showing) {
-        setState(() {});
-      }
-      if (!built && widget.moveBackAndForthToForceTriggerScrollbar) {
-        final pixels = widget.controller!.position.pixels;
-        widget.controller!.jumpTo(pixels+0.1);
-        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-          widget.controller!.jumpTo(pixels);
-        });
-      }
-      built = true;
-      this.maxScrollExtent = maxScrollExtent;
-      this.showing = showing;
-    }
+    } catch (_) {}
   }
 
 
@@ -125,6 +142,10 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   Widget build(BuildContext context) {
 
     Widget child = widget.child;
+
+    if (context.findAncestorWidgetOfExactType<Export>()!=null) {
+      return child;
+    }
 
     if (widget.applyOpacityGradientToChildren ?? widget.controller!=null){
       if (widget.controller!=null) {
@@ -157,24 +178,29 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
           AnimatedContainer(
             duration: Duration(milliseconds: 300),
             curve: Curves.easeOutCubic,
-            width: showing ? 12 : 0,
+            width: canBeScrolled ? 12 : 0,
           ),
         ],
       );
     }
 
+    isAlwaysShown = (canBeScrolled && (widget.controller?.hasClients??false))
+        ? (widget.isAlwaysShown ?? Theme.of(context).scrollbarTheme.isAlwaysShown ?? PlatformExtended.isDesktop)
+        : false;
+    // print ("$hashCode $isAlwaysShown");
     return Scrollbar(
       controller: widget.controller,
-      isAlwaysShown: (showing && (widget.controller?.hasClients??false))
-          ? (widget.isAlwaysShown ?? Theme.of(context).scrollbarTheme.isAlwaysShown)
-          : false,
+      isAlwaysShown: isAlwaysShown,
       notificationPredicate: widget.notificationPredicate ?? (notification) => true,
       radius: widget.radius,
       thickness: widget.thickness,
       hoverThickness: widget.hoverThickness,
       showTrackOnHover: widget.showTrackOnHover,
       child: NotificationListener<ScrollNotification>(
-        onNotification: (notification) => widget.controller==null,
+        onNotification: (notification) {
+          anotherScrollHappened = true;
+          return widget.controller==null;
+        },
         child: child,
       ),
     );

@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_content_wrapper.dart';
 import 'package:from_zero_ui/src/exposed_transitions.dart';
 import 'package:from_zero_ui/src/scaffold_from_zero.dart';
@@ -526,7 +527,7 @@ class _ReturnToTopButtonState extends State<ReturnToTopButton> {
             ),
             child: !show ? SizedBox.shrink() : FloatingActionButton(
               child: widget.icon ?? Icon(Icons.arrow_upward, color: Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white,),
-              tooltip: "Regresar al Principio", // TODO internationalize
+              tooltip: FromZeroLocalizations.of(context).translate('return_to_top'),
               backgroundColor: Theme.of(context).primaryColor,
               onPressed: widget.onTap ?? () {
                 if (widget.duration==null){
@@ -581,13 +582,28 @@ class TextIcon extends StatelessWidget {
 
 class TitleTextBackground extends StatelessWidget {
 
-  final double verticalPadding;
+  final double paddingTop;
+  final double paddingBottom;
+  final double paddingLeft;
+  final double paddingRight;
   final Widget? child;
-  final double horizontalPadding;
   final VoidCallback? onTap;
   final Color? backgroundColor;
 
-  TitleTextBackground({this.verticalPadding=8, this.child, this.horizontalPadding=24, this.backgroundColor, this.onTap});
+  TitleTextBackground({
+    double paddingVertical = 8,
+    double paddingHorizontal = 24,
+    double? paddingTop,
+    double? paddingBottom,
+    double? paddingLeft,
+    double? paddingRight,
+    this.child,
+    this.backgroundColor,
+    this.onTap,
+  })  : this.paddingTop = paddingTop ?? paddingVertical,
+        this.paddingBottom = paddingBottom ?? paddingVertical,
+        this.paddingLeft = paddingLeft ?? paddingHorizontal,
+        this.paddingRight = paddingRight ?? paddingHorizontal;
 
   @override
   Widget build(BuildContext context) {
@@ -598,7 +614,8 @@ class TitleTextBackground extends StatelessWidget {
         Positioned.fill(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              double stopPercentage = (horizontalPadding/constraints.maxWidth).clamp(0, 1);
+              double stopPercentageLeft = (paddingLeft/constraints.maxWidth).clamp(0, 1);
+              double stopPercentageRight = 1 - (paddingRight/constraints.maxWidth).clamp(0, 1);
               return Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -608,7 +625,7 @@ class TitleTextBackground extends StatelessWidget {
                       backgroundColor.withOpacity(0.8),
                       backgroundColor.withOpacity(0),
                     ],
-                    stops: [0, stopPercentage, 1-stopPercentage, 1,],
+                    stops: [0, stopPercentageLeft, stopPercentageRight, 1,],
                   ),
                 ),
               );
@@ -620,7 +637,7 @@ class TitleTextBackground extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: verticalPadding, horizontal: horizontalPadding),
+              padding: EdgeInsets.fromLTRB(paddingLeft, paddingTop, paddingRight, paddingBottom),
               child: child,
             ),
           ),
@@ -729,16 +746,16 @@ class ChangeNotifierSelectorBuilder<A extends ChangeNotifier, S> extends Statele
 typedef Widget InitiallyAnimatedWidgetBuilder(Animation<double> animation, Widget? child);
 class InitiallyAnimatedWidget extends StatefulWidget {
 
-  final InitiallyAnimatedWidgetBuilder builder;
+  final InitiallyAnimatedWidgetBuilder? builder;
   final Duration duration;
   final Curve curve;
   final Widget? child;
 
   InitiallyAnimatedWidget({
     Key? key,
-    required this.builder,
-    required this.duration,
-    this.curve = Curves.linear,
+    this.builder,
+    this.duration = const Duration(milliseconds: 300,),
+    this.curve = Curves.easeOutCubic,
     this.child,
   }) : super(key: key);
 
@@ -776,7 +793,14 @@ class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with 
       animation: animationController,
       child: widget.child,
       builder: (context, child) {
-        return widget.builder(animation, widget.child);
+        if (widget.builder!=null) {
+          return widget.builder!(animation, widget.child);
+        } else {
+          return FadeTransition(
+            opacity: animation,
+            child: child,
+          );
+        }
       },
     );
   }

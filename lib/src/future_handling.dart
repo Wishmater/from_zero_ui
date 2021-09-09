@@ -77,40 +77,56 @@ class ErrorSign extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return IconTheme(
-      data: Theme.of(context).iconTheme.copyWith(size: 64, color: Theme.of(context).disabledColor,),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (icon!=null)
-                icon!,
-              if (icon!=null)
-                SizedBox(height: 6,),
+    return Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (icon!=null)
+              IconTheme(
+                data: Theme.of(context).iconTheme.copyWith(size: 64, color: Theme.of(context).disabledColor,),
+                child: icon!,
+              ),
+            if (icon!=null)
+              SizedBox(height: 6,),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.headline6,
+              textAlign: TextAlign.center,
+            ),
+            if (subtitle!=null)
+              SizedBox(height: 12,),
+            if (subtitle!=null)
               Text(
-                title,
-                style: Theme.of(context).textTheme.headline6,
+                subtitle!,
+                style: Theme.of(context).textTheme.bodyText1,
                 textAlign: TextAlign.center,
               ),
-              if (subtitle!=null)
-                SizedBox(height: 12,),
-              if (subtitle!=null)
-                Text(
-                  subtitle!,
-                  style: Theme.of(context).textTheme.bodyText1,
-                  textAlign: TextAlign.center,
+            if (onRetry!=null)
+              SizedBox(height: 12,),
+            if (onRetry!=null)
+              TextButton(
+                style: TextButton.styleFrom(
+                  primary: Theme.of(context).brightness==Brightness.light
+                      ? Colors.blue.shade500
+                      : Colors.blue.shade400
                 ),
-              if (onRetry!=null)
-                SizedBox(height: 12,),
-              if (onRetry!=null)
-                RaisedButton(
-                  child: Text(FromZeroLocalizations.of(context).translate("retry")), //TODO 3 internationalize
-                  onPressed: onRetry,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(width: 8,),
+                    Icon(Icons.refresh),
+                    SizedBox(width: 4,),
+                    Text(FromZeroLocalizations.of(context).translate("retry"),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
+                    ),
+                    SizedBox(width: 8,),
+                  ],
                 ),
-            ],
-          ),
+                onPressed: onRetry,
+              ),
+          ],
         ),
       ),
     );
@@ -280,11 +296,15 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
   final Duration duration;
   final Curve curve;
   final Widget child;
+  final Alignment alignment;
+  final Clip clipBehavior;
 
   AnimatedContainerFromChildSize({
     required this.child,
     this.duration = const Duration(milliseconds: 300),
+    this.alignment = Alignment.topLeft,
     this.curve = Curves.easeOutCubic,
+    this.clipBehavior = Clip.none,
   });
 
   @override
@@ -356,19 +376,26 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
           }
           int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds*durationMult).toInt();
 
+          Widget result = OverflowBox(
+            maxWidth: constraints.maxWidth,
+            maxHeight: constraints.maxHeight,
+            minWidth: constraints.minWidth,
+            minHeight: constraints.minHeight,
+            alignment: widget.alignment,
+            child: child,
+          );
+          if (widget.clipBehavior != Clip.none) {
+            result = ClipRect(
+              clipBehavior: widget.clipBehavior,
+              child: result,
+            );
+          }
           return AnimatedContainer(
             height: height,
             width: width,
             duration: Duration(milliseconds: milliseconds),
             curve: widget.curve,
-            child: OverflowBox(
-              maxWidth: constraints.maxWidth,
-              maxHeight: constraints.maxHeight,
-              minWidth: constraints.minWidth,
-              minHeight: constraints.minHeight,
-              alignment: Alignment.topLeft,
-              child: child,
-            ),
+            child: result,
           );
         }
       },

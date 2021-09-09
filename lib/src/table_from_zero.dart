@@ -15,9 +15,11 @@ import 'package:from_zero_ui/src/table_from_zero_models.dart';
 import 'package:from_zero_ui/util/my_sticky_header.dart';
 import 'package:from_zero_ui/util/small_splash_popup_menu_button.dart' as small_popup;
 import 'dart:async';
+import 'package:dartx/dartx.dart';
 
 import 'package:implicitly_animated_reorderable_list/implicitly_animated_reorderable_list.dart';
 import 'package:implicitly_animated_reorderable_list/transitions.dart';
+import 'package:keframe/frame_separate_widget.dart';
 
 typedef OnRowHoverCallback = void Function(RowModel row, bool focused);
 typedef OnCheckBoxSelectedCallback = bool? Function(RowModel row, bool? focused);
@@ -81,6 +83,7 @@ class TableFromZero extends StatefulWidget {
   final bool applyStickyHeadersToRowAddon;
   final bool applyRowBackgroundToRowAddon;
   final bool useFixedHeightForListRows;
+  final bool hideIfNoRows;
   final Widget? errorWidget;
   final double? rowHeightForScrollingCalculation;
 
@@ -128,6 +131,7 @@ class TableFromZero extends StatefulWidget {
     this.rowHeightForScrollingCalculation,
     this.useSmartRowAlternativeColors = true,
     this.useFixedHeightForListRows = true,
+    this.hideIfNoRows = false,
     bool? applyStickyHeadersToRowAddon,
     bool? applyRowBackgroundToRowAddon,
     Key? key,
@@ -157,11 +161,9 @@ class TableFromZeroState extends State<TableFromZero> {
   late List<RowModel> sorted;
   late List<RowModel> filtered;
 
-
-
-  late List<List<ConditionFilter>> _conditionFilters;
-  List<List<ConditionFilter>> get conditionFilters => widget.tableController?.conditionFilters ?? _conditionFilters;
-  set conditionFilters(List<List<ConditionFilter>> value) {
+  late Map<int, List<ConditionFilter>> _conditionFilters;
+  Map<int, List<ConditionFilter>> get conditionFilters => widget.tableController?.conditionFilters ?? _conditionFilters;
+  set conditionFilters(Map<int, List<ConditionFilter>> value) {
     if (widget.tableController == null) {
       _conditionFilters = value;
     } else {
@@ -230,19 +232,24 @@ class TableFromZeroState extends State<TableFromZero> {
         lockScrollUpdates = false;
       }
     });
-    init();
+    if (sortedColumnIndex==null) {
+      sortedColumnIndex = widget.initialSortedColumnIndex;
+    }
+    if (sortedColumnIndex!=null) {
+      sortedAscending = widget.columns![sortedColumnIndex!].defaultSortAscending ?? true;
+    }
+    init(notifyListeners: false,);
   }
 
   @override
   void didUpdateWidget(TableFromZero oldWidget) {
     super.didUpdateWidget(oldWidget);
-    init();
+    // init();  // This causes major issues with performance and some bugs as well,
+                // disabling it might make it necessary to manually trigger an initState when necessary
   }
 
-  void init() {
+  void init({bool notifyListeners=true}) {
     sorted = List.from(widget.rows);
-    if (widget.initialSortedColumnIndex!=null && widget.initialSortedColumnIndex!>=0 && widget.tableController?.sortedColumnIndex==null) sortedAscending = widget.columns![widget.initialSortedColumnIndex!].defaultSortAscending ?? true;
-    if (sortedColumnIndex==null) sortedColumnIndex = widget.initialSortedColumnIndex;
     if (widget.columns!=null) {
       int actionsIndex = widget.rows.indexWhere((element) => element.actions!=null);
       headerRowModel = SimpleRowModel(
@@ -284,11 +291,15 @@ class TableFromZeroState extends State<TableFromZero> {
               available.add(element.values[i]);
           });
         }
+        bool sortAscending = widget.columns?[i].defaultSortAscending ?? true;
         available.sort((a, b) {
+          int? result;
           try {
-            return a.compareTo(b);
-          } catch (_) {}
-          return a.toString().compareTo(b.toString());
+            result = a.compareTo(b);
+          } catch (_) {
+            result = a.toString().compareTo(b.toString());
+          }
+          return sortAscending ? result! : result! * -1;
         });
         availableFilters.add(available);
       }
@@ -305,9 +316,9 @@ class TableFromZeroState extends State<TableFromZero> {
     }
     if (widget.tableController?.conditionFilters==null) {
       if (widget.tableController?.initialConditionFilters==null){
-        conditionFilters = List.generate(widget.columns?.length ?? 0, (index) => []);
+        conditionFilters = {};
       } else{
-        conditionFilters = List.generate(widget.columns?.length ?? 0, (index) => widget.tableController!.initialConditionFilters![index] ?? []);
+        conditionFilters = Map.from(widget.tableController!.initialConditionFilters ?? {});
       }
     }
     if (widget.tableController?.valueFilters==null) {
@@ -333,11 +344,20 @@ class TableFromZeroState extends State<TableFromZero> {
       }
     }
     _updateFiltersApplied();
-    sort();
+    sort(notifyListeners: notifyListeners);
   }
 
   @override
   Widget build(BuildContext context) {
+
+    if (widget.hideIfNoRows && filtered.where((e) => !(e is ErrorRow)).isEmpty) {
+      if (widget.layoutWidgetType==TableFromZero.sliverListViewBuilder || widget.layoutWidgetType==TableFromZero.sliverAnimatedListViewBuilder) {
+        return SliverToBoxAdapter(child: SizedBox.shrink(),);
+      } else {
+        return SizedBox.shrink();
+      }
+    }
+
     int childCount = filtered.length;
     Widget result;
 
@@ -937,14 +957,20 @@ class TableFromZeroState extends State<TableFromZero> {
       return result;
     };
 
+    Widget result;
     // bool intrinsicDimensions = context.findAncestorWidgetOfExactType<IntrinsicHeight>()!=null
     //     || context.findAncestorWidgetOfExactType<IntrinsicWidth>()!=null;
     // if (!intrinsicDimensions && (widget.minWidth!=null || widget.maxWidth!=null)){
     if (widget.minWidth!=null || widget.maxWidth!=null){
-      return LayoutBuilder(builder: builder,);
+      result = LayoutBuilder(builder: builder,);
     } else {
-      return builder(context, null);
+      result = builder(context, null);
     }
+    return result;
+    // return FrameSeparateWidget(
+    //   placeHolder: Container(height: row.height, ),
+    //   child: result,
+    // );
 
   }
   _buildRowGestureDetector({required BuildContext context, required RowModel row, required Widget child}) {
@@ -1176,7 +1202,10 @@ class TableFromZeroState extends State<TableFromZero> {
                                                             onSelected: (value) {
                                                               filterPopupSetState((){
                                                                 modified = true;
-                                                                conditionFilters[j].add(value);
+                                                                if (conditionFilters[j]==null) {
+                                                                  conditionFilters[j] = [];
+                                                                }
+                                                                conditionFilters[j]!.add(value);
                                                               });
                                                               WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
                                                                 value.focusNode.requestFocus();
@@ -1186,7 +1215,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                                         ],
                                                       ),
                                                     ),),
-                                                  if (conditionFilters[j].isEmpty)
+                                                  if ((conditionFilters[j] ?? []).isEmpty)
                                                     SliverToBoxAdapter(child: Padding(
                                                       padding: EdgeInsets.only(left: 24, bottom: 8,),
                                                       child: Text (FromZeroLocalizations.of(context).translate('none'),
@@ -1195,7 +1224,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                                     ),),
                                                   SliverList(
                                                     delegate: SliverChildListDelegate.fixed(
-                                                      conditionFilters[j].map((e) {
+                                                      (conditionFilters[j] ?? []).map((e) {
                                                         return Padding(
                                                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                                           child: e.buildFormWidget(
@@ -1207,7 +1236,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                                             onDelete: () {
                                                               modified = true;
                                                               filterPopupSetState((){
-                                                                conditionFilters[j].remove(e);
+                                                                conditionFilters[j]!.remove(e);
                                                               });
                                                             },
                                                           ),
@@ -1215,7 +1244,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                                       }).toList(),
                                                     ),
                                                   ),
-                                                  SliverToBoxAdapter(child: SizedBox(height: conditionFilters[j].isEmpty ? 6 : 12,)),
+                                                  SliverToBoxAdapter(child: SizedBox(height: (conditionFilters[j] ?? []).isEmpty ? 6 : 12,)),
                                                   SliverToBoxAdapter(child: Divider(height: 32,)),
                                                   TableFromZero(
                                                     tableController: filterTableController,
@@ -1251,8 +1280,8 @@ class TableFromZeroState extends State<TableFromZero> {
                                                               height: 32,
                                                               child: TextFormField(
                                                                 onChanged: (v) {
-                                                                  filterTableController.conditionFilters![0].clear();
-                                                                  filterTableController.conditionFilters![0].add(
+                                                                  filterTableController.conditionFilters![0] = [];
+                                                                  filterTableController.conditionFilters![0]!.add(
                                                                     FilterTextContains(query: v,),
                                                                   );
                                                                   filterPopupSetState((){
@@ -1276,7 +1305,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                                                     onPressed: () {
                                                                       modified = true;
                                                                       filterPopupSetState(() {
-                                                                        filterTableController.filtered.forEach((row) {
+                                                                        filterTableController.filtered!.forEach((row) {
                                                                           valueFilters[j][row.id] = true;
                                                                           (row as SimpleRowModel).selected = true;
                                                                         });
@@ -1290,7 +1319,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                                                     onPressed: () {
                                                                       modified = true;
                                                                       filterPopupSetState(() {
-                                                                        filterTableController.filtered.forEach((row) {
+                                                                        filterTableController.filtered!.forEach((row) {
                                                                           valueFilters[j][row.id] = false;
                                                                           (row as SimpleRowModel).selected = false;
                                                                         });
@@ -1359,8 +1388,8 @@ class TableFromZeroState extends State<TableFromZero> {
                         );
                         if (modified && mounted) {
                           setState(() {
-                            filter();
                             _updateFiltersApplied();
+                            filter();
                           });
                         }
                         // if (accepted!=true) {
@@ -1501,10 +1530,10 @@ class TableFromZeroState extends State<TableFromZero> {
   }
 
   int get disabledColumnCount => widget.columns==null ? 0 : widget.columns!.where((element) => element.flex==0).length;
-  void sort() {
+  void sort({bool notifyListeners=true}) {
     if (sortedColumnIndex!=null && sortedColumnIndex!>=0)
       mergeSort(sorted, compare: ((RowModel a, RowModel b){
-        if (a.alwaysOnTop!=null || b.alwaysOnTop!=null){
+        if (a.alwaysOnTop!=null || b.alwaysOnTop!=null) {
           if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
           if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1;
         }
@@ -1512,39 +1541,45 @@ class TableFromZeroState extends State<TableFromZero> {
             ? a.values[sortedColumnIndex!]!.compareTo(b.values[sortedColumnIndex!])
             : b.values[sortedColumnIndex!]!.compareTo(a.values[sortedColumnIndex!]);
       }));
-    filter();
+    filter(notifyListeners: notifyListeners);
   }
-  void filter(){
+  void filter({bool notifyListeners=true}){
     filtered = sorted.where((element) {
       bool pass = true;
       for (var i = 0; i<valueFilters.length && pass; ++i) {
         pass = valueFilters[i][element.values[i]] ?? true;
       }
-      for (int i=0; i<conditionFilters.length && pass; i++){
-        for (var j = 0; j < conditionFilters[i].length && pass; ++j) {
-          pass = conditionFilters[i][j].isAllowed(element.values[i]);
+      conditionFilters.forEach((i, filters) {
+        for (var j = 0; j < filters.length && pass; ++j) {
+          pass = filters[j].isAllowed(element.values[i], element.values, i);
         }
-      }
+      });
       return pass;
     }).toList();
     if (widget.onFilter!=null) filtered = widget.onFilter!(filtered);
     if (filtered.isEmpty) filtered.add(ErrorRow());
 //    if (widget.headerRowModel!=null) filtered.insert(0, widget.headerRowModel);
+    if (notifyListeners) {
+      widget.tableController?.notifyListeners();
+    }
   }
   void _updateFiltersApplied(){
+    valueFilters.forEachIndexed((element, index) {
+      element.removeWhere((key, value) => !availableFilters[index].contains(key));
+    });
     filtersApplied = List.generate(widget.columns?.length ?? 0,
-            (index) => conditionFilters[index].isNotEmpty
+            (index) => (conditionFilters[index] ?? []).isNotEmpty
                       || valueFilters[index].values.where((e) => e==false).isNotEmpty);
   }
 
 }
 
 
-class TableController {
+class TableController extends ChangeNotifier {
 
-  final Map<int, List<ConditionFilter>>? initialConditionFilters;
-  List<List<ConditionFilter>>? conditionFilters;
-  final Map<int, Map<Object, bool>>? initialValueFilters;
+  Map<int, List<ConditionFilter>>? initialConditionFilters;
+  Map<int, List<ConditionFilter>>? conditionFilters;
+  Map<int, Map<Object, bool>>? initialValueFilters;
   bool initialValueFiltersExcludeAllElse;
   List<Map<Object, bool>>? valueFilters;
   Map<int, bool> columnVisibilities;
@@ -1566,6 +1601,6 @@ class TableController {
   }
 
   List<RowModel> Function()? _getFiltered;
-  List<RowModel> get filtered => _getFiltered!();
+  List<RowModel>? get filtered => _getFiltered?.call().where((e) => !(e is ErrorRow)).toList();
 
 }

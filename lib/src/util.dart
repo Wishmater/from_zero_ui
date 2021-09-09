@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 
 
-
+@deprecated
 class FormattedNum with Comparable implements ContainsValue{
 
   num value;
@@ -47,6 +47,9 @@ class SimpleValueString implements ContainsValue {
   }
 }
 
+
+
+
 class ValueString<T extends Comparable> with Comparable implements ContainsValue {
 
   T value;
@@ -68,10 +71,23 @@ class ValueString<T extends Comparable> with Comparable implements ContainsValue
 
 }
 
+class NumValueString<T extends num> extends ValueString<T> {
+
+  NumValueString(T? value, NumberFormat formatter)
+      : super(value ?? (0.0 as T), value==null ? '' : formatter.format(value));
+
+}
 
 
 
-class NumGroupComparingBySum with Comparable{
+
+
+
+
+
+
+
+class NumGroupComparingBySum with Comparable implements ValueString<num>  {
 
   num value = 0;
   List<num> values;
@@ -83,6 +99,7 @@ class NumGroupComparingBySum with Comparable{
     });
   }
 
+  late dynamic string = toString();
   @override
   String toString() {
     return formatter==null ? value.toString() : formatter!.format(value);
@@ -97,27 +114,10 @@ class NumGroupComparingBySum with Comparable{
 
 }
 
-class NumGroupComparingByAverage extends NumGroupComparingBySum{
+class NumGroupComparingByAverage extends NumGroupComparingBySum {
 
   NumGroupComparingByAverage(List<num> values, NumberFormat formatter) : super(values, formatter){
     value /= values.length;
-  }
-
-}
-
-class NumGroupAlwaysBiggest extends NumGroupComparingBySum{
-
-  NumGroupAlwaysBiggest(List<num> values, NumberFormat formatter) : super(values, formatter){
-    value = double.infinity;
-  }
-
-}
-
-
-class NumGroupAlwaysSmallest extends NumGroupComparingBySum{
-
-  NumGroupAlwaysSmallest(List<num> values, NumberFormat formatter) : super(values, formatter){
-    value = -double.infinity;
   }
 
 }

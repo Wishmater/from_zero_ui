@@ -12,7 +12,7 @@ abstract class HeroesFromZero{
         (flightDirection == HeroFlightDirection.push
             ? fromHeroContext.widget
             : toHeroContext.widget) as Hero;
-        Animation<double> newAnimation = CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic);
+        Animation<double> newAnimation = Tween<double>(begin: 1, end: 0).animate(CurvedAnimation(parent: animation, curve: Curves.easeInOutCubic));
         return LayoutBuilder(
           builder: (context, constraints) => OverflowBox(
             minHeight: constraints.minHeight,
@@ -28,7 +28,7 @@ abstract class HeroesFromZero{
                     constraints: BoxConstraints.loose(
                       Size(constraints.maxWidth, constraints.maxHeight),
                     ),
-                    child: oldHero.child,
+                    child: newHero.child,
                   ),
                 ),
                 FittedBox(
@@ -39,7 +39,7 @@ abstract class HeroesFromZero{
                       constraints: BoxConstraints.loose(
                         Size(constraints.maxWidth, constraints.maxHeight),
                       ),
-                      child: newHero.child,
+                      child: oldHero.child,
                     ),
                   ),
                 ),

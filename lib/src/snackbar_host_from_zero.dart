@@ -15,6 +15,8 @@ class SnackBarControllerFromZero {
 
   SnackBarHostControllerFromZero host;
   SnackBarFromZero snackBar;
+  Function(VoidCallback)? setState;
+  int? type;
 
   Completer<void> _closedCompleter = Completer();
   Future<void> get closed => _closedCompleter.future;
@@ -37,8 +39,10 @@ class SnackBarHostControllerFromZero extends ChangeNotifier {
 
   void dismiss(SnackBarFromZero o) {
     _snackBarQueue.remove(o);
-    o.controller?._closedCompleter.complete();
-    notifyListeners();
+    if (o.controller?._closedCompleter.isCompleted==false) {
+      o.controller?._closedCompleter.complete();
+      notifyListeners();
+    }
   }
 
   void dismissFirst(){
@@ -72,46 +76,67 @@ class SnackBarHostFromZero extends StatefulWidget {
 
 class _SnackBarHostFromZeroState extends State<SnackBarHostFromZero> {
 
+  SnackBarFromZero? lastShownSnackbar;
+
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
+    Widget result = ChangeNotifierProvider(
       create: (context) => SnackBarHostControllerFromZero(),
       child: widget.child,
       builder: (context, child) {
         return Consumer<SnackBarHostControllerFromZero>(
           child: child,
           builder: (context, controller, child) {
-            return Stack(
+            SnackBarFromZero? currentSnackbar = controller._snackBarQueue.isEmpty
+                ? null : controller._snackBarQueue.first;
+            bool isSameSnackbar = currentSnackbar?.key!=null && lastShownSnackbar?.key!=null
+                && currentSnackbar?.key==lastShownSnackbar?.key;
+            Widget result = Stack(
               children: [
                 child!,
                 Positioned(
-                  bottom: 0, left: 0, right: 0,
+                  bottom: 0, left: 0, right: 0, // TODO 3 snackbar doesnt respond to bottom keyboard inset
                   child: AnimatedSwitcher(
                     switchInCurve: Curves.easeOutCubic,
                     switchOutCurve: Curves.easeInCubic,
                     duration: Duration(milliseconds: 500,),
                     reverseDuration: Duration(milliseconds: 300,),
                     transitionBuilder: (child, animation) {
-                      return SlideTransition(
-                        position: Tween<Offset>(begin: Offset(0, 1), end: Offset.zero,).animate(animation),
-                        child: FadeTransition(
-                          opacity: CurvedAnimation(parent: animation, curve: Interval(0, 0.5,),),
-                          child: ScaleTransition(
-                            scale: Tween<double>(begin: 0.66, end: 1,).animate(animation),
-                            child: child,
+                      if (isSameSnackbar) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        );
+                      } else {
+                        return SlideTransition(
+                          position: Tween<Offset>(begin: Offset(0, 1), end: Offset.zero,).animate(animation),
+                          child: FadeTransition(
+                            opacity: CurvedAnimation(parent: animation, curve: Interval(0, 0.5,),),
+                            child: ScaleTransition(
+                              scale: Tween<double>(begin: 0.66, end: 1,).animate(animation),
+                              child: child,
+                            ),
                           ),
-                        ),
-                      );
+                        );
+                      }
                     },
-                    child: controller._snackBarQueue.isEmpty ? SizedBox.shrink() : controller._snackBarQueue.first,
+                    child: controller._snackBarQueue.isEmpty
+                        ? SizedBox.shrink()
+                        : Container(
+                            key: ValueKey(controller._snackBarQueue.first.hashCode),
+                            child: controller._snackBarQueue.first,
+                          ),
                   ),
                 ),
               ],
             );
+            lastShownSnackbar = currentSnackbar;
+            return result;
           },
         );
       },
     );
+    return result;
   }
 
 }

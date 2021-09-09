@@ -191,12 +191,11 @@ class RenderStickyHeader extends RenderBox
         _scrollController = scrollController,
         _callback = callback,
         _overlapHeaders = overlapHeaders {
-    assert(_scrollController!=null || _scrollPosition!=null);
     if (content != null) add(content);
     if (header != null) add(header);
   }
 
-  ScrollPosition get scrollPosition => _scrollController?.position ?? _scrollPosition!;
+  ScrollPosition? get scrollPosition => _scrollController?.position ?? _scrollPosition;
 
   set scrollPosition(ScrollPosition? newValue) {
     if (_scrollPosition == newValue) {
@@ -248,7 +247,7 @@ class RenderStickyHeader extends RenderBox
     if (_scrollController!=null){
       _scrollController?.addListener(markNeedsLayout);
     } else{
-      scrollPosition.addListener(markNeedsLayout);
+      scrollPosition?.addListener(markNeedsLayout);
     }
   }
 
@@ -257,7 +256,7 @@ class RenderStickyHeader extends RenderBox
     if (_scrollController!=null){
       _scrollController?.removeListener(markNeedsLayout);
     } else{
-      scrollPosition.removeListener(markNeedsLayout);
+      scrollPosition?.removeListener(markNeedsLayout);
     }
     super.detach();
   }
@@ -314,13 +313,13 @@ class RenderStickyHeader extends RenderBox
 //      initial = false;
 //      return 0;
 //    }
-    final scrollBox = scrollPosition.context.notificationContext?.findRenderObject();
-    if (scrollBox?.attached ?? false) {
-      try {
+    try {
+      final scrollBox = scrollPosition!.context.notificationContext?.findRenderObject();
+      if (scrollBox?.attached ?? false) {
         return localToGlobal(Offset(0, -stickOffset,), ancestor: scrollBox).dy;
-      } catch (e) {
-        // ignore and fall-through and return 0.0
       }
+    } catch(e) {
+      // ignore and fall-through and return 0.0
     }
     return 0.0;
   }

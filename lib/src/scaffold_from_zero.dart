@@ -17,6 +17,12 @@ import 'package:dartx/dartx.dart';
 
 typedef Widget DrawerContentBuilder(BuildContext context, bool compact,);
 
+typedef Widget ScaffoldFromZeroTransitionBuilder ({
+  required Widget child,
+  required Animation<double> animation,
+  required Animation<double> secondaryAnimation,
+  required ScaffoldFromZeroChangeNotifier scaffoldChangeNotifier,
+});
 
 class ScaffoldFromZero extends StatefulWidget {
 
@@ -78,9 +84,9 @@ class ScaffoldFromZero extends StatefulWidget {
   final bool addFooterDivisions;
   final bool applyHeroToDrawerTitle;
   final bool alwaysShowHamburgerButtonOnMobile;
-  final Widget Function(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen) titleTransitionBuilder;
-  final Widget Function(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen) drawerContentTransitionBuilder;
-
+  final ScaffoldFromZeroTransitionBuilder titleTransitionBuilder;
+  final ScaffoldFromZeroTransitionBuilder drawerContentTransitionBuilder;
+  final ScaffoldFromZeroTransitionBuilder bodyTransitionBuilder;
 
   ScaffoldFromZero({
     this.title,
@@ -118,8 +124,9 @@ class ScaffoldFromZero extends StatefulWidget {
     this.applyHeroToDrawerTitle = true,
     this.alwaysShowHamburgerButtonOnMobile = false,
     this.centerDrawerTitle = false,
-    Widget Function(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen)? titleTransitionBuilder,
-    Widget Function(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen)? drawerContentTransitionBuilder,
+    ScaffoldFromZeroTransitionBuilder? titleTransitionBuilder,
+    ScaffoldFromZeroTransitionBuilder? drawerContentTransitionBuilder,
+    ScaffoldFromZeroTransitionBuilder? bodyTransitionBuilder,
   }) :
         // this.appbarType = appbarType ?? (title==null&&(actions==null||actions.isEmpty)&&drawerContentBuilder==null ? appbarTypeNone : appbarTypeStatic),
         this.collapsibleBackgroundHeight = collapsibleBackgroundLength ?? (appbarType==ScaffoldFromZero.appbarTypeStatic||appbarHeight==null ? -1 : appbarHeight*4),
@@ -128,12 +135,18 @@ class ScaffoldFromZero extends StatefulWidget {
         this.compactDrawerWidth = drawerContentBuilder==null||!useCompactDrawerInsteadOfClose ? 0 : 56,
         this.appbarHeight = appbarHeight ?? (appbarType==ScaffoldFromZero.appbarTypeNone ? 0 : 56), //useCompactDrawerInsteadOfClose ? 56 : 0
         this.titleTransitionBuilder = titleTransitionBuilder ?? defaultTitleTransitionBuilder,
-        this.drawerContentTransitionBuilder = drawerContentTransitionBuilder ?? defaultDrawerContentTransitionBuilder;
+        this.drawerContentTransitionBuilder = drawerContentTransitionBuilder ?? defaultDrawerContentTransitionBuilder,
+        this.bodyTransitionBuilder = bodyTransitionBuilder ?? defaultBodyTransitionBuilder;
 
   @override
   _ScaffoldFromZeroState createState() => _ScaffoldFromZeroState();
 
-  static Widget defaultTitleTransitionBuilder(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen){
+  static Widget defaultTitleTransitionBuilder({
+    required Widget child,
+    required Animation<double> animation,
+    required Animation<double> secondaryAnimation,
+    required ScaffoldFromZeroChangeNotifier scaffoldChangeNotifier,
+  }) {
     return AnimatedBuilder(
       animation: animation,
       child: child,
@@ -145,15 +158,15 @@ class ScaffoldFromZero extends StatefulWidget {
             Positioned.fill(
               left: Tween<double>(begin: 64.0, end: 0.0)
                   .evaluate(CurvedAnimation( curve: Curves.easeInQuad,
-                  parent: changeNotifierNotListen.titleAnimation ? animation : kAlwaysCompleteAnimation),
+                  parent: scaffoldChangeNotifier.titleAnimation ? animation : kAlwaysCompleteAnimation),
               ),
               child: FadeTransition(
                 opacity: CurvedAnimation( curve: Curves.easeOutCubic,
-                  parent: changeNotifierNotListen.titleAnimation ? animation : kAlwaysCompleteAnimation,
+                  parent: scaffoldChangeNotifier.titleAnimation ? animation : kAlwaysCompleteAnimation,
                 ),
                 child: ScaleTransition(
                   scale: CurvedAnimation( curve: Curves.easeOutCubic,
-                    parent: changeNotifierNotListen.titleAnimation ? animation : kAlwaysCompleteAnimation,
+                    parent: scaffoldChangeNotifier.titleAnimation ? animation : kAlwaysCompleteAnimation,
                   ),
                   child: Align(
                     alignment: Alignment.centerLeft,
@@ -163,12 +176,12 @@ class ScaffoldFromZero extends StatefulWidget {
                       builder: (context, child) {
                         return ScaleTransition(
                           scale: CurvedAnimation( curve: Curves.easeOutCubic,
-                            parent: changeNotifierNotListen.titleAnimation ? ReverseAnimation(secondaryAnimation) : kAlwaysCompleteAnimation,
+                            parent: scaffoldChangeNotifier.titleAnimation ? ReverseAnimation(secondaryAnimation) : kAlwaysCompleteAnimation,
                           ),
                           alignment: Alignment.topLeft,
                           child: FadeTransition(
                             opacity: CurvedAnimation( curve: Curves.easeOutCubic,
-                              parent: changeNotifierNotListen.titleAnimation ? ReverseAnimation(secondaryAnimation) : kAlwaysCompleteAnimation,
+                              parent: scaffoldChangeNotifier.titleAnimation ? ReverseAnimation(secondaryAnimation) : kAlwaysCompleteAnimation,
                             ),
                             child: child,
                           ),
@@ -185,7 +198,12 @@ class ScaffoldFromZero extends StatefulWidget {
     );
   }
 
-  static Widget defaultDrawerContentTransitionBuilder(Widget child, Animation<double> animation, Animation<double> secondaryAnimation, ScaffoldFromZeroChangeNotifier changeNotifierNotListen){
+  static Widget defaultDrawerContentTransitionBuilder({
+    required Widget child,
+    required Animation<double> animation,
+    required Animation<double> secondaryAnimation,
+    required ScaffoldFromZeroChangeNotifier scaffoldChangeNotifier,
+  }) {
     return AnimatedBuilder(
       animation: secondaryAnimation,
       child: child,
@@ -195,14 +213,66 @@ class ScaffoldFromZero extends StatefulWidget {
           child: child,
           builder: (context, child) {
             return FadeUpwardsSlideTransition(
-              routeAnimation: changeNotifierNotListen.sharedAnim
+              routeAnimation: scaffoldChangeNotifier.sharedAnim
                   ? ReverseAnimation(secondaryAnimation) : kAlwaysCompleteAnimation,
               child: FadeUpwardsSlideTransition(
-                routeAnimation: changeNotifierNotListen.sharedAnim
+                routeAnimation: scaffoldChangeNotifier.sharedAnim
                     ? animation : kAlwaysCompleteAnimation,
                 child: child!,
               ),
             );
+          },
+        );
+      },
+    );
+  }
+
+  static Widget defaultBodyTransitionBuilder({
+    required Widget child,
+    required Animation<double> animation,
+    required Animation<double> secondaryAnimation,
+    required ScaffoldFromZeroChangeNotifier scaffoldChangeNotifier,
+  }) {
+    return AnimatedBuilder(
+      child: child,
+      animation: animation,
+      builder: (context, child) {
+        return AnimatedBuilder(
+          animation: secondaryAnimation,
+          child: child,
+          builder: (context, child) {
+            if (secondaryAnimation.value>0.9) return Opacity(opacity: 0, child: child,);
+            if (scaffoldChangeNotifier.sharedAnim) {
+              return no_fading_shared_axis_transition.SharedAxisTransition(
+                animation: scaffoldChangeNotifier.animationType==ScaffoldFromZero.animationTypeOuter
+                    ? ReverseAnimation(secondaryAnimation) : animation,
+                secondaryAnimation: scaffoldChangeNotifier.animationType==ScaffoldFromZero.animationTypeOuter
+                    ? ReverseAnimation(animation).isCompleted ? kAlwaysDismissedAnimation : ReverseAnimation(animation)
+                    : secondaryAnimation.isCompleted ? kAlwaysDismissedAnimation : secondaryAnimation,
+                child: child!,
+                transitionType: no_fading_shared_axis_transition.SharedAxisTransitionType.scaled,
+                fillColor: Colors.transparent,
+              );
+            } else if (scaffoldChangeNotifier.fadeAnim) {
+              return FadeTransition(
+                opacity: CurvedAnimation(
+                  parent: ReverseAnimation(secondaryAnimation),
+                  curve: Interval(0.33, 1, curve: Curves.easeInCubic),
+                ),
+                child: FadeUpwardsSlideTransition(
+                  routeAnimation: animation,
+                  child: child!,
+                ),
+              );
+              // return FadeThroughTransition(
+              //   animation: animation,
+              //   secondaryAnimation: secondaryAnimation.isCompleted ? kAlwaysDismissedAnimation : secondaryAnimation,
+              //   child: child,
+              //   fillColor: Colors.transparent,
+              // );
+            } else {
+              return child!;
+            }
           },
         );
       },
@@ -467,39 +537,11 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
       child: Container(
         alignment: Alignment.topCenter,
         width: widget.constraintBodyOnXLargeScreens ? ScaffoldFromZero.screenSizeXLarge : double.infinity,
-        child: AnimatedBuilder(
+        child: widget.bodyTransitionBuilder(
           child: Container(key: bodyGlobalKey, child: widget.body),
           animation: animation,
-          builder: (context, child) {
-            return AnimatedBuilder(
-              animation: secondaryAnimation,
-              child: child,
-              builder: (context, child) {
-                if (secondaryAnimation.value>0.9) return Opacity(opacity: 0, child: child,);
-                if (changeNotifierNotListen.sharedAnim) {
-                  return no_fading_shared_axis_transition.SharedAxisTransition(
-                    animation: changeNotifierNotListen.animationType==ScaffoldFromZero.animationTypeOuter
-                        ? ReverseAnimation(secondaryAnimation) : animation,
-                    secondaryAnimation: changeNotifierNotListen.animationType==ScaffoldFromZero.animationTypeOuter
-                        ? ReverseAnimation(animation).isCompleted ? kAlwaysDismissedAnimation : ReverseAnimation(animation)
-                        : secondaryAnimation.isCompleted ? kAlwaysDismissedAnimation : secondaryAnimation,
-                    child: child!,
-                    transitionType: no_fading_shared_axis_transition.SharedAxisTransitionType.scaled,
-                    fillColor: Colors.transparent,
-                  );
-                } else if (changeNotifierNotListen.fadeAnim) {
-                  return FadeThroughTransition(
-                    animation: animation,
-                    secondaryAnimation: secondaryAnimation.isCompleted ? kAlwaysDismissedAnimation : secondaryAnimation,
-                    child: child,
-                    fillColor: Colors.transparent,
-                  );
-                } else {
-                  return child!;
-                }
-              },
-            );
-          },
+          secondaryAnimation: secondaryAnimation,
+          scaffoldChangeNotifier: changeNotifierNotListen,
         ),
       ),
     );
@@ -639,7 +681,12 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                       child: Container(
                         height: widget.appbarHeight,
                         alignment: Alignment.centerLeft,
-                        child: widget.titleTransitionBuilder(widget.title!, animation, secondaryAnimation, changeNotifierNotListen),
+                        child: widget.titleTransitionBuilder(
+                          child: widget.title!,
+                          animation: animation,
+                          secondaryAnimation: secondaryAnimation,
+                          scaffoldChangeNotifier: changeNotifierNotListen,
+                        ),
                       ),
                     ),
 
@@ -686,6 +733,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                   elevation: 0,
                   automaticallyImplyLeading: false,
                   toolbarHeight: widget.appbarHeight,
+                  backgroundColor: Theme.of(context).appBarTheme?.backgroundColor ?? Theme.of(context).primaryColor,
                   title: SizedBox(
                       height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
                       child: Selector<ScreenFromZero, bool>(
@@ -786,7 +834,12 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                                   builder: (context, changeNotifier, child) {
                                     Widget result = _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth);
                                     if (widget.animateDrawer){
-                                      result = widget.drawerContentTransitionBuilder(result, animation, secondaryAnimation, changeNotifierNotListen,);
+                                      result = widget.drawerContentTransitionBuilder(
+                                        child: result,
+                                        animation: animation,
+                                        secondaryAnimation: secondaryAnimation,
+                                        scaffoldChangeNotifier: changeNotifierNotListen,
+                                      );
                                     }
                                     return result;
                                   },

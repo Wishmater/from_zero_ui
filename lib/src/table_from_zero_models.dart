@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/table_from_zero_filters.dart';
 
 
 abstract class RowModel{
@@ -91,7 +90,7 @@ class SimpleRowModel extends RowModel{
     this.onCellHover,
   });
   SimpleRowModel copywith({
-    dynamic? id,
+    dynamic id,
     Key? rowKey,
     List<Comparable?>? values,
     Color? backgroundColor,
@@ -130,6 +129,7 @@ class SimpleRowModel extends RowModel{
       onCellDoubleTap: onCellDoubleTap ?? this.onCellDoubleTap,
       onCellLongPress: onCellLongPress ?? this.onCellLongPress,
       onCellHover: onCellHover ?? this.onCellHover,
+      alwaysOnTop: alwaysOnTop ?? this.alwaysOnTop,
     );
   }
 }

@@ -82,5 +82,16 @@
     "filter_number_greater": "Número mayor que",
     "filter_number_less": "Número menor que",
     "filter_date_after": "Fecha es después de",
-    "filter_date_before": "Fecha es antes de"
+    "filter_date_before": "Fecha es antes de",
+    "return_to_top": "Regresar al principio",
+    "documents": "Documentos",
+    "downloads": "Descargas",
+    "downloading": "Descargando...",
+    "download_success": "Descarga Exitosa",
+    "download_fail": "Descarga Fallida",
+    "downloaded_to": "Descargado a:",
+    "open": "Abrir",
+    "open_folder": "Abrir Carpeta",
+    "error_file": "Error del sistema de archivos",
+    "error_connection": "Error de conexión"
 }
