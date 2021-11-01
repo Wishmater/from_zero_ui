@@ -1,4 +1,8 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/src/scheduler/ticker.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/ui_utility_widgets.dart';
 import 'package:from_zero_ui/src/export.dart';
 
@@ -16,8 +20,8 @@ class ScrollbarFromZero extends StatefulWidget {
   final bool? applyOpacityGradientToChildren;
   final int? opacityGradientDirection;
   final double opacityGradientSize;
-  final bool moveBackAndForthToForceTriggerScrollbar;
-  final bool addPaddingOnDesktop;
+  final bool ignoreDevicePadding;
+  // final bool addPaddingOnDesktop;
 
   ScrollbarFromZero({
     Key? key,
@@ -32,8 +36,8 @@ class ScrollbarFromZero extends StatefulWidget {
     this.thickness,
     this.hoverThickness,
     this.showTrackOnHover,
-    this.moveBackAndForthToForceTriggerScrollbar = false,
-    this.addPaddingOnDesktop = false,
+    this.ignoreDevicePadding = true,
+    // this.addPaddingOnDesktop = false,
   }) :  super(key: key);
 
   @override
@@ -46,102 +50,36 @@ class ScrollbarFromZero extends StatefulWidget {
 
 class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
-  bool built = false;
-  bool canBeScrolled = false;
-  bool isAlwaysShown = false;
-  double maxScrollExtent = 0;
-  bool anotherScrollHappened = false;
-
-  @override
-  void didUpdateWidget(covariant ScrollbarFromZero oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    removeListeners(oldWidget.controller);
-    addListeners(widget.controller);
-    // built = false;
-    _onChildSizeChangeListener();
-  }
+  late AlwaysAttachedScrollController alwaysAttachedScrollController;
 
   @override
   void initState() {
     super.initState();
-    addListeners(widget.controller);
-    built = false;
-    // _onScrollListener();
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-      listenPeriodically();
-    });
+    alwaysAttachedScrollController = AlwaysAttachedScrollController(parent: widget.controller, context: context);
   }
-
-  // TODO if a notification could be received on change position.maxScrollExtent, there would be no need to listen periodically
-  void listenPeriodically() async {
-    while (mounted) {
-      _onChildSizeChangeListener();
-      await Future.delayed(Duration(milliseconds: 1000));
-    }
-  }
-
-  void addListeners(ScrollController? controller){
-    controller?.addListener(_onScrollListener);
-    if (controller?.hasClients ?? false)
-      controller?.position.addListener(_onScrollListener);
-  }
-
-  void removeListeners(ScrollController? controller) {
-    controller?.removeListener(_onScrollListener);
-  }
-
-  @override
-  void dispose() {
-    removeListeners(widget.controller);
-    super.dispose();
-  }
-
-  void _onScrollListener () {
-    try { maxScrollExtent = widget.controller!.position.maxScrollExtent; } catch(_){}
-  }
-
-  void _onChildSizeChangeListener () async {
-    try {
-      if (mounted && widget.controller!=null) {
-        if (!widget.controller!.hasClients) {
-          // await Future.delayed(Duration(milliseconds: 400));
-          // _onChildSizeChangeListener();
-          return;
-        }
-        double maxScrollExtent = widget.controller!.position.maxScrollExtent;
-        bool canBeScrolled = maxScrollExtent > 0;
-        if (!built || canBeScrolled!=this.canBeScrolled) {
-          setState(() {
-            this.canBeScrolled = canBeScrolled;
-          });
-        }
-        if (!built || canBeScrolled!=this.canBeScrolled || (isAlwaysShown && maxScrollExtent!=this.maxScrollExtent)) {
-          widget.controller!.position.didUpdateScrollPositionBy(0);
-          anotherScrollHappened = false;
-          Future.delayed(Duration(milliseconds: 500)).then((value) {
-            if (!isAlwaysShown && !anotherScrollHappened) {
-              try { widget.controller!.position.didEndScroll(); } catch(_) {}
-            }
-          });
-        }
-        if (!built && widget.moveBackAndForthToForceTriggerScrollbar) {
-          final pixels = widget.controller!.position.pixels;
-          widget.controller!.jumpTo(pixels+0.1);
-          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-            try { widget.controller!.jumpTo(pixels); } catch (_) {}
-          });
-        }
-        built = true;
-        this.maxScrollExtent = maxScrollExtent;
-      }
-    } catch (_) {}
-  }
-
 
   @override
   Widget build(BuildContext context) {
 
+    alwaysAttachedScrollController.parent = widget.controller;
     Widget child = widget.child;
+    bool wantsAlwaysShown = Theme.of(context).scrollbarTheme.isAlwaysShown ?? PlatformExtended.isDesktop;
+    bool supportsAlwaysShown = widget.controller!=null && (widget.controller!.hasClients || alwaysAttachedScrollController.lastPosition!=null);
+    if (widget.controller!=null && !supportsAlwaysShown) {
+      // Listen until the controller has clients
+      final controller = widget.controller!;
+      Future.doWhile(() async {
+        if (!mounted || widget.controller!=controller) {
+          return false;
+        }
+        if (controller.hasClients) {
+          setState(() {});
+          return false;
+        }
+        await Future.delayed(Duration(milliseconds: 200));
+        return true;
+      });
+    }
 
     if (context.findAncestorWidgetOfExactType<Export>()!=null) {
       return child;
@@ -150,7 +88,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     if (widget.applyOpacityGradientToChildren ?? widget.controller!=null){
       if (widget.controller!=null) {
         child = ScrollOpacityGradient(
-          scrollController: widget.controller!,
+          scrollController: alwaysAttachedScrollController,
           child: child,
           direction: widget.opacityGradientDirection ?? (widget.controller!.hasClients
               ? widget.controller!.position.axis==Axis.vertical
@@ -168,43 +106,188 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
       }
     }
 
-    if (widget.addPaddingOnDesktop) {
-      //TODO implement add padding on desktop functionality
-      // allow to set background color
-      // find a way to reduce the scrollbar gesture detector size
-      child = Row(
-        children: [
-          Expanded(child: child,),
-          AnimatedContainer(
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeOutCubic,
-            width: canBeScrolled ? 12 : 0,
-          ),
-        ],
-      );
-    }
-
-    isAlwaysShown = (canBeScrolled && (widget.controller?.hasClients??false))
-        ? (widget.isAlwaysShown ?? Theme.of(context).scrollbarTheme.isAlwaysShown ?? PlatformExtended.isDesktop)
-        : false;
-    // print ("$hashCode $isAlwaysShown");
-    return Scrollbar(
-      controller: widget.controller,
-      isAlwaysShown: isAlwaysShown,
-      notificationPredicate: widget.notificationPredicate ?? (notification) => true,
+    Widget result = Scrollbar(
+      // controller: supportsAlwaysShown ? widget.controller : null
+      controller: widget.controller==null ? null : alwaysAttachedScrollController,
+      isAlwaysShown: wantsAlwaysShown && supportsAlwaysShown,
+      notificationPredicate: widget.notificationPredicate,
       radius: widget.radius,
       thickness: widget.thickness,
       hoverThickness: widget.hoverThickness,
       showTrackOnHover: widget.showTrackOnHover,
-      child: NotificationListener<ScrollNotification>(
-        onNotification: (notification) {
-          anotherScrollHappened = true;
-          return widget.controller==null;
-        },
-        child: child,
-      ),
+      child: child,
+    );
+    if (widget.ignoreDevicePadding) {
+      result = MediaQuery(
+        data: MediaQuery.of(context).copyWith(padding: EdgeInsets.zero),
+        child: result,
+      );
+    }
+    return NotificationListener(
+      onNotification: (notification) => true,
+      child: result,
     );
 
   }
 
 }
+
+
+
+
+
+
+
+
+class DummyTickerProvider extends TickerProvider {
+
+  @override
+  Ticker createTicker(TickerCallback onTick) {
+    return Ticker((time) {});
+  }
+
+}
+
+class DummyScrollContext extends ScrollContext {
+
+  BuildContext context;
+
+  DummyScrollContext(this.context);
+
+  @override
+  AxisDirection get axisDirection => AxisDirection.down;
+
+  @override
+  BuildContext? get notificationContext => null;
+
+  @override
+  BuildContext get storageContext => context;
+
+  final _dummyTickerProvider = DummyTickerProvider();
+  @override
+  TickerProvider get vsync => _dummyTickerProvider;
+
+  @override
+  void saveOffset(double offset) {}
+
+  @override
+  void setCanDrag(bool value) {}
+
+  @override
+  void setIgnorePointer(bool value) {}
+
+  @override
+  void setSemanticsActions(Set<SemanticsAction> actions) {}
+
+}
+
+class DummyScrollPosition extends ScrollPositionWithSingleContext {
+
+  DummyScrollPosition(BuildContext context) : super(
+    context: DummyScrollContext(context),
+    physics: NeverScrollableScrollPhysics(),
+  );
+
+}
+
+class AlwaysAttachedScrollController implements ScrollController {
+
+  ScrollController? parent;
+  BuildContext context;
+  DummyScrollPosition dummyScrollPosition;
+
+
+  AlwaysAttachedScrollController({
+    required this.parent,
+    required this.context,
+  })  : dummyScrollPosition = DummyScrollPosition(context);
+
+  @override
+  bool get hasClients => true;
+
+  ScrollPosition? lastPosition;
+  @override
+  ScrollPosition get position {
+    if (parent==null || parent!.positions.isEmpty) {
+      return lastPosition ?? dummyScrollPosition;
+    } else {
+      lastPosition = parent!.position;
+      return parent!.position;
+    }
+  }
+
+  @override
+  Iterable<ScrollPosition> get positions => parent?.positions ?? [];
+
+  @override
+  void addListener(VoidCallback listener) {
+    parent?.addListener(listener);
+  }
+
+  @override
+  Future<void> animateTo(double offset, {required Duration duration, required Curve curve}) async {
+    return parent?.animateTo(offset, duration: duration, curve: curve);
+  }
+
+  @override
+  void attach(ScrollPosition position) {
+    parent?.attach(position);
+  }
+
+  @override
+  ScrollPosition createScrollPosition(ScrollPhysics physics, ScrollContext context, ScrollPosition? oldPosition) {
+    if (parent==null) {
+      return DummyScrollPosition(this.context);
+    } else {
+      return parent!.createScrollPosition(physics, context, oldPosition);
+    }
+  }
+
+  @override
+  void debugFillDescription(List<String> description) {
+    parent?.debugFillDescription(description);
+  }
+
+  @override
+  String? get debugLabel => 'AlwaysAttachedScrollController';
+
+  @override
+  void detach(ScrollPosition position) {
+    parent?.detach(position);
+  }
+
+  @override
+  void dispose() {
+    parent?.dispose();
+  }
+
+  @override
+  bool get hasListeners => parent?.hasListeners ?? false;
+
+  @override
+  double get initialScrollOffset => parent?.initialScrollOffset ?? 0;
+
+  @override
+  void jumpTo(double value) {
+    parent?.jumpTo(value);
+  }
+
+  @override
+  bool get keepScrollOffset => parent?.keepScrollOffset ?? true;
+
+  @override
+  void notifyListeners() {
+    parent?.notifyListeners();
+  }
+
+  @override
+  double get offset => parent?.offset ?? 0;
+
+
+  @override
+  void removeListener(VoidCallback listener) {
+    parent?.removeListener(listener);
+  }
+
+}
+

@@ -232,6 +232,14 @@ class TableFromZeroState extends State<TableFromZero> {
         lockScrollUpdates = false;
       }
     });
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      if (sharedController.hasClients) {
+        // TODO fix this VERY BAD way to trigger initial scrollbar
+        final pixels = sharedController.position.pixels;
+        sharedController.jumpTo(pixels+1);
+        sharedController.jumpTo(pixels);
+      }
+    });
     if (sortedColumnIndex==null) {
       sortedColumnIndex = widget.initialSortedColumnIndex;
     }
@@ -343,6 +351,9 @@ class TableFromZeroState extends State<TableFromZero> {
         }
       }
     }
+    valueFilters.forEachIndexed((element, index) {
+      element.removeWhere((key, value) => !availableFilters[index].contains(key));
+    });
     _updateFiltersApplied();
     sort(notifyListeners: notifyListeners);
   }
@@ -609,8 +620,8 @@ class TableFromZeroState extends State<TableFromZero> {
   Widget _getHeaderAddonWidget(BuildContext context, [BoxConstraints? constraints]) {
     Widget addon = widget.headerAddon!;
     if (widget.applyMinWidthToHeaderAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
-      addon = NotificationListener<ScrollNotification>(
-        onNotification: (notification) => true,
+      addon = NotificationListener(
+        onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
         child: SingleChildScrollView(
           controller: sharedController,
           scrollDirection: Axis.horizontal,
@@ -806,9 +817,9 @@ class TableFromZeroState extends State<TableFromZero> {
       Widget result;
       if (constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
         background = SizedBox(
-          height: row.height + widget.itemPadding.vertical,
-          child: NotificationListener<ScrollNotification>(
-            onNotification: (notification) => true,
+          height: row.height,
+          child: NotificationListener(
+            onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               controller: sharedController,
@@ -819,7 +830,7 @@ class TableFromZeroState extends State<TableFromZero> {
           ),
         );
         result = SizedBox(
-          height: row.height + widget.itemPadding.vertical,
+          height: row.height,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             controller: sharedController,
@@ -831,14 +842,15 @@ class TableFromZeroState extends State<TableFromZero> {
         if (row==headerRowModel) {
           result = ScrollbarFromZero(
             controller: sharedController,
-            moveBackAndForthToForceTriggerScrollbar: true,
+            // moveBackAndForthToForceTriggerScrollbar: true,
+            child: result,
+          );
+        } else {
+          result = NotificationListener(
+            onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
             child: result,
           );
         }
-        result = NotificationListener<ScrollNotification>(
-          onNotification: (notification) => true,
-          child: result,
-        );
       } else {
         background = Row(
           children: List.generate(cols, (j) => decorationBuilder(context, j)),
@@ -887,8 +899,8 @@ class TableFromZeroState extends State<TableFromZero> {
       if (row.rowAddon!=null) {
         Widget addon = row.rowAddon!;
         if (widget.applyScrollToRowAddon && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
-          addon = NotificationListener<ScrollNotification>(
-            onNotification: (notification) => true,
+          addon = NotificationListener(
+            onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
             child: SingleChildScrollView(
               controller: sharedController,
               scrollDirection: Axis.horizontal,
@@ -1259,7 +1271,7 @@ class TableFromZeroState extends State<TableFromZero> {
                                                       return SimpleRowModel(
                                                         id: e,
                                                         values: [e.toString()],
-                                                        selected: valueFilters[j][e] ?? true,
+                                                        selected: valueFilters[j][e] ?? false,
                                                         onCheckBoxSelected: (row, focused) {
                                                           modified = true;
                                                           valueFilters[j][row.id] = focused!;
@@ -1537,9 +1549,11 @@ class TableFromZeroState extends State<TableFromZero> {
           if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
           if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1;
         }
+        final aVal = a.values[sortedColumnIndex!];
+        final bVal = b.values[sortedColumnIndex!];
         return sortedAscending
-            ? a.values[sortedColumnIndex!]!.compareTo(b.values[sortedColumnIndex!])
-            : b.values[sortedColumnIndex!]!.compareTo(a.values[sortedColumnIndex!]);
+            ? aVal==null ? 1 : bVal==null ? -1 : aVal.compareTo(bVal)
+            : aVal==null ? -1 : bVal==null ? 1 : bVal.compareTo(aVal);
       }));
     filter(notifyListeners: notifyListeners);
   }
@@ -1547,7 +1561,9 @@ class TableFromZeroState extends State<TableFromZero> {
     filtered = sorted.where((element) {
       bool pass = true;
       for (var i = 0; i<valueFilters.length && pass; ++i) {
-        pass = valueFilters[i][element.values[i]] ?? true;
+        if (filtersApplied[i]) {
+          pass = valueFilters[i][element.values[i]] ?? false;
+        }
       }
       conditionFilters.forEach((i, filters) {
         for (var j = 0; j < filters.length && pass; ++j) {
@@ -1564,12 +1580,22 @@ class TableFromZeroState extends State<TableFromZero> {
     }
   }
   void _updateFiltersApplied(){
-    valueFilters.forEachIndexed((element, index) {
-      element.removeWhere((key, value) => !availableFilters[index].contains(key));
+    filtersApplied = List.generate(widget.columns?.length ?? 0, (index) {
+      if ((conditionFilters[index] ?? []).isNotEmpty) {
+        return true;
+      }
+      bool? previous;
+      for (var i = 0; i < availableFilters[index].length; ++i) {
+        final availableFilter = availableFilters[index][i];
+        final value = valueFilters[index][availableFilter] ?? false;
+        if (i==0) {
+          previous = value;
+        } else if (previous!=value){
+          return true;
+        }
+      }
+      return false;
     });
-    filtersApplied = List.generate(widget.columns?.length ?? 0,
-            (index) => (conditionFilters[index] ?? []).isNotEmpty
-                      || valueFilters[index].values.where((e) => e==false).isNotEmpty);
   }
 
 }
@@ -1594,6 +1620,28 @@ class TableController extends ChangeNotifier {
     this.initialValueFiltersExcludeAllElse = false,
     Map<int, bool>? columnVisibilities,
   })  : this.columnVisibilities = columnVisibilities ?? {};
+
+  TableController copyWith({
+    Map<int, List<ConditionFilter>>? initialConditionFilters,
+    Map<int, List<ConditionFilter>>? conditionFilters,
+    Map<int, Map<Object, bool>>? initialValueFilters,
+    bool? initialValueFiltersExcludeAllElse,
+    List<Map<Object, bool>>? valueFilters,
+    Map<int, bool>? columnVisibilities,
+    bool? sortedAscending,
+    int? sortedColumnIndex,
+  }) {
+    return TableController()
+      ..initialConditionFilters = initialConditionFilters ?? this.initialConditionFilters
+      ..conditionFilters = conditionFilters ?? this.conditionFilters
+      ..initialValueFilters = initialValueFilters ?? this.initialValueFilters
+      ..initialValueFiltersExcludeAllElse = initialValueFiltersExcludeAllElse ?? this.initialValueFiltersExcludeAllElse
+      ..valueFilters = valueFilters ?? this.valueFilters
+      ..columnVisibilities = columnVisibilities ?? this.columnVisibilities
+      ..sortedAscending = sortedAscending ?? this.sortedAscending
+      ..sortedColumnIndex = sortedColumnIndex ?? this.sortedColumnIndex
+      .._filter = this._filter;
+  }
 
   VoidCallback? _filter;
   void filter(){

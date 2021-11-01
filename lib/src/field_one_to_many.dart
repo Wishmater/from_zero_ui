@@ -45,6 +45,8 @@ class OneToManyRelationField extends Field<String> {
   Widget? tableErrorWidget;
   int? initialSortColumn;
   ValueChanged<RowModel>? onRowTap;
+  bool? tableSortable;
+  bool? tableFilterable;
 
   List<DAO>? _objects;
   List<DAO>? get objects => _objects;
@@ -62,16 +64,17 @@ class OneToManyRelationField extends Field<String> {
   ValueNotifier<List<DAO>?> filtered = ValueNotifier(null);
 
 
+  // TODO ?????? how does undo/redo even work here LOL, objects should just be values, maybe make getter/setter that redirects, for compatibility
   OneToManyRelationField({
-    required String uiName,
+    required FieldValueGetter<String, Field> uiNameGetter,
     required this.objectTemplate,
     this.availableObjectsPoolGetter,
     this.allowDuplicateObjectsFromAvailablePool = false,
     this.showObjectsFromAvailablePoolAsTable = false,
     this.allowAddNew = true,
-    bool clearable = true, /// Unused in table
-    bool enabled = true, //TODO implement enabled
-    bool? tableCellsEditable,
+    FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, /// Unused in table
+    FieldValueGetter<bool, Field> enabledGetter = trueFieldGetter, //TODO implement enabled
+    this.tableCellsEditable = false,
     double maxWidth = double.infinity,
     List<DAO>? objects,
     List<DAO>? dbObjects,
@@ -91,42 +94,45 @@ class OneToManyRelationField extends Field<String> {
     this.extraRowActionBuilders = const [],
     this.showAddButtonAtEndOfTable = false,
     bool? showEditDialogOnAdd,
-    String? hint,
+    FieldValueGetter<String?, Field>? hintGetter,
     this.tableKey,
     this.tableErrorWidget,
     this.futureErrorWidgetBuilder,
     double? tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
+    FieldValueGetter<bool, Field>? hiddenGetter,
+    FieldValueGetter<bool, Field>? hiddenInTableGetter,
+    FieldValueGetter<bool, Field>? hiddenInViewGetter,
+    FieldValueGetter<bool, Field>? hiddenInFormGetter,
     this.initialSortColumn,
     this.onRowTap,
-    List<FieldValidator<String>> validators = const[],
+    FieldValueGetter<List<FieldValidator<String>>, Field>? validatorsGetter,
     bool validateOnlyOnConfirm = false,
+    this.tableSortable,
+    this.tableFilterable,
+    FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
   }) :  assert(objects==null || futureObjects==null),
         _objects = objects,
         dbObjects = dbObjects ?? List.from(objects ?? []),
-        showEditDialogOnAdd = showEditDialogOnAdd ?? objectTemplate.onSave!=null,
-        tableCellsEditable = tableCellsEditable ?? false, //objectTemplate.onSave!=null,
+        showEditDialogOnAdd = showEditDialogOnAdd ?? (tableCellsEditable ? false : objectTemplate.onSave!=null),
         this.skipDeleteConfirmation = availableObjectsPoolGetter!=null,
-        this.viewOnRowTap = viewOnRowTap ?? onRowTap==null,
+        this.viewOnRowTap = viewOnRowTap ?? (onRowTap==null && !tableCellsEditable),
         this.showActionView = showActionView ?? !(viewOnRowTap ?? onRowTap==null),
         super(
-          uiName: uiName,
+          uiNameGetter: uiNameGetter,
           value: '',
           dbValue: '',
-          enabled: enabled,
-          clearable: clearable,
+          clearableGetter: clearableGetter,
+          enabledGetter: enabledGetter,
           maxWidth: maxWidth,
-          hint: hint,
+          hintGetter: hintGetter,
           tableColumnWidth: tableColumnWidth,
-          hidden: hidden,
-          hiddenInTable: hiddenInTable,
-          hiddenInView: hiddenInView,
-          hiddenInForm: hiddenInForm,
-          validators: validators,
+          hiddenGetter: hiddenGetter,
+          hiddenInTableGetter: hiddenInTableGetter,
+          hiddenInViewGetter: hiddenInViewGetter,
+          hiddenInFormGetter: hiddenInFormGetter,
+          validatorsGetter: validatorsGetter,
           validateOnlyOnConfirm: validateOnlyOnConfirm,
+          colModelBuilder: colModelBuilder,
         ) {
     addListeners();
     WidgetsBinding.instance!.addPostFrameCallback((timeStamp) async {
@@ -148,35 +154,35 @@ class OneToManyRelationField extends Field<String> {
   }
 
   @override
-  bool get isEditted {
-    bool editted = objects?.length != dbObjects?.length;
-    for (var i = 0; !editted && i < (objects?.length??0); ++i) {
-      editted = objects?[i] != dbObjects?[i];
+  bool get isEdited {
+    bool edited = objects?.length != dbObjects?.length;
+    for (var i = 0; !edited && i < (objects?.length??0); ++i) {
+      edited = objects?[i] != dbObjects?[i];
     }
-    if (!editted) {
-      editted = objects==null || objects!.any((element) => element.isEdited);
+    if (!edited) {
+      edited = objects==null || objects!.any((element) => element.isEdited);
     }
-    return editted;
+    return edited;
   }
 
   @override
   OneToManyRelationField copyWith({
-    String? uiName,
+    FieldValueGetter<String, Field>? uiNameGetter,
     String? value,
     String? dbValue,
-    String? hint,
-    bool? clearable,
-    bool? enabled,
+    FieldValueGetter<String?, Field>? hintGetter,
+    FieldValueGetter<bool, Field>? enabledGetter,
+    FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     DAO? objectTemplate,
     Future<List<DAO>>? futureObjects,
     List<DAO>? objects,
     List<DAO>? dbObjects,
     double? tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
+    FieldValueGetter<bool, Field>? hiddenGetter,
+    FieldValueGetter<bool, Field>? hiddenInTableGetter,
+    FieldValueGetter<bool, Field>? hiddenInViewGetter,
+    FieldValueGetter<bool, Field>? hiddenInFormGetter,
     bool? collapsible,
     bool? showActionEdit,
     bool? showActionDuplicate,
@@ -196,24 +202,29 @@ class OneToManyRelationField extends Field<String> {
     bool? showEditDialogOnAdd,
     Widget? tableErrorWidget,
     bool? showDefaultSnackBars,
-    List<FieldValidator<String>>? validators,
+    FieldValueGetter<List<FieldValidator<String>>, Field>? validatorsGetter,
     bool? validateOnlyOnConfirm,
     TableController? tableController,
+    bool? tableSortable,
+    bool? tableFilterable,
+    FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
+    List<String?>? undoValues,
+    List<String?>? redoValues,
   }) {
     return OneToManyRelationField(
-      uiName: uiName??this.uiName,
-      enabled: enabled??this.enabled,
-      clearable: clearable??this.clearable,
+      uiNameGetter: uiNameGetter??this.uiNameGetter,
+      enabledGetter: enabledGetter??this.enabledGetter,
+      clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
       objectTemplate: objectTemplate??this.objectTemplate,
       objects: objects??this.objects?.map((e) => e.copyWith()).toList(),
       dbObjects: dbObjects??objects??this.dbObjects?.map((e) => e.copyWith()).toList(),
       futureObjects: (objects??this.objects)!=null ? null : futureObjects??this.futureObjects,
-      hint: hint??this.hint,
+      hintGetter: hintGetter??this.hintGetter,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
-      hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
-      hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
-      hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
+      hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
+      hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
+      hiddenInFormGetter: hiddenInFormGetter ?? hiddenGetter ?? this.hiddenInFormGetter,
       collapsible: collapsible ?? this.collapsible,
       showActionEdit: showActionEdit ?? this.showActionEdit,
       showActionDuplicate: showActionDuplicate ?? this.showActionDuplicate,
@@ -232,10 +243,13 @@ class OneToManyRelationField extends Field<String> {
       showEditDialogOnAdd: showEditDialogOnAdd ?? this.showEditDialogOnAdd,
       tableErrorWidget: tableErrorWidget ?? this.tableErrorWidget,
       showDefaultSnackBars: showDefaultSnackBars ?? this.showDefaultSnackBars,
-      validators: validators ?? this.validators,
+      validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
       showObjectsFromAvailablePoolAsTable: showObjectsFromAvailablePoolAsTable ?? this.showObjectsFromAvailablePoolAsTable,
       tableController: tableController ?? this.tableController,
+      tableSortable: tableSortable ?? this.tableSortable,
+      tableFilterable: tableFilterable ?? this.tableFilterable,
+      colModelBuilder: colModelBuilder ?? this.colModelBuilder,
     );
   }
 
@@ -269,9 +283,9 @@ class OneToManyRelationField extends Field<String> {
             onSave: newOnSave,
           );
         }
-        Widget content = ChangeNotifierBuilder(
-          changeNotifier: this,
-          builder: (context, value, child) {
+        Widget content = AnimatedBuilder(
+          animation:  this,
+          builder: (context, child) {
             ScrollController scrollController = ScrollController();
             return Column(
               mainAxisSize: MainAxisSize.min,
@@ -296,7 +310,7 @@ class OneToManyRelationField extends Field<String> {
                             padding: const EdgeInsets.only(top: 16, bottom: 32),
                             child: Column(
                               children: OneToManyRelationField(
-                                uiName: emptyDAO.classUiNamePlural,
+                                uiNameGetter: (field, dao) => emptyDAO.classUiNamePluralGetter(dao),
                                 objectTemplate: emptyDAO,
                                 tableCellsEditable: false,
                                 collapsible: false,
@@ -502,59 +516,53 @@ class OneToManyRelationField extends Field<String> {
     propsShownOnTable.forEach((key, value) {
       width += value.tableColumnWidth ?? 192;
     });
-    result = ChangeNotifierBuilder(
+    result = AnimatedBuilder(
       key: fieldGlobalKey,
-      changeNotifier: this,
-      builder: (context, v, child) {
+      animation:  this,
+      builder: (context, child) {
         if (collapsed || objects==null) {
           Widget result;
           if (collapsed) {
-            result = Center(
-              child: SizedBox(
-                width: maxWidth==double.infinity ? width : maxWidth,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _getTableHeader(context),
-                    InitiallyAnimatedWidget(
-                      duration: Duration(milliseconds: 300),
-                      builder: (animationController, child) {
-                        return Container(
-                          color: Material.of(context)!.color ?? Theme.of(context).cardColor,
-                          height: 128*CurveTween(curve: Curves.easeInCubic).chain(Tween(begin: 1.0, end: 0.0,)).evaluate(animationController),
-                        );
-                      },
-                    ),
-                  ],
-                ),
+            result = SizedBox(
+              width: maxWidth==double.infinity ? width : maxWidth,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _getTableHeader(context),
+                  InitiallyAnimatedWidget(
+                    duration: Duration(milliseconds: 300),
+                    builder: (animationController, child) {
+                      return Container(
+                        color: Material.of(context)!.color ?? Theme.of(context).cardColor,
+                        height: 128*CurveTween(curve: Curves.easeInCubic).chain(Tween(begin: 1.0, end: 0.0,)).evaluate(animationController),
+                      );
+                    },
+                  ),
+                ],
               ),
             );
           } else if (futureError!=null) {
-            result = Center(
-              child: SizedBox(
-                  width: maxWidth==double.infinity ? width : maxWidth,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _getTableHeader(context),
-                      futureErrorWidgetBuilder?.call(futureError, futureStackTrace)
-                          ?? defaultErrorBuilder(context, futureError, futureStackTrace),
-                    ],
-                  )
-              ),
-            );
-          } else {
-            result = Center(
-              child: SizedBox(
+            result = SizedBox(
                 width: maxWidth==double.infinity ? width : maxWidth,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _getTableHeader(context),
-                    SizedBox(height: 96, child: LoadingSign()),
+                    futureErrorWidgetBuilder?.call(futureError, futureStackTrace)
+                        ?? defaultErrorBuilder(context, futureError, futureStackTrace),
                   ],
                 )
-              ),
+            );
+          } else {
+            result = SizedBox(
+              width: maxWidth==double.infinity ? width : maxWidth,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _getTableHeader(context),
+                  SizedBox(height: 96, child: LoadingSign()),
+                ],
+              )
             );
           }
           if (asSliver) {
@@ -565,7 +573,7 @@ class OneToManyRelationField extends Field<String> {
           return result;
         }
         return TableFromZero(
-          key: tableKey ?? ValueKey(objects!.isNotEmpty),
+          key: tableKey ?? ValueKey(objects!.length),
           maxWidth: maxWidth==double.infinity ? width : maxWidth,
           minWidth: width,
           initialSortedColumnIndex: initialSortColumn ?? 0,
@@ -578,14 +586,23 @@ class OneToManyRelationField extends Field<String> {
           applyMinWidthToHeaderAddon: false,
           verticalPadding: 0,
           useSmartRowAlternativeColors: false,
-          columns: propsShownOnTable.values.map((e) => e.getColModel()).toList(),
+          columns: propsShownOnTable.values.map((e) {
+            final SimpleColModel result = e.getColModel();
+            if (tableFilterable!=null) {
+              result.filterEnabled = tableFilterable;
+            }
+            if (tableSortable!=null) {
+              result.sortEnabled = tableSortable;
+            }
+            return result;
+          }).toList(),
           showHeaders: showTableHeaders,
           rows: objects!.map((e) {
             // e.props.remove(columnName);
             return SimpleRowModel(
               id: e,
               values: propsShownOnTable.keys.map((k) => e.props[k]).toList(),
-              height: tableCellsEditable ? 64 : 42,
+              height: tableCellsEditable ? 72 : 42,
               onRowTap: onRowTap ?? (viewOnRowTap ? (row) {
                 e.pushViewDialog(context);
               } : null), //TODO if null, show view, if not show view as icon
@@ -640,9 +657,10 @@ class OneToManyRelationField extends Field<String> {
             );
           }).toList(),
           cellBuilder: tableCellsEditable ? (context, row, col, j) {
-            final widgets = (row.values[j] as Field).buildFieldEditorWidgets(context);
+            final widgets = (row.values[j] as Field).buildFieldEditorWidgets(context, expandToFillContainer: false);
             return Column(
               mainAxisSize: MainAxisSize.min,
+              // mainAxisAlignment: MainAxisAlignment.center,
               children: widgets.map((widget) {
                 return Expanded(
                   child: widget is SliverToBoxAdapter ? widget.child! : widget,
@@ -664,14 +682,12 @@ class OneToManyRelationField extends Field<String> {
           } : null,
           errorWidget: tableErrorWidget
               ?? (availableObjectsPoolGetter==null
-                  ? Center(
-                    child: Container(
-                      color: Material.of(context)!.color ?? Theme.of(context).cardColor,
-                      width: maxWidth==double.infinity ? width : maxWidth,
-                      child: ErrorSign(
-                        title: FromZeroLocalizations.of(context).translate('no_data'),
-                        subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
-                      ),
+                  ? Container(
+                    color: Material.of(context)!.color ?? Theme.of(context).cardColor,
+                    width: maxWidth==double.infinity ? width : maxWidth,
+                    child: ErrorSign(
+                      title: FromZeroLocalizations.of(context).translate('no_data'),
+                      subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
                     ),
                   ) : SizedBox.shrink()),
           headerAddon: _getTableHeader(context),
@@ -688,56 +704,53 @@ class OneToManyRelationField extends Field<String> {
       SizedBox(height: 1,),
       result,
       if ((allowAddNew||availableObjectsPoolGetter!=null) && showAddButtonAtEndOfTable)
-        ChangeNotifierBuilder(
-          changeNotifier: this,
-          builder: (context, value, child) {
+        AnimatedBuilder(
+          animation:  this,
+          builder: (context, child) {
             if (collapsed || objects==null) {
               return SizedBox.shrink();
             }
-            return Center(
-              child: Transform.translate(
-                offset: Offset(0, -12),
-                child: Container(
-                  width: maxWidth==double.infinity ? width : maxWidth,
-                  color: Material.of(context)!.color ?? Theme.of(context).cardColor,
-                  child: Column(
-                    children: [
-                      SizedBox(
-                        height: 12,
-                      ),
-                      TextButton(
-                        child: Padding(
-                          padding: const EdgeInsets.only(top: 10, bottom: 10,),
-                          child: Center(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.add),
-                                SizedBox(width: 8,),
-                                Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}', style: TextStyle(fontSize: 16),),
-                                SizedBox(width: 8,),
-                              ],
-                            ),
+            return Transform.translate(
+              offset: Offset(0, -12),
+              child: Container(
+                width: maxWidth==double.infinity ? width : maxWidth,
+                color: Material.of(context)!.color ?? Theme.of(context).cardColor,
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 12,
+                    ),
+                    TextButton(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 10, bottom: 10,),
+                        child: Center(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.add),
+                              SizedBox(width: 8,),
+                              Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}', style: TextStyle(fontSize: 16),),
+                              SizedBox(width: 8,),
+                            ],
                           ),
                         ),
-                        style: TextButton.styleFrom(
-                          backgroundColor: Colors.blue.withOpacity(0.2),
-                        ),
-                        onPressed: () => addRow(context),
                       ),
-                      SizedBox(
-                        height: 12,
+                      style: TextButton.styleFrom(
+                        backgroundColor: Colors.blue.withOpacity(0.2),
                       ),
-                    ],
-                  ),
+                      onPressed: () => addRow(context),
+                    ),
+                    SizedBox(
+                      height: 12,
+                    ),
+                  ],
                 ),
               ),
             );
           },
         ),
-      if (validationErrors.isNotEmpty)
-        ValidationMessage(errors: validationErrors),
+      ValidationMessage(errors: validationErrors),
       SizedBox(height: 1,),
     ];
     if (asSliver) {
@@ -1028,12 +1041,12 @@ class OneToManyRelationField extends Field<String> {
     Map<String, Field> props = {};
     elements.first.props.forEach((key, value) {
       props[key] = value.copyWith(
-        hint: FromZeroLocalizations.of(context).translate('selected_plurkeep_value'),
+        hintGetter: (_, __) => FromZeroLocalizations.of(context).translate('keep_value'),
       ) ..value = null
         ..dbValue = null;
     });
     final DAO dao = elements.first.copyWith(
-      props: props,
+      // props: props, // TODO 3 need to change hint on all props from all groups
     );
     ScrollController scrollController = ScrollController();
     bool? confirm = await showModal(
@@ -1061,9 +1074,9 @@ class OneToManyRelationField extends Field<String> {
                         Navigator.of(context).pop(false); // Dismiss alert dialog
                       },
                     ),
-                    ChangeNotifierBuilder(
-                      changeNotifier: dao,
-                      builder: (context, value, child) {
+                    AnimatedBuilder(
+                      animation:  dao,
+                      builder: (context, child) {
                         return FlatButton(
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -1098,7 +1111,7 @@ class OneToManyRelationField extends Field<String> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Editar mútiples elementos',
+                          Text(FromZeroLocalizations.of(context).translate('edit_multiple_title'),
                             style: Theme.of(context).textTheme.headline6,
                           ),
                           SizedBox(height: 12,),
@@ -1137,9 +1150,9 @@ class OneToManyRelationField extends Field<String> {
                               Navigator.of(context).maybePop(); // Dismiss alert dialog
                             },
                           ),
-                          ChangeNotifierBuilder(
-                            changeNotifier: dao,
-                            builder: (context, value, child) {
+                          AnimatedBuilder(
+                            animation:  dao,
+                            builder: (context, child) {
                               return FlatButton(
                                 child: Padding(
                                   padding: const EdgeInsets.all(8.0),
@@ -1207,7 +1220,7 @@ class OneToManyRelationField extends Field<String> {
     );
     if (confirm??false) {
       dao.props.forEach((key, value) {
-        if (value.isEditted) {
+        if (value.isEdited) {
           elements.forEach((e) {
             e.props[key]?.value = value.value;
           });

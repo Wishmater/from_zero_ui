@@ -32,13 +32,13 @@ class StringField extends Field<String> {
   }
 
   StringField({
-    required String uiName,
+    required FieldValueGetter<String, Field> uiNameGetter,
     String? value,
     String? dbValue,
-    bool clearable = true,
-    bool enabled = true,
+    FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter,
+    FieldValueGetter<bool, Field> enabledGetter = trueFieldGetter,
     double? maxWidth,
-    String? hint,
+    FieldValueGetter<String?, Field>? hintGetter,
     this.type = StringFieldType.short,
     int? minLines,
     int? maxLines,
@@ -47,73 +47,85 @@ class StringField extends Field<String> {
     this.inputDecoration,
     this.inputFormatters,
     double? tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
-    List<FieldValidator<String>> validators = const[],
+    FieldValueGetter<bool, Field>? hiddenGetter,
+    FieldValueGetter<bool, Field>? hiddenInTableGetter,
+    FieldValueGetter<bool, Field>? hiddenInViewGetter,
+    FieldValueGetter<bool, Field>? hiddenInFormGetter,
+    FieldValueGetter<List<FieldValidator<String>>, Field>? validatorsGetter,
     bool validateOnlyOnConfirm = false,
+    FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
+    List<String?>? undoValues,
+    List<String?>? redoValues,
   }) :  this.minLines = minLines ?? (type==StringFieldType.short ? null : 3),
         this.maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
         this.showObfuscationToggleButton = showObfuscationToggleButton ?? obfuscate,
         this.controller = TextEditingController(text: value),
         super(
-          uiName: uiName,
+          uiNameGetter: uiNameGetter,
           value: value ?? '',
           dbValue: dbValue ?? value ?? '',
-          clearable: clearable,
-          enabled: enabled,
-          hint: hint,
+          clearableGetter: clearableGetter,
+          enabledGetter: enabledGetter,
+          hintGetter: hintGetter,
           maxWidth: maxWidth ?? (type==StringFieldType.short ? 512 : 512), //768
           tableColumnWidth: tableColumnWidth,
-          hidden: hidden,
-          hiddenInTable: hiddenInTable,
-          hiddenInView: hiddenInView,
-          hiddenInForm: hiddenInForm,
-          validators: validators,
+          hiddenGetter: hiddenGetter,
+          hiddenInTableGetter: hiddenInTableGetter,
+          hiddenInViewGetter: hiddenInViewGetter,
+          hiddenInFormGetter: hiddenInFormGetter,
+          validatorsGetter: validatorsGetter,
           validateOnlyOnConfirm: validateOnlyOnConfirm,
+          colModelBuilder: colModelBuilder,
+          undoValues: undoValues,
+          redoValues: redoValues,
         );
 
 
   @override
   StringField copyWith({
-    String? uiName,
+    FieldValueGetter<String, Field>? uiNameGetter,
     String? value,
     String? dbValue,
-    String? hint,
-    bool? clearable,
-    bool? enabled,
+    FieldValueGetter<String?, Field>? hintGetter,
+    FieldValueGetter<bool, Field>? enabledGetter,
+    FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     StringFieldType? type,
     int? minLines,
     int? maxLines,
     InputDecoration? inputDecoration,
     double? tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
-    List<FieldValidator<String>>? validators,
+    FieldValueGetter<bool, Field>? hiddenGetter,
+    FieldValueGetter<bool, Field>? hiddenInTableGetter,
+    FieldValueGetter<bool, Field>? hiddenInViewGetter,
+    FieldValueGetter<bool, Field>? hiddenInFormGetter,
+    FieldValueGetter<List<FieldValidator<String>>, Field>? validatorsGetter,
     bool? validateOnlyOnConfirm,
+    FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
+    List<String?>? undoValues,
+    List<String?>? redoValues,
   }) {
     return StringField(
-      uiName: uiName??this.uiName,
+      uiNameGetter: uiNameGetter??this.uiNameGetter,
       value: value??this.value,
       dbValue: dbValue??this.dbValue,
-      clearable: clearable??this.clearable,
-      enabled: enabled??this.enabled,
+      enabledGetter: enabledGetter??this.enabledGetter,
+      clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
       type: type??this.type,
       minLines: minLines??this.minLines,
       maxLines: maxLines??this.maxLines,
       inputDecoration: inputDecoration??this.inputDecoration,
-      hint: hint??this.hint,
+      hintGetter: hintGetter??this.hintGetter,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
-      hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
-      hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
-      hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
-      validators: validators ?? this.validators,
+      hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
+      hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
+      hiddenInFormGetter: hiddenInFormGetter ?? hiddenGetter ?? this.hiddenInFormGetter,
+      validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
+      colModelBuilder: colModelBuilder ?? this.colModelBuilder,
+      undoValues: undoValues ?? this.undoValues,
+      redoValues: redoValues ?? this.redoValues,
     );
   }
 
@@ -197,7 +209,9 @@ class StringField extends Field<String> {
               labelText: uiName,
               hintText: hint,
               floatingLabelBehavior: hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
-              labelStyle: TextStyle(height: largeVertically ? 0.75 : 0.2),
+              labelStyle: TextStyle(height: largeVertically ? 0.75 : 0.2,
+                color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!,
+              ),
               hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
               contentPadding: EdgeInsets.only(top: 10, bottom: 8, right: enabled&&clearable ? 40 : 0),
             ),
@@ -207,11 +221,20 @@ class StringField extends Field<String> {
               right: -4, top: 6, bottom: 0,
               child: ExcludeFocus(
                 child: Center(
-                  child: IconButton(
-                    icon: Icon(Icons.close),
-                    tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                    onPressed: () {
-                      value = '';
+                  child: AnimatedBuilder(
+                    animation: this,
+                    builder: (context, child) {
+                      if (value==null || value!.trim().isEmpty) {
+                        return SizedBox.shrink();
+                      } else {
+                        return IconButton(
+                          icon: Icon(Icons.close),
+                          tooltip: FromZeroLocalizations.of(context).translate('clear'),
+                          onPressed: () {
+                            value = '';
+                          },
+                        );
+                      }
                     },
                   ),
                 ),
@@ -222,27 +245,29 @@ class StringField extends Field<String> {
     );
     if (addCard) {
       result = Card(
+        color: enabled ? null : Color.lerp(Theme.of(context).cardColor, Colors.black, 0.18),
         child: Padding(
           padding: EdgeInsets.only(left: 15, right: 15, bottom: largeVertically ? 6 : 0),
           child: result,
         ),
       );
+    } else {
+      result = Container(
+
+      );
     }
     return Padding(
       key: fieldGlobalKey,
       padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
-      child: Center(
-        child: SizedBox(
-          width: maxWidth,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              result,
-              if (validationErrors.isNotEmpty)
-                ValidationMessage(errors: validationErrors),
-            ],
-          ),
+      child: SizedBox(
+        width: maxWidth,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            result,
+            ValidationMessage(errors: validationErrors),
+          ],
         ),
       ),
     );

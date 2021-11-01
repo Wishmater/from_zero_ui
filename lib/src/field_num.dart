@@ -23,39 +23,45 @@ class NumField extends Field<num> {
   }
 
   NumField({
-    required String uiName,
+    required FieldValueGetter<String, Field> uiNameGetter,
     num? value,
     num? dbValue,
-    bool clearable = true,
-    bool enabled = true,
+    FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter,
+    FieldValueGetter<bool, Field> enabledGetter = trueFieldGetter,
     this.formatter,
     this.inputDecoration,
     this.digitsAfterComma = 0,
     double? maxWidth,
-    String? hint,
+    FieldValueGetter<String?, Field>? hintGetter,
     double? tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
-    List<FieldValidator<num>> validators = const[],
+    FieldValueGetter<bool, Field>? hiddenGetter,
+    FieldValueGetter<bool, Field>? hiddenInTableGetter,
+    FieldValueGetter<bool, Field>? hiddenInViewGetter,
+    FieldValueGetter<bool, Field>? hiddenInFormGetter,
+    FieldValueGetter<List<FieldValidator<num>>, Field>? validatorsGetter,
     bool validateOnlyOnConfirm = false,
+    FieldValueGetter<SimpleColModel, Field> colModelBuilder = numFieldDefaultGetColumn,
+    List<num?>? undoValues,
+    List<num?>? redoValues,
   }) :  controller = TextEditingController(text: toStringStatic(value, formatter)),
         super(
-          uiName: uiName,
+          uiNameGetter: uiNameGetter,
           value: value,
           dbValue: dbValue,
-          clearable: clearable,
-          enabled: enabled,
-          hint: hint,
+          clearableGetter: clearableGetter,
+          enabledGetter: enabledGetter,
+          hintGetter: hintGetter,
           maxWidth: 512, //768
           tableColumnWidth: tableColumnWidth,
-          hidden: hidden,
-          hiddenInTable: hiddenInTable,
-          hiddenInView: hiddenInView,
-          hiddenInForm: hiddenInForm,
-          validators: validators,
+          hiddenGetter: hiddenGetter,
+          hiddenInTableGetter: hiddenInTableGetter,
+          hiddenInViewGetter: hiddenInViewGetter,
+          hiddenInFormGetter: hiddenInFormGetter,
+          validatorsGetter: validatorsGetter,
           validateOnlyOnConfirm: validateOnlyOnConfirm,
+          colModelBuilder: colModelBuilder,
+          undoValues: undoValues,
+          redoValues: redoValues,
         );
 
   @override
@@ -68,39 +74,45 @@ class NumField extends Field<num> {
 
   @override
   NumField copyWith({
-    String? uiName,
+    FieldValueGetter<String, Field>? uiNameGetter,
     NumberFormat? formatter,
     num? value,
     num? dbValue,
-    String? hint,
-    bool? clearable,
-    bool? enabled,
+    FieldValueGetter<String?, Field>? hintGetter,
+    FieldValueGetter<bool, Field>? enabledGetter,
+    FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     int? digitsAfterComma,
     double? tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
-    List<FieldValidator<num>>? validators,
+    FieldValueGetter<bool, Field>? hiddenGetter,
+    FieldValueGetter<bool, Field>? hiddenInTableGetter,
+    FieldValueGetter<bool, Field>? hiddenInViewGetter,
+    FieldValueGetter<bool, Field>? hiddenInFormGetter,
+    FieldValueGetter<List<FieldValidator<num>>, Field>? validatorsGetter,
     bool? validateOnlyOnConfirm,
+    FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
+    List<num?>? undoValues,
+    List<num?>? redoValues,
   }) {
     return NumField(
-      uiName: uiName??this.uiName,
+      uiNameGetter: uiNameGetter??this.uiNameGetter,
       value: value??this.value,
       dbValue: dbValue??this.dbValue,
-      clearable: clearable??this.clearable,
-      enabled: enabled??this.enabled,
+      enabledGetter: enabledGetter??this.enabledGetter,
+      clearableGetter: clearableGetter??this.clearableGetter,
       formatter: formatter??this.formatter,
       maxWidth: maxWidth??this.maxWidth,
-      hint: hint??this.hint,
+      hintGetter: hintGetter??this.hintGetter,
       digitsAfterComma: digitsAfterComma??this.digitsAfterComma,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
-      hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
-      hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
-      hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
-      validators: validators ?? this.validators,
+      hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
+      hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
+      hiddenInFormGetter: hiddenInFormGetter ?? hiddenGetter ?? this.hiddenInFormGetter,
+      validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
+      colModelBuilder: colModelBuilder ?? this.colModelBuilder,
+      undoValues: undoValues ?? this.undoValues,
+      redoValues: redoValues ?? this.redoValues,
     );
   }
 
@@ -201,12 +213,21 @@ class NumField extends Field<num> {
               right: -4, top: 6, bottom: 0,
               child: ExcludeFocus(
                 child: Center(
-                  child: IconButton(
-                    icon: Icon(Icons.close),
-                    tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                    onPressed: () {
-                      value = null;
-                      controller.clear();
+                  child: AnimatedBuilder(
+                    animation: this,
+                    builder: (context, child) {
+                      if (value==null) {
+                        return SizedBox.shrink();
+                      } else {
+                        return IconButton(
+                          icon: Icon(Icons.close),
+                          tooltip: FromZeroLocalizations.of(context).translate('clear'),
+                          onPressed: () {
+                            value = null;
+                            controller.clear();
+                          },
+                        );
+                      }
                     },
                   ),
                 ),
@@ -226,29 +247,25 @@ class NumField extends Field<num> {
     return Padding(
       key: fieldGlobalKey,
       padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
-      child: Center(
-        child: SizedBox(
-          width: maxWidth,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              result,
-              if (validationErrors.isNotEmpty)
-                ValidationMessage(errors: validationErrors),
-            ],
-          ),
+      child: SizedBox(
+        width: maxWidth,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            result,
+            ValidationMessage(errors: validationErrors),
+          ],
         ),
       ),
     );
   }
 
-  @override
-  SimpleColModel getColModel() {
+  static SimpleColModel numFieldDefaultGetColumn(Field field, DAO dao) {
     return SimpleColModel(
-      name: uiName,
-      filterEnabled: true, // TODO make actually good filters for values (range-picking)
-      width: tableColumnWidth,
+      name: field.uiName,
+      filterEnabled: true,
+      width: field.tableColumnWidth,
       alignment: TextAlign.right,
       defaultSortAscending: false,
     );

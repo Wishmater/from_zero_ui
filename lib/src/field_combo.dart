@@ -7,97 +7,143 @@ import 'package:from_zero_ui/src/field_validators.dart';
 
 class ComboField<T extends DAO> extends Field<T> {
 
-  final List<T>? possibleValues;
-  final Future<List<T>>? futurePossibleValues;
+  final FieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter;
+  List<T>? get possibleValues => possibleValuesGetter?.call(this, dao);
+  final FieldValueGetter<Future<List<T>>?, ComboField<T>>? futurePossibleValuesGetter;
+  Future<List<T>>? get futurePossibleValues => futurePossibleValuesGetter?.call(this, dao);
   final bool showSearchBox;
   final ExtraWidgetBuilder<T>? extraWidget;
-  final DAO? newObjectTemplate;
+  final FieldValueGetter<DAO?, ComboField<T>>? newObjectTemplateGetter;
+  DAO? get newObjectTemplate => newObjectTemplateGetter?.call(this, dao);
+  final bool showViewActionOnDAOs;
+  final bool showDropdownIcon;
+  final bool invalidateValuesNotInPossibleValues;
 
   set value(T? v) {
-    passedFirstEdit = true;
-    super.value = v;
+    if (v!=value) {
+      passedFirstEdit = true;
+      super.value = v;
+    }
   }
 
   ComboField({
-    required String uiName,
+    required FieldValueGetter<String, Field> uiNameGetter,
     T? value,
     T? dbValue,
-    bool clearable = true,
-    bool enabled = true,
+    FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter,
+    FieldValueGetter<bool, Field> enabledGetter = trueFieldGetter,
     double maxWidth = 512,
-    String? hint,
-    this.possibleValues,
-    this.futurePossibleValues,
+    FieldValueGetter<String?, Field>? hintGetter,
+    this.possibleValuesGetter,
+    this.futurePossibleValuesGetter,
     this.showSearchBox = true,
+    this.showViewActionOnDAOs = true,
+    this.showDropdownIcon = true,
     this.extraWidget,
     double? tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
-    this.newObjectTemplate,
-    List<FieldValidator<T>> validators = const[],
+    FieldValueGetter<bool, Field>? hiddenGetter,
+    FieldValueGetter<bool, Field>? hiddenInTableGetter,
+    FieldValueGetter<bool, Field>? hiddenInViewGetter,
+    FieldValueGetter<bool, Field>? hiddenInFormGetter,
+    this.newObjectTemplateGetter,
+    FieldValueGetter<List<FieldValidator<T>>, Field>? validatorsGetter,
     bool validateOnlyOnConfirm = false,
-  }) :  assert(possibleValues!=null || futurePossibleValues!=null),
+    FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
+    List<T?>? undoValues,
+    List<T?>? redoValues,
+    this.invalidateValuesNotInPossibleValues = true,
+  }) :  assert(possibleValuesGetter!=null || futurePossibleValuesGetter!=null),
+        assert(possibleValuesGetter==null || futurePossibleValuesGetter==null),
         super(
-          uiName: uiName,
+          uiNameGetter: uiNameGetter,
           value: value,
           dbValue: dbValue,
-          clearable: clearable,
-          enabled: enabled,
+          clearableGetter: clearableGetter,
+          enabledGetter: enabledGetter,
           maxWidth: maxWidth,
-          hint: hint,
+          hintGetter: hintGetter,
           tableColumnWidth: tableColumnWidth,
-          hidden: hidden,
-          hiddenInTable: hiddenInTable,
-          hiddenInView: hiddenInView,
-          hiddenInForm: hiddenInForm,
-          validators: validators,
-        validateOnlyOnConfirm: validateOnlyOnConfirm,
+          hiddenGetter: hiddenGetter,
+          hiddenInTableGetter: hiddenInTableGetter,
+          hiddenInViewGetter: hiddenInViewGetter,
+          hiddenInFormGetter: hiddenInFormGetter,
+          validatorsGetter: validatorsGetter,
+          validateOnlyOnConfirm: validateOnlyOnConfirm,
+          colModelBuilder: colModelBuilder,
+          undoValues: undoValues,
+          redoValues: redoValues,
         );
 
   @override
   ComboField copyWith({
-    String? uiName,
+    FieldValueGetter<String, Field>? uiNameGetter,
     T? value,
     T? dbValue,
-    bool? clearable,
-    bool? enabled,
+    FieldValueGetter<bool, Field>? enabledGetter,
+    FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
-    List<T>? possibleValues,
-    Future<List<T>>? futurePossibleValues,
-    String? hint,
+    FieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter,
+    FieldValueGetter<Future<List<T>>?, ComboField<T>>? futurePossibleValuesGetter,
+    FieldValueGetter<String?, Field>? hintGetter,
     bool? showSearchBox,
+    bool? showViewActionOnDAOs,
+    bool? showDropdownIcon,
     ExtraWidgetBuilder<T>? extraWidget,
     double? tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
-    DAO? newObjectTemplate,
-    List<FieldValidator<T>>? validators,
+    FieldValueGetter<bool, Field>? hiddenGetter,
+    FieldValueGetter<bool, Field>? hiddenInTableGetter,
+    FieldValueGetter<bool, Field>? hiddenInViewGetter,
+    FieldValueGetter<bool, Field>? hiddenInFormGetter,
+    FieldValueGetter<DAO?, ComboField<T>>? newObjectTemplateGetter,
+    FieldValueGetter<List<FieldValidator<T>>, Field>? validatorsGetter,
     bool? validateOnlyOnConfirm,
+    FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
+    List<T?>? undoValues,
+    List<T?>? redoValues,
   }) {
     return ComboField<T>(
-      uiName: uiName??this.uiName,
+      uiNameGetter: uiNameGetter??this.uiNameGetter,
       value: value??this.value,
       dbValue: dbValue??this.dbValue,
-      clearable: clearable??this.clearable,
-      enabled: enabled??this.enabled,
+      enabledGetter: enabledGetter??this.enabledGetter,
+      clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
-      possibleValues: possibleValues??this.possibleValues,
-      futurePossibleValues: futurePossibleValues??this.futurePossibleValues,
-      hint: hint??this.hint,
+      possibleValuesGetter: possibleValuesGetter??this.possibleValuesGetter,
+      futurePossibleValuesGetter: futurePossibleValuesGetter??this.futurePossibleValuesGetter,
+      hintGetter: hintGetter??this.hintGetter,
       showSearchBox: showSearchBox??this.showSearchBox,
       extraWidget: extraWidget??this.extraWidget,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
-      hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
-      hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
-      hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
-      newObjectTemplate: newObjectTemplate ?? this.newObjectTemplate,
-      validators: validators ?? this.validators,
+      hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
+      hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
+      hiddenInFormGetter: hiddenInFormGetter ?? hiddenGetter ?? this.hiddenInFormGetter,
+      newObjectTemplateGetter: newObjectTemplateGetter ?? this.newObjectTemplateGetter,
+      validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
+      showViewActionOnDAOs: showViewActionOnDAOs ?? this.showViewActionOnDAOs,
+      showDropdownIcon: showDropdownIcon ?? this.showDropdownIcon,
+      colModelBuilder: colModelBuilder ?? this.colModelBuilder,
+      undoValues: undoValues ?? this.undoValues,
+      redoValues: redoValues ?? this.redoValues,
     );
+  }
+
+  @override
+  Future<bool> validate(BuildContext context, DAO dao) async {
+    super.validate(context, dao);
+    List<T> possibleValues;
+    if (futurePossibleValues!=null) {
+      possibleValues = await futurePossibleValues!;
+    } else {
+      possibleValues = this.possibleValues!;
+    }
+    if (invalidateValuesNotInPossibleValues && value!=null && !possibleValues.contains(value)) {
+      validationErrors.add(InvalidatingError(
+        error: FromZeroLocalizations.of(context).translate("validation_combo_not_possible"),
+        defaultValue: null,
+      ));
+    }
+    return validationErrors.where((e) => e.isBlocking).isEmpty;
   }
 
   @override
@@ -147,6 +193,7 @@ class ComboField<T extends DAO> extends Field<T> {
     bool largeHorizontally = false,
   }) {
     ExtraWidgetBuilder<T>? extraWidget;
+    final newObjectTemplate = this.newObjectTemplate;
     if (newObjectTemplate?.onSave!=null) {
       extraWidget = (context, onSelected) {
         final oldOnSave = newObjectTemplate!.onSave!;
@@ -160,7 +207,7 @@ class ComboField<T extends DAO> extends Field<T> {
           }
           return newDAO;
         };
-        final emptyDAO = newObjectTemplate!.copyWith(
+        final emptyDAO = newObjectTemplate.copyWith(
           onSave: newOnSave,
         );
         return Column (
@@ -197,9 +244,9 @@ class ComboField<T extends DAO> extends Field<T> {
         );
       };
     }
-    Widget result = ChangeNotifierBuilder(
-      changeNotifier: this,
-      builder: (context, v, child) {
+    Widget result = AnimatedBuilder(
+      animation: this,
+      builder: (context, child) {
         return ComboFromZero<T>(
           enabled: enabled,
           clearable: clearable,
@@ -211,8 +258,10 @@ class ComboField<T extends DAO> extends Field<T> {
           showSearchBox: showSearchBox,
           onSelected: _onSelected,
           popupWidth: maxWidth,
-          buttonChildBuilder: _buttonContentBuilder,
+          buttonChildBuilder: buttonContentBuilder,
           extraWidget: extraWidget ?? this.extraWidget,
+          showViewActionOnDAOs: showViewActionOnDAOs,
+          showDropdownIcon: showDropdownIcon,
         );
       },
     );
@@ -225,21 +274,18 @@ class ComboField<T extends DAO> extends Field<T> {
     result = Padding(
       key: fieldGlobalKey,
       padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
-      child: Center(
-        child: SizedBox(
-          width: maxWidth,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 64,
-                child: result,
-              ),
-              if (validationErrors.isNotEmpty)
-                ValidationMessage(errors: validationErrors),
-            ],
-          ),
+      child: SizedBox(
+        width: maxWidth,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 64,
+              child: result,
+            ),
+            ValidationMessage(errors: validationErrors),
+          ],
         ),
       ),
     );
@@ -250,7 +296,9 @@ class ComboField<T extends DAO> extends Field<T> {
     value = v;
   }
 
-  Widget _buttonContentBuilder(BuildContext context, String? title, String? hint, T? value, bool enabled, bool clearable) {
+  static Widget buttonContentBuilder(BuildContext context, String? title, String? hint, dynamic value, bool enabled, bool clearable, {
+    bool showDropdownIcon = true,
+  }) {
     return Padding(
       padding: EdgeInsets.only(right: enabled&&clearable ? 40 : 0),
       child: Row(
@@ -278,9 +326,10 @@ class ComboField<T extends DAO> extends Field<T> {
             ),
           ),
           SizedBox(width: 4,),
-          if (enabled && !clearable)
-            Icon(Icons.arrow_drop_down),
-          SizedBox(width: !(enabled && clearable) ? 36 : 4,),
+          if (showDropdownIcon && enabled && !clearable)
+            Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyText1!.color,),
+          SizedBox(width: 4,),
+          // SizedBox(width: !(enabled && clearable) ? 36 : 4,),
         ],
       ),
     );

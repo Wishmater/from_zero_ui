@@ -305,7 +305,8 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
     this.alignment = Alignment.topLeft,
     this.curve = Curves.easeOutCubic,
     this.clipBehavior = Clip.none,
-  });
+    Key? key,
+  })  : super(key: key);
 
   @override
   _AnimatedContainerFromChildSizeState createState() => _AnimatedContainerFromChildSizeState();

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/my_popup_menu.dart' as my_popup;
 
-typedef Widget ButtonChildBuilder<T>(BuildContext context, String? title, String? hint, T? value, bool enabled, bool clearable,);
+typedef Widget ButtonChildBuilder<T>(BuildContext context, String? title, String? hint, T? value, bool enabled, bool clearable, {bool showDropdownIcon});
 /// returns true if navigator should pop after (default true)
 typedef bool? OnPopupItemSelected<T>(T? value);
 typedef dynamic DAOGetter<T>(T value);    // TODO this should be DAO
@@ -23,10 +23,13 @@ class ComboFromZero<T> extends StatefulWidget {
   final bool enabled;
   final bool clearable;
   final bool sort;
+  final bool showViewActionOnDAOs;
+  final bool showDropdownIcon;
   final ButtonChildBuilder<T>? buttonChildBuilder;
   final double popupWidth;
   final ExtraWidgetBuilder<T>? extraWidget;
   final FocusNode? focusNode;
+  final Widget Function(T value)? popupWidgetBuilder;
 
   ComboFromZero({
     this.value,
@@ -41,15 +44,18 @@ class ComboFromZero<T> extends StatefulWidget {
     this.enabled = true,
     this.clearable = true,
     this.sort = true,
+    this.showViewActionOnDAOs = true,
+    this.showDropdownIcon = true,
     this.popupWidth = 312,
     this.extraWidget,
     this.focusNode,
+    this.popupWidgetBuilder,
   }) :  assert(possibleValues!=null || futurePossibleValues!=null);
 
   @override
   _ComboFromZeroState<T> createState() => _ComboFromZeroState<T>();
 
-  static Widget defaultButtonChildBuilder(BuildContext context, String? title, String? hint, dynamic value, bool enabled, bool clearable,) {
+  static Widget defaultButtonChildBuilder(BuildContext context, String? title, String? hint, dynamic value, bool enabled, bool clearable, {bool showDropdownIcon=true}) {
     return IntrinsicWidth(
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -74,8 +80,8 @@ class ComboFromZero<T> extends StatefulWidget {
                 ),
               ),
               SizedBox(width: 4,),
-              if (enabled && !clearable)
-                Icon(Icons.arrow_drop_down),
+              if (showDropdownIcon && enabled && !clearable)
+                Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyText1!.color,),
               SizedBox(width: 4,),
             ],
           ),
@@ -148,15 +154,24 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
     } else {
       Widget child;
       if (widget.buttonChildBuilder==null) {
-        child = ComboFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable);
+        child = ComboFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable,
+          showDropdownIcon: widget.showDropdownIcon,
+        );
       } else {
-        child = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable);
+        child = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable,
+          showDropdownIcon: widget.showDropdownIcon,
+        );
       }
       result = Stack(
         children: [
-          OutlineButton(
+          TextButton(
             key: buttonKey,
-            child: child,
+            child: Center(
+              child: OverflowScroll(
+                child: child,
+                scrollDirection: Axis.vertical,
+              ),
+            ),
             focusNode: buttonFocusNode,
             onPressed: widget.enabled ? () async {
               buttonFocusNode.requestFocus();
@@ -168,8 +183,10 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
                   onCanceled: widget.onCanceled,
                   value: widget.value,
                   showSearchBox: widget.showSearchBox,
+                  showViewActionOnDAOs: widget.showViewActionOnDAOs,
                   title: widget.title,
                   extraWidget: widget.extraWidget,
+                  popupWidgetBuilder: widget.popupWidgetBuilder,
                 ),
               );
               bool? accepted = await showDialog<bool>(
@@ -279,17 +296,21 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
   final my_popup.PopupMenuCanceled? onCanceled;
   final OnPopupItemSelected<T>? onSelected;
   final bool showSearchBox;
+  final bool showViewActionOnDAOs;
   final String? title;
   final ExtraWidgetBuilder<T>? extraWidget;
+  final Widget Function(T value)? popupWidgetBuilder;
 
   ComboFromZeroPopup({
     required this.possibleValues,
     this.value,
     this.onSelected,
     this.onCanceled,
-    this.showSearchBox=true,
+    this.showSearchBox = true,
+    this.showViewActionOnDAOs = true,
     this.title,
     this.extraWidget,
+    this.popupWidgetBuilder,
   });
 
   @override
@@ -325,10 +346,14 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
           controller: popupScrollController,
           shrinkWrap: true,
           slivers: [
+            if (!widget.showSearchBox)
+              SliverToBoxAdapter(child: SizedBox(height: 12,),),
             TableFromZero(
               layoutWidgetType: TableFromZero.sliverListViewBuilder,
               showHeaders: false,
               horizontalPadding: 8,
+              cellBuilder: widget.popupWidgetBuilder==null ? null
+                  : (context, row, col, j) => widget.popupWidgetBuilder!(row.id),
               rows: filtered.map((e) {
                 return SimpleRowModel(
                   id: e,
@@ -337,7 +362,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                   onRowTap: (value) {
                     _select(e);
                   },
-                  actions: e is DAO ? [IconButton(
+                  actions: widget.showViewActionOnDAOs && e is DAO ? [IconButton(
                     icon: Icon(Icons.remove_red_eye),
                     onPressed: () {
                       e.pushViewDialog(context);

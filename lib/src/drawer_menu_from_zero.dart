@@ -207,8 +207,8 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
           }
         }
       } catch (e, st) {
-        print(e);
-        print(st);
+        // print(e);
+        // print(st);
       }
     }
   }
@@ -261,11 +261,10 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
 
         Future<bool> Function() onTap = (tabs[i].onTap!=null && !tabs[i].executeBothOnTapAndDefaultOnTap)
             ? () async {
-              if (widget.popup) Navigator.of(context).pop();
+              // if (widget.popup) Navigator.of(context).pop();
               return tabs[i].onTap?.call() ?? false;
             }
             : () async {
-              if (widget.popup) Navigator.of(context).pop();
               bool result;
               result = tabs[i].onTap?.call() ?? false;
               if (i!=selected && tabs[i].route!=null) {

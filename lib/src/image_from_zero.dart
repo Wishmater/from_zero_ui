@@ -1,4 +1,4 @@
-import 'package:animations/animations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -6,6 +6,8 @@ import 'package:extended_image/extended_image.dart';
 import 'dart:math';
 
 import 'package:from_zero_ui/src/web_compile_file.dart';
+import 'package:url_launcher/link.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 enum FullscreenType {
@@ -23,19 +25,22 @@ enum ImageSourceType {
 
 class ImageFromZero extends StatefulWidget {
 
-  String url;
-  List<Widget> actions;
-  List<Widget> fullscreenActions;
-  FullscreenType fullscreenType;
-  bool gesturesEnabled;
-  double maxScale;
-  double minScale;
-  bool retryable;
-  bool expand;
-  bool renderAsHtmlOnWebToAvoidCors;
-  bool removeHighlightAndHoverFromPicInkWell;
-  bool applySafeAreaToActions;
-  ImageSourceType sourceType;
+  final String url;
+  final List<Widget> actions;
+  final List<Widget> fullscreenActions;
+  final FullscreenType fullscreenType;
+  final bool gesturesEnabled;
+  final double maxScale;
+  final double minScale;
+  final bool retryable;
+  final bool expand;
+  final bool renderAsHtmlOnWebToAvoidCors;
+  final bool removeHighlightAndHoverFromPicInkWell;
+  final bool applySafeAreaToActions;
+  final bool fullscreenAsNewTabOnWeb;
+  final ImageSourceType sourceType;
+  /// this means the image already has a hero with this tag, a hero will not be added to the image if this is not null
+  final String? heroTag;
 
   ImageFromZero({
     required this.url,
@@ -50,6 +55,8 @@ class ImageFromZero extends StatefulWidget {
     this.renderAsHtmlOnWebToAvoidCors = false,
     this.removeHighlightAndHoverFromPicInkWell = false,
     this.applySafeAreaToActions = false,
+    this.heroTag,
+    this.fullscreenAsNewTabOnWeb = true,
     ImageSourceType? sourceType,
   })  : fullscreenActions = fullscreenActions??actions,
         this.sourceType = sourceType ?? (url.length>=6 && url.substring(0, 6)=="assets" ? ImageSourceType.assets
@@ -68,15 +75,18 @@ class ImageFromZero extends StatefulWidget {
     double minScale = 0.8,
     bool retryable = false,
     bool applySafeAreaToActions = true,
+    String? heroTag,
   }) {
+    GlobalKey<ExtendedImageSlidePageState> slidePagekey = GlobalKey();
     Navigator.of(context).push(
       PageRouteBuilder(
         fullscreenDialog: true,
         opaque: false,
         pageBuilder: (context, animation, secondaryAnimation) {
-          return ZoomedFadeInTransition(
-            animation: animation,
+          return FadeTransition(
+            opacity: animation,
             child: ExtendedImageSlidePage(
+              key: slidePagekey,
               slidePageBackgroundHandler: (offset, pageSize) {
                 return defaultSlidePageBackgroundHandler(
                     offset: offset,
@@ -85,27 +95,38 @@ class ImageFromZero extends StatefulWidget {
                     pageGestureAxis: SlideAxis.both);
               },
               slideAxis: SlideAxis.both,
-              child: ImageFromZero(
-                url: url,
-                fullscreenType: FullscreenType.none,
-                expand: true,
-                applySafeAreaToActions: applySafeAreaToActions,
-                gesturesEnabled: gesturesEnabled,
-                maxScale: maxScale,
-                minScale: minScale,
-                retryable: retryable,
-                actions: [
-                  IconButtonBackground(
-                    child: IconButton(
-                      icon: Icon(Icons.close),
-                      tooltip: FromZeroLocalizations.of(context).translate('close'),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
+              child: ExtendedImageSlidePageHandler(
+                heroBuilderForSlidingPage: (Widget result) {
+                  return HeroWidget(
+                    tag: heroTag ?? url,
+                    child: result,
+                    slideType: SlideType.onlyImage,
+                    slidePagekey: slidePagekey,
+                  );
+                },
+                child: ImageFromZero(
+                  url: url,
+                  fullscreenType: FullscreenType.none,
+                  expand: true,
+                  applySafeAreaToActions: applySafeAreaToActions,
+                  gesturesEnabled: gesturesEnabled,
+                  maxScale: maxScale,
+                  minScale: minScale,
+                  retryable: retryable,
+                  heroTag: heroTag,
+                  actions: [
+                    IconButtonBackground(
+                      child: IconButton(
+                        icon: Icon(Icons.close),
+                        tooltip: FromZeroLocalizations.of(context).translate('close'),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
                     ),
-                  ),
-                  ...actions
-                ],
+                    ...actions
+                  ],
+                ),
               ),
             ),
           );
@@ -152,8 +173,8 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
   @override
   Widget build(BuildContext context) {
     Widget result;
-    // return Image.asset(widget.url);
     if (widget.sourceType==ImageSourceType.assets){
+      // return Image.asset(widget.url);
       result = ExtendedImage.asset( //TODO 3 why only this breaks on size change
         widget.url,
         fit: BoxFit.contain,
@@ -185,6 +206,12 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
         mode: widget.gesturesEnabled ? ExtendedImageMode.gesture : ExtendedImageMode.none,
         onDoubleTap: widget.gesturesEnabled ? _onDoubleTap : null,
         extendedImageGestureKey: extendedImageGestureKey,
+      );
+    }
+    if (widget.heroTag==null) {
+      result = Hero(
+        tag: widget.url,
+        child: result,
       );
     }
     if (widget.gesturesEnabled) {
@@ -226,21 +253,6 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
           _controller.value = 1;
         }
         Widget result = state.completedWidget;
-        // if (widget.fullscreenType==FullscreenType.onClick || widget.fullscreenType==FullscreenType.onClickAndAsAction) {
-        //   result = Stack(
-        //     children: [
-        //       result,
-        //       Material(
-        //         type: MaterialType.transparency,
-        //         child: InkWell(
-        //           onTap: () {
-        //             _pushFullscreen(context);
-        //           },
-        //         ),
-        //       ),
-        //     ],
-        //   );
-        // }
         if (widget.expand) {
           result = Positioned.fill(child: result,);
         }
@@ -251,14 +263,16 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
               result,
               if (widget.fullscreenType==FullscreenType.onClick || widget.fullscreenType==FullscreenType.onClickAndAsAction)
                 Positioned.fill(
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: InkWell(
-                      highlightColor: widget.removeHighlightAndHoverFromPicInkWell ? Colors.transparent : null,
-                      hoverColor: widget.removeHighlightAndHoverFromPicInkWell ? Colors.transparent : null,
-                      onTap: () {
-                        _pushFullscreen(context);
-                      },
+                  child: buildFullScreenLink(
+                    Material(
+                      type: MaterialType.transparency,
+                      child: InkWell(
+                        highlightColor: widget.removeHighlightAndHoverFromPicInkWell ? Colors.transparent : null,
+                        hoverColor: widget.removeHighlightAndHoverFromPicInkWell ? Colors.transparent : null,
+                        onTap: () {
+                          _pushFullscreen(context);
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -272,13 +286,16 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
                     Widget actions = Column(
                         children: widget.fullscreenType==FullscreenType.asAction
                                     || widget.fullscreenType==FullscreenType.onClickAndAsAction
-                            ? [IconButtonBackground(
-                                child: IconButton(
-                                  icon: Icon(Icons.fullscreen),
-                                  tooltip: FromZeroLocalizations.of(context).translate('fullscreen'),
-                                  onPressed: () {
-                                    _pushFullscreen(context);
-                                  },
+                            ? [
+                              buildFullScreenLink(
+                                IconButtonBackground(
+                                  child: IconButton(
+                                    icon: Icon(Icons.fullscreen),
+                                    tooltip: FromZeroLocalizations.of(context).translate('fullscreen'),
+                                    onPressed: () {
+                                      _pushFullscreen(context);
+                                    },
+                                  ),
                                 ),
                               ),
                               ...widget.actions,
@@ -325,6 +342,18 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
     }
   }
 
+  Widget buildFullScreenLink(Widget child) {
+    if (kIsWeb && widget.fullscreenAsNewTabOnWeb && widget.sourceType==ImageSourceType.network) {
+      try {
+        return Link(
+          uri: Uri.parse(widget.url),
+          builder: (context, followLink) => child,
+        );
+      } catch(_) {}
+    }
+    return child;
+  }
+
   _onDoubleTap(ExtendedImageGestureState state) {
     ///you can use define pointerDownPosition as you can,
     ///default value is double tap pointer down postion.
@@ -363,16 +392,121 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
     _doubleClickAnimationController.forward();
   }
 
-  void _pushFullscreen(BuildContext context) {
-    widget.pushFullscreenImage(
-      context: context,
-      url: widget.url,
-      actions: widget.fullscreenActions,
-      maxScale: widget.maxScale,
-      minScale: widget.minScale,
-      retryable: widget.retryable,
-      gesturesEnabled: true,
-    );
+  void _pushFullscreen(BuildContext context) async {
+    if (kIsWeb && widget.fullscreenAsNewTabOnWeb && widget.sourceType==ImageSourceType.network && (await canLaunch(widget.url))) {
+      launch(widget.url);
+    } else {
+      widget.pushFullscreenImage(
+        context: context,
+        url: widget.url,
+        actions: widget.fullscreenActions,
+        maxScale: widget.maxScale,
+        minScale: widget.minScale,
+        retryable: widget.retryable,
+        gesturesEnabled: true,
+        heroTag: widget.heroTag,
+      );
+    }
   }
 
+}
+
+
+
+
+
+class HeroWidget extends StatefulWidget {
+  const HeroWidget({
+    required this.child,
+    required this.tag,
+    required this.slidePagekey,
+    this.slideType = SlideType.onlyImage,
+  });
+  final Widget child;
+  final SlideType slideType;
+  final Object tag;
+  final GlobalKey<ExtendedImageSlidePageState> slidePagekey;
+  @override
+  _HeroWidgetState createState() => _HeroWidgetState();
+}
+
+class _HeroWidgetState extends State<HeroWidget> {
+  late RectTween _rectTween;
+  @override
+  Widget build(BuildContext context) {
+    return Hero(
+      tag: widget.tag,
+      createRectTween: (Rect? begin, Rect? end) {
+        _rectTween = RectTween(begin: begin, end: end);
+        return _rectTween;
+      },
+      // make hero better when slide out
+      flightShuttleBuilder: (BuildContext flightContext,
+          Animation<double> animation,
+          HeroFlightDirection flightDirection,
+          BuildContext fromHeroContext,
+          BuildContext toHeroContext) {
+        // make hero more smoothly
+        final Hero hero = (flightDirection == HeroFlightDirection.pop
+            ? fromHeroContext.widget
+            : toHeroContext.widget) as Hero;
+        if (flightDirection == HeroFlightDirection.pop) {
+          final bool fixTransform = widget.slideType == SlideType.onlyImage &&
+              (widget.slidePagekey.currentState!.offset != Offset.zero ||
+                  widget.slidePagekey.currentState!.scale != 1.0);
+
+          final Widget toHeroWidget = (toHeroContext.widget as Hero).child;
+          return AnimatedBuilder(
+            animation: animation,
+            builder: (BuildContext buildContext, Widget? child) {
+              Widget animatedBuilderChild = hero.child;
+
+              // make hero more smoothly
+              animatedBuilderChild = Stack(
+                clipBehavior: Clip.antiAlias,
+                alignment: Alignment.center,
+                children: <Widget>[
+                  Opacity(
+                    opacity: 1 - animation.value,
+                    child: UnconstrainedBox(
+                      child: SizedBox(
+                        width: _rectTween.begin!.width,
+                        height: _rectTween.begin!.height,
+                        child: toHeroWidget,
+                      ),
+                    ),
+                  ),
+                  Opacity(
+                    opacity: animation.value,
+                    child: animatedBuilderChild,
+                  )
+                ],
+              );
+
+              // fix transform when slide out
+              if (fixTransform) {
+                final Tween<Offset> offsetTween = Tween<Offset>(
+                    begin: Offset.zero,
+                    end: widget.slidePagekey.currentState!.offset);
+
+                final Tween<double> scaleTween = Tween<double>(
+                    begin: 1.0, end: widget.slidePagekey.currentState!.scale);
+                animatedBuilderChild = Transform.translate(
+                  offset: offsetTween.evaluate(animation),
+                  child: Transform.scale(
+                    scale: scaleTween.evaluate(animation),
+                    child: animatedBuilderChild,
+                  ),
+                );
+              }
+
+              return animatedBuilderChild;
+            },
+          );
+        }
+        return hero.child;
+      },
+      child: widget.child,
+    );
+  }
 }

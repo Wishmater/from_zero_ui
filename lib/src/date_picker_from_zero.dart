@@ -101,7 +101,7 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
     }
     return Stack(
       children: [
-        OutlineButton(
+        TextButton(
           key: buttonKey,
           child: child,
           focusNode: buttonFocusNode,

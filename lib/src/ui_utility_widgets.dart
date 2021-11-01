@@ -337,17 +337,31 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
 
   @override
   void initState() {
-    super.initState();
-    widget.scrollController.addListener(_updateScroll);
+    _addListener(widget.scrollController);
     WidgetsBinding.instance?.addPostFrameCallback((_) {
       _updateScroll();
     });
   }
 
   @override
+  void didUpdateWidget(ScrollOpacityGradient oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _removeListener(oldWidget.scrollController);
+    _addListener(widget.scrollController);
+  }
+
+  @override
   void dispose() {
     super.dispose();
-    widget.scrollController.removeListener(_updateScroll);
+    _removeListener(widget.scrollController);
+  }
+
+  void _addListener(ScrollController scrollController) {
+    scrollController.addListener(_updateScroll);
+  }
+
+  void _removeListener(ScrollController scrollController) {
+    scrollController.removeListener(_updateScroll);
   }
 
   void _updateScroll(){
@@ -356,13 +370,13 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
     }
   }
 
+  double size1 = 0;
+  double size2 = 0;
   @override
   Widget build(BuildContext context) {
-    double size1 = 0;
-    double size2 = 0;
     try{
-      size1 = widget.scrollController.positions.first.pixels.clamp(0, widget.maxSize);
-      size2 = (widget.scrollController.positions.first.maxScrollExtent-widget.scrollController.positions.first.pixels).clamp(0, widget.maxSize);
+      size1 = widget.scrollController.position.pixels.clamp(0, widget.maxSize);
+      size2 = (widget.scrollController.position.maxScrollExtent-widget.scrollController.position.pixels).clamp(0, widget.maxSize);
     } catch(e){ }
     return OpacityGradient(
       size: size1,
@@ -680,35 +694,6 @@ class IconButtonBackground extends StatelessWidget {
 }
 
 
-class ChangeNotifierBuilder<T extends ChangeNotifier> extends StatelessWidget{
-
-  final T changeNotifier;
-  final Widget? child;
-  final Widget Function(BuildContext context, T value, Widget? child) builder;
-
-  ChangeNotifierBuilder({
-    required this.changeNotifier,
-    this.child,
-    required this.builder,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider<T>.value(
-      value: changeNotifier,
-      child: child,
-      builder: (context, child) {
-        return Consumer<T>(
-          builder: builder,
-          child: child,
-        );
-      },
-    );
-  }
-
-}
-
 
 class ChangeNotifierSelectorBuilder<A extends ChangeNotifier, S> extends StatelessWidget{
 
@@ -812,8 +797,7 @@ class PlatformExtended {
 
   static bool get isWindows{
     if (kIsWeb){
-      return false; // ! TODO ! enable this to get platform from web once null-safety compatibility issues are solved
-      // return operatingSystem.isWindows;
+      return defaultTargetPlatform==TargetPlatform.windows;
     } else{
       return Platform.isWindows;
     }
@@ -821,8 +805,7 @@ class PlatformExtended {
 
   static bool get isAndroid{
     if (kIsWeb){
-      return false; // ! TODO ! enable this to get platform from web once null-safety compatibility issues are solved
-      // return operatingSystem.isLinux; //Assuming unix==android
+      return defaultTargetPlatform==TargetPlatform.android;
     } else{
       return Platform.isAndroid;
     }
@@ -830,8 +813,7 @@ class PlatformExtended {
 
   static bool get isIOS{
     if (kIsWeb){
-      return false; // ! TODO ! enable this to get platform from web once null-safety compatibility issues are solved
-      // return operatingSystem.isMac; //Assuming mac==ios
+      return defaultTargetPlatform==TargetPlatform.iOS;
     } else{
       return Platform.isIOS;
     }
@@ -839,7 +821,7 @@ class PlatformExtended {
 
   static bool get isLinux{
     if (kIsWeb){
-      return false;
+      return defaultTargetPlatform==TargetPlatform.linux;
     } else{
       return Platform.isLinux;
     }
@@ -847,7 +829,7 @@ class PlatformExtended {
 
   static bool get isMacOS{
     if (kIsWeb){
-      return false;
+      return defaultTargetPlatform==TargetPlatform.macOS;
     } else{
       return Platform.isMacOS;
     }
@@ -855,7 +837,7 @@ class PlatformExtended {
 
   static bool get isFuchsia{
     if (kIsWeb){
-      return false;
+      return defaultTargetPlatform==TargetPlatform.fuchsia;
     } else{
       return Platform.isFuchsia;
     }

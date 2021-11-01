@@ -366,7 +366,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         widget.appbarType,
         null,
       );
-      canPop = Navigator.of(context).canPop();
+      canPop = ModalRoute.of(context)?.canPop ?? Navigator.of(context).canPop();
       animation = ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation;
       secondaryAnimation = ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation;
     }
@@ -538,7 +538,19 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
         alignment: Alignment.topCenter,
         width: widget.constraintBodyOnXLargeScreens ? ScaffoldFromZero.screenSizeXLarge : double.infinity,
         child: widget.bodyTransitionBuilder(
-          child: Container(key: bodyGlobalKey, child: widget.body),
+          child: NotificationListener(
+            key: bodyGlobalKey,
+            child: widget.body,
+            onNotification: (notification) {
+              if (notification is ScrollMetricsNotification) {
+                return notification.metrics.axis==Axis.horizontal;
+              }
+              if (notification is ScrollNotification) {
+                return notification.metrics.axis==Axis.horizontal;
+              }
+              return false;
+            },
+          ),
           animation: animation,
           secondaryAnimation: secondaryAnimation,
           scaffoldChangeNotifier: changeNotifierNotListen,
@@ -733,7 +745,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                   elevation: 0,
                   automaticallyImplyLeading: false,
                   toolbarHeight: widget.appbarHeight,
-                  backgroundColor: Theme.of(context).appBarTheme?.backgroundColor ?? Theme.of(context).primaryColor,
+                  backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).primaryColor,
                   title: SizedBox(
                       height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
                       child: Selector<ScreenFromZero, bool>(

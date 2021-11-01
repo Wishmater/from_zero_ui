@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:animations/animations.dart';
 import 'package:downloads_path_provider/downloads_path_provider.dart';
 import 'package:excel/excel.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
@@ -322,15 +323,18 @@ class ExportState extends State<Export> {
         title: widget.title,
       );
     }
-    WidgetsBinding.instance?.addPostFrameCallback((timeStamp) async{
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) async{
       await Future.delayed(100.milliseconds);
+      if (!mounted) return;
       setState(() {});
       await Future.delayed(400.milliseconds);
+      if (!mounted) return;
       await _executeExport(size, i, pdf);
       i++;
       doneExports++;
       if (i<widget.childrenCount!(currentSize, portrait, scale, format,)) {
         WidgetsBinding.instance?.addPostFrameCallback((timeStamp) async{
+          if (!mounted) return;
           await _export(size, i, pdf);
         });
       }
@@ -340,7 +344,9 @@ class ExportState extends State<Export> {
     if (format=='PDF'){
       var format = Export.defaultFormats[currentSize];
       if (!portrait) format = PdfPageFormat(format.height, format.width);
+      if (!mounted) return;
       Uint8List pngBytes = await _getImageBytes(size, await _getImage(size, boundaryKeys[i]));
+      if (!mounted) return;
       pdf.addPage(
         pw.Page(
           pageFormat: format,
@@ -351,6 +357,7 @@ class ExportState extends State<Export> {
         )
       );
       if (i==widget.childrenCount!(currentSize, portrait, scale, this.format,)-1){
+        if (!mounted) return;
         final file = File((await widget.path)+widget.title+'.pdf');
         await file.create(recursive: true);
         filePath = file.absolute.path;
@@ -360,10 +367,12 @@ class ExportState extends State<Export> {
           pathUi = pathUi.substring(filePath.indexOf("Document")).replaceAll('/', '\\');
         if (Platform.isAndroid)
           pathUi = "Downloads/Cutrans CRM/${filePath.substring(filePath.lastIndexOf(p.separator))}";
+        if (!mounted) return;
         await file.writeAsBytes(pdf.save());
       }
     } else if (format=='PNG'){
       File imgFile = File((await widget.path)+widget.title+(widget.childrenCount!(currentSize, portrait, scale, this.format,)>1?' ${(i+1)}':'')+'.png');
+      if (!mounted) return;
       await imgFile.create(recursive: true);
       if (i==0){
         filePath = imgFile.absolute.path;
@@ -374,7 +383,9 @@ class ExportState extends State<Export> {
         if (Platform.isAndroid)
           pathUi = "Downloads/Cutrans CRM/${filePath.substring(filePath.lastIndexOf(p.separator))}";
       }
+      if (!mounted) return;
       Uint8List pngBytes = await _getImageBytes(size, await _getImage(size, boundaryKeys[i]));
+      if (!mounted) return;
       await imgFile.writeAsBytes(pngBytes);
     }
   }
@@ -468,7 +479,9 @@ class ExportState extends State<Export> {
       // }
     });
     excel.delete('Sheet1');
+    if (!mounted) return;
     var encoded = await excel.encode();
+    if (!mounted) return;
     File file = File((await widget.path)+widget.title+'.xlsx');
     filePath = file.absolute.path;
     directoryPath = file.parent.absolute.path;
@@ -477,6 +490,7 @@ class ExportState extends State<Export> {
       pathUi = pathUi.substring(filePath.indexOf("Document")).replaceAll('/', '\\');
     if (Platform.isAndroid)
       pathUi = "Downloads/Cutrans CRM/${filePath.substring(filePath.lastIndexOf(p.separator))}";
+    if (!mounted) return;
     file..createSync(recursive: true)
         ..writeAsBytesSync(encoded);
     doneExports = widget.childrenCount!(currentSize, portrait, scale, format,);
@@ -513,7 +527,32 @@ class ExportState extends State<Export> {
           context: context,
           barrierDismissible: false,
           builder: (context) {
-            return LoadingSign();
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16,),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor.withOpacity(0.8),
+                      borderRadius: BorderRadius.all(Radius.circular(4)),
+                    ),
+                    child: TextButton(
+                      child: Text('CANCELAR', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
+                      style: TextButton.styleFrom(
+                        primary: Colors.red,
+                      ),
+                      onPressed: () {
+                        final navigator = Navigator.of(context);
+                        navigator.pop();
+                        navigator.pop();
+                      },
+                    ),
+                  )
+                ],
+              ),
+            );
           },
         );
         doneExports = 0;

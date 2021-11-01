@@ -18,78 +18,90 @@ class DateField extends Field<DateTime> {
   }
 
   DateField({
-    required String uiName,
+    required FieldValueGetter<String, Field> uiNameGetter,
     DateTime? firstDate,
     DateTime? lastDate,
     DateTime? value,
     DateTime? dbValue,
-    bool clearable = true,
-    bool enabled = true,
+    FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter,
+    FieldValueGetter<bool, Field> enabledGetter = trueFieldGetter,
     double maxWidth = 512,
     DateFormat? formatter,
-    String? hint,
+    FieldValueGetter<String?, Field>? hintGetter,
     double? tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
-    List<FieldValidator<DateTime>> validators = const[],
+    FieldValueGetter<bool, Field>? hiddenGetter,
+    FieldValueGetter<bool, Field>? hiddenInTableGetter,
+    FieldValueGetter<bool, Field>? hiddenInViewGetter,
+    FieldValueGetter<bool, Field>? hiddenInFormGetter,
+    FieldValueGetter<List<FieldValidator<DateTime>>, Field>? validatorsGetter,
     bool validateOnlyOnConfirm = false,
+    FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
+    List<DateTime?>? undoValues,
+    List<DateTime?>? redoValues,
   }) :  this.firstDate = firstDate ?? DateTime(1900),
         this.lastDate = lastDate ?? DateTime(2200),
         this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY),
         super(
-          uiName: uiName,
+          uiNameGetter: uiNameGetter,
           value: value,
           dbValue: dbValue,
-          clearable: clearable,
-          enabled: enabled,
+          clearableGetter: clearableGetter,
+          enabledGetter: enabledGetter,
           maxWidth: maxWidth,
-          hint: hint,
+          hintGetter: hintGetter,
           tableColumnWidth: tableColumnWidth,
-          hidden: hidden,
-          hiddenInTable: hiddenInTable,
-          hiddenInView: hiddenInView,
-          hiddenInForm: hiddenInForm,
-          validators: validators,
+          hiddenGetter: hiddenGetter,
+          hiddenInTableGetter: hiddenInTableGetter,
+          hiddenInViewGetter: hiddenInViewGetter,
+          hiddenInFormGetter: hiddenInFormGetter,
+          validatorsGetter: validatorsGetter,
           validateOnlyOnConfirm: validateOnlyOnConfirm,
+          colModelBuilder: colModelBuilder,
+          undoValues: undoValues,
+          redoValues: redoValues,
         );
 
   @override
   DateField copyWith({
-    String? uiName,
+    FieldValueGetter<String, Field>? uiNameGetter,
     DateTime? value,
     DateTime? dbValue,
-    bool? clearable,
-    bool? enabled,
+    FieldValueGetter<bool, Field>? enabledGetter,
+    FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     DateTime? firstDate,
     DateTime? lastDate,
-    String? hint,
+    FieldValueGetter<String?, Field>? hintGetter,
     double? tableColumnWidth,
-    bool? hidden,
-    bool? hiddenInTable,
-    bool? hiddenInView,
-    bool? hiddenInForm,
-    List<FieldValidator<DateTime>>? validators,
+    FieldValueGetter<bool, Field>? hiddenGetter,
+    FieldValueGetter<bool, Field>? hiddenInTableGetter,
+    FieldValueGetter<bool, Field>? hiddenInViewGetter,
+    FieldValueGetter<bool, Field>? hiddenInFormGetter,
+    FieldValueGetter<List<FieldValidator<DateTime>>, Field>? validatorsGetter,
     bool? validateOnlyOnConfirm,
+    FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
+    List<DateTime?>? undoValues,
+    List<DateTime?>? redoValues,
   }) {
     return DateField(
-      uiName: uiName??this.uiName,
+      uiNameGetter: uiNameGetter??this.uiNameGetter,
       value: value??this.value,
       dbValue: dbValue??this.dbValue,
-      clearable: clearable??this.clearable,
-      enabled: enabled??this.enabled,
+      enabledGetter: enabledGetter??this.enabledGetter,
+      clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
       firstDate: firstDate??this.firstDate,
       lastDate: lastDate??this.lastDate,
-      hint: hint??this.hint,
+      hintGetter: hintGetter??this.hintGetter,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
-      hiddenInTable: hiddenInTable ?? hidden ?? this.hiddenInTable,
-      hiddenInView: hiddenInView ?? hidden ?? this.hiddenInView,
-      hiddenInForm: hiddenInForm ?? hidden ?? this.hiddenInForm,
-      validators: validators ?? this.validators,
+      hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
+      hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
+      hiddenInFormGetter: hiddenInFormGetter ?? hiddenGetter ?? this.hiddenInFormGetter,
+      validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
+      colModelBuilder: colModelBuilder ?? this.colModelBuilder,
+      undoValues: undoValues ?? this.undoValues,
+      redoValues: redoValues ?? this.redoValues,
     );
   }
 
@@ -142,9 +154,9 @@ class DateField extends Field<DateTime> {
     bool expandToFillContainer = true,
     bool largeHorizontally = false,
   }) {
-    Widget result = ChangeNotifierBuilder(
-      changeNotifier: this,
-      builder: (context, v, child) {
+    Widget result = AnimatedBuilder(
+      animation: this,
+      builder: (context, child) {
         return Stack(
           children: [
             DatePickerFromZero(
@@ -172,21 +184,18 @@ class DateField extends Field<DateTime> {
     result = Padding(
       key: fieldGlobalKey,
       padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
-      child: Center(
-        child: SizedBox(
-          width: maxWidth,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                height: 64,
-                child: result,
-              ),
-              if (validationErrors.isNotEmpty)
-                ValidationMessage(errors: validationErrors),
-            ],
-          ),
+      child: SizedBox(
+        width: maxWidth,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 64,
+              child: result,
+            ),
+            ValidationMessage(errors: validationErrors),
+          ],
         ),
       ),
     );
