@@ -2,6 +2,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:dartx/dartx.dart';
+import 'package:from_zero_ui/util/my_tooltip.dart';
 
 
 class BoolComparable with Comparable {
@@ -20,11 +21,20 @@ class BoolComparable with Comparable {
   int get hashCode => value.hashCode;
 
   @override
-  int compareTo(other) => other is BoolComparable ? value==true ? other.value==true ? 0
-                                                                                    : 1
-                                                                : other.value==true ? -1
-                                                                : 0
-                                                  : 1;
+  int compareTo(other) {
+    bool otherValue;
+    if (other is BoolComparable) {
+      otherValue = other.value;
+    } else if (other is bool) {
+      otherValue = other;
+    } else {
+      return 1;
+    }
+    return value==true  ? otherValue==true  ? 0
+                                            : 1
+                        : otherValue==true  ? -1
+                                            : 0;
+  }
 
 }
 
@@ -71,9 +81,9 @@ class BoolField extends Field<BoolComparable> {
     BoolComparable value = const BoolComparable(false),
     BoolComparable? dbValue,
     // FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, // non-nullable by design
-    FieldValueGetter<bool, Field> enabledGetter = trueFieldGetter,
     double? maxWidth,
     FieldValueGetter<String?, Field>? hintGetter,
+    FieldValueGetter<String?, Field>? tooltipGetter,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -90,11 +100,11 @@ class BoolField extends Field<BoolComparable> {
           value: value,
           dbValue: dbValue ?? value,
           clearableGetter: falseFieldGetter,
-          enabledGetter: enabledGetter,
           maxWidth: maxWidth ?? ( displayType==BoolFieldDisplayType.compactCheckBox ? 96
                                 : displayType==BoolFieldDisplayType.compactSwitch ? 96
                                 : 512),
           hintGetter: hintGetter,
+          tooltipGetter: tooltipGetter,
           tableColumnWidth: tableColumnWidth,
           hiddenGetter: hiddenGetter,
           hiddenInTableGetter: hiddenInTableGetter,
@@ -116,10 +126,10 @@ class BoolField extends Field<BoolComparable> {
     FieldValueGetter<String, Field>? uiNameGetter,
     BoolComparable? value,
     BoolComparable? dbValue,
-    FieldValueGetter<bool, Field>? enabledGetter,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     FieldValueGetter<String?, Field>? hintGetter,
+    FieldValueGetter<String?, Field>? tooltipGetter,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -139,9 +149,9 @@ class BoolField extends Field<BoolComparable> {
       uiNameGetter: uiNameGetter??this.uiNameGetter,
       value: value??this.value!,
       dbValue: dbValue??this.dbValue,
-      enabledGetter: enabledGetter??this.enabledGetter,
       maxWidth: maxWidth??this.maxWidth,
       hintGetter: hintGetter??this.hintGetter,
+      tooltipGetter: tooltipGetter??this.tooltipGetter,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
       hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
       hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
@@ -216,14 +226,18 @@ class BoolField extends Field<BoolComparable> {
                   listTileControlAffinity==ListTileControlAffinity.leading ? -12 : 3,
                   -4,
                 ),
-                child: Text(uiName, style: Theme.of(context).textTheme.caption,),
+                child: Text(uiName, style: Theme.of(context).textTheme.caption!.copyWith(
+                  color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                ),),
               ),
               subtitle:  Transform.translate(
                 offset:  Offset(
                   listTileControlAffinity==ListTileControlAffinity.leading ? -12 : 3,
                   showBothNeutralAndSpecificUiName ? -4 : -10,
                 ),
-                child: Text(uiNameValue, style: Theme.of(context).textTheme.subtitle1,),
+                child: Text(uiNameValue, style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                  color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                ),),
               ),
               onChanged: !enabled ? null : (value) {
                 this.value = value!.comparable;
@@ -241,14 +255,18 @@ class BoolField extends Field<BoolComparable> {
                   listTileControlAffinity==ListTileControlAffinity.leading ? -8 : 7,
                   -4,
                 ),
-                child: Text(uiName, style: Theme.of(context).textTheme.caption,),
+                child: Text(uiName, style: Theme.of(context).textTheme.caption!.copyWith(
+                  color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                ),),
               ),
               subtitle:  Transform.translate(
                 offset:  Offset(
                   listTileControlAffinity==ListTileControlAffinity.leading ? -8 : 7,
                   showBothNeutralAndSpecificUiName ? -4 : -10,
                 ),
-                child: Text(uiNameValue, style: Theme.of(context).textTheme.subtitle1,),
+                child: Text(uiNameValue, style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                  color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                ),),
               ),
               onChanged: !enabled ? null : (value) {
                 this.value = value.comparable;
@@ -277,6 +295,7 @@ class BoolField extends Field<BoolComparable> {
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyText1!.copyWith(
                             height: 1,
+                            color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
                           ),
                         ),
                       ),
@@ -308,6 +327,7 @@ class BoolField extends Field<BoolComparable> {
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyText1!.copyWith(
                             height: 1,
+                            color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
                           ),
                         ),
                       ),
@@ -354,13 +374,35 @@ class BoolField extends Field<BoolComparable> {
             result = Text('Unimplemented type'); // TODO 3 implement radio BoolField, maybe also radio ComboField
             break;
         }
+        result = TooltipFromZero(
+          message: validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+            return a.toString().trim().isEmpty ? b.toString()
+                : b.toString().trim().isEmpty ? a.toString()
+                : '$a\n$b';
+          }),
+          child: result,
+          triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
+          waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
+        );
         return result;
       },
     );
     if (addCard) {
       result = Card(
         clipBehavior: Clip.hardEdge,
-        child: result,
+        color: enabled ? null : Theme.of(context).canvasColor,
+        child: Stack(
+          children: [
+            result,
+            if (!enabled)
+              Positioned.fill(
+                child: MouseRegion(
+                  opaque: false,
+                  cursor: SystemMouseCursors.forbidden,
+                ),
+              ),
+          ],
+        ),
       );
     }
     result = Padding(

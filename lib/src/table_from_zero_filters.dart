@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/util/my_tooltip.dart';
 import 'package:intl/intl.dart';
 
 
@@ -73,7 +74,7 @@ abstract class FilterText extends ConditionFilter {
           Positioned(
             right: 38, top: 0, bottom: 0,
             child: Center(
-              child: Tooltip(
+              child: TooltipFromZero(
                 message: getExtraUiTooltip(context),
                 child: Stack(
                   clipBehavior: Clip.none,
@@ -247,7 +248,7 @@ abstract class FilterNumber extends ConditionFilter {
           Positioned(
             right: 38, top: 0, bottom: 0,
             child: Center(
-              child: Tooltip(
+              child: TooltipFromZero(
                 message: getExtraUiTooltip(context),
                 child: Stack(
                   clipBehavior: Clip.none,
@@ -420,7 +421,7 @@ abstract class FilterDate extends ConditionFilter {
           Positioned(
             right: 38, top: 0, bottom: 0,
             child: Center(
-              child: Tooltip(
+              child: TooltipFromZero(
                 message: getExtraUiTooltip(context),
                 child: Stack(
                   clipBehavior: Clip.none,

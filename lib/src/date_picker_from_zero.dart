@@ -59,16 +59,20 @@ class DatePickerFromZero extends StatefulWidget {
             children: [
               SizedBox(width: 8,),
               Expanded(
-                child: MaterialKeyValuePair(
-                  title: title,
-                  value: value==null ? (hint ?? '') : formatter.format(value),
-                  valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
-                    height: 1,
-                    color: value==null ? Theme.of(context).textTheme.caption!.color!
-                        : Theme.of(context).textTheme.bodyText1!.color!,
+                child: value==null&&hint==null&&title!=null
+                    ? Text(title, style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                    ),)
+                    : MaterialKeyValuePair(
+                      title: title,
+                      value: value==null ? (hint ?? '') : formatter.format(value),
+                      valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
+                        height: 1,
+                        color: value==null ? Theme.of(context).textTheme.caption!.color!
+                            : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                      ),
+                    ),
                   ),
-                ),
-              ),
               SizedBox(width: 4,),
               if (enabled && !clearable)
                 Icon(Icons.arrow_drop_down),

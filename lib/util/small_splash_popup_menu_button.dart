@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:from_zero_ui/util/my_tooltip.dart';
 
 class PopupMenuButton<T> extends StatefulWidget {
   /// Creates a button that shows a popup menu.
@@ -185,7 +186,7 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
     assert(debugCheckHasMaterialLocalizations(context));
 
     if (widget.child != null)
-      return Tooltip(
+      return TooltipFromZero(
         message: widget.tooltip ?? MaterialLocalizations.of(context).showMenuTooltip,
         child: InkWell(
           onTap: widget.enabled ? showButtonMenu : null,

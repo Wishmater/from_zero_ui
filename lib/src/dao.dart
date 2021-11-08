@@ -195,9 +195,7 @@ class DAO extends ChangeNotifier implements Comparable {
     bool success = true;
     List<Future<bool>> results = [];
     for (final e in props.values) {
-      if (validateNonEditedFields || e.passedFirstEdit) {
-        results.add(e.validate(context, this)..then((v) => notifyListeners()));
-      }
+      results.add(e.validate(context, this, validateIfNotEdited: validateNonEditedFields)..then((v) => notifyListeners()));
     }
     for (final e in results) {
       success = await e;
@@ -238,10 +236,12 @@ class DAO extends ChangeNotifier implements Comparable {
           List<ValidationError> warnings = [];
           List<ValidationError> errors = [];
           for (final e in allErrors) {
-            if (e.severity==ValidationErrorSeverity.warning) {
-              warnings.add(e);
-            } else {
-              errors.add(e);
+            if (e.isVisibleAsHintMessage) {
+              if (e.isBlocking) {
+                errors.add(e);
+              } else {
+                warnings.add(e);
+              }
             }
           }
           return SizedBox(
@@ -377,9 +377,6 @@ class DAO extends ChangeNotifier implements Comparable {
     bool showDefaultSnackBar=true,
     bool skipValidation=false,
   }) async {
-    props.values.forEach((e) {
-      e.passedFirstEdit = true;
-    });
     if (!skipValidation) {
       bool validation = await validate(context,
         validateNonEditedFields: true,
@@ -415,10 +412,11 @@ class DAO extends ChangeNotifier implements Comparable {
     return success;
   }
 
-  Future<bool> delete(context, {bool showDefaultSnackBar=true,}) async {
+  Future<bool> delete(context, {bool? showDefaultSnackBar,}) async {
     bool success = false;
+    showDefaultSnackBar = showDefaultSnackBar ?? onDelete!=null;
     try {
-      success = (await onDelete?.call(context, this))!=null;
+      success = onDelete==null || await onDelete!.call(context, this)!=null;
     } catch (e, st) {
       success = false;
       print(e); print(st);
@@ -627,11 +625,12 @@ class DAO extends ChangeNotifier implements Comparable {
                                               clipBehavior: Clip.hardEdge,
                                               child: TabBar(
                                                 isScrollable: true,
+                                                indicatorWeight: 3,
                                                 tabs: secondaryFormWidgets.keys.map((e) {
                                                   return Container(
                                                     height: 32,
                                                     alignment: Alignment.center,
-                                                    child: Text(e),
+                                                    child: Text(e, style: Theme.of(context).textTheme.subtitle1,),
                                                   );
                                                 }).toList(),
                                               ),
@@ -694,7 +693,6 @@ class DAO extends ChangeNotifier implements Comparable {
                 if (error.showVisualConfirmation) {
                   invalidatingErrors[error] = e;
                 } else {
-                  print ('pass');
                   WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
                     e.value = error.defaultValue;
                   });
@@ -720,15 +718,10 @@ class DAO extends ChangeNotifier implements Comparable {
                           ? formDialogWidth+32+24+16
                           : widescreenDialogWidth,
                       child: Dialog(
+                        backgroundColor: Theme.of(context).canvasColor,
                         clipBehavior: Clip.hardEdge,
                         insetPadding: EdgeInsets.all(16),
-                        child: Container(
-                          color: Theme.of(context).canvasColor,
-                          child: Material(
-                            type: MaterialType.transparency,
-                            child: result,
-                          ),
-                        ),
+                        child: result,
                       ),
                     ),
                   ),
@@ -774,17 +767,36 @@ class DAO extends ChangeNotifier implements Comparable {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(FromZeroLocalizations.of(context).translate("confirm_invalidating_change_description1")),
-                                            Text("\n"),
                                             if (undoRecord.isEmpty)
                                               Text(FromZeroLocalizations.of(context).translate("confirm_invalidating_no_undo_record")),
                                             if (undoRecord.isNotEmpty)
-                                              Text('${undoRecord.last.uiName}:   ${undoRecord.last.undoValues.last} => ${undoRecord.last.value}'), // TODO accomodate for multi-step undo's
-                                            Text("\n"),
-                                            Text(FromZeroLocalizations.of(context).translate("confirm_invalidating_change_description2")),
-                                            ...invalidatingErrors.map((key, value) {
-                                              return MapEntry(key, Text('\n${value.uiName}:   ${value.value} => ${key.defaultValue}\n${key.error}'));
-                                              // TODO also show error severity
-                                            }).values.toList(),
+                                              FieldDiffMessage(
+                                                field: undoRecord.last,
+                                                oldValue: undoRecord.last.undoValues.last,
+                                                newValue: undoRecord.last.value,
+                                              ), // TODO accomodate for multi-step undo's
+                                            SizedBox(height: 24,),
+                                            Text(FromZeroLocalizations.of(context).translate(!allowSetInvalidatingFieldsToDefaultValues ? "confirm_invalidating_change_description2_1" : "confirm_invalidating_change_description2_2")),
+                                            SizedBox(height: 6,),
+                                            ValidationMessage(
+                                              errors: invalidatingErrors.keys.toList(),
+                                              errorTextStyle: Theme.of(context).textTheme.bodyText1,
+                                              animate: false,
+                                            ),
+                                            if (allowSetInvalidatingFieldsToDefaultValues)
+                                              Padding(
+                                                padding: const EdgeInsets.only(top: 24),
+                                                child: Text(FromZeroLocalizations.of(context).translate(!allowUndoInvalidatingChanges ? "confirm_invalidating_change_description3_1" : "confirm_invalidating_change_description3_2")),
+                                              ),
+                                            if (allowSetInvalidatingFieldsToDefaultValues)
+                                              ...invalidatingErrors.map((key, value) {
+                                                print (key.defaultValue);
+                                                return MapEntry(key, FieldDiffMessage(
+                                                  field: value,
+                                                  oldValue: value.value,
+                                                  newValue: key.defaultValue,
+                                                ));
+                                              }).values.toList(),
                                           ],
                                         ),
                                       ),
@@ -1137,7 +1149,7 @@ class DAO extends ChangeNotifier implements Comparable {
                   sizeFactor: animation,
                   axis: Axis.vertical,
                   axisAlignment: -1,
-                  child: child,
+                  child: Center(child: child),
                 );
               },
             );

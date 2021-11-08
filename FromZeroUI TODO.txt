@@ -1,0 +1,65 @@
+
+
+    _mouseIsConnected = RendererBinding.instance!.mouseTracker.mouseIsConnected;
+	
+
+
+
+!!!!!!!!! Textfield alt-64 blocks whole windows
+
+!!!!!! Bug with slivers tearing !!!!!!!!!!!
+		once it is solved, remove patches from Table
+
+!!! fix part of the screen not being draggable on really big screens
+	maybe just deprecate limitWidthOnBigScreens
+
+!!! Windows Increase mouse wheel scroll speed and add anmation
+	only when the mouse wheel is click (not smooth)
+	
+!!! Implement UIScaling + Scaling picker widget (with slider)
+	take initial system textScale as UI scaling
+
+! Scrollbar not updated on window resize
+	noticeable in table horizontal scrollbars
+	
+Experiment: make Telegram-like scrollbars: 
+		leave option
+	scrollbar is not always visible
+	add a MouseRegion: on enter whole region, trigger a fake movement to show scrollbar
+	while inside the scrollbar region action range, keep showig it
+	also show it once at start	
+	remove top padding on android by default
+
+Generalize showPopupFromZero function and make everything use it
+		ComboFromZero
+		DatePickerFromZero
+		TableFromZero filters
+	make it resize for android keyboard offset appropriately
+		test same problem with snackbar
+
+TableFromZero improvements
+	List<Columns> and List<values> refactored as maps
+		this would make it trivial to add/remove columns
+		! need to keep compatibility with lists somehow
+	Initial checking for filter values should be async (and also maybe other parts of initialization)
+			??? also filtering, maybe
+		filters will show loading until this finishes
+		probably needs to be in an isolate
+		??? only if rowCount > 100 ??? (also allow to force sync or async)
+		
+REFACTOR FROMZERO NAVIGATION
+	Learn about Navigation 2.0
+	Implement PageFromZero, including all info
+	Deprecate current hacks for remembering stack
+
+Use better scroll shadow on table
+	https://pub.dev/packages/flutter_scroll_shadow
+
+make Export use new FileSaverFromZero
+
+implement DialogButton widget to streamline appearance
+implement AlertDialogFromZero, taking simple parameters (title, message, onAccept, onCancel)
+
+
+
+??? force windows app to be executed as admin by default

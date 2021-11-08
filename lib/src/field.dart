@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao.dart';
 import 'package:from_zero_ui/src/field_validators.dart';
 import 'package:from_zero_ui/src/table_from_zero_models.dart';
@@ -20,11 +21,12 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   String get uiName => uiNameGetter(this, dao);
   FieldValueGetter<String?, Field>? hintGetter;
   String? get hint => hintGetter?.call(this, dao);
+  FieldValueGetter<String?, Field>? tooltipGetter;
+  String? get tooltip => tooltipGetter?.call(this, dao);
   T? dbValue;
   FieldValueGetter<bool, Field> clearableGetter;
   bool get clearable => clearableGetter(this, dao);
-  FieldValueGetter<bool, Field> enabledGetter;
-  bool get enabled => enabledGetter(this, dao);
+  bool get enabled => validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).isEmpty;
   FieldValueGetter<bool, Field> hiddenInTableGetter;
   bool get hiddenInTable => hiddenInTableGetter(this, dao);
   FieldValueGetter<bool, Field> hiddenInViewGetter;
@@ -61,10 +63,10 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     required this.uiNameGetter,
     T? value,
     T? dbValue,
-    this.enabledGetter = trueFieldGetter,
     this.clearableGetter = trueFieldGetter,
     this.maxWidth = 512,
     this.hintGetter,
+    this.tooltipGetter,
     this.focusNode,
     this.tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
@@ -92,10 +94,10 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     FieldValueGetter<String, Field>? uiNameGetter,
     T? value,
     T? dbValue,
-    FieldValueGetter<bool, Field>? enabledGetter,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     FieldValueGetter<String?, Field>? hintGetter,
+    FieldValueGetter<String?, Field>? tooltipGetter,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -111,10 +113,10 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       uiNameGetter: uiNameGetter??this.uiNameGetter,
       value: value??this.value,
       dbValue: dbValue??this.dbValue,
-      enabledGetter: enabledGetter??this.enabledGetter,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
       hintGetter: hintGetter??this.hintGetter,
+      tooltipGetter: tooltipGetter??this.tooltipGetter,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
       hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
       hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
@@ -168,15 +170,19 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     notifyListeners();
   }
 
-  Future<bool> validate(BuildContext context, DAO dao) async {
+  Future<bool> validate(BuildContext context, DAO dao, {
+    bool validateIfNotEdited=false,
+  }) async {
     validationErrors = [];
     if (hiddenInForm) {
       return true;
     }
-    passedFirstEdit = true;
+    if (validateIfNotEdited) {
+      passedFirstEdit = true;
+    }
     validators.forEach((e) {
       final error = e(context, dao, this);
-      if (error!=null) {
+      if (error!=null && (error.isBeforeEditing || passedFirstEdit || validateIfNotEdited)) {
         validationErrors.add(error);
       }
     });

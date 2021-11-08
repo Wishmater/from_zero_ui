@@ -69,15 +69,19 @@ class ComboFromZero<T> extends StatefulWidget {
             children: [
               SizedBox(width: 8,),
               Expanded(
-                child: MaterialKeyValuePair(
-                  title: title,
-                  value: value==null ? (hint ?? '') : value.toString(),
-                  valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
-                    height: 1,
-                    color: value==null ? Theme.of(context).textTheme.caption!.color!
-                        : Theme.of(context).textTheme.bodyText1!.color!,
-                  ),
-                ),
+                child: value==null&&hint==null&&title!=null
+                    ? Text(title, style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                    ),)
+                    : MaterialKeyValuePair(
+                      title: title,
+                      value: value==null ? (hint ?? '') : value.toString(),
+                      valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
+                        height: 1,
+                        color: value==null ? Theme.of(context).textTheme.caption!.color!
+                            : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                      ),
+                    ),
               ),
               SizedBox(width: 4,),
               if (showDropdownIcon && enabled && !clearable)
@@ -118,20 +122,20 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
   }
   void init() async {
     possibleValues = (widget.possibleValues==null ? null : List.from(widget.possibleValues!)) ?? possibleValues;
-    if (widget.sort) sort();
+    // if (widget.sort) sort();
     if (widget.futurePossibleValues!=null) {
       possibleValues = List.from(await widget.futurePossibleValues!);
-      if (widget.sort) sort();
+      // if (widget.sort) sort();
       setState(() {});
     }
   }
-  void sort() {
-    if (possibleValues!=null) {
-      possibleValues!.sort((a, b) {
-        return a.toString().compareTo(b.toString());
-      });
-    }
-  }
+  // void sort() { // sorting is now delegated to the tableFromZero in the popup
+  //   if (possibleValues!=null) {
+  //     possibleValues!.sort((a, b) {
+  //       return a.toString().compareTo(b.toString());
+  //     });
+  //   }
+  // }
 
   late final buttonFocusNode = widget.focusNode ?? FocusNode();
   @override
@@ -182,6 +186,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
                   onSelected: widget.onSelected,
                   onCanceled: widget.onCanceled,
                   value: widget.value,
+                  sort: widget.sort,
                   showSearchBox: widget.showSearchBox,
                   showViewActionOnDAOs: widget.showViewActionOnDAOs,
                   title: widget.title,
@@ -242,27 +247,27 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
               right: 8, top: 0, bottom: 0,
               child: ExcludeFocus(
                 child: Center(
-                    child: AnimatedSwitcher(
-                      duration: Duration(milliseconds: 300),
-                      switchInCurve: Curves.easeOutCubic,
-                      transitionBuilder: (child, animation) {
-                        return SizeTransition(
-                          sizeFactor: animation,
-                          child: FadeTransition(
-                            opacity: animation,
-                            child: child,
-                          ),
-                        );
+                  child: AnimatedSwitcher(
+                    duration: Duration(milliseconds: 300),
+                    switchInCurve: Curves.easeOutCubic,
+                    transitionBuilder: (child, animation) {
+                      return SizeTransition(
+                        sizeFactor: animation,
+                        child: FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: widget.value!=null ? IconButton(
+                      icon: Icon(Icons.close),
+                      tooltip: FromZeroLocalizations.of(context).translate('clear'),
+                      splashRadius: 20,
+                      onPressed: () {
+                        widget.onSelected?.call(null);
                       },
-                      child: widget.value!=null ? IconButton(
-                        icon: Icon(Icons.close),
-                        tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                        splashRadius: 20,
-                        onPressed: () {
-                          widget.onSelected?.call(null);
-                        },
-                      ) : SizedBox.shrink(),
-                    )
+                    ) : SizedBox.shrink(),
+                  ),
                 ),
               ),
             ),
@@ -297,6 +302,7 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
   final OnPopupItemSelected<T>? onSelected;
   final bool showSearchBox;
   final bool showViewActionOnDAOs;
+  final bool sort;
   final String? title;
   final ExtraWidgetBuilder<T>? extraWidget;
   final Widget Function(T value)? popupWidgetBuilder;
@@ -308,6 +314,7 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
     this.onCanceled,
     this.showSearchBox = true,
     this.showViewActionOnDAOs = true,
+    this.sort = true,
     this.title,
     this.extraWidget,
     this.popupWidgetBuilder,
@@ -321,20 +328,12 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
 class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
 
   final ScrollController popupScrollController = ScrollController();
-  late List<T> filtered;
   String? searchQuery;
+  TableController tableController = TableController();
 
   @override
   void initState() {
     super.initState();
-    filter();
-  }
-
-  void filter() {
-    filtered = widget.possibleValues;
-    if (searchQuery!=null) {
-      filtered = filtered.where((element) => element.toString().toUpperCase().contains(searchQuery!.toUpperCase())).toList();
-    }
   }
 
   @override
@@ -349,12 +348,20 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
             if (!widget.showSearchBox)
               SliverToBoxAdapter(child: SizedBox(height: 12,),),
             TableFromZero(
+              tableController: tableController,
               layoutWidgetType: TableFromZero.sliverListViewBuilder,
               showHeaders: false,
               horizontalPadding: 8,
+              initialSortedColumnIndex: widget.sort ? 0 : -1,
               cellBuilder: widget.popupWidgetBuilder==null ? null
                   : (context, row, col, j) => widget.popupWidgetBuilder!(row.id),
-              rows: filtered.map((e) {
+              onFilter: (filtered) {
+                if (searchQuery!=null && searchQuery!.isNotEmpty) {
+                  return filtered.where((e) => e.id.toString().toUpperCase().contains(searchQuery!.toUpperCase())).toList();
+                }
+                return filtered;
+              },
+              rows: widget.possibleValues.map((e) {
                 return SimpleRowModel(
                   id: e,
                   values: [e.toString()],
@@ -398,14 +405,13 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                           suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
                         ),
                         onChanged: (value) {
-                          setState(() {
-                            searchQuery = value;
-                            filter();
-                          });
+                          searchQuery = value;
+                          tableController.filter();
                         },
                         onFieldSubmitted: (value) {
+                          final filtered = tableController.filtered!;
                           if (filtered.length==1) {
-                            _select(filtered.first);
+                            _select(filtered.first.id);
                           }
                         },
                       ),

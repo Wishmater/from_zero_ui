@@ -602,7 +602,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
             child: Builder(
               builder: (context) {
                 Widget result = SizedBox.expand(
-                  child: widget.compact ? Tooltip(
+                  child: widget.compact ? TooltipFromZero(
                     message: widget.title,
                     child: Padding(
                       padding: const EdgeInsets.only(left: 6),

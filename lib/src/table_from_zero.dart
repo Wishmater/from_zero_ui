@@ -240,11 +240,11 @@ class TableFromZeroState extends State<TableFromZero> {
         sharedController.jumpTo(pixels);
       }
     });
-    if (sortedColumnIndex==null) {
+    if (sortedColumnIndex==null || sortedColumnIndex==-1) {
       sortedColumnIndex = widget.initialSortedColumnIndex;
     }
-    if (sortedColumnIndex!=null) {
-      sortedAscending = widget.columns![sortedColumnIndex!].defaultSortAscending ?? true;
+    if (sortedColumnIndex!=null && sortedColumnIndex!>=0) {
+      sortedAscending = widget.columns?[sortedColumnIndex!].defaultSortAscending ?? true;
     }
     init(notifyListeners: false,);
   }
@@ -1031,7 +1031,7 @@ class TableFromZeroState extends State<TableFromZero> {
               textAlign: _getAlignment(j),
               maxLines: widget.autoSizeTextMaxLines,
               minFontSize: 14,
-              overflowReplacement: Tooltip(
+              overflowReplacement: TooltipFromZero(
                 message: widget.columns![j].name,
                 waitDuration: Duration(milliseconds: 0),
                 verticalOffset: -16,
@@ -1426,7 +1426,7 @@ class TableFromZeroState extends State<TableFromZero> {
       textAlign: _getAlignment(j),
       maxLines: widget.autoSizeTextMaxLines,
       minFontSize: 14,
-      overflowReplacement: Tooltip(
+      overflowReplacement: TooltipFromZero(
         message: message,
         waitDuration: Duration(milliseconds: 0),
         verticalOffset: -16,
@@ -1572,9 +1572,12 @@ class TableFromZeroState extends State<TableFromZero> {
       });
       return pass;
     }).toList();
-    if (widget.onFilter!=null) filtered = widget.onFilter!(filtered);
-    if (filtered.isEmpty) filtered.add(ErrorRow());
-//    if (widget.headerRowModel!=null) filtered.insert(0, widget.headerRowModel);
+    if (widget.onFilter!=null) {
+      filtered = widget.onFilter!(filtered);
+    }
+    if (filtered.isEmpty) {
+      filtered.add(ErrorRow());
+    }
     if (notifyListeners) {
       widget.tableController?.notifyListeners();
     }

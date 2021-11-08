@@ -9,6 +9,7 @@ enum ValidationErrorSeverity {
   warning,
   nonBlockingError,
   error,
+  disabling,
   invalidating,
 }
 
@@ -21,7 +22,10 @@ class ValidationError {
   });
   @override
   String toString() => error;
+  bool get isVisibleAsHintMessage => severity!=ValidationErrorSeverity.disabling;
+  bool get isVisibleAsTooltip => severity==ValidationErrorSeverity.disabling;
   bool get isBlocking => severity==ValidationErrorSeverity.error || severity==ValidationErrorSeverity.invalidating;
+  bool get isBeforeEditing => severity==ValidationErrorSeverity.disabling || severity==ValidationErrorSeverity.invalidating;
 }
 
 class InvalidatingError<T> extends ValidationError {
@@ -102,16 +106,91 @@ ValidationError? fieldValidatorStringIsEmail(BuildContext context, DAO dao, Fiel
 
 
 
+
+class FieldDiffMessage extends StatelessWidget {
+
+  final Field field;
+  final dynamic oldValue;
+  final dynamic newValue;
+  late final Field oldValueField;
+  late final Field newdValueField;
+
+  FieldDiffMessage({
+    Key? key,
+    required this.field,
+    required this.oldValue,
+    required this.newValue,
+  }) : super(key: key) {
+    oldValueField = field.copyWith()..value=oldValue;
+    newdValueField = field.copyWith()..value=newValue;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(8)),
+          border: Border.all(
+            width: 2,
+            color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.3),
+          ),
+        ),
+        child: IntrinsicHeight(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(field.uiName),
+              IntrinsicWidth(
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: MaterialKeyValuePair(
+                        title: FromZeroLocalizations.of(context).translate("old_value"),
+                        value: oldValueField.toString(),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16, left: 6, right: 6),
+                      child: Icon(Icons.arrow_right_alt),
+                    ),
+                    Expanded(
+                      child: MaterialKeyValuePair(
+                        title: FromZeroLocalizations.of(context).translate("new_value"),
+                        value: newdValueField.toString(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+}
+
+
+
+
+
 class ValidationMessage extends StatefulWidget {
 
   static final Map<Brightness, Map<ValidationErrorSeverity, Color>> severityColors = {
     Brightness.light: {
+      ValidationErrorSeverity.disabling: Colors.grey.shade800,
       ValidationErrorSeverity.warning: Colors.yellow.shade900,
       ValidationErrorSeverity.nonBlockingError: Colors.red.shade900,
       ValidationErrorSeverity.error: Colors.red.shade900,
       ValidationErrorSeverity.invalidating: Colors.red.shade900,
     },
     Brightness.dark: {
+      ValidationErrorSeverity.disabling: Colors.grey.shade400,
       ValidationErrorSeverity.warning: Colors.yellow.shade400,
       ValidationErrorSeverity.nonBlockingError: Colors.red.shade400,
       ValidationErrorSeverity.error: Colors.red.shade400,
@@ -122,10 +201,14 @@ class ValidationMessage extends StatefulWidget {
   static const int animationCount = 5;
   static const double animationCountRate = 1/animationCount;
   final List<ValidationError> errors;
+  final TextStyle? errorTextStyle;
+  final bool animate;
 
   ValidationMessage({
     Key? key,
     required this.errors,
+    this.animate = true,
+    this.errorTextStyle,
   }) : super(key: key);
 
   @override
@@ -142,9 +225,9 @@ class _ValidationMessageState extends State<ValidationMessage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: widget.errors.map((e) {
+        children: widget.errors.where((e) => e.isVisibleAsHintMessage).map((e) {
           return InitiallyAnimatedWidget(
-            duration: Duration(milliseconds: 300),
+            duration: Duration(milliseconds: widget.animate ? 300 : 0),
             curve: Curves.easeOutCubic,
             builder: (animationController, child) {
               return SizeTransition(
@@ -156,7 +239,7 @@ class _ValidationMessageState extends State<ValidationMessage> {
             },
             child: InitiallyAnimatedWidget(
               key: ValueKey(e.severity.toString() + e.error),
-              duration: Duration(milliseconds: 2000,),
+              duration: Duration(milliseconds: widget.animate ? 2000 : 0,),
               curve: Curves.linear,
               builder: (animation, child) {
                 final baseColor = ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!;
@@ -184,7 +267,7 @@ class _ValidationMessageState extends State<ValidationMessage> {
                           : Colors.transparent,
                     ),
                     child: Text(e.toString(),
-                      style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      style: (widget.errorTextStyle ?? Theme.of(context).textTheme.subtitle1!).copyWith(
                         color: e.isBlocking
                             ? Colors.white
                             : color,

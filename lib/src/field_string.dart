@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -36,9 +37,9 @@ class StringField extends Field<String> {
     String? value,
     String? dbValue,
     FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter,
-    FieldValueGetter<bool, Field> enabledGetter = trueFieldGetter,
     double? maxWidth,
     FieldValueGetter<String?, Field>? hintGetter,
+    FieldValueGetter<String?, Field>? tooltipGetter,
     this.type = StringFieldType.short,
     int? minLines,
     int? maxLines,
@@ -65,8 +66,8 @@ class StringField extends Field<String> {
           value: value ?? '',
           dbValue: dbValue ?? value ?? '',
           clearableGetter: clearableGetter,
-          enabledGetter: enabledGetter,
           hintGetter: hintGetter,
+          tooltipGetter: tooltipGetter,
           maxWidth: maxWidth ?? (type==StringFieldType.short ? 512 : 512), //768
           tableColumnWidth: tableColumnWidth,
           hiddenGetter: hiddenGetter,
@@ -87,7 +88,7 @@ class StringField extends Field<String> {
     String? value,
     String? dbValue,
     FieldValueGetter<String?, Field>? hintGetter,
-    FieldValueGetter<bool, Field>? enabledGetter,
+    FieldValueGetter<String?, Field>? tooltipGetter,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     StringFieldType? type,
@@ -109,7 +110,6 @@ class StringField extends Field<String> {
       uiNameGetter: uiNameGetter??this.uiNameGetter,
       value: value??this.value,
       dbValue: dbValue??this.dbValue,
-      enabledGetter: enabledGetter??this.enabledGetter,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
       type: type??this.type,
@@ -117,6 +117,7 @@ class StringField extends Field<String> {
       maxLines: maxLines??this.maxLines,
       inputDecoration: inputDecoration??this.inputDecoration,
       hintGetter: hintGetter??this.hintGetter,
+      tooltipGetter: tooltipGetter??this.tooltipGetter,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
       hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
       hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
@@ -151,7 +152,7 @@ class StringField extends Field<String> {
             addCard: addCard,
             asSliver: asSliver,
             expandToFillContainer: expandToFillContainer,
-            largeVertically: constraints.maxHeight>64,
+            largeVertically: maxLines!=1,
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
             focusNode: focusNode,
           );
@@ -163,6 +164,7 @@ class StringField extends Field<String> {
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
         focusNode: focusNode,
+        largeVertically: maxLines!=1,
       );
     }
     if (asSliver) {
@@ -190,70 +192,98 @@ class StringField extends Field<String> {
         notifyListeners();
       }
     });
-    Widget result = NotificationListener<ScrollNotification>(
+    Widget result = NotificationListener(
       onNotification: (notification) => true,
-      child: Stack(
-        children: [
-          TextFormField(
-            controller: controller,
-            enabled: enabled,
-            focusNode: focusNode,
-            minLines: minLines,
-            maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
-            obscureText: obfuscate,
-            onChanged: (v) {
-              value = v;
-            },
-            inputFormatters: inputFormatters,
-            decoration: inputDecoration??InputDecoration(
-              labelText: uiName,
-              hintText: hint,
-              floatingLabelBehavior: hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
-              labelStyle: TextStyle(height: largeVertically ? 0.75 : 0.2,
-                color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!,
-              ),
-              hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
-              contentPadding: EdgeInsets.only(top: 10, bottom: 8, right: enabled&&clearable ? 40 : 0),
-            ),
-          ),
-          if (enabled && clearable)
-            Positioned(
-              right: -4, top: 6, bottom: 0,
-              child: ExcludeFocus(
-                child: Center(
-                  child: AnimatedBuilder(
-                    animation: this,
-                    builder: (context, child) {
-                      if (value==null || value!.trim().isEmpty) {
-                        return SizedBox.shrink();
-                      } else {
-                        return IconButton(
-                          icon: Icon(Icons.close),
-                          tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                          onPressed: () {
-                            value = '';
-                          },
-                        );
-                      }
-                    },
+      child: AnimatedBuilder(
+        animation: this,
+        builder: (context, child) {
+          Widget result = Stack(
+            fit: largeVertically ? StackFit.loose : StackFit.expand,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(bottom: largeVertically ? 16 : 0, top: largeVertically ? 12 : 2,),
+                child: TextFormField(
+                  controller: controller,
+                  enabled: enabled,
+                  focusNode: focusNode,
+                  minLines: minLines,
+                  maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
+                  obscureText: obfuscate,
+                  onChanged: (v) {
+                    value = v;
+                  },
+                  inputFormatters: inputFormatters,
+                  decoration: inputDecoration??InputDecoration(
+                    border: InputBorder.none,
+                    labelText: uiName,
+                    hintText: hint,
+                    floatingLabelBehavior: enabled&&hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
+                    labelStyle: TextStyle(height: largeVertically ? 0.75 : 1.85,
+                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                    ),
+                    hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
+                    contentPadding: EdgeInsets.only(
+                      left: 16,
+                      right: enabled&&clearable ? 16+40 : 16,
+                    ),
                   ),
                 ),
               ),
-            ),
-        ],
+              if (enabled && clearable)
+                Positioned(
+                  right: 8, top: 0, bottom: 0,
+                  child: ExcludeFocus(
+                    child: Center(
+                      child: AnimatedSwitcher(
+                        duration: Duration(milliseconds: 300),
+                        switchInCurve: Curves.easeOutCubic,
+                        transitionBuilder: (child, animation) {
+                          return SizeTransition(
+                            sizeFactor: animation,
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: value!=null && value!.trim().isNotEmpty ? IconButton(
+                          icon: Icon(Icons.close),
+                          tooltip: FromZeroLocalizations.of(context).translate('clear'),
+                          splashRadius: 20,
+                          onPressed: () {
+                            value = '';
+                          },
+                        ) : SizedBox.shrink(),
+                      ),
+                    ),
+                  ),
+                ),
+              if (!enabled)
+                Positioned.fill(
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.forbidden,
+                  ),
+                ),
+            ],
+          );
+          result = TooltipFromZero(
+            message: validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+              return a.toString().trim().isEmpty ? b.toString()
+                  : b.toString().trim().isEmpty ? a.toString()
+                  : '$a\n$b';
+            }),
+            child: result,
+            triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
+            waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
+          );
+          return result;
+        },
       ),
     );
     if (addCard) {
       result = Card(
-        color: enabled ? null : Color.lerp(Theme.of(context).cardColor, Colors.black, 0.18),
-        child: Padding(
-          padding: EdgeInsets.only(left: 15, right: 15, bottom: largeVertically ? 6 : 0),
-          child: result,
-        ),
-      );
-    } else {
-      result = Container(
-
+        color: enabled ? null : Theme.of(context).canvasColor,
+        child: result,
       );
     }
     return Padding(
@@ -265,7 +295,10 @@ class StringField extends Field<String> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            result,
+            SizedBox(
+              height: largeVertically ? null : 64,
+              child: result,
+            ),
             ValidationMessage(errors: validationErrors),
           ],
         ),

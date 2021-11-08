@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao.dart';
 import 'package:from_zero_ui/src/field_validators.dart';
+import 'package:from_zero_ui/util/my_tooltip.dart';
 import 'package:intl/intl.dart';
 import 'package:from_zero_ui/src/field.dart';
+import 'package:dartx/dartx.dart';
 
 
 class DateField extends Field<DateTime> {
@@ -24,10 +26,10 @@ class DateField extends Field<DateTime> {
     DateTime? value,
     DateTime? dbValue,
     FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter,
-    FieldValueGetter<bool, Field> enabledGetter = trueFieldGetter,
     double maxWidth = 512,
     DateFormat? formatter,
     FieldValueGetter<String?, Field>? hintGetter,
+    FieldValueGetter<String?, Field>? tooltipGetter,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -46,9 +48,9 @@ class DateField extends Field<DateTime> {
           value: value,
           dbValue: dbValue,
           clearableGetter: clearableGetter,
-          enabledGetter: enabledGetter,
           maxWidth: maxWidth,
           hintGetter: hintGetter,
+          tooltipGetter: tooltipGetter,
           tableColumnWidth: tableColumnWidth,
           hiddenGetter: hiddenGetter,
           hiddenInTableGetter: hiddenInTableGetter,
@@ -66,12 +68,12 @@ class DateField extends Field<DateTime> {
     FieldValueGetter<String, Field>? uiNameGetter,
     DateTime? value,
     DateTime? dbValue,
-    FieldValueGetter<bool, Field>? enabledGetter,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     DateTime? firstDate,
     DateTime? lastDate,
     FieldValueGetter<String?, Field>? hintGetter,
+    FieldValueGetter<String?, Field>? tooltipGetter,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -87,12 +89,12 @@ class DateField extends Field<DateTime> {
       uiNameGetter: uiNameGetter??this.uiNameGetter,
       value: value??this.value,
       dbValue: dbValue??this.dbValue,
-      enabledGetter: enabledGetter??this.enabledGetter,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
       firstDate: firstDate??this.firstDate,
       lastDate: lastDate??this.lastDate,
       hintGetter: hintGetter??this.hintGetter,
+      tooltipGetter: tooltipGetter??this.tooltipGetter,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
       hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
       hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
@@ -157,27 +159,35 @@ class DateField extends Field<DateTime> {
     Widget result = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
-        return Stack(
-          children: [
-            DatePickerFromZero(
-              enabled: enabled,
-              clearable: clearable,
-              title: uiName,
-              firstDate: firstDate,
-              lastDate: lastDate,
-              hint: hint,
-              value: value,
-              onSelected: (v) {value=v;},
-              popupWidth: maxWidth,
-              buttonChildBuilder: _buttonContentBuilder,
-            ),
-          ],
+        Widget result = DatePickerFromZero(
+          enabled: enabled,
+          clearable: clearable,
+          title: uiName,
+          firstDate: firstDate,
+          lastDate: lastDate,
+          hint: hint,
+          value: value,
+          onSelected: (v) {value=v;},
+          popupWidth: maxWidth,
+          buttonChildBuilder: _buttonContentBuilder,
         );
+        result = TooltipFromZero(
+          message: validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+            return a.toString().trim().isEmpty ? b.toString()
+                : b.toString().trim().isEmpty ? a.toString()
+                : '$a\n$b';
+          }),
+          child: result,
+          triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
+          waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
+        );
+        return result;
       },
     );
     if (addCard) {
       result = Card(
         clipBehavior: Clip.hardEdge,
+        color: enabled ? null : Theme.of(context).canvasColor,
         child: result,
       );
     }
@@ -215,16 +225,23 @@ class DateField extends Field<DateTime> {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                MaterialKeyValuePair(
-                  title: title,
-                  padding: 6,
-                  value: value==null ? (hint ?? '') : formatter.format(value),
-                  valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
-                    height: 1,
-                    color: value==null ? Theme.of(context).textTheme.caption!.color!
-                        : Theme.of(context).textTheme.bodyText1!.color!,
-                  ),
-                ),
+                value==null&&hint==null&&title!=null
+                    ? Text(title, style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                    ),)
+                    : MaterialKeyValuePair(
+                      padding: 6,
+                      title: title,
+                      titleStyle: Theme.of(context).textTheme.caption!.copyWith(
+                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                      ),
+                      value: value==null ? (hint ?? '') : formatter.format(value),
+                      valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
+                        height: 1,
+                        color: value==null ? Theme.of(context).textTheme.caption!.color!
+                            : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                      ),
+                    ),
                 SizedBox(height: 4,),
               ],
             ),

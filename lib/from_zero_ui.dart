@@ -30,6 +30,7 @@ export 'package:from_zero_ui/src/table_from_zero_models.dart';
 export 'package:from_zero_ui/src/heroes_from_zero.dart';
 
 export 'package:from_zero_ui/src/export.dart';
+export 'package:from_zero_ui/util/my_tooltip.dart';
 
 export 'package:from_zero_ui/src/exposed_transitions.dart';
 export 'package:from_zero_ui/util/no_fading_material_transitions.dart';

@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/util/my_tooltip.dart';
 
 // Examples can assume:
 // enum Commands { heroAndScholar, hurricaneCame }
@@ -1161,7 +1162,7 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
         child: widget.child,
       );
       if (widget.tooltip!=""){
-        result = Tooltip(
+        result = TooltipFromZero(
           message: widget.tooltip ?? MaterialLocalizations.of(context).showMenuTooltip,
           child: result,
         );

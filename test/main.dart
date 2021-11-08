@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             title: 'FromZero playground',
             debugShowCheckedModeBanner: false,
-            themeMode: ThemeMode.dark, //themeParameters.themeMode
+            themeMode: ThemeMode.light, //themeParameters.themeMode
             theme: themeParameters.lightTheme,
             darkTheme: themeParameters.darkTheme,
             locale: Locale('ES'), //themeParameters.appLocale

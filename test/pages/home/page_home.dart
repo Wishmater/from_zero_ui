@@ -10,7 +10,6 @@ import 'package:from_zero_ui/src/settings.dart';
 import 'package:provider/provider.dart';
 
 import '../../change_notifiers/theme_parameters.dart';
-import '../../daos/et.dart';
 
 class PageHome extends PageFromZero {
 
@@ -139,51 +138,37 @@ class _PageHomeState extends State<PageHome> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               AppbarFiller(),
-              // SizedBox(height: 12,),
-              // AspectRatio(
-              //   aspectRatio: 4,
-              //   child: FromZeroBanner(logoSizePercentage: 0.8,),
-              // ),
-              // SizedBox(height: 12,),
-              RaisedButton(
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add),
-                    Text('Nueva ET'),
-                  ],
-                ),
-                onPressed: () {
-                  getEtDao().maybeEdit(context,
-
-                  );
-                },
+              SizedBox(height: 12,),
+              AspectRatio(
+                aspectRatio: 4,
+                child: FromZeroBanner(logoSizePercentage: 0.8,),
               ),
-              // SizedBox(height: 12,),
-              // Card(
-              //   clipBehavior: Clip.hardEdge,
-              //   child: Container(height: 1200, width: 600, color: Colors.red,
-              //     child: Column(
-              //       children: [
-              //         SizedBox(height: 16,),
-              //         Text(Platform.script.toString()),
-              //         SizedBox(height: 16,),
-              //         AspectRatio(
-              //           aspectRatio: 4,
-              //           child: FromZeroBanner(logoSizePercentage: 0.8,),
-              //         ),
-              //         SizedBox(height: 32,),
-              //         RaisedButton(
-              //           child: Text("SCAFFOLD"),
-              //           onPressed: () {
-              //             Navigator.of(context).pushNamed("/scaffold");
-              //           },
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
-              // SizedBox(height: 12,),
+              SizedBox(height: 12,),
+              SizedBox(height: 12,),
+              Card(
+                clipBehavior: Clip.hardEdge,
+                child: Container(height: 1200, width: 600, color: Colors.red,
+                  child: Column(
+                    children: [
+                      SizedBox(height: 16,),
+                      Text(Platform.script.toString()),
+                      SizedBox(height: 16,),
+                      AspectRatio(
+                        aspectRatio: 4,
+                        child: FromZeroBanner(logoSizePercentage: 0.8,),
+                      ),
+                      SizedBox(height: 32,),
+                      RaisedButton(
+                        child: Text("SCAFFOLD"),
+                        onPressed: () {
+                          Navigator.of(context).pushNamed("/scaffold");
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              SizedBox(height: 12,),
             ],
           ),
         ),

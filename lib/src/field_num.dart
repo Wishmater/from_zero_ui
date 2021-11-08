@@ -27,12 +27,12 @@ class NumField extends Field<num> {
     num? value,
     num? dbValue,
     FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter,
-    FieldValueGetter<bool, Field> enabledGetter = trueFieldGetter,
     this.formatter,
     this.inputDecoration,
     this.digitsAfterComma = 0,
     double? maxWidth,
     FieldValueGetter<String?, Field>? hintGetter,
+    FieldValueGetter<String?, Field>? tooltipGetter,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -49,8 +49,8 @@ class NumField extends Field<num> {
           value: value,
           dbValue: dbValue,
           clearableGetter: clearableGetter,
-          enabledGetter: enabledGetter,
           hintGetter: hintGetter,
+          tooltipGetter: tooltipGetter,
           maxWidth: 512, //768
           tableColumnWidth: tableColumnWidth,
           hiddenGetter: hiddenGetter,
@@ -79,7 +79,7 @@ class NumField extends Field<num> {
     num? value,
     num? dbValue,
     FieldValueGetter<String?, Field>? hintGetter,
-    FieldValueGetter<bool, Field>? enabledGetter,
+    FieldValueGetter<String?, Field>? tooltipGetter,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     int? digitsAfterComma,
@@ -98,11 +98,11 @@ class NumField extends Field<num> {
       uiNameGetter: uiNameGetter??this.uiNameGetter,
       value: value??this.value,
       dbValue: dbValue??this.dbValue,
-      enabledGetter: enabledGetter??this.enabledGetter,
       clearableGetter: clearableGetter??this.clearableGetter,
       formatter: formatter??this.formatter,
       maxWidth: maxWidth??this.maxWidth,
       hintGetter: hintGetter??this.hintGetter,
+      tooltipGetter: tooltipGetter??this.tooltipGetter,
       digitsAfterComma: digitsAfterComma??this.digitsAfterComma,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
       hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
@@ -147,7 +147,7 @@ class NumField extends Field<num> {
             addCard: addCard,
             asSliver: asSliver,
             expandToFillContainer: expandToFillContainer,
-            largeVertically: constraints.maxHeight>64,
+            largeVertically: false,
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
             focusNode: focusNode,
           );
@@ -159,6 +159,7 @@ class NumField extends Field<num> {
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
         focusNode: focusNode,
+        largeVertically: false,
       );
     }
     if (asSliver) {
@@ -173,7 +174,7 @@ class NumField extends Field<num> {
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
-    bool largeVertically = true,
+    bool largeVertically = false,
     bool largeHorizontally = false,
     FocusNode? focusNode,
   }) {
@@ -186,62 +187,97 @@ class NumField extends Field<num> {
         notifyListeners();
       }
     });
-    Widget result = NotificationListener<ScrollNotification>(
+    Widget result = NotificationListener(
       onNotification: (notification) => true,
-      child: Stack(
-        children: [
-          TextFormField(
-            controller: controller,
-            enabled: enabled,
-            focusNode: focusNode,
-            onChanged: (v) {
-              value = _getTextVal(v);
-            },
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(digitsAfterComma==0 ? (r'[0-9]') : (r'[0-9.]'))),],
-            decoration: inputDecoration??InputDecoration(
-              labelText: uiName,
-              hintText: hint,
-              floatingLabelBehavior: hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
-              labelStyle: TextStyle(height: largeVertically ? 0.75 : 0.2),
-              hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
-              contentPadding: EdgeInsets.only(top: 8, bottom: 8, right: enabled&&clearable ? 40 : 0),
-            ),
-          ),
-          if (enabled && clearable)
-            Positioned(
-              right: -4, top: 6, bottom: 0,
-              child: ExcludeFocus(
-                child: Center(
-                  child: AnimatedBuilder(
-                    animation: this,
-                    builder: (context, child) {
-                      if (value==null) {
-                        return SizedBox.shrink();
-                      } else {
-                        return IconButton(
+      child: AnimatedBuilder(
+        animation: this,
+        builder: (context, child) {
+          Widget result = Stack(
+            fit: largeVertically ? StackFit.loose : StackFit.expand,
+            children: [
+              Padding(
+                padding: EdgeInsets.only(bottom: largeVertically ? 16 : 0, top: largeVertically ? 12 : 2,),
+                child: TextFormField(
+                  controller: controller,
+                  enabled: enabled,
+                  focusNode: focusNode,
+                  onChanged: (v) {
+                    value = _getTextVal(v);
+                  },
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(digitsAfterComma==0 ? (r'[0-9]') : (r'[0-9.]'))),],
+                  decoration: inputDecoration??InputDecoration(
+                    border: InputBorder.none,
+                    labelText: uiName,
+                    hintText: hint,
+                    floatingLabelBehavior: enabled&&hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
+                    labelStyle: TextStyle(height: largeVertically ? 0.75 : 1.85,
+                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                    ),
+                    hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
+                    contentPadding: EdgeInsets.only(
+                      left: 16,
+                      right: enabled&&clearable ? 16+40 : 16,
+                    ),
+                  ),
+                ),
+              ),
+              if (enabled && clearable)
+                Positioned(
+                  right: 8, top: 0, bottom: 0,
+                  child: ExcludeFocus(
+                    child: Center(
+                      child: AnimatedSwitcher(
+                        duration: Duration(milliseconds: 300),
+                        switchInCurve: Curves.easeOutCubic,
+                        transitionBuilder: (child, animation) {
+                          return SizeTransition(
+                            sizeFactor: animation,
+                            child: FadeTransition(
+                              opacity: animation,
+                              child: child,
+                            ),
+                          );
+                        },
+                        child: value!=null ? IconButton(
                           icon: Icon(Icons.close),
                           tooltip: FromZeroLocalizations.of(context).translate('clear'),
+                          splashRadius: 20,
                           onPressed: () {
                             value = null;
                             controller.clear();
                           },
-                        );
-                      }
-                    },
+                        ) : SizedBox.shrink(),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-        ],
+              if (!enabled)
+                Positioned.fill(
+                  child: MouseRegion(
+                    cursor: SystemMouseCursors.forbidden,
+                  ),
+                ),
+            ],
+          );
+          result = TooltipFromZero(
+            message: validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+              return a.toString().trim().isEmpty ? b.toString()
+                  : b.toString().trim().isEmpty ? a.toString()
+                  : '$a\n$b';
+            }),
+            child: result,
+            triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
+            waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
+          );
+          return result;
+        },
       ),
     );
     if (addCard) {
       result = Card(
-        child: Padding(
-          padding: EdgeInsets.only(left: 15, right: 15, bottom: largeVertically ? 6 : 0),
-          child: result,
-        ),
+        color: enabled ? null : Theme.of(context).canvasColor,
+        child: result,
       );
     }
     return Padding(
@@ -253,7 +289,10 @@ class NumField extends Field<num> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            result,
+            SizedBox(
+              height: largeVertically ? null : 64,
+              child: result,
+            ),
             ValidationMessage(errors: validationErrors),
           ],
         ),

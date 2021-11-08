@@ -359,7 +359,13 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
     return LayoutBuilder(
       builder: (context, constraints) {
         _addCallback(null);
-        Widget child = Container(key: globalKey, child: widget.child,);
+        Widget child = NotificationListener<ScrollMetricsNotification>(
+          onNotification: (notification) {
+            setState((){});
+            return false;
+          },
+          child: Container(key: globalKey, child: widget.child,),
+        );
         if (size == null){
           return AnimatedContainer(
             duration: widget.duration,

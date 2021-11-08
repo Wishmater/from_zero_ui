@@ -73,7 +73,6 @@ class OneToManyRelationField extends Field<String> {
     this.showObjectsFromAvailablePoolAsTable = false,
     this.allowAddNew = true,
     FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, /// Unused in table
-    FieldValueGetter<bool, Field> enabledGetter = trueFieldGetter, //TODO implement enabled
     this.tableCellsEditable = false,
     double maxWidth = double.infinity,
     List<DAO>? objects,
@@ -95,6 +94,7 @@ class OneToManyRelationField extends Field<String> {
     this.showAddButtonAtEndOfTable = false,
     bool? showEditDialogOnAdd,
     FieldValueGetter<String?, Field>? hintGetter,
+    FieldValueGetter<String?, Field>? tooltipGetter,
     this.tableKey,
     this.tableErrorWidget,
     this.futureErrorWidgetBuilder,
@@ -122,9 +122,9 @@ class OneToManyRelationField extends Field<String> {
           value: '',
           dbValue: '',
           clearableGetter: clearableGetter,
-          enabledGetter: enabledGetter,
           maxWidth: maxWidth,
           hintGetter: hintGetter,
+          tooltipGetter: tooltipGetter,
           tableColumnWidth: tableColumnWidth,
           hiddenGetter: hiddenGetter,
           hiddenInTableGetter: hiddenInTableGetter,
@@ -171,7 +171,7 @@ class OneToManyRelationField extends Field<String> {
     String? value,
     String? dbValue,
     FieldValueGetter<String?, Field>? hintGetter,
-    FieldValueGetter<bool, Field>? enabledGetter,
+    FieldValueGetter<String?, Field>? tooltipGetter,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     DAO? objectTemplate,
@@ -213,7 +213,6 @@ class OneToManyRelationField extends Field<String> {
   }) {
     return OneToManyRelationField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
-      enabledGetter: enabledGetter??this.enabledGetter,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
       objectTemplate: objectTemplate??this.objectTemplate,
@@ -221,6 +220,7 @@ class OneToManyRelationField extends Field<String> {
       dbObjects: dbObjects??objects??this.dbObjects?.map((e) => e.copyWith()).toList(),
       futureObjects: (objects??this.objects)!=null ? null : futureObjects??this.futureObjects,
       hintGetter: hintGetter??this.hintGetter,
+      tooltipGetter: tooltipGetter??this.tooltipGetter,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
       hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
       hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
@@ -516,6 +516,7 @@ class OneToManyRelationField extends Field<String> {
     propsShownOnTable.forEach((key, value) {
       width += value.tableColumnWidth ?? 192;
     });
+    double rowHeight = tableCellsEditable ? 48 : 36;
     result = AnimatedBuilder(
       key: fieldGlobalKey,
       animation:  this,
@@ -572,138 +573,154 @@ class OneToManyRelationField extends Field<String> {
           }
           return result;
         }
-        return TableFromZero(
-          key: tableKey ?? ValueKey(objects!.length),
-          maxWidth: maxWidth==double.infinity ? width : maxWidth,
-          minWidth: width,
-          initialSortedColumnIndex: initialSortColumn ?? 0,
-          tableController: tableController,
-          layoutWidgetType: asSliver
-              ? objects!.length<=10 ? TableFromZero.sliverAnimatedListViewBuilder : TableFromZero.sliverListViewBuilder
-              : !expandToFillContainer
-                  ? TableFromZero.column
-                  : objects!.length<=10 ? TableFromZero.animatedListViewBuilder : TableFromZero.listViewBuilder,
-          applyMinWidthToHeaderAddon: false,
-          verticalPadding: 0,
-          useSmartRowAlternativeColors: false,
-          columns: propsShownOnTable.values.map((e) {
-            final SimpleColModel result = e.getColModel();
-            if (tableFilterable!=null) {
-              result.filterEnabled = tableFilterable;
-            }
-            if (tableSortable!=null) {
-              result.sortEnabled = tableSortable;
-            }
-            return result;
-          }).toList(),
-          showHeaders: showTableHeaders,
-          rows: objects!.map((e) {
-            // e.props.remove(columnName);
-            return SimpleRowModel(
-              id: e,
-              values: propsShownOnTable.keys.map((k) => e.props[k]).toList(),
-              height: tableCellsEditable ? 72 : 42,
-              onRowTap: onRowTap ?? (viewOnRowTap ? (row) {
-                e.pushViewDialog(context);
-              } : null), //TODO if null, show view, if not show view as icon
-              actions: [
-                ...extraRowActionBuilders.map((builder) => builder(e)).toList(),
-                if (showActionView)
-                  IconButton(
-                    icon: Icon(Icons.remove_red_eye),
-                    tooltip: FromZeroLocalizations.of(context).translate('view'),
-                    onPressed: () async {
-                      e.pushViewDialog(context);
-                    },
-                  ),
-                if (showActionEdit)
-                  IconButton(
-                    icon: Icon(Icons.edit_outlined),
-                    tooltip: FromZeroLocalizations.of(context).translate('edit'),
-                    onPressed: () async {
-                      if (await e.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars)) {
-                        passedFirstEdit = true;
-                        notifyListeners();
-                      }
-                    },
-                  ),
-                if (showActionDuplicate)
-                  IconButton(
-                    icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
-                    tooltip: FromZeroLocalizations.of(context).translate('duplicate'),
-                    onPressed: () {
-                      duplicate([e]);
-                    },
-                  ),
-                if (showActionDelete)
-                  IconButton(
-                    icon: Icon(Icons.delete_forever_outlined),
-                    tooltip: FromZeroLocalizations.of(context).translate('delete'),
-                    onPressed: () async {
-                      if (await maybeDelete(context, [e])) {
-                        passedFirstEdit = true;
-                        notifyListeners();
-                      }
-                    },
-                  ),
-              ],
-              selected: allowMultipleSelection ? (selectedObjects.value[e]??false) : null,
-              backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
-              onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
-                selectedObjects.value[row.id] = focused??false;
-                selectedObjects.notifyListeners();
-                notifyListeners();
-              } : null,
-            );
-          }).toList(),
-          cellBuilder: tableCellsEditable ? (context, row, col, j) {
-            final widgets = (row.values[j] as Field).buildFieldEditorWidgets(context, expandToFillContainer: false);
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              // mainAxisAlignment: MainAxisAlignment.center,
-              children: widgets.map((widget) {
-                return Expanded(
-                  child: widget is SliverToBoxAdapter ? widget.child! : widget,
+        return Material(
+          color: Theme.of(context).cardColor,
+          child: Container(
+            color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
+            child: TableFromZero(
+              key: tableKey ?? ValueKey(objects!.length),
+              maxWidth: maxWidth==double.infinity ? width : maxWidth,
+              minWidth: width,
+              initialSortedColumnIndex: initialSortColumn ?? 0,
+              tableController: tableController,
+              layoutWidgetType: asSliver
+                  ? objects!.length<=10 ? TableFromZero.sliverAnimatedListViewBuilder : TableFromZero.sliverListViewBuilder
+                  : !expandToFillContainer
+                      ? TableFromZero.column
+                      : objects!.length<=10 ? TableFromZero.animatedListViewBuilder : TableFromZero.listViewBuilder,
+              applyMinWidthToHeaderAddon: false,
+              verticalPadding: 0,
+              useSmartRowAlternativeColors: false,
+              columns: propsShownOnTable.values.map((e) {
+                final SimpleColModel result = e.getColModel();
+                if (tableFilterable!=null) {
+                  result.filterEnabled = tableFilterable;
+                }
+                if (tableSortable!=null) {
+                  result.sortEnabled = tableSortable;
+                }
+                return result;
+              }).toList(),
+              showHeaders: showTableHeaders,
+              rows: objects!.map((e) {
+                // e.props.remove(columnName);
+                return SimpleRowModel(
+                  id: e,
+                  values: propsShownOnTable.keys.map((k) => e.props[k]).toList(),
+                  height: rowHeight,
+                  onRowTap: onRowTap ?? (viewOnRowTap ? (row) {
+                    e.pushViewDialog(context);
+                  } : null), //TODO if null, show view, if not show view as icon
+                  actions: [
+                    ...extraRowActionBuilders.map((builder) => builder(e)).toList(),
+                    if (showActionView)
+                      IconButton(
+                        icon: Icon(Icons.remove_red_eye),
+                        tooltip: FromZeroLocalizations.of(context).translate('view'),
+                        onPressed: () async {
+                          e.pushViewDialog(context);
+                        },
+                      ),
+                    if (showActionEdit)
+                      IconButton(
+                        icon: Icon(Icons.edit_outlined),
+                        tooltip: FromZeroLocalizations.of(context).translate('edit'),
+                        onPressed: () async {
+                          if (await e.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars)) {
+                            passedFirstEdit = true;
+                            notifyListeners();
+                          }
+                        },
+                      ),
+                    if (showActionDuplicate)
+                      IconButton(
+                        icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
+                        tooltip: FromZeroLocalizations.of(context).translate('duplicate'),
+                        onPressed: () {
+                          duplicate([e]);
+                        },
+                      ),
+                    if (showActionDelete)
+                      IconButton(
+                        icon: Icon(Icons.delete_forever_outlined),
+                        tooltip: FromZeroLocalizations.of(context).translate('delete'),
+                        onPressed: () async {
+                          if (await maybeDelete(context, [e])) {
+                            passedFirstEdit = true;
+                            notifyListeners();
+                          }
+                        },
+                      ),
+                  ],
+                  selected: allowMultipleSelection ? (selectedObjects.value[e]??false) : null,
+                  backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
+                  onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
+                    selectedObjects.value[row.id] = focused??false;
+                    selectedObjects.notifyListeners();
+                    notifyListeners();
+                  } : null,
                 );
               }).toList(),
-            );
-          } : null,
-          onFilter: (rows) {
-            filtered.value = rows.map((e) => e.id as DAO).toList();
-            return rows;
-          },
-          onAllSelected: allowMultipleSelection ? (value, rows) {
-            filtered.value = rows.map((e) => e.id as DAO).toList();
-            filtered.value!.forEach((element) {
-              selectedObjects.value[element] = value??false;
-              selectedObjects.notifyListeners();
-            });
-            notifyListeners();
-          } : null,
-          errorWidget: tableErrorWidget
-              ?? (availableObjectsPoolGetter==null
-                  ? Container(
-                    color: Material.of(context)!.color ?? Theme.of(context).cardColor,
-                    width: maxWidth==double.infinity ? width : maxWidth,
-                    child: ErrorSign(
-                      title: FromZeroLocalizations.of(context).translate('no_data'),
-                      subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
+              cellBuilder: tableCellsEditable ? (context, row, col, j) {
+                final widgets = (row.values[j] as Field).buildFieldEditorWidgets(context,
+                  expandToFillContainer: false,
+                  addCard: false,
+                  asSliver: false,
+                );
+                return SizedBox(
+                  height: rowHeight,
+                  child: OverflowBox(
+                    minHeight: rowHeight, maxHeight: double.infinity,
+                    alignment: Alignment(0, -0.4),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: widgets,
+                      // children: widgets.map((widget) {
+                      //   return Expanded(
+                      //     child: widget is SliverToBoxAdapter ? widget.child! : widget,
+                      //   );
+                      // }).toList(),
                     ),
-                  ) : SizedBox.shrink()),
-          headerAddon: _getTableHeader(context),
+                  ),
+                );
+              } : null,
+              onFilter: (rows) {
+                filtered.value = rows.map((e) => e.id as DAO).toList();
+                return rows;
+              },
+              onAllSelected: allowMultipleSelection ? (value, rows) {
+                filtered.value = rows.map((e) => e.id as DAO).toList();
+                filtered.value!.forEach((element) {
+                  selectedObjects.value[element] = value??false;
+                  selectedObjects.notifyListeners();
+                });
+                notifyListeners();
+              } : null,
+              errorWidget: tableErrorWidget
+                  ?? (availableObjectsPoolGetter==null
+                      ? Container(
+                        color: Theme.of(context).cardColor,
+                        width: maxWidth==double.infinity ? width : maxWidth,
+                        child: ErrorSign(
+                          title: FromZeroLocalizations.of(context).translate('no_data'),
+                          subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
+                        ),
+                      ) : SizedBox.shrink()),
+              headerAddon: _getTableHeader(context),
+            ),
+          ),
         );
       }
     );
-    // if (addCard) {
+    // if (addCard) { // TODO 3 implement addCard in table, and add it to each sliver, VERY HARD IPMLEMENTATION FOR LOW REWARD
     //   result = Card(
     //     clipBehavior: Clip.hardEdge,
     //     child: result,
     //   );
     // }
     List<Widget> resultList = [
-      SizedBox(height: 1,),
       result,
-      if ((allowAddNew||availableObjectsPoolGetter!=null) && showAddButtonAtEndOfTable)
+      if ((allowAddNew||availableObjectsPoolGetter!=null) && showAddButtonAtEndOfTable && !collapsed)
         AnimatedBuilder(
           animation:  this,
           builder: (context, child) {
@@ -750,8 +767,7 @@ class OneToManyRelationField extends Field<String> {
             );
           },
         ),
-      ValidationMessage(errors: validationErrors),
-      SizedBox(height: 1,),
+      // ValidationMessage(errors: validationErrors), // TODO 1 this is counted as an extra item and given padding. Ideally this would be a footing on the table, hard to implement tho
     ];
     if (asSliver) {
       resultList = resultList.map((e) => (e==result) ? e : SliverToBoxAdapter(child: e,)).toList();
