@@ -83,7 +83,7 @@ class ListField extends Field<ComparableList<DAO>> {
     this.collapsible = true,
     bool? viewOnRowTap,
     ActionState? actionViewType,
-    Map<double, ActionState>? actionEditBreakpoints, //= {0: ActionState.popup},
+    Map<double, ActionState>? actionEditBreakpoints, //= {0: ActionState.popup}, // TODO *** convert to actionEditType to actionEditBreakpoints, and use them to build actions
     Map<double, ActionState>? actionDuplicateBreakpoints, //= ActionState.none,
     Map<double, ActionState>? actionDeleteBreakpoints,  // = ActionState.icon,
     this.showTableHeaders = true,
