@@ -1,4 +1,6 @@
+import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as material;
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao.dart';
@@ -26,11 +28,13 @@ class NumField extends Field<num> {
     required FieldValueGetter<String, Field> uiNameGetter,
     num? value,
     num? dbValue,
-    FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter,
+    FieldValueGetter<bool, Field> clearableGetter = Field.defaultClearableGetter,
     this.formatter,
     this.inputDecoration,
     this.digitsAfterComma = 0,
-    double? maxWidth,
+    double maxWidth = 512,
+    double minWidth = 128,
+    double flex = 0,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
     double? tableColumnWidth,
@@ -43,6 +47,12 @@ class NumField extends Field<num> {
     FieldValueGetter<SimpleColModel, Field> colModelBuilder = numFieldDefaultGetColumn,
     List<num?>? undoValues,
     List<num?>? redoValues,
+    GlobalKey? fieldGlobalKey,
+    FocusNode? focusNode,
+    bool invalidateNonEmptyValuesIfHiddenInForm = true,
+    num? defaultValue,
+    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) :  controller = TextEditingController(text: toStringStatic(value, formatter)),
         super(
           uiNameGetter: uiNameGetter,
@@ -51,7 +61,9 @@ class NumField extends Field<num> {
           clearableGetter: clearableGetter,
           hintGetter: hintGetter,
           tooltipGetter: tooltipGetter,
-          maxWidth: 512, //768
+          maxWidth: maxWidth,
+          minWidth: minWidth,
+          flex: flex,
           tableColumnWidth: tableColumnWidth,
           hiddenGetter: hiddenGetter,
           hiddenInTableGetter: hiddenInTableGetter,
@@ -62,6 +74,12 @@ class NumField extends Field<num> {
           colModelBuilder: colModelBuilder,
           undoValues: undoValues,
           redoValues: redoValues,
+          fieldGlobalKey: fieldGlobalKey ?? GlobalKey(),
+          focusNode: focusNode ?? FocusNode(),
+          invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
+          defaultValue: defaultValue,
+          backgroundColor: backgroundColor,
+          actions: actions,
         );
 
   @override
@@ -82,6 +100,8 @@ class NumField extends Field<num> {
     FieldValueGetter<String?, Field>? tooltipGetter,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
+    double? minWidth,
+    double? flex,
     int? digitsAfterComma,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
@@ -93,6 +113,10 @@ class NumField extends Field<num> {
     FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
     List<num?>? undoValues,
     List<num?>? redoValues,
+    bool? invalidateNonEmptyValuesIfHiddenInForm,
+    num? defaultValue,
+    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) {
     return NumField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -101,6 +125,8 @@ class NumField extends Field<num> {
       clearableGetter: clearableGetter??this.clearableGetter,
       formatter: formatter??this.formatter,
       maxWidth: maxWidth??this.maxWidth,
+      minWidth: minWidth??this.minWidth,
+      flex: flex??this.flex,
       hintGetter: hintGetter??this.hintGetter,
       tooltipGetter: tooltipGetter??this.tooltipGetter,
       digitsAfterComma: digitsAfterComma??this.digitsAfterComma,
@@ -111,8 +137,12 @@ class NumField extends Field<num> {
       validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
       colModelBuilder: colModelBuilder ?? this.colModelBuilder,
-      undoValues: undoValues ?? this.undoValues,
-      redoValues: redoValues ?? this.redoValues,
+      undoValues: undoValues ?? List.from(this.undoValues),
+      redoValues: redoValues ?? List.from(this.redoValues),
+      invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
+      defaultValue: defaultValue ?? this.defaultValue,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      actions: actions ?? this.actions,
     );
   }
 
@@ -130,8 +160,12 @@ class NumField extends Field<num> {
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
+    bool dense = false,
     FocusNode? focusNode,
   }) {
+    if (focusNode==null) {
+      focusNode = this.focusNode;
+    }
     Widget result;
     if (hiddenInForm) {
       result = SizedBox.shrink();
@@ -149,7 +183,8 @@ class NumField extends Field<num> {
             expandToFillContainer: expandToFillContainer,
             largeVertically: false,
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
-            focusNode: focusNode,
+            focusNode: focusNode!,
+            dense: dense,
           );
         },
       );
@@ -160,6 +195,7 @@ class NumField extends Field<num> {
         expandToFillContainer: expandToFillContainer,
         focusNode: focusNode,
         largeVertically: false,
+        dense: dense,
       );
     }
     if (asSliver) {
@@ -169,20 +205,17 @@ class NumField extends Field<num> {
     }
     return [result];
   }
-  FocusNode _focusNode = FocusNode();
   Widget _buildFieldEditorWidget(BuildContext context, {
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool largeVertically = false,
     bool largeHorizontally = false,
-    FocusNode? focusNode,
+    bool dense = false,
+    required FocusNode focusNode,
   }) {
-    if (focusNode==null) {
-      focusNode = _focusNode;
-    }
     focusNode.addListener(() {
-      if (!passedFirstEdit && !focusNode!.hasFocus) {
+      if (!passedFirstEdit && !focusNode.hasFocus) {
         passedFirstEdit = true;
         notifyListeners();
       }
@@ -195,34 +228,50 @@ class NumField extends Field<num> {
           Widget result = Stack(
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [
-              Padding(
-                padding: EdgeInsets.only(bottom: largeVertically ? 16 : 0, top: largeVertically ? 12 : 2,),
-                child: TextFormField(
-                  controller: controller,
-                  enabled: enabled,
-                  focusNode: focusNode,
-                  onChanged: (v) {
-                    value = _getTextVal(v);
-                  },
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(digitsAfterComma==0 ? (r'[0-9]') : (r'[0-9.]'))),],
-                  decoration: inputDecoration??InputDecoration(
-                    border: InputBorder.none,
-                    labelText: uiName,
-                    hintText: hint,
-                    floatingLabelBehavior: enabled&&hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
-                    labelStyle: TextStyle(height: largeVertically ? 0.75 : 1.85,
-                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                    ),
-                    hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
-                    contentPadding: EdgeInsets.only(
-                      left: 16,
-                      right: enabled&&clearable ? 16+40 : 16,
+              AnimatedContainer(
+                duration: Duration(milliseconds: 300),
+                color: dense && validationErrors.isNotEmpty
+                    ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+                    : backgroundColor?.call(context, this, dao),
+                curve: Curves.easeOut,
+                padding: EdgeInsets.only(
+                  bottom: largeVertically ? 16 : 0,
+                  top: dense ? 0 : largeVertically ? 12 : 2,
+                ),
+                child: Directionality(
+                  textDirection: dense ? material.TextDirection.rtl : material.TextDirection.ltr,
+                  child: TextFormField(
+                    controller: controller,
+                    enabled: enabled,
+                    focusNode: focusNode,
+                    onChanged: (v) {
+                      value = _getTextVal(v);
+                    },
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(digitsAfterComma==0 ? (r'[0-9]') : (r'[0-9.]'))),],
+                    decoration: inputDecoration??InputDecoration(
+                      border: InputBorder.none,
+                      alignLabelWithHint: dense,
+                      label: Text(uiName,
+                        maxLines: 1,
+                        overflow: TextOverflow.fade,
+                      ),
+                      hintText: hint,
+                      floatingLabelBehavior: enabled&&hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
+                      labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
+                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                      ),
+                      hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
+                      contentPadding: EdgeInsets.only(
+                        left: dense ? 0 : 16,
+                        right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
+                        bottom: dense ? 10 : 0,
+                      ),
                     ),
                   ),
                 ),
               ),
-              if (enabled && clearable)
+              if (enabled && clearable && !dense)
                 Positioned(
                   right: 8, top: 0, bottom: 0,
                   child: ExcludeFocus(
@@ -261,7 +310,7 @@ class NumField extends Field<num> {
             ],
           );
           result = TooltipFromZero(
-            message: validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+            message: validationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
               return a.toString().trim().isEmpty ? b.toString()
                   : b.toString().trim().isEmpty ? a.toString()
                   : '$a\n$b';
@@ -269,6 +318,18 @@ class NumField extends Field<num> {
             child: result,
             triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
+          );
+          final actions = this.actions?.call(context, this, dao) ?? [];
+          result = ContextMenuFromZero( // TODO 3 this is blocked by default TextField toolbar
+            enabled: enabled,
+            addGestureDetector: !dense,
+            actions: [
+              ...actions,
+              if (actions.isNotEmpty)
+                ActionFromZero.divider(),
+              ...buildDefaultActions(context),
+            ],
+            child: result,
           );
           return result;
         },
@@ -280,21 +341,25 @@ class NumField extends Field<num> {
         child: result,
       );
     }
-    return Padding(
-      key: fieldGlobalKey,
-      padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
-      child: SizedBox(
-        width: maxWidth,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: largeVertically ? null : 64,
-              child: result,
-            ),
-            ValidationMessage(errors: validationErrors),
-          ],
+    return EnsureVisibleWhenFocused(
+      focusNode: focusNode,
+      child: Padding(
+        key: fieldGlobalKey,
+        padding: EdgeInsets.symmetric(horizontal: !dense && largeHorizontally ? 12 : 0),
+        child: SizedBox(
+          width: maxWidth,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: largeVertically ? null : 64,
+                child: result,
+              ),
+              if (!dense)
+                ValidationMessage(errors: validationErrors),
+            ],
+          ),
         ),
       ),
     );
@@ -304,7 +369,7 @@ class NumField extends Field<num> {
     return SimpleColModel(
       name: field.uiName,
       filterEnabled: true,
-      width: field.tableColumnWidth,
+      flex: field.tableColumnWidth?.round(),
       alignment: TextAlign.right,
       defaultSortAscending: false,
     );

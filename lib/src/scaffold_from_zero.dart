@@ -53,12 +53,12 @@ class ScaffoldFromZero extends StatefulWidget {
   final Widget? title;
   final double titleSpacing;
   final List<Widget>? actions;
-  final AppbarAction? initialExpandedAction;
+  final ActionFromZero? initialExpandedAction;
   final double appbarHeight;
   final double appbarElevation;
   final int appbarType;
   final AppbarFromZeroController? appbarController;
-  final void Function(AppbarAction)? onAppbarActionExpanded;
+  final void Function(ActionFromZero)? onAppbarActionExpanded;
   final VoidCallback? onAppbarActionUnexpanded;
   final ScrollController? mainScrollController;
   final int scrollbarType;

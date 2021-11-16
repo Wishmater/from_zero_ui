@@ -1,3 +1,4 @@
+import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -36,8 +37,10 @@ class StringField extends Field<String> {
     required FieldValueGetter<String, Field> uiNameGetter,
     String? value,
     String? dbValue,
-    FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter,
-    double? maxWidth,
+    FieldValueGetter<bool, Field> clearableGetter = Field.defaultClearableGetter,
+    double maxWidth = 512,
+    double minWidth = 128,
+    double flex = 0,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
     this.type = StringFieldType.short,
@@ -57,6 +60,12 @@ class StringField extends Field<String> {
     FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
     List<String?>? undoValues,
     List<String?>? redoValues,
+    GlobalKey? fieldGlobalKey,
+    FocusNode? focusNode,
+    bool invalidateNonEmptyValuesIfHiddenInForm = true,
+    String? defaultValue = '',
+    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) :  this.minLines = minLines ?? (type==StringFieldType.short ? null : 3),
         this.maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
         this.showObfuscationToggleButton = showObfuscationToggleButton ?? obfuscate,
@@ -68,7 +77,9 @@ class StringField extends Field<String> {
           clearableGetter: clearableGetter,
           hintGetter: hintGetter,
           tooltipGetter: tooltipGetter,
-          maxWidth: maxWidth ?? (type==StringFieldType.short ? 512 : 512), //768
+          maxWidth: maxWidth,
+          minWidth: minWidth,
+          flex: flex,
           tableColumnWidth: tableColumnWidth,
           hiddenGetter: hiddenGetter,
           hiddenInTableGetter: hiddenInTableGetter,
@@ -79,6 +90,12 @@ class StringField extends Field<String> {
           colModelBuilder: colModelBuilder,
           undoValues: undoValues,
           redoValues: redoValues,
+          fieldGlobalKey: fieldGlobalKey ?? GlobalKey(),
+          focusNode: focusNode ?? FocusNode(),
+          invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
+          defaultValue: defaultValue,
+          backgroundColor: backgroundColor,
+          actions: actions,
         );
 
 
@@ -91,6 +108,8 @@ class StringField extends Field<String> {
     FieldValueGetter<String?, Field>? tooltipGetter,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
+    double? minWidth,
+    double? flex,
     StringFieldType? type,
     int? minLines,
     int? maxLines,
@@ -105,6 +124,10 @@ class StringField extends Field<String> {
     FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
     List<String?>? undoValues,
     List<String?>? redoValues,
+    bool? invalidateNonEmptyValuesIfHiddenInForm,
+    String? defaultValue,
+    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) {
     return StringField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -112,6 +135,8 @@ class StringField extends Field<String> {
       dbValue: dbValue??this.dbValue,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
+      minWidth: minWidth??this.minWidth,
+      flex: flex??this.flex,
       type: type??this.type,
       minLines: minLines??this.minLines,
       maxLines: maxLines??this.maxLines,
@@ -125,8 +150,12 @@ class StringField extends Field<String> {
       validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
       colModelBuilder: colModelBuilder ?? this.colModelBuilder,
-      undoValues: undoValues ?? this.undoValues,
-      redoValues: redoValues ?? this.redoValues,
+      undoValues: undoValues ?? List.from(this.undoValues),
+      redoValues: redoValues ?? List.from(this.redoValues),
+      invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
+      defaultValue: defaultValue ?? this.defaultValue,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      actions: actions ?? this.actions,
     );
   }
 
@@ -135,8 +164,12 @@ class StringField extends Field<String> {
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
+    bool dense = false,
     FocusNode? focusNode,
   }) {
+    if (focusNode==null) {
+      focusNode = this.focusNode;
+    }
     Widget result;
     if (hiddenInForm) {
       result = SizedBox.shrink();
@@ -154,7 +187,8 @@ class StringField extends Field<String> {
             expandToFillContainer: expandToFillContainer,
             largeVertically: maxLines!=1,
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
-            focusNode: focusNode,
+            focusNode: focusNode!,
+            dense: dense,
           );
         },
       );
@@ -165,6 +199,7 @@ class StringField extends Field<String> {
         expandToFillContainer: expandToFillContainer,
         focusNode: focusNode,
         largeVertically: maxLines!=1,
+        dense: dense,
       );
     }
     if (asSliver) {
@@ -174,20 +209,17 @@ class StringField extends Field<String> {
     }
     return [result];
   }
-  FocusNode _focusNode = FocusNode();
   Widget _buildFieldEditorWidget(BuildContext context, {
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool largeVertically = true,
     bool largeHorizontally = false,
-    FocusNode? focusNode,
+    bool dense = false,
+    required FocusNode focusNode,
   }) {
-    if (focusNode==null) {
-      focusNode = _focusNode;
-    }
-    focusNode.addListener(() {
-      if (!passedFirstEdit && !focusNode!.hasFocus) {
+    focusNode.addListener(() { // TODO this might not be necessary after the new mechanism for adding undo is implemented, also un NumField
+      if (!passedFirstEdit && !focusNode.hasFocus) {
         passedFirstEdit = true;
         notifyListeners();
       }
@@ -200,8 +232,16 @@ class StringField extends Field<String> {
           Widget result = Stack(
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [
-              Padding(
-                padding: EdgeInsets.only(bottom: largeVertically ? 16 : 0, top: largeVertically ? 12 : 2,),
+              AnimatedContainer(
+                duration: Duration(milliseconds: 300),
+                color: dense && validationErrors.isNotEmpty
+                    ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+                    : backgroundColor?.call(context, this, dao),
+                curve: Curves.easeOut,
+                padding: EdgeInsets.only(
+                  bottom: largeVertically ? 16 : 0,
+                  top: dense ? 0 : largeVertically ? 12 : 2,
+                ),
                 child: TextFormField(
                   controller: controller,
                   enabled: enabled,
@@ -215,21 +255,26 @@ class StringField extends Field<String> {
                   inputFormatters: inputFormatters,
                   decoration: inputDecoration??InputDecoration(
                     border: InputBorder.none,
-                    labelText: uiName,
+                    alignLabelWithHint: dense,
+                    label: Text(uiName,
+                      softWrap: false,
+                      overflow: TextOverflow.fade,
+                    ),
                     hintText: hint,
                     floatingLabelBehavior: enabled&&hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
-                    labelStyle: TextStyle(height: largeVertically ? 0.75 : 1.85,
+                    labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
                       color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
                     ),
                     hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
                     contentPadding: EdgeInsets.only(
-                      left: 16,
-                      right: enabled&&clearable ? 16+40 : 16,
+                      left: dense ? 0 : 16,
+                      right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
+                      bottom: dense ? 10 : 0,
                     ),
                   ),
                 ),
               ),
-              if (enabled && clearable)
+              if (enabled && clearable && !dense)
                 Positioned(
                   right: 8, top: 0, bottom: 0,
                   child: ExcludeFocus(
@@ -267,7 +312,7 @@ class StringField extends Field<String> {
             ],
           );
           result = TooltipFromZero(
-            message: validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+            message: validationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
               return a.toString().trim().isEmpty ? b.toString()
                   : b.toString().trim().isEmpty ? a.toString()
                   : '$a\n$b';
@@ -275,6 +320,18 @@ class StringField extends Field<String> {
             child: result,
             triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
+          );
+          final actions = this.actions?.call(context, this, dao) ?? [];
+          result = ContextMenuFromZero( // TODO 3 this is blocked by default TextField toolbar
+            enabled: enabled,
+            addGestureDetector: !dense,
+            actions: [
+              ...actions,
+              if (actions.isNotEmpty)
+                ActionFromZero.divider(),
+              ...buildDefaultActions(context),
+            ],
+            child: result,
           );
           return result;
         },
@@ -286,21 +343,25 @@ class StringField extends Field<String> {
         child: result,
       );
     }
-    return Padding(
-      key: fieldGlobalKey,
-      padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
-      child: SizedBox(
-        width: maxWidth,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: largeVertically ? null : 64,
-              child: result,
-            ),
-            ValidationMessage(errors: validationErrors),
-          ],
+    return EnsureVisibleWhenFocused(
+      focusNode: focusNode,
+      child: Padding(
+        key: fieldGlobalKey,
+        padding: EdgeInsets.symmetric(horizontal: !dense && largeHorizontally ? 12 : 0),
+        child: SizedBox(
+          width: maxWidth,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: largeVertically ? null : 64,
+                child: result,
+              ),
+              if (!dense)
+                ValidationMessage(errors: validationErrors),
+            ],
+          ),
         ),
       ),
     );

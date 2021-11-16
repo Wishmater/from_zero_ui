@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/popup_from_zero.dart';
 import 'package:from_zero_ui/src/table_from_zero_filters.dart';
 import 'package:from_zero_ui/src/table_from_zero_models.dart';
 import 'package:from_zero_ui/util/my_sticky_header.dart';
@@ -803,6 +804,14 @@ class TableFromZeroState extends State<TableFromZero> {
             child: result,
           );
         }
+        final popupActions = row.actions?.whereType<ActionFromZero>().toList() ?? [];
+        print (popupActions);
+        if (popupActions.isNotEmpty) {
+          result = ContextMenuFromZero(
+            actions: popupActions,
+            child: result,
+          );
+        }
         if (widget.columns!=null && widget.columns![j].width!=null){
           return SizedBox(width: widget.columns![j].width, child: result,);
         } else {
@@ -852,8 +861,11 @@ class TableFromZeroState extends State<TableFromZero> {
           );
         }
       } else {
-        background = Row(
-          children: List.generate(cols, (j) => decorationBuilder(context, j)),
+        background = Container(
+          color: Material.of(context)?.color ?? Theme.of(context).cardColor,
+          child: Row(
+            children: List.generate(cols, (j) => decorationBuilder(context, j)),
+          ),
         );
         result = Row(
           children: List.generate(cols, (j) => cellBuilder(context, j)),
@@ -979,7 +991,7 @@ class TableFromZeroState extends State<TableFromZero> {
       result = builder(context, null);
     }
     return result;
-    // return FrameSeparateWidget(
+    // return FrameSeparateWidget( // TODO 2 experiment with frameSeparateWidget, just waiting for 100ms or less before buiding should be enough to counteract scroll jank
     //   placeHolder: Container(height: row.height, ),
     //   child: result,
     // );
@@ -1115,284 +1127,247 @@ class TableFromZeroState extends State<TableFromZero> {
                             FilterDateBefore(),
                           ]);
                         }
-                        await showDialog<bool>(
+                        await showPopupFromZero(
                           context: context,
-                          barrierColor: Colors.black.withOpacity(0.2),
+                          anchorKey: filterGlobalKeys[j],
                           builder: (context) {
-                            final animation = CurvedAnimation(
-                              parent: ModalRoute.of(context)!.animation!,
-                              curve: Curves.easeInOutCubic,
-                            );
-                            Offset? referencePosition;
-                            Size? referenceSize;
-                            try {
-                              RenderBox box = filterGlobalKeys[j].currentContext!.findRenderObject()! as RenderBox;
-                              referencePosition = box.localToGlobal(Offset.zero); //this is global position
-                              referenceSize = box.size;
-                            } catch(_) {}
-                            return CustomSingleChildLayout(
-                              delegate: DropdownChildLayoutDelegate(
-                                referencePosition: referencePosition,
-                                referenceSize: referenceSize,
-                                align: DropdownChildLayoutDelegateAlign.topLeft,
-                              ),
-                              child: AnimatedBuilder(
-                                animation: animation,
-                                builder: (context, child) {
-                                  return SizedBox(
-                                    width: 312, //referenceSize==null ? widget.popupWidth : (referenceSize.width+8).clamp(312, double.infinity),
-                                    child: ClipRect(
-                                      clipper: RectPercentageClipper(
-                                        widthPercent: (animation.value*2.0).clamp(0.0, 1),
-                                      ),
-                                      child: child,
-                                    ),
-                                  );
-                                },
-                                child: SizeTransition(
-                                  sizeFactor: animation,
-                                  axis: Axis.vertical,
-                                  axisAlignment: 0,
-                                  child: Card(
-                                    clipBehavior: Clip.hardEdge,
-                                    child: ScrollbarFromZero(
-                                      controller: filtersScrollController,
-                                      child: Stack (
-                                        children: [
-                                          StatefulBuilder(
-                                            builder: (context, filterPopupSetState) {
-                                              return CustomScrollView(
-                                                controller: filtersScrollController,
-                                                shrinkWrap: true,
-                                                slivers: [
-                                                  SliverToBoxAdapter(child: Padding(
-                                                    padding: const EdgeInsets.only(top: 4.0),
-                                                    child: Center(
-                                                      child: Text(FromZeroLocalizations.of(context).translate('filters'),
+                            return Card(
+                              clipBehavior: Clip.hardEdge,
+                              child: ScrollbarFromZero(
+                                controller: filtersScrollController,
+                                child: Stack (
+                                  children: [
+                                    StatefulBuilder(
+                                      builder: (context, filterPopupSetState) {
+                                        return CustomScrollView(
+                                          controller: filtersScrollController,
+                                          shrinkWrap: true,
+                                          slivers: [
+                                            SliverToBoxAdapter(child: Padding(
+                                              padding: const EdgeInsets.only(top: 4.0),
+                                              child: Center(
+                                                child: Text(FromZeroLocalizations.of(context).translate('filters'),
+                                                  style: Theme.of(context).textTheme.subtitle1,
+                                                  textAlign: TextAlign.center,
+                                                ),
+                                              ),
+                                            ),),
+                                            SliverToBoxAdapter(child: SizedBox(height: 16,)),
+                                            if (possibleConditionFilters.isNotEmpty)
+                                              SliverToBoxAdapter(child: Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8),
+                                                child: Row(
+                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    Padding(
+                                                      padding: const EdgeInsets.only(left: 4,),
+                                                      child: Text(FromZeroLocalizations.of(context).translate('condition_filters'),
                                                         style: Theme.of(context).textTheme.subtitle1,
-                                                        textAlign: TextAlign.center,
                                                       ),
                                                     ),
-                                                  ),),
-                                                  SliverToBoxAdapter(child: SizedBox(height: 16,)),
-                                                  if (possibleConditionFilters.isNotEmpty)
-                                                    SliverToBoxAdapter(child: Padding(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                                                      child: Row(
-                                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                        children: [
-                                                          Padding(
-                                                            padding: const EdgeInsets.only(left: 4,),
-                                                            child: Text(FromZeroLocalizations.of(context).translate('condition_filters'),
-                                                              style: Theme.of(context).textTheme.subtitle1,
-                                                            ),
-                                                          ),
-                                                          PopupMenuButton<ConditionFilter>(
-                                                            tooltip: FromZeroLocalizations.of(context).translate('add_condition_filter'),
-                                                            offset: Offset(128, 32),
-                                                            child: Padding(
-                                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
-                                                              child: Row(
-                                                                mainAxisSize: MainAxisSize.min,
-                                                                children: [
-                                                                  Icon(Icons.add, color: Colors.blue,),
-                                                                  SizedBox(width: 6,),
-                                                                  Text(FromZeroLocalizations.of(context).translate('add'),
-                                                                    style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.blue,),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ),
-                                                            itemBuilder: (context) {
-                                                              return possibleConditionFilters.map((e) {
-                                                                return PopupMenuItem(
-                                                                  value: e,
-                                                                  child: Text(e.getUiName(context)+'...'),
-                                                                );
-                                                              }).toList();
-                                                            },
-                                                            onSelected: (value) {
-                                                              filterPopupSetState((){
-                                                                modified = true;
-                                                                if (conditionFilters[j]==null) {
-                                                                  conditionFilters[j] = [];
-                                                                }
-                                                                conditionFilters[j]!.add(value);
-                                                              });
-                                                              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-                                                                value.focusNode.requestFocus();
-                                                              });
-                                                            },
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),),
-                                                  if ((conditionFilters[j] ?? []).isEmpty)
-                                                    SliverToBoxAdapter(child: Padding(
-                                                      padding: EdgeInsets.only(left: 24, bottom: 8,),
-                                                      child: Text (FromZeroLocalizations.of(context).translate('none'),
-                                                        style: Theme.of(context).textTheme.caption,
-                                                      ),
-                                                    ),),
-                                                  SliverList(
-                                                    delegate: SliverChildListDelegate.fixed(
-                                                      (conditionFilters[j] ?? []).map((e) {
-                                                        return Padding(
-                                                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                                          child: e.buildFormWidget(
-                                                            context: context,
-                                                            onValueChanged: () {
-                                                              modified = true;
-                                                              // filterPopupSetState((){});
-                                                            },
-                                                            onDelete: () {
-                                                              modified = true;
-                                                              filterPopupSetState((){
-                                                                conditionFilters[j]!.remove(e);
-                                                              });
-                                                            },
-                                                          ),
-                                                        );
-                                                      }).toList(),
-                                                    ),
-                                                  ),
-                                                  SliverToBoxAdapter(child: SizedBox(height: (conditionFilters[j] ?? []).isEmpty ? 6 : 12,)),
-                                                  SliverToBoxAdapter(child: Divider(height: 32,)),
-                                                  TableFromZero(
-                                                    tableController: filterTableController,
-                                                    layoutWidgetType: TableFromZero.sliverListViewBuilder,
-                                                    columns: [
-                                                      SimpleColModel(
-                                                        name: '',
-                                                        sortEnabled: false,
-                                                      ),
-                                                    ],
-                                                    rows: availableFilters[j].map((e) {
-                                                      return SimpleRowModel(
-                                                        id: e,
-                                                        values: [e.toString()],
-                                                        selected: valueFilters[j][e] ?? false,
-                                                        onCheckBoxSelected: (row, focused) {
-                                                          modified = true;
-                                                          valueFilters[j][row.id] = focused!;
-                                                          (row as SimpleRowModel).selected = focused;
-                                                          return true;
-                                                        },
-                                                      );
-                                                    }).toList(),
-                                                    errorWidget: SizedBox.shrink(),
-                                                    headerRowBuilder: (context, row) {
-                                                      return Container(
-                                                        padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
-                                                        color: Theme.of(context).cardColor,
-                                                        child: Column(
+                                                    PopupMenuButton<ConditionFilter>(
+                                                      tooltip: FromZeroLocalizations.of(context).translate('add_condition_filter'),
+                                                      offset: Offset(128, 32),
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
+                                                        child: Row(
                                                           mainAxisSize: MainAxisSize.min,
                                                           children: [
-                                                            SizedBox(
-                                                              height: 32,
-                                                              child: TextFormField(
-                                                                onChanged: (v) {
-                                                                  filterTableController.conditionFilters![0] = [];
-                                                                  filterTableController.conditionFilters![0]!.add(
-                                                                    FilterTextContains(query: v,),
-                                                                  );
-                                                                  filterPopupSetState((){
-                                                                    filterTableController.filter();
-                                                                  });
-                                                                },
-                                                                decoration: InputDecoration(
-                                                                  labelText: FromZeroLocalizations.of(context).translate('search...'),
-                                                                  contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
-                                                                  labelStyle: TextStyle(height: 0.2),
-                                                                  suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            SizedBox(height: 6,),
-                                                            Row(
-                                                              children: [
-                                                                Expanded(
-                                                                  child: TextButton(
-                                                                    child: Text(FromZeroLocalizations.of(context).translate('select_all')),
-                                                                    onPressed: () {
-                                                                      modified = true;
-                                                                      filterPopupSetState(() {
-                                                                        filterTableController.filtered!.forEach((row) {
-                                                                          valueFilters[j][row.id] = true;
-                                                                          (row as SimpleRowModel).selected = true;
-                                                                        });
-                                                                      });
-                                                                    },
-                                                                  ),
-                                                                ),
-                                                                Expanded(
-                                                                  child: TextButton(
-                                                                    child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
-                                                                    onPressed: () {
-                                                                      modified = true;
-                                                                      filterPopupSetState(() {
-                                                                        filterTableController.filtered!.forEach((row) {
-                                                                          valueFilters[j][row.id] = false;
-                                                                          (row as SimpleRowModel).selected = false;
-                                                                        });
-                                                                      });
-                                                                    },
-                                                                  ),
-                                                                ),
-                                                              ],
+                                                            Icon(Icons.add, color: Colors.blue,),
+                                                            SizedBox(width: 6,),
+                                                            Text(FromZeroLocalizations.of(context).translate('add'),
+                                                              style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.blue,),
                                                             ),
                                                           ],
                                                         ),
-                                                      );
-                                                    },
-                                                  ),
-                                                  SliverToBoxAdapter(child: SizedBox(height: 16+42,),),
-                                                ],
-                                              );
-                                            },
-                                          ),
-                                          Positioned(
-                                            bottom: 0, left: 0, right: 0,
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Container(
-                                                  height: 16,
-                                                  decoration: BoxDecoration(
-                                                    gradient: LinearGradient(
-                                                      begin: Alignment.topCenter,
-                                                      end: Alignment.bottomCenter,
-                                                      colors: [
-                                                        Theme.of(context).cardColor.withOpacity(0),
-                                                        Theme.of(context).cardColor,
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                Container(
-                                                  alignment: Alignment.centerRight,
-                                                  padding: EdgeInsets.only(bottom: 8, right: 16,),
-                                                  color: Theme.of(context).cardColor,
-                                                  child: FlatButton(
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.all(8.0),
-                                                      child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
-                                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                                       ),
+                                                      itemBuilder: (context) {
+                                                        return possibleConditionFilters.map((e) {
+                                                          return PopupMenuItem(
+                                                            value: e,
+                                                            child: Text(e.getUiName(context)+'...'),
+                                                          );
+                                                        }).toList();
+                                                      },
+                                                      onSelected: (value) {
+                                                        filterPopupSetState((){
+                                                          modified = true;
+                                                          if (conditionFilters[j]==null) {
+                                                            conditionFilters[j] = [];
+                                                          }
+                                                          conditionFilters[j]!.add(value);
+                                                        });
+                                                        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                                                          value.focusNode.requestFocus();
+                                                        });
+                                                      },
                                                     ),
-                                                    textColor: Colors.blue,
-                                                    onPressed: () {
-                                                      Navigator.of(context).pop(true);
-                                                    },
-                                                  ),
+                                                  ],
+                                                ),
+                                              ),),
+                                            if ((conditionFilters[j] ?? []).isEmpty)
+                                              SliverToBoxAdapter(child: Padding(
+                                                padding: EdgeInsets.only(left: 24, bottom: 8,),
+                                                child: Text (FromZeroLocalizations.of(context).translate('none'),
+                                                  style: Theme.of(context).textTheme.caption,
+                                                ),
+                                              ),),
+                                            SliverList(
+                                              delegate: SliverChildListDelegate.fixed(
+                                                (conditionFilters[j] ?? []).map((e) {
+                                                  return Padding(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                                    child: e.buildFormWidget(
+                                                      context: context,
+                                                      onValueChanged: () {
+                                                        modified = true;
+                                                        // filterPopupSetState((){});
+                                                      },
+                                                      onDelete: () {
+                                                        modified = true;
+                                                        filterPopupSetState((){
+                                                          conditionFilters[j]!.remove(e);
+                                                        });
+                                                      },
+                                                    ),
+                                                  );
+                                                }).toList(),
+                                              ),
+                                            ),
+                                            SliverToBoxAdapter(child: SizedBox(height: (conditionFilters[j] ?? []).isEmpty ? 6 : 12,)),
+                                            SliverToBoxAdapter(child: Divider(height: 32,)),
+                                            TableFromZero(
+                                              tableController: filterTableController,
+                                              layoutWidgetType: TableFromZero.sliverListViewBuilder,
+                                              columns: [
+                                                SimpleColModel(
+                                                  name: '',
+                                                  sortEnabled: false,
                                                 ),
                                               ],
+                                              rows: availableFilters[j].map((e) {
+                                                return SimpleRowModel(
+                                                  id: e,
+                                                  values: [e.toString()],
+                                                  selected: valueFilters[j][e] ?? false,
+                                                  onCheckBoxSelected: (row, focused) {
+                                                    modified = true;
+                                                    valueFilters[j][row.id] = focused!;
+                                                    (row as SimpleRowModel).selected = focused;
+                                                    return true;
+                                                  },
+                                                );
+                                              }).toList(),
+                                              errorWidget: SizedBox.shrink(),
+                                              headerRowBuilder: (context, row) {
+                                                return Container(
+                                                  padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
+                                                  color: Theme.of(context).cardColor,
+                                                  child: Column(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      SizedBox(
+                                                        height: 32,
+                                                        child: TextFormField(
+                                                          onChanged: (v) {
+                                                            filterTableController.conditionFilters![0] = [];
+                                                            filterTableController.conditionFilters![0]!.add(
+                                                              FilterTextContains(query: v,),
+                                                            );
+                                                            filterPopupSetState((){
+                                                              filterTableController.filter();
+                                                            });
+                                                          },
+                                                          decoration: InputDecoration(
+                                                            labelText: FromZeroLocalizations.of(context).translate('search...'),
+                                                            contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
+                                                            labelStyle: TextStyle(height: 0.2),
+                                                            suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: 6,),
+                                                      Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: TextButton(
+                                                              child: Text(FromZeroLocalizations.of(context).translate('select_all')),
+                                                              onPressed: () {
+                                                                modified = true;
+                                                                filterPopupSetState(() {
+                                                                  filterTableController.filtered!.forEach((row) {
+                                                                    valueFilters[j][row.id] = true;
+                                                                    (row as SimpleRowModel).selected = true;
+                                                                  });
+                                                                });
+                                                              },
+                                                            ),
+                                                          ),
+                                                          Expanded(
+                                                            child: TextButton(
+                                                              child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
+                                                              onPressed: () {
+                                                                modified = true;
+                                                                filterPopupSetState(() {
+                                                                  filterTableController.filtered!.forEach((row) {
+                                                                    valueFilters[j][row.id] = false;
+                                                                    (row as SimpleRowModel).selected = false;
+                                                                  });
+                                                                });
+                                                              },
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                            SliverToBoxAdapter(child: SizedBox(height: 16+42,),),
+                                          ],
+                                        );
+                                      },
+                                    ),
+                                    Positioned(
+                                      bottom: 0, left: 0, right: 0,
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Container(
+                                            height: 16,
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                begin: Alignment.topCenter,
+                                                end: Alignment.bottomCenter,
+                                                colors: [
+                                                  Theme.of(context).cardColor.withOpacity(0),
+                                                  Theme.of(context).cardColor,
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          Container(
+                                            alignment: Alignment.centerRight,
+                                            padding: EdgeInsets.only(bottom: 8, right: 16,),
+                                            color: Theme.of(context).cardColor,
+                                            child: FlatButton(
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(8.0),
+                                                child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
+                                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                                ),
+                                              ),
+                                              textColor: Colors.blue,
+                                              onPressed: () {
+                                                Navigator.of(context).pop(true);
+                                              },
                                             ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
+                                  ],
                                 ),
                               ),
                             );
@@ -1536,9 +1511,7 @@ class TableFromZeroState extends State<TableFromZero> {
   }
 
   int _getFlex(j){
-    if (widget.columns!=null && widget.columns![j].flex!=null)
-      return widget.columns![j].flex ?? 1;
-    return 1;
+    return widget.columns?[j].flex ?? 1;
   }
 
   int get disabledColumnCount => widget.columns==null ? 0 : widget.columns!.where((element) => element.flex==0).length;

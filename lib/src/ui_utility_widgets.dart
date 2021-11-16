@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:animations/animations.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -793,6 +794,154 @@ class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with 
 }
 
 
+class KeepAliveMixinWidget extends StatefulWidget {
+  final Widget child;
+  const KeepAliveMixinWidget({Key? key, required this.child}) : super(key: key);
+  @override
+  _KeepAliveMixinWidgetState createState() => _KeepAliveMixinWidgetState();
+}
+
+class _KeepAliveMixinWidgetState extends State<KeepAliveMixinWidget> with
+                          AutomaticKeepAliveClientMixin<KeepAliveMixinWidget> {
+  @override
+  bool get wantKeepAlive => true;
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
+}
+
+
+
+class FlexibleLayoutFromZero extends StatelessWidget {
+
+  final Axis axis;
+  /// if relevantAxisMaxSize is provided, there is no need for a LayoutBuilder,
+  /// min(relevantAxisMaxSize, MediaQuery.maxWidth) will be used instead
+  /// if the layout can span the entire screen, set relevantAxisMaxSize=double.infinity
+  final double? relevantAxisMaxSize;
+  final List<FlexibleLayoutItemFromZero> children;
+  final CrossAxisAlignment crossAxisAlignment;
+
+  const FlexibleLayoutFromZero({
+    this.axis = Axis.horizontal,
+    this.relevantAxisMaxSize,
+    this.crossAxisAlignment = CrossAxisAlignment.center,
+    required this.children,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    if (relevantAxisMaxSize!=null) {
+      final relevantScreenSize = axis==Axis.horizontal
+          ? MediaQuery.of(context).size.width
+          : MediaQuery.of(context).size.height;
+      return buildInternal(context, min(relevantAxisMaxSize!, relevantScreenSize));
+    } else {
+      return LayoutBuilder(
+        builder: (context, constraints) {
+          return buildInternal(context, axis==Axis.horizontal ? constraints.maxWidth : constraints.maxHeight);
+        },
+      );
+    }
+  }
+
+  Widget buildInternal(BuildContext context, double relevantAxisSize) {
+    double minTotalSize = children.sumBy((e) => e.minSize); // TODO 3 these calculations should probably be done in a render object
+    Map<int, FlexibleLayoutItemFromZero> expandableItems = {};
+    Map<int, double> itemSizes = {};
+    for (int i=0; i<children.length; i++) {
+      itemSizes[i] = children[i].minSize;
+      if (children[i].maxSize > children[i].minSize) {
+        expandableItems[i] = children[i];
+      }
+    }
+    double extraSize = (relevantAxisSize-minTotalSize).clamp(0, double.infinity);
+    while (extraSize!=0 && expandableItems.isNotEmpty) {
+      double totalFlex = children.sumBy((e) => e.flex);
+      for (final key in expandableItems.keys) {
+        final percentage = totalFlex==0
+            ? 1 / expandableItems.length
+            : expandableItems[key]!.flex / totalFlex;
+        itemSizes[key] = itemSizes[key]! + (extraSize * percentage);
+      }
+      extraSize = 0;
+      List<int> keysToRemove = [];
+      for (final key in expandableItems.keys) {
+        final difference = itemSizes[key]! - expandableItems[key]!.maxSize;
+        if (difference >= 0) {
+          itemSizes[key] = itemSizes[key]! - difference;
+          extraSize += difference;
+          keysToRemove.add(key);
+        }
+      }
+      for (final key in keysToRemove) {
+        expandableItems.remove(key);
+      }
+    }
+    List<Widget> sizedChildren = children.mapIndexed((index, e) {
+      return SizedBox(
+        height: axis==Axis.vertical ? itemSizes[index] : null,
+        width: axis==Axis.horizontal ? itemSizes[index] : null,
+        child: e,
+      );
+    }).toList();
+    Widget result;
+    if (axis==Axis.horizontal) {
+      result = Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: crossAxisAlignment,
+        children: sizedChildren,
+      );
+    } else {
+      result = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: crossAxisAlignment,
+        children: sizedChildren,
+      );
+    }
+    final scrollController = ScrollController();
+    return ScrollbarFromZero(
+      controller: scrollController,
+      opacityGradientDirection: axis==Axis.horizontal ? OpacityGradient.horizontal
+                                                      : OpacityGradient.vertical,
+      child: SingleChildScrollView(
+        controller: scrollController,
+        scrollDirection: axis,
+        child: result,
+      ),
+    );
+  }
+
+}
+class FlexibleLayoutItemFromZero extends StatelessWidget {
+
+  final double minSize;
+  final double maxSize;
+  /// defines the priority with which space remaining after al minWidth is filled
+  /// is distributed among items
+  final double flex;
+  final Widget child;
+
+  const FlexibleLayoutItemFromZero({
+    required this.child,
+    required this.maxSize,
+    this.minSize = 0,
+    this.flex = 0,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return child;
+  }
+
+}
+
+
+
 class PlatformExtended {
 
   static bool get isWindows{
@@ -869,4 +1018,10 @@ extension HexColor on Color {
       '${red.toRadixString(16).padLeft(2, '0')}'
       '${green.toRadixString(16).padLeft(2, '0')}'
       '${blue.toRadixString(16).padLeft(2, '0')}';
+}
+
+
+extension InverseBrigtenes on Brightness {
+  Brightness get inverse => this==Brightness.light
+      ? Brightness.dark : Brightness.light;
 }

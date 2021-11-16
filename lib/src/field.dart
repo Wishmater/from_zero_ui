@@ -1,4 +1,7 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao.dart';
 import 'package:from_zero_ui/src/field_validators.dart';
@@ -9,6 +12,7 @@ import 'package:dartx/dartx.dart';
 
 typedef ValidationError? FieldValidator<T extends Comparable>(BuildContext context, DAO dao, Field<T> field);
 typedef T FieldValueGetter<T, R extends Field>(R field, DAO dao);
+typedef T ContextFulFieldValueGetter<T, R extends Field>(BuildContext context, R field, DAO dao);
 bool trueFieldGetter(_, __) => true;
 bool falseFieldGetter(_, __) => false;
 List defaultValidatorsGetter(_, __) => [];
@@ -24,6 +28,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   FieldValueGetter<String?, Field>? tooltipGetter;
   String? get tooltip => tooltipGetter?.call(this, dao);
   T? dbValue;
+  T? defaultValue; /// used for reversing the field to default state when hidden, noly if invalidateNonEmptyValuesIfHiddenInForm==true, default null
   FieldValueGetter<bool, Field> clearableGetter;
   bool get clearable => clearableGetter(this, dao);
   bool get enabled => validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).isEmpty;
@@ -34,7 +39,10 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   FieldValueGetter<bool, Field> hiddenInFormGetter;
   bool get hiddenInForm => hiddenInFormGetter(this, dao);
   double maxWidth;
-  FocusNode? focusNode;
+  double minWidth;
+  /// only used when using FlexibleLayoutFromZero for FieldGroup
+  double flex;
+  FocusNode focusNode;
   double? tableColumnWidth;
   FieldValueGetter<List<FieldValidator<T>>, Field>? validatorsGetter;
   List<FieldValidator<T>> get validators => validatorsGetter?.call(this, dao) ?? [];
@@ -42,18 +50,24 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   bool passedFirstEdit = false;
   List<ValidationError> validationErrors = [];
   FieldValueGetter<SimpleColModel, Field> colModelBuilder;
+  bool invalidateNonEmptyValuesIfHiddenInForm;
+  ContextFulFieldValueGetter<Color?, Field>? backgroundColor;
+  ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions;
 
   T? _value;
   T? get value => _value;
+  @mustCallSuper
   set value(T? value) {
     if (_value!=value) {
       passedFirstEdit = true;
       undoValues.add(_value); // TODO 1 Fields that override value setter must override undo logic as well (important on textfields)
-      dao.undoRecord.add(this);
+      dao.addUndoEntry(this);
       redoValues = [];
-      dao.redoRecord = []; // dao.redoRecord.removeWhere((e) => e==this);
       _value = value;
-      notifyListeners();
+      dao.validate(dao.contextForValidation!,
+        validateNonEditedFields: false,
+      );
+      // notifyListeners();
     }
   }
   List<T?> undoValues;
@@ -63,11 +77,12 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     required this.uiNameGetter,
     T? value,
     T? dbValue,
-    this.clearableGetter = trueFieldGetter,
+    this.clearableGetter = Field.defaultClearableGetter,
     this.maxWidth = 512,
+    this.minWidth = 128,
+    this.flex = 0,
     this.hintGetter,
     this.tooltipGetter,
-    this.focusNode,
     this.tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -76,19 +91,23 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     this.validatorsGetter,
     this.validateOnlyOnConfirm = false,
     GlobalKey? fieldGlobalKey,
+    FocusNode? focusNode,
     this.colModelBuilder = fieldDefaultGetColumn,
     List<T?>? undoValues,
     List<T?>? redoValues,
-    bool invalidateNotNullValuesIfHiddenInForm = true,  // TODO 1 implement on each field, override if necessary
-  }) :  _value = value,
-        dbValue = dbValue ?? value,
-        undoValues = undoValues ?? [],
-        redoValues = redoValues ?? [],
+    this.invalidateNonEmptyValuesIfHiddenInForm = true,  // TODO 1 implement on each field, override if necessary
+    this.defaultValue,
+    this.backgroundColor,
+    this.actions,
+  }) :  this._value = value,
+        this.dbValue = dbValue ?? value,
+        this.undoValues = undoValues ?? [],
+        this.redoValues = redoValues ?? [],
         this.fieldGlobalKey = fieldGlobalKey ?? GlobalKey(),
+        this.focusNode = focusNode ?? FocusNode(),
         this.hiddenInTableGetter = hiddenInTableGetter ?? hiddenGetter ?? falseFieldGetter,
         this.hiddenInViewGetter = hiddenInViewGetter ?? hiddenGetter ?? falseFieldGetter,
         this.hiddenInFormGetter = hiddenInFormGetter ?? hiddenGetter ?? falseFieldGetter;
-
 
   Field copyWith({
     FieldValueGetter<String, Field>? uiNameGetter,
@@ -96,6 +115,8 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     T? dbValue,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
+    double? minWidth,
+    double? flex,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
     double? tableColumnWidth,
@@ -108,6 +129,10 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
     List<T?>? undoValues,
     List<T?>? redoValues,
+    bool? invalidateNonEmptyValuesIfHiddenInForm,
+    T? defaultValue,
+    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) {
     return Field<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -115,6 +140,8 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       dbValue: dbValue??this.dbValue,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
+      minWidth: minWidth??this.minWidth,
+      flex: flex??this.flex,
       hintGetter: hintGetter??this.hintGetter,
       tooltipGetter: tooltipGetter??this.tooltipGetter,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
@@ -124,8 +151,12 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
       colModelBuilder: colModelBuilder ?? this.colModelBuilder,
-      undoValues: undoValues ?? this.undoValues,
-      redoValues: redoValues ?? this.redoValues,
+      undoValues: undoValues ?? List.from(this.undoValues),
+      redoValues: redoValues ?? List.from(this.redoValues),
+      invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
+      defaultValue: defaultValue ?? this.defaultValue,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      actions: actions ?? this.actions,
     );
   }
 
@@ -146,27 +177,34 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   void revertChanges() {
     value = dbValue;
     undoValues = [];
-    dao.undoRecord.removeWhere((e) => e==this);
+    dao.removeAllUndoEntries(this);
     redoValues = [];
-    dao.redoRecord.removeWhere((e) => e==this);
+    dao.removeAllRedoEntries(this);
     notifyListeners();
   }
 
-  void undo() {
+  void undo({
+    bool removeEntryFromDAO = false,
+  }) {
     assert(undoValues.isNotEmpty);
     redoValues.add(value);
-    dao.redoRecord.add(this);
+    dao.addRedoEntry(this);
     _value = undoValues.removeLast();
-    dao.undoRecord.removeAt(dao.undoRecord.lastIndexOf(this));
+    if (removeEntryFromDAO) {
+      dao.removeLastUndoEntry(this);
+    }
     notifyListeners();
   }
-
-  void redo() {
+  void redo({
+    bool removeEntryFromDAO = false,
+  }) {
     assert(redoValues.isNotEmpty);
     undoValues.add(value);
-    dao.undoRecord.add(this);
+    dao.addUndoEntry(this);
     _value = redoValues.removeLast();
-    dao.redoRecord.removeAt(dao.redoRecord.lastIndexOf(this));
+    if (removeEntryFromDAO) {
+      dao.removeLastRedoEntry(this);
+    }
     notifyListeners();
   }
 
@@ -175,6 +213,14 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   }) async {
     validationErrors = [];
     if (hiddenInForm) {
+      if (invalidateNonEmptyValuesIfHiddenInForm && value!=defaultValue) {
+        validationErrors.add(InvalidatingError(
+          field: this,
+          error: uiName + ' ' + FromZeroLocalizations.of(context).translate("validation_combo_hidden_with_value"),
+          defaultValue: defaultValue,
+        ));
+        return false;
+      }
       return true;
     }
     if (validateIfNotEdited) {
@@ -186,6 +232,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
         validationErrors.add(error);
       }
     });
+    validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
     return validationErrors.where((e) => e.isBlocking).isEmpty;
   }
 
@@ -194,7 +241,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     return SimpleColModel(
       name: field.uiName,
       filterEnabled: true,
-      width: field.tableColumnWidth,
+      flex: field.tableColumnWidth?.round(),
     );
   }
 
@@ -202,6 +249,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool addCard = false,
     bool asSliver = true,
     bool expandToFillContainer = true,
+    bool dense = false,
     FocusNode? focusNode,
   }) {
     Widget result;
@@ -290,6 +338,34 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     );
   }
 
+  List<ActionFromZero> buildDefaultActions(BuildContext context) {
+    return [
+      ActionFromZero(
+        title: 'Deshacer', // TODO 1 internationalize
+        icon: Icon(MaterialCommunityIcons.undo_variant),
+        onTap: (context) => undo(removeEntryFromDAO: true),
+        enabled: undoValues.isNotEmpty,
+      ),
+      ActionFromZero(
+        title: 'Rehacer', // TODO 1 internationalize
+        icon: Icon(MaterialCommunityIcons.redo_variant),
+        onTap: (context) => redo(removeEntryFromDAO: true),
+        enabled: redoValues.isNotEmpty,
+      ),
+      ActionFromZero(
+        title: 'Limpiar', // TODO 1 internationalize
+        icon: Icon(Icons.clear),
+        onTap: (context) => value = defaultValue,
+        enabled: clearable && value!=defaultValue,
+      ),
+    ];
+  }
+
+  static bool defaultClearableGetter<T extends Comparable>(Field field, DAO dao) {
+    return trueFieldGetter(field, dao);
+    //return !field.validators.contains(fieldValidatorRequired<T>);
+  }
+
 }
 
 
@@ -307,12 +383,20 @@ class FieldGroup {
         ...childGroups.map((e) => e.props).reduce((value, element) => {...value, ...element}),
     };
   }
+  final bool useLayoutFromZero;
+  /// only used when building FlexibleLayoutFromZero
+  double get maxWidth => max(fields.values.maxBy((e) => e.maxWidth)?.maxWidth ?? 0,
+                              childGroups.maxBy((e) => e.maxWidth)?.maxWidth ?? 0);
+  /// only used when building FlexibleLayoutFromZero
+  double get minWidth => max(fields.values.maxBy((e) => e.minWidth)?.minWidth ?? 0,
+                              childGroups.maxBy((e) => e.minWidth)?.minWidth ?? 0);
 
   const FieldGroup({
     this.fields = const {},
     this.name,
     this.primary = true,
     this.childGroups = const [],
+    this.useLayoutFromZero = true,
   });
 
   FieldGroup copyWith({

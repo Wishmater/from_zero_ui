@@ -1,3 +1,4 @@
+import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao.dart';
@@ -14,10 +15,6 @@ class DateField extends Field<DateTime> {
   DateTime firstDate;
   DateTime lastDate;
 
-  set value(DateTime? v) {
-    passedFirstEdit = true;
-    super.value = v;
-  }
 
   DateField({
     required FieldValueGetter<String, Field> uiNameGetter,
@@ -25,8 +22,10 @@ class DateField extends Field<DateTime> {
     DateTime? lastDate,
     DateTime? value,
     DateTime? dbValue,
-    FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter,
+    FieldValueGetter<bool, Field> clearableGetter = Field.defaultClearableGetter,
     double maxWidth = 512,
+    double minWidth = 128,
+    double flex = 0,
     DateFormat? formatter,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
@@ -40,6 +39,12 @@ class DateField extends Field<DateTime> {
     FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
     List<DateTime?>? undoValues,
     List<DateTime?>? redoValues,
+    GlobalKey? fieldGlobalKey,
+    FocusNode? focusNode,
+    bool invalidateNonEmptyValuesIfHiddenInForm = true,
+    DateTime? defaultValue,
+    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) :  this.firstDate = firstDate ?? DateTime(1900),
         this.lastDate = lastDate ?? DateTime(2200),
         this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY),
@@ -49,6 +54,8 @@ class DateField extends Field<DateTime> {
           dbValue: dbValue,
           clearableGetter: clearableGetter,
           maxWidth: maxWidth,
+          minWidth: minWidth,
+          flex: flex,
           hintGetter: hintGetter,
           tooltipGetter: tooltipGetter,
           tableColumnWidth: tableColumnWidth,
@@ -61,6 +68,12 @@ class DateField extends Field<DateTime> {
           colModelBuilder: colModelBuilder,
           undoValues: undoValues,
           redoValues: redoValues,
+          fieldGlobalKey: fieldGlobalKey ?? GlobalKey(),
+          focusNode: focusNode ?? FocusNode(),
+          invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
+          defaultValue: defaultValue,
+          backgroundColor: backgroundColor,
+          actions: actions,
         );
 
   @override
@@ -70,6 +83,8 @@ class DateField extends Field<DateTime> {
     DateTime? dbValue,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
+    double? minWidth,
+    double? flex,
     DateTime? firstDate,
     DateTime? lastDate,
     FieldValueGetter<String?, Field>? hintGetter,
@@ -84,6 +99,10 @@ class DateField extends Field<DateTime> {
     FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
     List<DateTime?>? undoValues,
     List<DateTime?>? redoValues,
+    bool? invalidateNonEmptyValuesIfHiddenInForm,
+    DateTime? defaultValue,
+    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) {
     return DateField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -91,6 +110,8 @@ class DateField extends Field<DateTime> {
       dbValue: dbValue??this.dbValue,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
+      minWidth: minWidth??this.minWidth,
+      flex: flex??this.flex,
       firstDate: firstDate??this.firstDate,
       lastDate: lastDate??this.lastDate,
       hintGetter: hintGetter??this.hintGetter,
@@ -102,8 +123,12 @@ class DateField extends Field<DateTime> {
       validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
       colModelBuilder: colModelBuilder ?? this.colModelBuilder,
-      undoValues: undoValues ?? this.undoValues,
-      redoValues: redoValues ?? this.redoValues,
+      undoValues: undoValues ?? List.from(this.undoValues),
+      redoValues: redoValues ?? List.from(this.redoValues),
+      invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
+      defaultValue: defaultValue ?? this.defaultValue,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      actions: actions ?? this.actions,
     );
   }
 
@@ -115,8 +140,12 @@ class DateField extends Field<DateTime> {
     bool addCard=false,
     bool asSliver = true,
     expandToFillContainer: true,
-    FocusNode? focusNode, /// unused
+    bool dense = false,
+    FocusNode? focusNode,
   }) {
+    if (focusNode==null) {
+      focusNode = this.focusNode;
+    }
     Widget result;
     if (hiddenInForm) {
       result = SizedBox.shrink();
@@ -133,6 +162,8 @@ class DateField extends Field<DateTime> {
             asSliver: asSliver,
             expandToFillContainer: expandToFillContainer,
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
+            dense: dense,
+            focusNode: focusNode!,
           );
         },
       );
@@ -141,6 +172,8 @@ class DateField extends Field<DateTime> {
         addCard: addCard,
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
+        dense: dense,
+        focusNode: focusNode,
       );
     }
     if (asSliver) {
@@ -155,11 +188,14 @@ class DateField extends Field<DateTime> {
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool largeHorizontally = false,
+    bool dense = false,
+    required FocusNode focusNode,
   }) {
     Widget result = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
         Widget result = DatePickerFromZero(
+          focusNode: focusNode,
           enabled: enabled,
           clearable: clearable,
           title: uiName,
@@ -169,10 +205,23 @@ class DateField extends Field<DateTime> {
           value: value,
           onSelected: (v) {value=v;},
           popupWidth: maxWidth,
-          buttonChildBuilder: _buttonContentBuilder,
+          buttonPadding: dense ? EdgeInsets.zero : null,
+          buttonChildBuilder: (context, title, hint, value, formatter, enabled, clearable) {
+            return _buttonContentBuilder(context, title, hint, value, formatter, enabled, clearable,
+              dense: dense,
+            );
+          },
+        );
+        result = AnimatedContainer(
+          duration: Duration(milliseconds: 300),
+          color: dense && validationErrors.isNotEmpty
+              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+              : backgroundColor?.call(context, this, dao),
+          curve: Curves.easeOut,
+          child: result,
         );
         result = TooltipFromZero(
-          message: validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+          message: validationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
             return a.toString().trim().isEmpty ? b.toString()
                 : b.toString().trim().isEmpty ? a.toString()
                 : '$a\n$b';
@@ -180,6 +229,18 @@ class DateField extends Field<DateTime> {
           child: result,
           triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
+        );
+        final actions = this.actions?.call(context, this, dao) ?? [];
+        result = ContextMenuFromZero(
+          enabled: enabled,
+          addGestureDetector: !dense,
+          actions: [
+            ...actions,
+            if (actions.isNotEmpty)
+              ActionFromZero.divider(),
+            ...buildDefaultActions(context),
+          ],
+          child: result,
         );
         return result;
       },
@@ -191,41 +252,53 @@ class DateField extends Field<DateTime> {
         child: result,
       );
     }
-    result = Padding(
-      key: fieldGlobalKey,
-      padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
-      child: SizedBox(
-        width: maxWidth,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 64,
-              child: result,
-            ),
-            ValidationMessage(errors: validationErrors),
-          ],
+    result = EnsureVisibleWhenFocused(
+      focusNode: focusNode,
+      child: Padding(
+        key: fieldGlobalKey,
+        padding: EdgeInsets.symmetric(horizontal: !dense && largeHorizontally ? 12 : 0),
+        child: SizedBox(
+          width: maxWidth,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 64,
+                child: result,
+              ),
+              if (!dense)
+                ValidationMessage(errors: validationErrors),
+            ],
+          ),
         ),
       ),
     );
     return result;
   }
 
-  Widget _buttonContentBuilder(BuildContext context, String? title, String? hint, DateTime? value, formatter, bool enabled, bool clearable) {
+  Widget _buttonContentBuilder(BuildContext context, String? title, String? hint, DateTime? value, formatter, bool enabled, bool clearable, {
+    dense = false,
+  }) {
     return Padding(
       padding: EdgeInsets.only(right: enabled&&clearable ? 40 : 0),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(width: 8,),
+          SizedBox(width: dense ? 0 : 8,),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                value==null&&hint==null&&title!=null
+                dense
+                    ? Text(value==null ? (hint ?? title ?? '') : value.toString(), style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                        height: 0.8,
+                        color: value==null ? Theme.of(context).textTheme.caption!.color!
+                            : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                      ))
+                : value==null&&hint==null&&title!=null
                     ? Text(title, style: Theme.of(context).textTheme.subtitle1!.copyWith(
                       color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
                     ),)
@@ -246,10 +319,10 @@ class DateField extends Field<DateTime> {
               ],
             ),
           ),
-          SizedBox(width: 4,),
-          if (enabled && !clearable)
+          SizedBox(width: dense ? 0 : 4,),
+          if (!dense && enabled && !clearable)
             Icon(Icons.arrow_drop_down),
-          SizedBox(width: !(enabled && clearable) ? 36 : 4,),
+          SizedBox(width: dense ? 0 : 4,),
         ],
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/popup_from_zero.dart';
 import 'package:from_zero_ui/util/my_popup_menu.dart' as my_popup;
 import 'package:intl/intl.dart';
 
@@ -20,10 +21,11 @@ class DatePickerFromZero extends StatefulWidget {
   final String? hint;
   final bool enabled;
   final DatePickerButtonChildBuilder? buttonChildBuilder;
-  final double popupWidth;
+  final double? popupWidth;
   final DAOGetter? daoGetter;
   final bool clearable;
   final FocusNode? focusNode;
+  final EdgeInsets? buttonPadding;
 
   DatePickerFromZero({
     this.value,
@@ -37,9 +39,10 @@ class DatePickerFromZero extends StatefulWidget {
     this.buttonChildBuilder,
     this.enabled = true,
     this.clearable = true,
-    this.popupWidth = 312,
+    this.popupWidth,
     this.daoGetter,
     this.focusNode,
+    this.buttonPadding,
   }) :  this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY);
 
   @override
@@ -107,59 +110,25 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
       children: [
         TextButton(
           key: buttonKey,
+          style: TextButton.styleFrom(
+            padding: widget.buttonPadding,
+          ),
           child: child,
           focusNode: buttonFocusNode,
           onPressed: widget.enabled ? () async {
             buttonFocusNode.requestFocus();
-            Widget child = Card(
-              clipBehavior: Clip.hardEdge,
-              child: DatePickerFromZeroPopup(
-                title: widget.title,
-                value: widget.value,
-                firstDate: widget.firstDate,
-                lastDate: widget.lastDate,
-                onSelected: widget.onSelected,
-              ),
-            );
-            bool? accepted = await showDialog<bool>(
+            bool? accepted = await showPopupFromZero<bool>(
               context: context,
-              barrierColor: Colors.black.withOpacity(0.2),
+              anchorKey: buttonKey,
               builder: (context) {
-                final animation = CurvedAnimation(
-                  parent: ModalRoute.of(context)!.animation!,
-                  curve: Curves.easeInOutCubic,
-                );
-                Offset? referencePosition;
-                Size? referenceSize;
-                try {
-                  RenderBox box = buttonKey.currentContext!.findRenderObject()! as RenderBox;
-                  referencePosition = box.localToGlobal(Offset.zero); //this is global position
-                  referenceSize = box.size;
-                } catch(_) {}
-                return CustomSingleChildLayout(
-                  delegate: DropdownChildLayoutDelegate(
-                    referencePosition: referencePosition,
-                    referenceSize: referenceSize,
-                  ),
-                  child: AnimatedBuilder(
-                    animation: animation,
-                    builder: (context, child) {
-                      return SizedBox(
-                        width: referenceSize==null ? widget.popupWidth : (referenceSize.width+8).clamp(312, double.infinity),
-                        child: ClipRect(
-                          clipper: RectPercentageClipper(
-                            widthPercent: (animation.value*2.0).clamp(0.0, 1),
-                          ),
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: SizeTransition(
-                      sizeFactor: animation,
-                      axis: Axis.vertical,
-                      axisAlignment: 0,
-                      child: child,
-                    ),
+                return Card(
+                  clipBehavior: Clip.hardEdge,
+                  child: DatePickerFromZeroPopup(
+                    title: widget.title,
+                    value: widget.value,
+                    firstDate: widget.firstDate,
+                    lastDate: widget.lastDate,
+                    onSelected: widget.onSelected,
                   ),
                 );
               },

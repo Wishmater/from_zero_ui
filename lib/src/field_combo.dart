@@ -1,3 +1,4 @@
+import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao.dart';
@@ -20,19 +21,15 @@ class ComboField<T extends DAO> extends Field<T> {
   final bool showDropdownIcon;
   final bool invalidateValuesNotInPossibleValues;
 
-  set value(T? v) {
-    if (v!=value) {
-      passedFirstEdit = true;
-      super.value = v;
-    }
-  }
 
   ComboField({
     required FieldValueGetter<String, Field> uiNameGetter,
     T? value,
     T? dbValue,
-    FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter,
+    FieldValueGetter<bool, Field> clearableGetter = Field.defaultClearableGetter,
     double maxWidth = 512,
+    double minWidth = 128,
+    double flex = 0,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
     this.possibleValuesGetter,
@@ -40,7 +37,7 @@ class ComboField<T extends DAO> extends Field<T> {
     this.sort = true,
     this.showSearchBox = true,
     this.showViewActionOnDAOs = true,
-    this.showDropdownIcon = true,
+    this.showDropdownIcon = false,
     this.extraWidget,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
@@ -54,6 +51,12 @@ class ComboField<T extends DAO> extends Field<T> {
     List<T?>? undoValues,
     List<T?>? redoValues,
     this.invalidateValuesNotInPossibleValues = true,
+    GlobalKey? fieldGlobalKey,
+    FocusNode? focusNode,
+    bool invalidateNonEmptyValuesIfHiddenInForm = true,
+    T? defaultValue,
+    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) :  assert(possibleValuesGetter!=null || futurePossibleValuesGetter!=null),
         assert(possibleValuesGetter==null || futurePossibleValuesGetter==null),
         super(
@@ -62,6 +65,8 @@ class ComboField<T extends DAO> extends Field<T> {
           dbValue: dbValue,
           clearableGetter: clearableGetter,
           maxWidth: maxWidth,
+          minWidth: minWidth,
+          flex: flex,
           hintGetter: hintGetter,
           tooltipGetter: tooltipGetter,
           tableColumnWidth: tableColumnWidth,
@@ -74,6 +79,12 @@ class ComboField<T extends DAO> extends Field<T> {
           colModelBuilder: colModelBuilder,
           undoValues: undoValues,
           redoValues: redoValues,
+          fieldGlobalKey: fieldGlobalKey ?? GlobalKey(),
+          focusNode: focusNode ?? FocusNode(),
+          invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
+          defaultValue: defaultValue,
+          backgroundColor: backgroundColor,
+          actions: actions,
         );
 
   @override
@@ -83,6 +94,8 @@ class ComboField<T extends DAO> extends Field<T> {
     T? dbValue,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
+    double? minWidth,
+    double? flex,
     FieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter,
     FieldValueGetter<Future<List<T>>?, ComboField<T>>? futurePossibleValuesGetter,
     FieldValueGetter<String?, Field>? hintGetter,
@@ -103,6 +116,12 @@ class ComboField<T extends DAO> extends Field<T> {
     FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
     List<T?>? undoValues,
     List<T?>? redoValues,
+    GlobalKey? fieldGlobalKey,
+    FocusNode? focusNode,
+    bool? invalidateNonEmptyValuesIfHiddenInForm,
+    T? defaultValue,
+    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) {
     return ComboField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -110,6 +129,8 @@ class ComboField<T extends DAO> extends Field<T> {
       dbValue: dbValue??this.dbValue,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
+      minWidth: minWidth??this.minWidth,
+      flex: flex??this.flex,
       possibleValuesGetter: possibleValuesGetter??this.possibleValuesGetter,
       futurePossibleValuesGetter: futurePossibleValuesGetter??this.futurePossibleValuesGetter,
       hintGetter: hintGetter??this.hintGetter,
@@ -127,8 +148,12 @@ class ComboField<T extends DAO> extends Field<T> {
       showViewActionOnDAOs: showViewActionOnDAOs ?? this.showViewActionOnDAOs,
       showDropdownIcon: showDropdownIcon ?? this.showDropdownIcon,
       colModelBuilder: colModelBuilder ?? this.colModelBuilder,
-      undoValues: undoValues ?? this.undoValues,
-      redoValues: redoValues ?? this.redoValues,
+      undoValues: undoValues ?? List.from(this.undoValues),
+      redoValues: redoValues ?? List.from(this.redoValues),
+      invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
+      defaultValue: defaultValue ?? this.defaultValue,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      actions: actions ?? this.actions,
     );
   }
 
@@ -144,11 +169,13 @@ class ComboField<T extends DAO> extends Field<T> {
       possibleValues = this.possibleValues!;
     }
     if (invalidateValuesNotInPossibleValues && value!=null && !possibleValues.contains(value)) {
-      validationErrors.add(InvalidatingError(
+      validationErrors.add(InvalidatingError<T>(
+        field: this,
         error: FromZeroLocalizations.of(context).translate("validation_combo_not_possible"),
         defaultValue: null,
       ));
     }
+    validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
     return validationErrors.where((e) => e.isBlocking).isEmpty;
   }
 
@@ -157,8 +184,12 @@ class ComboField<T extends DAO> extends Field<T> {
     bool addCard=false,
     bool asSliver = true,
     expandToFillContainer: true,
-    FocusNode? focusNode, /// unused
+    bool dense = false,
+    FocusNode? focusNode,
   }) {
+    if (focusNode==null) {
+      focusNode = this.focusNode;
+    }
     Widget result;
     if (hiddenInForm) {
       result = SizedBox.shrink();
@@ -175,6 +206,8 @@ class ComboField<T extends DAO> extends Field<T> {
             asSliver: asSliver,
             expandToFillContainer: expandToFillContainer,
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
+            dense: dense,
+            focusNode: focusNode!,
           );
         },
       );
@@ -183,6 +216,8 @@ class ComboField<T extends DAO> extends Field<T> {
         addCard: addCard,
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
+        dense: dense,
+        focusNode: focusNode,
       );
     }
     if (asSliver) {
@@ -197,6 +232,8 @@ class ComboField<T extends DAO> extends Field<T> {
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool largeHorizontally = false,
+    bool dense = false,
+    required FocusNode focusNode,
   }) {
     ExtraWidgetBuilder<T>? extraWidget;
     final newObjectTemplate = this.newObjectTemplate;
@@ -254,6 +291,7 @@ class ComboField<T extends DAO> extends Field<T> {
       animation: this,
       builder: (context, child) {
         Widget result = ComboFromZero<T>(
+          focusNode: focusNode,
           enabled: enabled,
           clearable: clearable,
           title: uiName,
@@ -265,13 +303,27 @@ class ComboField<T extends DAO> extends Field<T> {
           showSearchBox: showSearchBox,
           onSelected: _onSelected,
           popupWidth: maxWidth,
-          buttonChildBuilder: buttonContentBuilder,
+          buttonPadding: dense ? EdgeInsets.zero : null,
+          buttonChildBuilder: (context, title, hint, value, enabled, clearable, {showDropdownIcon=false}) {
+            return buttonContentBuilder(context, title, hint, value, enabled, clearable,
+              showDropdownIcon: showDropdownIcon,
+              dense: dense,
+            );
+          },
           extraWidget: extraWidget ?? this.extraWidget,
           showViewActionOnDAOs: showViewActionOnDAOs,
           showDropdownIcon: showDropdownIcon,
         );
+        result = AnimatedContainer(
+          duration: Duration(milliseconds: 300),
+          color: dense && validationErrors.isNotEmpty
+          ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+              : backgroundColor?.call(context, this, dao),
+          curve: Curves.easeOut,
+          child: result,
+        );
         result = TooltipFromZero(
-          message: validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+          message: validationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
             return a.toString().trim().isEmpty ? b.toString()
                 : b.toString().trim().isEmpty ? a.toString()
                 : '$a\n$b';
@@ -279,6 +331,18 @@ class ComboField<T extends DAO> extends Field<T> {
           child: result,
           triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
+        );
+        final actions = this.actions?.call(context, this, dao) ?? [];
+        result = ContextMenuFromZero(
+          enabled: enabled,
+          addGestureDetector: !dense,
+          actions: [
+            ...actions,
+            if (actions.isNotEmpty)
+              ActionFromZero.divider(),
+            ...buildDefaultActions(context),
+          ],
+          child: result,
         );
         return result;
       },
@@ -290,21 +354,25 @@ class ComboField<T extends DAO> extends Field<T> {
         child: result,
       );
     }
-    result = Padding(
-      key: fieldGlobalKey,
-      padding: EdgeInsets.symmetric(horizontal: largeHorizontally ? 12 : 0),
-      child: SizedBox(
-        width: maxWidth,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 64,
-              child: result,
-            ),
-            ValidationMessage(errors: validationErrors),
-          ],
+    result = EnsureVisibleWhenFocused(
+      focusNode: focusNode,
+      child: Padding(
+        key: fieldGlobalKey,
+        padding: EdgeInsets.symmetric(horizontal: !dense && largeHorizontally ? 12 : 0),
+        child: SizedBox(
+          width: maxWidth,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 64,
+                child: result,
+              ),
+              if (!dense)
+                ValidationMessage(errors: validationErrors),
+            ],
+          ),
         ),
       ),
     );
@@ -317,6 +385,7 @@ class ComboField<T extends DAO> extends Field<T> {
 
   static Widget buttonContentBuilder(BuildContext context, String? title, String? hint, dynamic value, bool enabled, bool clearable, {
     bool showDropdownIcon = true,
+    dense = false,
   }) {
     return Padding(
       padding: EdgeInsets.only(right: enabled&&clearable ? 40 : 0),
@@ -324,16 +393,23 @@ class ComboField<T extends DAO> extends Field<T> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(width: 8,),
+          SizedBox(width: dense ? 0 : 8,),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                value==null&&hint==null&&title!=null
+                dense
+                    ? Text(value==null ? (hint ?? title ?? '') : value.toString(), style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                        height: 0.8,
+                        color: value==null ? Theme.of(context).textTheme.caption!.color!
+                            : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                      ))
+                : value==null&&hint==null&&title!=null
                     ? Text(title, style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                  color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                    ),) : MaterialKeyValuePair(
+                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                      ),)
+                    : MaterialKeyValuePair(
                       padding: 6,
                       title: title,
                       titleStyle: Theme.of(context).textTheme.caption!.copyWith(
@@ -350,11 +426,10 @@ class ComboField<T extends DAO> extends Field<T> {
               ],
             ),
           ),
-          SizedBox(width: 4,),
-          if (showDropdownIcon && enabled && !clearable)
+          SizedBox(width: dense ? 0 : 4,),
+          if (!dense && showDropdownIcon && enabled && !clearable)
             Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyText1!.color,),
-          SizedBox(width: 4,),
-          // SizedBox(width: !(enabled && clearable) ? 36 : 4,),
+          SizedBox(width: dense ? 0 : 4,),
         ],
       ),
     );

@@ -1,38 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:dartx/dartx.dart';
+import 'package:from_zero_ui/src/context_menu.dart';
+import 'package:from_zero_ui/src/popup_from_zero.dart';
 
 
 enum ActionState {
+  none,
+  popup,
   overflow,
   icon,
   button,
   expanded,
 }
+extension ActionStateExtension on ActionState {
+  bool get shownOnPrimaryToolbar => this==ActionState.icon || this==ActionState.button || this==ActionState.expanded;
+  bool get shownOnOverflowMenu => this==ActionState.overflow;
+  bool get shownOnContextMenu => this==ActionState.icon || this==ActionState.button || this==ActionState.expanded || this==ActionState.overflow || this==ActionState.popup;
+}
 
-class AppbarAction extends StatelessWidget{
+typedef void ContextCallback(BuildContext context);
+typedef Widget ActionBuilder({
+  required BuildContext context,
+  required String title,
+  Widget? icon,
+  ContextCallback? onTap,
+  bool enabled,
+});
+
+class ActionFromZero extends StatelessWidget{ // TODO 2 separate this into its own file
 
   /// callback called when icon/button/overflowMenuItem is clicked
   /// if null and expandedWidget!= null, will switch expanded
   final void Function(BuildContext context)? onTap;
   final String title;
   final Widget? icon;
+  final bool enabled;
 
   /// from each breakpoint up, the selected widget will be used
   /// defaults to overflow
   final Map<double, ActionState> breakpoints;
 
   /// optional callbacks to customize the look of the widget in its different states
-  final Widget Function(BuildContext context, String title, Widget? icon) overflowBuilder;
-  final Widget Function(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap) iconBuilder;
-  final Widget Function(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap) buttonBuilder;
-  final Widget Function(BuildContext context, String title, Widget? icon)? expandedBuilder;
+  final ActionBuilder overflowBuilder;
+  Widget buildOverflow(BuildContext context) => overflowBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled,);
+
+  final ActionBuilder iconBuilder;
+  Widget buildIcon(BuildContext context) => iconBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled,);
+
+  final ActionBuilder buttonBuilder;
+  Widget buildButton(BuildContext context) => buttonBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled,);
+
+  final ActionBuilder? expandedBuilder;
+  Widget buildExpanded(BuildContext context) => expandedBuilder!(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled,);
   final bool centerExpanded;
 
-  AppbarAction({
+  ActionFromZero({
     this.onTap,
     required this.title,
     this.icon,
+    this.enabled = true,
     Map<double, ActionState>? breakpoints,
     this.overflowBuilder = defaultOverflowBuilder,
     this.iconBuilder = defaultIconBuilder,
@@ -44,64 +71,175 @@ class AppbarAction extends StatelessWidget{
     ScaffoldFromZero.screenSizeLarge: expandedBuilder==null ? ActionState.button : ActionState.expanded,
   };
 
+  ActionFromZero.divider({
+    Map<double, ActionState>? breakpoints,
+    this.overflowBuilder = dividerOverflowBuilder,
+    this.iconBuilder = dividerIconBuilder,
+    this.buttonBuilder = dividerIconBuilder,
+  }) :  title = '',
+        icon = null,
+        onTap = null,
+        expandedBuilder = null,
+        centerExpanded = true,
+        enabled = true,
+        this.breakpoints = breakpoints ?? {
+          0: ActionState.overflow,
+          ScaffoldFromZero.screenSizeLarge: ActionState.icon,
+        };
+
+  ActionFromZero copyWith({
+    void Function(BuildContext context)? onTap,
+    String? title,
+    Widget? icon,
+    Map<double, ActionState>? breakpoints,
+    ActionBuilder? overflowBuilder,
+    ActionBuilder? iconBuilder,
+    ActionBuilder? buttonBuilder,
+    ActionBuilder? expandedBuilder,
+    bool? centerExpanded,
+    bool? enabled,
+  }) {
+    return ActionFromZero(
+      onTap: onTap ?? this.onTap,
+      title: title ?? this.title,
+      icon: icon ?? this.icon,
+      breakpoints: breakpoints ?? this.breakpoints,
+      overflowBuilder: overflowBuilder ?? this.overflowBuilder,
+      iconBuilder: iconBuilder ?? this.iconBuilder,
+      buttonBuilder: buttonBuilder ?? this.buttonBuilder,
+      expandedBuilder: expandedBuilder ?? this.expandedBuilder,
+      centerExpanded: centerExpanded ?? this.centerExpanded,
+      enabled: enabled ?? this.enabled,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return icon==null
-        ? buttonBuilder(context, title, icon, onTap)
-        : iconBuilder(context, title, icon, onTap);
+    return buildButton(context);
+  }
+
+  ActionState getStateForMaxWidth(double width) {
+    ActionState state = ActionState.overflow;
+    double biggestKey=-1;
+    breakpoints.forEach((key, value) {
+      if (key<width && key>biggestKey){
+        state = value;
+        biggestKey = key;
+      }
+    });
+    return state;
+  }
+
+  static Widget defaultIconBuilder({
+    required BuildContext context,
+    required String title,
+    Widget? icon,
+    ContextCallback? onTap,
+    bool enabled = true,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: IconButton(
+        tooltip: title,
+        icon: icon ?? SizedBox.shrink(),
+        onPressed: !enabled ? null : (){
+          onTap?.call(context);
+        },
+      ),
+    );
+  }
+
+  static Widget defaultButtonBuilder({
+    required BuildContext context,
+    required String title,
+    Widget? icon,
+    ContextCallback? onTap,
+    bool enabled = true,
+  }) {
+    return TextButton(
+      style: TextButton.styleFrom(
+        primary: Theme.of(context).appBarTheme.toolbarTextStyle?.color
+            ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+        padding: EdgeInsets.zero,
+      ),
+      onPressed: !enabled ? null : (){
+        onTap?.call(context);
+      },
+      onLongPress: () => null,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          SizedBox(width: 6),
+          if (icon!=null)
+            icon,
+          if (icon!=null)
+            SizedBox(width: 8,),
+          Text(title, style: TextStyle(fontSize: 16),),
+          SizedBox(width: 6),
+        ],
+      ),
+    );
+  }
+
+  static Widget defaultOverflowBuilder({
+    required BuildContext context,
+    required String title,
+    Widget? icon,
+    ContextCallback? onTap,
+    bool enabled = true,
+  }) {
+    return TextButton(
+      onPressed: !enabled ? null : () => onTap?.call(context),
+      style: TextButton.styleFrom(
+        primary: Theme.of(context).textTheme.bodyText1!.color,
+        padding: EdgeInsets.zero,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (icon!=null) SizedBox(width: 12,),
+            if (icon!=null) IconTheme(data: Theme.of(context).iconTheme.copyWith(color: Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white), child: icon,),
+            SizedBox(width: 12,),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: 2),
+                child: Text(title, style: TextStyle(fontSize: 16),),
+              ),
+            ),
+            SizedBox(width: 12,),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static Widget dividerIconBuilder({
+    required BuildContext context,
+    required String title,
+    Widget? icon,
+    ContextCallback? onTap,
+    bool enabled = true,
+  }) {
+    return VerticalDivider();
+  }
+
+  static Widget dividerOverflowBuilder({
+    required BuildContext context,
+    required String title,
+    Widget? icon,
+    ContextCallback? onTap,
+    bool enabled = true,
+  }) {
+    return Divider();
   }
 
 }
 
-Widget defaultIconBuilder(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap){
-  return Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 4),
-    child: IconButton(
-      tooltip: title,
-      icon: icon ?? SizedBox.shrink(),
-      onPressed: (){
-        onTap?.call(context);
-      },
-    ),
-  );
-}
 
-Widget defaultButtonBuilder(BuildContext context, String title, Widget? icon, void Function(BuildContext context)? onTap){
-  return FlatButton(
-    onPressed: (){
-      onTap?.call(context);
-    },
-    colorBrightness: Theme.of(context).appBarTheme.brightness ?? Theme.of(context).primaryColorBrightness,
-    child: Row(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        SizedBox(width: 6),
-        if (icon!=null)
-          icon,
-        if (icon!=null)
-          SizedBox(width: 8,),
-        Text(title, style: TextStyle(fontSize: 16),),
-        SizedBox(width: 6),
-      ],
-    ),
-  );
-}
 
-Widget defaultOverflowBuilder(BuildContext context, String title, Widget? icon){
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-      if (icon!=null) IconTheme(data: Theme.of(context).iconTheme.copyWith(color: Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white), child: icon,),
-      if (icon!=null) SizedBox(width: 16,),
-      Expanded(
-        child: Padding(
-          padding: EdgeInsets.only(bottom: 2),
-          child: Text(title, style: TextStyle(fontSize: 16),),
-        ),
-      ),
-    ],
-  );
-}
+
 
 
 class AppbarFromZero extends StatefulWidget {
@@ -125,9 +263,9 @@ class AppbarFromZero extends StatefulWidget {
   final double toolbarOpacity;
   final double bottomOpacity;
   final double? toolbarHeight;
-  final AppbarAction? initialExpandedAction;
+  final ActionFromZero? initialExpandedAction;
   final AppbarFromZeroController? controller;
-  final void Function(AppbarAction)? onExpanded;
+  final void Function(ActionFromZero)? onExpanded;
   final VoidCallback? onUnexpanded;
 
   AppbarFromZero({
@@ -166,13 +304,13 @@ class AppbarFromZero extends StatefulWidget {
 
 class AppbarFromZeroController {
 
-  void Function(AppbarAction? expanded)? setExpanded;
+  void Function(ActionFromZero? expanded)? setExpanded;
 
 }
 
 class _AppbarFromZeroState extends State<AppbarFromZero> {
 
-  AppbarAction? forceExpanded;
+  ActionFromZero? forceExpanded;
 
   @override
   void initState() {
@@ -207,169 +345,171 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
       child: LayoutBuilder(
         builder: (context, constraints) {
           List<Widget> actions = [];
-          List<AppbarAction> overflows = [];
+          List<ActionFromZero> overflows = [];
           List<Widget> expanded = [];
           List<int> removeIndices = [];
           if (forceExpanded!=null){
-            ActionState state = ActionState.overflow;
-            double biggestKey=-1;
-            forceExpanded!.breakpoints.forEach((key, value) {
-              if (key<constraints.maxWidth && key>biggestKey){
-                state = value;
-                biggestKey = key;
-              }
-            });
+            ActionState state = forceExpanded!.getStateForMaxWidth(constraints.maxWidth);
             if (state==ActionState.expanded)
               forceExpanded = null;
-          } else if (forceExpanded==null){
+          }
+          if (forceExpanded==null){
             actions = List.from(widget.actions);
             for (int i=0; i<actions.length; i++){
-              if (actions[i] is AppbarAction){
-                AppbarAction action = actions[i] as AppbarAction;
-                ActionState state = ActionState.overflow;
-                double biggestKey=-1;
-                action.breakpoints.forEach((key, value) {
-                  if (key<constraints.maxWidth && key>biggestKey){
-                    state = value;
-                    biggestKey = key;
-                  }
-                });
+              if (actions[i] is ActionFromZero){
+                ActionFromZero action = actions[i] as ActionFromZero;
+                ActionState state = action.getStateForMaxWidth(constraints.maxWidth);
                 switch (state){
+                  case ActionState.none:
+                  case ActionState.popup:
+                    removeIndices.add(i);
+                    break;
                   case ActionState.overflow:
                     overflows.add(action);
                     removeIndices.add(i);
                     break;
                   case ActionState.icon:
-                    actions[i] = action.iconBuilder(context, action.title, action.icon, _getOnTap(action));
+                    actions[i] = action.buildIcon(context);
                     break;
                   case ActionState.button:
-                    actions[i] = action.buttonBuilder(context, action.title, action.icon, _getOnTap(action));
+                    actions[i] = action.buildButton(context);
                     break;
                   case ActionState.expanded:
                     if (action.centerExpanded){
-                      expanded.add(action.expandedBuilder!.call(context, action.title, action.icon));
+                      expanded.add(action.buildExpanded(context));
                       removeIndices.add(i);
                     } else{
-                      actions[i] = action.expandedBuilder!.call(context, action.title, action.icon);
+                      actions[i] = action.buildExpanded(context);
                     }
                     break;
                 }
               }
             }
             removeIndices.reversed.forEach((element) {actions.removeAt(element);});
-            if (overflows.isNotEmpty){
-              actions.add(PopupMenuButton<AppbarAction>(
-                icon: Icon(Icons.more_vert),
-                itemBuilder: (context) => List.generate(overflows.length, (index) => PopupMenuItem(
-                  value: overflows[index],
-                  child: overflows[index].overflowBuilder(context, overflows[index].title, overflows[index].icon),
-                )),
-                onSelected: (value) => _getOnTap(value)?.call(context),
-              ));
+            if (overflows.isNotEmpty) {
+              actions.add(
+                ContextMenuIconButton(
+                  icon: Icon(Icons.more_vert),
+                  anchorAlignment: Alignment.bottomCenter,
+                  popupAlignment: Alignment.bottomCenter,
+                  actions: overflows.map((e) => e.copyWith(onTap: (context) => _getOnTap(e)?.call(context),)).toList(),
+                ),
+              );
             }
             if (actions.isNotEmpty) actions.add(SizedBox(width: 8,));
           }
-          return AppBar(
+          return ContextMenuFromZero(
+            actions: widget.actions
+                .whereType<ActionFromZero>()
+                .where((e) => e.getStateForMaxWidth(constraints.maxWidth).shownOnContextMenu)
+                .map((e) {
+                    return e.copyWith(onTap: _getOnTap(e));
+                }).toList(),
+            child: AppBar(
 //          leading: widget.leading,
-            title: AnimatedSwitcher(
-              duration: 300.milliseconds,
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: Tween<double>(begin: -0.5, end: 1).animate(animation),
-                child: SlideTransition(
-                  position: Tween<Offset>(begin: Offset(-1, 0), end: Offset.zero).animate(animation),
-                  child: child,
-                ),
-              ),
-              child: forceExpanded!=null ? SizedBox.shrink() : widget.title,
-            ),
-            actions: [
-              AnimatedSwitcher(
-                duration: 300.milliseconds,
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: SlideTransition(
-                    position: Tween<Offset>(begin: Offset(1, 0), end: Offset.zero).animate(animation),
-                    child: child,
-                  ),
-                ),
-                child: Row(
-                  key: ValueKey(forceExpanded),
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: actions,
-                ),
-              ),
-            ],
-            flexibleSpace: AppBar(
-              excludeHeaderSemantics: true,
-              automaticallyImplyLeading: false,
-              centerTitle: true,
-              elevation: widget.elevation,
-              backgroundColor: Colors.transparent,
-              titleSpacing: 8,
               title: AnimatedSwitcher(
                 duration: 300.milliseconds,
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
                 transitionBuilder: (child, animation) => FadeTransition(
-                  opacity: animation,
-                  child: ScaleTransition(
-                    scale: animation,
+                  opacity: Tween<double>(begin: -0.5, end: 1).animate(animation),
+                  child: SlideTransition(
+                    position: Tween<Offset>(begin: Offset(-1, 0), end: Offset.zero).animate(animation),
                     child: child,
-                    alignment: Alignment.bottomCenter,
                   ),
                 ),
-                child: SizedBox(
-                  key: ValueKey(forceExpanded!=null ? forceExpanded : expanded.isEmpty),
-                  height: widget.toolbarHeight ?? 56,
+                child: forceExpanded!=null ? SizedBox.shrink() : widget.title,
+              ),
+              actions: [
+                AnimatedSwitcher(
+                  duration: 300.milliseconds,
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(begin: Offset(1, 0), end: Offset.zero).animate(animation),
+                      child: child,
+                    ),
+                  ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    key: ValueKey(forceExpanded),
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: forceExpanded==null ? expanded : [
-                      Expanded(
-                        child: forceExpanded!.expandedBuilder!.call(context, forceExpanded!.title, forceExpanded!.icon),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close),
-                        onPressed: () {
-                          setState(() {
-                            forceExpanded = null;
-                            widget.onUnexpanded?.call();
-                          });
-                        },
-                      ),
-                    ],
+                    children: actions,
+                  ),
+                ),
+              ],
+              flexibleSpace: AppBar(
+                excludeHeaderSemantics: true,
+                automaticallyImplyLeading: false,
+                centerTitle: true,
+                elevation: widget.elevation,
+                backgroundColor: Colors.transparent,
+                titleSpacing: 8,
+                title: AnimatedSwitcher(
+                  duration: 300.milliseconds,
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  transitionBuilder: (child, animation) => FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: animation,
+                      child: child,
+                      alignment: Alignment.bottomCenter,
+                    ),
+                  ),
+                  child: SizedBox(
+                    key: ValueKey(forceExpanded!=null ? forceExpanded : expanded.isEmpty),
+                    height: widget.toolbarHeight ?? 56,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: forceExpanded==null ? expanded : [
+                        Expanded(
+                          child: forceExpanded!.buildExpanded(context),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close),
+                          onPressed: () {
+                            setState(() {
+                              forceExpanded = null;
+                              widget.onUnexpanded?.call();
+                            });
+                          },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
+              automaticallyImplyLeading: false,
+              bottom: widget.bottom,
+              elevation: widget.elevation,
+              shadowColor: widget.shadowColor,
+              shape: widget.shape,
+              backgroundColor: widget.backgroundColor,
+              brightness: widget.brightness,
+              iconTheme: widget.iconTheme,
+              actionsIconTheme: widget.actionsIconTheme,
+              textTheme: widget.textTheme,
+              primary: widget.primary,
+              centerTitle: widget.centerTitle,
+              excludeHeaderSemantics: widget.excludeHeaderSemantics,
+              titleSpacing: widget.titleSpacing,
+              toolbarOpacity: widget.toolbarOpacity,
+              bottomOpacity: widget.bottomOpacity,
+              toolbarHeight: widget.toolbarHeight,
             ),
-            automaticallyImplyLeading: false,
-            bottom: widget.bottom,
-            elevation: widget.elevation,
-            shadowColor: widget.shadowColor,
-            shape: widget.shape,
-            backgroundColor: widget.backgroundColor,
-            brightness: widget.brightness,
-            iconTheme: widget.iconTheme,
-            actionsIconTheme: widget.actionsIconTheme,
-            textTheme: widget.textTheme,
-            primary: widget.primary,
-            centerTitle: widget.centerTitle,
-            excludeHeaderSemantics: widget.excludeHeaderSemantics,
-            titleSpacing: widget.titleSpacing,
-            toolbarOpacity: widget.toolbarOpacity,
-            bottomOpacity: widget.bottomOpacity,
-            toolbarHeight: widget.toolbarHeight,
           );
         },
       ),
     );
   }
 
-  void Function(BuildContext context)? _getOnTap (AppbarAction action){
+  void Function(BuildContext context)? _getOnTap (ActionFromZero action){
+    if (!action.enabled) {
+      return null;
+    }
     if (action.onTap==null && action.expandedBuilder!=null){
       return (context){
         setState(() {

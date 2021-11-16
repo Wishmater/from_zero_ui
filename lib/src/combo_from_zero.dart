@@ -2,6 +2,7 @@ import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/popup_from_zero.dart';
 import 'package:from_zero_ui/util/my_popup_menu.dart' as my_popup;
 
 typedef Widget ButtonChildBuilder<T>(BuildContext context, String? title, String? hint, T? value, bool enabled, bool clearable, {bool showDropdownIcon});
@@ -26,10 +27,11 @@ class ComboFromZero<T> extends StatefulWidget {
   final bool showViewActionOnDAOs;
   final bool showDropdownIcon;
   final ButtonChildBuilder<T>? buttonChildBuilder;
-  final double popupWidth;
+  final double? popupWidth;
   final ExtraWidgetBuilder<T>? extraWidget;
   final FocusNode? focusNode;
   final Widget Function(T value)? popupWidgetBuilder;
+  final EdgeInsets? buttonPadding;
 
   ComboFromZero({
     this.value,
@@ -45,11 +47,12 @@ class ComboFromZero<T> extends StatefulWidget {
     this.clearable = true,
     this.sort = true,
     this.showViewActionOnDAOs = true,
-    this.showDropdownIcon = true,
-    this.popupWidth = 312,
+    this.showDropdownIcon = false,
+    this.popupWidth,
     this.extraWidget,
     this.focusNode,
     this.popupWidgetBuilder,
+    this.buttonPadding,
   }) :  assert(possibleValues!=null || futurePossibleValues!=null);
 
   @override
@@ -170,6 +173,9 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
         children: [
           TextButton(
             key: buttonKey,
+            style: TextButton.styleFrom(
+              padding: widget.buttonPadding,
+            ),
             child: Center(
               child: OverflowScroll(
                 child: child,
@@ -179,61 +185,22 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
             focusNode: buttonFocusNode,
             onPressed: widget.enabled ? () async {
               buttonFocusNode.requestFocus();
-              Widget child = Card(
-                clipBehavior: Clip.hardEdge,
-                child: ComboFromZeroPopup<T>(
-                  possibleValues: possibleValues!,
-                  onSelected: widget.onSelected,
-                  onCanceled: widget.onCanceled,
-                  value: widget.value,
-                  sort: widget.sort,
-                  showSearchBox: widget.showSearchBox,
-                  showViewActionOnDAOs: widget.showViewActionOnDAOs,
-                  title: widget.title,
-                  extraWidget: widget.extraWidget,
-                  popupWidgetBuilder: widget.popupWidgetBuilder,
-                ),
-              );
-              bool? accepted = await showDialog<bool>(
+              bool? accepted = await showPopupFromZero<bool>(
                 context: context,
-                barrierColor: Colors.black.withOpacity(0.2),
+                anchorKey: buttonKey,
+                width: widget.popupWidth,
                 builder: (context) {
-                  final animation = CurvedAnimation(
-                    parent: ModalRoute.of(context)!.animation!,
-                    curve: Curves.easeInOutCubic,
-                  );
-                  Offset? referencePosition;
-                  Size? referenceSize;
-                  try {
-                    RenderBox box = buttonKey.currentContext!.findRenderObject()! as RenderBox;
-                    referencePosition = box.localToGlobal(Offset.zero); //this is global position
-                    referenceSize = box.size;
-                  } catch(_) {}
-                  return CustomSingleChildLayout(
-                    delegate: DropdownChildLayoutDelegate(
-                      referencePosition: referencePosition,
-                      referenceSize: referenceSize,
-                    ),
-                    child: AnimatedBuilder(
-                      animation: animation,
-                      builder: (context, child) {
-                        return SizedBox(
-                          width: referenceSize==null ? widget.popupWidth : (referenceSize.width+8).clamp(312, double.infinity),
-                          child: ClipRect(
-                            clipper: RectPercentageClipper(
-                              widthPercent: (animation.value*2.0).clamp(0.0, 1),
-                            ),
-                            child: child, // TODO add AnimatedContainerFromChildSize
-                          ),
-                        );
-                      },
-                      child: SizeTransition(
-                        sizeFactor: animation,
-                        axis: Axis.vertical,
-                        axisAlignment: 0,
-                        child: child,
-                      ),
-                    ),
+                  return ComboFromZeroPopup<T>(
+                    possibleValues: possibleValues!,
+                    onSelected: widget.onSelected,
+                    onCanceled: widget.onCanceled,
+                    value: widget.value,
+                    sort: widget.sort,
+                    showSearchBox: widget.showSearchBox,
+                    showViewActionOnDAOs: widget.showViewActionOnDAOs,
+                    title: widget.title,
+                    extraWidget: widget.extraWidget,
+                    popupWidgetBuilder: widget.popupWidgetBuilder,
                   );
                 },
               );
@@ -275,7 +242,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
       );
     }
     return result;
-    // TODO apply transition switcher, solve problems with duplicate key and stack constraints
+    // TODO 3 apply transition switcher, solve problems with duplicate key and stack constraints
     return PageTransitionSwitcher(
       child: result,
       duration: Duration(milliseconds: 300,),
@@ -340,89 +307,90 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
   Widget build(BuildContext context) {
     return ScrollbarFromZero(
       controller: popupScrollController,
-      child: AnimatedContainerFromChildSize(
-        child: CustomScrollView(
-          controller: popupScrollController,
-          shrinkWrap: true,
-          slivers: [
-            if (!widget.showSearchBox)
-              SliverToBoxAdapter(child: SizedBox(height: 12,),),
-            TableFromZero(
-              tableController: tableController,
-              layoutWidgetType: TableFromZero.sliverListViewBuilder,
-              showHeaders: false,
-              horizontalPadding: 8,
-              initialSortedColumnIndex: widget.sort ? 0 : -1,
-              cellBuilder: widget.popupWidgetBuilder==null ? null
-                  : (context, row, col, j) => widget.popupWidgetBuilder!(row.id),
-              onFilter: (filtered) {
-                if (searchQuery!=null && searchQuery!.isNotEmpty) {
-                  return filtered.where((e) => e.id.toString().toUpperCase().contains(searchQuery!.toUpperCase())).toList();
-                }
-                return filtered;
-              },
-              rows: widget.possibleValues.map((e) {
-                return SimpleRowModel(
-                  id: e,
-                  values: [e.toString()],
-                  backgroundColor: widget.value==e ? Theme.of(context).toggleableActiveColor.withOpacity(0.1) : null,
-                  onRowTap: (value) {
-                    _select(e);
+      child: CustomScrollView(
+        controller: popupScrollController,
+        shrinkWrap: true,
+        slivers: [
+          if (!widget.showSearchBox)
+            SliverToBoxAdapter(child: SizedBox(height: 12,),),
+          TableFromZero(
+            tableController: tableController,
+            layoutWidgetType: TableFromZero.sliverListViewBuilder,
+            showHeaders: false,
+            horizontalPadding: 8,
+            initialSortedColumnIndex: widget.sort ? 0 : -1,
+            cellBuilder: widget.popupWidgetBuilder==null ? null
+                : (context, row, col, j) => widget.popupWidgetBuilder!(row.id),
+            onFilter: (filtered) {
+              if (searchQuery!=null && searchQuery!.isNotEmpty) {
+                return filtered.where((e) => e.id.toString().toUpperCase().contains(searchQuery!.toUpperCase())).toList();
+              }
+              return filtered;
+            },
+            rows: widget.possibleValues.map((e) {
+              return SimpleRowModel(
+                id: e,
+                values: [e.toString()],
+                backgroundColor: widget.value==e ? Theme.of(context).toggleableActiveColor.withOpacity(0.1) : null,
+                onRowTap: (value) {
+                  _select(e);
+                },
+                actions: widget.showViewActionOnDAOs && e is DAO ? [IconButton(
+                  icon: Icon(Icons.remove_red_eye),
+                  onPressed: () {
+                    e.pushViewDialog(context);
                   },
-                  actions: widget.showViewActionOnDAOs && e is DAO ? [IconButton(
-                    icon: Icon(Icons.remove_red_eye),
-                    onPressed: () {
-                      e.pushViewDialog(context);
-                    },
-                  )] : null
-                );
-              }).toList(),
-              headerAddon: widget.showSearchBox ? Container(
-                color: Theme.of(context).cardColor,
-                child: Column(
-                  children: [
-                    if (widget.title!=null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Center(
+                )] : null
+              );
+            }).toList(),
+            headerAddon: widget.showSearchBox ? Container(
+              color: Theme.of(context).cardColor,
+              child: Column(
+                children: [
+                  if (widget.title!=null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4.0),
+                      child: Center(
+                        child: Transform.translate(
+                          offset: Offset(0, 4),
                           child: Text(widget.title!,
                             style: Theme.of(context).textTheme.subtitle1,
                             textAlign: TextAlign.center,
                           ),
                         ),
                       ),
-                    if (widget.extraWidget!=null)
-                      widget.extraWidget!(context, widget.onSelected,),
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8.0, left: 12, right: 12,),
-                      child: TextFormField(
-                        initialValue: searchQuery,
-                        autofocus: PlatformExtended.isDesktop,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
-                          labelText: FromZeroLocalizations.of(context).translate('search...'),
-                          labelStyle: TextStyle(height: 1.5),
-                          suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
-                        ),
-                        onChanged: (value) {
-                          searchQuery = value;
-                          tableController.filter();
-                        },
-                        onFieldSubmitted: (value) {
-                          final filtered = tableController.filtered!;
-                          if (filtered.length==1) {
-                            _select(filtered.first.id);
-                          }
-                        },
-                      ),
                     ),
-                  ],
-                ),
-              ) : null,
-            ),
-            SliverToBoxAdapter(child: SizedBox(height: 12,),),
-          ],
-        ),
+                  if (widget.extraWidget!=null)
+                    widget.extraWidget!(context, widget.onSelected,),
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8.0, left: 12, right: 12,),
+                    child: TextFormField(
+                      initialValue: searchQuery,
+                      autofocus: PlatformExtended.isDesktop,
+                      decoration: InputDecoration(
+                        contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
+                        labelText: FromZeroLocalizations.of(context).translate('search...'),
+                        labelStyle: TextStyle(height: 1.5),
+                        suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
+                      ),
+                      onChanged: (value) {
+                        searchQuery = value;
+                        tableController.filter();
+                      },
+                      onFieldSubmitted: (value) {
+                        final filtered = tableController.filtered!;
+                        if (filtered.length==1) {
+                          _select(filtered.first.id);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ) : null,
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: 12,),),
+        ],
       ),
     );
   }
@@ -437,82 +405,3 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
 }
 
 
-enum DropdownChildLayoutDelegateAlign {
-  topLeft,
-  bottomLeft,
-  topRight,
-  bottomRight,
-}
-
-// TODO make this a separate thing, since it is also used in DatePickerFromZero
-class DropdownChildLayoutDelegate extends SingleChildLayoutDelegate {
-
-  Offset? referencePosition;
-  Size? referenceSize;
-  DropdownChildLayoutDelegateAlign align;
-
-  DropdownChildLayoutDelegate({
-    this.referencePosition,
-    this.referenceSize,
-    this.align = DropdownChildLayoutDelegateAlign.bottomLeft,
-  });
-
-  @override
-  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
-    return constraints.loosen();
-  }
-
-  @override
-  Offset getPositionForChild(Size size, Size childSize) {
-    if (referencePosition!=null && referenceSize!=null) {
-      double x = (referencePosition!.dx-4).clamp(0, size.width-childSize.width);
-      if (align==DropdownChildLayoutDelegateAlign.topRight || align==DropdownChildLayoutDelegateAlign.bottomRight) {
-        x += referenceSize!.width-childSize.width;
-      }
-      double y = referencePosition!.dy;
-      if (align==DropdownChildLayoutDelegateAlign.bottomLeft || align==DropdownChildLayoutDelegateAlign.bottomRight) {
-        y += referenceSize!.height;
-      }
-      if (size.height-y < childSize.height) {
-        y = size.height - childSize.height;
-      }
-      return Offset(x, y,);
-    } else {
-      return Offset(
-        size.width/2-childSize.width/2,
-        size.height/2-childSize.height/2,
-      );
-    }
-  }
-
-  @override
-  bool shouldRelayout(covariant SingleChildLayoutDelegate oldDelegate) {
-    return false;
-  }
-
-}
-
-class RectPercentageClipper extends CustomClipper<Rect> {
-
-  double heightPercent;
-  double widthPercent;
-
-  RectPercentageClipper({
-    this.heightPercent = 1,
-    this.widthPercent = 1,
-  });
-
-  @override
-  getClip(Size size) {
-    return Rect.fromLTWH(0, 0,
-      size.width * widthPercent,
-      size.height * heightPercent,
-    );
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper oldClipper) {
-    return true;
-  }
-
-}

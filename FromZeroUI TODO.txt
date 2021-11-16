@@ -1,8 +1,5 @@
 
 
-    _mouseIsConnected = RendererBinding.instance!.mouseTracker.mouseIsConnected;
-	
-
 
 
 !!!!!!!!! Textfield alt-64 blocks whole windows
@@ -22,6 +19,12 @@
 ! Scrollbar not updated on window resize
 	noticeable in table horizontal scrollbars
 	
+popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
+
+popupFromZero doesn't reposition child in response to window resize
+
+popupFromZero improvement: on dektop, popup should not block content behind it by default (use Overlay)
+
 Experiment: make Telegram-like scrollbars: 
 		leave option
 	scrollbar is not always visible
@@ -29,13 +32,6 @@ Experiment: make Telegram-like scrollbars:
 	while inside the scrollbar region action range, keep showig it
 	also show it once at start	
 	remove top padding on android by default
-
-Generalize showPopupFromZero function and make everything use it
-		ComboFromZero
-		DatePickerFromZero
-		TableFromZero filters
-	make it resize for android keyboard offset appropriately
-		test same problem with snackbar
 
 TableFromZero improvements
 	List<Columns> and List<values> refactored as maps
@@ -46,7 +42,7 @@ TableFromZero improvements
 		filters will show loading until this finishes
 		probably needs to be in an isolate
 		??? only if rowCount > 100 ??? (also allow to force sync or async)
-		
+	
 REFACTOR FROMZERO NAVIGATION
 	Learn about Navigation 2.0
 	Implement PageFromZero, including all info
@@ -57,6 +53,9 @@ Use better scroll shadow on table
 
 make Export use new FileSaverFromZero
 
+implement PageIndicatorForZero
+	indicator that 'slides' with a transition between values
+	builders for the actual tab children, depending on selected value/index
 implement DialogButton widget to streamline appearance
 implement AlertDialogFromZero, taking simple parameters (title, message, onAccept, onCancel)
 

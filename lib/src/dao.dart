@@ -1,12 +1,16 @@
+import 'dart:math';
+
 import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/src/field.dart';
 import 'package:from_zero_ui/src/field_validators.dart';
-import 'field_one_to_many.dart';
+import 'package:preload_page_view/preload_page_view.dart';
+import 'field_list.dart';
 
 
 typedef Future<DAO?> OnSaveCallback(BuildContext context, DAO e);
@@ -30,12 +34,9 @@ class DAO extends ChangeNotifier implements Comparable {
         ...fieldGroups.map((e) => e.props).reduce((value, element) => {...value, ...element}),
     };
   }
-  List<Field> undoRecord;
-  List<Field> redoRecord;
   OnSaveCallback? onSave;
   OnSaveCallback? onDelete;
   List<ValueChanged<DAO>> _selfUpdateListeners = [];
-
   DAOWidgetBuilder? viewWidgetBuilder;
   bool useIntrinsicHeightForViewDialog;
   double viewDialogWidth;
@@ -43,6 +44,7 @@ class DAO extends ChangeNotifier implements Comparable {
   bool viewDialogLinksToInnerDAOs;
   bool viewDialogShowsViewButtons;
   bool? viewDialogShowsEditButton;
+  DAO? parentDAO; /// if not null, undo/redo calls will be relayed to the parent
 
   DAO({
     required this.classUiNameGetter,
@@ -59,10 +61,11 @@ class DAO extends ChangeNotifier implements Comparable {
     this.viewDialogLinksToInnerDAOs = true,
     this.viewDialogShowsViewButtons = true,
     this.viewDialogShowsEditButton,
-    List<Field>? undoRecord,
-    List<Field>? redoRecord,
-  }) :  this.undoRecord = undoRecord ?? [],
-        this.redoRecord = redoRecord ?? [],
+    List<List<Field>>? undoRecord,
+    List<List<Field>>? redoRecord,
+    this.parentDAO,
+  }) :  this._undoRecord = undoRecord ?? [],
+        this._redoRecord = redoRecord ?? [],
         this.classUiNamePluralGetter = classUiNamePluralGetter ?? classUiNameGetter
         {
           this.props.forEach((key, value) {
@@ -94,8 +97,9 @@ class DAO extends ChangeNotifier implements Comparable {
     bool? viewDialogLinksToInnerDAOs,
     bool? viewDialogShowsViewButtons,
     bool? viewDialogShowsEditButton,
-    List<Field>? undoRecord,
-    List<Field>? redoRecord,
+    List<List<Field>>? undoRecord,
+    List<List<Field>>? redoRecord,
+    DAO? parentDAO,
   }) {
     final result = DAO(
       id: id??this.id,
@@ -112,8 +116,9 @@ class DAO extends ChangeNotifier implements Comparable {
       viewDialogLinksToInnerDAOs: viewDialogLinksToInnerDAOs??this.viewDialogLinksToInnerDAOs,
       viewDialogShowsViewButtons: viewDialogShowsViewButtons??this.viewDialogShowsViewButtons,
       viewDialogShowsEditButton: viewDialogShowsEditButton??this.viewDialogShowsEditButton,
-      undoRecord: undoRecord??this.undoRecord,
-      redoRecord: redoRecord??this.redoRecord,
+      undoRecord: undoRecord??this._undoRecord,
+      redoRecord: redoRecord??this._redoRecord,
+      parentDAO: parentDAO??this.parentDAO,
     );
     result._selfUpdateListeners = _selfUpdateListeners;
     return result;
@@ -130,35 +135,24 @@ class DAO extends ChangeNotifier implements Comparable {
   String toString() => uiName;
 
   @override
-  bool operator == (dynamic other) => (other is DAO) && (id==null ? super.hashCode==other.hashCode : (this.classUiName==other.classUiName && this.id==other.id));
+  bool operator == (dynamic other) => (other is DAO)
+      && (id==null
+          ? hashCode==other.hashCode
+          : (this.classUiName==other.classUiName && this.id==other.id));
 
   @override
   int get hashCode => id==null ? super.hashCode : (classUiName+id.toString()).hashCode;
 
 
-  BuildContext? contextForValidation;
-  Map<String, dynamic> lastValidatedValues = {}; // kept to only run validation if values have changed
+  bool blockNotifyListeners = false;
+  BuildContext? _contextForValidation;
+  BuildContext? get contextForValidation => parentDAO?.contextForValidation ?? this._contextForValidation;
   @override
   void notifyListeners() {
-    super.notifyListeners();
-    if (contextForValidation!=null) {
-      bool editedSinceLastValidation = false;
-      final props = this.props;
-      for (final key in props.keys) {
-        if (!lastValidatedValues.containsKey(key) || lastValidatedValues[key]!=props[key]!.value) {
-          editedSinceLastValidation = true;
-          break;
-        }
-      }
-      if (editedSinceLastValidation) {
-        for (final key in props.keys) {
-          lastValidatedValues[key] = props[key]!.value;
-        }
-        validate(contextForValidation,
-          validateNonEditedFields: false,
-        );
-      }
+    if (blockNotifyListeners) {
+      return;
     }
+    super.notifyListeners();
   }
 
 
@@ -178,20 +172,150 @@ class DAO extends ChangeNotifier implements Comparable {
     notifyListeners();
   }
 
-  void undo() {
-    assert(undoRecord.isNotEmpty);
-    undoRecord.last.undo();
+
+  List<List<Field>> _undoRecord;
+  List<List<Field>> _redoRecord;
+  List<Field>? _undoTransaction;
+  List<Field>? _redoTransaction;
+
+  void beginUndoTransaction() {
+    _undoTransaction = [];
+  }
+  void beginRedoTransaction() {
+    _redoTransaction = [];
   }
 
-  void redo() {
-    assert(redoRecord.isNotEmpty);
-    redoRecord.last.redo();
+  void commitUndoTransaction({
+    bool clearRedo = true,
+  }) {
+    assert(_undoTransaction!=null, 'beginUndoTransaction was not called');
+    if (_undoTransaction!.isNotEmpty) {
+      _undoRecord.add(_undoTransaction!);
+      if (clearRedo) {
+        _redoRecord.clear();
+      }
+    }
+    _undoTransaction = null;
   }
+  void commitRedoTransaction() {
+    assert(_redoTransaction!=null, 'beginRedoTransaction was not called');
+    if (_redoTransaction!.isNotEmpty) {
+      _redoRecord.add(_redoTransaction!);
+    }
+    _redoTransaction = null;
+  }
+
+  addUndoEntry(Field field, {
+    bool clearRedo = true,
+  }) {
+    if (parentDAO!=null) {
+      parentDAO!.addUndoEntry(field, clearRedo: clearRedo);
+    } else {
+      if (_undoTransaction != null) {
+        _undoTransaction!.add(field);
+      } else {
+        _undoRecord.add([field]);
+        if (clearRedo) {
+          _redoRecord.clear();
+        }
+      }
+    }
+  }
+  addRedoEntry(Field field) {
+    if (parentDAO!=null) {
+      parentDAO!.addRedoEntry(field);
+    } else {
+      if (_redoTransaction!=null) {
+        _redoTransaction!.add(field);
+      } else {
+        _redoRecord.add([field]);
+      }
+    }
+  }
+
+  removeLastUndoEntry(Field field) {
+    int index = -1;
+    for (int i=_undoRecord.lastIndex; i>=0 && index==-1; i--) {
+      index = _undoRecord[i].lastIndexOf(field);
+      if (index!=-1) {
+        _undoRecord[i].removeAt(index);
+      }
+      if (_undoRecord[i].isEmpty) {
+        _undoRecord.removeAt(i);
+      }
+    }
+  }
+  removeLastRedoEntry(Field field) {
+    int index = -1;
+    for (int i=_redoRecord.lastIndex; i>=0 && index==-1; i--) {
+      index = _redoRecord[i].lastIndexOf(field);
+      if (index!=-1) {
+        _redoRecord[i].removeAt(index);
+      }
+      if (_redoRecord[i].isEmpty) {
+        _redoRecord.removeAt(i);
+      }
+    }
+  }
+
+  removeAllUndoEntries(Field field) {
+    for (int i=_undoRecord.lastIndex; i>=0; i--) {
+      _undoRecord[i].removeWhere((e) => e==field);
+      if (_undoRecord[i].isEmpty) {
+        _undoRecord.removeAt(i);
+      }
+    }
+  }
+  removeAllRedoEntries(Field field) {
+    for (int i=_redoRecord.lastIndex; i>=0; i--) {
+      _redoRecord[i].removeWhere((e) => e==field);
+      if (_redoRecord[i].isEmpty) {
+        _redoRecord.removeAt(i);
+      }
+    }
+  }
+
+  void undo() {
+    assert(_undoRecord.isNotEmpty);
+    blockNotifyListeners = true;
+    beginRedoTransaction();
+    for (int i=0; i<_undoRecord.last.length; i++) {
+      _undoRecord.last[i].undo(removeEntryFromDAO: false);
+    }
+    _undoRecord.removeLast();
+    commitRedoTransaction();
+    blockNotifyListeners = false;
+    validate(contextForValidation, validateNonEditedFields: false,);
+    notifyListeners();
+  }
+  void redo() {
+    assert(_redoRecord.isNotEmpty);
+    blockNotifyListeners = true;
+    beginUndoTransaction();
+    for (int i=0; i<_redoRecord.last.length; i++) {
+      _redoRecord.last[i].redo(removeEntryFromDAO: false);
+    }
+    _redoRecord.removeLast();
+    commitUndoTransaction(clearRedo: false,);
+    blockNotifyListeners = false;
+    validate(contextForValidation, validateNonEditedFields: false,);
+    notifyListeners();
+  }
+
 
   Future<bool> validate(context, {
     bool validateNonEditedFields = true,
-    bool scrollToBlockingFields = false,
+    bool focusBlockingField = false,
   }) async {
+    if (blockNotifyListeners) {
+      return false;
+    }
+    if (parentDAO!=null) {
+      return parentDAO!.validate(parentDAO!.contextForValidation,
+        validateNonEditedFields: validateNonEditedFields,
+        focusBlockingField: focusBlockingField,
+      );
+    }
     bool success = true;
     List<Future<bool>> results = [];
     for (final e in props.values) {
@@ -203,15 +327,25 @@ class DAO extends ChangeNotifier implements Comparable {
         break;
       }
     }
-    if (scrollToBlockingFields && !success) {
+    if (focusBlockingField && !success) {
+      final validationErrors = this.validationErrors;
+      validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
+      ValidationError error = validationErrors.first;
+      error.field.focusNode.requestFocus();
       try {
-        Scrollable.ensureVisible(props.values.firstWhere((e) => e.validationErrors.where((e) => e.isBlocking).isNotEmpty).fieldGlobalKey.currentContext!,
+        Scrollable.ensureVisible(error.field.fieldGlobalKey.currentContext!,
           duration: Duration(milliseconds: 500),
           curve: Curves.easeOutCubic,
-          alignment: 0.1,
+          alignment: 0.5,
         );
       } catch(_) {}
+      try {
+        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+          error.animationController?.forward(from: 0);
+        });
+      } catch(_) {}
     }
+    notifyListeners();
     return success;
   }
 
@@ -222,7 +356,7 @@ class DAO extends ChangeNotifier implements Comparable {
   }) async {
     bool validation = await validate(context,
       validateNonEditedFields: true,
-      scrollToBlockingFields: true,
+      focusBlockingField: true,
     );
     if (!validation) {
       return false;
@@ -232,18 +366,6 @@ class DAO extends ChangeNotifier implements Comparable {
       confirm = await showModal(
         context: context,
         builder: (context) {
-          final allErrors = validationErrors;
-          List<ValidationError> warnings = [];
-          List<ValidationError> errors = [];
-          for (final e in allErrors) {
-            if (e.isVisibleAsHintMessage) {
-              if (e.isBlocking) {
-                errors.add(e);
-              } else {
-                warnings.add(e);
-              }
-            }
-          }
           return SizedBox(
             width: formDialogWidth-32,
             child: AlertDialog(
@@ -253,80 +375,7 @@ class DAO extends ChangeNotifier implements Comparable {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(FromZeroLocalizations.of(context).translate("confirm_save_desc")),
-                  if (errors.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12,),
-                      child: Row(
-                        children: [
-                          Icon(Icons.warning,
-                            size: 38,
-                            color: ValidationMessage.severityColors[Theme.of(context).brightness]![ValidationErrorSeverity.error]!,
-                          ),
-                          SizedBox(width: 6,),
-                          Expanded(
-                            child: Text(FromZeroLocalizations.of(context).translate("errors") + ':',
-                              style: Theme.of(context).textTheme.headline6,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ...errors.map((e) {
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 15,),
-                      child: Row(
-                        children: [
-                          Icon(Icons.circle,
-                            size: 10,
-                            color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
-                          ),
-                          SizedBox(width: 8,),
-                          Expanded(
-                            child: Text(e.error,
-                              // style: Theme.of(context).textTheme.bodyText1!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-                  if (warnings.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 12,),
-                      child: Row(
-                        children: [
-                          Icon(Icons.warning,
-                            size: 38,
-                            color: ValidationMessage.severityColors[Theme.of(context).brightness]![ValidationErrorSeverity.warning]!,
-                          ),
-                          SizedBox(width: 6,),
-                          Expanded(
-                            child: Text(FromZeroLocalizations.of(context).translate("warnings") + ':',
-                              style: Theme.of(context).textTheme.headline6,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ...warnings.map((e) {
-                    return Padding(
-                      padding: const EdgeInsets.only(left: 15,),
-                      child: Row(
-                        children: [
-                          Icon(Icons.circle,
-                            size: 10,
-                            color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
-                          ),
-                          SizedBox(width: 8,),
-                          Expanded(
-                            child: Text(e.error,
-                              // style: Theme.of(context).textTheme.bodyText1!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
+                  SaveConfirmationValidationMessage(allErrors: validationErrors),
                 ],
               ),
               actions: [
@@ -380,7 +429,7 @@ class DAO extends ChangeNotifier implements Comparable {
     if (!skipValidation) {
       bool validation = await validate(context,
         validateNonEditedFields: true,
-        scrollToBlockingFields: true,
+        focusBlockingField: true,
       );
       if (!validation) {
         return false;
@@ -431,6 +480,18 @@ class DAO extends ChangeNotifier implements Comparable {
       ).show(context);
     }
     return success;
+  }
+
+  applyDefaultValues(List<InvalidatingError> invalidatingErrors) {
+    beginUndoTransaction();
+    for (final e in invalidatingErrors) {
+      e.field.value = e.defaultValue;
+    }
+    commitUndoTransaction();
+    if (_undoRecord.length>2) {
+      final previousRecord = _undoRecord[_undoRecord.length-2];
+      previousRecord.addAll(_undoRecord.removeLast());
+    }
   }
 
   void maybeRevertChanges(BuildContext context) async {
@@ -486,8 +547,11 @@ class DAO extends ChangeNotifier implements Comparable {
       e.passedFirstEdit = false;
       e.validationErrors = [];
     });
-    lastValidatedValues = {};
-    contextForValidation = context;
+    _contextForValidation = context;
+    validate(context,
+      validateNonEditedFields: false,
+      focusBlockingField: false,
+    );
     final focusNode = FocusNode();
     Widget content = LayoutBuilder(
       builder: (context, constraints) {
@@ -497,7 +561,7 @@ class DAO extends ChangeNotifier implements Comparable {
           animation: this,
           builder: (context, child) {
             bool expandToFillContainer = false;
-            if (props.values.where((e) => !e.hiddenInForm && (e is OneToManyRelationField)).isNotEmpty) {
+            if (props.values.where((e) => !e.hiddenInForm && (e is ListField)).isNotEmpty) {
               expandToFillContainer = true;
             } else if (widescreen && fieldGroups.where((e) => !e.primary && e.props.values.where((e) => !e.hiddenInForm).isNotEmpty).isNotEmpty) {
               expandToFillContainer = true;
@@ -522,7 +586,7 @@ class DAO extends ChangeNotifier implements Comparable {
                 if (!widescreen || e.primary) {
                   primaryFormWidgets.add(groupWidget);
                 } else {
-                  secondaryFormWidgets[e.name ?? 'Grupo $i'] = groupWidget; // TODO declare buildForm field and call it here reccurisvely
+                  secondaryFormWidgets[e.name ?? 'Grupo $i'] = groupWidget;
                   i++;
                 }
               }
@@ -538,6 +602,7 @@ class DAO extends ChangeNotifier implements Comparable {
             Map<String, ScrollController> secondaryScrollControllers = Map.fromIterable(secondaryFormWidgets.keys,
               value: (element) => ScrollController(),
             );
+            final pageController = PreloadPageController();
             Widget result = Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -559,7 +624,7 @@ class DAO extends ChangeNotifier implements Comparable {
                         IconButton(
                           tooltip: FromZeroLocalizations.of(context).translate("undo"),
                           icon: Icon(MaterialCommunityIcons.undo_variant,),
-                          onPressed: undoRecord.isEmpty ? null : () {
+                          onPressed: _undoRecord.isEmpty ? null : () {
                             undo(); // TODO 3 add shortcut support (ctrl+z, ctrl+shift+z)
                           },
                         ),
@@ -567,7 +632,7 @@ class DAO extends ChangeNotifier implements Comparable {
                         IconButton(
                           tooltip: FromZeroLocalizations.of(context).translate("redo"),
                           icon: Icon(MaterialCommunityIcons.redo_variant,),
-                          onPressed: redoRecord.isEmpty ? null : () {
+                          onPressed: _redoRecord.isEmpty ? null : () {
                             redo();
                           },
                         ),
@@ -575,96 +640,121 @@ class DAO extends ChangeNotifier implements Comparable {
                   ),
                 ),
                 Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Container(
-                          alignment: secondaryFormWidgets.keys.isNotEmpty ? Alignment.centerLeft : null,
-                          width: secondaryFormWidgets.keys.isNotEmpty ? formDialogWidth : null,
-                          padding: EdgeInsets.only(left: secondaryFormWidgets.keys.isNotEmpty ? 12 : 0),
-                          child: ScrollbarFromZero(
-                            controller: primaryScrollController,
+                  child: FocusScope(
+                    child: DefaultTabController(
+                      length: secondaryFormWidgets.keys.length,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12,),
-                              child: SingleChildScrollView(
+                              alignment: secondaryFormWidgets.keys.isNotEmpty ? Alignment.centerLeft : null,
+                              width: secondaryFormWidgets.keys.isNotEmpty ? formDialogWidth : null,
+                              padding: EdgeInsets.only(left: secondaryFormWidgets.keys.isNotEmpty ? 12 : 0),
+                              child: ScrollbarFromZero(
                                 controller: primaryScrollController,
-                                child: FocusTraversalGroup(
-                                  policy: WidgetOrderTraversalPolicy(),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: primaryFormWidgets,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12,),
+                                  child: SingleChildScrollView(
+                                    controller: primaryScrollController,
+                                    child: FocusTraversalGroup(
+                                      // policy: TraversalPolicy(),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: primaryFormWidgets,
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
-                      if (secondaryFormWidgets.keys.isNotEmpty)
-                        Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.only(right: 24),
-                            alignment: Alignment.centerRight,
-                            child: SizedBox(
-                              width: formDialogWidth+12+16,
-                              child: DefaultTabController(
-                                length: secondaryFormWidgets.keys.length,
-                                child: Column(
-                                  children: [
-                                    ScrollbarFromZero(
-                                      controller: tabBarScrollController,
-                                      opacityGradientDirection: OpacityGradient.horizontal,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(right: 12, bottom: PlatformExtended.isDesktop ? 8 : 0,),
-                                        child: SingleChildScrollView(
-                                          scrollDirection: Axis.horizontal,
+                          if (secondaryFormWidgets.keys.isNotEmpty)
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.only(right: 24),
+                                alignment: Alignment.centerRight,
+                                child: SizedBox(
+                                  width: formDialogWidth+12+16,
+                                  child: Column(
+                                    children: [
+                                      ExcludeFocus(
+                                        child: ScrollbarFromZero(
                                           controller: tabBarScrollController,
-                                          child: IntrinsicWidth(
-                                            child: Card(
-                                              clipBehavior: Clip.hardEdge,
-                                              child: TabBar(
-                                                isScrollable: true,
-                                                indicatorWeight: 3,
-                                                tabs: secondaryFormWidgets.keys.map((e) {
-                                                  return Container(
-                                                    height: 32,
-                                                    alignment: Alignment.center,
-                                                    child: Text(e, style: Theme.of(context).textTheme.subtitle1,),
-                                                  );
-                                                }).toList(),
+                                          opacityGradientDirection: OpacityGradient.horizontal,
+                                          child: Padding(
+                                            padding: EdgeInsets.only(right: 12, bottom: PlatformExtended.isDesktop ? 8 : 0,),
+                                            child: SingleChildScrollView(
+                                              scrollDirection: Axis.horizontal,
+                                              controller: tabBarScrollController,
+                                              child: IntrinsicWidth(
+                                                child: Card(
+                                                  clipBehavior: Clip.hardEdge,
+                                                  child: TabBar( // TODO 3 replace this with an actual widget: PageIndicatorFromzero. Allow to have an indicator + building children dinamically according to selected
+                                                    isScrollable: true,
+                                                    indicatorWeight: 3,
+                                                    tabs: secondaryFormWidgets.keys.map((e) {
+                                                      return Container(
+                                                        height: 32,
+                                                        alignment: Alignment.center,
+                                                        child: Text(e, style: Theme.of(context).textTheme.subtitle1,),
+                                                      );
+                                                    }).toList(),
+                                                    onTap: (value) {
+                                                      pageController.animateToPage(value,
+                                                        duration: kTabScrollDuration,
+                                                        curve: Curves.ease,
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
                                         ),
                                       ),
-                                    ),
-                                    Expanded(
-                                      child: TabBarView(
-                                        children: secondaryFormWidgets.keys.map((e) {
-                                          return ScrollbarFromZero(
-                                            controller: secondaryScrollControllers[e],
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(right: 12),
-                                              child: SingleChildScrollView(
-                                                controller: secondaryScrollControllers[e],
-                                                child: FocusTraversalGroup(
-                                                  policy: WidgetOrderTraversalPolicy(),
-                                                  child: secondaryFormWidgets[e]!,
-                                                ),
-                                              ),
-                                            ),
-                                          );
-                                        }).toList(),
+                                      SizedBox(
+                                        height: 0,
+                                        child: TabBarView(
+                                          children: List.filled(secondaryFormWidgets.keys.length, Container()),
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                      Expanded(
+                                        child: Builder(
+                                          builder: (context) {
+                                            return PreloadPageView(
+                                              controller: pageController,
+                                              preloadPagesCount: 999,
+                                              onPageChanged: (value) {
+                                                DefaultTabController.of(context)?.animateTo(value);
+                                              },
+                                              children: secondaryFormWidgets.keys.map((e) {
+                                                return ScrollbarFromZero(
+                                                  controller: secondaryScrollControllers[e],
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.only(right: 12),
+                                                    child: SingleChildScrollView(
+                                                      controller: secondaryScrollControllers[e],
+                                                      child: FocusTraversalGroup(
+                                                        // policy: WidgetOrderTraversalPolicy(),
+                                                        child: secondaryFormWidgets[e]!,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
+                                            );
+                                          }
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ),
-                    ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 Padding(
@@ -682,8 +772,9 @@ class DAO extends ChangeNotifier implements Comparable {
               );
             }
             Map<InvalidatingError, Field> invalidatingErrors = {};
+            List<InvalidatingError> autoResolveInvalidatingErrors = [];
             bool allowSetInvalidatingFieldsToDefaultValues = true;
-            bool allowUndoInvalidatingChanges = undoRecord.isNotEmpty;
+            bool allowUndoInvalidatingChanges = _undoRecord.isNotEmpty;
             for (Field e in props.values) {
               final errors = e.validationErrors.where((error) => error.severity==ValidationErrorSeverity.invalidating);
               errors.forEach((err) {
@@ -693,14 +784,17 @@ class DAO extends ChangeNotifier implements Comparable {
                 if (error.showVisualConfirmation) {
                   invalidatingErrors[error] = e;
                 } else {
-                  WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-                    e.value = error.defaultValue;
-                  });
+                  autoResolveInvalidatingErrors.add(error);
                 }
               });
             }
+            if (autoResolveInvalidatingErrors.isNotEmpty) {
+              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                applyDefaultValues(autoResolveInvalidatingErrors);
+              });
+            }
             if (!allowSetInvalidatingFieldsToDefaultValues && !allowUndoInvalidatingChanges) {
-              if (undoRecord.isEmpty) {
+              if (_undoRecord.isEmpty) {
                 allowSetInvalidatingFieldsToDefaultValues = true;
               } else {
                 allowUndoInvalidatingChanges = true;
@@ -767,14 +861,14 @@ class DAO extends ChangeNotifier implements Comparable {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(FromZeroLocalizations.of(context).translate("confirm_invalidating_change_description1")),
-                                            if (undoRecord.isEmpty)
+                                            if (_undoRecord.isEmpty)
                                               Text(FromZeroLocalizations.of(context).translate("confirm_invalidating_no_undo_record")),
-                                            if (undoRecord.isNotEmpty)
-                                              FieldDiffMessage(
-                                                field: undoRecord.last,
-                                                oldValue: undoRecord.last.undoValues.last,
-                                                newValue: undoRecord.last.value,
-                                              ), // TODO accomodate for multi-step undo's
+                                            if (_undoRecord.isNotEmpty)
+                                              ..._undoRecord.last.map((e) => FieldDiffMessage(
+                                                field: e,
+                                                oldValue: e.undoValues.last,
+                                                newValue: e.value,
+                                              ),),
                                             SizedBox(height: 24,),
                                             Text(FromZeroLocalizations.of(context).translate(!allowSetInvalidatingFieldsToDefaultValues ? "confirm_invalidating_change_description2_1" : "confirm_invalidating_change_description2_2")),
                                             SizedBox(height: 6,),
@@ -790,7 +884,6 @@ class DAO extends ChangeNotifier implements Comparable {
                                               ),
                                             if (allowSetInvalidatingFieldsToDefaultValues)
                                               ...invalidatingErrors.map((key, value) {
-                                                print (key.defaultValue);
                                                 return MapEntry(key, FieldDiffMessage(
                                                   field: value,
                                                   oldValue: value.value,
@@ -819,7 +912,9 @@ class DAO extends ChangeNotifier implements Comparable {
                                           ),
                                           textColor: Theme.of(context).textTheme.caption!.color,
                                           onPressed: () {
+                                            beginRedoTransaction();
                                             undo();
+                                            beginRedoTransaction(); commitRedoTransaction(); // discard redo
                                           },
                                         ),
                                       if (allowSetInvalidatingFieldsToDefaultValues)
@@ -831,9 +926,7 @@ class DAO extends ChangeNotifier implements Comparable {
                                             ),
                                           ),
                                           onPressed: () {
-                                            invalidatingErrors.forEach((key, value) {
-                                              value.value = key.defaultValue;
-                                            });
+                                            applyDefaultValues(invalidatingErrors.keys.toList());
                                           },
                                         ),
                                     ],
@@ -865,7 +958,7 @@ class DAO extends ChangeNotifier implements Comparable {
         return content;
       },
     );
-    contextForValidation = null;
+    _contextForValidation = null;
     return confirm??false;
   }
 
@@ -1002,13 +1095,15 @@ class DAO extends ChangeNotifier implements Comparable {
     bool showDefaultSnackBars=true,
     bool askForSaveConfirmation=true,
     bool firstIteration=true,
+    bool wrapInLayoutFromZeroItem=false,
     FocusNode? focusNode,
+    int groupBorderNestingCount = 0,
   }) {
     if (group.props.values.where((e) => !e.hiddenInForm).isEmpty) {
       return SizedBox.shrink();
     }
     bool verticalLayout = firstIteration || group.primary;
-    List<Widget> children = [
+    List<Widget> Function({bool useLayoutFromZero}) getChildren = ({bool useLayoutFromZero = false}) => [
       ...buildFormWidgets(context,
         group: group,
         showCancelActionToPop: true,
@@ -1019,6 +1114,7 @@ class DAO extends ChangeNotifier implements Comparable {
         showRevertChanges: showRevertChanges,
         askForSaveConfirmation: askForSaveConfirmation,
         showActionButtons: false,
+        wrapInLayoutFromZeroItem: useLayoutFromZero,
       ),
       ...group.childGroups.map((e) {
         return buildGroupWidget(
@@ -1034,6 +1130,8 @@ class DAO extends ChangeNotifier implements Comparable {
           showActionButtons: false,
           popAfterSuccessfulSave: popAfterSuccessfulSave,
           firstIteration: false,
+          wrapInLayoutFromZeroItem: useLayoutFromZero,
+          groupBorderNestingCount: groupBorderNestingCount + (group.name!=null ? 1 : 0),
         );
       }),
     ];
@@ -1042,28 +1140,39 @@ class DAO extends ChangeNotifier implements Comparable {
       result = Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
-        children: children,
+        children: getChildren(),
       );
     } else {
-      ScrollController scrollController = ScrollController();
-      result = ScrollbarFromZero(
-        controller: scrollController,
-        opacityGradientDirection: OpacityGradient.horizontal,
-        child: SingleChildScrollView(
+      if (group.useLayoutFromZero) {
+        result = FlexibleLayoutFromZero(
+          children: getChildren(useLayoutFromZero: true).map((e) => e as FlexibleLayoutItemFromZero).toList(),
+          relevantAxisMaxSize: min(formDialogWidth,
+              MediaQuery.of(context).size.width - 56 - (groupBorderNestingCount*16)),
+          crossAxisAlignment: CrossAxisAlignment.start,
+        );
+      } else {
+        ScrollController scrollController = ScrollController();
+        result = ScrollbarFromZero(
           controller: scrollController,
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: children,
+          opacityGradientDirection: OpacityGradient.horizontal,
+          child: SingleChildScrollView(
+            controller: scrollController,
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: getChildren(),
+            ),
           ),
-        ),
+        );
+      }
+    }
+    if (!wrapInLayoutFromZeroItem) {
+      result = SizedBox(
+        width: formDialogWidth,
+        child: result,
       );
     }
-    result = SizedBox(
-      width: formDialogWidth,
-      child: result,
-    );
     if (group.name!=null) {
       result = Padding(
         padding: const EdgeInsets.only(bottom: 12,),
@@ -1099,6 +1208,13 @@ class DAO extends ChangeNotifier implements Comparable {
         child: result,
       );
     }
+    if (wrapInLayoutFromZeroItem) {
+      result = FlexibleLayoutItemFromZero(
+        maxSize: group.maxWidth + (group.name!=null ? 16 : 0),
+        minSize: group.minWidth + (group.name!=null ? 16 : 0),
+        child: result,
+      );
+    }
     return result;
   }
 
@@ -1112,8 +1228,10 @@ class DAO extends ChangeNotifier implements Comparable {
     bool expandToFillContainer=true,
     bool showDefaultSnackBars=true,
     bool askForSaveConfirmation=true,
+    bool wrapInLayoutFromZeroItem=false,
     FocusNode? focusNode,
   }) {
+    assert(!asSlivers || !wrapInLayoutFromZeroItem, 'FlexibleLayoutFromZero does not support slivers.');
     final props = group?.fields ?? this.props;
     bool first = true;
     List<Widget> result = [
@@ -1125,33 +1243,44 @@ class DAO extends ChangeNotifier implements Comparable {
           focusNode: first ? focusNode : null,
         );
         first = false;
-        result = result.map((w) {
+        result = result.mapIndexed((i, w) {
           if (asSlivers) {
             return e.hiddenInForm
                 ? SliverToBoxAdapter(child: SizedBox.shrink(),)
                 : SliverPadding(
-                  padding: EdgeInsets.only(top: 6, bottom: 6,),
+                  padding: EdgeInsets.only(
+                    top: i==0 ? 6 : 0,
+                    bottom: i==result.lastIndex ? 6 : 0,
+                  ),
                   sliver: w,
                 );
           } else {
-            return AnimatedSwitcher(
-              duration: 300.milliseconds,
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              child: e.hiddenInForm
-                  ? SizedBox.shrink()
-                  : Padding(
-                    padding: EdgeInsets.only(top: 6, bottom: 6,),
-                    child: w,
-                  ),
-              transitionBuilder: (child, animation) {
-                return SizeTransition(
-                  sizeFactor: animation,
-                  axis: Axis.vertical,
-                  axisAlignment: -1,
-                  child: Center(child: child),
-                );
-              },
+            return FlexibleLayoutItemFromZero(
+              maxSize: e.maxWidth,
+              minSize: e.minWidth,
+              flex: e.flex,
+              child: AnimatedSwitcher(
+                duration: 300.milliseconds,
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                child: e.hiddenInForm
+                    ? SizedBox.shrink()
+                    : Padding(
+                      padding: EdgeInsets.only(
+                        top: i==0 ? 6 : 0,
+                        bottom: i==result.lastIndex ? 6 : 0,
+                      ),
+                      child: w,
+                    ),
+                transitionBuilder: (child, animation) {
+                  return SizeTransition(
+                    sizeFactor: animation,
+                    axis: Axis.vertical,
+                    axisAlignment: -1,
+                    child: Center(child: child),
+                  );
+                },
+              ),
             );
           }
         }).toList();

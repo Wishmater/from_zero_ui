@@ -49,7 +49,7 @@ class _PageScaffoldState extends State<PageScaffold> {
       actions: [
         Builder(
           builder: (context) {
-            return AppbarAction(
+            return ActionFromZero(
               title: "Action 1",
               icon: Icon(Icons.looks_one),
               onTap: (appbarContext){
@@ -96,7 +96,7 @@ class _PageScaffoldState extends State<PageScaffold> {
             );
           }
         ),
-        Builder(builder: (context) => AppbarAction(
+        Builder(builder: (context) => ActionFromZero(
           title: "Action 2",
           breakpoints: {
             ScaffoldFromZero.screenSizeMedium: ActionState.button,
@@ -115,13 +115,15 @@ class _PageScaffoldState extends State<PageScaffold> {
           },
         ),),
 
-        AppbarAction(
+        ActionFromZero(
           title: "Search",
           icon: Icon(Icons.search),
-          expandedBuilder: (context, title, icon) => Container(
-            width: 256,
-            color: Colors.green,
-          ),
+          expandedBuilder: ({required context, enabled=true, icon, onTap, required title}) {
+            return Container(
+              width: 256,
+              color: Colors.green,
+            );
+          },
         ),
       ],
     );
