@@ -137,9 +137,9 @@ class ErrorSign extends StatelessWidget {
 @deprecated
 typedef SuccessBuilder<T> = Widget Function(BuildContext context, T data);
 @deprecated
-typedef ErrorBuilder = Widget Function(BuildContext context, Object? error, Object? stackTrace);
+typedef FutureErrorBuilder = Widget Function(BuildContext context, Object? error, Object? stackTrace);
 @deprecated
-typedef LoadingBuilder = Widget Function(BuildContext context);
+typedef FutureLoadingBuilder = Widget Function(BuildContext context);
 @deprecated
 Widget _defaultLoadingBuilder(context){
   return LoadingSign();
@@ -179,8 +179,8 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
   final Duration duration;
   final bool applyAnimatedContainerFromChildSize;
   final bool keepPreviousDataWhileLoading;
-  ErrorBuilder errorBuilder;
-  LoadingBuilder loadingBuilder;
+  FutureErrorBuilder errorBuilder;
+  FutureLoadingBuilder loadingBuilder;
   AnimatedSwitcherTransitionBuilder transitionBuilder;
 
   FutureBuilderFromZero({

@@ -13,6 +13,7 @@ export 'package:from_zero_ui/src/settings.dart';
 export 'package:from_zero_ui/src/app_update.dart';
 export 'package:from_zero_ui/src/popup_from_zero.dart';
 export 'package:from_zero_ui/src/context_menu.dart';
+export 'package:from_zero_ui/src/async_value_builder.dart';
 
 export 'package:from_zero_ui/src/dao.dart';
 export 'package:from_zero_ui/src/field.dart';
