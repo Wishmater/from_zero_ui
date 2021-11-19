@@ -82,10 +82,10 @@ class ListField extends Field<ComparableList<DAO>> {
     this.allowMultipleSelection = false,
     this.collapsible = true,
     bool? viewOnRowTap,
-    ActionState? actionViewType,
-    Map<double, ActionState>? actionEditBreakpoints, //= {0: ActionState.popup}, // TODO *** convert to actionEditType to actionEditBreakpoints, and use them to build actions
-    Map<double, ActionState>? actionDuplicateBreakpoints, //= ActionState.none,
-    Map<double, ActionState>? actionDeleteBreakpoints,  // = ActionState.icon,
+    Map<double, ActionState>? actionViewBreakpoints,
+    Map<double, ActionState>? actionEditBreakpoints,
+    Map<double, ActionState>? actionDuplicateBreakpoints,
+    Map<double, ActionState>? actionDeleteBreakpoints,
     this.showTableHeaders = true,
     this.updateObjectsInRealTime = false,
     bool? showDefaultSnackBars,
@@ -124,7 +124,10 @@ class ListField extends Field<ComparableList<DAO>> {
         this.showDefaultSnackBars = showDefaultSnackBars ?? updateObjectsInRealTime,
         this.skipDeleteConfirmation = skipDeleteConfirmation ?? updateObjectsInRealTime,
         this.viewOnRowTap = viewOnRowTap ?? (onRowTap==null && !tableCellsEditable),
-        this.actionViewType = actionViewType ?? (viewOnRowTap ?? (onRowTap==null && !tableCellsEditable) ? ActionState.popup : ActionState.icon),
+        this.actionEditBreakpoints = {0: ActionState.popup},
+        this.actionDuplicateBreakpoints = {0: ActionState.none},
+        this.actionDeleteBreakpoints = {0: ActionState.icon},
+        this.actionViewBreakpoints = actionViewBreakpoints ?? (viewOnRowTap ?? (onRowTap==null && !tableCellsEditable) ? {0: ActionState.popup} : {0: ActionState.icon}),
         super(
           uiNameGetter: uiNameGetter,
           value: ComparableList(list: objects),
@@ -227,10 +230,10 @@ class ListField extends Field<ComparableList<DAO>> {
     FieldValueGetter<bool, Field>? hiddenInViewGetter,
     FieldValueGetter<bool, Field>? hiddenInFormGetter,
     bool? collapsible,
-    ActionState? actionEditType,
-    ActionState? actionDuplicateType,
-    ActionState? actionDeleteType,
-    ActionState? actionViewType,
+    Map<double, ActionState>? actionViewBreakpoints,
+    Map<double, ActionState>? actionEditBreakpoints,
+    Map<double, ActionState>? actionDuplicateBreakpoints,
+    Map<double, ActionState>? actionDeleteBreakpoints,
     bool? skipDeleteConfirmation,
     bool? showTableHeaders,
     Future<List<DAO>> Function(BuildContext contex)? availableObjectsPoolGetter,
@@ -276,10 +279,10 @@ class ListField extends Field<ComparableList<DAO>> {
       hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
       hiddenInFormGetter: hiddenInFormGetter ?? hiddenGetter ?? this.hiddenInFormGetter,
       collapsible: collapsible ?? this.collapsible,
-      actionEditType: actionEditType ?? this.actionEditType,
-      actionDuplicateType: actionDuplicateType ?? this.actionDuplicateType,
-      actionDeleteType: actionDeleteType ?? this.actionDeleteType,
-      actionViewType: actionViewType ?? actionViewType,
+      actionViewBreakpoints: actionViewBreakpoints ?? this.actionViewBreakpoints,
+      actionEditBreakpoints: actionEditBreakpoints ?? this.actionEditBreakpoints,
+      actionDuplicateBreakpoints: actionDuplicateBreakpoints ?? this.actionDuplicateBreakpoints,
+      actionDeleteBreakpoints: actionDeleteBreakpoints ?? actionDeleteBreakpoints,
       availableObjectsPoolGetter: availableObjectsPoolGetter ?? this.availableObjectsPoolGetter,
       allowDuplicateObjectsFromAvailablePool: allowDuplicateObjectsFromAvailablePool ?? this.allowDuplicateObjectsFromAvailablePool,
       allowAddNew: allowAddNew ?? this.allowAddNew,
@@ -417,7 +420,7 @@ class ListField extends Field<ComparableList<DAO>> {
                                     objectTemplate: emptyDAO,
                                     tableCellsEditable: false,
                                     collapsible: false,
-                                    actionDeleteType: ActionState.none,
+                                    actionDeleteBreakpoints: {0: ActionState.none},
                                     objects: data,
                                     allowAddNew: allowAddNew && emptyDAO.onSave!=null,
                                     onRowTap: (value) {
@@ -825,7 +828,12 @@ class ListField extends Field<ComparableList<DAO>> {
       return [result];
     }
     Map<String, Field> propsShownOnTable = Map.from(objectTemplate.props)..removeWhere((k, v) => v.hiddenInTable);
-    double width = 48*((actionDeleteType.shownOnPrimaryToolbar?1:0) + (actionDuplicateType.shownOnPrimaryToolbar?1:0) + (actionEditType.shownOnPrimaryToolbar?1:0) + (actionViewType.shownOnPrimaryToolbar?1:0));
+    double width = 0;
+    // double width = 48 *
+    //         ((actionDeleteType.shownOnPrimaryToolbar?1:0)
+    //         + (actionDuplicateType.shownOnPrimaryToolbar?1:0)
+    //         + (actionEditType.shownOnPrimaryToolbar?1:0)
+    //         + (actionViewType.shownOnPrimaryToolbar?1:0));
     propsShownOnTable.forEach((key, value) {
       width += value.tableColumnWidth ?? 192;
     });
@@ -900,45 +908,45 @@ class ListField extends Field<ComparableList<DAO>> {
                   } : null),
                   actions: [
                     ...extraRowActionBuilders.map((builder) => builder(e)).toList(),
-                    if (actionViewType)
-                      ActionFromZero(
-                        icon: Icon(Icons.remove_red_eye),
-                        title: FromZeroLocalizations.of(context).translate('view'),
-                        onTap: (context) async {
-                          e.pushViewDialog(context);
-                        },
-
-                      ),
-                    if (actionEditType)
-                      ActionFromZero(
-                        icon: Icon(Icons.edit_outlined),
-                        tooltip: FromZeroLocalizations.of(context).translate('edit'),
-                        onPressed: () async {
-                          if (await e.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars)) {
-                            passedFirstEdit = true;
-                            notifyListeners();
-                          }
-                        },
-                      ),
-                    if (actionDuplicateType)
-                      ActionFromZero(
-                        icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
-                        tooltip: FromZeroLocalizations.of(context).translate('duplicate'),
-                        onPressed: () {
-                          duplicateRows([e]);
-                        },
-                      ),
-                    if (actionDeleteType)
-                      ActionFromZero(
-                        icon: Icon(Icons.delete_forever_outlined),
-                        tooltip: FromZeroLocalizations.of(context).translate('delete'),
-                        onPressed: () async {
-                          if (await maybeDelete(context, [e])) {
-                            passedFirstEdit = true;
-                            notifyListeners();
-                          }
-                        },
-                      ),
+                    // if (actionViewType)
+                    //   ActionFromZero(
+                    //     icon: Icon(Icons.remove_red_eye),
+                    //     title: FromZeroLocalizations.of(context).translate('view'),
+                    //     onTap: (context) async {
+                    //       e.pushViewDialog(context);
+                    //     },
+                    //
+                    //   ),
+                    // if (actionEditType)
+                    //   ActionFromZero(
+                    //     icon: Icon(Icons.edit_outlined),
+                    //     tooltip: FromZeroLocalizations.of(context).translate('edit'),
+                    //     onPressed: () async {
+                    //       if (await e.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars)) {
+                    //         passedFirstEdit = true;
+                    //         notifyListeners();
+                    //       }
+                    //     },
+                    //   ),
+                    // if (actionDuplicateType)
+                    //   ActionFromZero(
+                    //     icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
+                    //     tooltip: FromZeroLocalizations.of(context).translate('duplicate'),
+                    //     onPressed: () {
+                    //       duplicateRows([e]);
+                    //     },
+                    //   ),
+                    // if (actionDeleteType)
+                    //   ActionFromZero(
+                    //     icon: Icon(Icons.delete_forever_outlined),
+                    //     tooltip: FromZeroLocalizations.of(context).translate('delete'),
+                    //     onPressed: () async {
+                    //       if (await maybeDelete(context, [e])) {
+                    //         passedFirstEdit = true;
+                    //         notifyListeners();
+                    //       }
+                    //     },
+                    //   ),
                   ],
                   selected: allowMultipleSelection ? (selectedObjects.value[e]??false) : null,
                   backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
@@ -1219,7 +1227,7 @@ class ListField extends Field<ComparableList<DAO>> {
   List<ActionFromZero> buildDefaultActions(BuildContext context) {
     List<DAO> currentSelected = filtered.value?.where((element) => selectedObjects.value[element]==true).toList() ?? [];
     return [
-      if (!collapsed && currentSelected.length>0 && actionEditType)
+      if (!collapsed && currentSelected.length>0)
         ActionFromZero(
           icon: IconBackground(
             color: Theme.of(context).accentColor.withOpacity(0.25),
@@ -1229,8 +1237,9 @@ class ListField extends Field<ComparableList<DAO>> {
           onTap: (context) {
             maybeEditMultiple(context, currentSelected);
           },
+          breakpoints: actionEditBreakpoints[0]==ActionState.none ? actionEditBreakpoints : null,
         ),
-      if (!collapsed && currentSelected.length>0 && actionDuplicateType)
+      if (!collapsed && currentSelected.length>0)
         ActionFromZero(
           icon: IconBackground(
             color: Theme.of(context).accentColor.withOpacity(0.25),
@@ -1240,8 +1249,9 @@ class ListField extends Field<ComparableList<DAO>> {
           onTap: (context) {
             duplicateRows(currentSelected);
           },
+          breakpoints: actionDuplicateBreakpoints[0]==ActionState.none ? actionDuplicateBreakpoints : null,
         ),
-      if (!collapsed && currentSelected.length>0 && actionDeleteType)
+      if (!collapsed && currentSelected.length>0)
         ActionFromZero(
           icon: IconBackground(
             color: Theme.of(context).accentColor.withOpacity(0.25),
@@ -1251,6 +1261,7 @@ class ListField extends Field<ComparableList<DAO>> {
           onTap: (context) {
             maybeDelete(context, currentSelected);
           },
+          breakpoints: actionDeleteBreakpoints[0]==ActionState.none ? actionDeleteBreakpoints : null,
         ),
       if (!collapsed && currentSelected.length>0)
         ActionFromZero(

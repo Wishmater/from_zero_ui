@@ -43,6 +43,9 @@ TableFromZero improvements
 		probably needs to be in an isolate
 		??? only if rowCount > 100 ??? (also allow to force sync or async)
 	
+Return to top button improvement: only show when there is certain space from beggining AND user is scrolling upwards, hide when scrolling down
+	maybe add to ScrollbarFromZero by default (probably need to support horizontal scrolling for this)
+	
 REFACTOR FROMZERO NAVIGATION
 	Learn about Navigation 2.0
 	Implement PageFromZero, including all info

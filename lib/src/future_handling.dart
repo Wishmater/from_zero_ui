@@ -134,13 +134,18 @@ class ErrorSign extends StatelessWidget {
 
 }
 
+@deprecated
 typedef SuccessBuilder<T> = Widget Function(BuildContext context, T data);
+@deprecated
 typedef ErrorBuilder = Widget Function(BuildContext context, Object? error, Object? stackTrace);
+@deprecated
 typedef LoadingBuilder = Widget Function(BuildContext context);
+@deprecated
 Widget _defaultLoadingBuilder(context){
   return LoadingSign();
 }
 
+@deprecated
 Widget defaultErrorBuilder(context, error, stackTrace){
   print(error);
   print(stackTrace);
@@ -151,6 +156,7 @@ Widget defaultErrorBuilder(context, error, stackTrace){
   );
 }
 
+@deprecated
 Widget _defaultTransitionBuilder(Widget child, Animation<double> animation){
   return ZoomedFadeInFadeOutTransition(
     animation: animation,
@@ -158,11 +164,13 @@ Widget _defaultTransitionBuilder(Widget child, Animation<double> animation){
   );
 }
 
+@deprecated
 Widget _noneTransitionBuilder(Widget child, Animation<double> animation){
   return child;
 }
 
 
+@deprecated
 class FutureBuilderFromZero<T> extends StatefulWidget {
 
   final initialData;
@@ -290,7 +298,7 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
 }
 
 
-/// Only updates when a different child is given, like AnimatedSwitcher
+
 class AnimatedContainerFromChildSize extends StatefulWidget {
 
   final Duration duration;
