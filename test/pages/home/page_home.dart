@@ -109,6 +109,9 @@ class _PageHomeState extends State<PageHome> {
       fieldGroups: [
         FieldGroup(
           fields: {
+            'test_text': StringField(
+              uiNameGetter: (field, dao) => 'TextField Test',
+            ),
             'test_combo': ComboField(
               uiNameGetter: (field, dao) => 'Combo Test',
               possibleValuesGetter: (field, dao) => List.generate(40, (index) {
