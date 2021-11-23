@@ -805,7 +805,7 @@ class TableFromZeroState extends State<TableFromZero> {
           );
         }
         final popupActions = row.actions?.whereType<ActionFromZero>().toList() ?? [];
-        print (popupActions);
+        // print (popupActions);
         if (popupActions.isNotEmpty) {
           result = ContextMenuFromZero(
             actions: popupActions,
@@ -1131,244 +1131,241 @@ class TableFromZeroState extends State<TableFromZero> {
                           context: context,
                           anchorKey: filterGlobalKeys[j],
                           builder: (context) {
-                            return Card(
-                              clipBehavior: Clip.hardEdge,
-                              child: ScrollbarFromZero(
-                                controller: filtersScrollController,
-                                child: Stack (
-                                  children: [
-                                    StatefulBuilder(
-                                      builder: (context, filterPopupSetState) {
-                                        return CustomScrollView(
-                                          controller: filtersScrollController,
-                                          shrinkWrap: true,
-                                          slivers: [
-                                            SliverToBoxAdapter(child: Padding(
-                                              padding: const EdgeInsets.only(top: 4.0),
-                                              child: Center(
-                                                child: Text(FromZeroLocalizations.of(context).translate('filters'),
-                                                  style: Theme.of(context).textTheme.subtitle1,
-                                                  textAlign: TextAlign.center,
-                                                ),
-                                              ),
-                                            ),),
-                                            SliverToBoxAdapter(child: SizedBox(height: 16,)),
-                                            if (possibleConditionFilters.isNotEmpty)
-                                              SliverToBoxAdapter(child: Padding(
-                                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                                                child: Row(
-                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: [
-                                                    Padding(
-                                                      padding: const EdgeInsets.only(left: 4,),
-                                                      child: Text(FromZeroLocalizations.of(context).translate('condition_filters'),
-                                                        style: Theme.of(context).textTheme.subtitle1,
-                                                      ),
-                                                    ),
-                                                    PopupMenuButton<ConditionFilter>(
-                                                      tooltip: FromZeroLocalizations.of(context).translate('add_condition_filter'),
-                                                      offset: Offset(128, 32),
-                                                      child: Padding(
-                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
-                                                        child: Row(
-                                                          mainAxisSize: MainAxisSize.min,
-                                                          children: [
-                                                            Icon(Icons.add, color: Colors.blue,),
-                                                            SizedBox(width: 6,),
-                                                            Text(FromZeroLocalizations.of(context).translate('add'),
-                                                              style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.blue,),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      itemBuilder: (context) {
-                                                        return possibleConditionFilters.map((e) {
-                                                          return PopupMenuItem(
-                                                            value: e,
-                                                            child: Text(e.getUiName(context)+'...'),
-                                                          );
-                                                        }).toList();
-                                                      },
-                                                      onSelected: (value) {
-                                                        filterPopupSetState((){
-                                                          modified = true;
-                                                          if (conditionFilters[j]==null) {
-                                                            conditionFilters[j] = [];
-                                                          }
-                                                          conditionFilters[j]!.add(value);
-                                                        });
-                                                        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-                                                          value.focusNode.requestFocus();
-                                                        });
-                                                      },
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),),
-                                            if ((conditionFilters[j] ?? []).isEmpty)
-                                              SliverToBoxAdapter(child: Padding(
-                                                padding: EdgeInsets.only(left: 24, bottom: 8,),
-                                                child: Text (FromZeroLocalizations.of(context).translate('none'),
-                                                  style: Theme.of(context).textTheme.caption,
-                                                ),
-                                              ),),
-                                            SliverList(
-                                              delegate: SliverChildListDelegate.fixed(
-                                                (conditionFilters[j] ?? []).map((e) {
-                                                  return Padding(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                                    child: e.buildFormWidget(
-                                                      context: context,
-                                                      onValueChanged: () {
-                                                        modified = true;
-                                                        // filterPopupSetState((){});
-                                                      },
-                                                      onDelete: () {
-                                                        modified = true;
-                                                        filterPopupSetState((){
-                                                          conditionFilters[j]!.remove(e);
-                                                        });
-                                                      },
-                                                    ),
-                                                  );
-                                                }).toList(),
+                            return ScrollbarFromZero(
+                              controller: filtersScrollController,
+                              child: Stack (
+                                children: [
+                                  StatefulBuilder(
+                                    builder: (context, filterPopupSetState) {
+                                      return CustomScrollView(
+                                        controller: filtersScrollController,
+                                        shrinkWrap: true,
+                                        slivers: [
+                                          SliverToBoxAdapter(child: Padding(
+                                            padding: const EdgeInsets.only(top: 4.0),
+                                            child: Center(
+                                              child: Text(FromZeroLocalizations.of(context).translate('filters'),
+                                                style: Theme.of(context).textTheme.subtitle1,
+                                                textAlign: TextAlign.center,
                                               ),
                                             ),
-                                            SliverToBoxAdapter(child: SizedBox(height: (conditionFilters[j] ?? []).isEmpty ? 6 : 12,)),
-                                            SliverToBoxAdapter(child: Divider(height: 32,)),
-                                            TableFromZero(
-                                              tableController: filterTableController,
-                                              layoutWidgetType: TableFromZero.sliverListViewBuilder,
-                                              columns: [
-                                                SimpleColModel(
-                                                  name: '',
-                                                  sortEnabled: false,
-                                                ),
-                                              ],
-                                              rows: availableFilters[j].map((e) {
-                                                return SimpleRowModel(
-                                                  id: e,
-                                                  values: [e.toString()],
-                                                  selected: valueFilters[j][e] ?? false,
-                                                  onCheckBoxSelected: (row, focused) {
-                                                    modified = true;
-                                                    valueFilters[j][row.id] = focused!;
-                                                    (row as SimpleRowModel).selected = focused;
-                                                    return true;
-                                                  },
-                                                );
-                                              }).toList(),
-                                              errorWidget: SizedBox.shrink(),
-                                              headerRowBuilder: (context, row) {
-                                                return Container(
-                                                  padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
-                                                  color: Theme.of(context).cardColor,
-                                                  child: Column(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    children: [
-                                                      SizedBox(
-                                                        height: 32,
-                                                        child: TextFormField(
-                                                          onChanged: (v) {
-                                                            filterTableController.conditionFilters![0] = [];
-                                                            filterTableController.conditionFilters![0]!.add(
-                                                              FilterTextContains(query: v,),
-                                                            );
-                                                            filterPopupSetState((){
-                                                              filterTableController.filter();
-                                                            });
-                                                          },
-                                                          decoration: InputDecoration(
-                                                            labelText: FromZeroLocalizations.of(context).translate('search...'),
-                                                            contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
-                                                            labelStyle: TextStyle(height: 0.2),
-                                                            suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      SizedBox(height: 6,),
-                                                      Row(
+                                          ),),
+                                          SliverToBoxAdapter(child: SizedBox(height: 16,)),
+                                          if (possibleConditionFilters.isNotEmpty)
+                                            SliverToBoxAdapter(child: Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                                              child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Padding(
+                                                    padding: const EdgeInsets.only(left: 4,),
+                                                    child: Text(FromZeroLocalizations.of(context).translate('condition_filters'),
+                                                      style: Theme.of(context).textTheme.subtitle1,
+                                                    ),
+                                                  ),
+                                                  PopupMenuButton<ConditionFilter>(
+                                                    tooltip: FromZeroLocalizations.of(context).translate('add_condition_filter'),
+                                                    offset: Offset(128, 32),
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
+                                                      child: Row(
+                                                        mainAxisSize: MainAxisSize.min,
                                                         children: [
-                                                          Expanded(
-                                                            child: TextButton(
-                                                              child: Text(FromZeroLocalizations.of(context).translate('select_all')),
-                                                              onPressed: () {
-                                                                modified = true;
-                                                                filterPopupSetState(() {
-                                                                  filterTableController.filtered!.forEach((row) {
-                                                                    valueFilters[j][row.id] = true;
-                                                                    (row as SimpleRowModel).selected = true;
-                                                                  });
-                                                                });
-                                                              },
-                                                            ),
-                                                          ),
-                                                          Expanded(
-                                                            child: TextButton(
-                                                              child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
-                                                              onPressed: () {
-                                                                modified = true;
-                                                                filterPopupSetState(() {
-                                                                  filterTableController.filtered!.forEach((row) {
-                                                                    valueFilters[j][row.id] = false;
-                                                                    (row as SimpleRowModel).selected = false;
-                                                                  });
-                                                                });
-                                                              },
-                                                            ),
+                                                          Icon(Icons.add, color: Colors.blue,),
+                                                          SizedBox(width: 6,),
+                                                          Text(FromZeroLocalizations.of(context).translate('add'),
+                                                            style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.blue,),
                                                           ),
                                                         ],
                                                       ),
-                                                    ],
+                                                    ),
+                                                    itemBuilder: (context) {
+                                                      return possibleConditionFilters.map((e) {
+                                                        return PopupMenuItem(
+                                                          value: e,
+                                                          child: Text(e.getUiName(context)+'...'),
+                                                        );
+                                                      }).toList();
+                                                    },
+                                                    onSelected: (value) {
+                                                      filterPopupSetState((){
+                                                        modified = true;
+                                                        if (conditionFilters[j]==null) {
+                                                          conditionFilters[j] = [];
+                                                        }
+                                                        conditionFilters[j]!.add(value);
+                                                      });
+                                                      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                                                        value.focusNode.requestFocus();
+                                                      });
+                                                    },
                                                   ),
-                                                );
-                                              },
-                                            ),
-                                            SliverToBoxAdapter(child: SizedBox(height: 16+42,),),
-                                          ],
-                                        );
-                                      },
-                                    ),
-                                    Positioned(
-                                      bottom: 0, left: 0, right: 0,
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Container(
-                                            height: 16,
-                                            decoration: BoxDecoration(
-                                              gradient: LinearGradient(
-                                                begin: Alignment.topCenter,
-                                                end: Alignment.bottomCenter,
-                                                colors: [
-                                                  Theme.of(context).cardColor.withOpacity(0),
-                                                  Theme.of(context).cardColor,
                                                 ],
                                               ),
-                                            ),
-                                          ),
-                                          Container(
-                                            alignment: Alignment.centerRight,
-                                            padding: EdgeInsets.only(bottom: 8, right: 16,),
-                                            color: Theme.of(context).cardColor,
-                                            child: FlatButton(
-                                              child: Padding(
-                                                padding: const EdgeInsets.all(8.0),
-                                                child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
-                                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                                ),
+                                            ),),
+                                          if ((conditionFilters[j] ?? []).isEmpty)
+                                            SliverToBoxAdapter(child: Padding(
+                                              padding: EdgeInsets.only(left: 24, bottom: 8,),
+                                              child: Text (FromZeroLocalizations.of(context).translate('none'),
+                                                style: Theme.of(context).textTheme.caption,
                                               ),
-                                              textColor: Colors.blue,
-                                              onPressed: () {
-                                                Navigator.of(context).pop(true);
-                                              },
+                                            ),),
+                                          SliverList(
+                                            delegate: SliverChildListDelegate.fixed(
+                                              (conditionFilters[j] ?? []).map((e) {
+                                                return Padding(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                                  child: e.buildFormWidget(
+                                                    context: context,
+                                                    onValueChanged: () {
+                                                      modified = true;
+                                                      // filterPopupSetState((){});
+                                                    },
+                                                    onDelete: () {
+                                                      modified = true;
+                                                      filterPopupSetState((){
+                                                        conditionFilters[j]!.remove(e);
+                                                      });
+                                                    },
+                                                  ),
+                                                );
+                                              }).toList(),
                                             ),
                                           ),
+                                          SliverToBoxAdapter(child: SizedBox(height: (conditionFilters[j] ?? []).isEmpty ? 6 : 12,)),
+                                          SliverToBoxAdapter(child: Divider(height: 32,)),
+                                          TableFromZero(
+                                            tableController: filterTableController,
+                                            layoutWidgetType: TableFromZero.sliverListViewBuilder,
+                                            columns: [
+                                              SimpleColModel(
+                                                name: '',
+                                                sortEnabled: false,
+                                              ),
+                                            ],
+                                            rows: availableFilters[j].map((e) {
+                                              return SimpleRowModel(
+                                                id: e,
+                                                values: [e.toString()],
+                                                selected: valueFilters[j][e] ?? false,
+                                                onCheckBoxSelected: (row, focused) {
+                                                  modified = true;
+                                                  valueFilters[j][row.id] = focused!;
+                                                  (row as SimpleRowModel).selected = focused;
+                                                  return true;
+                                                },
+                                              );
+                                            }).toList(),
+                                            errorWidget: SizedBox.shrink(),
+                                            headerRowBuilder: (context, row) {
+                                              return Container(
+                                                padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
+                                                color: Theme.of(context).cardColor,
+                                                child: Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    SizedBox(
+                                                      height: 32,
+                                                      child: TextFormField(
+                                                        onChanged: (v) {
+                                                          filterTableController.conditionFilters![0] = [];
+                                                          filterTableController.conditionFilters![0]!.add(
+                                                            FilterTextContains(query: v,),
+                                                          );
+                                                          filterPopupSetState((){
+                                                            filterTableController.filter();
+                                                          });
+                                                        },
+                                                        decoration: InputDecoration(
+                                                          labelText: FromZeroLocalizations.of(context).translate('search...'),
+                                                          contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
+                                                          labelStyle: TextStyle(height: 0.2),
+                                                          suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    SizedBox(height: 6,),
+                                                    Row(
+                                                      children: [
+                                                        Expanded(
+                                                          child: TextButton(
+                                                            child: Text(FromZeroLocalizations.of(context).translate('select_all')),
+                                                            onPressed: () {
+                                                              modified = true;
+                                                              filterPopupSetState(() {
+                                                                filterTableController.filtered!.forEach((row) {
+                                                                  valueFilters[j][row.id] = true;
+                                                                  (row as SimpleRowModel).selected = true;
+                                                                });
+                                                              });
+                                                            },
+                                                          ),
+                                                        ),
+                                                        Expanded(
+                                                          child: TextButton(
+                                                            child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
+                                                            onPressed: () {
+                                                              modified = true;
+                                                              filterPopupSetState(() {
+                                                                filterTableController.filtered!.forEach((row) {
+                                                                  valueFilters[j][row.id] = false;
+                                                                  (row as SimpleRowModel).selected = false;
+                                                                });
+                                                              });
+                                                            },
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          SliverToBoxAdapter(child: SizedBox(height: 16+42,),),
                                         ],
-                                      ),
+                                      );
+                                    },
+                                  ),
+                                  Positioned(
+                                    bottom: 0, left: 0, right: 0,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          height: 16,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                              colors: [
+                                                Theme.of(context).cardColor.withOpacity(0),
+                                                Theme.of(context).cardColor,
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        Container(
+                                          alignment: Alignment.centerRight,
+                                          padding: EdgeInsets.only(bottom: 8, right: 16,),
+                                          color: Theme.of(context).cardColor,
+                                          child: FlatButton(
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(8.0),
+                                              child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
+                                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                              ),
+                                            ),
+                                            textColor: Colors.blue,
+                                            onPressed: () {
+                                              Navigator.of(context).pop(true);
+                                            },
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               ),
                             );
                           },

@@ -19,6 +19,9 @@
 ! Scrollbar not updated on window resize
 	noticeable in table horizontal scrollbars
 	
+Try out bitsdojo window	in older SOs
+	https://github.com/bitsdojo/bitsdojo_window/pull/100/commits/b823ae5b9f2f82635067add7eadfc32d9054bc2b
+
 popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
 
 popupFromZero doesn't reposition child in response to window resize
