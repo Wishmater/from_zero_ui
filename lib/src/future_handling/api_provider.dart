@@ -8,15 +8,22 @@ import 'package:from_zero_ui/src/future_handling/async_value_builder.dart';
 import 'package:from_zero_ui/src/future_handling/future_handling.dart';
 import 'package:riverpod/riverpod.dart';
 
+
+typedef ApiProvider<T> = StateNotifierProvider<ApiState<T>, AsyncValue<T>>;
+
 class ApiState<State> extends StateNotifier<AsyncValue<State>> {
 
-  StateNotifierProviderRef<ApiState<State>, AsyncValue<State>> _ref;
+  // StateNotifierProviderRef<ApiState<State>, AsyncValue<State>> _ref;
+  Ref _ref;
   FutureOr<State> Function(ApiState<State>) _create;
+  late FutureOr<State> future;
   bool _running = true;
-  late final ValueNotifier<double?> totalNotifier;
-  late final ValueNotifier<double?> progressNotifier;
-  late final ValueNotifier<double?> percentageNotifier;
-  final List<StateNotifierProvider<ApiState, AsyncValue>> _watching = [];
+  late final ValueNotifier<double?> selfTotalNotifier;
+  late final ValueNotifier<double?> selfProgressNotifier;
+  late final ValueNotifier<double?> wholeTotalNotifier;
+  late final ValueNotifier<double?> wholeProgressNotifier;
+  late final ValueNotifier<double?> wholePercentageNotifier;
+  final List<ApiProvider> _watching = [];
   final List<CancelToken> _cancelTokens = [];
   void addCancelToken(CancelToken ct) {
     _cancelTokens.add(ct);
@@ -24,58 +31,78 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
 
   ApiState(this._ref, this._create,)
       : super(AsyncValue.loading()) {
-    totalNotifier = ValueNotifier(null);
-    totalNotifier.addListener(_computePercentage);
-    progressNotifier = ValueNotifier(null);
-    progressNotifier.addListener(_computePercentage);
-    percentageNotifier = ValueNotifier(null);
+    selfTotalNotifier = ValueNotifier(null);
+    selfTotalNotifier.addListener(_computeTotal);
+    selfProgressNotifier = ValueNotifier(null);
+    selfProgressNotifier.addListener(_computeProgress);
+    wholeTotalNotifier = ValueNotifier(null);
+    wholeTotalNotifier.addListener(_computePercentage);
+    wholeProgressNotifier = ValueNotifier(null);
+    wholeProgressNotifier.addListener(_computePercentage);
+    wholePercentageNotifier = ValueNotifier(null);
     _runFuture();
   }
 
-  // Future<T> watch<T>(StateNotifierProvider<ApiState<T>, AsyncValue<T>> watchProvider) {
-  //
-  //   if (!_watching.contains(watchProvider)) {
-  //     _watching.add(watchProvider);
-  //   }
-  //   return _ref.watch(watchProvider.notifier);
-  // }
-  //
-  // void retry() {
-  //   for (final e in List<ApiProvider>.from(_watching)) {
-  //     _ref.read(e.provider).whenOrNull(
-  //       error: (error, stackTrace) {
-  //         e.retry();
-  //       },
-  //     );
-  //   }
-  //   try { _ref.refresh(provider); } catch (_) {}
-  // }
-  //
-  // void refresh() {
-  //   for (final e in _watching) {
-  //     e.refresh();
-  //   }
-  //   try { _ref.refresh(provider); } catch (_) {}
-  // }
-  //
-  // void _cleanupCancelTokens() {
-  //   for (final c in cancelTokens) {
-  //     try { c.cancel(); } catch (_) {}
-  //   }
-  //   cancelTokens.clear();
-  // }
-  //
-  // @override
-  // void dispose() {
-  //   _running = false;
-  //   super.dispose();
-  // }
+  Future<T> watch<T>(ApiProvider<T> watchProvider) async {
+    if (!_watching.contains(watchProvider)) {
+      _watching.add(watchProvider);
+      final newApiState = _ref.read(watchProvider.notifier);
+      _computeTotal();
+      _computeProgress();
+      _computePercentage();
+      newApiState.wholeTotalNotifier.addListener(_computeTotal);
+      newApiState.wholeProgressNotifier.addListener(_computeProgress);
+      newApiState.wholePercentageNotifier.addListener(_computePercentage);
+    }
+    // return await _ref.watch(watchProvider.notifier).future;
+    return await _ref.watch(watchProvider.future);
+  }
+
+  void retry() {
+    bool refreshed = false;
+    for (final e in List<ApiProvider>.from(_watching)) {
+      _ref.read(e).whenOrNull(
+        error: (error, stackTrace) {
+          _ref.read(e.notifier).retry();
+          refreshed = true;
+        },
+      );
+    }
+    if (!refreshed) {
+      _runFuture();
+    }
+    // try { _ref.refresh(provider); } catch (_) {} // TODO ??? how to refresh THIS provider
+  }
+
+  void refresh() {
+    bool refreshed = false;
+    for (final e in _watching) {
+      _ref.read(e.notifier).refresh();
+      refreshed = true;
+    }
+    if (!refreshed) {
+      _runFuture();
+    }
+    // try { _ref.refresh(provider); } catch (_) {} // TODO ??? how to refresh THIS provider
+  }
+
+
+  @override
+  void dispose() {
+    _running = false;
+    _cleanupCancelTokens();
+    super.dispose();
+  }
 
   void _runFuture() {
+    _cleanupCancelTokens();
+    selfTotalNotifier.value = null;
+    selfProgressNotifier.value = null;
+    wholePercentageNotifier.value = null;
     try {
-      final value = _create(this);
-      if (value is Future<State>) {
-        value.then(
+      future = _create(this);
+      if (future is Future<State>) {
+        (future as Future<State>).then(
               (event) {
             if (_running) {
               state = AsyncValue<State>.data(event);
@@ -86,187 +113,59 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
             if (_running) {
               state = AsyncValue<State>.error(err, stackTrace: stack);
             }
+            _cleanupCancelTokens();
           },
         );
       } else {
-        state = AsyncData(value);
+        state = AsyncData(future as State);
       }
     } catch (err, stack) {
       state = AsyncValue.error(err, stackTrace: stack);
     }
   }
 
-  void _computeTotal() {
-    //
-    // double? result = totalNotifier.value;
-    // _watching.forEach((e) {
-    //   final partial = ref.watch(e.totalProvider);
-    //   if (partial!=null) {
-    //     result = (result??0) + partial;
-    //   }
-    // });
-    // return result;
-  }
-  void _computeProgress() {
-    //
-    // double? result = progressNotifier.value;
-    // _watching.forEach((e) {
-    //   final partial = ref.watch(e.progressProvider);
-    //   if (partial!=null) {
-    //     result = (result??0) + partial;
-    //   }
-    // });
-    // return result;
-  }
-  void _computePercentage() {
-    // final total = totalNotifier.value;
-    // final progress = progressNotifier.value;
-    // double? result = total==null||progress==null||total==0 ? null : progress/total;
-    // _watching.forEach((e) {
-    //   final partial = ref.watch(e.percentageProvider)
-    //       ?? ref.watch(e.provider).maybeWhen<double>(data:(_)=>1, orElse: ()=>0,);
-    //   result = (result??0) + partial;
-    // });
-    // return result==null ? null : (result!/(_watching.length+1));
-
-  }
-
-
-
-
-
-}
-
-
-
-class ApiProvider<State> {
-
-  final FutureOr<State> Function(FutureProviderRef<State> ref,
-      ApiProvider<State> apiProvider,) _create;
-  final AlwaysAliveProviderBase<AsyncValue<State>> Function
-      (Create<FutureOr<State>, FutureProviderRef<State>>)? providerBuilder;
-
-  ApiProvider(this._create,{
-    this.providerBuilder,
-  });
-
-  late final ValueNotifier<double?> totalNotifier;
-  late final ValueNotifier<double?> progressNotifier;
-  late final Provider<double?> totalProvider;
-  late final Provider<double?> progressProvider;
-  late final Provider<double?> percentageProvider;
-  late FutureProviderRef<State> _ref;
-  final List<ApiProvider> _watching = [];
-  final List<CancelToken> cancelTokens = [];
-
-  AlwaysAliveProviderBase<AsyncValue<State>>? _provider;
-  AlwaysAliveProviderBase<AsyncValue<State>> get provider {
-    if (_provider==null) {
-      _init();
-    }
-    return _provider!;
-  }
-  void _init() {
-    totalProvider = Provider<double?>((ref) {
-      double? result = totalNotifier.value;
-      _watching.forEach((e) {
-        final partial = ref.watch(e.totalProvider);
-        if (partial!=null) {
-          result = (result??0) + partial;
-        }
-      });
-      return result;
-    });
-    progressProvider = Provider<double?>((ref) {
-      double? result = progressNotifier.value;
-      _watching.forEach((e) {
-        final partial = ref.watch(e.progressProvider);
-        if (partial!=null) {
-          result = (result??0) + partial;
-        }
-      });
-      return result;
-    });
-    percentageProvider = Provider<double?>((ref) {
-      final total = totalNotifier.value;
-      final progress = progressNotifier.value;
-      double? result = total==null||progress==null||total==0 ? null : progress/total;
-      _watching.forEach((e) {
-        final partial = ref.watch(e.percentageProvider)
-            ?? ref.watch(e.provider).maybeWhen<double>(data:(_)=>1, orElse: ()=>0,);
-        result = (result??0) + partial;
-      });
-      return result==null ? null : (result!/(_watching.length+1));
-    });
-    totalNotifier = ValueNotifier(null);
-    progressNotifier = ValueNotifier(null);
-    totalNotifier.addListener(() {
-      _ref.refresh(totalProvider);
-      _ref.refresh(percentageProvider);
-    });
-    progressNotifier.addListener(() {
-      _ref.refresh(progressProvider);
-      _ref.refresh(percentageProvider);
-    });
-    final create = (ref) async {
-      this._ref = ref;
-      totalNotifier.value = null;
-      progressNotifier.value = null;
-      ref.onDispose(() {
-        cleanupCancelTokens();
-        _watching.clear();
-      });
-      State result;
-      try {
-        result = await _create(ref, this);
-      } catch(_) {
-        cleanupCancelTokens();
-        rethrow;
-      }
-      cleanupCancelTokens();
-      return result;
-    };
-    _provider = (providerBuilder ?? ApiProvider.defaultProviderBuilder)(create);
-  }
-
-  Future<T> watch<T>(ApiProvider<T> watchProvider) {
-    if (!_watching.contains(watchProvider)) {
-      _watching.add(watchProvider);
-    }
-    return _ref.watch(watchProvider.provider.future);
-  }
-
-  void retry() {
-    for (final e in List<ApiProvider>.from(_watching)) {
-      _ref.read(e.provider).whenOrNull(
-        error: (error, stackTrace) {
-          e.retry();
-        },
-      );
-    }
-    try { _ref.refresh(provider); } catch (_) {}
-  }
-
-  void refresh() {
-    for (final e in _watching) {
-      e.refresh();
-    }
-    try { _ref.refresh(provider); } catch (_) {}
-  }
-
-  void cleanupCancelTokens() {
-    for (final c in cancelTokens) {
+  void _cleanupCancelTokens() {
+    for (final c in _cancelTokens) {
       try { c.cancel(); } catch (_) {}
     }
-    cancelTokens.clear();
+    _cancelTokens.clear();
   }
 
-  static AlwaysAliveProviderBase<AsyncValue<State>> defaultProviderBuilder<State>
-      (Create<FutureOr<State>, FutureProviderRef<State>> create) {
-    return FutureProvider<State>(create);
+  void _computeTotal() {
+    double? result = selfTotalNotifier.value;
+    _watching.forEach((e) {
+      final partial = _ref.read(e.notifier).wholeTotalNotifier.value;
+      if (partial!=null) {
+        result = (result??0) + partial;
+      }
+    });
+    wholeTotalNotifier.value = result;
   }
-
-  // TODO !!! implement .autoDispose and .family
+  void _computeProgress() {
+    double? result = selfProgressNotifier.value;
+    _watching.forEach((e) {
+      final partial = _ref.read(e.notifier).wholeProgressNotifier.value;
+      if (partial!=null) {
+        result = (result??0) + partial;
+      }
+    });
+    wholeProgressNotifier.value = result;
+  }
+  void _computePercentage() {
+    // TODO 3 there could be some improvement here, tight now wholeNotifiers are ignored
+    //    Instead percentage of all dependencies are used, asuming their totals are equal
+    //    Percentage could be calculated only from wholeNotifiers,
+    //    but this has problems when not all dependencies teport their total/progress
+    final total = selfTotalNotifier.value;
+    final progress = selfProgressNotifier.value;
+    double? result = total==null||progress==null||total==0 ? null : progress/total;
+    _watching.forEach((e) {
+      final partial = _ref.read(e.notifier).wholePercentageNotifier.value
+          ?? _ref.read(e).maybeWhen<double>(data:(_)=>1, orElse: ()=>0,);
+      result = (result??0) + partial;
+    });
+    wholePercentageNotifier.value = result==null ? null : (result!/(_watching.length+1));
+  }
 
 }
 
@@ -304,18 +203,21 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return AsyncValueBuilder(
-      asyncValue: ref.watch(provider.provider),
+    ApiState<T> stateNotifier = ref.watch(provider.notifier);
+    AsyncValue<T> value = ref.watch(provider);
+    return AsyncValueBuilder<T>(
+      asyncValue: value,
       dataBuilder: dataBuilder,
       loadingBuilder: (context) {
-        return Consumer(
-          builder: (context, ref, child) {
-            return loadingBuilder(context, ref.watch(provider.percentageProvider));
+        return ValueListenableBuilder<double?>(
+          valueListenable: stateNotifier.wholePercentageNotifier,
+          builder: (context, percentage, child) {
+            return loadingBuilder(context, percentage);
           },
         );
       },
       errorBuilder: (context, error, stackTrace) {
-        return errorBuilder(context, error, stackTrace, provider.retry);
+        return errorBuilder(context, error, stackTrace, stateNotifier.retry);
       },
       transitionBuilder: transitionBuilder,
       transitionDuration: transitionDuration,
