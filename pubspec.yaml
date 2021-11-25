@@ -43,6 +43,7 @@ dependencies:
   keframe: ^2.0.2
   ensure_visible_when_focused: ^1.0.0
   preload_page_view: ^0.1.6
+  sliding_number: ^0.0.4
 
   # * Plugins
   url_launcher: ^6.0.2

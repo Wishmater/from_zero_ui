@@ -1,7 +1,7 @@
 
 import 'package:flutter/material.dart';
-import 'package:from_zero_ui/src/app_content_wrapper.dart';
-import 'package:from_zero_ui/src/snackbar_host_from_zero.dart';
+import 'package:from_zero_ui/src/app_scaffolding/app_content_wrapper.dart';
+import 'package:from_zero_ui/src/app_scaffolding/snackbar_host_from_zero.dart';
 import 'package:provider/provider.dart';
 
 

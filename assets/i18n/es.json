@@ -113,5 +113,6 @@
     "open": "Abrir",
     "open_folder": "Abrir Carpeta",
     "error_file": "Error del sistema de archivos",
-    "error_connection": "Error de conexión"
+    "error_connection": "Error de conexión",
+    "error_connection_details": "Compruebe su conexión e inténtelo de nuevo"
 }

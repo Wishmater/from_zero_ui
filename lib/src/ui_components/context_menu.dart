@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:from_zero_ui/src/appbar_from_zero.dart';
-import 'package:from_zero_ui/src/popup_from_zero.dart';
+import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
+import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 
 class ContextMenuFromZero extends StatefulWidget {
 

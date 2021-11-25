@@ -7,8 +7,8 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:dartx/dartx.dart';
-import 'package:from_zero_ui/src/field.dart';
-import 'package:from_zero_ui/src/field_validators.dart';
+import 'package:from_zero_ui/src/dao/field.dart';
+import 'package:from_zero_ui/src/dao/field_validators.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 import 'field_list.dart';
 

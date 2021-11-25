@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:dartx/dartx.dart';
-import 'package:from_zero_ui/src/context_menu.dart';
-import 'package:from_zero_ui/src/popup_from_zero.dart';
+import 'package:from_zero_ui/src/ui_components/context_menu.dart';
+import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 
 
 enum ActionState {

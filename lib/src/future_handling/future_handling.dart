@@ -3,31 +3,159 @@ import 'dart:math';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/exposed_transitions.dart';
+import 'package:from_zero_ui/src/animations/exposed_transitions.dart';
+import 'package:intl/intl.dart';
+import 'package:sliding_number/sliding_number.dart';
 
 
 class LoadingCard extends StatelessWidget {
 
+  final double? value;
+  final Color? color;
+
+  const LoadingCard({
+    this.value,
+    this.color,
+    Key? key,
+  }) :  super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: LoadingSign(),
+      child: LoadingSign(
+        value: value,
+        color: color,
+      ),
     );
   }
 
 }
 
-class LoadingSign extends StatelessWidget {
+class LoadingSign extends ImplicitlyAnimatedWidget {
 
-  const LoadingSign();
+  final double? value;
+  final Color? color;
+
+  const LoadingSign({
+    Key? key,
+    this.value,
+    this.color,
+    /// for animating value
+    Duration duration = const Duration(milliseconds: 250),
+    /// for animating value
+    Curve curve = Curves.easeOutCubic,
+  }) :  super(
+    key: key,
+    duration: duration,
+    curve: curve,
+  );
+
+  @override
+  ImplicitlyAnimatedWidgetState<LoadingSign> createState() => _LoadingSignState();
+
+}
+
+class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
+
+  Tween<double>? _valueTween;
+
+  @override
+  void forEachTween(TweenVisitor<dynamic> visitor) {
+    // Update the tween using the provided visitor function.
+    _valueTween = visitor(
+      // The latest tween value. Can be `null`.
+      _valueTween,
+      // The color value toward which we are animating.
+      widget.value ?? 0.0,
+      // A function that takes a color value and returns a tween
+      // beginning at that value.
+          (dynamic value) => Tween<double>(begin: value as double?),
+    ) as Tween<double>?;
+    // We could have more tweens than one by using the visitor
+    // multiple times.
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Center(
-        child: CircularProgressIndicator(),
-      ),
+    Color color = this.widget.color ?? Theme.of(context).primaryColor;
+    Color colorMedium = color.withOpacity(0.8);
+    Color colorMild = color.withOpacity(0.2);
+    Color colorTransparent = color.withOpacity(0);
+    return AnimatedBuilder(
+      animation: animation,
+      builder: (context, child) {
+        double? value = _valueTween?.evaluate(animation);
+        if (value==0) value = null;
+        return Padding(
+          padding: const EdgeInsets.all(12),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Center(
+                child: SizedBox(
+                  width: 48, height: 48,
+                  child: InitiallyAnimatedWidget(
+                    duration: Duration(seconds: 1),
+                    curve: Curves.easeOut,
+                    repeat: true,
+                    builder: (loopingAnimation, child) {
+                      Color backgroundColor = ColorTween(begin: colorTransparent, end: colorMild).evaluate(loopingAnimation)!;
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(2.5),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [colorTransparent, colorTransparent, backgroundColor,],
+                                  stops: [0, 0.25 + (0.75 * loopingAnimation.value), 1],
+                                ),
+                              ),
+                            ),
+                          ),
+                          CircularProgressIndicator(
+                            value: value,
+                            strokeWidth: 5,
+                            backgroundColor: backgroundColor,
+                            valueColor: ColorTween(begin: colorMedium, end: color).animate(loopingAnimation),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ),
+              if (value!=null)
+                Center(
+                  child: OpacityGradient(
+                    direction: OpacityGradient.vertical,
+                    size: 5,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 1, bottom: 1,),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SlidingNumber(
+                            number: (value*100).round(),
+                            duration: Duration(milliseconds: 250),
+                            style: TextStyle(
+                              color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                            ),
+                          ),
+                          Text('%', style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                          ),),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        );
+      },
     );
   }
 
@@ -35,11 +163,11 @@ class LoadingSign extends StatelessWidget {
 
 class ErrorCard extends StatelessWidget {
 
-  String title;
-  String? subtitle;
-  Widget? icon;
-  VoidCallback? onRetry;
-  EdgeInsets padding;
+  final String title;
+  final String? subtitle;
+  final Widget? icon;
+  final VoidCallback? onRetry;
+  final EdgeInsets padding;
 
   ErrorCard({
     required this.title,
@@ -89,14 +217,14 @@ class ErrorSign extends StatelessWidget {
                 child: icon!,
               ),
             if (icon!=null)
-              SizedBox(height: 6,),
+              SizedBox(height: 4,),
             Text(
               title,
               style: Theme.of(context).textTheme.headline6,
               textAlign: TextAlign.center,
             ),
             if (subtitle!=null)
-              SizedBox(height: 12,),
+              SizedBox(height: 8,),
             if (subtitle!=null)
               Text(
                 subtitle!,
@@ -104,7 +232,7 @@ class ErrorSign extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             if (onRetry!=null)
-              SizedBox(height: 12,),
+              SizedBox(height: 20,),
             if (onRetry!=null)
               TextButton(
                 style: TextButton.styleFrom(
@@ -179,9 +307,9 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
   final Duration duration;
   final bool applyAnimatedContainerFromChildSize;
   final bool keepPreviousDataWhileLoading;
-  FutureErrorBuilder errorBuilder;
-  FutureLoadingBuilder loadingBuilder;
-  AnimatedSwitcherTransitionBuilder transitionBuilder;
+  final FutureErrorBuilder errorBuilder;
+  final FutureLoadingBuilder loadingBuilder;
+  final AnimatedSwitcherTransitionBuilder transitionBuilder;
 
   FutureBuilderFromZero({
     Key? key,
@@ -257,33 +385,31 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
           }
         }
         int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds).toInt();
-        if (widget.transitionBuilder != null){
-          result = AnimatedSwitcher(
-            transitionBuilder: widget.transitionBuilder,
-            child: Container(
-              key: ValueKey(state),
-              child: result,
-            ),
-            duration: Duration(milliseconds: milliseconds),
-            layoutBuilder: (currentChild, previousChildren) {
-              return Stack(
-                overflow: Overflow.visible,
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: OverflowBox(
-                      child: Stack(
-                        children: previousChildren,
-                      ),
+        result = AnimatedSwitcher(
+          transitionBuilder: widget.transitionBuilder,
+          child: Container(
+            key: ValueKey(state),
+            child: result,
+          ),
+          duration: Duration(milliseconds: milliseconds),
+          layoutBuilder: (currentChild, previousChildren) {
+            return Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: OverflowBox(
+                    child: Stack(
+                      children: previousChildren,
                     ),
                   ),
-                  if (currentChild!=null)
-                    currentChild,
-                ],
-              );
-            },
-          );
-        }
+                ),
+                if (currentChild!=null)
+                  currentChild,
+              ],
+            );
+          },
+        );
         if (widget.applyAnimatedContainerFromChildSize){
           result = AnimatedContainerFromChildSize(
             duration: widget.duration,

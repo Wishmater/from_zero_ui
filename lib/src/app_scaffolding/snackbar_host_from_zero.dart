@@ -2,7 +2,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:from_zero_ui/src/snackbar_from_zero.dart';
+import 'package:from_zero_ui/src/app_scaffolding/snackbar_from_zero.dart';
 import 'package:provider/provider.dart';
 
 

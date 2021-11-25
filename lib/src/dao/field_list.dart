@@ -1,13 +1,13 @@
 import 'package:animations/animations.dart';
-import 'package:from_zero_ui/src/popup_from_zero.dart';
+import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/dao.dart';
-import 'package:from_zero_ui/src/field.dart';
+import 'package:from_zero_ui/src/dao/dao.dart';
+import 'package:from_zero_ui/src/dao/field.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 

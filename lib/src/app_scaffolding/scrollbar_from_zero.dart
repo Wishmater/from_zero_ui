@@ -3,8 +3,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/scheduler/ticker.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/ui_utility_widgets.dart';
-import 'package:from_zero_ui/src/export.dart';
+import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
+import 'package:from_zero_ui/src/ui_utility/export.dart';
 
 
 class ScrollbarFromZero extends StatefulWidget {

@@ -1,79 +1,63 @@
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as material;
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/dao.dart';
-import 'package:from_zero_ui/src/field.dart';
-import 'package:from_zero_ui/src/field_validators.dart';
+import 'package:from_zero_ui/src/dao/dao.dart';
+import 'package:from_zero_ui/src/dao/field_validators.dart';
+import 'package:intl/intl.dart';
+import 'package:from_zero_ui/src/dao/field.dart';
 
-enum StringFieldType {
-  short,
-  long,
-}
 
-class StringField extends Field<String> {
+class NumField extends Field<num> {
 
   TextEditingController controller;
-  StringFieldType type;
-  int? minLines;
-  int? maxLines;
+  NumberFormat? formatter;
   InputDecoration? inputDecoration;
-  List<TextInputFormatter>? inputFormatters;
-  bool obfuscate;
-  bool showObfuscationToggleButton; // TODO implement obfuscation toggle button
+  int digitsAfterComma;
 
-  set value(String? v) {
-    super.value = v ?? '';
-    if (value != controller.text) {
-      controller.text = value ?? '';
+  set value(num? v) {
+    super.value = v;
+    final textVal = _getTextVal(controller.text);
+    if (value != textVal) {
+      controller.text = toString();
     }
   }
-  set dbValue(String? v) {
-    super.dbValue = v ?? '';
-  }
 
-  StringField({
+  NumField({
     required FieldValueGetter<String, Field> uiNameGetter,
-    String? value,
-    String? dbValue,
+    num? value,
+    num? dbValue,
     FieldValueGetter<bool, Field> clearableGetter = Field.defaultClearableGetter,
+    this.formatter,
+    this.inputDecoration,
+    this.digitsAfterComma = 0,
     double maxWidth = 512,
     double minWidth = 128,
     double flex = 0,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
-    this.type = StringFieldType.short,
-    int? minLines,
-    int? maxLines,
-    this.obfuscate = false,
-    bool? showObfuscationToggleButton,
-    this.inputDecoration,
-    this.inputFormatters,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
     FieldValueGetter<bool, Field>? hiddenInViewGetter,
     FieldValueGetter<bool, Field>? hiddenInFormGetter,
-    FieldValueGetter<List<FieldValidator<String>>, Field>? validatorsGetter,
+    FieldValueGetter<List<FieldValidator<num>>, Field>? validatorsGetter,
     bool validateOnlyOnConfirm = false,
-    FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
-    List<String?>? undoValues,
-    List<String?>? redoValues,
+    FieldValueGetter<SimpleColModel, Field> colModelBuilder = numFieldDefaultGetColumn,
+    List<num?>? undoValues,
+    List<num?>? redoValues,
     GlobalKey? fieldGlobalKey,
     FocusNode? focusNode,
     bool invalidateNonEmptyValuesIfHiddenInForm = true,
-    String? defaultValue = '',
+    num? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
-  }) :  this.minLines = minLines ?? (type==StringFieldType.short ? null : 3),
-        this.maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
-        this.showObfuscationToggleButton = showObfuscationToggleButton ?? obfuscate,
-        this.controller = TextEditingController(text: value),
+  }) :  controller = TextEditingController(text: toStringStatic(value, formatter)),
         super(
           uiNameGetter: uiNameGetter,
-          value: value ?? '',
-          dbValue: dbValue ?? value ?? '',
+          value: value,
+          dbValue: dbValue,
           clearableGetter: clearableGetter,
           hintGetter: hintGetter,
           tooltipGetter: tooltipGetter,
@@ -98,51 +82,54 @@ class StringField extends Field<String> {
           actions: actions,
         );
 
+  @override
+  String toString() => toStringStatic(value, formatter);
+  static String toStringStatic(num? value, NumberFormat? formatter) {
+    return value==null  ? ''
+                        : formatter==null ? value.toString()
+                                          : formatter.format(value);
+  }
 
   @override
-  StringField copyWith({
+  NumField copyWith({
     FieldValueGetter<String, Field>? uiNameGetter,
-    String? value,
-    String? dbValue,
+    NumberFormat? formatter,
+    num? value,
+    num? dbValue,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     double? minWidth,
     double? flex,
-    StringFieldType? type,
-    int? minLines,
-    int? maxLines,
-    InputDecoration? inputDecoration,
+    int? digitsAfterComma,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
     FieldValueGetter<bool, Field>? hiddenInViewGetter,
     FieldValueGetter<bool, Field>? hiddenInFormGetter,
-    FieldValueGetter<List<FieldValidator<String>>, Field>? validatorsGetter,
+    FieldValueGetter<List<FieldValidator<num>>, Field>? validatorsGetter,
     bool? validateOnlyOnConfirm,
     FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
-    List<String?>? undoValues,
-    List<String?>? redoValues,
+    List<num?>? undoValues,
+    List<num?>? redoValues,
     bool? invalidateNonEmptyValuesIfHiddenInForm,
-    String? defaultValue,
+    num? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) {
-    return StringField(
+    return NumField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
       value: value??this.value,
       dbValue: dbValue??this.dbValue,
       clearableGetter: clearableGetter??this.clearableGetter,
+      formatter: formatter??this.formatter,
       maxWidth: maxWidth??this.maxWidth,
       minWidth: minWidth??this.minWidth,
       flex: flex??this.flex,
-      type: type??this.type,
-      minLines: minLines??this.minLines,
-      maxLines: maxLines??this.maxLines,
-      inputDecoration: inputDecoration??this.inputDecoration,
       hintGetter: hintGetter??this.hintGetter,
       tooltipGetter: tooltipGetter??this.tooltipGetter,
+      digitsAfterComma: digitsAfterComma??this.digitsAfterComma,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
       hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
       hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
@@ -157,6 +144,15 @@ class StringField extends Field<String> {
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
     );
+  }
+
+  num? _getTextVal(String? text) {
+    num? textVal;
+    try {
+      textVal = formatter==null ? num.parse(text!)
+          : formatter!.parse(text!);
+    } catch(_) {}
+    return textVal;
   }
 
   @override
@@ -185,7 +181,7 @@ class StringField extends Field<String> {
             addCard: addCard,
             asSliver: asSliver,
             expandToFillContainer: expandToFillContainer,
-            largeVertically: maxLines!=1,
+            largeVertically: false,
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
             focusNode: focusNode!,
             dense: dense,
@@ -198,7 +194,7 @@ class StringField extends Field<String> {
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
         focusNode: focusNode,
-        largeVertically: maxLines!=1,
+        largeVertically: false,
         dense: dense,
       );
     }
@@ -213,12 +209,12 @@ class StringField extends Field<String> {
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
-    bool largeVertically = true,
+    bool largeVertically = false,
     bool largeHorizontally = false,
     bool dense = false,
     required FocusNode focusNode,
   }) {
-    focusNode.addListener(() { // TODO this might not be necessary after the new mechanism for adding undo is implemented, also un NumField
+    focusNode.addListener(() {
       if (!passedFirstEdit && !focusNode.hasFocus) {
         passedFirstEdit = true;
         notifyListeners();
@@ -242,34 +238,35 @@ class StringField extends Field<String> {
                   bottom: largeVertically ? 16 : 0,
                   top: dense ? 0 : largeVertically ? 12 : 2,
                 ),
-                child: TextFormField(
-                  controller: controller,
-                  enabled: enabled,
-                  focusNode: focusNode,
-                  minLines: minLines,
-                  maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
-                  obscureText: obfuscate,
-                  onChanged: (v) {
-                    value = v;
-                  },
-                  inputFormatters: inputFormatters,
-                  decoration: inputDecoration??InputDecoration(
-                    border: InputBorder.none,
-                    alignLabelWithHint: dense,
-                    label: Text(uiName,
-                      softWrap: false,
-                      overflow: TextOverflow.fade,
-                    ),
-                    hintText: hint,
-                    floatingLabelBehavior: enabled&&hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
-                    labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
-                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                    ),
-                    hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
-                    contentPadding: EdgeInsets.only(
-                      left: dense ? 0 : 16,
-                      right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
-                      bottom: dense ? 10 : 0,
+                child: Directionality(
+                  textDirection: dense ? material.TextDirection.rtl : material.TextDirection.ltr,
+                  child: TextFormField(
+                    controller: controller,
+                    enabled: enabled,
+                    focusNode: focusNode,
+                    onChanged: (v) {
+                      value = _getTextVal(v);
+                    },
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(digitsAfterComma==0 ? (r'[0-9]') : (r'[0-9.]'))),],
+                    decoration: inputDecoration??InputDecoration(
+                      border: InputBorder.none,
+                      alignLabelWithHint: dense,
+                      label: Text(uiName,
+                        maxLines: 1,
+                        overflow: TextOverflow.fade,
+                      ),
+                      hintText: hint,
+                      floatingLabelBehavior: enabled&&hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
+                      labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
+                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                      ),
+                      hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
+                      contentPadding: EdgeInsets.only(
+                        left: dense ? 0 : 16,
+                        right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
+                        bottom: dense ? 10 : 0,
+                      ),
                     ),
                   ),
                 ),
@@ -291,12 +288,13 @@ class StringField extends Field<String> {
                             ),
                           );
                         },
-                        child: value!=null && value!.trim().isNotEmpty ? IconButton(
+                        child: value!=null ? IconButton(
                           icon: Icon(Icons.close),
                           tooltip: FromZeroLocalizations.of(context).translate('clear'),
                           splashRadius: 20,
                           onPressed: () {
-                            value = '';
+                            value = null;
+                            controller.clear();
                           },
                         ) : SizedBox.shrink(),
                       ),
@@ -364,6 +362,16 @@ class StringField extends Field<String> {
           ),
         ),
       ),
+    );
+  }
+
+  static SimpleColModel numFieldDefaultGetColumn(Field field, DAO dao) {
+    return SimpleColModel(
+      name: field.uiName,
+      filterEnabled: true,
+      flex: field.tableColumnWidth?.round(),
+      alignment: TextAlign.right,
+      defaultSortAscending: false,
     );
   }
 

@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/settings.dart';
+import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 

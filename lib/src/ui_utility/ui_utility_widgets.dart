@@ -6,14 +6,16 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_content_wrapper.dart';
-import 'package:from_zero_ui/src/exposed_transitions.dart';
-import 'package:from_zero_ui/src/scaffold_from_zero.dart';
+import 'package:from_zero_ui/src/app_scaffolding/app_content_wrapper.dart';
+import 'package:from_zero_ui/src/animations/exposed_transitions.dart';
+import 'package:from_zero_ui/src/app_scaffolding/scaffold_from_zero.dart';
 import 'package:flutter/foundation.dart';
 import 'package:from_zero_ui/util/platform_web_impl.dart';
 import 'package:provider/provider.dart';
 import 'package:dartx/dartx.dart';
 
+
+// TODO 2 break this up into individual files
 
 class ResponsiveHorizontalInsetsSliver extends StatelessWidget {
 
@@ -736,6 +738,8 @@ class InitiallyAnimatedWidget extends StatefulWidget {
   final Duration duration;
   final Curve curve;
   final Widget? child;
+  final bool repeat;
+  final bool reverse;
 
   InitiallyAnimatedWidget({
     Key? key,
@@ -743,6 +747,8 @@ class InitiallyAnimatedWidget extends StatefulWidget {
     this.duration = const Duration(milliseconds: 300,),
     this.curve = Curves.easeOutCubic,
     this.child,
+    this.repeat = false,
+    this.reverse = true,
   }) : super(key: key);
 
   @override
@@ -765,7 +771,13 @@ class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with 
       parent: animationController,
       curve: widget.curve,
     );
-    animationController.forward();
+    if (widget.repeat) {
+      animationController.repeat(
+        reverse: widget.reverse,
+      );
+    } else {
+      animationController.forward();
+    }
   }
 
   void dispose() {

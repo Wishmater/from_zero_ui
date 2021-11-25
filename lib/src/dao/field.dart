@@ -3,11 +3,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/dao.dart';
-import 'package:from_zero_ui/src/field_validators.dart';
-import 'package:from_zero_ui/src/table_from_zero_models.dart';
-import 'package:from_zero_ui/src/ui_utility_widgets.dart';
-import 'package:from_zero_ui/src/util.dart';
+import 'package:from_zero_ui/src/dao/dao.dart';
+import 'package:from_zero_ui/src/dao/field_validators.dart';
+import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
+import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
+import 'package:from_zero_ui/src/ui_utility/util.dart';
 import 'package:dartx/dartx.dart';
 
 typedef ValidationError? FieldValidator<T extends Comparable>(BuildContext context, DAO dao, Field<T> field);

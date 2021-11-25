@@ -1,7 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:from_zero_ui/src/future_handling.dart';
+import 'package:from_zero_ui/src/future_handling/future_handling.dart';
 
 
 

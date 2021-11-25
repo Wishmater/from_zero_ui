@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/settings.dart';
+import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 

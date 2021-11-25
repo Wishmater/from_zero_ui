@@ -1,53 +1,64 @@
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/dao.dart';
-import 'package:from_zero_ui/src/field_validators.dart';
-import 'package:from_zero_ui/util/my_tooltip.dart';
-import 'package:intl/intl.dart';
-import 'package:from_zero_ui/src/field.dart';
-import 'package:dartx/dartx.dart';
+import 'package:from_zero_ui/src/dao/dao.dart';
+import 'package:from_zero_ui/src/dao/field.dart';
+import 'package:from_zero_ui/src/dao/field_validators.dart';
 
 
-class DateField extends Field<DateTime> {
+class ComboField<T extends DAO> extends Field<T> {
 
-  DateFormat formatter;
-  DateTime firstDate;
-  DateTime lastDate;
+  final FieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter;
+  List<T>? get possibleValues => possibleValuesGetter?.call(this, dao);
+  final FieldValueGetter<Future<List<T>>?, ComboField<T>>? futurePossibleValuesGetter;
+  Future<List<T>>? get futurePossibleValues => futurePossibleValuesGetter?.call(this, dao);
+  final bool showSearchBox;
+  final ExtraWidgetBuilder<T>? extraWidget;
+  final FieldValueGetter<DAO?, ComboField<T>>? newObjectTemplateGetter;
+  DAO? get newObjectTemplate => newObjectTemplateGetter?.call(this, dao);
+  final bool sort;
+  final bool showViewActionOnDAOs;
+  final bool showDropdownIcon;
+  final bool invalidateValuesNotInPossibleValues;
 
 
-  DateField({
+  ComboField({
     required FieldValueGetter<String, Field> uiNameGetter,
-    DateTime? firstDate,
-    DateTime? lastDate,
-    DateTime? value,
-    DateTime? dbValue,
+    T? value,
+    T? dbValue,
     FieldValueGetter<bool, Field> clearableGetter = Field.defaultClearableGetter,
     double maxWidth = 512,
     double minWidth = 128,
     double flex = 0,
-    DateFormat? formatter,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
+    this.possibleValuesGetter,
+    this.futurePossibleValuesGetter,
+    this.sort = true,
+    this.showSearchBox = true,
+    this.showViewActionOnDAOs = true,
+    this.showDropdownIcon = false,
+    this.extraWidget,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
     FieldValueGetter<bool, Field>? hiddenInViewGetter,
     FieldValueGetter<bool, Field>? hiddenInFormGetter,
-    FieldValueGetter<List<FieldValidator<DateTime>>, Field>? validatorsGetter,
+    this.newObjectTemplateGetter,
+    FieldValueGetter<List<FieldValidator<T>>, Field>? validatorsGetter,
     bool validateOnlyOnConfirm = false,
     FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
-    List<DateTime?>? undoValues,
-    List<DateTime?>? redoValues,
+    List<T?>? undoValues,
+    List<T?>? redoValues,
+    this.invalidateValuesNotInPossibleValues = true,
     GlobalKey? fieldGlobalKey,
     FocusNode? focusNode,
     bool invalidateNonEmptyValuesIfHiddenInForm = true,
-    DateTime? defaultValue,
+    T? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
-  }) :  this.firstDate = firstDate ?? DateTime(1900),
-        this.lastDate = lastDate ?? DateTime(2200),
-        this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY),
+  }) :  assert(possibleValuesGetter!=null || futurePossibleValuesGetter!=null),
+        assert(possibleValuesGetter==null || futurePossibleValuesGetter==null),
         super(
           uiNameGetter: uiNameGetter,
           value: value,
@@ -77,34 +88,42 @@ class DateField extends Field<DateTime> {
         );
 
   @override
-  DateField copyWith({
+  ComboField copyWith({
     FieldValueGetter<String, Field>? uiNameGetter,
-    DateTime? value,
-    DateTime? dbValue,
+    T? value,
+    T? dbValue,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     double? minWidth,
     double? flex,
-    DateTime? firstDate,
-    DateTime? lastDate,
+    FieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter,
+    FieldValueGetter<Future<List<T>>?, ComboField<T>>? futurePossibleValuesGetter,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
+    bool? sort,
+    bool? showSearchBox,
+    bool? showViewActionOnDAOs,
+    bool? showDropdownIcon,
+    ExtraWidgetBuilder<T>? extraWidget,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
     FieldValueGetter<bool, Field>? hiddenInViewGetter,
     FieldValueGetter<bool, Field>? hiddenInFormGetter,
-    FieldValueGetter<List<FieldValidator<DateTime>>, Field>? validatorsGetter,
+    FieldValueGetter<DAO?, ComboField<T>>? newObjectTemplateGetter,
+    FieldValueGetter<List<FieldValidator<T>>, Field>? validatorsGetter,
     bool? validateOnlyOnConfirm,
     FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
-    List<DateTime?>? undoValues,
-    List<DateTime?>? redoValues,
+    List<T?>? undoValues,
+    List<T?>? redoValues,
+    GlobalKey? fieldGlobalKey,
+    FocusNode? focusNode,
     bool? invalidateNonEmptyValuesIfHiddenInForm,
-    DateTime? defaultValue,
+    T? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) {
-    return DateField(
+    return ComboField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
       value: value??this.value,
       dbValue: dbValue??this.dbValue,
@@ -112,16 +131,22 @@ class DateField extends Field<DateTime> {
       maxWidth: maxWidth??this.maxWidth,
       minWidth: minWidth??this.minWidth,
       flex: flex??this.flex,
-      firstDate: firstDate??this.firstDate,
-      lastDate: lastDate??this.lastDate,
+      possibleValuesGetter: possibleValuesGetter??this.possibleValuesGetter,
+      futurePossibleValuesGetter: futurePossibleValuesGetter??this.futurePossibleValuesGetter,
       hintGetter: hintGetter??this.hintGetter,
       tooltipGetter: tooltipGetter??this.tooltipGetter,
+      sort: sort??this.sort,
+      showSearchBox: showSearchBox??this.showSearchBox,
+      extraWidget: extraWidget??this.extraWidget,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
       hiddenInTableGetter: hiddenInTableGetter ?? hiddenGetter ?? this.hiddenInTableGetter,
       hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
       hiddenInFormGetter: hiddenInFormGetter ?? hiddenGetter ?? this.hiddenInFormGetter,
+      newObjectTemplateGetter: newObjectTemplateGetter ?? this.newObjectTemplateGetter,
       validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
+      showViewActionOnDAOs: showViewActionOnDAOs ?? this.showViewActionOnDAOs,
+      showDropdownIcon: showDropdownIcon ?? this.showDropdownIcon,
       colModelBuilder: colModelBuilder ?? this.colModelBuilder,
       undoValues: undoValues ?? List.from(this.undoValues),
       redoValues: redoValues ?? List.from(this.redoValues),
@@ -133,7 +158,26 @@ class DateField extends Field<DateTime> {
   }
 
   @override
-  String toString() => value==null ? '' : formatter.format(value!);
+  Future<bool> validate(BuildContext context, DAO dao, {
+    bool validateIfNotEdited=false,
+  }) async {
+    super.validate(context, dao, validateIfNotEdited: validateIfNotEdited);
+    List<T> possibleValues;
+    if (futurePossibleValues!=null) {
+      possibleValues = await futurePossibleValues!;
+    } else {
+      possibleValues = this.possibleValues!;
+    }
+    if (invalidateValuesNotInPossibleValues && value!=null && !possibleValues.contains(value)) {
+      validationErrors.add(InvalidatingError<T>(
+        field: this,
+        error: FromZeroLocalizations.of(context).translate("validation_combo_not_possible"),
+        defaultValue: null,
+      ));
+    }
+    validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
+    return validationErrors.where((e) => e.isBlocking).isEmpty;
+  }
 
   @override
   List<Widget> buildFieldEditorWidgets(BuildContext context, {
@@ -191,31 +235,89 @@ class DateField extends Field<DateTime> {
     bool dense = false,
     required FocusNode focusNode,
   }) {
+    ExtraWidgetBuilder<T>? extraWidget;
+    final newObjectTemplate = this.newObjectTemplate;
+    if (newObjectTemplate?.onSave!=null) {
+      extraWidget = (context, onSelected) {
+        final oldOnSave = newObjectTemplate!.onSave!;
+        final newOnSave = (context, e) async {
+          DAO? newDAO = await oldOnSave(context, e);
+          if (newDAO!=null) {
+            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+              onSelected?.call(newDAO as T);
+              Navigator.of(context).pop(true);
+            });
+          }
+          return newDAO;
+        };
+        final emptyDAO = newObjectTemplate.copyWith(
+          onSave: newOnSave,
+        );
+        return Column (
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (this.extraWidget!=null)
+              this.extraWidget!(context, onSelected),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2,),
+                child: TextButton(
+                  onPressed: () async {
+                     emptyDAO.maybeEdit(context);
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6,),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        SizedBox(width: 6),
+                        Icon(Icons.add),
+                        SizedBox(width: 6,),
+                        Text('New ${emptyDAO.classUiName}', style: TextStyle(fontSize: 16),),
+                        SizedBox(width: 6),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      };
+    }
     Widget result = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
-        Widget result = DatePickerFromZero(
+        Widget result = ComboFromZero<T>(
           focusNode: focusNode,
           enabled: enabled,
           clearable: clearable,
           title: uiName,
-          firstDate: firstDate,
-          lastDate: lastDate,
           hint: hint,
           value: value,
-          onSelected: (v) {value=v;},
+          possibleValues: possibleValues,
+          futurePossibleValues: futurePossibleValues,
+          sort: sort,
+          showSearchBox: showSearchBox,
+          onSelected: _onSelected,
           popupWidth: maxWidth,
           buttonPadding: dense ? EdgeInsets.zero : null,
-          buttonChildBuilder: (context, title, hint, value, formatter, enabled, clearable) {
-            return _buttonContentBuilder(context, title, hint, value, formatter, enabled, clearable,
+          buttonChildBuilder: (context, title, hint, value, enabled, clearable, {showDropdownIcon=false}) {
+            return buttonContentBuilder(context, title, hint, value, enabled, clearable,
+              showDropdownIcon: showDropdownIcon,
               dense: dense,
             );
           },
+          extraWidget: extraWidget ?? this.extraWidget,
+          showViewActionOnDAOs: showViewActionOnDAOs,
+          showDropdownIcon: showDropdownIcon,
         );
         result = AnimatedContainer(
           duration: Duration(milliseconds: 300),
           color: dense && validationErrors.isNotEmpty
-              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+          ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
               : backgroundColor?.call(context, this, dao),
           curve: Curves.easeOut,
           child: result,
@@ -277,7 +379,12 @@ class DateField extends Field<DateTime> {
     return result;
   }
 
-  Widget _buttonContentBuilder(BuildContext context, String? title, String? hint, DateTime? value, formatter, bool enabled, bool clearable, {
+  bool? _onSelected(T? v) {
+    value = v;
+  }
+
+  static Widget buttonContentBuilder(BuildContext context, String? title, String? hint, dynamic value, bool enabled, bool clearable, {
+    bool showDropdownIcon = true,
     dense = false,
   }) {
     return Padding(
@@ -300,15 +407,15 @@ class DateField extends Field<DateTime> {
                       ))
                 : value==null&&hint==null&&title!=null
                     ? Text(title, style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                    ),)
+                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                      ),)
                     : MaterialKeyValuePair(
                       padding: 6,
                       title: title,
                       titleStyle: Theme.of(context).textTheme.caption!.copyWith(
                         color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
                       ),
-                      value: value==null ? (hint ?? '') : formatter.format(value),
+                      value: value==null ? (hint ?? '') : value.toString(),
                       valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
                         height: 1,
                         color: value==null ? Theme.of(context).textTheme.caption!.color!
@@ -320,8 +427,8 @@ class DateField extends Field<DateTime> {
             ),
           ),
           SizedBox(width: dense ? 0 : 4,),
-          if (!dense && enabled && !clearable)
-            Icon(Icons.arrow_drop_down),
+          if (!dense && showDropdownIcon && enabled && !clearable)
+            Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyText1!.color,),
           SizedBox(width: dense ? 0 : 4,),
         ],
       ),
