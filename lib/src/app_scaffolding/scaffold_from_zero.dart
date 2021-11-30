@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:animations/animations.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -133,7 +134,7 @@ class ScaffoldFromZero extends StatefulWidget {
         this.scrollbarType = scrollbarType ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? scrollbarTypeBellowAppbar : scrollbarTypeOverAppbar),
         this.bodyFloatsBelowAppbar = bodyFloatsBelowAppbar ?? appbarType==ScaffoldFromZero.appbarTypeQuickReturn,
         this.compactDrawerWidth = drawerContentBuilder==null||!useCompactDrawerInsteadOfClose ? 0 : 56,
-        this.appbarHeight = appbarHeight ?? (appbarType==ScaffoldFromZero.appbarTypeNone ? 0 : 56), //useCompactDrawerInsteadOfClose ? 56 : 0
+        this.appbarHeight = appbarHeight ?? (appbarType==ScaffoldFromZero.appbarTypeNone ? 0 : (48 + (PlatformExtended.isWindows ? appWindow.titleBarHeight : 0))), //useCompactDrawerInsteadOfClose ? 56 : 0
         this.titleTransitionBuilder = titleTransitionBuilder ?? defaultTitleTransitionBuilder,
         this.drawerContentTransitionBuilder = drawerContentTransitionBuilder ?? defaultDrawerContentTransitionBuilder,
         this.bodyTransitionBuilder = bodyTransitionBuilder ?? defaultBodyTransitionBuilder;
@@ -512,17 +513,17 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
             ),
 
             //DESKTOP DRAWER OPEN GESTURE DETECTOR
-            screen.displayMobileLayout || widget.drawerContentBuilder==null
+            screen.displayMobileLayout || widget.drawerContentBuilder==null || PlatformExtended.isDesktop // this should be if no mouse, instead of platform based
                 ? Positioned(top: 0, bottom: 0, width: 0, child: Container(),)
                 : Positioned(
-              top: 0, bottom: 0, left: 0, width: changeNotifier.getCurrentDrawerWidth(widget.currentPage)+18,
-              child: GestureDetector(
-                onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
-                onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
-                behavior: HitTestBehavior.translucent,
-                excludeFromSemantics: true,
-              ),
-            ),
+                  top: 0, bottom: 0, left: 0, width: changeNotifier.getCurrentDrawerWidth(widget.currentPage)+18,
+                  child: GestureDetector(
+                    onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
+                    onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
+                    behavior: HitTestBehavior.translucent,
+                    excludeFromSemantics: true,
+                  ),
+                ),
           ],
         );
       },
@@ -560,6 +561,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
     if (widget.scrollbarType==ScaffoldFromZero.scrollbarTypeBellowAppbar) {
       body = ScrollbarFromZero(
         applyOpacityGradientToChildren: false,
+        mainScrollbar: true,
         controller: widget.mainScrollController,
         child: body,
       );
@@ -601,6 +603,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
               height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
               left: 0, right: 0,
               child: AppbarFromZero(
+                mainAppbar: true,
                 controller: widget.appbarController,
                 onExpanded: widget.onAppbarActionExpanded,
                 onUnexpanded: widget.onAppbarActionUnexpanded,
@@ -611,6 +614,10 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
                 actions: widget.actions,
                 initialExpandedAction: widget.initialExpandedAction,
                 toolbarHeight: widget.appbarHeight,
+                paddingRight: widget.scrollbarType!=ScaffoldFromZero.scrollbarTypeOverAppbar ? 0
+                    : (Theme.of(context).scrollbarTheme.thickness?.resolve({}) ?? 8)
+                        + (Theme.of(context).scrollbarTheme.crossAxisMargin ?? 0)
+                            .clamp(appWindow.isMaximized ? 0 : 6, double.infinity),
                 title: Row(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -713,6 +720,7 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
     if (widget.scrollbarType==ScaffoldFromZero.scrollbarTypeOverAppbar) {
       result = ScrollbarFromZero(
         controller: widget.mainScrollController,
+        mainScrollbar: true,
         applyOpacityGradientToChildren: false,
         child: result,
       );
@@ -731,91 +739,89 @@ class _ScaffoldFromZeroState extends State<ScaffoldFromZero> {
       children: <Widget>[
 
         //DRAWER APPBAR
-        Stack(
-          children: [
-            SizedBox(
-              height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
-              child: OverflowBox(
-                minWidth: 0,
-                maxWidth: widget.drawerWidth,
-                minHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
-                maxHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
-                alignment: Alignment.centerRight,
-                child: AppBar(
-                  elevation: 0,
-                  automaticallyImplyLeading: false,
-                  toolbarHeight: widget.appbarHeight,
-                  backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).primaryColor,
-                  title: SizedBox(
-                      height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
-                      child: Selector<ScreenFromZero, bool>(
-                        selector: (context, screen) => screen.displayMobileLayout,
-                        builder: (context, displayMobileLayout, child) {
-                          return Stack(
-                            alignment: Alignment.centerLeft,
-                            clipBehavior: Clip.none,
-                            children: [
-                              if (!displayMobileLayout && canPop)
-                                Positioned(
-                                  left: -8,
-                                  child: IconButton(
-                                    icon: Icon(Icons.arrow_back),
-                                    tooltip: FromZeroLocalizations.of(context).translate("back"),
-                                    onPressed: () async{
-                                      var navigator = Navigator.of(context);
-                                      if (displayMobileLayout)
-                                        navigator.pop();
-                                      if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
-                                        navigator.pop();
-                                      }
-                                    },
-                                  ),
+        SizedBox(
+          height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
+          child: MoveWindow(
+            child: OverflowBox(
+              minWidth: 0,
+              maxWidth: widget.drawerWidth,
+              minHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
+              maxHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
+              alignment: Alignment.centerRight,
+              child: AppBar(
+                elevation: 0,
+                automaticallyImplyLeading: false,
+                toolbarHeight: widget.appbarHeight,
+                backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).primaryColor,
+                title: SizedBox(
+                    height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
+                    child: Selector<ScreenFromZero, bool>(
+                      selector: (context, screen) => screen.displayMobileLayout,
+                      builder: (context, displayMobileLayout, child) {
+                        return Stack(
+                          alignment: Alignment.centerLeft,
+                          clipBehavior: Clip.none,
+                          children: [
+                            if (!displayMobileLayout && canPop)
+                              Positioned(
+                                left: -8,
+                                child: IconButton(
+                                  icon: Icon(Icons.arrow_back),
+                                  tooltip: FromZeroLocalizations.of(context).translate("back"),
+                                  onPressed: () async{
+                                    var navigator = Navigator.of(context);
+                                    if (displayMobileLayout)
+                                      navigator.pop();
+                                    if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
+                                      navigator.pop();
+                                    }
+                                  },
                                 ),
-                              if(widget.drawerTitle!=null)
-                                Positioned(
-                                  left: !displayMobileLayout && canPop ? 40 : 0,
-                                  right: widget.centerDrawerTitle ? 0 : null,
-                                  top: 0, bottom: 0,
+                              ),
+                            if(widget.drawerTitle!=null)
+                              Positioned(
+                                left: !displayMobileLayout && canPop ? 40 : 0,
+                                right: widget.centerDrawerTitle ? 0 : null,
+                                top: 0, bottom: 0,
 //                                  duration: 300.milliseconds,
 //                                  curve: widget.drawerAnimationCurve,
-                                  child: widget.applyHeroToDrawerTitle ? Hero(
-                                    tag: "scaffold-fz-drawer-title",
-                                    child: widget.drawerTitle!,
-                                  ) : widget.drawerTitle!,
-                                ),
-                            ],
-                          );
-                        },
-                      )
-                  ),
-                  actions: [
-                    Consumer2<ScaffoldFromZeroChangeNotifier, ScreenFromZero>(
-                      builder: (context, changeNotifier, screen, child) {
-                        if (!screen.displayMobileLayout){
-                          return Padding(
-                            padding: EdgeInsets.only(right: 8),
-                            child: IconButton(
-                              icon: Icon(Icons.menu),
-                              tooltip: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>widget.compactDrawerWidth||screen.displayMobileLayout
-                                  ? FromZeroLocalizations.of(context).translate("menu_close") : FromZeroLocalizations.of(context).translate("menu_open"),
-                              onPressed: (){
-                                if (screen.displayMobileLayout)
-                                  Navigator.of(context).pop();
-                                else
-                                  _toggleDrawer(context, changeNotifier);
-                              },
-                            ),
-                          );
-                        }
-                        return SizedBox.shrink();
+                                child: widget.applyHeroToDrawerTitle ? Hero(
+                                  tag: "scaffold-fz-drawer-title",
+                                  child: widget.drawerTitle!,
+                                ) : widget.drawerTitle!,
+                              ),
+                          ],
+                        );
                       },
                     )
-
-                  ],
                 ),
+                actions: [
+                  Consumer2<ScaffoldFromZeroChangeNotifier, ScreenFromZero>(
+                    builder: (context, changeNotifier, screen, child) {
+                      if (!screen.displayMobileLayout){
+                        return Padding(
+                          padding: EdgeInsets.only(right: 8),
+                          child: IconButton(
+                            icon: Icon(Icons.menu),
+                            tooltip: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>widget.compactDrawerWidth||screen.displayMobileLayout
+                                ? FromZeroLocalizations.of(context).translate("menu_close") : FromZeroLocalizations.of(context).translate("menu_open"),
+                            onPressed: (){
+                              if (screen.displayMobileLayout)
+                                Navigator.of(context).pop();
+                              else
+                                _toggleDrawer(context, changeNotifier);
+                            },
+                          ),
+                        );
+                      }
+                      return SizedBox.shrink();
+                    },
+                  )
+
+                ],
               ),
             ),
-          ],
+          ),
         ),
 
         //DRAWER CONTENT

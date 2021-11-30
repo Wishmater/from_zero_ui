@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +12,6 @@ import 'package:from_zero_ui/src/app_scaffolding/app_update.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:window_size/window_size.dart';
 
 bool alreadyInitedHive = false;
 Future<void> initHive([String? subdir]) async{
@@ -26,13 +26,15 @@ Future<void> initHive([String? subdir]) async{
     if (file.existsSync()){
       final lines = file.readAsLinesSync();
       file.delete();
-      setWindowTitle("Finishing Update...");
-      final maxSize = (await getCurrentScreen())!.frame;
-      setWindowFrame(Rect.fromCenter(
-          center: Offset(maxSize.width/2, maxSize.height/2),
-          width: 512, height: 112
-      ));
       runApp(LoadingApp());
+      doWhenWindowReady(() {
+        appWindow.title = "Finishing Update...";
+        const initialSize = Size(512, 112);
+        appWindow.minSize = initialSize;
+        appWindow.size = initialSize;
+        appWindow.alignment = Alignment.center;
+        appWindow.show();
+      });
       await UpdateFromZero.finishUpdate(
         lines[0].replaceAll('%20', ' '),
         lines[1].replaceAll('%20', ' '),);

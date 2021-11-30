@@ -55,6 +55,16 @@ dependencies:
   pdf: ^1.10.0
   excel: ^1.1.5
   universal_html: ^2.0.8
+  bitsdojo_window:     # ^0.1.1+1
+    git:
+      url: https://github.com/bitsdojo/bitsdojo_window.git
+      ref: 095455f92a432a2262abeddc07bf4f628b0afe52
+      path: bitsdojo_window
+  bitsdojo_window_windows:
+    git:
+      url: https://github.com/bitsdojo/bitsdojo_window.git
+      ref: b823ae5b9f2f82635067add7eadfc32d9054bc2b
+      path: bitsdojo_window_windows
 
   # * Update
   archive: ^3.1.2
@@ -63,27 +73,6 @@ dependencies:
   dio: ^3.0.10
   dio_retry: ^0.1.9-beta
 
-
-
-  # ! temporal fde dependencies until official desktop support is stable
-#  path_provider_fde:
-#    git:
-#      url: git://github.com/google/flutter-desktop-embedding.git
-#      path: plugins/flutter_plugins/path_provider_fde
-#      ref: 040f36c82b63e8764ec2fd97066767503a667b6d
-#  url_launcher_fde:
-#    git:
-#      url: git://github.com/google/flutter-desktop-embedding.git
-#      path: plugins/flutter_plugins/url_launcher_fde
-#      ref: 040f36c82b63e8764ec2fd97066767503a667b6d
-  window_size:
-    git:
-      url: git://github.com/google/flutter-desktop-embedding.git
-      path: plugins/window_size
-      ref: 040f36c82b63e8764ec2fd97066767503a667b6d
-
-      # 1feed8db2e5222af4e5d8495ac45135a2701c755
-      # 82296566f18becd353205e51096441d8a69c2186
 
 
 dev_dependencies:
@@ -99,6 +88,11 @@ dependency_overrides:
   logging: ^1.0.0
   pub_semver: ^2.0.0
   convert: ^3.0.0
+  bitsdojo_window_windows:
+    git:
+      url: https://github.com/bitsdojo/bitsdojo_window.git
+      ref: b823ae5b9f2f82635067add7eadfc32d9054bc2b
+      path: bitsdojo_window_windows
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -23,10 +23,24 @@ class ThemeParameters extends AppParametersFromZero {
       primaryColorLight: Color.fromRGBO(0, 0, 140, 1),
       accentColor: Colors.orangeAccent.shade700,
       visualDensity: VisualDensity.compact,
+      appBarTheme: AppBarTheme(
+        color: Colors.white,
+        titleTextStyle: TextStyle(
+          color: Colors.black,
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+        ),
+        toolbarTextStyle: TextStyle(
+          color: Colors.black,
+        ),
+        iconTheme: IconThemeData(
+            color: Colors.black
+        ),
+      ),
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: Colors.grey.shade700.withOpacity(0.9),
-          borderRadius: const BorderRadius.all(Radius.circular(999999)),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
         ),
         padding: EdgeInsets.fromLTRB(12, 4, 12, 6),
         textStyle: TextStyle(
@@ -50,9 +64,6 @@ class ThemeParameters extends AppParametersFromZero {
         }),
       ),
       primaryColorBrightness: Brightness.light,
-      appBarTheme: AppBarTheme(
-        color: Colors.white,
-      ),
     ),
     ThemeData(
       canvasColor: Colors.grey.shade300,
@@ -61,10 +72,24 @@ class ThemeParameters extends AppParametersFromZero {
       primaryColorLight: Color.fromRGBO(0, 0, 140, 1),
       accentColor: Colors.orangeAccent.shade700,
       visualDensity: VisualDensity.compact,
+      appBarTheme: AppBarTheme(
+        color: Colors.white,
+        titleTextStyle: TextStyle(
+          color: Colors.black,
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+        ),
+        toolbarTextStyle: TextStyle(
+          color: Colors.black,
+        ),
+        iconTheme: IconThemeData(
+            color: Colors.black
+        ),
+      ),
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: Colors.grey.shade700.withOpacity(0.9),
-          borderRadius: const BorderRadius.all(Radius.circular(999999)),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
         ),
         padding: EdgeInsets.fromLTRB(12, 4, 12, 6),
         textStyle: TextStyle(

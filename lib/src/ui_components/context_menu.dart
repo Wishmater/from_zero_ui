@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 
@@ -88,7 +89,11 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
         behavior: HitTestBehavior.translucent,
         onTapDown: (details) => tapDownDetails = details,
         onSecondaryTapDown: (details) => tapDownDetails = details,
-        onLongPress: () => showContextMenu(context),
+        onLongPress: () {
+          if (PlatformExtended.isMobile) {
+            showContextMenu(context);
+          }
+        },
         onSecondaryTap: () => showContextMenu(context),
         child: result,
       );

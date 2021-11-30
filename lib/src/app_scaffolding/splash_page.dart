@@ -35,9 +35,7 @@ class _SplashPageState extends State<SplashPage> {
   @override
   Widget build(BuildContext context) {
     return widget.child ?? Container(
-      color: kIsWeb ? Theme.of(context).canvasColor
-        : Platform.isWindows ? Colors.black
-        : Theme.of(context).canvasColor,
+      color: Theme.of(context).canvasColor,
     );
   }
 

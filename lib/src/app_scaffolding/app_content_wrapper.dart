@@ -1,3 +1,4 @@
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -62,16 +63,22 @@ class _FromZeroAppContentWrapperState extends State<FromZeroAppContentWrapper> {
             child: SizedBox(
               width: changeNotifier._previousWidth ?? 1280,
               height: changeNotifier._previousHeight ?? 720,
-              child: MultiProvider(
-                providers: [
-                  ChangeNotifierProvider.value(value: changeNotifier,),
-                  ChangeNotifierProvider.value(value: screen,),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: MultiProvider(
+                      providers: [
+                        ChangeNotifierProvider.value(value: changeNotifier,),
+                        ChangeNotifierProvider.value(value: screen,),
+                      ],
+                      builder: (context, _) {
+                        return SnackBarHostFromZero(
+                          child: widget.child,
+                        );
+                      },
+                    ),
+                  ),
                 ],
-                builder: (context, _) {
-                  return SnackBarHostFromZero(
-                    child: widget.child,
-                  );
-                },
               ),
             ),
           );

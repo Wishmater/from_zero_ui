@@ -2,6 +2,7 @@
 import 'dart:io';
 
 import 'package:animations/animations.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_retry/dio_retry.dart';
 import 'package:flutter/cupertino.dart';
@@ -11,7 +12,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:intl/intl.dart';
 import 'package:archive/archive.dart';
-import 'package:window_size/window_size.dart';
 
 class UpdateFromZero{
 
@@ -86,7 +86,7 @@ class UpdateFromZero{
         deleteOnError: true,
       );
       download.then((value) async{
-        setWindowTitle(FromZeroLocalizations.of(context).translate('processing_update'));
+        appWindow.title = FromZeroLocalizations.of(context).translate('processing_update');
         final file = File(downloadPath);
         final bytes = file.readAsBytesSync();
         final archive = ZipDecoder().decodeBytes(bytes);

@@ -1,4 +1,4 @@
-
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -16,6 +16,15 @@ void main() async{
   await initHive();
   MyFluroRouter.setupRouter();
   runApp(MyApp());
+
+  doWhenWindowReady(() {
+    const initialSize = Size(600, 450);
+    appWindow.minSize = initialSize;
+    // appWindow.size = initialSize;
+    // appWindow.alignment = Alignment.center;
+    appWindow.maximize();
+    appWindow.show();
+  });
 }
 
 
@@ -23,6 +32,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
     return ChangeNotifierProvider(
       create: (context) => ThemeParameters(),
       child: Consumer<ThemeParameters>(
@@ -30,7 +40,7 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             title: 'FromZero playground',
             debugShowCheckedModeBanner: false,
-            themeMode: ThemeMode.light, //themeParameters.themeMode
+            themeMode: ThemeMode.dark, //themeParameters.themeMode
             theme: themeParameters.lightTheme,
             darkTheme: themeParameters.darkTheme,
             locale: Locale('ES'), //themeParameters.appLocale

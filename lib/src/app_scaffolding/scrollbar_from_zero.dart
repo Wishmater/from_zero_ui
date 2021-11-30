@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/scheduler/ticker.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -22,6 +23,8 @@ class ScrollbarFromZero extends StatefulWidget {
   final double opacityGradientSize;
   final bool ignoreDevicePadding;
   // final bool addPaddingOnDesktop;
+  /// is main window scaffold scrollbar
+  final bool mainScrollbar;
 
   ScrollbarFromZero({
     Key? key,
@@ -37,6 +40,7 @@ class ScrollbarFromZero extends StatefulWidget {
     this.hoverThickness,
     this.showTrackOnHover,
     this.ignoreDevicePadding = true,
+    this.mainScrollbar = false,
     // this.addPaddingOnDesktop = false,
   }) :  super(key: key);
 
@@ -51,6 +55,8 @@ class ScrollbarFromZero extends StatefulWidget {
 class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
   late AlwaysAttachedScrollController alwaysAttachedScrollController;
+  /// only used on mainWindowScrollbar
+  GlobalKey? childGlobalKey;
 
   @override
   void initState() {
@@ -84,7 +90,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     if (context.findAncestorWidgetOfExactType<Export>()!=null) {
       return child;
     }
-
+// TODO add 6 margin right if main and windowed
     if (widget.applyOpacityGradientToChildren ?? widget.controller!=null){
       if (widget.controller!=null) {
         child = ScrollOpacityGradient(
@@ -106,7 +112,68 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
       }
     }
 
-    Widget result = Scrollbar(
+
+    Widget result;
+    if (widget.mainScrollbar) {
+
+      if (childGlobalKey==null) {
+        childGlobalKey = GlobalKey();
+      }
+      final theme = Theme.of(context);
+      result = Theme(
+        key: ValueKey(appWindow.isMaximized),
+        data: theme.copyWith(
+          scrollbarTheme: theme.scrollbarTheme.copyWith(
+            crossAxisMargin: appWindow.isMaximized
+                ? theme.scrollbarTheme.crossAxisMargin
+                : theme.scrollbarTheme.crossAxisMargin?.clamp(6, double.infinity),
+          ),
+        ),
+        child: buildScrollbar(
+          context: context,
+          wantsAlwaysShown: wantsAlwaysShown,
+          supportsAlwaysShown: supportsAlwaysShown,
+          child: Theme(
+            key: childGlobalKey,
+            data: theme,
+            child: child,
+          ),
+        ),
+      );
+      if (widget.ignoreDevicePadding) {
+        result = MediaQuery(
+          data: MediaQuery.of(context).copyWith(padding: EdgeInsets.zero),
+          child: result,
+        );
+      }
+
+    } else {
+
+      result = buildScrollbar(
+        context: context,
+        wantsAlwaysShown: wantsAlwaysShown,
+        supportsAlwaysShown: supportsAlwaysShown,
+        child: child,
+      );
+
+    }
+
+    return NotificationListener(
+      onNotification: (notification) => true,
+      child: result,
+    );
+
+  }
+
+  Widget buildScrollbar({
+    Key? key,
+    required BuildContext context,
+    required bool wantsAlwaysShown,
+    required bool supportsAlwaysShown,
+    required Widget child,
+  }) {
+    return Scrollbar(
+      key: key,
       // controller: supportsAlwaysShown ? widget.controller : null
       controller: widget.controller==null ? null : alwaysAttachedScrollController,
       isAlwaysShown: wantsAlwaysShown && supportsAlwaysShown,
@@ -117,17 +184,6 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
       showTrackOnHover: widget.showTrackOnHover,
       child: child,
     );
-    if (widget.ignoreDevicePadding) {
-      result = MediaQuery(
-        data: MediaQuery.of(context).copyWith(padding: EdgeInsets.zero),
-        child: result,
-      );
-    }
-    return NotificationListener(
-      onNotification: (notification) => true,
-      child: result,
-    );
-
   }
 
 }
