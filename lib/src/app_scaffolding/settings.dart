@@ -11,7 +11,6 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/app_update.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:provider/provider.dart';
 
 bool alreadyInitedHive = false;
 Future<void> initHive([String? subdir]) async{
@@ -44,7 +43,7 @@ Future<void> initHive([String? subdir]) async{
   }
 }
 
-abstract class AppParametersFromZero extends ChangeNotifier {
+class ThemeParametersFromZero extends ChangeNotifier {
 
   ThemeData get lightTheme => themes[selectedTheme]==null
       || themes[selectedTheme]!.brightness!=Brightness.light
@@ -56,8 +55,8 @@ abstract class AppParametersFromZero extends ChangeNotifier {
       ThemeMode.system : themes[selectedTheme]!.brightness==Brightness.light
       ? ThemeMode.light : ThemeMode.dark;
 
-  ThemeData get defaultLightTheme;
-  ThemeData get defaultDarkTheme;
+  ThemeData get defaultLightTheme => ThemeData();
+  ThemeData get defaultDarkTheme => ThemeData.dark();
 
   /// override for custom choices
   List<Widget> get themeIcons => [Icon(MaterialCommunityIcons.theme_light_dark), Icon(Icons.wb_sunny), Icon(MaterialCommunityIcons.weather_night),];
@@ -174,7 +173,7 @@ class _FromZeroLocalizationsDelegate
 
 class ThemeSwitcher extends StatelessWidget {
 
-  final AppParametersFromZero themeParameters;
+  final ThemeParametersFromZero themeParameters;
 
   ThemeSwitcher(this.themeParameters);
 
@@ -205,7 +204,7 @@ class ThemeSwitcher extends StatelessWidget {
 
 class LocaleSwitcher extends StatelessWidget {
 
-  final AppParametersFromZero themeParameters;
+  final ThemeParametersFromZero themeParameters;
 
   LocaleSwitcher(this.themeParameters);
 

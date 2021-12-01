@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/animations/heroes_from_zero.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
-import 'package:provider/provider.dart';
+
 
 import '../../change_notifiers/theme_parameters.dart';
 import '../home/page_home.dart';

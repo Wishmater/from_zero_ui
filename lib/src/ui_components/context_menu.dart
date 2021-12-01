@@ -44,36 +44,39 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
   final GlobalKey anchorKey = GlobalKey();
 
   void showContextMenu(BuildContext context) {
-    if (!widget.enabled) {
-      return;
+    var actions = widget.actions;
+    if (widget.contextMenuWidget!=null) {
+      actions = widget.actions!.where((e) => e.getStateForMaxWidth(0).shownOnContextMenu).toList();
     }
-    Offset? mousePosition = widget.useCursorLocation ? tapDownDetails?.globalPosition : null;
-    showPopupFromZero( // TODO 3 find a way to show a non-blocking popup (an overlay)
-      context: context,
-      anchorKey: mousePosition==null ? anchorKey : null,
-      referencePosition: mousePosition,
-      referenceSize: mousePosition==null ? null : Size(1, 1),
-      width: widget.contextMenuWidth,
-      popupAlignment: widget.popupAlignment,
-      anchorAlignment: widget.anchorAlignment,
-      barrierColor: widget.barrierColor,
-      builder: (context) {
-        return widget.contextMenuWidget ?? ListView.builder(
-          shrinkWrap: true,
-          itemCount: widget.actions!.length,
-          padding: EdgeInsets.symmetric(vertical: 6),
-          itemBuilder: (context, index) {
-            final action = widget.actions![index];
-            return action.copyWith(
-              onTap: (context) {
-                action.onTap?.call(context);
-                Navigator.of(context).pop(action);
-              },
-            ).buildOverflow(context);
-          },
-        );
-      },
-    );
+    if (widget.enabled && (widget.contextMenuWidget!=null || actions!.isNotEmpty)) {
+      Offset? mousePosition = widget.useCursorLocation ? tapDownDetails?.globalPosition : null;
+      showPopupFromZero<dynamic>( // TODO 3 find a way to show a non-blocking popup (an overlay)
+        context: context,
+        anchorKey: mousePosition==null ? anchorKey : null,
+        referencePosition: mousePosition,
+        referenceSize: mousePosition==null ? null : Size(1, 1),
+        width: widget.contextMenuWidth,
+        popupAlignment: widget.popupAlignment,
+        anchorAlignment: widget.anchorAlignment,
+        barrierColor: widget.barrierColor,
+        builder: (context) {
+          return widget.contextMenuWidget ?? ListView.builder(
+            shrinkWrap: true,
+            itemCount: actions!.length,
+            padding: EdgeInsets.symmetric(vertical: 6),
+            itemBuilder: (context, index) {
+              final action = actions![index];
+              return action.copyWith(
+                onTap: (context) {
+                  Navigator.of(context).pop();
+                  action.onTap?.call(context);
+                },
+              ).buildOverflow(context);
+            },
+          );
+        },
+      );
+    }
   }
 
   TapDownDetails? tapDownDetails;

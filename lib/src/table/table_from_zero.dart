@@ -29,7 +29,7 @@ typedef OnCellTapCallback = ValueChanged<RowModel>? Function(int index,);
 typedef OnCellHoverCallback = OnRowHoverCallback? Function(int index,);
 
 
-class TableFromZero extends StatefulWidget {
+class TableFromZero<T> extends StatefulWidget {
 
   @deprecated static const int column = 0;
   static const int listViewBuilder = 1;
@@ -40,7 +40,7 @@ class TableFromZero extends StatefulWidget {
   static const double _checkmarkWidth = 48;
 
   final bool enabled;
-  final List<RowModel> rows;
+  final List<RowModel<T>> rows;
   final List<ColModel>? columns;
   final bool rowTakesPriorityOverColumn;
   final int layoutWidgetType;
@@ -51,16 +51,16 @@ class TableFromZero extends StatefulWidget {
   /// Only used if layoutWidgetType==listViewBuilder
   final double verticalPadding;
   final double horizontalPadding;
-  final bool? Function(bool? value, List<RowModel> filtered)? onAllSelected;
+  final bool? Function(bool? value, List<RowModel<T>> filtered)? onAllSelected;
   final int? initialSortedColumnIndex;
   final bool showFirstHorizontalDivider;
   @deprecated final Widget? horizontalDivider;
   @deprecated final Widget? verticalDivider;
   final int autoSizeTextMaxLines;
   final double? headerHeight;
-  final Widget Function(BuildContext context, RowModel row, ColModel? col, int j)? cellBuilder;
-  final Widget Function(BuildContext context, RowModel row)? rowBuilder;
-  final Widget Function(BuildContext context, RowModel row)? headerRowBuilder;
+  final Widget Function(BuildContext context, RowModel<T> row, ColModel? col, int j)? cellBuilder;
+  final Widget Function(BuildContext context, RowModel<T> row)? rowBuilder;
+  final Widget Function(BuildContext context, RowModel<String> row)? headerRowBuilder;
   final bool applyStickyHeaders;
   final Widget? headerAddon;
   final bool applyRowAlternativeColors;
@@ -75,7 +75,7 @@ class TableFromZero extends StatefulWidget {
   final TextStyle? defaultTextStyle;
   final ScrollController? mainScrollController;
   final double stickyOffset;
-  final List<RowModel> Function(List<RowModel>)? onFilter;
+  final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   final TableController? tableController;
   final Alignment? alignmentWhenOverMaxWidth;
   final FutureOr<String>? exportPath;
@@ -87,9 +87,10 @@ class TableFromZero extends StatefulWidget {
   final bool hideIfNoRows;
   final Widget? errorWidget;
   final double? rowHeightForScrollingCalculation;
+  final List<RowAction<T>> rowActions;
 
   TableFromZero({
-    required List<RowModel> rows,
+    required List<RowModel<T>> rows,
     this.enabled = true,
     this.columns,
     this.layoutWidgetType = listViewBuilder,
@@ -133,6 +134,7 @@ class TableFromZero extends StatefulWidget {
     this.useSmartRowAlternativeColors = true,
     this.useFixedHeightForListRows = true,
     this.hideIfNoRows = false,
+    this.rowActions = const [],
     bool? applyStickyHeadersToRowAddon,
     bool? applyRowBackgroundToRowAddon,
     Key? key,
@@ -142,7 +144,7 @@ class TableFromZero extends StatefulWidget {
         super(key: key,);
 
   @override
-  TableFromZeroState createState() => TableFromZeroState();
+  TableFromZeroState<T> createState() => TableFromZeroState<T>();
 
 }
 
@@ -157,10 +159,10 @@ class TrackingScrollControllerFixedPosition extends TrackingScrollController {
 
 }
 
-class TableFromZeroState extends State<TableFromZero> {
+class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
-  late List<RowModel> sorted;
-  late List<RowModel> filtered;
+  late List<RowModel<T>> sorted;
+  late List<RowModel<T>> filtered;
 
   late Map<int, List<ConditionFilter>> _conditionFilters;
   Map<int, List<ConditionFilter>> get conditionFilters => widget.tableController?.conditionFilters ?? _conditionFilters;
@@ -205,7 +207,7 @@ class TableFromZeroState extends State<TableFromZero> {
   }
 
   late TrackingScrollControllerFixedPosition sharedController;
-  RowModel? headerRowModel;
+  RowModel<String>? headerRowModel;
 
   TableFromZeroState();
 
@@ -251,7 +253,7 @@ class TableFromZeroState extends State<TableFromZero> {
   }
 
   @override
-  void didUpdateWidget(TableFromZero oldWidget) {
+  void didUpdateWidget(TableFromZero<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     // init();  // This causes major issues with performance and some bugs as well,
                 // disabling it might make it necessary to manually trigger an initState when necessary
@@ -260,12 +262,10 @@ class TableFromZeroState extends State<TableFromZero> {
   void init({bool notifyListeners=true}) {
     sorted = List.from(widget.rows);
     if (widget.columns!=null) {
-      int actionsIndex = widget.rows.indexWhere((element) => element.actions!=null);
       headerRowModel = SimpleRowModel(
         id: "header_row",
         values: List.generate(widget.columns!.length, (index) => widget.columns![index].name),
         onCheckBoxSelected:  widget.onAllSelected!=null||widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null,
-        actions: actionsIndex!=-1 ? List.generate(widget.rows[actionsIndex].actions!.length, (index) => SizedBox.shrink()) : null,
         selected: true,
         height: widget.headerHeight ?? 38,
         onCellTap: (j) {
@@ -362,7 +362,7 @@ class TableFromZeroState extends State<TableFromZero> {
   @override
   Widget build(BuildContext context) {
 
-    if (widget.hideIfNoRows && filtered.where((e) => !(e is ErrorRow)).isEmpty) {
+    if (widget.hideIfNoRows && filtered.isEmpty) {
       if (widget.layoutWidgetType==TableFromZero.sliverListViewBuilder || widget.layoutWidgetType==TableFromZero.sliverAnimatedListViewBuilder) {
         return SliverToBoxAdapter(child: SizedBox.shrink(),);
       } else {
@@ -370,7 +370,7 @@ class TableFromZeroState extends State<TableFromZero> {
       }
     }
 
-    int childCount = filtered.length;
+    int childCount = filtered.length.coerceIn(1);
     Widget result;
 
     // Hack to be able to apply widget.stickyOffset
@@ -394,7 +394,7 @@ class TableFromZeroState extends State<TableFromZero> {
               : null,
         );
       } else if (widget.layoutWidgetType==TableFromZero.animatedListViewBuilder){
-        result = ImplicitlyAnimatedList<RowModel>(
+        result = ImplicitlyAnimatedList<RowModel<T>>(
           items: filtered,
           areItemsTheSame: (a, b) => a==b,
           shrinkWrap: true,
@@ -513,7 +513,7 @@ class TableFromZeroState extends State<TableFromZero> {
         }
       } else if (widget.layoutWidgetType==TableFromZero.sliverAnimatedListViewBuilder
           || widget.layoutWidgetType==TableFromZero.animatedListViewBuilder){
-        result = SliverImplicitlyAnimatedList<RowModel>(
+        result = SliverImplicitlyAnimatedList<RowModel<T>>(
           items: filtered,
           areItemsTheSame: (a, b) => a==b,
           itemBuilder: (context, animation, item, index) {
@@ -639,16 +639,16 @@ class TableFromZeroState extends State<TableFromZero> {
     return addon;
   }
 
-  Widget _getRow(BuildContext context, RowModel row){
+  Widget _getRow(BuildContext context, RowModel? row){
     if (row==headerRowModel){
-      return (widget.headerRowBuilder??_defaultGetRow).call(context, row);
+      return (widget.headerRowBuilder??_defaultGetRow).call(context, headerRowModel!);
     } else{
-      return (widget.rowBuilder??_defaultGetRow).call(context, row);
+      return (widget.rowBuilder??_defaultGetRow).call(context, row as RowModel<T>);
     }
   }
-  Widget _defaultGetRow(BuildContext context, RowModel row){
+  Widget _defaultGetRow(BuildContext context, RowModel? row){
 
-    if (row is ErrorRow){
+    if (row==null){
       return InitiallyAnimatedWidget(
         duration: Duration(milliseconds: 500,),
         builder: (animation, child) {
@@ -674,16 +674,15 @@ class TableFromZeroState extends State<TableFromZero> {
     for (var j = 0; j < row.values.length; ++j) {
       maxFlex += _getFlex(j);
     }
-    int cols = ((row.values.length) + (row.onCheckBoxSelected==null ? 0 : 1)) * (widget.verticalDivider==null ? 1 : 2) + (widget.verticalDivider==null ? 0 : 1) + (row.actions==null ? 0 : 1);
+    int cols = ((row.values.length) + (row.onCheckBoxSelected==null ? 0 : 1)) * (widget.verticalDivider==null ? 1 : 2) + (widget.verticalDivider==null ? 0 : 1);
+    final rowActions = widget.rowActions.map((e) => e.copyWith(onTap: (context) {
+      e.onRowTap.call(context, row as RowModel<T>);
+    },)).toList();
 
     final builder = (BuildContext context, BoxConstraints? constraints) {
       final decorationBuilder = (BuildContext context, int j) {
         Widget? result;
         bool addSizing = true;
-        if (row.actions!=null && j==cols-1){
-          addSizing = false;
-          result = SizedBox(width: TableFromZero._checkmarkWidth*row.actions!.length, height: double.infinity,);
-        }
         if (result==null && widget.verticalDivider!=null){
           if (j%2==0) return Padding(
             padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
@@ -739,15 +738,6 @@ class TableFromZeroState extends State<TableFromZero> {
         return result;
       };
       final cellBuilder = (BuildContext context, int j) {
-        if (row.actions!=null && j==cols-1){
-          return SizedBox(
-            width: TableFromZero._checkmarkWidth*row.actions!.length,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: row.actions!,
-            ),
-          );
-        }
         if (widget.verticalDivider!=null){
           if (j%2==0) return Padding(
             padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
@@ -791,25 +781,21 @@ class TableFromZeroState extends State<TableFromZero> {
           padding: row==headerRowModel ? null : widget.itemPadding,
           child: Container(
               width: double.infinity,
-              child: (row==headerRowModel ? defaultHeaderCellBuilder : widget.cellBuilder??defaultCellBuilder)
-                  .call(context, row, widget.columns==null?null:widget.columns![j], j)
+              child: row==headerRowModel
+                  ? defaultHeaderCellBuilder(context, headerRowModel!, widget.columns==null?null:widget.columns![j], j)
+                  : (widget.cellBuilder??defaultCellBuilder).call(context, row as RowModel<T>, widget.columns==null?null:widget.columns![j], j),
           ),
         );
         if (row.onCellTap!=null || row.onCellDoubleTap!=null || row.onCellLongPress!=null || row.onCellHover!=null){
-          result = InkWell(
-            onTap: widget.enabled&&row.onCellTap!=null&&row.onCellTap!(j)!=null ? () => row.onCellTap!(j)!.call(row) : null,
-            onDoubleTap: widget.enabled&&row.onCellDoubleTap!=null&&row.onCellDoubleTap!(j)!=null ? () => row.onCellDoubleTap!(j)!.call(row) : null,
-            onLongPress: widget.enabled&&row.onCellLongPress!=null&&row.onCellLongPress!(j)!=null ? () => row.onCellLongPress!(j)!.call(row) : null,
-            onHover: widget.enabled&&row.onCellHover!=null&&row.onCellHover!(j)!=null ? (value) => row.onCellHover!(j)!.call(row, value) : null,
-            child: result,
-          );
-        }
-        final popupActions = row.actions?.whereType<ActionFromZero>().toList() ?? [];
-        // print (popupActions);
-        if (popupActions.isNotEmpty) {
-          result = ContextMenuFromZero(
-            actions: popupActions,
-            child: result,
+          result = Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: widget.enabled&&row.onCellTap!=null&&row.onCellTap!(j)!=null ? () => row.onCellTap!(j)!.call(row) : null,
+              onDoubleTap: widget.enabled&&row.onCellDoubleTap!=null&&row.onCellDoubleTap!(j)!=null ? () => row.onCellDoubleTap!(j)!.call(row) : null,
+              onLongPress: widget.enabled&&row.onCellLongPress!=null&&row.onCellLongPress!(j)!=null ? () => row.onCellLongPress!(j)!.call(row) : null,
+              onHover: widget.enabled&&row.onCellHover!=null&&row.onCellHover!(j)!=null ? (value) => row.onCellHover!(j)!.call(row, value) : null,
+              child: result,
+            ),
           );
         }
         if (widget.columns!=null && widget.columns![j].width!=null){
@@ -855,9 +841,13 @@ class TableFromZeroState extends State<TableFromZero> {
             child: result,
           );
         } else {
-          result = NotificationListener(
-            onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
-            child: result,
+          result = ScrollOpacityGradient(
+            scrollController: sharedController,
+            direction: OpacityGradient.horizontal,
+            child: NotificationListener(
+              onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
+              child: result,
+            ),
           );
         }
       } else {
@@ -886,6 +876,18 @@ class TableFromZeroState extends State<TableFromZero> {
           context: context,
           row: row,
           child: result,
+        );
+      }
+      if (rowActions.isNotEmpty) {
+        result = AppbarFromZero(
+          title: result,
+          actions: rowActions,
+          toolbarHeight: row.height,
+          addContextMenu: row!=headerRowModel,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          paddingRight: 0,
+          titleSpacing: 0,
         );
       }
       if (!widget.applyRowBackgroundToRowAddon) {
@@ -928,7 +930,8 @@ class TableFromZeroState extends State<TableFromZero> {
             controller: widget.mainScrollController,
             header: result,
             content: addon,
-            stickOffset: filtered.indexOf(row)==0 ? 0 : widget.stickyOffset+headerRowModel!.height,
+            stickOffset: row is! RowModel<T> ? 0
+                : filtered.indexOf(row)==0 ? 0 : widget.stickyOffset+headerRowModel!.height,
           );
         } else{
           result = Column(
@@ -968,13 +971,7 @@ class TableFromZeroState extends State<TableFromZero> {
         );
       }
       if (constraints!=null) {
-        if (widget.minWidth!=null && constraints.maxWidth<widget.minWidth!){
-          result = ScrollOpacityGradient(
-            scrollController: sharedController,
-            direction: OpacityGradient.horizontal,
-            child: result,
-          );
-        } else if(widget.maxWidth!=null && constraints.maxWidth>widget.maxWidth!) {
+        if(widget.maxWidth!=null && constraints.maxWidth>widget.maxWidth!) {
           result = Center(child: SizedBox(width: widget.maxWidth!, child: result,),);
         }
       }
@@ -1015,7 +1012,7 @@ class TableFromZeroState extends State<TableFromZero> {
     );
   }
 
-  Widget defaultHeaderCellBuilder(BuildContext context, RowModel row, ColModel? col, int j) {
+  Widget defaultHeaderCellBuilder(BuildContext context, RowModel<String> row, ColModel? col, int j) {
     // String message = row.values[j]!=null ? row.values[j].toString() : "";
     bool export = context.findAncestorWidgetOfExactType<Export>()!=null;
     while (filterGlobalKeys.length<=j) {
@@ -1085,302 +1082,299 @@ class TableFromZeroState extends State<TableFromZero> {
                 child: OverflowBox(
                   maxHeight: row.height, maxWidth: 48,
                   alignment: Alignment.center,
-                  child: Material(
-                    type: MaterialType.transparency,
-                    child: IconButton(
-                      key: filterGlobalKeys[j],
-                      icon: Icon(filtersApplied[j] ? MaterialCommunityIcons.filter : MaterialCommunityIcons.filter_outline,
-                        color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
-                      ),
-                      splashRadius: 20,
-                      tooltip: FromZeroLocalizations.of(context).translate('filters'),
-                      onPressed: () async {
-                        ScrollController filtersScrollController = ScrollController();
-                        TableController filterTableController = TableController();
-                        bool modified = false;
-                        List<ConditionFilter> possibleConditionFilters = [];
-                        // if (widget.columns![j].neutralConditionFiltersEnabled ?? true) {
-                        //   possibleConditionFilters.addAll([
-                        //     FilterIsEmpty(),
-                        //   ]);
-                        // }
-                        // TODO, when selecting available filters, automatically enable only possible filters (if null in the column)
-                        if (widget.columns![j].textConditionFiltersEnabled ?? true) {
-                          possibleConditionFilters.addAll([
-                            // FilterTextExactly(),
-                            FilterTextContains(),
-                            FilterTextStartsWith(),
-                            FilterTextEndsWith(),
-                          ]);
-                        }
-                        if (widget.columns![j].numberConditionFiltersEnabled ?? true) {
-                          possibleConditionFilters.addAll([
-                            // FilterNumberEqualTo(),
-                            FilterNumberGreaterThan(),
-                            FilterNumberLessThan(),
-                          ]);
-                        }
-                        if (widget.columns![j].dateConditionFiltersEnabled ?? true) {
-                          possibleConditionFilters.addAll([
-                            // FilterDateExactDay(),
-                            FilterDateAfter(),
-                            FilterDateBefore(),
-                          ]);
-                        }
-                        await showPopupFromZero(
-                          context: context,
-                          anchorKey: filterGlobalKeys[j],
-                          builder: (context) {
-                            return ScrollbarFromZero(
-                              controller: filtersScrollController,
-                              child: Stack (
-                                children: [
-                                  StatefulBuilder(
-                                    builder: (context, filterPopupSetState) {
-                                      return CustomScrollView(
-                                        controller: filtersScrollController,
-                                        shrinkWrap: true,
-                                        slivers: [
-                                          SliverToBoxAdapter(child: Padding(
-                                            padding: const EdgeInsets.only(top: 4.0),
-                                            child: Center(
-                                              child: Text(FromZeroLocalizations.of(context).translate('filters'),
-                                                style: Theme.of(context).textTheme.subtitle1,
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ),
-                                          ),),
-                                          SliverToBoxAdapter(child: SizedBox(height: 16,)),
-                                          if (possibleConditionFilters.isNotEmpty)
-                                            SliverToBoxAdapter(child: Padding(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                                              child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                children: [
-                                                  Padding(
-                                                    padding: const EdgeInsets.only(left: 4,),
-                                                    child: Text(FromZeroLocalizations.of(context).translate('condition_filters'),
-                                                      style: Theme.of(context).textTheme.subtitle1,
-                                                    ),
-                                                  ),
-                                                  PopupMenuButton<ConditionFilter>(
-                                                    tooltip: FromZeroLocalizations.of(context).translate('add_condition_filter'),
-                                                    offset: Offset(128, 32),
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
-                                                      child: Row(
-                                                        mainAxisSize: MainAxisSize.min,
-                                                        children: [
-                                                          Icon(Icons.add, color: Colors.blue,),
-                                                          SizedBox(width: 6,),
-                                                          Text(FromZeroLocalizations.of(context).translate('add'),
-                                                            style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.blue,),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    itemBuilder: (context) {
-                                                      return possibleConditionFilters.map((e) {
-                                                        return PopupMenuItem(
-                                                          value: e,
-                                                          child: Text(e.getUiName(context)+'...'),
-                                                        );
-                                                      }).toList();
-                                                    },
-                                                    onSelected: (value) {
-                                                      filterPopupSetState((){
-                                                        modified = true;
-                                                        if (conditionFilters[j]==null) {
-                                                          conditionFilters[j] = [];
-                                                        }
-                                                        conditionFilters[j]!.add(value);
-                                                      });
-                                                      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-                                                        value.focusNode.requestFocus();
-                                                      });
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ),),
-                                          if ((conditionFilters[j] ?? []).isEmpty)
-                                            SliverToBoxAdapter(child: Padding(
-                                              padding: EdgeInsets.only(left: 24, bottom: 8,),
-                                              child: Text (FromZeroLocalizations.of(context).translate('none'),
-                                                style: Theme.of(context).textTheme.caption,
-                                              ),
-                                            ),),
-                                          SliverList(
-                                            delegate: SliverChildListDelegate.fixed(
-                                              (conditionFilters[j] ?? []).map((e) {
-                                                return Padding(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                                  child: e.buildFormWidget(
-                                                    context: context,
-                                                    onValueChanged: () {
-                                                      modified = true;
-                                                      // filterPopupSetState((){});
-                                                    },
-                                                    onDelete: () {
-                                                      modified = true;
-                                                      filterPopupSetState((){
-                                                        conditionFilters[j]!.remove(e);
-                                                      });
-                                                    },
-                                                  ),
-                                                );
-                                              }).toList(),
+                  child: IconButton(
+                    key: filterGlobalKeys[j],
+                    icon: Icon(filtersApplied[j] ? MaterialCommunityIcons.filter : MaterialCommunityIcons.filter_outline,
+                      color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                    ),
+                    splashRadius: 20,
+                    tooltip: FromZeroLocalizations.of(context).translate('filters'),
+                    onPressed: () async {
+                      ScrollController filtersScrollController = ScrollController();
+                      TableController filterTableController = TableController();
+                      bool modified = false;
+                      List<ConditionFilter> possibleConditionFilters = [];
+                      // if (widget.columns![j].neutralConditionFiltersEnabled ?? true) {
+                      //   possibleConditionFilters.addAll([
+                      //     FilterIsEmpty(),
+                      //   ]);
+                      // }
+                      // TODO, when selecting available filters, automatically enable only possible filters (if null in the column)
+                      if (widget.columns![j].textConditionFiltersEnabled ?? true) {
+                        possibleConditionFilters.addAll([
+                          // FilterTextExactly(),
+                          FilterTextContains(),
+                          FilterTextStartsWith(),
+                          FilterTextEndsWith(),
+                        ]);
+                      }
+                      if (widget.columns![j].numberConditionFiltersEnabled ?? true) {
+                        possibleConditionFilters.addAll([
+                          // FilterNumberEqualTo(),
+                          FilterNumberGreaterThan(),
+                          FilterNumberLessThan(),
+                        ]);
+                      }
+                      if (widget.columns![j].dateConditionFiltersEnabled ?? true) {
+                        possibleConditionFilters.addAll([
+                          // FilterDateExactDay(),
+                          FilterDateAfter(),
+                          FilterDateBefore(),
+                        ]);
+                      }
+                      await showPopupFromZero(
+                        context: context,
+                        anchorKey: filterGlobalKeys[j],
+                        builder: (context) {
+                          return ScrollbarFromZero(
+                            controller: filtersScrollController,
+                            child: Stack (
+                              children: [
+                                StatefulBuilder(
+                                  builder: (context, filterPopupSetState) {
+                                    return CustomScrollView(
+                                      controller: filtersScrollController,
+                                      shrinkWrap: true,
+                                      slivers: [
+                                        SliverToBoxAdapter(child: Padding(
+                                          padding: const EdgeInsets.only(top: 4.0),
+                                          child: Center(
+                                            child: Text(FromZeroLocalizations.of(context).translate('filters'),
+                                              style: Theme.of(context).textTheme.subtitle1,
+                                              textAlign: TextAlign.center,
                                             ),
                                           ),
-                                          SliverToBoxAdapter(child: SizedBox(height: (conditionFilters[j] ?? []).isEmpty ? 6 : 12,)),
-                                          SliverToBoxAdapter(child: Divider(height: 32,)),
-                                          TableFromZero(
-                                            tableController: filterTableController,
-                                            layoutWidgetType: TableFromZero.sliverListViewBuilder,
-                                            columns: [
-                                              SimpleColModel(
-                                                name: '',
-                                                sortEnabled: false,
-                                              ),
-                                            ],
-                                            rows: availableFilters[j].map((e) {
-                                              return SimpleRowModel(
-                                                id: e,
-                                                values: [e.toString()],
-                                                selected: valueFilters[j][e] ?? false,
-                                                onCheckBoxSelected: (row, focused) {
-                                                  modified = true;
-                                                  valueFilters[j][row.id] = focused!;
-                                                  (row as SimpleRowModel).selected = focused;
-                                                  return true;
-                                                },
-                                              );
-                                            }).toList(),
-                                            errorWidget: SizedBox.shrink(),
-                                            headerRowBuilder: (context, row) {
-                                              return Container(
-                                                padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
-                                                color: Theme.of(context).cardColor,
-                                                child: Column(
-                                                  mainAxisSize: MainAxisSize.min,
-                                                  children: [
-                                                    SizedBox(
-                                                      height: 32,
-                                                      child: TextFormField(
-                                                        onChanged: (v) {
-                                                          filterTableController.conditionFilters![0] = [];
-                                                          filterTableController.conditionFilters![0]!.add(
-                                                            FilterTextContains(query: v,),
-                                                          );
-                                                          filterPopupSetState((){
-                                                            filterTableController.filter();
-                                                          });
-                                                        },
-                                                        decoration: InputDecoration(
-                                                          labelText: FromZeroLocalizations.of(context).translate('search...'),
-                                                          contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
-                                                          labelStyle: TextStyle(height: 0.2),
-                                                          suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    SizedBox(height: 6,),
-                                                    Row(
+                                        ),),
+                                        SliverToBoxAdapter(child: SizedBox(height: 16,)),
+                                        if (possibleConditionFilters.isNotEmpty)
+                                          SliverToBoxAdapter(child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                                            child: Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Padding(
+                                                  padding: const EdgeInsets.only(left: 4,),
+                                                  child: Text(FromZeroLocalizations.of(context).translate('condition_filters'),
+                                                    style: Theme.of(context).textTheme.subtitle1,
+                                                  ),
+                                                ),
+                                                PopupMenuButton<ConditionFilter>(
+                                                  tooltip: FromZeroLocalizations.of(context).translate('add_condition_filter'),
+                                                  offset: Offset(128, 32),
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
+                                                    child: Row(
+                                                      mainAxisSize: MainAxisSize.min,
                                                       children: [
-                                                        Expanded(
-                                                          child: TextButton(
-                                                            child: Text(FromZeroLocalizations.of(context).translate('select_all')),
-                                                            onPressed: () {
-                                                              modified = true;
-                                                              filterPopupSetState(() {
-                                                                filterTableController.filtered!.forEach((row) {
-                                                                  valueFilters[j][row.id] = true;
-                                                                  (row as SimpleRowModel).selected = true;
-                                                                });
-                                                              });
-                                                            },
-                                                          ),
-                                                        ),
-                                                        Expanded(
-                                                          child: TextButton(
-                                                            child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
-                                                            onPressed: () {
-                                                              modified = true;
-                                                              filterPopupSetState(() {
-                                                                filterTableController.filtered!.forEach((row) {
-                                                                  valueFilters[j][row.id] = false;
-                                                                  (row as SimpleRowModel).selected = false;
-                                                                });
-                                                              });
-                                                            },
-                                                          ),
+                                                        Icon(Icons.add, color: Colors.blue,),
+                                                        SizedBox(width: 6,),
+                                                        Text(FromZeroLocalizations.of(context).translate('add'),
+                                                          style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.blue,),
                                                         ),
                                                       ],
                                                     ),
-                                                  ],
+                                                  ),
+                                                  itemBuilder: (context) {
+                                                    return possibleConditionFilters.map((e) {
+                                                      return PopupMenuItem(
+                                                        value: e,
+                                                        child: Text(e.getUiName(context)+'...'),
+                                                      );
+                                                    }).toList();
+                                                  },
+                                                  onSelected: (value) {
+                                                    filterPopupSetState((){
+                                                      modified = true;
+                                                      if (conditionFilters[j]==null) {
+                                                        conditionFilters[j] = [];
+                                                      }
+                                                      conditionFilters[j]!.add(value);
+                                                    });
+                                                    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                                                      value.focusNode.requestFocus();
+                                                    });
+                                                  },
                                                 ),
-                                              );
-                                            },
-                                          ),
-                                          SliverToBoxAdapter(child: SizedBox(height: 16+42,),),
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                  Positioned(
-                                    bottom: 0, left: 0, right: 0,
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          height: 16,
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              begin: Alignment.topCenter,
-                                              end: Alignment.bottomCenter,
-                                              colors: [
-                                                Theme.of(context).cardColor.withOpacity(0),
-                                                Theme.of(context).cardColor,
                                               ],
                                             ),
-                                          ),
-                                        ),
-                                        Container(
-                                          alignment: Alignment.centerRight,
-                                          padding: EdgeInsets.only(bottom: 8, right: 16,),
-                                          color: Theme.of(context).cardColor,
-                                          child: FlatButton(
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
-                                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                              ),
+                                          ),),
+                                        if ((conditionFilters[j] ?? []).isEmpty)
+                                          SliverToBoxAdapter(child: Padding(
+                                            padding: EdgeInsets.only(left: 24, bottom: 8,),
+                                            child: Text (FromZeroLocalizations.of(context).translate('none'),
+                                              style: Theme.of(context).textTheme.caption,
                                             ),
-                                            textColor: Colors.blue,
-                                            onPressed: () {
-                                              Navigator.of(context).pop(true);
-                                            },
+                                          ),),
+                                        SliverList(
+                                          delegate: SliverChildListDelegate.fixed(
+                                            (conditionFilters[j] ?? []).map((e) {
+                                              return Padding(
+                                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                                child: e.buildFormWidget(
+                                                  context: context,
+                                                  onValueChanged: () {
+                                                    modified = true;
+                                                    // filterPopupSetState((){});
+                                                  },
+                                                  onDelete: () {
+                                                    modified = true;
+                                                    filterPopupSetState((){
+                                                      conditionFilters[j]!.remove(e);
+                                                    });
+                                                  },
+                                                ),
+                                              );
+                                            }).toList(),
                                           ),
                                         ),
+                                        SliverToBoxAdapter(child: SizedBox(height: (conditionFilters[j] ?? []).isEmpty ? 6 : 12,)),
+                                        SliverToBoxAdapter(child: Divider(height: 32,)),
+                                        TableFromZero(
+                                          tableController: filterTableController,
+                                          layoutWidgetType: TableFromZero.sliverListViewBuilder,
+                                          columns: [
+                                            SimpleColModel(
+                                              name: '',
+                                              sortEnabled: false,
+                                            ),
+                                          ],
+                                          rows: availableFilters[j].map((e) {
+                                            return SimpleRowModel<T>(
+                                              id: e,
+                                              values: [e.toString()],
+                                              selected: valueFilters[j][e] ?? false,
+                                              onCheckBoxSelected: (row, focused) {
+                                                modified = true;
+                                                valueFilters[j][row.id] = focused!;
+                                                (row as SimpleRowModel<T>).selected = focused;
+                                                return true;
+                                              },
+                                            );
+                                          }).toList(),
+                                          errorWidget: SizedBox.shrink(),
+                                          headerRowBuilder: (context, row) {
+                                            return Container(
+                                              padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
+                                              color: Theme.of(context).cardColor,
+                                              child: Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  SizedBox(
+                                                    height: 32,
+                                                    child: TextFormField(
+                                                      onChanged: (v) {
+                                                        filterTableController.conditionFilters![0] = [];
+                                                        filterTableController.conditionFilters![0]!.add(
+                                                          FilterTextContains(query: v,),
+                                                        );
+                                                        filterPopupSetState((){
+                                                          filterTableController.filter();
+                                                        });
+                                                      },
+                                                      decoration: InputDecoration(
+                                                        labelText: FromZeroLocalizations.of(context).translate('search...'),
+                                                        contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
+                                                        labelStyle: TextStyle(height: 0.2),
+                                                        suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  SizedBox(height: 6,),
+                                                  Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: TextButton(
+                                                          child: Text(FromZeroLocalizations.of(context).translate('select_all')),
+                                                          onPressed: () {
+                                                            modified = true;
+                                                            filterPopupSetState(() {
+                                                              filterTableController.filtered!.forEach((row) {
+                                                                valueFilters[j][row.id] = true;
+                                                                (row as SimpleRowModel<T>).selected = true;
+                                                              });
+                                                            });
+                                                          },
+                                                        ),
+                                                      ),
+                                                      Expanded(
+                                                        child: TextButton(
+                                                          child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
+                                                          onPressed: () {
+                                                            modified = true;
+                                                            filterPopupSetState(() {
+                                                              filterTableController.filtered!.forEach((row) {
+                                                                valueFilters[j][row.id] = false;
+                                                                (row as SimpleRowModel<T>).selected = false;
+                                                              });
+                                                            });
+                                                          },
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        SliverToBoxAdapter(child: SizedBox(height: 16+42,),),
                                       ],
-                                    ),
+                                    );
+                                  },
+                                ),
+                                Positioned(
+                                  bottom: 0, left: 0, right: 0,
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Container(
+                                        height: 16,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            begin: Alignment.topCenter,
+                                            end: Alignment.bottomCenter,
+                                            colors: [
+                                              Theme.of(context).cardColor.withOpacity(0),
+                                              Theme.of(context).cardColor,
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        alignment: Alignment.centerRight,
+                                        padding: EdgeInsets.only(bottom: 8, right: 16,),
+                                        color: Theme.of(context).cardColor,
+                                        child: FlatButton(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
+                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                            ),
+                                          ),
+                                          textColor: Colors.blue,
+                                          onPressed: () {
+                                            Navigator.of(context).pop(true);
+                                          },
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            );
-                          },
-                        );
-                        if (modified && mounted) {
-                          setState(() {
-                            _updateFiltersApplied();
-                            filter();
-                          });
-                        }
-                        // if (accepted!=true) {
-                        //   widget.onCanceled?.call();
-                        // }
-                      },
-                    ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      );
+                      if (modified && mounted) {
+                        setState(() {
+                          _updateFiltersApplied();
+                          filter();
+                        });
+                      }
+                      // if (accepted!=true) {
+                      //   widget.onCanceled?.call();
+                      // }
+                    },
                   ),
                 )
             ),
@@ -1390,7 +1384,7 @@ class TableFromZeroState extends State<TableFromZero> {
     return result;
   }
 
-  Widget defaultCellBuilder(BuildContext context, RowModel row, ColModel? col, int j) {
+  Widget defaultCellBuilder(BuildContext context, RowModel<T> row, ColModel? col, int j) {
     String message = row.values[j]!=null ? row.values[j].toString() : "";
     Widget result = AutoSizeText(
       message,
@@ -1477,7 +1471,7 @@ class TableFromZeroState extends State<TableFromZero> {
   }
   bool _shouldApplyDarkerBackground(Color? current, RowModel row, int j, bool header){
 //    if (filtered[i]!=row) return false;
-    int i = filtered.indexOf(row);
+    int i = row is! RowModel<T> ? 0 : filtered.indexOf(row);
     if (i<=0) {
       return false;
     } else if (!widget.useSmartRowAlternativeColors || i > filtered.length) {
@@ -1493,7 +1487,7 @@ class TableFromZeroState extends State<TableFromZero> {
     return widget.columns!=null && j<widget.columns!.length ? widget.columns![j].alignment??TextAlign.left : TextAlign.left;
   }
 
-  TextStyle _getStyle(BuildContext context, RowModel row, int j){
+  TextStyle _getStyle(BuildContext context, RowModel<T> row, int j){
     TextStyle? style;
     if (widget.rowTakesPriorityOverColumn){
       style = row.textStyle;
@@ -1514,7 +1508,7 @@ class TableFromZeroState extends State<TableFromZero> {
   int get disabledColumnCount => widget.columns==null ? 0 : widget.columns!.where((element) => element.flex==0).length;
   void sort({bool notifyListeners=true}) {
     if (sortedColumnIndex!=null && sortedColumnIndex!>=0)
-      mergeSort(sorted, compare: ((RowModel a, RowModel b){
+      mergeSort(sorted, compare: ((RowModel<T> a, RowModel<T> b){
         if (a.alwaysOnTop!=null || b.alwaysOnTop!=null) {
           if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
           if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1;
@@ -1545,9 +1539,6 @@ class TableFromZeroState extends State<TableFromZero> {
     if (widget.onFilter!=null) {
       filtered = widget.onFilter!(filtered);
     }
-    if (filtered.isEmpty) {
-      filtered.add(ErrorRow());
-    }
     if (notifyListeners) {
       widget.tableController?.notifyListeners();
     }
@@ -1574,7 +1565,7 @@ class TableFromZeroState extends State<TableFromZero> {
 }
 
 
-class TableController extends ChangeNotifier {
+class TableController<T> extends ChangeNotifier {
 
   Map<int, List<ConditionFilter>>? initialConditionFilters;
   Map<int, List<ConditionFilter>>? conditionFilters;
@@ -1621,7 +1612,37 @@ class TableController extends ChangeNotifier {
     _filter?.call();
   }
 
-  List<RowModel> Function()? _getFiltered;
-  List<RowModel>? get filtered => _getFiltered?.call().where((e) => !(e is ErrorRow)).toList();
+  List<RowModel<T>> Function()? _getFiltered;
+  List<RowModel<T>>? get filtered => _getFiltered?.call();
+
+}
+
+
+
+class RowAction<T> extends ActionFromZero {
+
+  final Function(BuildContext context, RowModel<T> row) onRowTap;
+
+  RowAction({
+    required this.onRowTap,
+    required String title,
+    Widget? icon,
+    bool enabled = true,
+    Map<double, ActionState>? breakpoints,
+    ActionBuilder overflowBuilder = ActionFromZero.defaultOverflowBuilder,
+    ActionBuilder iconBuilder = ActionFromZero.defaultIconBuilder,
+    ActionBuilder buttonBuilder = ActionFromZero.defaultButtonBuilder,
+  }) : super(
+    onTap: (context) {},
+    title: title,
+    icon: icon,
+    enabled: enabled,
+    breakpoints: breakpoints ?? {
+      0: ActionState.icon,
+    },
+    overflowBuilder: overflowBuilder,
+    iconBuilder: iconBuilder,
+    buttonBuilder: buttonBuilder,
+  );
 
 }

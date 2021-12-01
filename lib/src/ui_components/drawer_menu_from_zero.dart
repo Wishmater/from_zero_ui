@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:dartx/dartx.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/expansion_tile_from_zero.dart';
 import 'package:from_zero_ui/util/my_popup_menu.dart' as my_popup_menu_button;
 import 'package:flutter/rendering.dart';
-import 'package:provider/provider.dart';
+
 
 class ResponsiveDrawerMenuDivider extends ResponsiveDrawerMenuItem{
 
@@ -96,7 +97,7 @@ class ResponsiveDrawerMenuItem{
 
 }
 
-class DrawerMenuFromZero extends StatefulWidget {
+class DrawerMenuFromZero extends ConsumerStatefulWidget {
 
   static const int alwaysReplaceInsteadOfPushing = 1;
   static const int neverReplaceInsteadOfPushing = 2;
@@ -151,7 +152,7 @@ class DrawerMenuFromZero extends StatefulWidget {
 
 }
 
-class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
+class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
   Map<int, GlobalKey> _menuButtonKeys = {};
   late List<ResponsiveDrawerMenuItem> _tabs;
@@ -331,12 +332,13 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
         if (tabs[i].children!=null && (tabs[i].children?.isNotEmpty??false)){
 
           if (!_menuButtonKeys.containsKey(i)) _menuButtonKeys[i] = GlobalKey();
+          final scaffoldChangeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
           result = my_popup_menu_button.PopupMenuButton(
             enabled: false,
             child: ExpansionTileFromZero(
-              initiallyExpanded: selected==i || tabs[i].selectedChild!=null&&tabs[i].selectedChild>=0,
+              initiallyExpanded: selected==i || tabs[i].selectedChild>=0,
               expanded: widget.compact||tabs[i].forcePopup ? false
-                  : Provider.of<ScaffoldFromZeroChangeNotifier>(context).isTreeNodeExpanded[tabs[i].uniqueId] ?? tabs[i].defaultExpanded,
+                  : scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] ?? tabs[i].defaultExpanded,
               expandedAlignment: Alignment.topCenter,
               style: widget.style,
               actionPadding: EdgeInsets.only(
@@ -409,14 +411,14 @@ class _DrawerMenuFromZeroState extends State<DrawerMenuFromZero> {
                 }
               },
               onPostExpansionChanged: (value) {
-                Provider.of<ScaffoldFromZeroChangeNotifier>(context, listen: false).isTreeNodeExpanded[tabs[i].uniqueId] = value;
+                scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] = value;
               },
             ),
             key: _menuButtonKeys[i],
             tooltip: "",
             offset: Offset(widget.compact
-                ? Provider.of<ScaffoldFromZeroChangeNotifier>(context).currentScaffold.compactDrawerWidth
-                : Provider.of<ScaffoldFromZeroChangeNotifier>(context).currentScaffold.drawerWidth, -7),
+                ? scaffoldChangeNotifier.currentScaffold.compactDrawerWidth
+                : scaffoldChangeNotifier.currentScaffold.drawerWidth, -7),
             menuHorizontalPadding: 0,
 //            menuVerticalPadding: 0,
             itemBuilder: (context) => List.generate(widget.compact||tabs[i].forcePopup ? 1 : 0,

@@ -37,7 +37,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
   final Widget Function(BuildContext context, int index, int currentSize, bool portrait, double scale, String format)? childBuilder;
   final Widget Function(BuildContext context, int index, int currentSize, bool portrait, double scale, String format, ScrollController scrollController)? scrollableChildBuilder;
   final double scrollableStickyOffset;
-  final AppParametersFromZero themeParameters;
+  final ThemeParametersFromZero themeParameters;
   final FutureOr<String> path;
   final String title;
   final ThemeData exportThemeData;

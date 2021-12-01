@@ -8,9 +8,10 @@ import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
 import 'package:from_zero_ui/src/ui_components/context_menu.dart';
 import 'package:from_zero_ui/src/ui_utility/from_zero_logo.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
-import 'package:provider/provider.dart';
+
 
 import '../../change_notifiers/theme_parameters.dart';
+import '../../et_test.dart';
 
 class PageHome extends PageFromZero {
 
@@ -148,7 +149,9 @@ class _PageHomeState extends State<PageHome> {
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 0,),
       drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
       actions: [
-        ActionFromZero(title: "Test Action", onTap: (appbarContext){},)
+        ActionFromZero(title: "Test Action", onTap: (appbarContext){
+          getEtDao().maybeEdit(context);
+        },)
       ],
     );
   }

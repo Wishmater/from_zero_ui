@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 
 
-abstract class RowModel{
-  dynamic get id;
+abstract class RowModel<T> {
+  T get id;
   Key? get rowKey => null;
   List<Comparable?> get values;
   Color? get backgroundColor => null;
@@ -19,11 +19,10 @@ abstract class RowModel{
   OnCellTapCallback? get onCellLongPress => null;
   OnCellHoverCallback? get onCellHover => null;
   OnCheckBoxSelectedCallback? get onCheckBoxSelected => null;
-  List<Widget>? get actions => null;
   Widget? get rowAddon => null;
   bool? get alwaysOnTop => null;
   @override
-  bool operator == (dynamic other) => other is RowModel && !(other is ErrorRow) && this.id==other.id;
+  bool operator == (dynamic other) => other is RowModel && this.id==other.id;
   @override
   int get hashCode => id.hashCode;
 }
@@ -48,8 +47,8 @@ abstract class ColModel{
   bool? get dateConditionFiltersEnabled => null;
 }
 
-class SimpleRowModel extends RowModel{
-  dynamic id;
+class SimpleRowModel<T> extends RowModel<T> {
+  T id;
   Key? rowKey;
   List<Comparable?> values;
   Color? backgroundColor;
@@ -65,7 +64,6 @@ class SimpleRowModel extends RowModel{
   OnCellTapCallback? onCellLongPress;
   OnCellHoverCallback? onCellHover;
   OnCheckBoxSelectedCallback? onCheckBoxSelected;
-  List<Widget>? actions;
   Widget? rowAddon;
   bool? alwaysOnTop;
   SimpleRowModel({
@@ -81,7 +79,6 @@ class SimpleRowModel extends RowModel{
     this.onRowLongPress,
     this.onRowHover,
     this.onCheckBoxSelected,
-    this.actions,
     this.rowAddon,
     this.alwaysOnTop,
     this.onCellTap,
@@ -89,8 +86,8 @@ class SimpleRowModel extends RowModel{
     this.onCellLongPress,
     this.onCellHover,
   });
-  SimpleRowModel copywith({
-    dynamic id,
+  SimpleRowModel copyWith({
+    T? id,
     Key? rowKey,
     List<Comparable?>? values,
     Color? backgroundColor,
@@ -102,7 +99,6 @@ class SimpleRowModel extends RowModel{
     ValueChanged<RowModel>? onRowLongPress,
     OnRowHoverCallback? onRowHover,
     OnCheckBoxSelectedCallback? onCheckBoxSelected,
-    List<Widget>? actions,
     Widget? rowAddon,
     bool? alwaysOnTop,
     OnCellTapCallback? onCellTap,
@@ -123,7 +119,6 @@ class SimpleRowModel extends RowModel{
       onRowLongPress: onRowLongPress ?? this.onRowLongPress,
       onRowHover: onRowHover ?? this.onRowHover,
       onCheckBoxSelected: onCheckBoxSelected ?? this.onCheckBoxSelected,
-      actions: actions ?? this.actions,
       rowAddon: rowAddon ?? this.rowAddon,
       onCellTap: onCellTap ?? this.onCellTap,
       onCellDoubleTap: onCellDoubleTap ?? this.onCellDoubleTap,
@@ -209,17 +204,6 @@ class SimpleColModel extends ColModel{
       dateConditionFiltersEnabled: dateConditionFiltersEnabled ?? this.dateConditionFiltersEnabled,
     );
   }
-}
-
-class ErrorRow extends RowModel{
-  @override
-  bool operator == (dynamic other) => false;
-  @override
-  int get hashCode => -1;
-  @override
-  get id => throw UnimplementedError();
-  @override
-  List<Comparable> get values => throw UnimplementedError();
 }
 
 

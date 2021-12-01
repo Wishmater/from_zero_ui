@@ -313,7 +313,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
         slivers: [
           if (!widget.showSearchBox)
             SliverToBoxAdapter(child: SizedBox(height: 12,),),
-          TableFromZero(
+          TableFromZero<T>(
             tableController: tableController,
             layoutWidgetType: TableFromZero.sliverListViewBuilder,
             showHeaders: false,
@@ -335,14 +335,19 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                 onRowTap: (value) {
                   _select(e);
                 },
-                actions: widget.showViewActionOnDAOs && e is DAO ? [IconButton(
-                  icon: Icon(Icons.remove_red_eye),
-                  onPressed: () {
-                    e.pushViewDialog(context);
-                  },
-                )] : null
               );
             }).toList(),
+            rowActions: widget.showViewActionOnDAOs && T is DAO
+                ? [
+                    RowAction<T>(
+                      title: FromZeroLocalizations.of(context).translate('view'),
+                      icon: Icon(Icons.remove_red_eye),
+                      onRowTap: (context, row) {
+                        (row.id as DAO).pushViewDialog(context);
+                      },
+                    )
+                  ]
+                : [],
             headerAddon: widget.showSearchBox ? Container(
               color: Theme.of(context).cardColor,
               child: Column(

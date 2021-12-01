@@ -12,7 +12,7 @@ import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 
 
-typedef Widget RowActionBuilder(DAO e);
+typedef List<RowAction<T>> RowActionsBuilder<T>(BuildContext context);
 
 
 
@@ -39,7 +39,7 @@ class ListField extends Field<ComparableList<DAO>> {
   bool skipDeleteConfirmation;
   bool showTableHeaders;
   bool showDefaultSnackBars;
-  List<RowActionBuilder> extraRowActionBuilders; //TODO 3 also allow global action builders
+  RowActionsBuilder<DAO>? extraRowActionsBuilder; //TODO 3 also allow global action builders
   bool showEditDialogOnAdd;
   bool showAddButtonAtEndOfTable;
   Key? tableKey;
@@ -90,7 +90,7 @@ class ListField extends Field<ComparableList<DAO>> {
     this.updateObjectsInRealTime = false,
     bool? showDefaultSnackBars,
     bool? skipDeleteConfirmation,
-    this.extraRowActionBuilders = const [],
+    this.extraRowActionsBuilder,
     this.showAddButtonAtEndOfTable = false,
     bool? showEditDialogOnAdd,
     FieldValueGetter<String?, Field>? hintGetter,
@@ -240,7 +240,7 @@ class ListField extends Field<ComparableList<DAO>> {
     bool? allowDuplicateObjectsFromAvailablePool,
     bool? showObjectsFromAvailablePoolAsTable,
     bool? allowAddNew,
-    List<RowActionBuilder>? extraRowActionBuilders,
+    RowActionsBuilder<DAO>? extraRowActionBuilders,
     int? initialSortColumn,
     bool? tableCellsEditable,
     bool? allowMultipleSelection,
@@ -286,7 +286,7 @@ class ListField extends Field<ComparableList<DAO>> {
       availableObjectsPoolGetter: availableObjectsPoolGetter ?? this.availableObjectsPoolGetter,
       allowDuplicateObjectsFromAvailablePool: allowDuplicateObjectsFromAvailablePool ?? this.allowDuplicateObjectsFromAvailablePool,
       allowAddNew: allowAddNew ?? this.allowAddNew,
-      extraRowActionBuilders: extraRowActionBuilders ?? this.extraRowActionBuilders,
+      extraRowActionsBuilder: extraRowActionBuilders ?? this.extraRowActionsBuilder,
       skipDeleteConfirmation: skipDeleteConfirmation ?? this.skipDeleteConfirmation,
       showTableHeaders: showTableHeaders ?? this.showTableHeaders,
       initialSortColumn: initialSortColumn ?? this.initialSortColumn,
@@ -872,10 +872,10 @@ class ListField extends Field<ComparableList<DAO>> {
           color: Theme.of(context).cardColor,
           child: Container(
             color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
-            child: TableFromZero(
+            child: TableFromZero<DAO>(
               key: tableKey ?? ValueKey(objects.length),
               maxWidth: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
-              minWidth: width,
+              minWidth: 1000, // TODO 1 take into account space occupied by actions (do it in table, not here)
               initialSortedColumnIndex: initialSortColumn ?? 0,
               tableController: tableController,
               layoutWidgetType: asSliver
@@ -906,48 +906,6 @@ class ListField extends Field<ComparableList<DAO>> {
                   onRowTap: onRowTap ?? (viewOnRowTap ? (row) {
                     e.pushViewDialog(context);
                   } : null),
-                  actions: [
-                    ...extraRowActionBuilders.map((builder) => builder(e)).toList(),
-                    // if (actionViewType)
-                    //   ActionFromZero(
-                    //     icon: Icon(Icons.remove_red_eye),
-                    //     title: FromZeroLocalizations.of(context).translate('view'),
-                    //     onTap: (context) async {
-                    //       e.pushViewDialog(context);
-                    //     },
-                    //
-                    //   ),
-                    // if (actionEditType)
-                    //   ActionFromZero(
-                    //     icon: Icon(Icons.edit_outlined),
-                    //     tooltip: FromZeroLocalizations.of(context).translate('edit'),
-                    //     onPressed: () async {
-                    //       if (await e.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars)) {
-                    //         passedFirstEdit = true;
-                    //         notifyListeners();
-                    //       }
-                    //     },
-                    //   ),
-                    // if (actionDuplicateType)
-                    //   ActionFromZero(
-                    //     icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
-                    //     tooltip: FromZeroLocalizations.of(context).translate('duplicate'),
-                    //     onPressed: () {
-                    //       duplicateRows([e]);
-                    //     },
-                    //   ),
-                    // if (actionDeleteType)
-                    //   ActionFromZero(
-                    //     icon: Icon(Icons.delete_forever_outlined),
-                    //     tooltip: FromZeroLocalizations.of(context).translate('delete'),
-                    //     onPressed: () async {
-                    //       if (await maybeDelete(context, [e])) {
-                    //         passedFirstEdit = true;
-                    //         notifyListeners();
-                    //       }
-                    //     },
-                    //   ),
-                  ],
                   selected: allowMultipleSelection ? (selectedObjects.value[e]??false) : null,
                   backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
                   onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
@@ -976,6 +934,47 @@ class ListField extends Field<ComparableList<DAO>> {
                   ),
                 );
               } : null,
+              rowActions: [
+                ...(extraRowActionsBuilder?.call(context) ?? []),
+                RowAction<DAO>(
+                  icon: Icon(Icons.remove_red_eye),
+                  title: FromZeroLocalizations.of(context).translate('view'),
+                  breakpoints: actionViewBreakpoints,
+                  onRowTap: (context, row) async {
+                    row.id.pushViewDialog(context);
+                  },
+                ),
+                RowAction<DAO>(
+                  icon: Icon(Icons.edit_outlined),
+                  title: FromZeroLocalizations.of(context).translate('edit'),
+                  breakpoints: actionEditBreakpoints,
+                  onRowTap: (context, row) async {
+                    if (await row.id.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars)) {
+                      passedFirstEdit = true;
+                      notifyListeners();
+                    }
+                  },
+                ),
+                RowAction<DAO>(
+                  icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
+                  title: FromZeroLocalizations.of(context).translate('duplicate'),
+                  breakpoints: actionDuplicateBreakpoints,
+                  onRowTap: (context, row) async {
+                    duplicateRows([row.id]);
+                  },
+                ),
+                RowAction<DAO>(
+                  icon: Icon(Icons.delete_forever_outlined),
+                  title: FromZeroLocalizations.of(context).translate('delete'),
+                  breakpoints: actionDeleteBreakpoints,
+                  onRowTap: (context, row) async {
+                    if (await maybeDelete(context, [row.id])) {
+                      passedFirstEdit = true;
+                      notifyListeners();
+                    }
+                  },
+                ),
+              ],
               onFilter: (rows) {
                 filtered.value = rows.map((e) => e.id as DAO).toList();
                 return rows;
@@ -1003,7 +1002,7 @@ class ListField extends Field<ComparableList<DAO>> {
         );
       }
     );
-    if (!asSliver && addCard) { // TODO 3 implement addCard in table, and add it to each sliver, VERY HARD IPMLEMENTATION FOR LOW REWARD
+    if (!asSliver && addCard) { // TODO 3 implement addCard in table slivers, VERY HARD IPMLEMENTATION FOR LOW REWARD
       result = Card(
         clipBehavior: Clip.hardEdge,
         child: result,

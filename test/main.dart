@@ -2,21 +2,23 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
-
 import 'change_notifiers/theme_parameters.dart';
 import 'router.dart';
+
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   print(await getApplicationDocumentsDirectory());
   await initHive();
   MyFluroRouter.setupRouter();
+  fromZeroThemeParametersProvider = ChangeNotifierProvider((ref) {
+    return ThemeParameters();
+  });
   runApp(MyApp());
-
   doWhenWindowReady(() {
     const initialSize = Size(600, 450);
     appWindow.minSize = initialSize;
@@ -32,15 +34,14 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
-    return ChangeNotifierProvider(
-      create: (context) => ThemeParameters(),
-      child: Consumer<ThemeParameters>(
-        builder: (context, themeParameters, child) {
+    return ProviderScope(
+      child: Consumer(
+        builder: (context, ref, child) {
+          final themeParameters = ref.watch(fromZeroThemeParametersProvider);
           return MaterialApp(
             title: 'FromZero playground',
             debugShowCheckedModeBanner: false,
-            themeMode: ThemeMode.dark, //themeParameters.themeMode
+            themeMode: themeParameters.themeMode,
             theme: themeParameters.lightTheme,
             darkTheme: themeParameters.darkTheme,
             locale: Locale('ES'), //themeParameters.appLocale

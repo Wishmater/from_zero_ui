@@ -2,8 +2,16 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/src/app_scaffolding/snackbar_from_zero.dart';
-import 'package:provider/provider.dart';
+
+
+
+var fromZeroSnackBarHostControllerProvider = ChangeNotifierProvider<SnackBarHostControllerFromZero>((ref) {
+  return SnackBarHostControllerFromZero();
+});
+
+
 
 
 class SnackBarControllerFromZero {
@@ -60,7 +68,7 @@ class SnackBarHostControllerFromZero extends ChangeNotifier {
 }
 
 
-class SnackBarHostFromZero extends StatefulWidget {
+class SnackBarHostFromZero extends ConsumerStatefulWidget {
 
   final Widget child;
 
@@ -74,68 +82,57 @@ class SnackBarHostFromZero extends StatefulWidget {
 
 }
 
-class _SnackBarHostFromZeroState extends State<SnackBarHostFromZero> {
+class _SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
 
-  SnackBarFromZero? lastShownSnackbar;
+  SnackBarFromZero? lastShownSnackBar;
 
   @override
   Widget build(BuildContext context) {
-    Widget result = ChangeNotifierProvider(
-      create: (context) => SnackBarHostControllerFromZero(),
-      child: widget.child,
-      builder: (context, child) {
-        return Consumer<SnackBarHostControllerFromZero>(
-          child: child,
-          builder: (context, controller, child) {
-            SnackBarFromZero? currentSnackbar = controller._snackBarQueue.isEmpty
-                ? null : controller._snackBarQueue.first;
-            bool isSameSnackbar = currentSnackbar?.key!=null && lastShownSnackbar?.key!=null
-                && currentSnackbar?.key==lastShownSnackbar?.key;
-            Widget result = Stack(
-              children: [
-                child!,
-                Positioned(
-                  bottom: 0, left: 0, right: 0, // TODO 3 snackbar doesnt respond to bottom keyboard inset
-                  child: AnimatedSwitcher(
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    duration: Duration(milliseconds: 500,),
-                    reverseDuration: Duration(milliseconds: 300,),
-                    transitionBuilder: (child, animation) {
-                      if (isSameSnackbar) {
-                        return FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        );
-                      } else {
-                        return SlideTransition(
-                          position: Tween<Offset>(begin: Offset(0, 1), end: Offset.zero,).animate(animation),
-                          child: FadeTransition(
-                            opacity: CurvedAnimation(parent: animation, curve: Interval(0, 0.5,),),
-                            child: ScaleTransition(
-                              scale: Tween<double>(begin: 0.66, end: 1,).animate(animation),
-                              child: child,
-                            ),
-                          ),
-                        );
-                      }
-                    },
-                    child: controller._snackBarQueue.isEmpty
-                        ? SizedBox.shrink()
-                        : Container(
-                            key: ValueKey(controller._snackBarQueue.first.hashCode),
-                            child: controller._snackBarQueue.first,
-                          ),
+    final controller = ref.watch(fromZeroSnackBarHostControllerProvider);
+    SnackBarFromZero? currentSnackBar = controller._snackBarQueue.isEmpty
+        ? null : controller._snackBarQueue.first;
+    bool isSameSnackBar = currentSnackBar?.key!=null && lastShownSnackBar?.key!=null
+        && currentSnackBar?.key==lastShownSnackBar?.key;
+    Widget result = Stack(
+      children: [
+        widget.child,
+        Positioned(
+          bottom: 0, left: 0, right: 0, // TODO 3 snackbar doesnt respond to bottom keyboard inset
+          child: AnimatedSwitcher(
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            duration: Duration(milliseconds: 500,),
+            reverseDuration: Duration(milliseconds: 300,),
+            transitionBuilder: (child, animation) {
+              if (isSameSnackBar) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: child,
+                );
+              } else {
+                return SlideTransition(
+                  position: Tween<Offset>(begin: Offset(0, 1), end: Offset.zero,).animate(animation),
+                  child: FadeTransition(
+                    opacity: CurvedAnimation(parent: animation, curve: Interval(0, 0.5,),),
+                    child: ScaleTransition(
+                      scale: Tween<double>(begin: 0.66, end: 1,).animate(animation),
+                      child: child,
+                    ),
                   ),
-                ),
-              ],
-            );
-            lastShownSnackbar = currentSnackbar;
-            return result;
-          },
-        );
-      },
+                );
+              }
+            },
+            child: controller._snackBarQueue.isEmpty
+                ? SizedBox.shrink()
+                : Container(
+              key: ValueKey(controller._snackBarQueue.first.hashCode),
+              child: controller._snackBarQueue.first,
+            ),
+          ),
+        ),
+      ],
     );
+    lastShownSnackBar = currentSnackBar;
     return result;
   }
 

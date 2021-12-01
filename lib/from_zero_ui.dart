@@ -1,6 +1,7 @@
 
 export 'package:from_zero_ui/src/app_scaffolding/app_content_wrapper.dart';
 export 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
+export 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
 export 'package:from_zero_ui/src/app_scaffolding/scaffold_from_zero.dart';
 export 'package:from_zero_ui/src/app_scaffolding/scrollbar_from_zero.dart';
 export 'package:from_zero_ui/src/ui_components/combo_from_zero.dart';

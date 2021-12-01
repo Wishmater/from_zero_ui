@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
-import 'package:provider/provider.dart';
+
 
 import '../../change_notifiers/theme_parameters.dart';
 
@@ -44,11 +45,11 @@ class _PageSettingsState extends State<PageSettings> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Consumer<ThemeParameters>(
-                            builder: (context, value, child) => ThemeSwitcher(value),
+                          Consumer(
+                            builder: (context, ref, child) => ThemeSwitcher(ref.watch(fromZeroThemeParametersProvider)),
                           ),
-                          Consumer<ThemeParameters>(
-                            builder: (context, value, child) => LocaleSwitcher(value),
+                          Consumer(
+                            builder: (context, ref, child) => LocaleSwitcher(ref.watch(fromZeroThemeParametersProvider)),
                           ),
                         ],
                       ),

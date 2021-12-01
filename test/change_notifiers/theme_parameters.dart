@@ -4,7 +4,7 @@ import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 
-class ThemeParameters extends AppParametersFromZero {
+class ThemeParameters extends ThemeParametersFromZero {
 
   @override
   ThemeData get defaultDarkTheme => themes[3]!;

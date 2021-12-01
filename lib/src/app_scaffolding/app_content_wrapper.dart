@@ -1,21 +1,41 @@
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/snackbar_host_from_zero.dart';
-import 'package:provider/provider.dart';
+
+
+
+
+var fromZeroScreenProvider = ChangeNotifierProvider<ScreenFromZero>((ref) {
+  return ScreenFromZero();
+});
+
+var fromZeroScaffoldChangeNotifierProvider = ChangeNotifierProvider<ScaffoldFromZeroChangeNotifier>((ref) {
+  return ScaffoldFromZeroChangeNotifier();
+});
+
+var fromZeroAppbarChangeNotifierProvider = ChangeNotifierProvider<AppbarChangeNotifier>((ref) {
+  return AppbarChangeNotifier(0, 0, 0, ScaffoldFromZero.appbarTypeNone, null);
+});
+
+var fromZeroThemeParametersProvider = ChangeNotifierProvider<ThemeParametersFromZero>((ref) {
+  return ThemeParametersFromZero();
+});
+
+
 
 /// Put this widget in the builder method of your MaterialApp.
 /// Controls different app-wide providers and features needed by other FromZeroWidgets
-class FromZeroAppContentWrapper extends StatefulWidget {
+class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
 
   final child;
-  final bool drawerOpenByDefaultOnDesktop;
 
   FromZeroAppContentWrapper({
     this.child,
-    this.drawerOpenByDefaultOnDesktop = true,
   });
 
   @override
@@ -23,62 +43,51 @@ class FromZeroAppContentWrapper extends StatefulWidget {
 
 }
 
-class _FromZeroAppContentWrapperState extends State<FromZeroAppContentWrapper> {
 
-  late final ScreenFromZero screen;
-  late final ScaffoldFromZeroChangeNotifier changeNotifier;
 
-  @override
-  void initState() {
-    super.initState();
-    screen = ScreenFromZero();
-    changeNotifier = ScaffoldFromZeroChangeNotifier(
-      drawerOpenByDefaultOnDesktop: widget.drawerOpenByDefaultOnDesktop,
-    );
-  }
+class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWrapper> {
 
   @override
   Widget build(BuildContext context) {
     //TODO 3 add restrictions to fontSize, uiScale logic, etc. here
+    final screen = ref.read(fromZeroScreenProvider);
+    final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
     return ScrollConfiguration(
       behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
       child: LayoutBuilder(
         builder: (context, constraints) {
+          double screenWidth = scaffoldChangeNotifier._previousWidth ?? 1280;
+          double screenHeight = scaffoldChangeNotifier._previousHeight ?? 720;
           if (constraints.maxWidth>0){
-            screen.displayMobileLayout = constraints.maxWidth < ScaffoldFromZero.screenSizeMedium;
-            if (constraints.maxWidth>=ScaffoldFromZero.screenSizeXLarge){
-              screen.breakpoint = ScaffoldFromZero.screenSizeXLarge;
-            } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeLarge){
-              screen.breakpoint = ScaffoldFromZero.screenSizeLarge;
-            } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium){
-              screen.breakpoint = ScaffoldFromZero.screenSizeMedium;
-            } else{
-              screen.breakpoint = ScaffoldFromZero.screenSizeSmall;
-            }
-            changeNotifier._updateScaffolds(screen.displayMobileLayout, constraints.maxWidth);
-            changeNotifier._previousWidth = constraints.maxWidth;
-            changeNotifier._previousHeight = constraints.maxHeight;
+            screenWidth = constraints.maxWidth;
+            screenHeight = constraints.maxHeight;
+            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+              screen.isMobileLayout = constraints.maxWidth < ScaffoldFromZero.screenSizeMedium;
+              if (constraints.maxWidth>=ScaffoldFromZero.screenSizeXLarge){
+                screen.breakpoint = ScaffoldFromZero.screenSizeXLarge;
+              } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeLarge){
+                screen.breakpoint = ScaffoldFromZero.screenSizeLarge;
+              } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium){
+                screen.breakpoint = ScaffoldFromZero.screenSizeMedium;
+              } else{
+                screen.breakpoint = ScaffoldFromZero.screenSizeSmall;
+              }
+              scaffoldChangeNotifier._updateScaffolds(screen.isMobileLayout, screenWidth);
+              scaffoldChangeNotifier._previousWidth = screenWidth;
+              scaffoldChangeNotifier._previousHeight = screenHeight;
+            });
           }
-          return FittedBox(
+          return OverflowBox(
+            alignment: Alignment.center,
+            minHeight: 0,
+            minWidth: 0,
+            maxHeight: double.infinity,
+            maxWidth: double.infinity,
             child: SizedBox(
-              width: changeNotifier._previousWidth ?? 1280,
-              height: changeNotifier._previousHeight ?? 720,
-              child: Column(
-                children: [
-                  Expanded(
-                    child: MultiProvider(
-                      providers: [
-                        ChangeNotifierProvider.value(value: changeNotifier,),
-                        ChangeNotifierProvider.value(value: screen,),
-                      ],
-                      builder: (context, _) {
-                        return SnackBarHostFromZero(
-                          child: widget.child,
-                        );
-                      },
-                    ),
-                  ),
-                ],
+              width: screenWidth,
+              height: screenHeight,
+              child: SnackBarHostFromZero(
+                child: widget.child,
               ),
             ),
           );
@@ -107,10 +116,10 @@ abstract class PageFromZero extends StatefulWidget{
 
 class ScreenFromZero extends ChangeNotifier{
 
-  late bool _displayMobileLayout;
-  bool get displayMobileLayout => _displayMobileLayout;
-  set displayMobileLayout(bool value) {
-    _displayMobileLayout = value;
+  late bool _isMobileLayout;
+  bool get isMobileLayout => _isMobileLayout;
+  set isMobileLayout(bool value) {
+    _isMobileLayout = value;
     notifyListeners();
   }
 
@@ -203,11 +212,11 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     var scaffold = scaffoldsStack[index];
     if (displayMobileLayout || scaffold.drawerContentBuilder==null) {
       setCurrentDrawerWidth(scaffold.currentPage, 0);
-    } else if (scaffold.drawerContentBuilder!=null && getCurrentDrawerWidth(scaffold.currentPage) < scaffold.compactDrawerWidth){
-      setCurrentDrawerWidth(scaffold.currentPage, scaffold.compactDrawerWidth);
     } else if (_previousWidth!=null && _previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
       setCurrentDrawerWidth(scaffold.currentPage, scaffold.drawerWidth);
     } else if (_previousWidth!=null && _previousWidth!>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
+      setCurrentDrawerWidth(scaffold.currentPage, scaffold.compactDrawerWidth);
+    } else if (getCurrentDrawerWidth(scaffold.currentPage) < scaffold.compactDrawerWidth){
       setCurrentDrawerWidth(scaffold.currentPage, scaffold.compactDrawerWidth);
     }
   }

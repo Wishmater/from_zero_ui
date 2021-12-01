@@ -6,7 +6,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
+
 import '../../change_notifiers/theme_parameters.dart';
 import '../home/page_home.dart';
 
@@ -68,7 +68,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
           //         scrollableStickyOffset: 48,
           //         significantWidgetsKeys: col3RowKeys,
           //         textEditingControllers: textControllers,
-          //         themeParameters: Provider.of<ThemeParameters>(context, listen: false),
+          //         themeParameters: (context as WidgetRef).read(fromZeroThemeParametersProvider),
           //         title: DateTime.now().millisecondsSinceEpoch.toString() + " Tables",
           //         path: Export.getDefaultDirectoryPath('Playground From Zero'),
           //       ),
@@ -88,7 +88,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
           //         childBuilder: (context, i, currentSize, portrait, scale, format) => [col1, col2, col3][i],
           //         childrenCount: (currentSize, portrait, scale, format) => 3,
           //         textEditingControllers: textControllers,
-          //         themeParameters: Provider.of<ThemeParameters>(context, listen: false),
+          //         themeParameters: (context as WidgetRef).read(fromZeroThemeParametersProvider),
           //         title: DateTime.now().millisecondsSinceEpoch.toString() + " Tables",
           //         path: Export.getDefaultDirectoryPath('Playground From Zero'),
           //         // excelSheets: () => {
@@ -129,9 +129,9 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
           rowAddon: Text('ADDON ASDFG fsgfad gadfsgkadfs glasdnfgklanfsgAFSG DAFG AFSD GADSF GADFGA DFSG'),
           onRowTap: (row){},
           onCellTap: (row,) {},
-          actions: [
-            Container(width: 32, height: 32, color: Colors.red,),
-          ],
+          // actions: [
+          //   Container(width: 32, height: 32, color: Colors.red,),
+          // ],
         );
       }).toList(),
       columns: ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"].map((e) {

@@ -6,7 +6,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/animations/heroes_from_zero.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
+
 
 import '../../change_notifiers/theme_parameters.dart';
 import '../home/page_home.dart';
@@ -53,7 +53,7 @@ class _PageHeroesState extends State<PageHeroes> {
           //         scaffoldContext: scaffoldContext,
           //         childBuilder: (context, i, currentSize, portrait, scale, format) => widgetToExport,
           //         childrenCount: (currentSize, portrait, scale, format) => 1,
-          //         themeParameters: Provider.of<ThemeParameters>(context, listen: false),
+          //         themeParameters: (context as WidgetRef).read(fromZeroThemeParametersProvider),
           //         title: DateTime.now().millisecondsSinceEpoch.toString() + " Heroes",
           //         path: getApplicationDocumentsDirectory().then((value) => value.absolute.path+"/Playground From Zero/"),
           //       ),

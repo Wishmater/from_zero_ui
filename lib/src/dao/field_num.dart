@@ -253,7 +253,7 @@ class NumField extends Field<num> {
                       border: InputBorder.none,
                       alignLabelWithHint: dense,
                       label: Text(uiName,
-                        maxLines: 1,
+                        softWrap: false,
                         overflow: TextOverflow.fade,
                       ),
                       hintText: hint,

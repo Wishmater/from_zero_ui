@@ -5,13 +5,14 @@ import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/app_content_wrapper.dart';
 import 'package:from_zero_ui/src/animations/exposed_transitions.dart';
 import 'package:from_zero_ui/src/app_scaffolding/scaffold_from_zero.dart';
 import 'package:flutter/foundation.dart';
 import 'package:from_zero_ui/util/platform_web_impl.dart';
-import 'package:provider/provider.dart';
+
 import 'package:dartx/dartx.dart';
 
 
@@ -472,7 +473,7 @@ class _OverflowScrollState extends State<OverflowScroll> {
 }
 
 
-class ReturnToTopButton extends StatefulWidget {
+class ReturnToTopButton extends ConsumerStatefulWidget {
 
   final ScrollController scrollController;
   final Widget child;
@@ -492,7 +493,7 @@ class ReturnToTopButton extends StatefulWidget {
   _ReturnToTopButtonState createState() => _ReturnToTopButtonState();
 
 }
-class _ReturnToTopButtonState extends State<ReturnToTopButton> {
+class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
 
   @override
   void initState() {
@@ -527,7 +528,7 @@ class _ReturnToTopButtonState extends State<ReturnToTopButton> {
     } catch(_){}
     double space = 16;
     try{
-      space = Provider.of<ScreenFromZero>(context).displayMobileLayout ? 16 : 32;
+      space = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout)) ? 16 : 32;
     } catch(_){}
     return Stack(
       fit: StackFit.expand,
@@ -696,39 +697,6 @@ class IconButtonBackground extends StatelessWidget {
 
 }
 
-
-
-class ChangeNotifierSelectorBuilder<A extends ChangeNotifier, S> extends StatelessWidget{
-
-  final A changeNotifier;
-  final Widget? child;
-  final ValueWidgetBuilder<S> builder;
-  final S Function(BuildContext, A) selector;
-
-  ChangeNotifierSelectorBuilder({
-    required this.changeNotifier,
-    required this.selector,
-    this.child,
-    required this.builder,
-    Key? key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider<A>.value(
-      value: changeNotifier,
-      child: child,
-      builder: (context, child) {
-        return Selector<A, S>(
-          selector: selector,
-          builder: builder,
-          child: child,
-        );
-      },
-    );
-  }
-
-}
 
 
 typedef Widget InitiallyAnimatedWidgetBuilder(Animation<double> animation, Widget? child);
@@ -951,6 +919,9 @@ class FlexibleLayoutItemFromZero extends StatelessWidget {
   }
 
 }
+
+
+
 
 
 

@@ -1,12 +1,13 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/src/app_scaffolding/app_content_wrapper.dart';
 import 'package:from_zero_ui/src/app_scaffolding/snackbar_host_from_zero.dart';
-import 'package:provider/provider.dart';
 
 
 
-class SnackBarFromZero extends StatefulWidget {
+
+class SnackBarFromZero extends ConsumerStatefulWidget {
 
   static const info = 0;
   static const success = 1;
@@ -73,7 +74,7 @@ class SnackBarFromZero extends StatefulWidget {
     if (controller!=null) {
       throw Exception('Already showed this SnackBar');
     }
-    final host = Provider.of<SnackBarHostControllerFromZero>(context??this.context, listen: false);
+    final host = ((context??this.context) as WidgetRef).read(fromZeroSnackBarHostControllerProvider);
     controller = SnackBarControllerFromZero(
       host: host,
       snackBar: this,
@@ -90,7 +91,7 @@ class SnackBarFromZero extends StatefulWidget {
 
 }
 
-class _SnackBarFromZeroState extends State<SnackBarFromZero> with TickerProviderStateMixin {
+class _SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerProviderStateMixin {
 
   AnimationController? animationController;
 
@@ -245,7 +246,9 @@ class _SnackBarFromZeroState extends State<SnackBarFromZero> with TickerProvider
         ],
       ),
     );
-    final fixed = widget.behaviour!=SnackBarFromZero.behaviourFloating && (widget.behaviour==SnackBarFromZero.behaviourFixed || Provider.of<ScreenFromZero>(context).displayMobileLayout);
+    final fixed = widget.behaviour!=SnackBarFromZero.behaviourFloating
+        && (widget.behaviour==SnackBarFromZero.behaviourFixed
+            || ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout)));
     Color backgroundColor = type==null ? Theme.of(context).cardColor
         : Color.alphaBlend(SnackBarFromZero.colors[type].withOpacity(0.066), Theme.of(context).cardColor);
     if (fixed) {
