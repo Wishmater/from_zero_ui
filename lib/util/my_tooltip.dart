@@ -227,7 +227,7 @@ class TooltipFromZero extends StatefulWidget {
       // Avoid concurrent modification.
       final List<_TooltipFromZeroState> openedToolTips = List<_TooltipFromZeroState>.from(_openedToolTips);
       for (final _TooltipFromZeroState state in openedToolTips) {
-        state._hideTooltip(immediately: true);
+        state._hideTooltipFromZero(immediately: true);
       }
       return true;
     }
@@ -356,11 +356,11 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
 
   void _handleStatusChanged(AnimationStatus status) {
     if (status == AnimationStatus.dismissed) {
-      _hideTooltip(immediately: true);
+      _hideTooltipFromZero(immediately: true);
     }
   }
 
-  void _hideTooltip({ bool immediately = false }) {
+  void _hideTooltipFromZero({ bool immediately = false }) {
     _showTimer?.cancel();
     _showTimer = null;
     if (immediately) {
@@ -375,7 +375,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     _pressActivated = false;
   }
 
-  void _showTooltip({ bool immediately = false }) {
+  void _showTooltipFromZero({ bool immediately = false }) {
     _hideTimer?.cancel();
     _hideTimer = null;
     if (immediately) {
@@ -475,12 +475,12 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
   bool _insideTooltipMouseRegion = false;
   void _onEnteredMouseRegion() {
     if (_entry==null) {
-      _showTooltip();
+      _showTooltipFromZero();
     }
   }
   void _onExitedMouseRegion() {
     if (!_insideChildMouseRegion && !_insideTooltipMouseRegion) {
-      _hideTooltip();
+      _hideTooltipFromZero();
     }
   }
 
@@ -489,16 +489,16 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
       return;
     }
     if (event is PointerUpEvent || event is PointerCancelEvent) {
-      _hideTooltip();
+      _hideTooltipFromZero();
     } else if (event is PointerDownEvent) {
-      _hideTooltip(immediately: true);
+      _hideTooltipFromZero(immediately: true);
     }
   }
 
   @override
   void deactivate() {
     if (_entry != null) {
-      _hideTooltip(immediately: true);
+      _hideTooltipFromZero(immediately: true);
     }
     _showTimer?.cancel();
     super.deactivate();
