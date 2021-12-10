@@ -7,6 +7,7 @@ export 'package:from_zero_ui/src/app_scaffolding/scrollbar_from_zero.dart';
 export 'package:from_zero_ui/src/ui_components/combo_from_zero.dart';
 export 'package:from_zero_ui/src/ui_components/date_picker_from_zero.dart';
 export 'package:from_zero_ui/src/ui_components/drawer_menu_from_zero.dart';
+export 'package:from_zero_ui/src/app_scaffolding/go_router.dart';
 export 'package:from_zero_ui/src/ui_components/image_from_zero.dart';
 export 'package:from_zero_ui/src/app_scaffolding/snackbar_from_zero.dart';
 export 'package:from_zero_ui/src/app_scaffolding/snackbar_host_from_zero.dart';
@@ -28,7 +29,6 @@ export 'package:from_zero_ui/src/dao/field_bool.dart';
 export 'package:from_zero_ui/src/dao/field_validators.dart';
 
 export 'package:from_zero_ui/src/ui_utility/file_saver_from_zero.dart';
-export 'package:from_zero_ui/src/app_scaffolding/splash_page.dart';
 export 'package:from_zero_ui/src/future_handling/future_handling.dart';
 export 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
 export 'package:from_zero_ui/src/table/table_from_zero.dart';

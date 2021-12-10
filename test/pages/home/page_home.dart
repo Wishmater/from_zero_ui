@@ -8,79 +8,13 @@ import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
 import 'package:from_zero_ui/src/ui_components/context_menu.dart';
 import 'package:from_zero_ui/src/ui_utility/from_zero_logo.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
-
+import 'package:go_router/go_router.dart';
 
 import '../../change_notifiers/theme_parameters.dart';
 import '../../et_test.dart';
+import '../../router.dart';
 
-class PageHome extends PageFromZero {
-
-  static List<ResponsiveDrawerMenuItem> tabs = [
-    ResponsiveDrawerMenuItem(
-      title: "Home",
-      icon: Icon(Icons.home),
-      route: "/home",
-    ),
-    ResponsiveDrawerMenuDivider(),
-    ResponsiveDrawerMenuItem(
-      title: "Scaffold FromZero",
-      icon: Icon(Icons.subtitles),
-      route: "/scaffold",
-    ),
-    ResponsiveDrawerMenuItem(
-      title: "Lightweight Table",
-      icon: Icon(Icons.table_chart),
-      route: "/lightweight_table",
-    ),
-    ResponsiveDrawerMenuDivider(
-      title: "Group 2",
-    ),
-    ResponsiveDrawerMenuItem(
-      title: "Heroes",
-      icon: Icon(Icons.person_pin_circle),
-      route: "/heroes",
-      children: [
-        ResponsiveDrawerMenuItem(
-          title: "Normal Hero",
-          icon: Icon(Icons.looks_one),
-          route: "/heroes/normal",
-        ),
-        ResponsiveDrawerMenuItem(
-          title: "CrossFade Hero",
-          icon: Icon(Icons.looks_two),
-          route: "/heroes/fade",
-        ),
-        ResponsiveDrawerMenuItem(
-          title: "Custom transionBuilder Hero",
-          icon: Icon(Icons.looks_3),
-          route: "/heroes/custom",
-        ),
-        ResponsiveDrawerMenuItem(
-          title: "CrossFade Higher Depth",
-          icon: Icon(Icons.looks_4),
-          route: "/heroes/inner",
-        ),
-      ]
-    ),
-    ResponsiveDrawerMenuItem(
-      title: "Future Handling",
-      icon: Icon(Icons.refresh),
-      route: "/future_handling",
-    ),
-  ];
-
-  static List<ResponsiveDrawerMenuItem> footerTabs = [
-    ResponsiveDrawerMenuItem(
-      title: "Settings",
-      icon: Icon(Icons.settings),
-      route: "/settings",
-    )
-  ];
-
-  @override
-  int get pageScaffoldDepth => 1;
-  @override
-  String get pageScaffoldId => "Home";
+class PageHome extends StatefulWidget {
 
   PageHome();
 
@@ -135,7 +69,6 @@ class _PageHomeState extends State<PageHome> {
       mainScrollController: controller,
       scrollbarType: ScaffoldFromZero.scrollbarTypeOverAppbar,
       appbarType: ScaffoldFromZero.appbarTypeQuickReturn,
-      currentPage: widget,
       title: Row(
         children: [
           Text("FromZero playground"),
@@ -146,8 +79,16 @@ class _PageHomeState extends State<PageHome> {
         ],
       ),
       body: _getPage(context),
-      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 0,),
-      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
+      drawerContentBuilder: (context, compact) {
+        return DrawerMenuFromZero(
+          tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: mainRoutes),
+          compact: compact,
+        );
+      },
+      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(
+        tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: settingsRoutes),
+        compact: compact,
+      ),
       actions: [
         ActionFromZero(title: "Test Action", onTap: (appbarContext){
           getEtDao().maybeEdit(context);

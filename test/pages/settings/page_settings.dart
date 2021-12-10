@@ -6,12 +6,7 @@ import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 
 import '../../change_notifiers/theme_parameters.dart';
 
-class PageSettings extends PageFromZero {
-
-  @override
-  int get pageScaffoldDepth => -1;
-  @override
-  String get pageScaffoldId => "Settings";
+class PageSettings extends StatefulWidget {
 
   PageSettings();
 
@@ -27,7 +22,6 @@ class _PageSettingsState extends State<PageSettings> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      currentPage: widget,
       title: Text("Settings"),
       body: ScrollbarFromZero(
         controller: controller,

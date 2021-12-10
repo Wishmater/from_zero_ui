@@ -9,15 +9,11 @@ import 'package:path_provider/path_provider.dart';
 
 
 import '../../change_notifiers/theme_parameters.dart';
+import '../../router.dart';
 import '../home/page_home.dart';
 
 
-class PageHeroes extends PageFromZero {
-
-  @override
-  int get pageScaffoldDepth => 1;
-  @override
-  String get pageScaffoldId => "Home";
+class PageHeroes extends StatefulWidget {
 
   PageHeroes();
 
@@ -34,10 +30,12 @@ class _PageHeroesState extends State<PageHeroes> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      currentPage: widget,
       title: Text("Heroes"),
       body: _getPage(context),
-      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 3,),
+      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
+        tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: mainRoutes),
+        compact: compact,
+      ),
       drawerFooterBuilder: (context, compact) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -60,7 +58,10 @@ class _PageHeroesState extends State<PageHeroes> {
           //     );
           //   },
           // ),
-          DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
+          DrawerMenuFromZero(
+            tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: settingsRoutes),
+            compact: compact,
+          )
         ],
       ),
     );

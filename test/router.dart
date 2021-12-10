@@ -1,6 +1,6 @@
-
+import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-
+import 'main.dart';
 import 'pages/future_handling/page_future_handling.dart';
 import 'pages/heroes/page_cross_fade_hero.dart';
 import 'pages/heroes/page_custom_hero.dart';
@@ -15,168 +15,160 @@ import 'pages/scaffold/page_scaffold_other.dart';
 import 'pages/scaffold/page_scaffold_same.dart';
 import 'pages/settings/page_settings.dart';
 
-import 'package:fluro/fluro.dart';
 
 
-class MyFluroRouter{
-
-  static FluroRouter router = FluroRouter();
-
-  static var cache;
-
-
-  static void setupRouter() {
-
-    router.define('/',
-      handler: Handler(
-        handlerFunc: (context, params){
-          return SplashPage((_) async => '/home');
-        },
+final mainRoutes = [
+  GoRouteGroupFromZero(
+    routes: [
+      GoRouteFromZero(
+        path: '/',
+        name: 'home',
+        title: 'Home',
+        icon: Icon(Icons.home),
+        childrenAsDropdownInDrawerNavigation: false,
+        builder: (context, state) => PageHome(),
+        routes: [
+          GoRouteFromZero(
+            path: 'scaffold',
+            name: 'scaffold',
+            title: 'Scaffold FromZero',
+            icon: Icon(Icons.subtitles),
+            builder: (context, state) => PageScaffold(),
+            routes: [
+              GoRouteFromZero(
+                path: 'same',
+                name: 'scaffold_same',
+                builder: (context, state) => PageScaffoldSame(),
+                showInDrawerNavigation: false,
+              ),
+              GoRouteFromZero(
+                path: 'inner',
+                name: 'scaffold_inner',
+                builder: (context, state) => PageScaffoldInner(),
+                showInDrawerNavigation: false,
+                pageScaffoldDepth: 1,
+              ),
+              GoRouteFromZero(
+                path: 'other',
+                name: 'scaffold_other',
+                builder: (context, state) => PageScaffoldOther(),
+                showInDrawerNavigation: false,
+                pageScaffoldId: 'other',
+              ),
+            ],
+          ),
+          GoRouteFromZero(
+            path: 'lightweight_table',
+            name: 'lightweight_table',
+            title: 'Lightweight Table',
+            icon: Icon(Icons.table_chart),
+            builder: (context, state) => PageLightweightTable(),
+          ),
+          GoRouteGroupFromZero(
+            title: 'Heroes',
+            routes: [
+              GoRouteFromZero(
+                path: 'heroes',
+                name: 'heroes',
+                title: 'Heroes',
+                icon: Icon(Icons.person_pin_circle),
+                builder: (context, state) => PageHeroes(),
+                routes: heroesRoutes,
+              ),
+            ],
+          ),
+          GoRouteFromZero(
+            path: 'future_handling',
+            name: 'future_handling',
+            title: 'Future Handling',
+            icon: Icon(Icons.refresh),
+            builder: (context, state) => PageFutureHandling(),
+          ),
+          ...settingsRoutes,
+        ],
       ),
-    );
+    ],
+  ),
+];
+
+final heroesRoutes = [
+  GoRouteFromZero(
+    path: 'normal',
+    name: 'heroes_normal',
+    title: 'Normal Hero',
+    icon: Icon(Icons.looks_one),
+    builder: (context, state) => PageNormalHero(),
+  ),
+  GoRouteFromZero(
+    path: 'fade',
+    name: 'heroes_fade',
+    title: 'CrossFade Hero',
+    icon: Icon(Icons.looks_two),
+    builder: (context, state) => PageCrossFadeHero(),
+  ),
+  GoRouteFromZero(
+    path: 'custom',
+    name: 'heroes_custom',
+    title: 'Custom transionBuilder Hero',
+    icon: Icon(Icons.looks_3),
+    builder: (context, state) => PageCustomHero(),
+  ),
+  GoRouteFromZero(
+    path: 'inner',
+    name: 'heroes_inner',
+    title: 'CrossFade Higher Depth',
+    icon: Icon(Icons.looks_4),
+    pageScaffoldDepth: 1,
+    builder: (context, state) => PageInnerHero(),
+  ),
+];
+
+final settingsRoutes = [
+  GoRouteFromZero(
+    path: 'settings',
+    name: 'settings',
+    title: 'Settings',
+    icon: Icon(Icons.settings),
+    builder: (context, state) => PageSettings(),
+    showInDrawerNavigation: false,
+    pageScaffoldId: 'settings',
+  ),
+];
+
+final initRoute = GoRouteFromZero(
+  path: '/login',
+  name: 'login',
+  builder: (context, state) => PageSplash(),
+  pageScaffoldId: 'login',
+);
 
 
-    router.define('/settings',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageSettings();
-        },
-      ),
-    );
 
 
-    router.define('/home',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageHome();
-        },
-      ),
-    );
 
+class PageSplash extends StatefulWidget {
 
-    router.define('/scaffold',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageScaffold();
-        },
-      ),
-    );
-    router.define('/scaffold/same',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageScaffoldSame();
-        },
-      ),
-    );
-    router.define('/scaffold/inner',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageScaffoldInner();
-        },
-      ),
-    );
-    router.define('/scaffold/other',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageScaffoldOther();
-        },
-      ),
-    );
+  const PageSplash({Key? key}) : super(key: key);
 
+  @override
+  _PageSplashState createState() => _PageSplashState();
 
-    router.define('/lightweight_table',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageLightweightTable();
-        },
-      ),
-    );
+}
 
+class _PageSplashState extends State<PageSplash> {
 
-    router.define('/future_handling',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageFutureHandling();
-        },
-      ),
-    );
+  @override
+  void initState() {
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      initChangeNotifier.initialized = true;
+    });
+    super.initState();
+  }
 
-
-    router.define('/heroes',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageHeroes();
-        },
-      ),
-    );
-    router.define('/heroes/normal',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageNormalHero();
-        },
-      ),
-    );
-    router.define('/heroes/fade',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageCrossFadeHero();
-        },
-      ),
-    );
-    router.define('/heroes/custom',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageCustomHero();
-        },
-      ),
-    );
-    router.define('/heroes/inner',
-      transitionType: TransitionType.custom,
-      transitionDuration: Duration(milliseconds: 300),
-      transitionBuilder: (context, animation, secondaryAnimation, child) => child,
-      handler: Handler(
-        handlerFunc: (context, params){
-          return PageInnerHero();
-        },
-      ),
-    );
-
+  @override
+  Widget build(BuildContext context) {
+    return Container(color: Theme.of(context).canvasColor,);
   }
 
 }
+

@@ -16,6 +16,7 @@ import 'package:from_zero_ui/src/app_scaffolding/scrollbar_from_zero.dart';
 
 import 'package:from_zero_ui/util/no_fading_shared_axis_transition.dart' as no_fading_shared_axis_transition;
 import 'package:dartx/dartx.dart';
+import 'package:go_router/go_router.dart';
 
 
 typedef Widget DrawerContentBuilder(BuildContext context, bool compact,);
@@ -52,7 +53,6 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
   final Duration appbarAnimationDuration = 300.milliseconds;
   final appbarAnimationCurve = Curves.easeOutCubic;
 
-  final PageFromZero currentPage;
   final Widget? title;
   final double titleSpacing;
   final List<Widget>? actions;
@@ -102,7 +102,6 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
     this.useCompactDrawerInsteadOfClose = true,
     this.constraintBodyOnXLargeScreens = true,
     double? appbarHeight,
-    required this.currentPage,
     this.appbarType = appbarTypeStatic,
     this.appbarController,
     this.onAppbarActionExpanded,
@@ -215,9 +214,10 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
           animation: animation,
           child: child,
           builder: (context, child) {
-            return FadeUpwardsSlideTransition(
-              routeAnimation: scaffoldChangeNotifier.sharedAnim
-                  ? ReverseAnimation(secondaryAnimation) : kAlwaysCompleteAnimation,
+            return FadeTransition(
+              opacity: scaffoldChangeNotifier.sharedAnim
+                  ? Tween<double>(begin: 1, end: -1.5).animate(secondaryAnimation)
+                  : kAlwaysCompleteAnimation,
               child: FadeUpwardsSlideTransition(
                 routeAnimation: scaffoldChangeNotifier.sharedAnim
                     ? animation : kAlwaysCompleteAnimation,
@@ -246,12 +246,19 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
           builder: (context, child) {
             if (secondaryAnimation.value>0.9) return Opacity(opacity: 0, child: child,);
             if (scaffoldChangeNotifier.sharedAnim) {
+              var sharedSecondaryAnimation = secondaryAnimation;
+              var sharedAnimation = animation;
+              if (secondaryAnimation.status == AnimationStatus.reverse
+                  || animation.status == AnimationStatus.reverse) {
+                sharedSecondaryAnimation = ReverseAnimation(animation);
+                sharedAnimation = ReverseAnimation(secondaryAnimation);
+              }
               return no_fading_shared_axis_transition.SharedAxisTransition(
                 animation: scaffoldChangeNotifier.animationType==ScaffoldFromZero.animationTypeOuter
-                    ? ReverseAnimation(secondaryAnimation) : animation,
+                    ? ReverseAnimation(sharedSecondaryAnimation) : sharedAnimation,
                 secondaryAnimation: scaffoldChangeNotifier.animationType==ScaffoldFromZero.animationTypeOuter
-                    ? ReverseAnimation(animation).isCompleted ? kAlwaysDismissedAnimation : ReverseAnimation(animation)
-                    : secondaryAnimation.isCompleted ? kAlwaysDismissedAnimation : secondaryAnimation,
+                    ? ReverseAnimation(sharedAnimation).isCompleted ? kAlwaysDismissedAnimation : ReverseAnimation(sharedAnimation)
+                    : sharedSecondaryAnimation.isCompleted ? kAlwaysDismissedAnimation : sharedSecondaryAnimation,
                 child: child!,
                 transitionType: no_fading_shared_axis_transition.SharedAxisTransitionType.scaled,
                 fillColor: Colors.transparent,
@@ -300,21 +307,21 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
 
   late ScaffoldFromZeroChangeNotifier _changeNotifier;
   bool lockListenToDrawerScroll = false;
+  late GoRouterStateFromZero route;
   @override
   void initState() {
     super.initState();
-    widget.currentPage.randomId  = DateTime.now().millisecondsSinceEpoch;
+    route = context.findAncestorStateOfType<OnlyOnActiveBuilderState>()!.state;
     _changeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
-    _changeNotifier.pushPageToStack(widget.currentPage);
-    _changeNotifier.pushScaffoldToStack(widget);
-    _changeNotifier.updateStackRelatedVariables();
+    _changeNotifier.expandedDrawerWidths[route.pageScaffoldId] = widget.drawerWidth;
+    _changeNotifier.collapsedDrawerWidths[route.pageScaffoldId] = widget.compactDrawerWidth;
     widget.mainScrollController?.addListener(_handleScroll);
-    if (_changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]==null){
-      _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId] = ValueNotifier(0);
+    if (_changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]==null){
+      _changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId] = ValueNotifier(0);
     }
-    _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.addListener(() {
+    _changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]?.addListener(() {
       if (!lockListenToDrawerScroll && mounted && drawerContentScrollController.hasClients){
-        drawerContentScrollController.jumpTo(_changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.value ?? 0);
+        drawerContentScrollController.jumpTo(_changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]?.value ?? 0);
         lockListenToDrawerScroll = false;
       }
     });
@@ -323,7 +330,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
   void _onDrawerScroll() {
     if (mounted && drawerContentScrollController.hasClients){
       lockListenToDrawerScroll = true;
-      _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.value
+      _changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]?.value
       = drawerContentScrollController.position.pixels;
     }
   }
@@ -331,7 +338,6 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
   @override
   void didUpdateWidget(ScaffoldFromZero oldWidget) {
     super.didUpdateWidget(oldWidget);
-    widget.currentPage.randomId  = oldWidget.currentPage.randomId;
     if (widget.mainScrollController!=oldWidget.mainScrollController) {
       oldWidget.mainScrollController?.removeListener(_handleScroll);
       if (widget.mainScrollController!=null) {
@@ -347,9 +353,6 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
   void dispose() {
     _appbarChangeNotifier!.dispose();
     super.dispose();
-    _changeNotifier.popPageFromStack(widget.currentPage);
-    _changeNotifier.popScaffoldFromStack(widget);
-    _changeNotifier.updateStackRelatedVariables();
     widget.mainScrollController?.removeListener(_handleScroll);
     widget.mainScrollController?.dispose();
   }
@@ -396,7 +399,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                             padding: EdgeInsets.only(
                               bottom: displayMobileLayout ? 0 : 12,
                               right: displayMobileLayout ? 0
-                                  : 12 + ((constraints.maxWidth-changeNotifier.getCurrentDrawerWidth(widget.currentPage)-ScaffoldFromZero.screenSizeXLarge)/2).coerceIn(0),
+                                  : 12 + ((constraints.maxWidth-changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)-ScaffoldFromZero.screenSizeXLarge)/2).coerceIn(0),
                             ),
                             duration: widget.drawerAnimationDuration,
                             curve: widget.drawerAnimationCurve,
@@ -466,7 +469,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
             AnimatedPositioned(
               duration: widget.drawerAnimationDuration,
               curve: widget.drawerAnimationCurve,
-              left: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
+              left: changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId),
               right: 0, top: 0, bottom: 0,
               child: _getBody(context),
             ),
@@ -478,7 +481,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                 if (!screen.isMobileLayout && widget.drawerContentBuilder!=null){
                   return AnimatedContainer(
                     alignment: Alignment.centerLeft,
-                    padding: EdgeInsets.only(top: appbarChangeNotifier.currentAppbarHeight, left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)),
+                    padding: EdgeInsets.only(top: appbarChangeNotifier.currentAppbarHeight, left: changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)),
                     duration: widget.drawerAnimationDuration,
                     curve: widget.drawerAnimationCurve,
                     child: SizedBox(
@@ -503,13 +506,13 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                   ? AnimatedContainer(
                 duration: widget.drawerAnimationDuration,
                 curve: widget.drawerAnimationCurve,
-                width: changeNotifier.getCurrentDrawerWidth(widget.currentPage),
+                width: changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId),
                 child: _getResponsiveDrawerContent(context),
               )
                   : AnimatedPositioned(
                 duration: widget.drawerAnimationDuration,
                 curve: widget.drawerAnimationCurve,
-                left: changeNotifier.getCurrentDrawerWidth(widget.currentPage)-widget.drawerWidth,
+                left: changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)-widget.drawerWidth,
                 width: widget.drawerWidth,
                 top: 0, bottom: 0,
                 child: _getResponsiveDrawerContent(context),
@@ -520,7 +523,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
             screen.isMobileLayout || widget.drawerContentBuilder==null || PlatformExtended.isDesktop // this should be if no mouse, instead of platform based
                 ? Positioned(top: 0, bottom: 0, width: 0, child: Container(),)
                 : Positioned(
-                  top: 0, bottom: 0, left: 0, width: changeNotifier.getCurrentDrawerWidth(widget.currentPage)+18,
+                  top: 0, bottom: 0, left: 0, width: changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)+18,
                   child: GestureDetector(
                     onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
                     onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
@@ -641,29 +644,36 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                           } else{
                             Widget result;
                             if (canPop&&(widget.drawerContentBuilder==null||(!widget.alwaysShowHamburgerButtonOnMobile&&displayMobileLayout))){
-                              result = IconButton(
-                                icon: Icon(Icons.arrow_back),
-                                tooltip: FromZeroLocalizations.of(context).translate("back"),
-                                onPressed: () async{
-                                  var navigator = Navigator.of(context);
-                                  if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
-                                    navigator.pop();
-                                  }
-                                },
+                              final onPressed = () async{
+                                var navigator = Navigator.of(context);
+                                if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
+                                  navigator.pop();
+                                }
+                              };
+                              result = GestureDetector(
+                                onDoubleTap: () => onPressed,
+                                child: IconButton(
+                                  icon: Icon(Icons.arrow_back),
+                                  tooltip: FromZeroLocalizations.of(context).translate("back"),
+                                  onPressed: onPressed,
+                                ),
                               );
                             } else{
                               result = AnimatedBuilder(
                                 animation: secondaryAnimation,// ?? kAlwaysDismissedAnimation,
-                                builder: (context, child) => IconButton(
-                                  icon: AnimatedIcon(
-                                    progress: widget.alwaysShowHamburgerButtonOnMobile ? kAlwaysDismissedAnimation
-                                        : secondaryAnimation,// ?? kAlwaysDismissedAnimation,
-                                    icon: AnimatedIcons.menu_arrow,
-                                    color: (Theme.of(context).appBarTheme.brightness ?? Theme.of(context).primaryColorBrightness)
-                                        == Brightness.light ? Colors.black : Colors.white,
+                                builder: (context, child) => GestureDetector(
+                                  onDoubleTap: () => _toggleDrawer(context, changeNotifierNotListen),
+                                  child: IconButton(
+                                    icon: AnimatedIcon(
+                                      progress: widget.alwaysShowHamburgerButtonOnMobile ? kAlwaysDismissedAnimation
+                                          : secondaryAnimation,// ?? kAlwaysDismissedAnimation,
+                                      icon: AnimatedIcons.menu_arrow,
+                                      color: (Theme.of(context).appBarTheme.brightness ?? Theme.of(context).primaryColorBrightness)
+                                          == Brightness.light ? Colors.black : Colors.white,
+                                    ),
+                                    tooltip: FromZeroLocalizations.of(context).translate("menu_open"),
+                                    onPressed: () => _toggleDrawer(context, changeNotifierNotListen),
                                   ),
-                                  tooltip: FromZeroLocalizations.of(context).translate("menu_open"),
-                                  onPressed: () => _toggleDrawer(context, changeNotifierNotListen),
                                 ),
                               );
                             }
@@ -679,7 +689,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                   child: result,
                                   builder: (context, ref, child) {
                                     final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-                                    double currentWidth = changeNotifier.getCurrentDrawerWidth(widget.currentPage);
+                                    double currentWidth = changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId);
                                     return  AnimatedOpacity(
                                       opacity: 1-currentWidth/56<0 ? 0 : 1-currentWidth/56,
                                       duration: widget.drawerAnimationDuration,
@@ -742,7 +752,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         final appbarChangeNotifier = ref.read(fromZeroAppbarChangeNotifierProvider);
         final changeNotifierNotListen = ref.read(fromZeroScaffoldChangeNotifierProvider); // ! this used to be watch, might bring problems with drawer
         drawerContentScrollController = ScrollController(
-          initialScrollOffset: _changeNotifier.drawerContentScrollOffsets[widget.currentPage.pageScaffoldId]?.value ?? 0,
+          initialScrollOffset: _changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]?.value ?? 0,
         );
         drawerContentScrollController.addListener(_onDrawerScroll);
         Widget result = Column(
@@ -768,6 +778,14 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                         child: Consumer(
                           builder: (context, ref, child) {
                             final displayMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
+                            final onBackPressed = () async{
+                              var navigator = Navigator.of(context);
+                              if (displayMobileLayout)
+                                navigator.pop();
+                              if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
+                                navigator.pop();
+                              }
+                            };
                             return Stack(
                               alignment: Alignment.centerLeft,
                               clipBehavior: Clip.none,
@@ -775,17 +793,13 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                 if (!displayMobileLayout && canPop)
                                   Positioned(
                                     left: -8,
-                                    child: IconButton(
-                                      icon: Icon(Icons.arrow_back),
-                                      tooltip: FromZeroLocalizations.of(context).translate("back"),
-                                      onPressed: () async{
-                                        var navigator = Navigator.of(context);
-                                        if (displayMobileLayout)
-                                          navigator.pop();
-                                        if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
-                                          navigator.pop();
-                                        }
-                                      },
+                                    child: GestureDetector(
+                                      onDoubleTap: onBackPressed,
+                                      child: IconButton(
+                                        icon: Icon(Icons.arrow_back),
+                                        tooltip: FromZeroLocalizations.of(context).translate("back"),
+                                        onPressed: onBackPressed,
+                                      ),
                                     ),
                                   ),
                                 if(widget.drawerTitle!=null)
@@ -811,18 +825,22 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                           final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
                           final displayMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
                           if (!displayMobileLayout){
+                            final onTap = (){
+                              if (displayMobileLayout)
+                                Navigator.of(context).pop();
+                              else
+                                _toggleDrawer(context, changeNotifier);
+                            };
                             return Padding(
                               padding: EdgeInsets.only(right: 8),
-                              child: IconButton(
-                                icon: Icon(Icons.menu),
-                                tooltip: changeNotifier.getCurrentDrawerWidth(widget.currentPage)>widget.compactDrawerWidth||displayMobileLayout
-                                    ? FromZeroLocalizations.of(context).translate("menu_close") : FromZeroLocalizations.of(context).translate("menu_open"),
-                                onPressed: (){
-                                  if (displayMobileLayout)
-                                    Navigator.of(context).pop();
-                                  else
-                                    _toggleDrawer(context, changeNotifier);
-                                },
+                              child: GestureDetector(
+                                onDoubleTap: onTap,
+                                child: IconButton(
+                                  icon: Icon(Icons.menu),
+                                  tooltip: changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)>widget.compactDrawerWidth||displayMobileLayout
+                                      ? FromZeroLocalizations.of(context).translate("menu_close") : FromZeroLocalizations.of(context).translate("menu_open"),
+                                  onPressed: onTap,
+                                ),
                               ),
                             );
                           }
@@ -863,7 +881,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                     child:  Consumer(
                                       builder: (context, ref, child) {
                                         final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-                                        Widget result = _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth);
+                                        Widget result = _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)==widget.compactDrawerWidth);
                                         if (widget.animateDrawer){
                                           result = widget.drawerContentTransitionBuilder(
                                             child: result,
@@ -890,11 +908,11 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                             children: <Widget>[
                                               Divider(height: 3, thickness: 3, color: Theme.of(context).brightness==Brightness.light ? Colors.grey : Colors.grey.shade900,),
                                               SizedBox(height: 8,),
-                                              _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth),
+                                              _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)==widget.compactDrawerWidth),
                                               SizedBox(height: 12,),
                                             ],
                                           ),
-                                        ) : _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(widget.currentPage)==widget.compactDrawerWidth);
+                                        ) : _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)==widget.compactDrawerWidth);
                                   },
                                 ) : SizedBox.shrink(),
                           ],
@@ -941,30 +959,30 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         scaffold.openDrawer();
       }
     } else{
-      if (changeNotifier.getCurrentDrawerWidth(widget.currentPage) > widget.compactDrawerWidth){
-        changeNotifier.setCurrentDrawerWidth(widget.currentPage, widget.compactDrawerWidth);
+      if (changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId) > widget.compactDrawerWidth){
+        changeNotifier.setCurrentDrawerWidth(route.pageScaffoldId, widget.compactDrawerWidth);
       } else{
-        changeNotifier.setCurrentDrawerWidth(widget.currentPage, widget.drawerWidth);
+        changeNotifier.setCurrentDrawerWidth(route.pageScaffoldId, widget.drawerWidth);
       }
     }
   }
 
   void onHorizontalDragUpdate (DragUpdateDetails details, ScaffoldFromZeroChangeNotifier changeNotifier) {
-    double jump = changeNotifier.getCurrentDrawerWidth(widget.currentPage) + details.delta.dx;
+    double jump = changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId) + details.delta.dx;
     if (jump<widget.compactDrawerWidth) jump = widget.compactDrawerWidth;
     if (jump>widget.drawerWidth) jump = widget.drawerWidth;
-    changeNotifier.setCurrentDrawerWidth(widget.currentPage, jump);
+    changeNotifier.setCurrentDrawerWidth(route.pageScaffoldId, jump);
   }
   static const double _kMinFlingVelocity = 365.0;
   void onHorizontalDragEnd (DragEndDetails details, ScaffoldFromZeroChangeNotifier changeNotifier) {
-    double jump = changeNotifier.getCurrentDrawerWidth(widget.currentPage);
+    double jump = changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId);
     if (details.velocity.pixelsPerSecond.dx.abs() >= _kMinFlingVelocity){
       if (details.velocity.pixelsPerSecond.dx>0) jump = widget.drawerWidth;
       else jump = widget.compactDrawerWidth;
     }
     else if (jump<widget.drawerWidth/2) jump = widget.compactDrawerWidth;
     else jump = widget.drawerWidth;
-    changeNotifier.setCurrentDrawerWidth(widget.currentPage, jump);
+    changeNotifier.setCurrentDrawerWidth(route.pageScaffoldId, jump);
   }
 
 }

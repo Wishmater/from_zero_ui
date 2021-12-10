@@ -4,14 +4,10 @@ import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 
 
 import '../../change_notifiers/theme_parameters.dart';
+import '../../router.dart';
 import '../home/page_home.dart';
 
-class PageScaffoldSame extends PageFromZero {
-
-  @override
-  int get pageScaffoldDepth => 1;
-  @override
-  String get pageScaffoldId => "Home";
+class PageScaffoldSame extends StatefulWidget {
 
   PageScaffoldSame();
 
@@ -25,13 +21,14 @@ class _PageScaffoldInnerState extends State<PageScaffoldSame> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      currentPage: widget,
       title: Text("Inner Page"),
       body: Center(
         child: Card(child: FlutterLogo(size: 512,)),
       ),
-      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: -1,),
-      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
+      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
+        tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: mainRoutes),
+        compact: compact,
+      ),
     );
   }
 

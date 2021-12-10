@@ -1,17 +1,16 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
+import 'package:go_router/go_router.dart';
 
 
 import '../../change_notifiers/theme_parameters.dart';
+import '../../router.dart';
 import '../home/page_home.dart';
 
-class PageScaffoldInner extends PageFromZero {
-
-  @override
-  int get pageScaffoldDepth => 2;
-  @override
-  String get pageScaffoldId => "Home";
+class PageScaffoldInner extends StatefulWidget {
 
   PageScaffoldInner();
 
@@ -25,13 +24,21 @@ class _PageScaffoldInnerState extends State<PageScaffoldInner> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      currentPage: widget,
       title: Text("Inner Page"),
       body: Center(
-        child: Card(child: FlutterLogo(size: 512,)),
+        child: Card(child: InkWell(
+          onTap: () {
+            GoRouter.of(context).pushNamed('scaffold_inner', queryParams: {
+              'rand': Random().nextDouble().toString(),
+            });
+          },
+          child: FlutterLogo(size: 512,),
+        )),
       ),
-      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: -1,),
-      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
+      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
+        tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: mainRoutes),
+        compact: compact,
+      ),
     );
   }
 

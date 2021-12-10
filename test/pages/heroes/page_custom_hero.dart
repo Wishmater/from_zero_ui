@@ -4,14 +4,10 @@ import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 
 
 import '../../change_notifiers/theme_parameters.dart';
+import '../../router.dart';
 import '../home/page_home.dart';
 
-class PageCustomHero extends PageFromZero {
-
-  @override
-  int get pageScaffoldDepth => 1;
-  @override
-  String get pageScaffoldId => "Home";
+class PageCustomHero extends StatefulWidget {
 
   PageCustomHero();
 
@@ -25,20 +21,12 @@ class _PageHeroesState extends State<PageCustomHero> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      currentPage: widget,
       title: Text("Heroes"),
       body: _getPage(context),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
-        tabs: List.generate(PageHome.tabs.length, (index) {
-          if (PageHome.tabs[index].title=="Heroes") {
-            return PageHome.tabs[index].copyWith(selectedChild: 2);
-          }
-          return PageHome.tabs[index];
-        })
-        , compact: compact,
-        selected: -1,
+        tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: heroesRoutes),
+        compact: compact,
       ),
-      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
     );
   }
 

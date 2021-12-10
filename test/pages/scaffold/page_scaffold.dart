@@ -3,17 +3,14 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
 import 'package:from_zero_ui/src/app_scaffolding/snackbar_from_zero.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
+import 'package:go_router/go_router.dart';
 
 
 import '../../change_notifiers/theme_parameters.dart';
+import '../../router.dart';
 import '../home/page_home.dart';
 
-class PageScaffold extends PageFromZero {
-
-  @override
-  int get pageScaffoldDepth => 1;
-  @override
-  String get pageScaffoldId => "Home";
+class PageScaffold extends StatefulWidget {
 
   PageScaffold();
 
@@ -29,7 +26,6 @@ class _PageScaffoldState extends State<PageScaffold> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      currentPage: widget,
       title: Row(
         children: [
           Text("Scaffold FromZero"),
@@ -41,11 +37,9 @@ class _PageScaffoldState extends State<PageScaffold> {
       ),
       body: _getPage(context),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
+        tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: mainRoutes),
         compact: compact,
-        selected: 1,
-        tabs: PageHome.tabs,
       ),
-      drawerFooterBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
       actions: [
         Builder(
           builder: (context) {
@@ -152,7 +146,7 @@ class _PageScaffoldState extends State<PageScaffold> {
                           padding: const EdgeInsets.only(left: 16),
                           child: RaisedButton(
                             child: Text("Page With Same ID and Same Depth"),
-                            onPressed: () => Navigator.pushNamed(context, "/scaffold/same"),
+                            onPressed: () => GoRouter.of(context).pushNamed("scaffold_same"),
                           ),
                         ),
                         SizedBox(height: 16,),
@@ -160,7 +154,7 @@ class _PageScaffoldState extends State<PageScaffold> {
                           padding: const EdgeInsets.only(left: 16),
                           child: RaisedButton(
                             child: Text("Page With Same ID and Higher Depth"),
-                            onPressed: () => Navigator.pushNamed(context, "/scaffold/inner"),
+                            onPressed: () => GoRouter.of(context).pushNamed("scaffold_inner"),
                           ),
                         ),
                         SizedBox(height: 16,),
@@ -168,7 +162,7 @@ class _PageScaffoldState extends State<PageScaffold> {
                           padding: const EdgeInsets.only(left: 16),
                           child: RaisedButton(
                             child: Text("Page With Different ID"),
-                            onPressed: () => Navigator.pushNamed(context, "/scaffold/other"),
+                            onPressed: () => GoRouter.of(context).pushNamed("scaffold_other"),
                           ),
                         ),
                         SizedBox(height: 8,),

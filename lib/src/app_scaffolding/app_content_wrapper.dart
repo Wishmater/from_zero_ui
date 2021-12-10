@@ -47,6 +47,7 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
 
 class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWrapper> {
 
+
   @override
   Widget build(BuildContext context) {
     //TODO 3 add restrictions to fontSize, uiScale logic, etc. here
@@ -61,21 +62,36 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
           if (constraints.maxWidth>0){
             screenWidth = constraints.maxWidth;
             screenHeight = constraints.maxHeight;
-            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-              screen.isMobileLayout = constraints.maxWidth < ScaffoldFromZero.screenSizeMedium;
+            if (scaffoldChangeNotifier._previousWidth==null) {
+              screen._isMobileLayout = constraints.maxWidth < ScaffoldFromZero.screenSizeMedium;
               if (constraints.maxWidth>=ScaffoldFromZero.screenSizeXLarge){
-                screen.breakpoint = ScaffoldFromZero.screenSizeXLarge;
+                screen._breakpoint = ScaffoldFromZero.screenSizeXLarge;
               } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeLarge){
-                screen.breakpoint = ScaffoldFromZero.screenSizeLarge;
+                screen._breakpoint = ScaffoldFromZero.screenSizeLarge;
               } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium){
-                screen.breakpoint = ScaffoldFromZero.screenSizeMedium;
+                screen._breakpoint = ScaffoldFromZero.screenSizeMedium;
               } else{
-                screen.breakpoint = ScaffoldFromZero.screenSizeSmall;
+                screen._breakpoint = ScaffoldFromZero.screenSizeSmall;
               }
-              scaffoldChangeNotifier._updateScaffolds(screen.isMobileLayout, screenWidth);
-              scaffoldChangeNotifier._previousWidth = screenWidth;
-              scaffoldChangeNotifier._previousHeight = screenHeight;
-            });
+              scaffoldChangeNotifier._previousWidth = constraints.maxWidth;
+              scaffoldChangeNotifier._previousHeight = constraints.maxHeight;
+            } else {
+              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                screen._isMobileLayout = constraints.maxWidth < ScaffoldFromZero.screenSizeMedium;
+                if (constraints.maxWidth>=ScaffoldFromZero.screenSizeXLarge){
+                  screen.breakpoint = ScaffoldFromZero.screenSizeXLarge;
+                } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeLarge){
+                  screen.breakpoint = ScaffoldFromZero.screenSizeLarge;
+                } else if (constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium){
+                  screen.breakpoint = ScaffoldFromZero.screenSizeMedium;
+                } else{
+                  screen.breakpoint = ScaffoldFromZero.screenSizeSmall;
+                }
+                scaffoldChangeNotifier._updateDrawerWidths(screen.isMobileLayout, constraints.maxWidth);
+                scaffoldChangeNotifier._previousWidth = constraints.maxWidth;
+                scaffoldChangeNotifier._previousHeight = constraints.maxHeight;
+              });
+            }
           }
           return OverflowBox(
             alignment: Alignment.center,
@@ -99,20 +115,8 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
 }
 
 
-abstract class PageFromZero extends StatefulWidget{
-
-  /// Use this to separate pages. Different page IDs will perform an animation in the whole Scaffold, instead of just the body
-  String get pageScaffoldId; // TODO 1 ????? maybe find a way to define this in pageRoute or something to deprecate PageFromZero and its whole mechanism
-  /// Scaffold will perform a SharedZAxisTransition if the depth is different (and not -1)
-  int get pageScaffoldDepth;
 
 
-  int randomId = 0;
-
-
-  PageFromZero({Key? key}) : super(key: key);
-
-}
 
 class ScreenFromZero extends ChangeNotifier{
 
@@ -141,41 +145,6 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     this.drawerOpenByDefaultOnDesktop = true,
   });
 
-  Map<String, ValueNotifier<double>> drawerContentScrollOffsets = {};
-  Map<String, bool> isTreeNodeExpanded = {};
-
-  Map<String, double> _currentDrawerWidth = {};
-  double getCurrentDrawerWidth(PageFromZero page) {
-    if (!_currentDrawerWidth.containsKey(page.pageScaffoldId)){
-      ScaffoldFromZero scaffold = _scaffoldsStack[_pagesStack.indexOf(page)];
-      _currentDrawerWidth[page.pageScaffoldId] =
-          drawerOpenByDefaultOnDesktop  ? scaffold.drawerWidth
-                                        : scaffold.compactDrawerWidth;
-      _blockNotify = true;
-      _updateScaffolds(_previousWidth!<ScaffoldFromZero.screenSizeMedium, _previousWidth!);
-      _blockNotify = false;
-    }
-    return _currentDrawerWidth[page.pageScaffoldId] ?? 0;
-  }
-  bool _blockNotify = false;
-  setCurrentDrawerWidth(PageFromZero page, double value) {
-    _currentDrawerWidth[page.pageScaffoldId] = value;
-    if (!_blockNotify) notifyListeners();
-  }
-  void collapseDrawer(){
-    var scaffold = currentScaffold;
-    var page = currentPage;
-    setCurrentDrawerWidth(page, scaffold.compactDrawerWidth);
-  }
-  void expandDrawer(){
-    var scaffold = currentScaffold;
-    var page = currentPage;
-    setCurrentDrawerWidth(page, scaffold.drawerWidth);
-  }
-  bool get isExpanded => getCurrentDrawerWidth(currentPage)==currentScaffold.drawerWidth;
-  ScaffoldFromZero get currentScaffold => scaffoldsStack.last;
-  PageFromZero get currentPage => pagesStack.last;
-
   int _animationType = ScaffoldFromZero.animationTypeOther;
   int get animationType => _animationType;
   set animationType(int value) {
@@ -183,77 +152,104 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     notifyListeners();
   }
 
-  List<PageFromZero> _pagesStack = [];
-  List<PageFromZero> get pagesStack => _pagesStack;
-  void pushPageToStack (PageFromZero page){
-    _pagesStack.add(page);
+
+
+  // DRAWER RELATED STUFF
+
+  final Map<String, ValueNotifier<double>> drawerContentScrollOffsets = {};
+  final Map<String, bool> isTreeNodeExpanded = {};
+
+  final Map<String, double> _currentDrawerWidths = {};
+  // remember the width of the scaffold for each id.
+  // This is kind of awkward because the option is set in the Scaffold widget,
+  // but needs to be controlled here globally.
+  final Map<String, double> collapsedDrawerWidths = {};
+  final Map<String, double> expandedDrawerWidths = {};
+  double getCurrentDrawerWidth(String pageScaffoldId) {
+    if (!_currentDrawerWidths.containsKey(pageScaffoldId)) {
+      _currentDrawerWidths[pageScaffoldId] =
+          drawerOpenByDefaultOnDesktop  ? expandedDrawerWidths[pageScaffoldId]!
+                                        : collapsedDrawerWidths[pageScaffoldId]!;
+      _blockNotify = true;
+      _updateDrawerWidths(_previousWidth!<ScaffoldFromZero.screenSizeMedium, _previousWidth!);
+      _blockNotify = false;
+    }
+    return _currentDrawerWidths[pageScaffoldId] ?? 0;
   }
-  void popPageFromStack (PageFromZero page){
-    _pagesStack.removeWhere((element) => element.randomId==page.randomId);
+  bool _blockNotify = false;
+  setCurrentDrawerWidth(String pageScaffoldId, double value) {
+    if (_currentDrawerWidths[pageScaffoldId] != value) {
+      _currentDrawerWidths[pageScaffoldId] = value;
+      if (!_blockNotify) notifyListeners();
+    }
+  }
+  void collapseDrawer([String? pageScaffoldId]){
+    pageScaffoldId ??= currentRouteState!.pageScaffoldId;
+    setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId]!);
+  }
+  void expandDrawer([String? pageScaffoldId]){
+    pageScaffoldId ??= currentRouteState!.pageScaffoldId;
+    setCurrentDrawerWidth(pageScaffoldId, expandedDrawerWidths[pageScaffoldId]!);
+  }
+  bool get isCurrentDrawerExpanded => isDrawerExpanded();
+  bool isDrawerExpanded([String? pageScaffoldId]) {
+    pageScaffoldId ??= currentRouteState!.pageScaffoldId;
+    return getCurrentDrawerWidth(pageScaffoldId)==expandedDrawerWidths[pageScaffoldId];
   }
 
-  List<ScaffoldFromZero> _scaffoldsStack = [];
-  List<ScaffoldFromZero> get scaffoldsStack => _scaffoldsStack;
-  void pushScaffoldToStack (ScaffoldFromZero scaffold){
-    _scaffoldsStack.add(scaffold);
-  }
-  void popScaffoldFromStack (ScaffoldFromZero scaffold){
-    _scaffoldsStack.removeWhere((element) => element.currentPage.randomId==scaffold.currentPage.randomId);
-  }
-
+  // Mechanism to automatically expand/collapse drawer in response to screen width changes
   double? _previousWidth;
   double? _previousHeight;
-  void _updateScaffolds(bool displayMobileLayout, double width){
-    for (int i=0; i<scaffoldsStack.length; i++){
-      _updateScaffold(i, displayMobileLayout, width);
+  void _updateDrawerWidths(bool displayMobileLayout, double width){
+    for (final e in _currentDrawerWidths.keys) {
+      _updateDrawerWidth(e, displayMobileLayout, width);
     }
   }
-  void _updateScaffold(int index, bool displayMobileLayout, double width){
-    var scaffold = scaffoldsStack[index];
-    if (displayMobileLayout || scaffold.drawerContentBuilder==null) {
-      setCurrentDrawerWidth(scaffold.currentPage, 0);
-    } else if (_previousWidth!=null && _previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
-      setCurrentDrawerWidth(scaffold.currentPage, scaffold.drawerWidth);
+  void _updateDrawerWidth(String pageScaffoldId, bool displayMobileLayout, double width){
+    if (_previousWidth!=null && _previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
+      setCurrentDrawerWidth(pageScaffoldId, expandedDrawerWidths[pageScaffoldId]!);
     } else if (_previousWidth!=null && _previousWidth!>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
-      setCurrentDrawerWidth(scaffold.currentPage, scaffold.compactDrawerWidth);
-    } else if (getCurrentDrawerWidth(scaffold.currentPage) < scaffold.compactDrawerWidth){
-      setCurrentDrawerWidth(scaffold.currentPage, scaffold.compactDrawerWidth);
+      setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId]!);
+    } else if (getCurrentDrawerWidth(pageScaffoldId) < collapsedDrawerWidths[pageScaffoldId]!){
+      setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId]!);
     }
   }
 
+
+  // SCAFFOLD TRANSITION RELATED STUFF
+
+  GoRouterStateFromZero? _currentRouteState;
+  GoRouterStateFromZero? get currentRouteState => _currentRouteState;
+  GoRouterStateFromZero? _previousRouteState;
+  GoRouterStateFromZero? get previousRouteState => _previousRouteState;
   bool fadeAnim = false;
   bool sharedAnim = false;
   bool titleAnimation = false;
-  void updateStackRelatedVariables(){
-    int animationType = ScaffoldFromZero.animationTypeOther;
-    PageFromZero? currentPage, previousPage;
-    ScaffoldFromZero? currentScaffold, previousScaffold;
-    try{
-      currentPage = _pagesStack[_pagesStack.length-1];
-      previousPage = _pagesStack[_pagesStack.length-2];
-      currentScaffold = _scaffoldsStack[scaffoldsStack.length-1];
-      previousScaffold = _scaffoldsStack[scaffoldsStack.length-2];
-    } catch(_, __) {}
-    if (currentPage!=null && previousPage!=null) {
-      if (currentPage.pageScaffoldId == previousPage.pageScaffoldId) {
-        if (currentPage.pageScaffoldDepth > previousPage.pageScaffoldDepth) {
-          animationType = ScaffoldFromZero.animationTypeInner;
-        } else if (currentPage.pageScaffoldDepth < previousPage.pageScaffoldDepth) {
-          animationType = ScaffoldFromZero.animationTypeOuter;
-        } else {
-          animationType = ScaffoldFromZero.animationTypeSame;
-        }
-      }
+  void setCurrentRouteState(GoRouterStateFromZero route) {
+    _previousRouteState = currentRouteState;
+    _currentRouteState = route;
+    updateAnimationTypes();
+  }
+  void updateAnimationTypes(){
+    if (currentRouteState==null || previousRouteState==null || currentRouteState!.pageScaffoldId!=previousRouteState!.pageScaffoldId) {
+      _animationType = ScaffoldFromZero.animationTypeOther;
+    } else if (currentRouteState!.pageScaffoldDepth > previousRouteState!.pageScaffoldDepth) { // TODO depth should be calculated dynamically (adding width from goRouter.matches stack)
+      _animationType = ScaffoldFromZero.animationTypeInner;
+    } else if (currentRouteState!.pageScaffoldDepth < previousRouteState!.pageScaffoldDepth) {
+      _animationType = ScaffoldFromZero.animationTypeOuter;
+    } else {
+      _animationType = ScaffoldFromZero.animationTypeSame;
     }
-    _animationType = animationType;
     fadeAnim = animationType==ScaffoldFromZero.animationTypeSame;
     sharedAnim = animationType==ScaffoldFromZero.animationTypeInner || animationType==ScaffoldFromZero.animationTypeOuter;
-    titleAnimation = animationType!=ScaffoldFromZero.animationTypeOther
-        && currentScaffold!=null && previousScaffold!=null
-        && !(  (currentScaffold.title?.key!=null && previousScaffold.title?.key!=null
-                && currentScaffold.title?.key==previousScaffold.title?.key)
-            || (currentScaffold.title is Text && previousScaffold.title is Text
-                && (currentScaffold.title as Text).data == (previousScaffold.title as Text).data));
+    titleAnimation = animationType!=ScaffoldFromZero.animationTypeOther;
+        // && currentRoute!=null && previousRoute!=null
+        // && !(  (currentScaffold.title?.key!=null && previousScaffold.title?.key!=null
+        //         && currentScaffold.title?.key==previousScaffold.title?.key)
+        //     || (currentScaffold.title is Text && previousScaffold.title is Text
+        //         && (currentScaffold.title as Text).data == (previousScaffold.title as Text).data));
+              // because of the change to using routes, we lost the ability to compare the titles of the different pages
+              // could still be done if the pages put it here, but is messy and not really necessary
   }
 
 }

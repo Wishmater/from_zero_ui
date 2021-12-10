@@ -154,27 +154,30 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
     ContextCallback? onTap,
     bool enabled = true,
   }) {
-    return TextButton(
-      style: TextButton.styleFrom(
-        primary: Theme.of(context).appBarTheme.toolbarTextStyle?.color
-            ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
-        padding: EdgeInsets.zero,
-      ),
-      onPressed: !enabled ? null : (){
-        onTap?.call(context);
-      },
-      onLongPress: () => null,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          SizedBox(width: 6),
-          if (icon!=null)
-            icon,
-          if (icon!=null)
-            SizedBox(width: 8,),
-          Text(title, style: TextStyle(fontSize: 16),),
-          SizedBox(width: 6),
-        ],
+    return GestureDetector(
+      onDoubleTap: () => !enabled ? null : onTap?.call(context),
+      child: TextButton(
+        style: TextButton.styleFrom(
+          primary: Theme.of(context).appBarTheme.toolbarTextStyle?.color
+              ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+          padding: EdgeInsets.zero,
+        ),
+        onPressed: !enabled ? null : (){
+          onTap?.call(context);
+        },
+        onLongPress: () => null,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(width: 6),
+            if (icon!=null)
+              icon,
+            if (icon!=null)
+              SizedBox(width: 8,),
+            Text(title, style: TextStyle(fontSize: 16),),
+            SizedBox(width: 6),
+          ],
+        ),
       ),
     );
   }

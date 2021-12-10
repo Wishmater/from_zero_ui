@@ -9,14 +9,10 @@ import 'package:path_provider/path_provider.dart';
 
 
 import '../../change_notifiers/theme_parameters.dart';
+import '../../router.dart';
 import '../home/page_home.dart';
 
-class PageFutureHandling extends PageFromZero {
-
-  @override
-  int get pageScaffoldDepth => 1;
-  @override
-  String get pageScaffoldId => "Home";
+class PageFutureHandling extends StatefulWidget {
 
   PageFutureHandling();
 
@@ -35,7 +31,6 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
     return ScaffoldFromZero(
       mainScrollController: scrollController,
       appbarType: ScaffoldFromZero.appbarTypeCollapse,
-      currentPage: widget,
       title: Container(
         height: 56,
         width: 256,
@@ -44,7 +39,10 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
         child: Text("Future Handling"),
       ),
       body: _getPage(context),
-      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 4,),
+      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
+        tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: mainRoutes),
+        compact: compact,
+      ),
       drawerFooterBuilder: (scaffoldContext, compact) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -67,7 +65,10 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
           //     );
           //   },
           // ),
-          DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
+          DrawerMenuFromZero(
+            tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: settingsRoutes),
+            compact: compact,
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton(

@@ -8,14 +8,10 @@ import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../change_notifiers/theme_parameters.dart';
+import '../../router.dart';
 import '../home/page_home.dart';
 
-class PageLightweightTable extends PageFromZero {
-
-  @override
-  int get pageScaffoldDepth => 1;
-  @override
-  String get pageScaffoldId => "Home";
+class PageLightweightTable extends StatefulWidget {
 
   PageLightweightTable();
 
@@ -47,10 +43,12 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
     return ScaffoldFromZero(
       mainScrollController: scrollController,
       scrollbarType: ScaffoldFromZero.scrollbarTypeOverAppbar,
-      currentPage: widget,
       title: Text("Lightweight Table"),
       body: _getPage(context),
-      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(tabs: PageHome.tabs, compact: compact, selected: 2,),
+      drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
+        tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: mainRoutes),
+        compact: compact,
+      ),
       drawerFooterBuilder: (scaffoldContext, compact) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -99,7 +97,10 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
           //     );
           //   },
           // ),
-          DrawerMenuFromZero(tabs: PageHome.footerTabs, compact: compact, selected: -1, replaceInsteadOfPushing: DrawerMenuFromZero.neverReplaceInsteadOfPushing,),
+          DrawerMenuFromZero(
+            tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: settingsRoutes),
+            compact: compact,
+          )
         ],
       ),
     );
