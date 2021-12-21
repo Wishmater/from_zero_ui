@@ -14,7 +14,7 @@ typedef ApiProvider<T> = StateNotifierProvider<ApiState<T>, AsyncValue<T>>;
 class ApiState<State> extends StateNotifier<AsyncValue<State>> {
 
   // StateNotifierProviderRef<ApiState<State>, AsyncValue<State>> _ref;
-  Ref _ref;
+  Ref? _ref;
   FutureOr<State> Function(ApiState<State>) _create;
   late FutureOr<State> future;
   bool _running = true;
@@ -29,8 +29,18 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     _cancelTokens.add(ct);
   }
 
-  ApiState(this._ref, this._create,)
+  ApiState(Ref ref, this._create,)
+      : this._ref = ref,
+        super(AsyncValue.loading()) {
+    init();
+  }
+
+  ApiState.noProvider(this._create,)
       : super(AsyncValue.loading()) {
+    init();
+  }
+
+  void init() {
     selfTotalNotifier = ValueNotifier(null);
     selfTotalNotifier.addListener(_computeTotal);
     selfProgressNotifier = ValueNotifier(null);
@@ -44,9 +54,10 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
   }
 
   Future<T> watch<T>(ApiProvider<T> watchProvider) async {
+    assert(_ref!=null);
     if (!_watching.contains(watchProvider)) {
       _watching.add(watchProvider);
-      final newApiState = _ref.read(watchProvider.notifier);
+      final newApiState = _ref!.read(watchProvider.notifier);
       _computeTotal();
       _computeProgress();
       _computePercentage();
@@ -55,47 +66,51 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
       newApiState.wholePercentageNotifier.addListener(_computePercentage);
     }
     // return await _ref.watch(watchProvider.notifier).future;
-    return await _ref.watch(watchProvider.future);
+    return await _ref!.watch(watchProvider.future);
   }
 
   void retry() {
     bool refreshed = false;
-    for (final e in List<ApiProvider>.from(_watching)) {
-      _ref.read(e).whenOrNull(
-        error: (error, stackTrace) {
-          _ref.read(e.notifier).retry();
-          refreshed = true;
-        },
-      );
+    if (_ref != null) {
+      for (final e in List<ApiProvider>.from(_watching)) {
+        _ref!.read(e).whenOrNull(
+          error: (error, stackTrace) {
+            _ref!.read(e.notifier).retry();
+            refreshed = true;
+          },
+        );
+      }
     }
     if (!refreshed) {
       _runFuture();
     }
-    // try { _ref.refresh(provider); } catch (_) {} // TODO ??? how to refresh THIS provider
+    // try { _ref.refresh(provider); } catch (_) {} // TODO ??? how to refresh THIS provider ??? pretty sure it is not needed
   }
 
   void refresh() {
     bool refreshed = false;
-    for (final e in _watching) {
-      _ref.read(e.notifier).refresh();
-      refreshed = true;
+    if (_ref != null) {
+      for (final e in _watching) {
+        _ref!.read(e.notifier).refresh();
+        refreshed = true;
+      }
     }
     if (!refreshed) {
       _runFuture();
     }
-    // try { _ref.refresh(provider); } catch (_) {} // TODO ??? how to refresh THIS provider
+    // try { _ref.refresh(provider); } catch (_) {} // TODO ??? how to refresh THIS provider ??? pretty sure it is not needed
   }
 
 
   @override
   void dispose() {
     _running = false;
-    _cleanupCancelTokens();
+    cancel();
     super.dispose();
   }
 
   void _runFuture() {
-    _cleanupCancelTokens();
+    cancel();
     selfTotalNotifier.value = null;
     selfProgressNotifier.value = null;
     wholePercentageNotifier.value = null;
@@ -113,7 +128,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
             if (_running) {
               state = AsyncValue<State>.error(err, stackTrace: stack);
             }
-            _cleanupCancelTokens();
+            cancel();
           },
         );
       } else {
@@ -124,7 +139,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     }
   }
 
-  void _cleanupCancelTokens() {
+  void cancel() {
     for (final c in _cancelTokens) {
       try { c.cancel(); } catch (_) {}
     }
@@ -133,41 +148,48 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
 
   void _computeTotal() {
     double? result = selfTotalNotifier.value;
-    _watching.forEach((e) {
-      final partial = _ref.read(e.notifier).wholeTotalNotifier.value;
-      if (partial!=null) {
-        result = (result??0) + partial;
-      }
-    });
+    if (_ref != null) {
+      _watching.forEach((e) {
+        final partial = _ref!.read(e.notifier).wholeTotalNotifier.value;
+        if (partial!=null) {
+          result = (result??0) + partial;
+        }
+      });
+    }
     wholeTotalNotifier.value = result;
   }
   void _computeProgress() {
     double? result = selfProgressNotifier.value;
-    _watching.forEach((e) {
-      final partial = _ref.read(e.notifier).wholeProgressNotifier.value;
-      if (partial!=null) {
-        result = (result??0) + partial;
-      }
-    });
+    if (_ref != null) {
+      _watching.forEach((e) {
+        final partial = _ref!.read(e.notifier).wholeProgressNotifier.value;
+        if (partial!=null) {
+          result = (result??0) + partial;
+        }
+      });
+    }
     wholeProgressNotifier.value = result;
   }
   void _computePercentage() {
-    // TODO 3 there could be some improvement here, tight now wholeNotifiers are ignored
+    // TODO 3 there could be some improvement here, right now wholeNotifiers are ignored
     //    Instead percentage of all dependencies are used, asuming their totals are equal
     //    Percentage could be calculated only from wholeNotifiers,
     //    but this has problems when not all dependencies teport their total/progress
     final total = selfTotalNotifier.value;
     final progress = selfProgressNotifier.value;
     double? result = total==null||progress==null||total==0 ? null : progress/total;
-    _watching.forEach((e) {
-      final partial = _ref.read(e.notifier).wholePercentageNotifier.value
-          ?? _ref.read(e).maybeWhen<double>(data:(_)=>1, orElse: ()=>0,);
-      result = (result??0) + partial;
-    });
+    if (_ref != null) {
+      _watching.forEach((e) {
+        final partial = _ref!.read(e.notifier).wholePercentageNotifier.value
+            ?? _ref!.read(e).maybeWhen<double>(data:(_)=>1, orElse: ()=>0,);
+        result = (result??0) + partial;
+      });
+    }
     wholePercentageNotifier.value = result==null ? null : (result!/(_watching.length+1));
   }
 
 }
+
 
 
 
