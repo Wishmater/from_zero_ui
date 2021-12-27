@@ -61,14 +61,19 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   set value(T? value) {
     if (_value!=value) {
       passedFirstEdit = true;
-      undoValues.add(_value); // TODO 1 Fields that override value setter must override undo logic as well (important on textfields)
-      dao.addUndoEntry(this);
-      redoValues = [];
+      addUndoEntry(_value);
       _value = value;
       dao.validate(dao.contextForValidation!,
         validateNonEditedFields: false,
       );
-      // notifyListeners();
+      notifyListeners();
+    }
+  }
+  void addUndoEntry(T? value) {
+    if (undoValues.isEmpty || undoValues.last!=value) {
+      undoValues.add(value);
+      dao.addUndoEntry(this);
+      redoValues = [];
     }
   }
   List<T?> undoValues;
@@ -96,7 +101,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     this.colModelBuilder = fieldDefaultGetColumn,
     List<T?>? undoValues,
     List<T?>? redoValues,
-    this.invalidateNonEmptyValuesIfHiddenInForm = true,  // TODO 1 implement on each field, override if necessary
+    this.invalidateNonEmptyValuesIfHiddenInForm = true,
     this.defaultValue,
     this.backgroundColor,
     this.actions,
@@ -186,25 +191,52 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
 
   void undo({
     bool removeEntryFromDAO = false,
+    bool requestFocus = true,
+  }) {
+    commitUndo(value,
+      removeEntryFromDAO: removeEntryFromDAO,
+      requestFocus: requestFocus,
+    );
+  }
+  void commitUndo(T? currentValue, {
+    bool removeEntryFromDAO = false,
+    bool requestFocus = true,
   }) {
     assert(undoValues.isNotEmpty);
-    redoValues.add(value);
+    redoValues.add(currentValue);
     dao.addRedoEntry(this);
     _value = undoValues.removeLast();
     if (removeEntryFromDAO) {
       dao.removeLastUndoEntry(this);
     }
+    if (requestFocus) {
+      this.requestFocus();
+    }
     notifyListeners();
   }
+
   void redo({
     bool removeEntryFromDAO = false,
+    bool requestFocus = true,
+  }) {
+    commitRedo(value,
+      removeEntryFromDAO: removeEntryFromDAO,
+      requestFocus: requestFocus,
+    );
+  }
+  void commitRedo(T? currentValue, {
+    bool removeEntryFromDAO = false,
+    bool requestFocus = true,
   }) {
     assert(redoValues.isNotEmpty);
-    undoValues.add(value);
+    undoValues.add(currentValue);
     dao.addUndoEntry(this);
     _value = redoValues.removeLast();
     if (removeEntryFromDAO) {
       dao.removeLastRedoEntry(this);
+    }
+    if (requestFocus) {
+      this.requestFocus();
     }
     notifyListeners();
   }
@@ -235,6 +267,17 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     });
     validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
     return validationErrors.where((e) => e.isBlocking).isEmpty;
+  }
+
+  void requestFocus() {
+    focusNode.requestFocus();
+    try {
+      Scrollable.ensureVisible(fieldGlobalKey.currentContext!,
+        duration: Duration(milliseconds: 500),
+        curve: Curves.easeOutCubic,
+        alignment: 0.5,
+      );
+    } catch(_) {}
   }
 
   SimpleColModel getColModel() => colModelBuilder(this, dao);

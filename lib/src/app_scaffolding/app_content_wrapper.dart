@@ -44,9 +44,8 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
 }
 
 
-
+ValueNotifier<bool> isMouseOverWindowBar = ValueNotifier(false);
 class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWrapper> {
-
 
   @override
   Widget build(BuildContext context) {
@@ -102,8 +101,30 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
             child: SizedBox(
               width: screenWidth,
               height: screenHeight,
-              child: SnackBarHostFromZero(
-                child: widget.child,
+              child: Stack(
+                children: [
+                  SnackBarHostFromZero(
+                    child: widget.child,
+                  ),
+                  Positioned(
+                    top: 0, left: 0, right: 0,
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: isMouseOverWindowBar,
+                      builder: (context, value, child) {
+                        return AppearOnMouseOver(
+                          appear: !value,
+                          child: WindowBar(
+                            backgroundColor: Theme.of(context).cardColor,
+                            onMaximizeOrRestore: (context) {
+                              // hack so the windowBar doesn't get stuck after maximize
+                              context.findAncestorStateOfType<_AppearOnMouseOverState>()!.pressed = false;
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -113,6 +134,157 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
   }
 
 }
+
+
+
+
+class AppearOnMouseOver extends StatefulWidget {
+
+  final bool appear;
+  final Widget child;
+
+  const AppearOnMouseOver({
+    required this.child,
+    this.appear = true,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  _AppearOnMouseOverState createState() => _AppearOnMouseOverState();
+
+}
+class _AppearOnMouseOverState extends State<AppearOnMouseOver> {
+
+  bool visible = false;
+  bool pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    bool visible = (this.visible||this.pressed)&&widget.appear;
+    return MouseRegion(
+      opaque: false,
+      onEnter: (event) {
+        setState(() {
+          this.visible = true;
+        });
+      },
+      onExit: (event) {
+        if (pressed) {
+          this.pressed = false;
+        } else {
+          setState(() {
+            this.visible = false;
+          });
+        }
+      },
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: !visible ? null : () => null,
+        onSecondaryTap: !visible ? null : () => null,
+        onTapDown: !visible ? null : (details) => pressed = true,
+        onTapCancel: !visible ? null : () => pressed = false,
+        onTapUp: !visible ? null : (details) => pressed = false,
+        onPanStart: !visible ? null : (details) => pressed = true,
+        onPanCancel: !visible ? null : () => pressed = true,
+        onPanEnd: !visible ? null : (details) => pressed = false,
+        child: AnimatedOpacity(
+          opacity: visible ? 1 : 0,
+          duration: Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          child: IgnorePointer(
+            ignoring: !visible,
+            child: widget.child,
+          ),
+        ),
+      ),
+    );
+  }
+
+}
+
+
+class WindowBar extends StatelessWidget {
+
+  final double? height;
+  final Color? backgroundColor;
+  final bool? Function(BuildContext context)? onMinimize;
+  final bool? Function(BuildContext context)? onMaximizeOrRestore;
+  final bool? Function(BuildContext context)? onClose;
+
+  const WindowBar({
+    Key? key,
+    this.height,
+    this.backgroundColor,
+    this.onMinimize,
+    this.onMaximizeOrRestore,
+    this.onClose,
+  })  : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height ?? (appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight),
+      color: backgroundColor,
+      child: MoveWindow(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            MinimizeWindowButton(
+              animate: true,
+              onPressed: () {
+                if (onMinimize?.call(context) ?? true) {
+                  appWindow.minimize();
+                }
+              },
+              colors: WindowButtonColors(
+                mouseOver: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.1),
+                mouseDown: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.2),
+                iconNormal: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+                iconMouseOver: Theme.of(context).textTheme.bodyText1!.color!,
+                iconMouseDown: Theme.of(context).textTheme.bodyText1!.color!,
+              ),
+            ),
+            WindowButton(
+              animate: true,
+              iconBuilder: (buttonContext) => appWindow.isMaximized
+                  ? RestoreIcon(color: buttonContext.iconColor)
+                  : MaximizeIcon(color: buttonContext.iconColor),
+              padding: EdgeInsets.zero,
+              onPressed: () {
+                if (onMaximizeOrRestore?.call(context) ?? true) {
+                  appWindow.maximizeOrRestore();
+                }
+              },
+              colors: WindowButtonColors(
+                mouseOver: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.1),
+                mouseDown: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.2),
+                iconNormal: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+                iconMouseOver: Theme.of(context).textTheme.bodyText1!.color!,
+                iconMouseDown: Theme.of(context).textTheme.bodyText1!.color!,
+              ),
+            ),
+            CloseWindowButton(
+              animate: true,
+              onPressed: () {
+                if (onClose?.call(context) ?? true) {
+                  appWindow.close();
+                }
+              },
+              colors: WindowButtonColors(
+                mouseOver: Color(0xFFD32F2F),
+                mouseDown: Color(0xFFB71C1C),
+                iconNormal: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+                iconMouseOver: Colors.white,
+                iconMouseDown: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 
 
 
@@ -206,7 +378,9 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     }
   }
   void _updateDrawerWidth(String pageScaffoldId, bool displayMobileLayout, double width){
-    if (_previousWidth!=null && _previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
+    if (width < ScaffoldFromZero.screenSizeMedium) {
+      setCurrentDrawerWidth(pageScaffoldId, 0);
+    } else if (_previousWidth!=null && _previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
       setCurrentDrawerWidth(pageScaffoldId, expandedDrawerWidths[pageScaffoldId]!);
     } else if (_previousWidth!=null && _previousWidth!>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
       setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId]!);
@@ -233,7 +407,7 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
   void updateAnimationTypes(){
     if (currentRouteState==null || previousRouteState==null || currentRouteState!.pageScaffoldId!=previousRouteState!.pageScaffoldId) {
       _animationType = ScaffoldFromZero.animationTypeOther;
-    } else if (currentRouteState!.pageScaffoldDepth > previousRouteState!.pageScaffoldDepth) { // TODO depth should be calculated dynamically (adding width from goRouter.matches stack)
+    } else if (currentRouteState!.pageScaffoldDepth > previousRouteState!.pageScaffoldDepth) {
       _animationType = ScaffoldFromZero.animationTypeInner;
     } else if (currentRouteState!.pageScaffoldDepth < previousRouteState!.pageScaffoldDepth) {
       _animationType = ScaffoldFromZero.animationTypeOuter;

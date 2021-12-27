@@ -24,7 +24,8 @@ class ResponsiveDrawerMenuItem{
   final String? subtitle;
   final String? subtitleRight;
   final String? route;
-  final Map<String, dynamic>? arguments;
+  final Map<String, dynamic>? params;
+  final Map<String, dynamic>? queryParams;
   final Widget? icon;
   final List<ResponsiveDrawerMenuItem>? children;
   final int selectedChild;
@@ -42,7 +43,8 @@ class ResponsiveDrawerMenuItem{
     this.subtitle,
     this.icon,
     this.route,
-    this.arguments,
+    this.params,
+    this.queryParams,
     this.children,
     this.selectedChild = -1,
     this.onTap,
@@ -59,7 +61,8 @@ class ResponsiveDrawerMenuItem{
   static List<ResponsiveDrawerMenuItem> fromGoRoutes({
     required List<GoRouteFromZero> routes,
     bool excludeRoutesThatDontWantToShow = false,
-    Map<String, dynamic>? arguments,
+    Map<String, dynamic>? params,
+    Map<String, dynamic>? queryParams,
     bool dense = false,
     bool forcePopup = false,
     double titleHorizontalOffset = 0,
@@ -70,7 +73,8 @@ class ResponsiveDrawerMenuItem{
     return routes.mapIndexed((i, e) {
       final children = fromGoRoutes(
         routes: e.routes,
-        arguments: arguments,
+        params: params,
+        queryParams: queryParams,
         dense: dense,
         forcePopup: forcePopup,
         titleHorizontalOffset: titleHorizontalOffset,
@@ -91,7 +95,8 @@ class ResponsiveDrawerMenuItem{
             icon: e.icon,
             route: e.name,
             children: e.childrenAsDropdownInDrawerNavigation ? children : [],
-            arguments: arguments,
+            params: params,
+            queryParams: queryParams,
             dense: dense,
             forcePopup: forcePopup,
             titleHorizontalOffset: titleHorizontalOffset,
@@ -126,7 +131,7 @@ class ResponsiveDrawerMenuItem{
       subtitle: subtitle ?? this.subtitle,
       subtitleRight: subtitleRight ?? this.subtitleRight,
       route: route ?? this.route,
-      arguments: arguments ?? this.arguments,
+      params: arguments ?? this.params,
       icon: icon ?? this.icon,
       children: children ?? this.children,
       selectedChild: selectedChild ?? this.selectedChild,
@@ -373,7 +378,11 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 bool result;
                 result = tabs[i].onTap?.call() ?? false;
                 if (i!=selected && tabs[i].route!=null) {
-                  GoRouter.of(context).goNamed(tabs[i].route!);
+                  GoRouter.of(context).goNamed(
+                    tabs[i].route!,
+                    params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
+                    queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
+                  );
                 }
                 return result;
               };
@@ -397,9 +406,12 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   navigator.pop();
               } catch(_, __){}
               if (widget.replaceInsteadOfPushing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPushing){
-                // TODO ! this will break if the homeRoute is NOT in the stack
+                // ! this will break if the homeRoute is NOT in the stack
                 if (selected>=0 && tabs[selected].route==widget.homeRoute){
-                  navigator.pushNamed(tabs[i].route!, arguments: tabs[i].arguments);
+                  navigator.pushNamed(
+                    tabs[i].route!,
+                    arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
+                  );
                 } else{
                   if (tabs[i].route==widget.homeRoute){
                     if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
@@ -407,12 +419,19 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                     }
                   } else{
                     if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
-                      navigator.pushNamedAndRemoveUntil(tabs[i].route!, ModalRoute.withName(widget.homeRoute!), arguments: tabs[i].arguments);
+                      navigator.pushNamedAndRemoveUntil(
+                        tabs[i].route!,
+                        ModalRoute.withName(widget.homeRoute!),
+                        arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
+                      );
                     }
                   }
                 }
               } else if (widget.replaceInsteadOfPushing == DrawerMenuFromZero.neverReplaceInsteadOfPushing){
-                navigator.pushNamed(tabs[i].route!, arguments: tabs[i].arguments);
+                navigator.pushNamed(
+                  tabs[i].route!,
+                  arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
+                );
               } else if (widget.replaceInsteadOfPushing == DrawerMenuFromZero.alwaysReplaceInsteadOfPushing){
                 if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
                   List<String> routes = [];
@@ -439,7 +458,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                       }
                       return false;
                     },
-                    arguments: tabs[i].arguments,
+                    arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
                   );
                 }
               }

@@ -65,6 +65,19 @@ implement PageIndicatorForZero
 implement DialogButton widget to streamline appearance
 implement AlertDialogFromZero, taking simple parameters (title, message, onAccept, onCancel)
 
+Navigation (with GoRouter)
+	??? Later maybe read a bit about nested navigation, might have some applications
+	there should be a way to "push" the subtree, 
+			this means the subtree will decide its normally with .go, but wont affect routes below it
+		PROPOSAL:
+			create a new custom routeDelegate, 
+				that contains a goRouterDelegate and conveys everything to it
+				add a new method pushRouter: 
+					allows to push a new goRouter, with full functionality, on top of the new one
+					when the last page of this new router is popped, the whole router will be popped, returning to previous one
+					add an aditional initialRoute parameter when pushing new router
+					? impact in the fromZeroScaffold page shenannigans
+				! need to read more about default navigator2.0 documentation
 
 
 ??? force windows app to be executed as admin by default

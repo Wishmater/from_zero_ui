@@ -18,9 +18,38 @@ class NumField extends Field<num> {
 
   set value(num? v) {
     super.value = v;
+    syncTextEditingController();
+  }
+
+  @override
+  void undo({
+    bool removeEntryFromDAO = false,
+    bool requestFocus = true,
+  }) {
+    super.commitUndo(_getTextVal(controller.text),
+      removeEntryFromDAO: removeEntryFromDAO,
+      requestFocus: requestFocus,
+    );
+    syncTextEditingController();
+  }
+  @override
+  void redo({
+    bool removeEntryFromDAO = false,
+    bool requestFocus = true,
+  }) {
+    super.commitRedo(_getTextVal(controller.text),
+      removeEntryFromDAO: removeEntryFromDAO,
+      requestFocus: requestFocus,
+    );
+    syncTextEditingController();
+  }
+
+  void syncTextEditingController() {
     final textVal = _getTextVal(controller.text);
     if (value != textVal) {
-      controller.text = toString();
+      final string = toString();
+      controller.text = string;
+      controller.selection = TextSelection.collapsed(offset: string.length);
     }
   }
 
@@ -215,9 +244,15 @@ class NumField extends Field<num> {
     required FocusNode focusNode,
   }) {
     focusNode.addListener(() {
-      if (!passedFirstEdit && !focusNode.hasFocus) {
-        passedFirstEdit = true;
-        notifyListeners();
+      if (!focusNode.hasFocus) {
+        final textVal = _getTextVal(controller.text);
+        if (textVal != value) {
+          super.value = textVal;
+        }
+        if (!passedFirstEdit) {
+          passedFirstEdit = true;
+          notifyListeners();
+        }
       }
     });
     Widget result = NotificationListener(
@@ -245,7 +280,12 @@ class NumField extends Field<num> {
                     enabled: enabled,
                     focusNode: focusNode,
                     onChanged: (v) {
-                      value = _getTextVal(v);
+                      final textVal = _getTextVal(v);
+                      if (v.isEmpty || v.characters.last=='.' || v.characters.last==',') {
+                        value = textVal;
+                      } else if (value!=textVal) {
+                        addUndoEntry(value);
+                      }
                     },
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.allow(RegExp(digitsAfterComma==0 ? (r'[0-9]') : (r'[0-9.]'))),],
@@ -320,7 +360,7 @@ class NumField extends Field<num> {
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
           final actions = this.actions?.call(context, this, dao) ?? [];
-          result = ContextMenuFromZero( // TODO 3 this is blocked by default TextField toolbar
+          result = ContextMenuFromZero( // TODO 1 this is blocked by default TextField toolbar
             enabled: enabled,
             addGestureDetector: !dense,
             actions: [

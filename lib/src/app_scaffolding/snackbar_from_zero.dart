@@ -12,7 +12,7 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
   static const info = 0;
   static const success = 1;
   static const error = 2;
-  static const loading = 3; //TODO accept a future, pop on completion or error
+  static const loading = 3;
   static final softColors = <Color>[
     Colors.blue.shade300,
     Colors.green.shade300,

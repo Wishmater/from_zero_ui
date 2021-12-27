@@ -1,4 +1,19 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+
+
+final fromZeroDefaultShortcuts = {
+  LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyF): SearchIntent(),
+  LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyZ): UndoIntent(),
+  LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.keyY): RedoIntent(),
+  LogicalKeySet(LogicalKeyboardKey.control, LogicalKeyboardKey.shift, LogicalKeyboardKey.keyZ): RedoIntent(),
+};
+class SearchIntent extends Intent {}
+class UndoIntent extends Intent {}
+class RedoIntent extends Intent {}
+
+
 
 
 @deprecated

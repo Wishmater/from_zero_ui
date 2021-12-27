@@ -73,6 +73,10 @@ class MyApp extends StatelessWidget {
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
             ],
+            shortcuts: {
+              ...WidgetsApp.defaultShortcuts,
+              ...fromZeroDefaultShortcuts,
+            },
             builder: (context, child) {
               return FromZeroAppContentWrapper(child: child);
             },

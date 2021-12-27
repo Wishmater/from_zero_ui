@@ -90,7 +90,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     if (context.findAncestorWidgetOfExactType<Export>()!=null) {
       return child;
     }
-// TODO add 6 margin right if main and windowed
+
     if (widget.applyOpacityGradientToChildren ?? widget.controller!=null){
       if (widget.controller!=null) {
         child = ScrollOpacityGradient(
@@ -174,7 +174,6 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   }) {
     return Scrollbar(
       key: key,
-      // controller: supportsAlwaysShown ? widget.controller : null
       controller: widget.controller==null ? null : alwaysAttachedScrollController,
       isAlwaysShown: wantsAlwaysShown && supportsAlwaysShown,
       notificationPredicate: widget.notificationPredicate,
@@ -273,7 +272,8 @@ class AlwaysAttachedScrollController implements ScrollController {
   }
 
   @override
-  Iterable<ScrollPosition> get positions => parent?.positions ?? [];
+  Iterable<ScrollPosition> get positions => parent==null ? []
+      : parent!.positions.isEmpty ? [] : [parent!.positions.first];
 
   @override
   void addListener(VoidCallback listener) {

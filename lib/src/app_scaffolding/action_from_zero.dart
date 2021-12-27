@@ -85,6 +85,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
           ScaffoldFromZero.screenSizeLarge: ActionState.icon,
         };
 
+  static final Function(BuildContext context)? nullOnTap = (context)=>null;
   ActionFromZero copyWith({
     void Function(BuildContext context)? onTap,
     String? title,
@@ -98,7 +99,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
     bool? enabled,
   }) {
     return ActionFromZero(
-      onTap: onTap ?? this.onTap,
+      onTap: onTap==nullOnTap ? null : (onTap ?? this.onTap),
       title: title ?? this.title,
       icon: icon ?? this.icon,
       breakpoints: breakpoints ?? this.breakpoints,

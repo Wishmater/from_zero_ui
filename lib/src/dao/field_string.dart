@@ -21,16 +21,50 @@ class StringField extends Field<String> {
   InputDecoration? inputDecoration;
   List<TextInputFormatter>? inputFormatters;
   bool obfuscate;
-  bool showObfuscationToggleButton; // TODO implement obfuscation toggle button
+  bool showObfuscationToggleButton; // TODO 2 implement obfuscation toggle button
 
-  set value(String? v) {
-    super.value = v ?? '';
-    if (value != controller.text) {
-      controller.text = value ?? '';
-    }
-  }
   set dbValue(String? v) {
     super.dbValue = v ?? '';
+  }
+
+  set value(String? v) {
+    v ??= '';
+    if (v.isEmpty || v.characters.last==' ' || v.characters.last=='\n') {
+      super.value = v;
+      syncTextEditingController();
+    } else if (value!=controller.text) {
+      addUndoEntry(value);
+    }
+  }
+
+  @override
+  void undo({
+    bool removeEntryFromDAO = false,
+    bool requestFocus = true,
+  }) {
+    super.commitUndo(controller.text,
+      removeEntryFromDAO: removeEntryFromDAO,
+      requestFocus: requestFocus,
+    );
+    syncTextEditingController();
+  }
+  @override
+  void redo({
+    bool removeEntryFromDAO = false,
+    bool requestFocus = true,
+  }) {
+    super.commitRedo(controller.text,
+      removeEntryFromDAO: removeEntryFromDAO,
+      requestFocus: requestFocus,
+    );
+    syncTextEditingController();
+  }
+
+  void syncTextEditingController() {
+    if (value != controller.text) {
+      controller.text = value ?? '';
+      controller.selection = TextSelection.collapsed(offset: value!.length);
+    }
   }
 
   StringField({
@@ -218,10 +252,15 @@ class StringField extends Field<String> {
     bool dense = false,
     required FocusNode focusNode,
   }) {
-    focusNode.addListener(() { // TODO this might not be necessary after the new mechanism for adding undo is implemented, also un NumField
-      if (!passedFirstEdit && !focusNode.hasFocus) {
-        passedFirstEdit = true;
-        notifyListeners();
+    focusNode.addListener(() {
+      if (!focusNode.hasFocus) {
+        if (controller.text != value) {
+          super.value = controller.text;
+        }
+        if (!passedFirstEdit) {
+          passedFirstEdit = true;
+          notifyListeners();
+        }
       }
     });
     Widget result = NotificationListener(
@@ -322,7 +361,7 @@ class StringField extends Field<String> {
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
           final actions = this.actions?.call(context, this, dao) ?? [];
-          result = ContextMenuFromZero( // TODO 3 this is blocked by default TextField toolbar
+          result = ContextMenuFromZero( // TODO 1 this is blocked by default TextField toolbar
             enabled: enabled,
             addGestureDetector: !dense,
             actions: [

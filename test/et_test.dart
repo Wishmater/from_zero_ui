@@ -541,7 +541,32 @@ DAO getEtDao() {
                           digitsAfterComma: 2,
                           validatorsGetter: (field, dao) => [fieldValidatorRequired, fieldValidatorNumberNotZero, fieldValidatorNumberNotNegative],
                         ),
-                        // TODO sellos
+                        'sellos': ListField(
+                          uiNameGetter: (field, dao) => 'Sellos',
+                          tableColumnWidth: 80,
+                          objects: [],
+                          tableCellsEditable: true,
+                          initialSortColumn: -1,
+                          tableFilterable: false,
+                          actionDeleteBreakpoints: {0: ActionState.icon},
+                          actionEditBreakpoints: {0: ActionState.icon},
+                          objectTemplate: DAO(
+                            uiNameGetter: (dao) => dao.props['sello'].toString(),
+                            classUiNameGetter: (dao) => 'Sellos',
+                            classUiNamePluralGetter: (dao) => 'Sellos',
+                            fieldGroups: [
+                              FieldGroup(
+                                fields: {
+                                  'sello': StringField(
+                                    clearableGetter: (field, dao) => false,
+                                    uiNameGetter: (field, dao) => 'Sello',
+                                    validatorsGetter: (field, dao) => [fieldValidatorRequired],
+                                  ),
+                                },
+                              )
+                            ],
+                          ),
+                        ),
                       },
                     ),
                   ],

@@ -280,7 +280,10 @@ class DAO extends ChangeNotifier implements Comparable {
     blockNotifyListeners = true;
     beginRedoTransaction();
     for (int i=0; i<_undoRecord.last.length; i++) {
-      _undoRecord.last[i].undo(removeEntryFromDAO: false);
+      _undoRecord.last[i].undo(
+        removeEntryFromDAO: false,
+        requestFocus: i==0,
+      );
     }
     _undoRecord.removeLast();
     commitRedoTransaction();
@@ -293,7 +296,10 @@ class DAO extends ChangeNotifier implements Comparable {
     blockNotifyListeners = true;
     beginUndoTransaction();
     for (int i=0; i<_redoRecord.last.length; i++) {
-      _redoRecord.last[i].redo(removeEntryFromDAO: false);
+      _redoRecord.last[i].redo(
+        removeEntryFromDAO: false,
+        requestFocus: i==0,
+      );
     }
     _redoRecord.removeLast();
     commitUndoTransaction(clearRedo: false,);
@@ -331,14 +337,7 @@ class DAO extends ChangeNotifier implements Comparable {
       final validationErrors = this.validationErrors;
       validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
       ValidationError error = validationErrors.first;
-      error.field.focusNode.requestFocus();
-      try {
-        Scrollable.ensureVisible(error.field.fieldGlobalKey.currentContext!,
-          duration: Duration(milliseconds: 500),
-          curve: Curves.easeOutCubic,
-          alignment: 0.5,
-        );
-      } catch(_) {}
+      error.field.requestFocus();
       try {
         WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
           error.animationController?.forward(from: 0);
@@ -348,6 +347,7 @@ class DAO extends ChangeNotifier implements Comparable {
     notifyListeners();
     return success;
   }
+
 
   Future<bool> maybeSave(BuildContext context, {
     bool updateDbValuesAfterSuccessfulSave=true,
@@ -944,6 +944,23 @@ class DAO extends ChangeNotifier implements Comparable {
             );
             return result;
           },
+        );
+        result = Actions(
+          actions: {
+            UndoIntent: CallbackAction(
+              onInvoke: (intent) {
+                undo();
+                return false;
+              },
+            ),
+            RedoIntent: CallbackAction(
+              onInvoke: (intent) {
+                redo();
+                return false;
+              },
+            ),
+          },
+          child: result,
         );
         return result;
       },

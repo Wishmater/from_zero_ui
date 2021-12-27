@@ -302,7 +302,7 @@ class ComboField<T extends DAO> extends Field<T> {
           sort: sort,
           showSearchBox: showSearchBox,
           onSelected: _onSelected,
-          popupWidth: maxWidth,
+          // popupWidth: maxWidth,
           buttonPadding: dense ? EdgeInsets.zero : null,
           buttonChildBuilder: (context, title, hint, value, enabled, clearable, {showDropdownIcon=false}) {
             return buttonContentBuilder(context, title, hint, value, enabled, clearable,

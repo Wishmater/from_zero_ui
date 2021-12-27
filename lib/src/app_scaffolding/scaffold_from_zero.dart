@@ -1026,7 +1026,7 @@ class AppbarChangeNotifier extends ChangeNotifier{
   }
 
   double mainScrollPosition = 0;
-  int? lastScrollUpdateTime; //TODO 1 wait for the scroll gesture to end instead of the timer
+  int? lastScrollUpdateTime; //TODO 2 wait for the scroll gesture to end instead of the timer ? how
   void handleMainScrollerControllerCall(ScrollController scrollController){
     if (appbarType==ScaffoldFromZero.appbarTypeStatic) return;
     if (!scrollController.hasClients) return;
