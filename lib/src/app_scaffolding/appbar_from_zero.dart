@@ -38,12 +38,14 @@ class AppbarFromZero extends StatefulWidget {
   final bool mainAppbar;
   final double paddingRight;
   final bool addContextMenu;
+  final VoidCallback? onShowContextMenu;
   /// sometimes, it's useful to disable flutter AppBar and just use a Row
   /// for title and actions.
   /// Default true.
   /// False does not support a lot of the appBar features.
   /// Used in Table row actions.
   final bool useFlutterAppbar;
+  final bool skipTraversalForActions;
 
   AppbarFromZero({
     Key? key,
@@ -74,6 +76,8 @@ class AppbarFromZero extends StatefulWidget {
     this.mainAppbar = false,
     this.paddingRight = 8,
     this.addContextMenu = true,
+    this.onShowContextMenu,
+    this.skipTraversalForActions = false,
   }) :
         this.actions = actions ?? [],
         super(key: key);
@@ -195,7 +199,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
             ),
             child: forceExpanded!=null ? SizedBox.shrink() : widget.title,
           );
-          final actionsContent = Padding(
+          Widget actionsContent = Padding(
             padding: EdgeInsets.only(
               right: widget.paddingRight,
             ),
@@ -233,6 +237,12 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
               ],
             ),
           );
+          if (widget.skipTraversalForActions) {
+            actionsContent = FocusScope(
+              canRequestFocus: false,
+              child: actionsContent,
+            );
+          }
           final expandedContent = AppBar(
             excludeHeaderSemantics: true,
             automaticallyImplyLeading: false,
@@ -324,12 +334,13 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
           }
           if (widget.addContextMenu) {
             result = ContextMenuFromZero(
-                actions: widget.actions
-                .whereType<ActionFromZero>()
-                .where((e) => e.getStateForMaxWidth(constraints.maxWidth).shownOnContextMenu)
-                .map((e) {
-                  return e.copyWith(onTap: _getOnTap(e));
-                }).toList(),
+              onShowMenu: widget.onShowContextMenu,
+              actions: widget.actions
+                    .whereType<ActionFromZero>()
+                    .where((e) => e.getStateForMaxWidth(constraints.maxWidth).shownOnContextMenu)
+                    .map((e) {
+                      return e.copyWith(onTap: _getOnTap(e));
+                    }).toList(),
               child: result,
             );
           }

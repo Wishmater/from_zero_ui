@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/scaffold_from_zero.dart';
 
 
@@ -25,6 +26,14 @@ typedef Widget ActionBuilder({
   ContextCallback? onTap,
   bool enabled,
 });
+typedef Widget OverflowActionBuilder({
+  required BuildContext context,
+  required String title,
+  Widget? icon,
+  ContextCallback? onTap,
+  bool enabled,
+  bool forceIconSpace,
+});
 
 class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 separate this into its own file
 
@@ -40,8 +49,8 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
   final Map<double, ActionState> breakpoints;
 
   /// optional callbacks to customize the look of the widget in its different states
-  final ActionBuilder overflowBuilder;
-  Widget buildOverflow(BuildContext context) => overflowBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled,);
+  final OverflowActionBuilder overflowBuilder;
+  Widget buildOverflow(BuildContext context, {bool forceIconSpace=false}) => overflowBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, forceIconSpace: forceIconSpace);
 
   final ActionBuilder iconBuilder;
   Widget buildIcon(BuildContext context) => iconBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled,);
@@ -91,7 +100,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
     String? title,
     Widget? icon,
     Map<double, ActionState>? breakpoints,
-    ActionBuilder? overflowBuilder,
+    OverflowActionBuilder? overflowBuilder,
     ActionBuilder? iconBuilder,
     ActionBuilder? buttonBuilder,
     ActionBuilder? expandedBuilder,
@@ -138,12 +147,14 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
   }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: IconButton(
-        tooltip: title,
-        icon: icon ?? SizedBox.shrink(),
-        onPressed: !enabled ? null : (){
-          onTap?.call(context);
-        },
+      child: TooltipFromZero(
+        message: title,
+        child: IconButton(
+          icon: icon ?? SizedBox.shrink(),
+          onPressed: !enabled ? null : (){
+            onTap?.call(context);
+          },
+        ),
       ),
     );
   }
@@ -159,8 +170,6 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
       onDoubleTap: () => !enabled ? null : onTap?.call(context),
       child: TextButton(
         style: TextButton.styleFrom(
-          primary: Theme.of(context).appBarTheme.toolbarTextStyle?.color
-              ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
           padding: EdgeInsets.zero,
         ),
         onPressed: !enabled ? null : (){
@@ -175,7 +184,13 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
               icon,
             if (icon!=null)
               SizedBox(width: 8,),
-            Text(title, style: TextStyle(fontSize: 16),),
+            Text(title,
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).appBarTheme.toolbarTextStyle?.color
+                  ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+              ),
+            ),
             SizedBox(width: 6),
           ],
         ),
@@ -189,11 +204,11 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
     Widget? icon,
     ContextCallback? onTap,
     bool enabled = true,
+    bool forceIconSpace = false,
   }) {
     return TextButton(
       onPressed: !enabled ? null : () => onTap?.call(context),
       style: TextButton.styleFrom(
-        primary: Theme.of(context).textTheme.bodyText1!.color,
         padding: EdgeInsets.zero,
       ),
       child: Padding(
@@ -203,11 +218,17 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
           children: [
             if (icon!=null) SizedBox(width: 12,),
             if (icon!=null) IconTheme(data: Theme.of(context).iconTheme.copyWith(color: Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white), child: icon,),
+            if (icon==null && forceIconSpace) SizedBox(width: 36,),
             SizedBox(width: 12,),
             Expanded(
               child: Padding(
                 padding: EdgeInsets.only(bottom: 2),
-                child: Text(title, style: TextStyle(fontSize: 16),),
+                child: Text(title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).brightness==Brightness.light ? Colors.black : Colors.white,
+                  ),
+                ),
               ),
             ),
             SizedBox(width: 12,),
@@ -233,6 +254,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
     Widget? icon,
     ContextCallback? onTap,
     bool enabled = true,
+    bool forceIconSpace = false,
   }) {
     return Divider();
   }

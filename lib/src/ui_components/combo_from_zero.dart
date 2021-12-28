@@ -3,12 +3,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
-import 'package:from_zero_ui/util/my_popup_menu.dart' as my_popup;
 
 typedef Widget ButtonChildBuilder<T>(BuildContext context, String? title, String? hint, T? value, bool enabled, bool clearable, {bool showDropdownIcon});
 /// returns true if navigator should pop after (default true)
 typedef bool? OnPopupItemSelected<T>(T? value);
-typedef dynamic DAOGetter<T>(T value);    // TODO this should be DAO
 typedef Widget ExtraWidgetBuilder<T>(BuildContext context, OnPopupItemSelected<T>? onSelected,);
 
 class ComboFromZero<T> extends StatefulWidget {
@@ -16,7 +14,7 @@ class ComboFromZero<T> extends StatefulWidget {
   final T? value;
   final List<T>? possibleValues;
   final Future<List<T>>? futurePossibleValues;
-  final my_popup.PopupMenuCanceled? onCanceled;
+  final VoidCallback? onCanceled;
   final OnPopupItemSelected<T>? onSelected;
   final bool showSearchBox;
   final String? title;
@@ -265,7 +263,7 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
 
   final T? value;
   final List<T> possibleValues;
-  final my_popup.PopupMenuCanceled? onCanceled;
+  final VoidCallback? onCanceled;
   final OnPopupItemSelected<T>? onSelected;
   final bool showSearchBox;
   final bool showViewActionOnDAOs;

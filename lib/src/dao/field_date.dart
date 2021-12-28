@@ -142,6 +142,7 @@ class DateField extends Field<DateTime> {
     expandToFillContainer: true,
     bool dense = false,
     FocusNode? focusNode,
+    ScrollController? mainScrollController,
   }) {
     if (focusNode==null) {
       focusNode = this.focusNode;
@@ -234,6 +235,7 @@ class DateField extends Field<DateTime> {
         result = ContextMenuFromZero(
           enabled: enabled,
           addGestureDetector: !dense,
+          onShowMenu: () => focusNode.requestFocus(),
           actions: [
             ...actions,
             if (actions.isNotEmpty)

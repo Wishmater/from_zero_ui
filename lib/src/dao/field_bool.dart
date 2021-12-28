@@ -209,10 +209,9 @@ class BoolField extends Field<BoolComparable> {
     expandToFillContainer: true,
     bool dense = false,
     FocusNode? focusNode,
+    ScrollController? mainScrollController,
   }) {
-    if (focusNode==null) {
-      focusNode = this.focusNode;
-    }
+    focusNode ??= this.focusNode;
     Widget result;
     if (hiddenInForm) {
       result = SizedBox.shrink();
@@ -293,6 +292,7 @@ class BoolField extends Field<BoolComparable> {
                 ),),
               ),
               onChanged: !enabled ? null : (value) {
+                focusNode.requestFocus();
                 this.value = value!.comparable;
               },
             );
@@ -328,6 +328,7 @@ class BoolField extends Field<BoolComparable> {
                 ),),
               ),
               onChanged: !enabled ? null : (value) {
+                focusNode.requestFocus();
                 this.value = value.comparable;
               },
             );
@@ -347,6 +348,7 @@ class BoolField extends Field<BoolComparable> {
                       : backgroundColor?.call(context, this, dao),
                   checkColor: selectedColor?.call(context, this, dao),
                   onChanged: !enabled ? null : (value) {
+                    focusNode.requestFocus();
                     this.value = value!.comparable;
                   },
                 ),
@@ -385,6 +387,7 @@ class BoolField extends Field<BoolComparable> {
                   activeColor: selectedColor?.call(context, this, dao),
                   activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
                   onChanged: !enabled ? null : (value) {
+                    focusNode.requestFocus();
                     this.value = value.comparable;
                   },
                 ),
@@ -433,6 +436,7 @@ class BoolField extends Field<BoolComparable> {
               ],
               showSearchBox: false,
               onSelected: (value) {
+                focusNode.requestFocus();
                 this.value = value!.id as BoolComparable;
               },
               popupWidth: maxWidth,

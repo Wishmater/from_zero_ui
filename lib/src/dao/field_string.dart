@@ -200,6 +200,7 @@ class StringField extends Field<String> {
     bool expandToFillContainer = true,
     bool dense = false,
     FocusNode? focusNode,
+    ScrollController? mainScrollController,
   }) {
     if (focusNode==null) {
       focusNode = this.focusNode;
@@ -259,6 +260,7 @@ class StringField extends Field<String> {
         }
         if (!passedFirstEdit) {
           passedFirstEdit = true;
+          validate(dao.contextForValidation!, dao);
           notifyListeners();
         }
       }
@@ -271,12 +273,56 @@ class StringField extends Field<String> {
           Widget result = Stack(
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [
-              AnimatedContainer(
-                duration: Duration(milliseconds: 300),
-                color: dense && validationErrors.isNotEmpty
-                    ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
-                    : backgroundColor?.call(context, this, dao),
-                curve: Curves.easeOut,
+              Positioned.fill(
+                child: AnimatedContainer(
+                  duration: Duration(milliseconds: 300),
+                  color: dense && validationErrors.isNotEmpty
+                      ?  ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+                      : backgroundColor?.call(context, this, dao),
+                  curve: Curves.easeOut,
+                ),
+              ),
+              Positioned(
+                top: 0, left: 0, right: 0,
+                child: AnimatedBuilder(
+                  animation: focusNode,
+                  builder: (context, child) {
+                    return AnimatedContainer(
+                      height: focusNode.hasFocus ? 12 : 0,
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.blue.withOpacity(0), Colors.blue.withOpacity(0.1), Colors.blue.withOpacity(0.1),],
+                          begin: Alignment.bottomCenter, end: Alignment.topCenter,
+                          stops: [0, 0.4, 1],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Positioned(
+                bottom: dense ? 10 : 0, left: 0, right: 0,
+                child: AnimatedBuilder(
+                  animation: focusNode,
+                  builder: (context, child) {
+                    return AnimatedContainer(
+                      height: focusNode.hasFocus ? 12 : 0,
+                      duration: Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Colors.blue.withOpacity(0), Colors.blue.withOpacity(0.1), Colors.blue.withOpacity(0.1),],
+                          begin: Alignment.topCenter, end: Alignment.bottomCenter,
+                          stops: [0, 0.4, 1],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Padding(
                 padding: EdgeInsets.only(
                   bottom: largeVertically ? 16 : 0,
                   top: dense ? 0 : largeVertically ? 12 : 2,
@@ -364,6 +410,7 @@ class StringField extends Field<String> {
           result = ContextMenuFromZero( // TODO 1 this is blocked by default TextField toolbar
             enabled: enabled,
             addGestureDetector: !dense,
+            onShowMenu: () => focusNode.requestFocus(),
             actions: [
               ...actions,
               if (actions.isNotEmpty)

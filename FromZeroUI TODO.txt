@@ -1,74 +1,92 @@
 
 
+**********************************************************************
+P0
+**********************************************************************
+
+Table -- use better scroll shadow https://pub.dev/packages/flutter_scroll_shadow
+
+make Export use new FileSaverFromZero
+
+Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
+
+Table -- allow passing headerRowModel, delete all weird parameters that exist right now
+
+Table -- deprecate the widget types thing, Table will always return a sliver, parents will need to put it in a CustomScrollView
+	remove both sticky packages used currently, use SliverTools instead
+		use SliverTools for the sticky headers
+			need to implement custom stickyOffset
+		check if there's an easy way to add cards to the slivers
+			preferably, added extarnally, before putting it in the CustomScrollController
+			if that is not possible, add a boolean option addCards to the Table widget itself
+		implement StickyFooter and add the Scrollbar there
+
+Table -- Use a Map instead of a list for columns (in models and everywhere)
+	this would allow columns to be added/removed/reordered easily
+
+Table -- check what else can be removed (lots of unused stuff probably)
+
+Bug with condition filters on table
+	when all value filters are disabled (new way) and a condition filter is added, no values return true
+
+??? force windows app to be executed as admin by default
+
+Problems with excel export
+	Excel breaks sometimes when copy/paste ????
+	Export breaks when exporting large amounts of data (embarques 3 years)
+
+WAITING bug with slivers tearing on windows, once it is solved, remove patches from Table
 
 
-!!!!!!!!! Textfield alt-64 blocks whole windows
 
-!!!!!! Bug with slivers tearing !!!!!!!!!!!
-		once it is solved, remove patches from Table
 
-!!! fix part of the screen not being draggable on really big screens
+**********************************************************************
+P1
+**********************************************************************
+
+Table Feature -- Export to excel with right-click (directly on the table)
+
+fix part of the screen not being draggable on really big screens
 	maybe just deprecate limitWidthOnBigScreens
-
-!!! Windows Increase mouse wheel scroll speed and add anmation
-	only when the mouse wheel is click (not smooth)
 	
-!!! Implement UIScaling + Scaling picker widget (with slider)
-	take initial system textScale as UI scaling
-
-! Scrollbar not updated on window resize
-	noticeable in table horizontal scrollbars
-	
-Try out bitsdojo window	in older SOs
-	https://github.com/bitsdojo/bitsdojo_window/pull/100/commits/b823ae5b9f2f82635067add7eadfc32d9054bc2b
-
-popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
-
 popupFromZero doesn't reposition child in response to window resize
 
-popupFromZero improvement: on dektop, popup should not block content behind it by default (use Overlay)
-
-Experiment: make Telegram-like scrollbars: 
-		leave option
-	scrollbar is not always visible
-	add a MouseRegion: on enter whole region, trigger a fake movement to show scrollbar
-	while inside the scrollbar region action range, keep showig it
-	also show it once at start	
-	remove top padding on android by default
-
-TableFromZero improvements
-	List<Columns> and List<values> refactored as maps
-		this would make it trivial to add/remove columns
-		! need to keep compatibility with lists somehow
-	Initial checking for filter values should be async (and also maybe other parts of initialization)
+Table -- Initial checking for filter values should be async (and also maybe other parts of initialization)
 			??? also filtering, maybe
 		filters will show loading until this finishes
 		probably needs to be in an isolate
 		??? only if rowCount > 100 ??? (also allow to force sync or async)
+
+
+
+
+**********************************************************************
+P2
+**********************************************************************
+
+Table Feature -- Sticky columns 
+
+Table Feature -- Reorder columns
+
+Table Feature -- Resize columns (hard)
+
+Windows Increase mouse wheel scroll speed and add anmation
+	only when the mouse wheel is click (not smooth)
 	
-Return to top button improvement: only show when there is certain space from beggining AND user is scrolling upwards, hide when scrolling down
-	maybe add to ScrollbarFromZero by default (probably need to support horizontal scrolling for this)
+Implement UIScaling + Scaling picker widget (with slider)
+	take initial system textScale as UI scaling
 	
-REFACTOR FROMZERO NAVIGATION
-	Learn about Navigation 2.0
-	Implement PageFromZero, including all info
-	Deprecate current hacks for remembering stack
+popupFromZero improvement: on dektop, popup should not block content behind it by default (use Overlay)
 
-Use better scroll shadow on table
-	https://pub.dev/packages/flutter_scroll_shadow
 
-make Export use new FileSaverFromZero
 
-implement PageIndicatorForZero
-	indicator that 'slides' with a transition between values
-	builders for the actual tab children, depending on selected value/index
-implement DialogButton widget to streamline appearance
-implement AlertDialogFromZero, taking simple parameters (title, message, onAccept, onCancel)
 
-Navigation (with GoRouter)
-	??? Later maybe read a bit about nested navigation, might have some applications
-	there should be a way to "push" the subtree, 
-			this means the subtree will decide its normally with .go, but wont affect routes below it
+**********************************************************************
+P3
+**********************************************************************
+
+GoRouter -- there should be a way to "push" a subtree, 
+	this means the subtree will decide its normally with .go, but wont affect routes below it in the stack
 		PROPOSAL:
 			create a new custom routeDelegate, 
 				that contains a goRouterDelegate and conveys everything to it
@@ -79,5 +97,21 @@ Navigation (with GoRouter)
 					? impact in the fromZeroScaffold page shenannigans
 				! need to read more about default navigator2.0 documentation
 
+Experiment: make Telegram-like scrollbars (leave option)
+	scrollbar is not always visible
+	add a MouseRegion: on enter whole region, trigger a fake movement to show scrollbar
+	while inside the scrollbar region action range, keep showig it
+	also show it once at start, then fade out on timing
+	
+Return to top button improvement: only show when there is certain space from beggining AND user is scrolling upwards, hide when scrolling down
+	maybe add to ScrollbarFromZero by default (probably need to support horizontal scrolling for this)
 
-??? force windows app to be executed as admin by default
+implement PageIndicatorForZero
+	indicator that 'slides' with a transition between values
+	builders for the actual tab children, depending on selected value/index
+	
+implement DialogButton widget to streamline appearance
+
+implement AlertDialogFromZero, taking simple parameters (title, message, onAccept, onCancel)
+
+

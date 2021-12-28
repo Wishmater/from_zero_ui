@@ -361,7 +361,7 @@ class ExportState extends State<Export> {
         final file = File((await widget.path)+widget.title+'.pdf');
         await file.create(recursive: true);
         filePath = file.absolute.path;
-        directoryPath = file.parent.absolute.path; // TODO always use saverFromZero to save
+        directoryPath = file.parent.absolute.path; // TODO 1 always use saverFromZero to save
         pathUi = filePath;
         if (Platform.isWindows)
           pathUi = pathUi.substring(filePath.indexOf("Document")).replaceAll('/', '\\');
@@ -953,7 +953,7 @@ class _PageWrapper extends StatelessWidget {
                     key: globalKey,
                     child: MediaQuery(
                       data: MediaQuery.of(context).copyWith(
-                        disableAnimations: true, //TODO 4 this doesn't work for some reason
+                        disableAnimations: true, //TODO 3 this doesn't work for some reason
                       ),
                       child: Theme(
                         data: themeData,

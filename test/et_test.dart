@@ -486,6 +486,7 @@ DAO getEtDao() {
                 actionDeleteBreakpoints: {0: ActionState.icon},
                 actionDuplicateBreakpoints: {0: ActionState.icon},
                 actionEditBreakpoints: {0: ActionState.icon},
+                actionViewBreakpoints: {0: ActionState.popup},
                 hiddenGetter: (field, dao) {
                   if ((dao.props['tipoDocumento'] as ComboField).value==null) {
                     return true;
@@ -550,6 +551,7 @@ DAO getEtDao() {
                           tableFilterable: false,
                           actionDeleteBreakpoints: {0: ActionState.icon},
                           actionEditBreakpoints: {0: ActionState.icon},
+                          actionViewBreakpoints: {0: ActionState.popup},
                           objectTemplate: DAO(
                             uiNameGetter: (dao) => dao.props['sello'].toString(),
                             classUiNameGetter: (dao) => 'Sellos',

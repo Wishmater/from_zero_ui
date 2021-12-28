@@ -92,7 +92,23 @@ class _PageHomeState extends State<PageHome> {
       actions: [
         ActionFromZero(title: "Test Action", onTap: (appbarContext){
           getEtDao().maybeEdit(context);
-        },)
+        },),
+        ActionFromZero(title: "Test Action", onTap: (appbarContext){
+          getEtDao().maybeEdit(context);
+        },
+          icon: Icon(Icons.call),
+          breakpoints: {0: ActionState.icon},
+        ),
+        ActionFromZero(title: "Test Action", onTap: (appbarContext){
+          getEtDao().maybeEdit(context);
+        },
+          icon: Icon(Icons.call),
+          breakpoints: {0: ActionState.icon},),
+        ActionFromZero(title: "Test Action", onTap: (appbarContext){
+          getEtDao().maybeEdit(context);
+        },
+          icon: Icon(Icons.call),
+          breakpoints: {0: ActionState.icon},),
       ],
     );
   }

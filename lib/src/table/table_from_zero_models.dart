@@ -21,6 +21,7 @@ abstract class RowModel<T> {
   OnCheckBoxSelectedCallback? get onCheckBoxSelected => null;
   Widget? get rowAddon => null;
   bool? get alwaysOnTop => null;
+  late FocusNode focusNode = FocusNode();
   @override
   bool operator == (dynamic other) => other is RowModel && this.id==other.id;
   @override

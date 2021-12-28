@@ -84,7 +84,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     if (!refreshed) {
       _runFuture();
     }
-    // try { _ref.refresh(provider); } catch (_) {} // TODO ??? how to refresh THIS provider ??? pretty sure it is not needed
+    // try { _ref.refresh(provider); } catch (_) {} // TODO 1 ??? how to refresh THIS provider ??? pretty sure it is not needed
   }
 
   void refresh() {
@@ -98,7 +98,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     if (!refreshed) {
       _runFuture();
     }
-    // try { _ref.refresh(provider); } catch (_) {} // TODO ??? how to refresh THIS provider ??? pretty sure it is not needed
+    // try { _ref.refresh(provider); } catch (_) {} // TODO 1 ??? how to refresh THIS provider ??? pretty sure it is not needed
   }
 
 

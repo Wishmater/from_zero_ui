@@ -3,7 +3,6 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/expansion_tile_from_zero.dart';
-import 'package:from_zero_ui/util/my_popup_menu.dart' as my_popup_menu_button;
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:go_router/src/go_route_match.dart';
@@ -153,9 +152,7 @@ class ResponsiveDrawerMenuItem{
 class DrawerMenuFromZero extends ConsumerStatefulWidget {
 
   static const int goRouter = 10;
-  @deprecated
   static const int alwaysReplaceInsteadOfPushing = 1;
-  @deprecated
   static const int neverReplaceInsteadOfPushing = 2;
   @deprecated
   static const int exceptRootReplaceInsteadOfPushing = 0;
@@ -167,7 +164,7 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
   final List<ResponsiveDrawerMenuItem> tabs;
   final int selected;
   final bool compact;
-  final int replaceInsteadOfPushing; // TODO refactor to
+  final int replaceInsteadOfPushing;
   final int depth;
   final double paddingRight;
   final bool popup;
@@ -213,7 +210,7 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
 
 class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
-  Map<int, GlobalKey> _menuButtonKeys = {};
+  Map<int, GlobalKey<ContextMenuFromZeroState>> _menuButtonKeys = {};
   late List<ResponsiveDrawerMenuItem> _tabs;
   late int _selected;
   bool pendingUpdate = false;
@@ -475,8 +472,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
           if (!_menuButtonKeys.containsKey(i)) _menuButtonKeys[i] = GlobalKey();
           final scaffoldChangeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-          result = my_popup_menu_button.PopupMenuButton(
-            enabled: false,
+          result = ContextMenuFromZero(
             child: ExpansionTileFromZero(
               initiallyExpanded: selected==i || tabs[i].selectedChild>=0,
               expanded: widget.compact||tabs[i].forcePopup ? false
@@ -541,8 +537,8 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               ],
               onExpansionChanged: (value) async {
                 if (widget.compact||tabs[i].forcePopup){
-                  if (!await onTap()){
-                    (_menuButtonKeys[i]!.currentState as my_popup_menu_button.PopupMenuButtonState).showButtonMenu();
+                  if (!(await onTap())) {
+                    _menuButtonKeys[i]!.currentState!.showContextMenu(context);
                   }
                   return false;
                 } else{
@@ -556,26 +552,30 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] = value;
               },
             ),
+            enabled: widget.compact,
             key: _menuButtonKeys[i],
-            tooltip: "",
-            menuHorizontalPadding: 0, // TODO 1 refactor this to use ContextMenuFromZero, maybe delete my_popup_menu_button
-//            menuVerticalPadding: 0,
-            itemBuilder: (context) => List.generate(widget.compact||tabs[i].forcePopup ? 1 : 0,
-                    (index) => my_popup_menu_button.PopupMenuItem(
-              enabled: false,
+            anchorAlignment: Alignment.topLeft,
+            popupAlignment: Alignment.bottomRight,
+            useCursorLocation: false,
+            contextMenuWidth: 304,
+            contextMenuWidget: IntrinsicHeight(
               child: DrawerMenuFromZero(
                 popup: true,
                 tabs: tabs[i].children!,
+                // tabs: [tabs[i].children!.first],
                 compact: false,
                 selected: tabs[i].selectedChild,
                 inferSelected: false,
                 paddingRight: 16,
-                replaceInsteadOfPushing: widget.replaceInsteadOfPushing,
+                // replaceInsteadOfPushing: widget.replaceInsteadOfPushing,
+                replaceInsteadOfPushing: widget.replaceInsteadOfPushing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPushing
+                    ? (selected==0 ? DrawerMenuFromZero.neverReplaceInsteadOfPushing : DrawerMenuFromZero.alwaysReplaceInsteadOfPushing)
+                    : widget.replaceInsteadOfPushing,
                 homeRoute: widget.homeRoute,
                 parentTabs: widget.parentTabs ?? _tabs,
                 style: widget.style,
               ),
-            )),
+            ),
           );
 
         } else{

@@ -135,7 +135,6 @@ class ListField extends Field<ComparableList<DAO>> {
     List<ComparableList<DAO>?>? undoValues,
     List<ComparableList<DAO>?>? redoValues,
     GlobalKey? fieldGlobalKey,
-    FocusNode? focusNode,
     bool invalidateNonEmptyValuesIfHiddenInForm = true,
     ComparableList<DAO>? defaultValue,
     this.expandHorizontally = true,
@@ -173,7 +172,6 @@ class ListField extends Field<ComparableList<DAO>> {
           undoValues: undoValues,
           redoValues: redoValues,
           fieldGlobalKey: fieldGlobalKey ?? GlobalKey(),
-          focusNode: focusNode ?? FocusNode(),
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue ?? ComparableList<DAO>(),
           backgroundColor: backgroundColor,
@@ -347,16 +345,24 @@ class ListField extends Field<ComparableList<DAO>> {
     });
   }
 
-  void addRow (DAO element) => addRows([element]);
-  void addRows (List<DAO> elements) {
+  void addRow (DAO element, [int? insertIndex]) => addRows([element], insertIndex);
+  void addRows (List<DAO> elements, [int? insertIndex]) {
     for (final e in elements) {
       e.addListener(notifyListeners);
       e.parentDAO = dao;
     }
     final newValue = value!.copyWith();
-    newValue.addAll(elements);
+    if (insertIndex==null) {
+      newValue.addAll(elements);
+    } else {
+      for (final e in elements) {
+        newValue.insert(insertIndex!, e);
+        insertIndex++;
+      }
+    }
     value = newValue;
     // tableController.init();
+    focusObject(elements.first);
   }
 
   void duplicateRow(DAO element) => duplicateRows([element]);
@@ -373,6 +379,7 @@ class ListField extends Field<ComparableList<DAO>> {
     });
     value = newValue;
     // tableController.init();
+    focusObject(elements.first);
   }
 
   Future<bool> removeRow(DAO element) => removeRows([element]);
@@ -390,8 +397,17 @@ class ListField extends Field<ComparableList<DAO>> {
   }
 
 
+  void focusObject(DAO object) {
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      if (tableCellsEditable) {
+        object.props.values.firstOrNullWhere((e) => !e.hiddenInForm)?.focusNode.requestFocus();
+      } else {
+        builtRows[object]!.focusNode.requestFocus();
+      }
+    });
+  }
 
-  void maybeAddRow(context) async { // TODO 3 implement disabled logic in ListField (color + tooltip + mouseRegion)
+  void maybeAddRow(context, [int? insertIndex]) async { // TODO 3 implement disabled logic in ListField (color + tooltip + mouseRegion)
     DAO emptyDAO = objectTemplate.copyWith();
     if (availableObjectsPoolGetter!=null) {
       var availableObjects = availableObjectsPoolGetter!(context);
@@ -561,7 +577,7 @@ class ListField extends Field<ComparableList<DAO>> {
         );
       }
       if (selected!=null) {
-        addRow(selected!);
+        addRow(selected!, insertIndex);
       }
     } else {
       bool add = true;
@@ -569,7 +585,7 @@ class ListField extends Field<ComparableList<DAO>> {
         add = await emptyDAO.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
       }
       if (add) {
-        addRow(emptyDAO);
+        addRow(emptyDAO, insertIndex);
       }
     }
   }
@@ -845,6 +861,7 @@ class ListField extends Field<ComparableList<DAO>> {
     bool expandToFillContainer = true,
     bool dense = false,
     FocusNode? focusNode,
+    ScrollController? mainScrollController,
   }) {
     if (dense || asPopup) {
       return buildDenseWidgets(context,
@@ -861,6 +878,7 @@ class ListField extends Field<ComparableList<DAO>> {
         expandToFillContainer: expandToFillContainer,
         dense: dense,
         focusNode: focusNode,
+        mainScrollController: mainScrollController,
       );
     }
   }
@@ -872,9 +890,7 @@ class ListField extends Field<ComparableList<DAO>> {
     bool dense = false,
     FocusNode? focusNode,
   }) {
-    if (focusNode==null) {
-      focusNode = this.focusNode;
-    }
+    focusNode ??= this.focusNode;
     Widget result;
     if (hiddenInForm) {
       result = SizedBox.shrink();
@@ -926,19 +942,18 @@ class ListField extends Field<ComparableList<DAO>> {
       builder: (context, child) {
         Widget result = TextButton(
           focusNode: focusNode,
-          key: popupGlobalKey,
           style: TextButton.styleFrom(
             padding: dense ? EdgeInsets.zero : null,
           ),
-          child: ComboField.buttonContentBuilder(context, uiName, hint, toString(), enabled, false,
+          child: ComboField.buttonContentBuilder(context, uiName, hint ?? uiName, toString(), enabled, false,
             showDropdownIcon: false,
             dense: dense,
           ),
           onPressed: () async {
+            focusNode.requestFocus();
             await showPopupFromZero<bool>(
               context: context,
-              anchorKey: popupGlobalKey,
-              // width: widget.popupWidth, // TODO 1 calculate table minWidth and set it here as well
+              anchorKey: fieldGlobalKey,
               builder: (context) {
                 return Column(
                   mainAxisSize: MainAxisSize.min,
@@ -948,7 +963,7 @@ class ListField extends Field<ComparableList<DAO>> {
                       asSliver: false, // TODO 3 try to do it as sliver for better performance
                       expandToFillContainer: false,
                       dense: false,
-                      focusNode: null,
+                      focusNode: FocusNode(),
                       collapsed: false,
                       collapsible: false,
                       fieldGlobalKey: ValueKey('popup'),
@@ -981,6 +996,7 @@ class ListField extends Field<ComparableList<DAO>> {
         result = ContextMenuFromZero(
           enabled: enabled,
           addGestureDetector: !dense,
+          onShowMenu: () => focusNode.requestFocus(),
           actions: [
             ...actions,
             if (actions.isNotEmpty)
@@ -1001,8 +1017,8 @@ class ListField extends Field<ComparableList<DAO>> {
     }
     result = EnsureVisibleWhenFocused(
       focusNode: focusNode,
+      key: fieldGlobalKey,
       child: Padding(
-        key: fieldGlobalKey,
         padding: EdgeInsets.symmetric(horizontal: !dense && largeHorizontally ? 12 : 0),
         child: SizedBox(
           width: maxWidth,
@@ -1024,6 +1040,8 @@ class ListField extends Field<ComparableList<DAO>> {
     return result;
   }
 
+  late final errorWidgetFocusNode = FocusNode();
+  late Map<DAO, RowModel<DAO>> builtRows;
   List<Widget> buildFullTableWidgets(BuildContext context, {
     bool addCard=true,
     bool asSliver = true,
@@ -1033,13 +1051,12 @@ class ListField extends Field<ComparableList<DAO>> {
     bool? collapsible,
     bool? collapsed,
     Key? fieldGlobalKey,
+    ScrollController? mainScrollController,
   }) {
     collapsible ??= this.collapsible;
     collapsed ??= this.collapsed;
     fieldGlobalKey ??= this.fieldGlobalKey;
-    if (focusNode==null) {
-      focusNode = this.focusNode;
-    }
+    focusNode ??= this.focusNode;
     Widget result;
     if (hiddenInForm) {
       result = SizedBox.shrink();
@@ -1048,13 +1065,13 @@ class ListField extends Field<ComparableList<DAO>> {
       }
       return [result];
     }
+    final actions = this.actions?.call(context, this, dao) ?? [];
+    if (actions.isNotEmpty) {
+      actions.add(ActionFromZero.divider());
+    }
+    actions.addAll(buildDefaultActions(context));
     Map<String, Field> propsShownOnTable = Map.from(objectTemplate.props)..removeWhere((k, v) => v.hiddenInTable);
     double width = 0;
-    // double width = 48 *
-    //         ((actionDeleteType.shownOnPrimaryToolbar?1:0)
-    //         + (actionDuplicateType.shownOnPrimaryToolbar?1:0)
-    //         + (actionEditType.shownOnPrimaryToolbar?1:0)
-    //         + (actionViewType.shownOnPrimaryToolbar?1:0));
     propsShownOnTable.forEach((key, value) {
       width += value.tableColumnWidth ?? 192;
     });
@@ -1069,10 +1086,11 @@ class ListField extends Field<ComparableList<DAO>> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _getTableHeader(context,
+                _buildTableHeader(context,
                   focusNode: focusNode!,
                   collapsed: collapsed,
                   collapsible: collapsible,
+                  actions: actions,
                 ),
                 InitiallyAnimatedWidget(
                   duration: Duration(milliseconds: 300),
@@ -1093,16 +1111,35 @@ class ListField extends Field<ComparableList<DAO>> {
           }
           return result;
         }
+        builtRows = {};
+        for (final e in objects) {
+          builtRows[e] = SimpleRowModel(
+            id: e,
+            values: propsShownOnTable.keys.map((k) => e.props[k]).toList(),
+            height: rowHeight,
+            onRowTap: onRowTap ?? (viewOnRowTap ? (row) {
+              e.pushViewDialog(context);
+            } : null),
+            selected: allowMultipleSelection ? (selectedObjects.value[e]??false) : null,
+            backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
+            onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
+              selectedObjects.value[row.id] = focused??false;
+              selectedObjects.notifyListeners();
+              notifyListeners();
+            } : null,
+          );
+        }
+        final extraRowActions = extraRowActionsBuilder?.call(context) ?? [];
         return Material(
           color: Theme.of(context).cardColor,
           child: Container(
             color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
             child: TableFromZero<DAO>(
               key: ValueKey(objects.length),
+              scrollController: mainScrollController,
               rowHeightForScrollingCalculation: rowHeight,
               maxWidth: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
-              minWidth: 1000, // TODO 1 take into account space occupied by actions (do it in table, not here), set this to 'width'
-                                  // calculating the exact width of actions would also make it easier to 'simulate' actions space in headerRow and for taking it into account for background
+              minWidth: width,
               initialSortedColumnIndex: initialSortColumn ?? 0,
               tableController: tableController,
               layoutWidgetType: asSliver
@@ -1124,24 +1161,7 @@ class ListField extends Field<ComparableList<DAO>> {
                 return result;
               }).toList(),
               showHeaders: showTableHeaders,
-              rows: objects.map((e) {
-                // e.props.remove(columnName);
-                return SimpleRowModel(
-                  id: e,
-                  values: propsShownOnTable.keys.map((k) => e.props[k]).toList(),
-                  height: rowHeight,
-                  onRowTap: onRowTap ?? (viewOnRowTap ? (row) {
-                    e.pushViewDialog(context);
-                  } : null),
-                  selected: allowMultipleSelection ? (selectedObjects.value[e]??false) : null,
-                  backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
-                  onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
-                    selectedObjects.value[row.id] = focused??false;
-                    selectedObjects.notifyListeners();
-                    notifyListeners();
-                  } : null,
-                );
-              }).toList(),
+              rows: builtRows.values.toList(),
               cellBuilder: tableCellsEditable ? (context, row, col, j) {
                 final widgets = (row.values[j] as Field).buildFieldEditorWidgets(context,
                   expandToFillContainer: false,
@@ -1162,7 +1182,20 @@ class ListField extends Field<ComparableList<DAO>> {
                 );
               } : null,
               rowActions: [
-                ...(extraRowActionsBuilder?.call(context) ?? []),
+                ...extraRowActions,
+                if (extraRowActions.isNotEmpty)
+                  RowAction.divider(),
+                if ((allowAddNew||availableObjectsPoolGetter!=null))
+                  RowAction<DAO>(
+                    title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
+                    icon: Icon(Icons.add),
+                    breakpoints: {0: ActionState.popup,},
+                    onRowTap: (context, row) {
+                      maybeAddRow(context, objects.indexOf(row.id)+1);
+                    },
+                  ),
+                if ((allowAddNew||availableObjectsPoolGetter!=null))
+                  RowAction.divider(),
                 RowAction<DAO>(
                   icon: Icon(Icons.remove_red_eye),
                   title: FromZeroLocalizations.of(context).translate('view'),
@@ -1215,15 +1248,31 @@ class ListField extends Field<ComparableList<DAO>> {
                 notifyListeners();
               } : null,
               errorWidget: tableErrorWidget
-                    ?? Container(
-                        color: Theme.of(context).cardColor,
+                    ?? ContextMenuFromZero(
+                    actions: actions,
+                    onShowMenu: () => errorWidgetFocusNode.requestFocus(),
+                    child: Focus(
+                      focusNode: errorWidgetFocusNode,
+                      skipTraversal: true,
+                      child: SizedBox(
                         width: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
-                        child: ErrorSign(
-                          title: FromZeroLocalizations.of(context).translate('no_data'),
-                          subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
+                        child: Material(
+                          color: Theme.of(context).cardColor,
+                          child: InkWell(
+                            onTap: () {
+                              maybeAddRow(context);
+                            },
+                            child: ErrorSign(
+                              title: FromZeroLocalizations.of(context).translate('no_data'),
+                              subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
+                            ),
+                          ),
                         ),
                       ),
-              headerAddon: _getTableHeader(context,
+                    ),
+                  ),
+              headerAddon: _buildTableHeader(context,
+                actions: actions,
                 focusNode: focusNode!,
                 collapsed: collapsed,
                 collapsible: collapsible,
@@ -1360,21 +1409,17 @@ class ListField extends Field<ComparableList<DAO>> {
   }
 
 
-  Widget _getTableHeader(BuildContext context, {
+  Widget _buildTableHeader(BuildContext context, {
     required FocusNode focusNode,
     required bool? collapsible,
     required bool? collapsed,
+    required List<ActionFromZero> actions,
   }) {
     collapsible ??= this.collapsible;
     collapsed ??= this.collapsed;
     return ValueListenableBuilder(
       valueListenable: filtered,
       builder: (context, List<DAO>? filtered, child) {
-        final actions = this.actions?.call(context, this, dao) ?? [];
-        if (actions.isNotEmpty) {
-          actions.add(ActionFromZero.divider());
-        }
-        actions.addAll(buildDefaultActions(context));
         return Theme(
           data: Theme.of(context).copyWith(
             appBarTheme: AppBarTheme(
@@ -1387,18 +1432,20 @@ class ListField extends Field<ComparableList<DAO>> {
           child: EnsureVisibleWhenFocused(
             focusNode: focusNode,
             child: Focus(
-              focusNode: focusNode, // TODO 3 maybe this focus node should be somewhere else
+              focusNode: focusNode,
               skipTraversal: true,
               canRequestFocus: true,
               child: AppbarFromZero(
                 titleSpacing: 0,
                 key: headerGlobalKey,
+                onShowContextMenu: () => focusNode.requestFocus(),
                 title: Row(
                   children: [
                     SizedBox(width: 9,),
                     collapsible! ? IconButton(
                       icon: Icon(collapsed! ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
                       onPressed: () {
+                        focusNode.requestFocus();
                         this.collapsed = !this.collapsed;
                         notifyListeners();
                       },

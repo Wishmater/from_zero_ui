@@ -8,6 +8,9 @@ import 'package:go_router/src/inherited_go_router.dart';
 
 
 
+bool skipFirstRenderWhenPushing = true;
+
+
 class GoRouteFromZero extends GoRoute {
 
   /// Name shown in the UI
@@ -242,16 +245,34 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
 
   @override
   Widget build(BuildContext context) {
+
     if (built || isActiveRoute(context)) {
+
       final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
       if (isActiveRoute(context) && scaffoldChangeNotifier.currentRouteState!=state) {
         scaffoldChangeNotifier.setCurrentRouteState(state);
       }
-      built = true;
-      return widget.builder(context, widget.state);
+
+      if (built || !skipFirstRenderWhenPushing) {
+
+        return widget.builder(context, widget.state);
+
+      } else {
+
+        built = true;
+        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+          setState(() {});
+        });
+        return Container(color: Theme.of(context).canvasColor,);
+
+      }
+
     } else {
+
       return Container();
+
     }
+
   }
 
   bool isActiveRoute(context) =>

@@ -271,13 +271,13 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
 
   void requestFocus() {
     focusNode.requestFocus();
-    try {
-      Scrollable.ensureVisible(fieldGlobalKey.currentContext!,
-        duration: Duration(milliseconds: 500),
-        curve: Curves.easeOutCubic,
-        alignment: 0.5,
-      );
-    } catch(_) {}
+    // try { // no need to do the anymore, since EnsureVisibleWhenFocused will work automatically
+    //   Scrollable.ensureVisible(fieldGlobalKey.currentContext!,
+    //     duration: Duration(milliseconds: 500),
+    //     curve: Curves.easeOutCubic,
+    //     alignment: 0.5,
+    //   );
+    // } catch(_) {}
   }
 
   SimpleColModel getColModel() => colModelBuilder(this, dao);
@@ -295,6 +295,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool expandToFillContainer = true,
     bool dense = false,
     FocusNode? focusNode,
+    ScrollController? mainScrollController,
   }) {
     Widget result;
     if (hiddenInForm) {

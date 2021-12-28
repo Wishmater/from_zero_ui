@@ -117,7 +117,6 @@ class ComboField<T extends DAO> extends Field<T> {
     List<T?>? undoValues,
     List<T?>? redoValues,
     GlobalKey? fieldGlobalKey,
-    FocusNode? focusNode,
     bool? invalidateNonEmptyValuesIfHiddenInForm,
     T? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
@@ -186,6 +185,7 @@ class ComboField<T extends DAO> extends Field<T> {
     expandToFillContainer: true,
     bool dense = false,
     FocusNode? focusNode,
+    ScrollController? mainScrollController,
   }) {
     if (focusNode==null) {
       focusNode = this.focusNode;
@@ -336,6 +336,7 @@ class ComboField<T extends DAO> extends Field<T> {
         result = ContextMenuFromZero(
           enabled: enabled,
           addGestureDetector: !dense,
+          onShowMenu: () => focusNode.requestFocus(),
           actions: [
             ...actions,
             if (actions.isNotEmpty)
@@ -400,9 +401,9 @@ class ComboField<T extends DAO> extends Field<T> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 dense
-                    ? Text(value==null ? (hint ?? title ?? '') : value.toString(), style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                    ? Text(value==null||value.toString().isEmpty ? (hint ?? title ?? '') : value.toString(), style: Theme.of(context).textTheme.subtitle1!.copyWith(
                         height: 0.8,
-                        color: value==null ? Theme.of(context).textTheme.caption!.color!
+                        color: value==null||value.toString().isEmpty ? Theme.of(context).textTheme.caption!.color!
                             : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
                       ))
                 : value==null&&hint==null&&title!=null
@@ -415,10 +416,10 @@ class ComboField<T extends DAO> extends Field<T> {
                       titleStyle: Theme.of(context).textTheme.caption!.copyWith(
                         color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
                       ),
-                      value: value==null ? (hint ?? '') : value.toString(),
+                      value: value==null||value.toString().isEmpty ? (hint ?? '') : value.toString(),
                       valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
                         height: 1,
-                        color: value==null ? Theme.of(context).textTheme.caption!.color!
+                        color: value==null||value.toString().isEmpty ? Theme.of(context).textTheme.caption!.color!
                             : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
                       ),
                     ),

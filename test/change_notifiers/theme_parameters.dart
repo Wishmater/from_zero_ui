@@ -23,6 +23,10 @@ class ThemeParameters extends ThemeParametersFromZero {
       primaryColorLight: Color.fromRGBO(0, 0, 140, 1),
       accentColor: Colors.orangeAccent.shade700,
       visualDensity: VisualDensity.compact,
+      focusColor: Colors.blue.withOpacity(0.1),
+      hoverColor: Colors.blue.withOpacity(0.05), // lighter
+      highlightColor: Colors.transparent,
+      splashColor: Colors.blue.withOpacity(0.1),
       appBarTheme: AppBarTheme(
         color: Colors.white,
         titleTextStyle: TextStyle(
@@ -117,6 +121,10 @@ class ThemeParameters extends ThemeParametersFromZero {
       brightness: Brightness.dark,
       accentColor: Colors.orangeAccent.shade700,
       visualDensity: VisualDensity.compact,
+      focusColor: Colors.blue.withOpacity(0.1),
+      hoverColor: Colors.blue.withOpacity(0.05),
+      highlightColor: Colors.transparent,
+      splashColor: Colors.blue.withOpacity(0.1),
       tooltipTheme: TooltipThemeData(
         decoration: BoxDecoration(
           color: Colors.white.withOpacity(0.9),

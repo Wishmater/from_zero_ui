@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -7,7 +8,7 @@ import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 class ContextMenuFromZero extends StatefulWidget {
 
   final Widget child;
-  final List<ActionFromZero>? actions; // TODO 2 rename AppbarAction to ActionFromZero
+  final List<ActionFromZero> actions;
   /// overrides everything else and is used as context menu widget
   final Widget? contextMenuWidget;
   final double contextMenuWidth;
@@ -18,21 +19,22 @@ class ContextMenuFromZero extends StatefulWidget {
   /// Default true. Set to false so menu will only be shown manually. Useful when stacking with a button.
   final bool addGestureDetector;
   final bool enabled;
+  final VoidCallback? onShowMenu;
 
   ContextMenuFromZero({
     required this.child,
     this.enabled = true,
     this.contextMenuWidget,
-    this.actions,
+    this.actions = const [],
     this.contextMenuWidth = 192,
     this.anchorAlignment = Alignment.bottomRight,
     this.popupAlignment = Alignment.bottomRight,
     this.barrierColor,
     this.useCursorLocation = true,
     this.addGestureDetector = true,
+    this.onShowMenu,
     Key? key,
-  }) :  assert(actions!=null || contextMenuWidget!=null),
-        super(key: key);
+  }) :  super(key: key);
 
   @override
   State<ContextMenuFromZero> createState() => ContextMenuFromZeroState();
@@ -44,11 +46,9 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
   final GlobalKey anchorKey = GlobalKey();
 
   void showContextMenu(BuildContext context) {
-    var actions = widget.actions;
-    if (widget.contextMenuWidget!=null) {
-      actions = widget.actions!.where((e) => e.getStateForMaxWidth(0).shownOnContextMenu).toList();
-    }
-    if (widget.enabled && (widget.contextMenuWidget!=null || actions!.isNotEmpty)) {
+    var actions = widget.actions.where((e) => e.getStateForMaxWidth(0).shownOnContextMenu).toList();
+    if (widget.enabled && (widget.contextMenuWidget!=null || actions.isNotEmpty)) {
+      widget.onShowMenu?.call();
       Offset? mousePosition = widget.useCursorLocation ? tapDownDetails?.globalPosition : null;
       showPopupFromZero<dynamic>( // TODO 3 find a way to show a non-blocking popup (an overlay)
         context: context,
@@ -62,22 +62,27 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
         builder: (context) {
           return widget.contextMenuWidget ?? ListView.builder(
             shrinkWrap: true,
-            itemCount: actions!.length,
-            padding: EdgeInsets.symmetric(vertical: 6),
+            itemCount: actions.length,
+            padding: EdgeInsets.symmetric(vertical: 8),
             itemBuilder: (context, index) {
-              final action = actions![index];
+              final action = actions[index];
               return action.copyWith(
                 onTap: (context) {
                   Navigator.of(context).pop();
                   action.onTap?.call(context);
                 },
-              ).buildOverflow(context);
+              ).buildOverflow(context, forceIconSpace: actions.where((e) => e.icon!=null).isNotEmpty);
             },
           );
         },
       );
     }
   }
+
+
+  void onTapDown(details) => tapDownDetails = details;
+  void _showContextMenu() => showContextMenu(context);
+
 
   TapDownDetails? tapDownDetails;
   @override
@@ -88,18 +93,38 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
     );
     // bool mouseIsConnected = RendererBinding.instance!.mouseTracker.mouseIsConnected; // doesnt work on windows
     if (widget.addGestureDetector) {
-      result = GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTapDown: (details) => tapDownDetails = details,
-        onSecondaryTapDown: (details) => tapDownDetails = details,
-        onLongPress: () {
-          if (PlatformExtended.isMobile) {
-            showContextMenu(context);
-          }
+      final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
+      gestures[_TransparentTapGestureRecognizer] = GestureRecognizerFactoryWithHandlers<_TransparentTapGestureRecognizer>(
+        () => _TransparentTapGestureRecognizer(debugOwner: this),
+        (TapGestureRecognizer instance) {
+          instance
+            ..onTapDown = onTapDown
+            ..onSecondaryTapDown = onTapDown
+            ..onSecondaryTap = _showContextMenu;
         },
-        onSecondaryTap: () => showContextMenu(context),
+      );
+      result = RawGestureDetector(
+        behavior: HitTestBehavior.translucent,
+        gestures: gestures,
         child: result,
       );
+      result = GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onLongPress: PlatformExtended.isMobile ? () {
+          showContextMenu(context);
+        } : null,
+        child: result,
+      );
+      // result = GestureDetector(
+      //   behavior: HitTestBehavior.translucent,
+      //   onTapDown: (details) => tapDownDetails = details,
+      //   onSecondaryTapDown: (details) => tapDownDetails = details,
+      //   onSecondaryTap: () => showContextMenu(context),
+      //   onLongPress: PlatformExtended.isMobile ? () {
+      //     showContextMenu(context);
+      //   } : null,
+      //   child: result,
+      // );
     }
     return result;
   }
@@ -110,7 +135,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
 
 class ContextMenuIconButton extends StatelessWidget {
 
-  final List<ActionFromZero>? actions;
+  final List<ActionFromZero> actions;
   /// overrides everything else and is used as context menu widget
   final Widget? contextMenuWidget;
   final double contextMenuWidth;
@@ -132,7 +157,7 @@ class ContextMenuIconButton extends StatelessWidget {
   final Color? hoverColor;
 
   ContextMenuIconButton({
-    this.actions,
+    this.actions = const [],
     this.contextMenuWidget,
     Key? key,
     required this.icon,
@@ -154,32 +179,57 @@ class ContextMenuIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ContextMenuFromZero(
-      key: contextMenuKey,
-      addGestureDetector: false,
-      actions: actions,
-      contextMenuWidget: contextMenuWidget,
-      contextMenuWidth: contextMenuWidth,
-      anchorAlignment: anchorAlignment,
-      popupAlignment: popupAlignment,
-      barrierColor: barrierColor,
-      useCursorLocation: useCursorLocation,
-      child: IconButton(
-        icon: icon,
-        focusNode: focusNode,
-        color: color,
-        iconSize: iconSize,
-        splashColor: splashColor,
-        splashRadius: splashRadius,
-        disabledColor: disabledColor,
-        focusColor: focusColor,
-        highlightColor: highlightColor,
-        hoverColor: hoverColor,
-        onPressed: () {
-          contextMenuKey.currentState!.showContextMenu(context);
-        },
-      ),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Positioned.fill(
+          child: ContextMenuFromZero(
+            key: contextMenuKey,
+            addGestureDetector: false,
+            actions: actions,
+            contextMenuWidget: contextMenuWidget,
+            contextMenuWidth: contextMenuWidth,
+            anchorAlignment: anchorAlignment,
+            popupAlignment: popupAlignment,
+            barrierColor: barrierColor,
+            useCursorLocation: useCursorLocation,
+            child: Container(),
+          ),
+        ),
+        IconButton(
+          icon: icon,
+          focusNode: focusNode,
+          color: color,
+          iconSize: iconSize,
+          splashColor: splashColor,
+          splashRadius: splashRadius,
+          disabledColor: disabledColor,
+          focusColor: focusColor,
+          highlightColor: highlightColor,
+          hoverColor: hoverColor,
+          onPressed: () {
+            contextMenuKey.currentState!.showContextMenu(context);
+          },
+        ),
+      ],
     );
   }
 
+}
+
+
+
+class _TransparentTapGestureRecognizer extends TapGestureRecognizer {
+  _TransparentTapGestureRecognizer({
+    Object? debugOwner,
+  }) : super(debugOwner: debugOwner);
+
+  @override
+  void rejectGesture(int pointer) {
+    if (state == GestureRecognizerState.ready) {
+      acceptGesture(pointer);
+    } else {
+      super.rejectGesture(pointer);
+    }
+  }
 }

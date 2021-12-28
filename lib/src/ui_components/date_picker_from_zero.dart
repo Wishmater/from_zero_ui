@@ -2,7 +2,6 @@ import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
-import 'package:from_zero_ui/util/my_popup_menu.dart' as my_popup;
 import 'package:intl/intl.dart';
 
 typedef Widget DatePickerButtonChildBuilder<T>(BuildContext context, String? title, String? hint, DateTime? value, DateFormat formatter, bool enabled, bool clearable,);
@@ -15,14 +14,13 @@ class DatePickerFromZero extends StatefulWidget {
   final DateTime firstDate;
   final DateTime lastDate;
   final DateFormat formatter;
-  final my_popup.PopupMenuCanceled? onCanceled;
+  final VoidCallback? onCanceled;
   final OnDateSelected? onSelected;
   final String? title;
   final String? hint;
   final bool enabled;
   final DatePickerButtonChildBuilder? buttonChildBuilder;
   final double? popupWidth;
-  final DAOGetter? daoGetter;
   final bool clearable;
   final FocusNode? focusNode;
   final EdgeInsets? buttonPadding;
@@ -40,7 +38,6 @@ class DatePickerFromZero extends StatefulWidget {
     this.enabled = true,
     this.clearable = true,
     this.popupWidth,
-    this.daoGetter,
     this.focusNode,
     this.buttonPadding,
   }) :  this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY);
@@ -98,11 +95,7 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
   Widget build(BuildContext context) {
     Widget child;
     if (widget.buttonChildBuilder==null) {
-      dynamic value = widget.value;
-      if (value!=null && widget.daoGetter!=null) {
-        value = widget.daoGetter!(value);
-      }
-      child = DatePickerFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, value, widget.formatter, widget.enabled, widget.clearable);
+      child = DatePickerFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, widget.value, widget.formatter, widget.enabled, widget.clearable);
     } else {
       child = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.formatter, widget.enabled, widget.clearable);
     }

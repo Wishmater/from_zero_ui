@@ -13,7 +13,9 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:from_zero_ui/src/table/table_from_zero_filters.dart';
 import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
+import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:from_zero_ui/util/my_sticky_header.dart';
+import 'package:from_zero_ui/util/no_ensure_visible_traversal_policy.dart';
 import 'package:from_zero_ui/util/small_splash_popup_menu_button.dart' as small_popup;
 import 'dart:async';
 import 'package:dartx/dartx.dart';
@@ -22,9 +24,9 @@ import 'package:implicitly_animated_reorderable_list/implicitly_animated_reorder
 import 'package:implicitly_animated_reorderable_list/transitions.dart';
 import 'package:keframe/frame_separate_widget.dart';
 
-typedef OnRowHoverCallback = void Function(RowModel row, bool focused);
-typedef OnCheckBoxSelectedCallback = bool? Function(RowModel row, bool? focused);
-typedef OnHeaderHoverCallback = void Function(int i, bool focused);
+typedef OnRowHoverCallback = void Function(RowModel row, bool selected);
+typedef OnCheckBoxSelectedCallback = bool? Function(RowModel row, bool? selected);
+typedef OnHeaderHoverCallback = void Function(int i, bool selected);
 typedef OnCellTapCallback = ValueChanged<RowModel>? Function(int index,);
 typedef OnCellHoverCallback = OnRowHoverCallback? Function(int index,);
 
@@ -46,7 +48,6 @@ class TableFromZero<T> extends StatefulWidget {
   final int layoutWidgetType;
   final EdgeInsets itemPadding;
   final bool showHeaders;
-  /// Only used if layoutWidgetType==listViewBuilder
   final ScrollController? scrollController;
   /// Only used if layoutWidgetType==listViewBuilder
   final double verticalPadding;
@@ -73,7 +74,6 @@ class TableFromZero<T> extends StatefulWidget {
   final Color? headerRowColor;
   final bool applyHalfOpacityToHeaderColor;
   final TextStyle? defaultTextStyle;
-  final ScrollController? mainScrollController;
   final double stickyOffset;
   final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   final TableController? tableController;
@@ -121,7 +121,6 @@ class TableFromZero<T> extends StatefulWidget {
     this.headerRowColor,
     this.applyHalfOpacityToHeaderColor = true,
     this.defaultTextStyle,
-    this.mainScrollController,
     this.stickyOffset = 0,
     this.onFilter,
     this.tableController,
@@ -163,6 +162,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
   late List<RowModel<T>> sorted;
   late List<RowModel<T>> filtered;
+  late Map<int, FocusNode> headerFocusNodes = {};
 
   late Map<int, List<ConditionFilter>> _conditionFilters;
   Map<int, List<ConditionFilter>> get conditionFilters => widget.tableController?.conditionFilters ?? _conditionFilters;
@@ -235,14 +235,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         lockScrollUpdates = false;
       }
     });
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-      if (sharedController.hasClients) {
-        // TODO fix this VERY BAD way to trigger initial scrollbar
-        final pixels = sharedController.position.pixels;
-        sharedController.jumpTo(pixels+1);
-        sharedController.jumpTo(pixels);
-      }
-    });
+    // WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+    //   if (sharedController.hasClients) {
+    //     // old hack to show scrollbar at start, no longer needed, i think
+    //     final pixels = sharedController.position.pixels;
+    //     sharedController.jumpTo(pixels+1);
+    //     sharedController.jumpTo(pixels);
+    //   }
+    // });
     if (sortedColumnIndex==null || sortedColumnIndex==-1) {
       sortedColumnIndex = widget.initialSortedColumnIndex;
     }
@@ -268,28 +268,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         onCheckBoxSelected:  widget.onAllSelected!=null||widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null,
         selected: true,
         height: widget.headerHeight ?? widget.rowHeightForScrollingCalculation ?? (widget.rows.isEmpty ? 38 : widget.rows.first.height),
-        onCellTap: (j) {
-          return widget.columns![j].onHeaderTap!=null
-              ||widget.columns![j].sortEnabled==true ? (row,) {
-            if (widget.columns![j].sortEnabled==true){
-              if (sortedColumnIndex==j) {
-                setState(() {
-                  sortedAscending = !sortedAscending;
-                  sort();
-                });
-              } else {
-                setState(() {
-                  sortedColumnIndex = j;
-                  sortedAscending = widget.columns![j].defaultSortAscending ?? true;
-                  sort();
-                });
-              }
-            }
-            if (widget.columns![j].onHeaderTap!=null){
-              widget.columns![j].onHeaderTap!(j);
-            }
-          } : null;
-        },
       );
       availableFilters = [];
       for (int i=0; i<widget.columns!.length; i++) {
@@ -456,7 +434,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       if (header!=null) {
         result = StickyHeaderBuilder(
           content: result,
-          controller: widget.mainScrollController,
+          controller: widget.scrollController,
           stickOffset: widget.stickyOffset,
           builder: (context, state) {
             return Stack(
@@ -621,6 +599,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       }
 
     }
+    result = FocusTraversalGroup(
+      policy: ReadingOrderTraversalPolicy(),
+      child: result,
+    );
     return result;
   }
 
@@ -691,22 +673,28 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
               ContextCallback? onTap,
               bool enabled = true,
             }) {
-              return IgnorePointer(
-                child: Opacity(
-                  opacity: 0,
-                  child: e.iconBuilder(
-                    context: context,
-                    title: title,
-                    icon: icon,
-                    onTap: onTap,
-                    enabled: enabled,
+              return FocusScope( // TODO 2 huge performance: find a way to pre-measure the width of actions, so we don't have to paint them
+                canRequestFocus: false,
+                child: IgnorePointer(
+                  child: Container(
+                    decoration: _getDecoration(row, -1),
+                    child: Opacity(
+                      opacity: 0,
+                      child: e.iconBuilder(
+                        context: context,
+                        title: title,
+                        icon: icon,
+                        onTap: onTap,
+                        enabled: enabled,
+                      ),
+                    ),
                   ),
                 ),
               );
             },
           )).toList()
         : widget.rowActions.map((e) => e.copyWith(onTap: (context) {
-            e.onRowTap.call(context, row as RowModel<T>);
+            e.onRowTap?.call(context, row as RowModel<T>);
           },)).toList();
 
     final builder = (BuildContext context, BoxConstraints? constraints) {
@@ -820,7 +808,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           result = Material(
             type: MaterialType.transparency,
             child: InkWell(
-              onTap: widget.enabled&&row.onCellTap!=null&&row.onCellTap!(j)!=null ? () => row.onCellTap!(j)!.call(row) : null,
+              onTap: widget.enabled&&row.onCellTap!=null&&row.onCellTap!(j)!=null ? () {
+                row.onCellTap!(j)!.call(row);
+              } : null,
               onDoubleTap: widget.enabled&&row.onCellDoubleTap!=null&&row.onCellDoubleTap!(j)!=null ? () => row.onCellDoubleTap!(j)!.call(row) : null,
               onLongPress: widget.enabled&&row.onCellLongPress!=null&&row.onCellLongPress!(j)!=null ? () => row.onCellLongPress!(j)!.call(row) : null,
               onHover: widget.enabled&&row.onCellHover!=null&&row.onCellHover!(j)!=null ? (value) => row.onCellHover!(j)!.call(row, value) : null,
@@ -859,6 +849,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             itemBuilder: cellBuilder,
             itemCount: cols,
             padding: EdgeInsets.symmetric(horizontal: widget.horizontalPadding),
+            cacheExtent: 99999999,
           ),
         );
         if (row==headerRowModel) {
@@ -878,11 +869,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           );
         }
       } else {
-        background = Container(
-          color: Material.of(context)?.color ?? Theme.of(context).cardColor,
-          child: Row(
-            children: List.generate(cols, (j) => decorationBuilder(context, j)),
-          ),
+        background = Row(
+          children: List.generate(cols, (j) => decorationBuilder(context, j)),
         );
         result = Row(
           children: List.generate(cols, (j) => cellBuilder(context, j)),
@@ -921,6 +909,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           useFlutterAppbar: false,
           toolbarHeight: widget.rowHeightForScrollingCalculation ?? row.height,
           addContextMenu: row!=headerRowModel,
+          onShowContextMenu: () => row.focusNode.requestFocus(),
+          skipTraversalForActions: true,
           backgroundColor: Colors.transparent,
           elevation: 0,
           paddingRight: 0,
@@ -955,7 +945,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         }
         if (row!=headerRowModel && widget.applyStickyHeadersToRowAddon){
           result = StickyHeader(
-            controller: widget.mainScrollController,
+            controller: widget.scrollController,
             header: result,
             content: addon,
             stickOffset: row is! RowModel<T> ? 0
@@ -1004,6 +994,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           result = Center(child: SizedBox(width: widget.maxWidth!, child: result,),);
         }
       }
+      result = FocusTraversalGroup(
+        policy: NoEnsureVisibleWidgetTraversalPolicy(),
+        child: Container(
+          decoration: _getDecoration(row, -1),
+          child: result,
+        ),
+      );
       return result;
     };
 
@@ -1023,22 +1020,34 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     // );
 
   }
-  _buildRowGestureDetector({required BuildContext context, required RowModel row, required Widget child}) {
-    return Material(
-      type: MaterialType.transparency,
-      child: InkWell(
-        onTap: widget.enabled&&row.onRowTap!=null ? () => row.onRowTap!(row)
+  Widget _buildRowGestureDetector({required BuildContext context, required RowModel row, required Widget child}) {
+    Widget result = child;
+    if (row.onRowTap!=null) {
+      result = InkWell(
+        onTap: widget.enabled ? () => row.onRowTap!(row)
             : row.onCheckBoxSelected!=null && row!=headerRowModel ? () {
-                if (row.onCheckBoxSelected!(row, !(row.selected??false)) ?? false) {
-                  setState(() {});
-                }
-              } : null,
+          if (row.onCheckBoxSelected!(row, !(row.selected??false)) ?? false) {
+            setState(() {});
+          }
+        } : null,
         onDoubleTap: widget.enabled&&row.onRowDoubleTap!=null ? () => row.onRowDoubleTap!(row) : null,
         onLongPress: widget.enabled&&row.onRowLongPress!=null ? () => row.onRowLongPress!(row) : null,
         onHover: widget.enabled&&row.onRowHover!=null ? (value) => row.onRowHover!(row, value) : null,
         child: child,
+      );
+    }
+    result = Material(
+      type: MaterialType.transparency,
+      child: EnsureVisibleWhenFocused(
+        focusNode: row.focusNode,
+        child: Focus(
+          focusNode: row.focusNode,
+          skipTraversal: true,
+          child: result,
+        ),
       ),
     );
+    return result;
   }
 
   Widget defaultHeaderCellBuilder(BuildContext context, RowModel<String> row, ColModel? col, int j) {
@@ -1125,8 +1134,41 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         ],
       ),
     );
+    headerFocusNodes[j] ??= FocusNode();
+    result = Material(
+      type: MaterialType.transparency,
+      child: EnsureVisibleWhenFocused(
+        focusNode: headerFocusNodes[j]!,
+        child: InkWell(
+          focusNode: headerFocusNodes[j],
+          onTap: widget.columns![j].onHeaderTap!=null
+              || widget.columns![j].sortEnabled==true ? () {
+            headerFocusNodes[j]!.requestFocus();
+            if (widget.columns![j].sortEnabled==true){
+              if (sortedColumnIndex==j) {
+                setState(() {
+                  sortedAscending = !sortedAscending;
+                  sort();
+                });
+              } else {
+                setState(() {
+                  sortedColumnIndex = j;
+                  sortedAscending = widget.columns![j].defaultSortAscending ?? true;
+                  sort();
+                });
+              }
+            }
+            if (widget.columns![j].onHeaderTap!=null){
+              widget.columns![j].onHeaderTap!(j);
+            }
+          } : null,
+          child: result,
+        ),
+      ),
+    );
     result = ContextMenuFromZero(
       child: result,
+      onShowMenu: () => headerFocusNodes[j]!.requestFocus(),
       actions: [
         if (col?.sortEnabled ?? true)
           ActionFromZero(
@@ -1177,7 +1219,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     //     FilterIsEmpty(),
     //   ]);
     // }
-    // TODO, when selecting available filters, automatically enable only possible filters (if null in the column)
+    // TODO 2 when selecting available filters, automatically enable only possible filters (if null in the column)
     if (widget.columns![j].textConditionFiltersEnabled ?? true) {
       possibleConditionFilters.addAll([
         // FilterTextExactly(),
@@ -1321,10 +1363,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                             id: e,
                             values: [e.toString()],
                             selected: valueFilters[j][e] ?? false,
-                            onCheckBoxSelected: (row, focused) {
+                            onCheckBoxSelected: (row, selected) {
                               modified = true;
-                              valueFilters[j][row.id] = focused!;
-                              (row as SimpleRowModel<T>).selected = focused;
+                              valueFilters[j][row.id] = selected!;
+                              (row as SimpleRowModel<T>).selected = selected;
                               return true;
                             },
                           );
@@ -1479,62 +1521,39 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     return result;
   }
 
-  BoxDecoration _getDecoration(RowModel row, int j,){
+  BoxDecoration? _getDecoration(RowModel row, int j,){
     bool header = row==headerRowModel;
     Color? backgroundColor = _getBackgroundColor(row, j, header);
-    bool applyDarker = widget.applyRowAlternativeColors==true
-        && _shouldApplyDarkerBackground(backgroundColor, row, j, header);
     if (header){
-      backgroundColor = backgroundColor ?? widget.headerRowColor;
-    }
-    if (backgroundColor==null){
-      backgroundColor = Material.of(context)!.color;
-    }
-    if (backgroundColor!=null) {
-      if (widget.applyHalfOpacityToHeaderColor && header){
+      backgroundColor = backgroundColor ?? widget.headerRowColor ?? _getMaterialColor();
+      if (widget.applyHalfOpacityToHeaderColor){
         backgroundColor = backgroundColor.withOpacity(backgroundColor.opacity*(0.5));
       }
-      if (backgroundColor.opacity<1 && Material.of(context)!.color!=null){
-        backgroundColor = Color.alphaBlend(backgroundColor, Material.of(context)!.color!);
+    }
+    if (backgroundColor!=null) {
+      bool applyDarker = widget.applyRowAlternativeColors==true
+          && _shouldApplyDarkerBackground(backgroundColor, row, j, header);
+      if (backgroundColor.opacity<1) {
+        backgroundColor = Color.alphaBlend(backgroundColor, _getMaterialColor());
       }
       if(applyDarker){
         backgroundColor = Color.alphaBlend(backgroundColor.withOpacity(0.965), Colors.black);
       }
     }
-    return BoxDecoration(color: backgroundColor);
-//    List<double> stops = [0, 0.1, 0.55, 1,];
-//    if (_getAlignment(j)==TextAlign.right)
-//      stops = [0, 0.45, 0.9, 1,];
-//    return backgroundColor!=null ? BoxDecoration(
-//        gradient: LinearGradient(
-//            colors: [
-//              backgroundColor.withOpacity(0),
-//              backgroundColor.withOpacity(backgroundColor.opacity*(header ? 0.5 : 1)),
-//              backgroundColor.withOpacity(backgroundColor.opacity*(header ? 0.5 : 1)),
-//              backgroundColor.withOpacity(0),
-//            ],
-//            stops: stops,
-//        )
-//    ) : null;
-//    if (backgroundColor==null){
-//      return null;
-//    } else{
-//
-//    }
+    return backgroundColor==null ? null : BoxDecoration(color: backgroundColor);
   }
+  Color _getMaterialColor() => Material.of(context)!.color ?? Theme.of(context).cardColor;
   Color? _getBackgroundColor(RowModel row, int j, bool header){
     Color? backgroundColor;
     if (header){
-      backgroundColor = widget.columns!=null && j<widget.columns!.length ? widget.columns![j].backgroundColor : null;
+      backgroundColor = (j<0 ? null : widget.columns?.elementAtOrNull(j)?.backgroundColor);
+    } else if (j<0) {
+      backgroundColor = row.backgroundColor ?? Material.of(context)!.color;
     } else{
       if (widget.rowTakesPriorityOverColumn){
-        backgroundColor = row.backgroundColor;
-        if (backgroundColor==null)
-          backgroundColor = widget.columns!=null && j<widget.columns!.length ? widget.columns![j].backgroundColor : null;
+        backgroundColor = row.backgroundColor ?? (j<0 ? null : widget.columns?.elementAtOrNull(j)?.backgroundColor);
       } else{
-        backgroundColor = widget.columns!=null && j<widget.columns!.length ? widget.columns![j].backgroundColor : null;
-        if (backgroundColor==null)
-          backgroundColor = row.backgroundColor;
+        backgroundColor = (j<0 ? null : widget.columns?.elementAtOrNull(j)?.backgroundColor) ?? row.backgroundColor;
       }
     }
     return backgroundColor;
@@ -1697,7 +1716,7 @@ class TableController<T> extends ChangeNotifier {
 
 class RowAction<T> extends ActionFromZero {
 
-  final Function(BuildContext context, RowModel<T> row) onRowTap;
+  final Function(BuildContext context, RowModel<T> row)? onRowTap;
 
   RowAction({
     required this.onRowTap,
@@ -1705,7 +1724,7 @@ class RowAction<T> extends ActionFromZero {
     Widget? icon,
     bool enabled = true,
     Map<double, ActionState>? breakpoints,
-    ActionBuilder overflowBuilder = ActionFromZero.defaultOverflowBuilder,
+    OverflowActionBuilder overflowBuilder = ActionFromZero.defaultOverflowBuilder,
     ActionBuilder iconBuilder = ActionFromZero.defaultIconBuilder,
     ActionBuilder buttonBuilder = ActionFromZero.defaultButtonBuilder,
   }) : super(
@@ -1720,5 +1739,23 @@ class RowAction<T> extends ActionFromZero {
     iconBuilder: iconBuilder,
     buttonBuilder: buttonBuilder,
   );
+
+  RowAction.divider({
+    Map<double, ActionState>? breakpoints,
+    OverflowActionBuilder overflowBuilder = ActionFromZero.dividerOverflowBuilder,
+    ActionBuilder iconBuilder = ActionFromZero.dividerIconBuilder,
+    ActionBuilder buttonBuilder = ActionFromZero.dividerIconBuilder,
+  })  : this.onRowTap = null,
+        super(
+          onTap: null,
+          title: '',
+          overflowBuilder: overflowBuilder,
+          iconBuilder: iconBuilder,
+          buttonBuilder: buttonBuilder,
+          breakpoints: breakpoints ?? {
+            0: ActionState.popup,
+          },
+        );
+
 
 }

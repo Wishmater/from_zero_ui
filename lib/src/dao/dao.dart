@@ -566,14 +566,21 @@ class DAO extends ChangeNotifier implements Comparable {
             } else if (widescreen && fieldGroups.where((e) => !e.primary && e.props.values.where((e) => !e.hiddenInForm).isNotEmpty).isNotEmpty) {
               expandToFillContainer = true;
             }
+            ScrollController primaryScrollController = ScrollController();
+            ScrollController tabBarScrollController = ScrollController();
+            Map<String, ScrollController> secondaryScrollControllers = {};
             List<Widget> primaryFormWidgets = [];
-            int i = 1;
             Map<String, Widget> secondaryFormWidgets = {};
+            int i = 1;
             for (final e in fieldGroups) {
               if (e.props.values.where((e) => !e.hiddenInForm).isNotEmpty) {
+                bool asPrimary = !widescreen || e.primary;
+                final name = e.name ?? 'Grupo $i';
+                final scrollController = asPrimary ? primaryScrollController : ScrollController();
                 Widget groupWidget = buildGroupWidget(
                   context: context,
                   group: e,
+                  mainScrollController: scrollController,
                   showCancelActionToPop: true,
                   expandToFillContainer: expandToFillContainer,
                   asSlivers: false,
@@ -583,10 +590,14 @@ class DAO extends ChangeNotifier implements Comparable {
                   askForSaveConfirmation: askForSaveConfirmation,
                   showActionButtons: false,
                 );
-                if (!widescreen || e.primary) {
+                if (asPrimary) {
                   primaryFormWidgets.add(groupWidget);
                 } else {
-                  secondaryFormWidgets[e.name ?? 'Grupo $i'] = groupWidget;
+                  secondaryScrollControllers[name] = scrollController;
+                  secondaryFormWidgets[name] = FocusTraversalOrder(
+                    order: NumericFocusOrder(i.toDouble()),
+                    child: groupWidget,
+                  );
                   i++;
                 }
               }
@@ -596,11 +607,6 @@ class DAO extends ChangeNotifier implements Comparable {
               showDefaultSnackBars: showDefaultSnackBars,
               showRevertChanges: showRevertChanges,
               askForSaveConfirmation: askForSaveConfirmation,
-            );
-            ScrollController primaryScrollController = ScrollController();
-            ScrollController tabBarScrollController = ScrollController();
-            Map<String, ScrollController> secondaryScrollControllers = Map.fromIterable(secondaryFormWidgets.keys,
-              value: (element) => ScrollController(),
             );
             final pageController = PreloadPageController();
             Widget result = Column(
@@ -641,118 +647,122 @@ class DAO extends ChangeNotifier implements Comparable {
                 ),
                 Expanded(
                   child: FocusScope(
-                    child: DefaultTabController(
-                      length: secondaryFormWidgets.keys.length,
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Container(
-                              alignment: secondaryFormWidgets.keys.isNotEmpty ? Alignment.centerLeft : null,
-                              width: secondaryFormWidgets.keys.isNotEmpty ? formDialogWidth : null,
-                              padding: EdgeInsets.only(left: secondaryFormWidgets.keys.isNotEmpty ? 12 : 0),
-                              child: ScrollbarFromZero(
-                                controller: primaryScrollController,
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12,),
-                                  child: SingleChildScrollView(
-                                    controller: primaryScrollController,
-                                    child: FocusTraversalGroup(
-                                      // policy: TraversalPolicy(),
-                                      child: Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: primaryFormWidgets,
+                    child: FocusTraversalGroup(
+                      policy: OrderedTraversalPolicy(),
+                      child: DefaultTabController(
+                        length: secondaryFormWidgets.keys.length,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Container(
+                                alignment: secondaryFormWidgets.keys.isNotEmpty ? Alignment.centerLeft : null,
+                                width: secondaryFormWidgets.keys.isNotEmpty ? formDialogWidth : null,
+                                padding: EdgeInsets.only(left: secondaryFormWidgets.keys.isNotEmpty ? 12 : 0),
+                                child: ScrollbarFromZero(
+                                  controller: primaryScrollController,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12,),
+                                    child: SingleChildScrollView(
+                                      controller: primaryScrollController,
+                                      child: FocusTraversalOrder(
+                                        order: NumericFocusOrder(1),
+                                        child: FocusTraversalGroup(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: primaryFormWidgets,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
                             ),
-                          ),
-                          if (secondaryFormWidgets.keys.isNotEmpty)
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.only(right: 24),
-                                alignment: Alignment.centerRight,
-                                child: SizedBox(
-                                  width: formDialogWidth+12+16,
-                                  child: Column(
-                                    children: [
-                                      ExcludeFocus(
-                                        child: ScrollbarFromZero(
-                                          controller: tabBarScrollController,
-                                          opacityGradientDirection: OpacityGradient.horizontal,
-                                          child: Padding(
-                                            padding: EdgeInsets.only(right: 12, bottom: PlatformExtended.isDesktop ? 8 : 0,),
-                                            child: SingleChildScrollView(
-                                              scrollDirection: Axis.horizontal,
-                                              controller: tabBarScrollController,
-                                              child: IntrinsicWidth(
-                                                child: Card(
-                                                  clipBehavior: Clip.hardEdge,
-                                                  child: TabBar( // TODO 3 replace this with an actual widget: PageIndicatorFromzero. Allow to have an indicator + building children dinamically according to selected
-                                                    isScrollable: true,
-                                                    indicatorWeight: 3,
-                                                    tabs: secondaryFormWidgets.keys.map((e) {
-                                                      return Container(
-                                                        height: 32,
-                                                        alignment: Alignment.center,
-                                                        child: Text(e, style: Theme.of(context).textTheme.subtitle1,),
-                                                      );
-                                                    }).toList(),
-                                                    onTap: (value) {
-                                                      pageController.animateToPage(value,
-                                                        duration: kTabScrollDuration,
-                                                        curve: Curves.ease,
-                                                      );
-                                                    },
+                            if (secondaryFormWidgets.keys.isNotEmpty)
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(right: 24),
+                                  alignment: Alignment.centerRight,
+                                  child: SizedBox(
+                                    width: formDialogWidth+12+16,
+                                    child: Column(
+                                      children: [
+                                        ExcludeFocus(
+                                          child: ScrollbarFromZero(
+                                            controller: tabBarScrollController,
+                                            opacityGradientDirection: OpacityGradient.horizontal,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(right: 12, bottom: PlatformExtended.isDesktop ? 8 : 0,),
+                                              child: SingleChildScrollView(
+                                                scrollDirection: Axis.horizontal,
+                                                controller: tabBarScrollController,
+                                                child: IntrinsicWidth(
+                                                  child: Card(
+                                                    clipBehavior: Clip.hardEdge,
+                                                    child: TabBar( // TODO 3 replace this with an actual widget: PageIndicatorFromzero. Allow to have an indicator + building children dinamically according to selected
+                                                      isScrollable: true,
+                                                      indicatorWeight: 3,
+                                                      tabs: secondaryFormWidgets.keys.map((e) {
+                                                        return Container(
+                                                          height: 32,
+                                                          alignment: Alignment.center,
+                                                          child: Text(e, style: Theme.of(context).textTheme.subtitle1,),
+                                                        );
+                                                      }).toList(),
+                                                      onTap: (value) {
+                                                        pageController.animateToPage(value,
+                                                          duration: kTabScrollDuration,
+                                                          curve: Curves.ease,
+                                                        );
+                                                      },
+                                                    ),
                                                   ),
                                                 ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                      SizedBox(
-                                        height: 0,
-                                        child: TabBarView(
-                                          children: List.filled(secondaryFormWidgets.keys.length, Container()),
+                                        SizedBox(
+                                          height: 0,
+                                          child: TabBarView(
+                                            children: List.filled(secondaryFormWidgets.keys.length, Container()),
+                                          ),
                                         ),
-                                      ),
-                                      Expanded(
-                                        child: Builder(
-                                          builder: (context) {
-                                            return PreloadPageView(
-                                              controller: pageController,
-                                              preloadPagesCount: 999,
-                                              onPageChanged: (value) {
-                                                DefaultTabController.of(context)?.animateTo(value);
-                                              },
-                                              children: secondaryFormWidgets.keys.map((e) {
-                                                return ScrollbarFromZero(
-                                                  controller: secondaryScrollControllers[e],
-                                                  child: Padding(
-                                                    padding: const EdgeInsets.only(right: 12),
-                                                    child: SingleChildScrollView(
-                                                      controller: secondaryScrollControllers[e],
+                                        Expanded(
+                                          child: Builder(
+                                            builder: (context) {
+                                              return PreloadPageView(
+                                                controller: pageController,
+                                                preloadPagesCount: 999,
+                                                onPageChanged: (value) {
+                                                  DefaultTabController.of(context)?.animateTo(value);
+                                                },
+                                                children: secondaryFormWidgets.keys.map((e) {
+                                                  return ScrollbarFromZero(
+                                                    controller: secondaryScrollControllers[e],
+                                                    child: Padding(
+                                                      padding: const EdgeInsets.only(right: 12),
                                                       child: FocusTraversalGroup(
-                                                        // policy: WidgetOrderTraversalPolicy(),
-                                                        child: secondaryFormWidgets[e]!,
+                                                        child: SingleChildScrollView(
+                                                          controller: secondaryScrollControllers[e],
+                                                          child: secondaryFormWidgets[e]!,
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                );
-                                              }).toList(),
-                                            );
-                                          }
+                                                  );
+                                                }).toList(),
+                                              );
+                                            }
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -1103,6 +1113,7 @@ class DAO extends ChangeNotifier implements Comparable {
   Widget buildGroupWidget({
     required BuildContext context,
     required FieldGroup group,
+    ScrollController? mainScrollController,
     bool asSlivers=true,
     bool showActionButtons=true,
     bool showRevertChanges=false,
@@ -1124,6 +1135,7 @@ class DAO extends ChangeNotifier implements Comparable {
       ...buildFormWidgets(context,
         group: group,
         showCancelActionToPop: true,
+        mainScrollController: mainScrollController,
         expandToFillContainer: verticalLayout && expandToFillContainer,
         asSlivers: false,
         focusNode: firstIteration && group.primary ? focusNode : null,
@@ -1138,6 +1150,7 @@ class DAO extends ChangeNotifier implements Comparable {
           context: context,
           group: e,
           showCancelActionToPop: true,
+          mainScrollController: mainScrollController,
           expandToFillContainer: verticalLayout && expandToFillContainer,
           asSlivers: false,
           focusNode: focusNode,
@@ -1237,6 +1250,7 @@ class DAO extends ChangeNotifier implements Comparable {
 
   List<Widget> buildFormWidgets(BuildContext context, {
     FieldGroup? group,
+    ScrollController? mainScrollController,
     bool asSlivers=true,
     bool showActionButtons=true,
     bool showRevertChanges=false,
@@ -1256,8 +1270,10 @@ class DAO extends ChangeNotifier implements Comparable {
         List<Widget> result = e.buildFieldEditorWidgets(context,
           addCard: true,
           asSliver: asSlivers,
-          expandToFillContainer: expandToFillContainer,
+          expandToFillContainer: e is ListField && !asSlivers // it will never make sense to build a ListView inside a FormGroup
+              ? false : expandToFillContainer,
           focusNode: first ? focusNode : null,
+          mainScrollController: mainScrollController,
         );
         first = false;
         result = result.mapIndexed((i, w) {
