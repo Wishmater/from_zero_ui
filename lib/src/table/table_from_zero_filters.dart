@@ -6,13 +6,13 @@ import 'package:from_zero_ui/util/my_tooltip.dart';
 import 'package:intl/intl.dart';
 
 
-abstract class ConditionFilter {
+abstract class ConditionFilter<T> {
   ConditionFilter({required this.extra});
   bool extra;
   String getUiName(BuildContext context);
   String getExtraUiName(BuildContext context);
   String getExtraUiTooltipFromZero(BuildContext context);
-  bool isAllowed(dynamic value, List<dynamic> values, int index);
+  bool isAllowed(dynamic value, Map<dynamic, T> values, int index);
   late FocusNode focusNode = FocusNode();
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,});
 }

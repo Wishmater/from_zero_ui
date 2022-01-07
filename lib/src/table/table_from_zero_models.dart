@@ -2,10 +2,58 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 
 
+
+
+class RowAction<T> extends ActionFromZero {
+
+  final Function(BuildContext context, RowModel<T> row)? onRowTap;
+
+  RowAction({
+    required this.onRowTap,
+    required String title,
+    Widget? icon,
+    bool enabled = true,
+    Map<double, ActionState>? breakpoints,
+    OverflowActionBuilder overflowBuilder = ActionFromZero.defaultOverflowBuilder,
+    ActionBuilder iconBuilder = ActionFromZero.defaultIconBuilder,
+    ActionBuilder buttonBuilder = ActionFromZero.defaultButtonBuilder,
+  }) : super(
+    onTap: (context) {},
+    title: title,
+    icon: icon,
+    enabled: enabled,
+    breakpoints: breakpoints ?? {
+      0: ActionState.icon,
+    },
+    overflowBuilder: overflowBuilder,
+    iconBuilder: iconBuilder,
+    buttonBuilder: buttonBuilder,
+  );
+
+  RowAction.divider({
+    Map<double, ActionState>? breakpoints,
+    OverflowActionBuilder overflowBuilder = ActionFromZero.dividerOverflowBuilder,
+    ActionBuilder iconBuilder = ActionFromZero.dividerIconBuilder,
+    ActionBuilder buttonBuilder = ActionFromZero.dividerIconBuilder,
+  })  : this.onRowTap = null,
+        super(
+        onTap: null,
+        title: '',
+        overflowBuilder: overflowBuilder,
+        iconBuilder: iconBuilder,
+        buttonBuilder: buttonBuilder,
+        breakpoints: breakpoints ?? {
+          0: ActionState.popup,
+        },
+      );
+
+}
+
+
 abstract class RowModel<T> {
   T get id;
   Key? get rowKey => null;
-  List<Comparable?> get values;
+  Map<dynamic, Comparable?> get values;
   Color? get backgroundColor => null;
   TextStyle? get textStyle => null;
   double get height => 36;
@@ -20,6 +68,11 @@ abstract class RowModel<T> {
   OnCellHoverCallback? get onCellHover => null;
   OnCheckBoxSelectedCallback? get onCheckBoxSelected => null;
   Widget? get rowAddon => null;
+  bool? get rowAddonIsCoveredByGestureDetector => null;
+  bool? get rowAddonIsCoveredByBackground => null;
+  bool? get rowAddonIsCoveredByScrollable => null;
+  bool? get rowAddonIsSticky => null;
+  bool? get rowAddonIsAboveRow => null;
   bool? get alwaysOnTop => null;
   late FocusNode focusNode = FocusNode();
   @override
@@ -51,7 +104,7 @@ abstract class ColModel{
 class SimpleRowModel<T> extends RowModel<T> {
   T id;
   Key? rowKey;
-  List<Comparable?> values;
+  Map<dynamic, Comparable?> values;
   Color? backgroundColor;
   TextStyle? textStyle;
   double height;
@@ -66,6 +119,11 @@ class SimpleRowModel<T> extends RowModel<T> {
   OnCellHoverCallback? onCellHover;
   OnCheckBoxSelectedCallback? onCheckBoxSelected;
   Widget? rowAddon;
+  bool? rowAddonIsCoveredByGestureDetector;
+  bool? rowAddonIsCoveredByBackground;
+  bool? rowAddonIsCoveredByScrollable;
+  bool? rowAddonIsSticky;
+  bool? rowAddonIsAboveRow;
   bool? alwaysOnTop;
   SimpleRowModel({
     required this.id,
@@ -81,6 +139,11 @@ class SimpleRowModel<T> extends RowModel<T> {
     this.onRowHover,
     this.onCheckBoxSelected,
     this.rowAddon,
+    this.rowAddonIsCoveredByGestureDetector,
+    this.rowAddonIsCoveredByBackground,
+    this.rowAddonIsCoveredByScrollable,
+    this.rowAddonIsSticky,
+    this.rowAddonIsAboveRow,
     this.alwaysOnTop,
     this.onCellTap,
     this.onCellDoubleTap,
@@ -90,7 +153,7 @@ class SimpleRowModel<T> extends RowModel<T> {
   SimpleRowModel copyWith({
     T? id,
     Key? rowKey,
-    List<Comparable?>? values,
+    Map<dynamic, Comparable?>? values,
     Color? backgroundColor,
     TextStyle? textStyle,
     double? height,
@@ -101,6 +164,11 @@ class SimpleRowModel<T> extends RowModel<T> {
     OnRowHoverCallback? onRowHover,
     OnCheckBoxSelectedCallback? onCheckBoxSelected,
     Widget? rowAddon,
+    bool? rowAddonIsCoveredByGestureDetector,
+    bool? rowAddonIsCoveredByBackground,
+    bool? rowAddonIsCoveredByScrollable,
+    bool? rowAddonIsSticky,
+    bool? rowAddonIsAboveRow,
     bool? alwaysOnTop,
     OnCellTapCallback? onCellTap,
     OnCellTapCallback? onCellDoubleTap,
@@ -121,6 +189,11 @@ class SimpleRowModel<T> extends RowModel<T> {
       onRowHover: onRowHover ?? this.onRowHover,
       onCheckBoxSelected: onCheckBoxSelected ?? this.onCheckBoxSelected,
       rowAddon: rowAddon ?? this.rowAddon,
+      rowAddonIsCoveredByGestureDetector: rowAddonIsCoveredByGestureDetector ?? this.rowAddonIsCoveredByGestureDetector,
+      rowAddonIsCoveredByBackground: rowAddonIsCoveredByBackground ?? this.rowAddonIsCoveredByBackground,
+      rowAddonIsCoveredByScrollable: rowAddonIsCoveredByScrollable ?? this.rowAddonIsCoveredByScrollable,
+      rowAddonIsSticky: rowAddonIsSticky ?? this.rowAddonIsSticky,
+      rowAddonIsAboveRow: rowAddonIsAboveRow ?? this.rowAddonIsAboveRow,
       onCellTap: onCellTap ?? this.onCellTap,
       onCellDoubleTap: onCellDoubleTap ?? this.onCellDoubleTap,
       onCellLongPress: onCellLongPress ?? this.onCellLongPress,

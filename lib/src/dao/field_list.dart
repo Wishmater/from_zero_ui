@@ -45,7 +45,7 @@ class ListField extends Field<ComparableList<DAO>> {
   bool showEditDialogOnAdd;
   bool showAddButtonAtEndOfTable;
   Widget? tableErrorWidget;
-  int? initialSortColumn;
+  int? initialSortedColumn;
   ValueChanged<RowModel>? onRowTap;
   bool? tableSortable;
   bool? tableFilterable;
@@ -58,6 +58,7 @@ class ListField extends Field<ComparableList<DAO>> {
   set value(ComparableList<DAO>? value) {
     assert(value!=null, 'ListField is non-nullable by design.');
     super.value = value;
+    tableController.reInit();
   }
 
   ValueNotifier<Map<DAO, bool>> selectedObjects = ValueNotifier({});
@@ -125,7 +126,7 @@ class ListField extends Field<ComparableList<DAO>> {
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
     FieldValueGetter<bool, Field>? hiddenInViewGetter,
     FieldValueGetter<bool, Field>? hiddenInFormGetter,
-    this.initialSortColumn,
+    this.initialSortedColumn,
     this.onRowTap,
     FieldValueGetter<List<FieldValidator<ComparableList<DAO>>>, Field>? validatorsGetter,
     bool validateOnlyOnConfirm = false,
@@ -314,7 +315,7 @@ class ListField extends Field<ComparableList<DAO>> {
       extraRowActionsBuilder: extraRowActionBuilders ?? this.extraRowActionsBuilder,
       skipDeleteConfirmation: skipDeleteConfirmation ?? this.skipDeleteConfirmation,
       showTableHeaders: showTableHeaders ?? this.showTableHeaders,
-      initialSortColumn: initialSortColumn ?? this.initialSortColumn,
+      initialSortedColumn: initialSortColumn ?? this.initialSortedColumn,
       tableCellsEditable: tableCellsEditable ?? this.tableCellsEditable,
       allowMultipleSelection: allowMultipleSelection ?? this.allowMultipleSelection,
       onRowTap: onRowTap ?? this.onRowTap,
@@ -361,7 +362,6 @@ class ListField extends Field<ComparableList<DAO>> {
       }
     }
     value = newValue;
-    // tableController.init();
     focusObject(elements.first);
   }
 
@@ -378,7 +378,6 @@ class ListField extends Field<ComparableList<DAO>> {
       }
     });
     value = newValue;
-    // tableController.init();
     focusObject(elements.first);
   }
 
@@ -391,7 +390,6 @@ class ListField extends Field<ComparableList<DAO>> {
     });
     if (result) {
       value = newValue;
-      // tableController.init();
     }
     return result;
   }
@@ -1115,7 +1113,7 @@ class ListField extends Field<ComparableList<DAO>> {
         for (final e in objects) {
           builtRows[e] = SimpleRowModel(
             id: e,
-            values: propsShownOnTable.keys.map((k) => e.props[k]).toList(),
+            values: propsShownOnTable.map((key, value) => MapEntry(key, e.props[key])),
             height: rowHeight,
             onRowTap: onRowTap ?? (viewOnRowTap ? (row) {
               e.pushViewDialog(context);
@@ -1134,149 +1132,152 @@ class ListField extends Field<ComparableList<DAO>> {
           color: Theme.of(context).cardColor,
           child: Container(
             color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
-            child: TableFromZero<DAO>(
-              key: ValueKey(objects.length),
-              scrollController: mainScrollController,
-              rowHeightForScrollingCalculation: rowHeight,
-              maxWidth: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
-              minWidth: width,
-              initialSortedColumnIndex: initialSortColumn ?? 0,
-              tableController: tableController,
-              layoutWidgetType: asSliver
-                  ? TableFromZero.sliverListViewBuilder
-                  : !expandToFillContainer
-                      ? TableFromZero.column
-                      : TableFromZero.listViewBuilder,
-              applyMinWidthToHeaderAddon: false,
-              verticalPadding: 0,
-              useSmartRowAlternativeColors: false,
-              columns: propsShownOnTable.values.map((e) {
-                final SimpleColModel result = e.getColModel();
-                if (tableFilterable!=null) {
-                  result.filterEnabled = tableFilterable;
-                }
-                if (tableSortable!=null) {
-                  result.sortEnabled = tableSortable;
-                }
-                return result;
-              }).toList(),
-              showHeaders: showTableHeaders,
-              rows: builtRows.values.toList(),
-              cellBuilder: tableCellsEditable ? (context, row, col, j) {
-                final widgets = (row.values[j] as Field).buildFieldEditorWidgets(context,
-                  expandToFillContainer: false,
-                  addCard: false,
-                  asSliver: false,
-                  dense: true,
-                );
-                return SizedBox(
-                  height: rowHeight,
-                  child: OverflowBox(
-                    minHeight: rowHeight, maxHeight: double.infinity,
-                    alignment: Alignment(0, -0.4),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: widgets,
+            child: CustomScrollView(
+              // TODO 2 performance opportunity: if asSliver, should return table as sliver, without ever wrapping in customScrollView
+              shrinkWrap: !expandToFillContainer,
+              slivers: [
+                TableFromZero<DAO>(
+                  // key: ValueKey(objects.length),
+                  scrollController: mainScrollController,
+                  // maxWidth: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
+                  minWidth: width,
+                  initialSortedColumn: initialSortedColumn ?? 0,
+                  tableController: tableController,
+                  alternateRowBackgroundSmartly: false,
+                  columns: propsShownOnTable.map((key, value) {
+                    final SimpleColModel result = value.getColModel();
+                    if (tableFilterable!=null) {
+                      result.filterEnabled = tableFilterable;
+                    }
+                    if (tableSortable!=null) {
+                      result.sortEnabled = tableSortable;
+                    }
+                    return MapEntry(key, result);
+                  }),
+                  showHeaders: showTableHeaders,
+                  rows: builtRows.values.toList(),
+                  cellBuilder: tableCellsEditable ? (context, row, colKey) {
+                    final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
+                      expandToFillContainer: false,
+                      addCard: false,
+                      asSliver: false,
+                      dense: true,
+                    );
+                    return SizedBox(
+                      height: rowHeight,
+                      child: OverflowBox(
+                        minHeight: rowHeight, maxHeight: double.infinity,
+                        alignment: Alignment(0, -0.4),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: widgets,
+                        ),
+                      ),
+                    );
+                  } : null,
+                  rowActions: [
+                    ...extraRowActions,
+                    if (extraRowActions.isNotEmpty)
+                      RowAction.divider(),
+                    if ((allowAddNew||availableObjectsPoolGetter!=null))
+                      RowAction<DAO>(
+                        title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
+                        icon: Icon(Icons.add),
+                        breakpoints: {0: ActionState.popup,},
+                        onRowTap: (context, row) {
+                          maybeAddRow(context, objects.indexOf(row.id)+1);
+                        },
+                      ),
+                    if ((allowAddNew||availableObjectsPoolGetter!=null))
+                      RowAction.divider(),
+                    RowAction<DAO>(
+                      icon: Icon(Icons.remove_red_eye),
+                      title: FromZeroLocalizations.of(context).translate('view'),
+                      breakpoints: actionViewBreakpoints,
+                      onRowTap: (context, row) async {
+                        row.id.pushViewDialog(context);
+                      },
                     ),
-                  ),
-                );
-              } : null,
-              rowActions: [
-                ...extraRowActions,
-                if (extraRowActions.isNotEmpty)
-                  RowAction.divider(),
-                if ((allowAddNew||availableObjectsPoolGetter!=null))
-                  RowAction<DAO>(
-                    title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
-                    icon: Icon(Icons.add),
-                    breakpoints: {0: ActionState.popup,},
-                    onRowTap: (context, row) {
-                      maybeAddRow(context, objects.indexOf(row.id)+1);
-                    },
-                  ),
-                if ((allowAddNew||availableObjectsPoolGetter!=null))
-                  RowAction.divider(),
-                RowAction<DAO>(
-                  icon: Icon(Icons.remove_red_eye),
-                  title: FromZeroLocalizations.of(context).translate('view'),
-                  breakpoints: actionViewBreakpoints,
-                  onRowTap: (context, row) async {
-                    row.id.pushViewDialog(context);
+                    RowAction<DAO>(
+                      icon: Icon(Icons.edit_outlined),
+                      title: FromZeroLocalizations.of(context).translate('edit'),
+                      breakpoints: actionEditBreakpoints,
+                      onRowTap: (context, row) async {
+                        if (await row.id.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars)) {
+                          passedFirstEdit = true;
+                          notifyListeners();
+                        }
+                      },
+                    ),
+                    RowAction<DAO>(
+                      icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
+                      title: FromZeroLocalizations.of(context).translate('duplicate'),
+                      breakpoints: actionDuplicateBreakpoints,
+                      onRowTap: (context, row) async {
+                        duplicateRows([row.id]);
+                      },
+                    ),
+                    RowAction<DAO>(
+                      icon: Icon(Icons.delete_forever_outlined),
+                      title: FromZeroLocalizations.of(context).translate('delete'),
+                      breakpoints: actionDeleteBreakpoints,
+                      onRowTap: (context, row) async {
+                        if (await maybeDelete(context, [row.id])) {
+                          passedFirstEdit = true;
+                          notifyListeners();
+                        }
+                      },
+                    ),
+                  ],
+                  onFilter: (rows) {
+                    filtered.value = rows.map((e) => e.id).toList();
+                    return rows;
                   },
-                ),
-                RowAction<DAO>(
-                  icon: Icon(Icons.edit_outlined),
-                  title: FromZeroLocalizations.of(context).translate('edit'),
-                  breakpoints: actionEditBreakpoints,
-                  onRowTap: (context, row) async {
-                    if (await row.id.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars)) {
-                      passedFirstEdit = true;
-                      notifyListeners();
-                    }
-                  },
-                ),
-                RowAction<DAO>(
-                  icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
-                  title: FromZeroLocalizations.of(context).translate('duplicate'),
-                  breakpoints: actionDuplicateBreakpoints,
-                  onRowTap: (context, row) async {
-                    duplicateRows([row.id]);
-                  },
-                ),
-                RowAction<DAO>(
-                  icon: Icon(Icons.delete_forever_outlined),
-                  title: FromZeroLocalizations.of(context).translate('delete'),
-                  breakpoints: actionDeleteBreakpoints,
-                  onRowTap: (context, row) async {
-                    if (await maybeDelete(context, [row.id])) {
-                      passedFirstEdit = true;
-                      notifyListeners();
-                    }
-                  },
-                ),
-              ],
-              onFilter: (rows) {
-                filtered.value = rows.map((e) => e.id as DAO).toList();
-                return rows;
-              },
-              onAllSelected: allowMultipleSelection ? (value, rows) {
-                filtered.value = rows.map((e) => e.id as DAO).toList();
-                filtered.value!.forEach((element) {
-                  selectedObjects.value[element] = value??false;
-                  selectedObjects.notifyListeners();
-                });
-                notifyListeners();
-              } : null,
-              errorWidget: tableErrorWidget
-                    ?? ContextMenuFromZero(
-                    actions: actions,
-                    onShowMenu: () => errorWidgetFocusNode.requestFocus(),
-                    child: Focus(
-                      focusNode: errorWidgetFocusNode,
-                      skipTraversal: true,
-                      child: SizedBox(
-                        width: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
-                        child: Material(
-                          color: Theme.of(context).cardColor,
-                          child: InkWell(
-                            onTap: () {
-                              maybeAddRow(context);
-                            },
-                            child: ErrorSign(
-                              title: FromZeroLocalizations.of(context).translate('no_data'),
-                              subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
+                  onAllSelected: allowMultipleSelection ? (value, rows) {
+                    filtered.value = rows.map((e) => e.id).toList();
+                    filtered.value!.forEach((element) {
+                      selectedObjects.value[element] = value??false;
+                      selectedObjects.notifyListeners();
+                    });
+                    notifyListeners();
+                  } : null,
+                  emptyWidget: tableErrorWidget
+                      ?? ContextMenuFromZero(
+                        actions: actions,
+                        onShowMenu: () => errorWidgetFocusNode.requestFocus(),
+                        child: Focus(
+                          focusNode: errorWidgetFocusNode,
+                          skipTraversal: true,
+                          child: SizedBox(
+                            width: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
+                            child: Material(
+                              color: Theme.of(context).cardColor,
+                              child: InkWell(
+                                onTap: () {
+                                  maybeAddRow(context);
+                                },
+                                child: ErrorSign(
+                                  title: FromZeroLocalizations.of(context).translate('no_data'),
+                                  subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
+                  headerRowModel: SimpleRowModel(
+                    id: 'header', values: {},
+                    rowAddonIsCoveredByScrollable: false,
+                    rowAddonIsCoveredByBackground: false,
+                    rowAddon: _buildTableHeader(context,
+                      actions: actions,
+                      focusNode: focusNode!,
+                      collapsed: collapsed,
+                      collapsible: collapsible,
                     ),
                   ),
-              headerAddon: _buildTableHeader(context,
-                actions: actions,
-                focusNode: focusNode!,
-                collapsed: collapsed,
-                collapsible: collapsible,
-              ),
+                ),
+              ],
             ),
           ),
         );

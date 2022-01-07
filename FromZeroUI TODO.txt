@@ -6,10 +6,6 @@ P0
 
 Table -- use better scroll shadow https://pub.dev/packages/flutter_scroll_shadow
 
-make Export use new FileSaverFromZero
-
-Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
-
 Table -- allow passing headerRowModel, delete all weird parameters that exist right now
 
 Table -- deprecate the widget types thing, Table will always return a sliver, parents will need to put it in a CustomScrollView
@@ -25,6 +21,10 @@ Table -- Use a Map instead of a list for columns (in models and everywhere)
 	this would allow columns to be added/removed/reordered easily
 
 Table -- check what else can be removed (lots of unused stuff probably)
+
+make Export use new FileSaverFromZero
+
+Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
 
 Bug with condition filters on table
 	when all value filters are disabled (new way) and a condition filter is added, no values return true

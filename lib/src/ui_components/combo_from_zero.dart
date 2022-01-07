@@ -313,12 +313,10 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
             SliverToBoxAdapter(child: SizedBox(height: 12,),),
           TableFromZero<T>(
             tableController: tableController,
-            layoutWidgetType: TableFromZero.sliverListViewBuilder,
-            showHeaders: false,
-            horizontalPadding: 8,
-            initialSortedColumnIndex: widget.sort ? 0 : -1,
+            tableHorizontalPadding: 8,
+            initialSortedColumn: widget.sort ? 0 : -1,
             cellBuilder: widget.popupWidgetBuilder==null ? null
-                : (context, row, col, j) => widget.popupWidgetBuilder!(row.id),
+                : (context, row, colKey) => widget.popupWidgetBuilder!(row.id),
             onFilter: (filtered) {
               if (searchQuery!=null && searchQuery!.isNotEmpty) {
                 return filtered.where((e) => e.id.toString().toUpperCase().contains(searchQuery!.toUpperCase())).toList();
@@ -328,7 +326,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
             rows: widget.possibleValues.map((e) {
               return SimpleRowModel(
                 id: e,
-                values: [e.toString()],
+                values: {0: e.toString()},
                 backgroundColor: widget.value==e ? Theme.of(context).toggleableActiveColor.withOpacity(0.1) : null,
                 onRowTap: (value) {
                   _select(e);
@@ -346,51 +344,54 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                     )
                   ]
                 : [],
-            headerAddon: widget.showSearchBox ? Container(
-              color: Theme.of(context).cardColor,
-              child: Column(
-                children: [
-                  if (widget.title!=null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4.0),
-                      child: Center(
-                        child: Transform.translate(
-                          offset: Offset(0, 4),
-                          child: Text(widget.title!,
-                            style: Theme.of(context).textTheme.subtitle1,
-                            textAlign: TextAlign.center,
+            headerRowModel: SimpleRowModel(
+              id: 'header', values: {},
+              rowAddon: widget.showSearchBox ? Container(
+                color: Theme.of(context).cardColor,
+                child: Column(
+                  children: [
+                    if (widget.title!=null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Center(
+                          child: Transform.translate(
+                            offset: Offset(0, 4),
+                            child: Text(widget.title!,
+                              style: Theme.of(context).textTheme.subtitle1,
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  if (widget.extraWidget!=null)
-                    widget.extraWidget!(context, widget.onSelected,),
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8.0, left: 12, right: 12,),
-                    child: TextFormField(
-                      initialValue: searchQuery,
-                      autofocus: PlatformExtended.isDesktop,
-                      decoration: InputDecoration(
-                        contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
-                        labelText: FromZeroLocalizations.of(context).translate('search...'),
-                        labelStyle: TextStyle(height: 1.5),
-                        suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
+                    if (widget.extraWidget!=null)
+                      widget.extraWidget!(context, widget.onSelected,),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, left: 12, right: 12,),
+                      child: TextFormField(
+                        initialValue: searchQuery,
+                        autofocus: PlatformExtended.isDesktop,
+                        decoration: InputDecoration(
+                          contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
+                          labelText: FromZeroLocalizations.of(context).translate('search...'),
+                          labelStyle: TextStyle(height: 1.5),
+                          suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
+                        ),
+                        onChanged: (value) {
+                          searchQuery = value;
+                          tableController.filter();
+                        },
+                        onFieldSubmitted: (value) {
+                          final filtered = tableController.filtered!;
+                          if (filtered.length==1) {
+                            _select(filtered.first.id);
+                          }
+                        },
                       ),
-                      onChanged: (value) {
-                        searchQuery = value;
-                        tableController.filter();
-                      },
-                      onFieldSubmitted: (value) {
-                        final filtered = tableController.filtered!;
-                        if (filtered.length==1) {
-                          _select(filtered.first.id);
-                        }
-                      },
                     ),
-                  ),
-                ],
-              ),
-            ) : null,
+                  ],
+                ),
+              ) : null,
+            ),
           ),
           SliverToBoxAdapter(child: SizedBox(height: 12,),),
         ],

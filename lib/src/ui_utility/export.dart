@@ -407,7 +407,7 @@ class ExportState extends State<Export> {
         if (i==-1) {
           row = SimpleRowModel(
             id: value.currentState!.widget.columns,
-            values: value.currentState!.widget.columns!.map((e) => e.name).toList(),
+            values: value.currentState!.widget.columns!.map((key, value) => MapEntry(key, value.name)),
           );
         } else{
           row = value.currentState!.filtered[i];
@@ -423,7 +423,7 @@ class ExportState extends State<Export> {
                 backgroundColor = backgroundColor.withOpacity(backgroundColor.opacity*0.5);
               }
             } else{
-              if (value.currentState!.widget.rowTakesPriorityOverColumn){
+              if (value.currentState!.widget.rowStyleTakesPriorityOverColumn){
                 backgroundColor = row.backgroundColor ?? col?.backgroundColor;
               } else{
                 backgroundColor = col?.backgroundColor ?? row.backgroundColor;
@@ -433,7 +433,7 @@ class ExportState extends State<Export> {
               backgroundColor = Color.alphaBlend(backgroundColor, Colors.white);
             }
             TextStyle? style;
-            if (value.currentState!.widget.rowTakesPriorityOverColumn){
+            if (value.currentState!.widget.rowStyleTakesPriorityOverColumn){
               style = row.textStyle ?? col?.textStyle;
             } else{
               style = col?.textStyle ?? row.textStyle;

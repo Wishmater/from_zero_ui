@@ -115,18 +115,13 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
     );
     table2 = TableFromZero(
       scrollController: tableScrollController,
-      verticalPadding: 16,
       minWidth: 640,
-      applyStickyHeaders: true,
-      applyScrollToRowAddon: false,
-      applyRowBackgroundToRowAddon: true,
-      applyRowAlternativeColors: true,
-      // applyStickyHeadersToRowAddon: false,
-      rowGestureDetectorCoversRowAddon: true,
+      enableStickyHeaders: true,
+      alternateRowBackgroundBrightness: true,
       rows: List.generate(100, (index) => ["Dummy data " + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",]).map((e) {
         return SimpleRowModel(
           id: e,
-          values: e,
+          values: e.asMap(),
           rowAddon: Text('ADDON ASDFG fsgfad gadfsgkadfs glasdnfgklanfsgAFSG DAFG AFSD GADSF GADFGA DFSG'),
           onRowTap: (row){},
           onCellTap: (row,) {},
@@ -139,7 +134,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
         return SimpleColModel(
           name: e,
         );
-      }).toList(),
+      }).toList().asMap(),
     );
     col2 = Card(
       clipBehavior: Clip.hardEdge,
@@ -147,7 +142,10 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
         controller: tableScrollController,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: table2,
+          child: CustomScrollView(
+            controller: tableScrollController,
+            slivers: [table2],
+          ),
         ),
       ),
     );
@@ -191,24 +189,21 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
   Widget _getCol3(BuildContext context, ScrollController controller, [List<Key>? rowKeys]){
     if (rowKeys==null) rowKeys = List.generate(100, (index) => ValueKey(index));
     table3 = TableFromZero(
-      layoutWidgetType: TableFromZero.sliverListViewBuilder,
-      headerHeight: 48,
       horizontalDivider: null,
       verticalDivider: null,
-      applyRowAlternativeColors: true,
+      alternateRowBackgroundBrightness: true,
       columns: ["Col 1", "Col 2", "Col 3", "Col 4", "Col 5"].map((e) => SimpleColModel(
         name: e,
         filterEnabled: true,
         width: e=="Col 1" ? 128 : null,
         alignment: e=="Col 3" ? TextAlign.right : null,
-      )).toList(),
+      )).toList().asMap(),
       rows: List.generate(100, (index) => SimpleRowModel(
         id: index,
         height: 36,
         rowKey: rowKeys![index],
-        values: ["Dummy data" + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",],
+        values: ["Dummy data" + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",].asMap(),
       )),
-      verticalPadding: 16,
     );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
