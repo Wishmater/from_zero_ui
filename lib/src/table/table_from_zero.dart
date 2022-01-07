@@ -8,13 +8,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_icons/flutter_icons.dart';
-import 'package:flutter_sticky_header/flutter_sticky_header.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/ui_utility/notification_relayer.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:from_zero_ui/src/table/table_from_zero_filters.dart';
 import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:from_zero_ui/util/my_sticky_header.dart';
+import 'package:from_zero_ui/util/my_sliver_sticky_header.dart';
 import 'package:from_zero_ui/util/no_ensure_visible_traversal_policy.dart';
 import 'package:from_zero_ui/util/small_splash_popup_menu_button.dart' as small_popup;
 import 'dart:async';
@@ -43,6 +44,7 @@ class TableFromZero<T> extends StatefulWidget {
   final RowModel? headerRowModel;
   final bool enableStickyHeaders;
   final double stickyOffset;
+  final double footerStickyOffset;
   final bool alternateRowBackgroundBrightness;
   final bool alternateRowBackgroundSmartly;
   final bool rowStyleTakesPriorityOverColumn;
@@ -77,6 +79,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.headerRowModel,
     this.enableStickyHeaders = true,
     this.stickyOffset = 0,
+    this.footerStickyOffset = 0,
     this.alternateRowBackgroundBrightness = true,
     this.alternateRowBackgroundSmartly = true,
     this.rowStyleTakesPriorityOverColumn = true,
@@ -212,6 +215,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       init();
     }
   }
+
+  late final notificationRelayController = NotificationRelayController(
+        (n) => n is ScrollNotification || n is ScrollMetricsNotification,
+  );
 
   void init({bool notifyListeners=true}) {
     isStateInvalidated = false;
@@ -393,9 +400,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     if (header!=null) {
       result = SliverStickyHeader.builder(
         sliver: result,
-        // controller: widget.scrollController,
+        scrollController: widget.scrollController,
         sticky: widget.enableStickyHeaders,
-        // stickOffset: widget.stickyOffset,
+        stickOffset: widget.stickyOffset,
         builder: (context, state) {
           return Stack(
             clipBehavior: Clip.none,
@@ -415,6 +422,28 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             ],
           );
         },
+      );
+    }
+
+    if (widget.minWidth!=null) {
+      result = SliverStickyHeader(
+        sliver: result,
+        scrollController: widget.scrollController,
+        sticky: true,
+        footer: true,
+        overlapsContent: true,
+        stickOffset: 12,
+        header: ScrollbarFromZero(
+          controller: sharedController,
+          opacityGradientDirection: OpacityGradient.horizontal,
+          child: SizedBox(
+            height: 12,
+            child: NotificationRelayer(
+              controller: notificationRelayController,
+              child: Container(),
+            ),
+          ),
+        ),
       );
     }
 
@@ -663,22 +692,20 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             cacheExtent: 99999999,
           ),
         );
-        if (row==headerRowModel) {
-          result = ScrollbarFromZero(
-            controller: sharedController,
-            opacityGradientDirection: OpacityGradient.horizontal,
-            child: result,
-          );
-        } else {
-          result = ScrollOpacityGradient(
-            scrollController: sharedController,
-            direction: OpacityGradient.horizontal,
-            child: NotificationListener(
-              onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
-              child: result,
-            ),
-          );
-        }
+        result = ScrollOpacityGradient(
+          scrollController: sharedController,
+          direction: OpacityGradient.horizontal,
+          child: row==headerRowModel // TODO 2 scrollbar might not work in tables with no header
+              ? NotificationRelayerListener(
+                controller: notificationRelayController,
+                consumeRelayedNotifications: true,
+                child: result,
+              )
+              : NotificationListener(
+                onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
+                child: result,
+              ),
+        );
       } else {
         background = Row(
           children: List.generate(cols, (j) => decorationBuilder(context, j)),

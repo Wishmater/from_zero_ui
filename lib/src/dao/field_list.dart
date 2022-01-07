@@ -1155,6 +1155,7 @@ class ListField extends Field<ComparableList<DAO>> {
                     return MapEntry(key, result);
                   }),
                   showHeaders: showTableHeaders,
+                  footerStickyOffset: 12,
                   rows: builtRows.values.toList(),
                   cellBuilder: tableCellsEditable ? (context, row, colKey) {
                     final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
