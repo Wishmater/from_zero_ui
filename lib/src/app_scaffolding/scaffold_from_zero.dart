@@ -388,7 +388,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
           routeAnimation: ref.read(fromZeroScaffoldChangeNotifierProvider).animationType==ScaffoldFromZero.animationTypeOther ? animation : kAlwaysCompleteAnimation,
           child: Consumer(
               builder: (context, ref, child) {
-                final displayMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
+                final isMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
                 return Scaffold(
                   floatingActionButton: Consumer(
                     builder: (context, ref, child) {
@@ -397,8 +397,8 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                         builder: (context, constraints) {
                           return AnimatedPadding(
                             padding: EdgeInsets.only(
-                              bottom: displayMobileLayout ? 0 : 12,
-                              right: displayMobileLayout ? 0
+                              bottom: isMobileLayout ? 0 : 12,
+                              right: isMobileLayout ? 0
                                   : 12 + ((constraints.maxWidth-changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)-ScaffoldFromZero.screenSizeXLarge)/2).coerceIn(0),
                             ),
                             duration: widget.drawerAnimationDuration,
@@ -409,7 +409,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                       );
                     },
                   ),
-                  drawer: displayMobileLayout && widget.drawerContentBuilder!=null ? Container(
+                  drawer: isMobileLayout && widget.drawerContentBuilder!=null ? Container(
                     width: widget.drawerWidth,
                     child: Drawer(
                       child: drawerContent,
@@ -637,13 +637,13 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                       //DRAWER HAMBURGER BUTTON (only if not using compact style)
                       Consumer(
                         builder: (context, ref, child) {
-                          final displayMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
-                          if ((widget.useCompactDrawerInsteadOfClose && widget.drawerContentBuilder!=null && !displayMobileLayout)
+                          final isMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
+                          if ((widget.useCompactDrawerInsteadOfClose && widget.drawerContentBuilder!=null && !isMobileLayout)
                               || (!canPop && widget.drawerContentBuilder==null)) {
                             return SizedBox(width: 4+widget.titleSpacing,);
                           } else{
                             Widget result;
-                            if (canPop&&(widget.drawerContentBuilder==null||(!widget.alwaysShowHamburgerButtonOnMobile&&displayMobileLayout))){
+                            if (canPop&&(widget.drawerContentBuilder==null||(!widget.alwaysShowHamburgerButtonOnMobile&&isMobileLayout))){
                               final onPressed = () async{
                                 var navigator = Navigator.of(context);
                                 if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
@@ -777,10 +777,10 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                         height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
                         child: Consumer(
                           builder: (context, ref, child) {
-                            final displayMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
+                            final isMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
                             final onBackPressed = () async{
                               var navigator = Navigator.of(context);
-                              if (displayMobileLayout)
+                              if (isMobileLayout)
                                 navigator.pop();
                               if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
                                 navigator.pop();
@@ -790,7 +790,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                               alignment: Alignment.centerLeft,
                               clipBehavior: Clip.none,
                               children: [
-                                if (!displayMobileLayout && canPop)
+                                if (!isMobileLayout && canPop)
                                   Positioned(
                                     left: -8,
                                     child: GestureDetector(
@@ -804,7 +804,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                   ),
                                 if(widget.drawerTitle!=null)
                                   Positioned(
-                                    left: !displayMobileLayout && canPop ? 40 : 0,
+                                    left: !isMobileLayout && canPop ? 40 : 0,
                                     right: widget.centerDrawerTitle ? 0 : null,
                                     top: 0, bottom: 0,
 //                                  duration: 300.milliseconds,
@@ -823,10 +823,10 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                       Consumer(
                         builder: (context, ref, child) {
                           final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-                          final displayMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
-                          if (!displayMobileLayout){
+                          final isMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
+                          if (!isMobileLayout){
                             final onTap = (){
-                              if (displayMobileLayout)
+                              if (isMobileLayout)
                                 Navigator.of(context).pop();
                               else
                                 _toggleDrawer(context, changeNotifier);
@@ -837,7 +837,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                 onDoubleTap: onTap,
                                 child: IconButton(
                                   icon: Icon(Icons.menu),
-                                  tooltip: changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)>widget.compactDrawerWidth||displayMobileLayout
+                                  tooltip: changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)>widget.compactDrawerWidth||isMobileLayout
                                       ? FromZeroLocalizations.of(context).translate("menu_close") : FromZeroLocalizations.of(context).translate("menu_open"),
                                   onPressed: onTap,
                                 ),

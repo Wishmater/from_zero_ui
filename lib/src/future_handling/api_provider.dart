@@ -267,3 +267,76 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   }
 
 }
+
+
+class ApiProviderMultiBuilder extends ConsumerWidget {
+
+  final List<ApiProvider> providers;
+  final DataMultiBuilder dataBuilder;
+  final ApiLoadingBuilder loadingBuilder;
+  final ApiErrorBuilder errorBuilder;
+  final FutureTransitionBuilder transitionBuilder;
+  final Duration transitionDuration;
+  final Curve transitionInCurve;
+  final Curve transitionOutCurve;
+
+  const ApiProviderMultiBuilder({
+    Key? key,
+    required this.providers,
+    required this.dataBuilder,
+    this.loadingBuilder = ApiProviderBuilder.defaultLoadingBuilder,
+    this.errorBuilder = ApiProviderBuilder.defaultErrorBuilder,
+    this.transitionBuilder = AsyncValueBuilder.defaultTransitionBuilder,
+    this.transitionDuration = const Duration(milliseconds: 300),
+    this.transitionInCurve = Curves.easeOutCubic,
+    this.transitionOutCurve = Curves.easeInCubic,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    List<ApiState> stateNotifiers = [];
+    List<AsyncValue> values = [];
+    for (final e in providers) {
+      stateNotifiers.add(ref.watch(e.notifier));
+      values.add(ref.watch(e));
+    }
+    return AsyncValueMultiBuilder(
+      asyncValues: values,
+      dataBuilder: dataBuilder,
+      loadingBuilder: (context) {
+        final listenable = MultiValueListenable(stateNotifiers.map((e) => e.wholePercentageNotifier).toList());
+        return AnimatedBuilder(
+          animation: listenable,
+          builder: (context, child) {
+            final meaningfulValues = listenable.values.whereType<double>().toList();
+            final percentage = meaningfulValues.reduce((v, e) => v+e) / meaningfulValues.length;
+            return loadingBuilder(context, percentage);
+          },
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return errorBuilder(context, error, stackTrace, () {
+          for (final e in stateNotifiers) {
+            e.retry();
+          }
+        });
+      },
+      transitionBuilder: transitionBuilder,
+      transitionDuration: transitionDuration,
+      transitionInCurve: transitionInCurve,
+      transitionOutCurve: transitionOutCurve,
+    );
+  }
+
+}
+
+
+class MultiValueListenable<T> extends ChangeNotifier {
+  List<ValueNotifier<T>> _notifiers;
+  MultiValueListenable(this._notifiers) {
+    for (final e in _notifiers) {
+      e.addListener(() => notifyListeners());
+    }
+  }
+  List<T> get values => _notifiers.map((e) => e.value).toList();
+}

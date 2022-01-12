@@ -372,12 +372,12 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
   // Mechanism to automatically expand/collapse drawer in response to screen width changes
   double? _previousWidth;
   double? _previousHeight;
-  void _updateDrawerWidths(bool displayMobileLayout, double width){
+  void _updateDrawerWidths(bool isMobileLayout, double width){
     for (final e in _currentDrawerWidths.keys) {
-      _updateDrawerWidth(e, displayMobileLayout, width);
+      _updateDrawerWidth(e, isMobileLayout, width);
     }
   }
-  void _updateDrawerWidth(String pageScaffoldId, bool displayMobileLayout, double width){
+  void _updateDrawerWidth(String pageScaffoldId, bool isMobileLayout, double width){
     if (width < ScaffoldFromZero.screenSizeMedium) {
       setCurrentDrawerWidth(pageScaffoldId, 0);
     } else if (_previousWidth!=null && _previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){

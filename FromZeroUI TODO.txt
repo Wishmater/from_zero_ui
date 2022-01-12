@@ -4,24 +4,6 @@
 P0
 **********************************************************************
 
-Table -- use better scroll shadow https://pub.dev/packages/flutter_scroll_shadow
-
-Table -- allow passing headerRowModel, delete all weird parameters that exist right now
-
-Table -- deprecate the widget types thing, Table will always return a sliver, parents will need to put it in a CustomScrollView
-	remove both sticky packages used currently, use SliverTools instead
-		use SliverTools for the sticky headers
-			need to implement custom stickyOffset
-		check if there's an easy way to add cards to the slivers
-			preferably, added extarnally, before putting it in the CustomScrollController
-			if that is not possible, add a boolean option addCards to the Table widget itself
-		implement StickyFooter and add the Scrollbar there
-
-Table -- Use a Map instead of a list for columns (in models and everywhere)
-	this would allow columns to be added/removed/reordered easily
-
-Table -- check what else can be removed (lots of unused stuff probably)
-
 make Export use new FileSaverFromZero
 
 Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
@@ -43,6 +25,8 @@ WAITING bug with slivers tearing on windows, once it is solved, remove patches f
 **********************************************************************
 P1
 **********************************************************************
+
+Table -- fix implicitlyAnimatedTable, make it default for <10 items
 
 Table Feature -- Export to excel with right-click (directly on the table)
 
@@ -70,6 +54,10 @@ Table Feature -- Reorder columns
 
 Table Feature -- Resize columns (hard)
 
+Table -- fix scroll shadow to actually swap states 
+	the state notification for stickyHeader using external scrollController does not work
+	maybe make the shadow change more noticeable (smaller when not pinned)
+	
 Windows Increase mouse wheel scroll speed and add anmation
 	only when the mouse wheel is click (not smooth)
 	
