@@ -53,7 +53,7 @@ class RowAction<T> extends ActionFromZero {
 abstract class RowModel<T> {
   T get id;
   Key? get rowKey => null;
-  Map<dynamic, Comparable?> get values;
+  Map get values;
   Color? get backgroundColor => null;
   TextStyle? get textStyle => null;
   double get height => 36;
@@ -104,7 +104,7 @@ abstract class ColModel{
 class SimpleRowModel<T> extends RowModel<T> {
   T id;
   Key? rowKey;
-  Map<dynamic, Comparable?> values;
+  Map values;
   Color? backgroundColor;
   TextStyle? textStyle;
   double height;
@@ -153,7 +153,7 @@ class SimpleRowModel<T> extends RowModel<T> {
   SimpleRowModel copyWith({
     T? id,
     Key? rowKey,
-    Map<dynamic, Comparable?>? values,
+    Map? values,
     Color? backgroundColor,
     TextStyle? textStyle,
     double? height,

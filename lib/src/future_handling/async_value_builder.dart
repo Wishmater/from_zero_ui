@@ -4,7 +4,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 
 
 typedef DataBuilder<T> = Widget Function(BuildContext context, T data);
-typedef DataMultiBuilder = Widget Function(BuildContext context, List data);
+typedef DataMultiBuilder<T> = Widget Function(BuildContext context, List<T> data);
 typedef LoadingBuilder = Widget Function(BuildContext context);
 typedef ErrorBuilder = Widget Function(BuildContext context, Object error, StackTrace? stackTrace);
 typedef FutureTransitionBuilder = Widget Function (BuildContext context, Widget child, Animation<double> animation);
@@ -124,10 +124,10 @@ class AsyncValueBuilder<T> extends StatelessWidget {
 }
 
 
-class AsyncValueMultiBuilder extends StatelessWidget {
+class AsyncValueMultiBuilder<T> extends StatelessWidget {
 
-  final List<AsyncValue> asyncValues;
-  final DataMultiBuilder dataBuilder;
+  final List<AsyncValue<T>> asyncValues;
+  final DataMultiBuilder<T> dataBuilder;
   final LoadingBuilder loadingBuilder;
   final ErrorBuilder errorBuilder;
   final FutureTransitionBuilder transitionBuilder;
@@ -149,7 +149,7 @@ class AsyncValueMultiBuilder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    List data = [];
+    List<T> data = [];
     Object? error;
     StackTrace? stackTrace;
     for (final e in asyncValues) {

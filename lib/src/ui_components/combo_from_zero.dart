@@ -1,6 +1,7 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 
@@ -13,6 +14,7 @@ class ComboFromZero<T> extends StatefulWidget {
 
   final T? value;
   final List<T>? possibleValues;
+  final AsyncValue<List<T>>? asyncPossibleValues;
   final Future<List<T>>? futurePossibleValues;
   final VoidCallback? onCanceled;
   final OnPopupItemSelected<T>? onSelected;
@@ -34,6 +36,7 @@ class ComboFromZero<T> extends StatefulWidget {
   ComboFromZero({
     this.value,
     this.possibleValues,
+    this.asyncPossibleValues,
     this.futurePossibleValues,
     this.onSelected,
     this.onCanceled,
@@ -110,7 +113,9 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
   @override
   void didUpdateWidget(covariant ComboFromZero<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.possibleValues!=widget.possibleValues) {
+    if (oldWidget.possibleValues != widget.possibleValues) {
+      init();
+    } else if (oldWidget.asyncPossibleValues != widget.asyncPossibleValues) {
       init();
     } else if (oldWidget.futurePossibleValues!=widget.futurePossibleValues) {
       init();
@@ -124,6 +129,11 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
   void init() async {
     possibleValues = (widget.possibleValues==null ? null : List.from(widget.possibleValues!)) ?? possibleValues;
     // if (widget.sort) sort();
+    if (widget.asyncPossibleValues!=null) {
+      possibleValues = widget.asyncPossibleValues!.mapOrNull(
+        data: (data) => List.from(data.value),
+      ) ?? possibleValues;
+    }
     if (widget.futurePossibleValues!=null) {
       possibleValues = List.from(await widget.futurePossibleValues!);
       // if (widget.sort) sort();

@@ -263,13 +263,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         }
         bool sortAscending = col.defaultSortAscending ?? true;
         available.sort((a, b) {
-          int? result;
-          try {
+          int result;
+          if (a is Comparable) {
             result = a.compareTo(b);
-          } catch (_) {
+          } else {
             result = a.toString().compareTo(b.toString());
           }
-          return sortAscending ? result! : result! * -1;
+          return sortAscending ? result : result * -1;
         });
         availableFilters[key] = available;
       });
@@ -1431,8 +1431,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
           if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1;
         }
-        final aVal = a.values[sortedColumn!];
-        final bVal = b.values[sortedColumn!];
+        var aVal = a.values[sortedColumn!];
+        var bVal = b.values[sortedColumn!];
+        if (aVal!=null && aVal is! Comparable) aVal = aVal.toString();
+        if (bVal!=null && bVal is! Comparable) bVal = bVal.toString();
         return sortedAscending
             ? aVal==null ? 1 : bVal==null ? -1 : aVal.compareTo(bVal)
             : aVal==null ? -1 : bVal==null ? 1 : bVal.compareTo(aVal);

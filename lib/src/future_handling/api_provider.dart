@@ -202,7 +202,7 @@ typedef ApiErrorBuilder = Widget Function(BuildContext context, Object error, St
 
 class ApiProviderBuilder<T> extends ConsumerWidget {
 
-  final ApiProvider<T> provider;
+  final StateNotifierProviderOverrideMixin<ApiState<T>, AsyncValue<T>> provider;
   final DataBuilder<T> dataBuilder;
   final ApiLoadingBuilder loadingBuilder;
   final ApiErrorBuilder errorBuilder;
@@ -269,10 +269,10 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
 }
 
 
-class ApiProviderMultiBuilder extends ConsumerWidget {
+class ApiProviderMultiBuilder<T> extends ConsumerWidget {
 
-  final List<ApiProvider> providers;
-  final DataMultiBuilder dataBuilder;
+  final List<StateNotifierProviderOverrideMixin<ApiState<T>, AsyncValue<T>>> providers;
+  final DataMultiBuilder<T> dataBuilder;
   final ApiLoadingBuilder loadingBuilder;
   final ApiErrorBuilder errorBuilder;
   final FutureTransitionBuilder transitionBuilder;
@@ -294,13 +294,13 @@ class ApiProviderMultiBuilder extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    List<ApiState> stateNotifiers = [];
-    List<AsyncValue> values = [];
+    List<ApiState<T>> stateNotifiers = [];
+    List<AsyncValue<T>> values = [];
     for (final e in providers) {
       stateNotifiers.add(ref.watch(e.notifier));
       values.add(ref.watch(e));
     }
-    return AsyncValueMultiBuilder(
+    return AsyncValueMultiBuilder<T>(
       asyncValues: values,
       dataBuilder: dataBuilder,
       loadingBuilder: (context) {

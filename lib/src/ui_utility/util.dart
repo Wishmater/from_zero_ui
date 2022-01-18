@@ -65,9 +65,9 @@ class SimpleValueString implements ContainsValue {
 
 
 
-class ValueString<T extends Comparable> with Comparable implements ContainsValue {
+class ValueString<T> with Comparable implements ContainsValue {
 
-  T value;
+  T? value;
   var string;
 
   ValueString(this.value, this.string);
@@ -81,8 +81,26 @@ class ValueString<T extends Comparable> with Comparable implements ContainsValue
   @override
   int get hashCode => value.hashCode;
   @override
-  int compareTo(other) => other is ValueString ? value.compareTo(other.value)
-      : other is T ? value.compareTo(other) : 1;
+  int compareTo(other) => other is ValueString  ? _compare(other.value)
+                                                : other is T ? _compare(other)
+                                                : 1;
+
+  int _compare(T other) {
+    if (value==null) {
+      if (other==null) {
+        return 0;
+      } else {
+        return 1;
+      }
+    } else if (other==null) {
+      return -1;
+    }
+    if (value is Comparable) {
+      return (value as Comparable).compareTo(other);
+    } else {
+      return (value.toString()).compareTo(other.toString());
+    }
+  }
 
 }
 
@@ -104,13 +122,13 @@ class NumValueString<T extends num> extends ValueString<T> {
 
 class NumGroupComparingBySum with Comparable implements ValueString<num>  {
 
-  num value = 0;
-  List<num> values;
+  num? value = 0;
+  List<num?> values;
   NumberFormat? formatter;
 
   NumGroupComparingBySum(this.values, [this.formatter]){
     values.forEach((element) {
-      value += element;
+      value = value! + (element??0);
     });
   }
 
@@ -124,15 +142,34 @@ class NumGroupComparingBySum with Comparable implements ValueString<num>  {
   @override
   int get hashCode => value.hashCode;
   @override
-  int compareTo(other) => other is NumGroupComparingBySum ? value.compareTo(other.value)
-      : other is num ? value.compareTo(other) : 1;
+  @override
+  int compareTo(other) => other is ValueString<num> ? _compare(other.value)
+      : other is num ? _compare(other)
+      : 1;
+
+  int _compare(num? other) {
+    if (value==null) {
+      if (other==null) {
+        return 0;
+      } else {
+        return 1;
+      }
+    } else if (other==null) {
+      return -1;
+    }
+    if (value is Comparable) {
+      return (value as Comparable).compareTo(other);
+    } else {
+      return (value.toString()).compareTo(other.toString());
+    }
+  }
 
 }
 
 class NumGroupComparingByAverage extends NumGroupComparingBySum {
 
-  NumGroupComparingByAverage(List<num> values, NumberFormat formatter) : super(values, formatter){
-    value /= values.length;
+  NumGroupComparingByAverage(List<num> values, NumberFormat formatter) : super(values, formatter) {
+    value = value! / values.length;
   }
 
 }

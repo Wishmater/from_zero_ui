@@ -6,6 +6,14 @@ P0
 
 make Export use new FileSaverFromZero
 
+Table Feature -- Export to excel with right-click (directly on the table)
+
+Table -- Initial checking for filter values should be async (and also maybe other parts of initialization)
+			??? also filtering, maybe
+		filters will show loading until this finishes
+		probably needs to be in an isolate
+		??? only if rowCount > 100 ??? (also allow to force sync or async)
+		
 Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
 
 Bug with condition filters on table
@@ -19,6 +27,7 @@ Problems with excel export
 
 WAITING bug with slivers tearing on windows, once it is solved, remove patches from Table
 
+		
 
 
 
@@ -28,18 +37,11 @@ P1
 
 Table -- fix implicitlyAnimatedTable, make it default for <10 items
 
-Table Feature -- Export to excel with right-click (directly on the table)
-
 fix part of the screen not being draggable on really big screens
 	maybe just deprecate limitWidthOnBigScreens
 	
 popupFromZero doesn't reposition child in response to window resize
 
-Table -- Initial checking for filter values should be async (and also maybe other parts of initialization)
-			??? also filtering, maybe
-		filters will show loading until this finishes
-		probably needs to be in an isolate
-		??? only if rowCount > 100 ??? (also allow to force sync or async)
 
 
 
@@ -69,9 +71,21 @@ popupFromZero improvement: on dektop, popup should not block content behind it b
 
 
 
+
 **********************************************************************
 P3
 **********************************************************************
+
+Considerations for a new model/dataClass solution
+	support normal dart class inheritnce
+	easy way to declare states
+	easy way to override toString (maybe in parent for different models)
+	autommatically implement == and hashCode (customizable, so i can do it from only id)
+	autommatically implement Comparable, so it can be used in tables
+	generate copyTo
+	generate from/to Json
+	support immutability
+	easy way to declare computed properties
 
 GoRouter -- there should be a way to "push" a subtree, 
 	this means the subtree will decide its normally with .go, but wont affect routes below it in the stack
