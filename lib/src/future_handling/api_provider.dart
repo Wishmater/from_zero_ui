@@ -23,7 +23,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
   late final ValueNotifier<double?> wholeTotalNotifier;
   late final ValueNotifier<double?> wholeProgressNotifier;
   late final ValueNotifier<double?> wholePercentageNotifier;
-  final List<ApiProvider> _watching = [];
+  final List<StateNotifierProviderOverrideMixin<ApiState, AsyncValue>> _watching = [];
   final List<CancelToken> _cancelTokens = [];
   void addCancelToken(CancelToken ct) {
     _cancelTokens.add(ct);
@@ -53,7 +53,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     _runFuture();
   }
 
-  Future<T> watch<T>(ApiProvider<T> watchProvider) async {
+  Future<T> watch<T>(StateNotifierProviderOverrideMixin<ApiState<T>, AsyncValue<T>> watchProvider) async {
     assert(_ref!=null);
     if (!_watching.contains(watchProvider)) {
       _watching.add(watchProvider);
@@ -66,7 +66,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
       newApiState.wholePercentageNotifier.addListener(_computePercentage);
     }
     // return await _ref.watch(watchProvider.notifier).future;
-    return await _ref!.watch(watchProvider.future);
+    return await _ref!.watch((watchProvider as dynamic).future);
   }
 
   void retry() {
