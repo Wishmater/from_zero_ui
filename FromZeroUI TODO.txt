@@ -15,6 +15,7 @@ Table -- Initial checking for filter values should be async (and also maybe othe
 		??? only if rowCount > 100 ??? (also allow to force sync or async)
 		
 Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
+	https://www.youtube.com/watch?v=ceCo8U0XHqw
 
 Bug with condition filters on table
 	when all value filters are disabled (new way) and a condition filter is added, no values return true

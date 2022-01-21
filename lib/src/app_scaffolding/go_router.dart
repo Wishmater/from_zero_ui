@@ -15,6 +15,8 @@ class GoRouteFromZero extends GoRoute {
 
   /// Name shown in the UI
   String? title;
+  /// Subtitle shown in the UI
+  String? subtitle;
   /// Icon shown in drawer menu, etc
   Widget icon;
   /// Different page IDs will perform an animation in the whole Scaffold, instead of just the body
@@ -30,6 +32,7 @@ class GoRouteFromZero extends GoRoute {
     required String path,
     required String name,
     this.title,
+    this.subtitle,
     this.icon = const SizedBox.shrink(),
     GoRouterWidgetBuilder builder = _builder,
     GoRouterRedirect redirect = _redirect,
@@ -55,6 +58,7 @@ class GoRouteFromZero extends GoRoute {
     String? path,
     String? name,
     String? title,
+    String? subtitle,
     Widget? icon,
     GoRouterWidgetBuilder? builder,
     GoRouterRedirect? redirect,
@@ -68,6 +72,7 @@ class GoRouteFromZero extends GoRoute {
       path: path ?? this.path,
       name: name ?? this.name!,
       title: title ?? this.title,
+      subtitle: subtitle,
       icon: icon ?? this.icon,
       builder: builder ?? this.builder,
       redirect: redirect ?? this.redirect,
@@ -134,11 +139,15 @@ class GoRouteGroupFromZero extends GoRouteFromZero {
 
   GoRouteGroupFromZero({
     String? title,
+    String? subtitle,
+    Widget? icon,
     required List<GoRouteFromZero> routes,
     bool showInDrawerNavigation = true,
   }) : super(
     path: 'null',
-    name: 'null',
+    name: title ?? '',
+    subtitle: subtitle,
+    icon: icon ?? const SizedBox.shrink(),
     routes: routes,
     showInDrawerNavigation: showInDrawerNavigation,
   );

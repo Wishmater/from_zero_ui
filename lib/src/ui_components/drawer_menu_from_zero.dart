@@ -25,6 +25,7 @@ class ResponsiveDrawerMenuItem{
   final String? route;
   final Map<String, dynamic>? params;
   final Map<String, dynamic>? queryParams;
+  final Object? extra;
   final Widget? icon;
   final List<ResponsiveDrawerMenuItem>? children;
   final int selectedChild;
@@ -44,6 +45,7 @@ class ResponsiveDrawerMenuItem{
     this.route,
     this.params,
     this.queryParams,
+    this.extra,
     this.children,
     this.selectedChild = -1,
     this.onTap,
@@ -62,6 +64,7 @@ class ResponsiveDrawerMenuItem{
     bool excludeRoutesThatDontWantToShow = false,
     Map<String, dynamic>? params,
     Map<String, dynamic>? queryParams,
+    Object? extra,
     bool dense = false,
     bool forcePopup = false,
     double titleHorizontalOffset = 0,
@@ -74,6 +77,7 @@ class ResponsiveDrawerMenuItem{
         routes: e.routes,
         params: params,
         queryParams: queryParams,
+        extra: extra,
         dense: dense,
         forcePopup: forcePopup,
         titleHorizontalOffset: titleHorizontalOffset,
@@ -96,6 +100,7 @@ class ResponsiveDrawerMenuItem{
             children: e.childrenAsDropdownInDrawerNavigation ? children : [],
             params: params,
             queryParams: queryParams,
+            extra: extra,
             dense: dense,
             forcePopup: forcePopup,
             titleHorizontalOffset: titleHorizontalOffset,
@@ -112,7 +117,9 @@ class ResponsiveDrawerMenuItem{
     String? subtitle,
     String? subtitleRight,
     String? route,
-    Map<String, dynamic>? arguments,
+    Map<String, dynamic>? params,
+    Map<String, dynamic>? queryParams,
+    Object? extra,
     Widget? icon,
     List<ResponsiveDrawerMenuItem>? children,
     int? selectedChild,
@@ -130,7 +137,9 @@ class ResponsiveDrawerMenuItem{
       subtitle: subtitle ?? this.subtitle,
       subtitleRight: subtitleRight ?? this.subtitleRight,
       route: route ?? this.route,
-      params: arguments ?? this.params,
+      params: params ?? this.params,
+      queryParams: queryParams ?? this.queryParams,
+      extra: extra ?? this.extra,
       icon: icon ?? this.icon,
       children: children ?? this.children,
       selectedChild: selectedChild ?? this.selectedChild,
@@ -379,6 +388,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                     tabs[i].route!,
                     params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
                     queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
+                    extra: tabs[i].extra,
                   );
                 }
                 return result;
