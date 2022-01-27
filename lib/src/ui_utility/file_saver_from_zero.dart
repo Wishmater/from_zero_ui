@@ -31,6 +31,7 @@ Future<bool> saveFileFromZero ({
   ValueNotifier<int?>? fileSize,
   VoidCallback? onCancel,
   FutureOr<Uint8List> Function()? onRetry,
+  bool autoOpenOnFinish = true,
   bool showSnackBars = true,
   bool showDownloadSnackBar = true,
   bool showResultSnackBar = true, // TODO 3 implement output pickers in not web (optional)
@@ -196,7 +197,13 @@ Future<bool> saveFileFromZero ({
   downloadSnackBarController?.dismiss();
   // show results snackBar
   bool retry = false;
-  if (showSnackBars && showResultSnackBar) {
+  if (success && autoOpenOnFinish) {
+    if (Platform.isAndroid){
+      OpenFile.open(file!.parent.absolute.path);
+    } else{
+      await launch(file!.parent.absolute.path);
+    }
+  } if (showSnackBars && showResultSnackBar) {
     if (success && uiPath!=null) {
       await SnackBarFromZero(
         key: snackBarKey ?? ValueKey(data.hashCode),
