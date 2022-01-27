@@ -4,7 +4,10 @@
 P0
 **********************************************************************
 
-make Export use new FileSaverFromZero
+Export
+	make Export use new FileSaverFromZero
+	export should autommatically open the saved file, default true
+		add option to open autommatically to FileSaverFromZero, default false
 
 Table Feature -- Export to excel with right-click (directly on the table)
 
