@@ -30,7 +30,7 @@ class GoRouteFromZero extends GoRoute {
 
   GoRouteFromZero({
     required String path,
-    required String name,
+    String? name,
     this.title,
     this.subtitle,
     this.icon = const SizedBox.shrink(),
@@ -43,7 +43,7 @@ class GoRouteFromZero extends GoRoute {
     this.childrenAsDropdownInDrawerNavigation = true,
   }) : super(
     path: path,
-    name: name,
+    name: name ?? path,
     builder: builder,
     redirect: redirect,
     routes: routes,
@@ -86,6 +86,19 @@ class GoRouteFromZero extends GoRoute {
 
   @override
   List<GoRouteFromZero> get routes => super.routes.cast<GoRouteFromZero>();
+
+  void go(BuildContext context, {
+    Map<String, String> params = const {},
+    Map<String, String> queryParams = const {},
+    Object? extra,
+  }) {
+    GoRouter.of(context).goNamed(name!,
+      params: params,
+      queryParams: queryParams,
+      extra: extra,
+    );
+  }
+
 
   static List<GoRouteFromZero> getCleanRoutes(List<GoRouteFromZero> routes) {
     final result = <GoRouteFromZero>[];
