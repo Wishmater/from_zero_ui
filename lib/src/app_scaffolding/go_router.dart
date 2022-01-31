@@ -34,8 +34,8 @@ class GoRouteFromZero extends GoRoute {
     this.title,
     this.subtitle,
     this.icon = const SizedBox.shrink(),
-    GoRouterWidgetBuilder builder = _builder,
-    GoRouterRedirect redirect = _redirect,
+    GoRouterWidgetBuilder builder = emptyBuilder,
+    GoRouterRedirect redirect = emptyRedirect,
     List<GoRouteFromZero> routes = const [],
     this.pageScaffoldId = 'main',
     this.pageScaffoldDepth = 0,
@@ -93,11 +93,43 @@ class GoRouteFromZero extends GoRoute {
     Object? extra,
   }) {
     GoRouter.of(context).goNamed(name!,
-      params: params,
-      queryParams: queryParams,
-      extra: extra,
+      params: _getParams(params),
+      queryParams: _getQueryParams(queryParams),
+      extra: _getExtra(extra),
     );
   }
+
+  void push(BuildContext context, {
+    Map<String, String> params = const {},
+    Map<String, String> queryParams = const {},
+    Object? extra,
+  }) {
+    GoRouter.of(context).pushNamed(name!,
+      params: _getParams(params),
+      queryParams: _getQueryParams(queryParams),
+      extra: _getExtra(extra),
+    );
+  }
+
+  Map<String, String> _getParams(Map<String, String> params)
+      => {...defaultParams, ...params};
+  Map<String, String> _getQueryParams(Map<String, String> queryParams)
+      => {...defaultQueryParams, ...queryParams};
+  Object? _getExtra(Object? extra) {
+    if ((extra==null || extra is Map) && defaultExtra is Map ) {
+      return {
+        if (extra!=null)
+          ...(extra as Map),
+        ...(defaultExtra as Map),
+      };
+    } else {
+      return extra;
+    }
+  }
+  // these can be overriden to add default params to route pushes
+  Map<String, String> get defaultParams => {};
+  Map<String, String> get defaultQueryParams => {};
+  Object? get defaultExtra => null;
 
 
   static List<GoRouteFromZero> getCleanRoutes(List<GoRouteFromZero> routes) {
@@ -114,9 +146,9 @@ class GoRouteFromZero extends GoRoute {
     return result;
   }
 
-  static String? _redirect(GoRouterState state) => null;
+  static String? emptyRedirect(GoRouterState state) => null;
 
-  static Widget _builder(BuildContext context, GoRouterState state) =>
+  static Widget emptyBuilder(BuildContext context, GoRouterState state) =>
       throw Exception('GoRoute builder parameter not set\n'
           'See gorouter.dev/redirection#considerations for details');
 
