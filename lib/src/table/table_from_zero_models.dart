@@ -58,9 +58,9 @@ abstract class RowModel<T> {
   TextStyle? get textStyle => null;
   double get height => 36;
   bool? get selected => null;
-  ValueChanged<RowModel>? get onRowTap => null;
-  ValueChanged<RowModel>? get onRowDoubleTap => null;
-  ValueChanged<RowModel>? get onRowLongPress => null;
+  ValueChanged<RowModel<T>>? get onRowTap => null;
+  ValueChanged<RowModel<T>>? get onRowDoubleTap => null;
+  ValueChanged<RowModel<T>>? get onRowLongPress => null;
   OnRowHoverCallback? get onRowHover => null;
   OnCellTapCallback? get onCellTap => null;
   OnCellTapCallback? get onCellDoubleTap => null;
@@ -109,9 +109,9 @@ class SimpleRowModel<T> extends RowModel<T> {
   TextStyle? textStyle;
   double height;
   bool? selected;
-  ValueChanged<RowModel>? onRowTap;
-  ValueChanged<RowModel>? onRowDoubleTap;
-  ValueChanged<RowModel>? onRowLongPress;
+  ValueChanged<RowModel<T>>? onRowTap;
+  ValueChanged<RowModel<T>>? onRowDoubleTap;
+  ValueChanged<RowModel<T>>? onRowLongPress;
   OnRowHoverCallback? onRowHover;
   OnCellTapCallback? onCellTap;
   OnCellTapCallback? onCellDoubleTap;
@@ -158,9 +158,9 @@ class SimpleRowModel<T> extends RowModel<T> {
     TextStyle? textStyle,
     double? height,
     bool? selected,
-    ValueChanged<RowModel>? onRowTap,
-    ValueChanged<RowModel>? onRowDoubleTap,
-    ValueChanged<RowModel>? onRowLongPress,
+    ValueChanged<RowModel<T>>? onRowTap,
+    ValueChanged<RowModel<T>>? onRowDoubleTap,
+    ValueChanged<RowModel<T>>? onRowLongPress,
     OnRowHoverCallback? onRowHover,
     OnCheckBoxSelectedCallback? onCheckBoxSelected,
     Widget? rowAddon,
@@ -175,7 +175,7 @@ class SimpleRowModel<T> extends RowModel<T> {
     OnCellTapCallback? onCellLongPress,
     OnCellHoverCallback? onCellHover,
   }) {
-    return SimpleRowModel(
+    return SimpleRowModel<T>(
       id: id ?? this.id,
       rowKey: rowKey ?? this.rowKey,
       values: values ?? this.values,

@@ -111,6 +111,19 @@ class GoRouteFromZero extends GoRoute {
     );
   }
 
+  void pushReplacement(BuildContext context, {
+    Map<String, String> params = const {},
+    Map<String, String> queryParams = const {},
+    Object? extra,
+  }) {
+    GoRouter.of(context).pop(context);
+    push(context,
+      params: params,
+      queryParams: queryParams,
+      extra: extra,
+    );
+  }
+
   Map<String, String> _getParams(Map<String, String> params)
       => {...defaultParams, ...params};
   Map<String, String> _getQueryParams(Map<String, String> queryParams)
