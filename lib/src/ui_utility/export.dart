@@ -352,7 +352,7 @@ class ExportState extends State<Export> {
           pageFormat: format,
           margin: pw.EdgeInsets.all(0),
           build: (context) => pw.Image(
-            PdfImage.file(pdf.document, bytes: pngBytes),
+            pw.MemoryImage(pngBytes),
           ),
         )
       );
@@ -368,7 +368,7 @@ class ExportState extends State<Export> {
         if (Platform.isAndroid)
           pathUi = "Downloads/Cutrans CRM/${filePath.substring(filePath.lastIndexOf(p.separator))}";
         if (!mounted) return;
-        await file.writeAsBytes(pdf.save());
+        await file.writeAsBytes(await pdf.save());
       }
     } else if (format=='PNG'){
       File imgFile = File((await widget.path)+widget.title+(widget.childrenCount!(currentSize, portrait, scale, this.format,)>1?' ${(i+1)}':'')+'.png');
@@ -480,7 +480,7 @@ class ExportState extends State<Export> {
     });
     excel.delete('Sheet1');
     if (!mounted) return;
-    var encoded = await excel.encode();
+    var encoded = excel.encode()!.cast<int>();
     if (!mounted) return;
     File file = File((await widget.path)+widget.title+'.xlsx');
     filePath = file.absolute.path;

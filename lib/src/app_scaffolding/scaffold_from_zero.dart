@@ -112,7 +112,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
     int? scrollbarType,
     bool? bodyFloatsBelowAppbar,
     double? compactDrawerWidth,
-    this.drawerWidth = 304,
+    double? drawerWidth,
     this.drawerElevation = 2,
     this.appbarElevation = 3,
     this.drawerBackgroundColor,
@@ -131,6 +131,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
     ScaffoldFromZeroTransitionBuilder? bodyTransitionBuilder,
   }) :
         // this.appbarType = appbarType ?? (title==null&&(actions==null||actions.isEmpty)&&drawerContentBuilder==null ? appbarTypeNone : appbarTypeStatic),
+        this.drawerWidth = drawerWidth ?? (drawerContentBuilder==null ? 0 : 304),
         this.collapsibleBackgroundHeight = collapsibleBackgroundLength ?? (appbarType==ScaffoldFromZero.appbarTypeStatic||appbarHeight==null ? -1 : appbarHeight*4),
         this.scrollbarType = scrollbarType ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? scrollbarTypeBellowAppbar : scrollbarTypeOverAppbar),
         this.bodyFloatsBelowAppbar = bodyFloatsBelowAppbar ?? appbarType==ScaffoldFromZero.appbarTypeQuickReturn,

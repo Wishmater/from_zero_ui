@@ -80,6 +80,11 @@ popupFromZero improvement: on dektop, popup should not block content behind it b
 P3
 **********************************************************************
 
+Organize dependencies
+	remove all dependency overrides
+	update all to latest
+	test for any bugs
+
 Considerations for a new model/dataClass solution
 	support normal dart class inheritnce
 	easy way to declare states

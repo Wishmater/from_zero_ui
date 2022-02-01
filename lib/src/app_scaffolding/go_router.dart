@@ -145,14 +145,22 @@ class GoRouteFromZero extends GoRoute {
   Object? get defaultExtra => null;
 
 
-  static List<GoRouteFromZero> getCleanRoutes(List<GoRouteFromZero> routes) {
+  static List<GoRouteFromZero> getCleanRoutes(List<GoRouteFromZero> routes, {
+    bool addStartingSlash = true,
+  }) {
     final result = <GoRouteFromZero>[];
     for (final e in routes) {
       if (e is GoRouteGroupFromZero) {
-        result.addAll(getCleanRoutes(e.routes));
+        result.addAll(getCleanRoutes(e.routes,
+          addStartingSlash: addStartingSlash,
+        ));
       } else {
         result.add(e.copyWith(
-          routes: getCleanRoutes(e.routes),
+          path: addStartingSlash && !e.path.startsWith('/')
+              ? '/${e.path}' : e.path,
+          routes: getCleanRoutes(e.routes,
+            addStartingSlash: false,
+          ),
         ));
       }
     }
