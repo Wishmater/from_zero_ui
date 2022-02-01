@@ -207,15 +207,18 @@ class GoRouteFromZero extends GoRoute {
 
 class GoRouteGroupFromZero extends GoRouteFromZero {
 
+  bool showAsDropdown;
+
   GoRouteGroupFromZero({
     String? title,
     String? subtitle,
     Widget? icon,
     required List<GoRouteFromZero> routes,
     bool showInDrawerNavigation = true,
+    this.showAsDropdown = true,
   }) : super(
     path: 'null',
-    name: title ?? '',
+    title: title,
     subtitle: subtitle,
     icon: icon ?? const SizedBox.shrink(),
     routes: routes,

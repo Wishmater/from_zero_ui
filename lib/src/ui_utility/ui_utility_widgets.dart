@@ -544,9 +544,12 @@ class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
               child: ZoomedFadeInTransition(animation: animation, child: child,),
             ),
             child: !show ? SizedBox.shrink() : FloatingActionButton(
-              child: widget.icon ?? Icon(Icons.arrow_upward, color: Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white,),
+              child: widget.icon ?? Icon(Icons.arrow_upward,
+                color: Theme.of(context).appBarTheme.iconTheme?.color
+                    ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+              ),
               tooltip: FromZeroLocalizations.of(context).translate('return_to_top'),
-              backgroundColor: Theme.of(context).primaryColor,
+              backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
               onPressed: widget.onTap ?? () {
                 if (widget.duration==null){
                   widget.scrollController.jumpTo(0);
@@ -699,6 +702,72 @@ class IconButtonBackground extends StatelessWidget {
 
 
 
+class SkipFrameWidget extends StatefulWidget {
+
+  final int frameSkipCount;
+  final WidgetBuilder paceholderBuilder;
+  final WidgetBuilder childBuilder;
+  final InitiallyAnimatedWidgetBuilder? transitionBuilder;
+  final Duration duration;
+  final Curve curve;
+
+  const SkipFrameWidget({
+    Key? key,
+    required this.paceholderBuilder,
+    required this.childBuilder,
+    this.frameSkipCount = 1,
+    this.transitionBuilder,
+    this.duration = const Duration(milliseconds: 250,),
+    this.curve = Curves.easeOutCubic,
+  }) : super(key: key);
+
+  @override
+  _SkipFrameWidgetState createState() => _SkipFrameWidgetState();
+
+}
+
+class _SkipFrameWidgetState extends State<SkipFrameWidget> {
+
+  late int skipFramesLeft;
+
+  @override
+  void initState() {
+    super.initState();
+    skipFramesLeft = widget.frameSkipCount;
+    skipNextFrame();
+  }
+
+  void skipNextFrame() {
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      skipFramesLeft--;
+      if (skipFramesLeft > 1) {
+        skipNextFrame();
+      } else {
+        setState(() {});
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (skipFramesLeft > 0) {
+      return widget.paceholderBuilder(context);
+    } else {
+      return InitiallyAnimatedWidget(
+        builder: widget.transitionBuilder ?? (animation, child) {
+          return FadeTransition(opacity: animation, child: child!,);
+        },
+        child: widget.childBuilder(context),
+        duration: widget.duration,
+        curve: widget.curve,
+      );
+    }
+  }
+
+}
+
+
+
 typedef Widget InitiallyAnimatedWidgetBuilder(Animation<double> animation, Widget? child);
 class InitiallyAnimatedWidget extends StatefulWidget {
 
@@ -739,6 +808,9 @@ class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with 
       parent: animationController,
       curve: widget.curve,
     );
+    startAnimation();
+  }
+  void startAnimation() {
     if (widget.repeat) {
       animationController.repeat(
         reverse: widget.reverse,
@@ -920,6 +992,23 @@ class FlexibleLayoutItemFromZero extends StatelessWidget {
 
 }
 
+
+
+class BottomClipper extends CustomClipper<Path> {
+  final double infinite = 999999;
+  @override
+  Path getClip(Size size) {
+    var path = Path();
+    path.moveTo(-infinite, -infinite);
+    path.lineTo(-infinite, size.height);
+    path.lineTo(infinite, size.height);
+    path.lineTo(infinite, -infinite);
+    path.close();
+    return path;
+  }
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
 
 
 

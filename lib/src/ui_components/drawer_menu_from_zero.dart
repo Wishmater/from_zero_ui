@@ -84,17 +84,35 @@ class ResponsiveDrawerMenuItem{
         excludeRoutesThatDontWantToShow: true,
       );
       if (e is GoRouteGroupFromZero) {
-        return <ResponsiveDrawerMenuItem>[
-          if (i>0)
-            ResponsiveDrawerMenuDivider(title: e.title),
-          ...children,
-          if (i<routes.lastIndex)
-            ResponsiveDrawerMenuDivider(),
-        ];
+        if (e.showAsDropdown) {
+          return [
+            if (i>0 && routes[i-1] is! GoRouteGroupFromZero)
+              ResponsiveDrawerMenuDivider(
+                widget: Divider(height: 1,),
+              ),
+            ResponsiveDrawerMenuItem(
+              title: e.title ?? e.path,
+              icon: e.icon,
+              children: children,
+            ),
+            ResponsiveDrawerMenuDivider(
+              widget: Divider(height: 1,),
+            ),
+          ];
+        } else {
+          return <ResponsiveDrawerMenuItem>[
+            if (i>0 || e.title!=null)
+              ResponsiveDrawerMenuDivider(title: e.title),
+            ...children,
+            if (i<routes.lastIndex || e.title!=null)
+              ResponsiveDrawerMenuDivider(),
+          ];
+        }
       } else {
         return [
           ResponsiveDrawerMenuItem(
             title: e.title ?? '',
+            subtitle: e.subtitle,
             icon: e.icon,
             route: e.name,
             children: e.childrenAsDropdownInDrawerNavigation ? children : [],
@@ -274,8 +292,17 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   return i;
                 }
               }
-              // print("$location -- $computedName");
+              print("$location -- $computedName");
               if (computedName == location) {
+                return i;
+              }
+            } else if (e.children!=null) {
+              int innerIndex = getSelectedIndex!(e.children!, match);
+              if (innerIndex>=0) {
+                tabs[i] = e.copyWith(
+                  selectedChild: innerIndex,
+                );
+                scaffoldChangeNotifier.isTreeNodeExpanded[e.uniqueId] = true;
                 return i;
               }
             }
@@ -349,7 +376,10 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
         ResponsiveDrawerMenuDivider divider = tabs[i] as ResponsiveDrawerMenuDivider;
         if (divider.widget!=null){
-          return divider.widget!;
+          return Padding(
+            padding: EdgeInsets.only(left: widget.depth*20.0),
+            child: divider.widget!,
+          );
         } else{
           double height = widget.compact||tabs[i].title.isNullOrEmpty ? 13 : 32;
           return Padding(
@@ -528,6 +558,23 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
           if (!_menuButtonKeys.containsKey(i)) _menuButtonKeys[i] = GlobalKey();
           final scaffoldChangeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
+          final title = getTreeOverlay(
+            DrawerMenuButtonFromZero(
+              key: tabs[i].itemKey,
+              title: tabs[i].title,
+              subtitle: tabs[i].subtitle,
+              subtitleRight: tabs[i].subtitleRight,
+              selected: selected==i,
+              compact: widget.compact,
+              dense: tabs[i].dense,
+              titleHorizontalOffset: tabs[i].titleHorizontalOffset,
+              icon: tabs[i].icon ?? SizedBox.shrink(),
+              contentPadding: EdgeInsets.only(
+                left: widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
+                right: widget.paddingRight + (widget.style==DrawerMenuFromZero.styleDrawerMenu ? 42 : 0),
+              ),
+            ), tabs, i,
+          );
           result = ContextMenuFromZero(
             child: ExpansionTileFromZero(
               initiallyExpanded: selected==i || tabs[i].selectedChild>=0,
@@ -538,56 +585,56 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               actionPadding: EdgeInsets.only(
                 left: widget.style==DrawerMenuFromZero.styleTree ? widget.depth*20.0 : 0,
               ),
-              title: getTreeOverlay(
-                DrawerMenuButtonFromZero(
-                  key: tabs[i].itemKey,
-                  title: tabs[i].title,
-                  subtitle: tabs[i].subtitle,
-                  subtitleRight: tabs[i].subtitleRight,
-                  selected: selected==i,
-                  compact: widget.compact,
-                  dense: tabs[i].dense,
-                  titleHorizontalOffset: tabs[i].titleHorizontalOffset,
-                  icon: tabs[i].icon ?? SizedBox.shrink(),
-                  contentPadding: EdgeInsets.only(
-                    left: widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
-                    right: widget.paddingRight + (widget.style==DrawerMenuFromZero.styleDrawerMenu ? 42 : 0),
-                  ),
-                ), tabs, i,
+              title: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: title,
+              ),
+              titleExpanded: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: title,
               ),
               trailing: tabs[i].customExpansionTileTrailing ?? (tabs[i].forcePopup ? SizedBox.shrink() : null),
               children: [
                 Stack(
-                  overflow: Overflow.visible,
+                  clipBehavior: Clip.none,
                   children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: DrawerMenuFromZero(
+                        tabs: tabs[i].children!,
+                        compact: widget.compact,
+                        selected: tabs[i].selectedChild,
+                        inferSelected: false,
+                        depth: widget.depth+1,
+                        pushType: widget.pushType == DrawerMenuFromZero.pushOnRoot
+                            ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
+                            : widget.pushType,
+                        style: widget.style,
+                        homeRoute: widget.homeRoute,
+                        parentTabs: widget.parentTabs ?? _tabs,
+                        paintPreviousTreeLines: [...widget.paintPreviousTreeLines, i!=tabs.length-1,],
+                      ),
+                    ),
                     if (widget.style==DrawerMenuFromZero.styleDrawerMenu)
-                      Positioned.fill(
-                        child: Container(
-                          padding: EdgeInsets.only(left: widget.depth*20.0),
-                          alignment: Alignment.centerLeft,
+                      Positioned(
+                        left: 0, right: 0, bottom: 0, top: 0, // -8
+                        child: IgnorePointer(
                           child: Container(
-                            width: 20.0, //(widget.depth+1)*20.0
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.only(topRight: Radius.circular(20)),
-                              color: Theme.of(context).dividerColor,
+                            padding: EdgeInsets.only(left: widget.depth*20.0),
+                            alignment: Alignment.centerLeft,
+                            child: Container(
+                              width: 20.0, //(widget.depth+1)*20.0
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(topRight: Radius.circular(20)),
+                                color: Color.alphaBlend(
+                                  Theme.of(context).dividerColor,
+                                  Material.of(context)?.color ?? Theme.of(context).cardColor,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    DrawerMenuFromZero(
-                      tabs: tabs[i].children!,
-                      compact: widget.compact,
-                      selected: tabs[i].selectedChild,
-                      inferSelected: false,
-                      depth: widget.depth+1,
-                      pushType: widget.pushType == DrawerMenuFromZero.pushOnRoot
-                          ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
-                          : widget.pushType,
-                      style: widget.style,
-                      homeRoute: widget.homeRoute,
-                      parentTabs: widget.parentTabs ?? _tabs,
-                      paintPreviousTreeLines: [...widget.paintPreviousTreeLines, i!=tabs.length-1,],
-                    ),
                   ],
                 ),
               ],

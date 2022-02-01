@@ -65,6 +65,7 @@ class TableFromZero<T> extends StatefulWidget {
   final Widget Function(BuildContext context, RowModel row)? headerRowBuilder;
   final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   final TableController? tableController;
+  final bool? enableSkipFrameWidgetForRows;
   /// if null, excel export option disabled
   final FutureOr<String>? exportPathForExcel; // TODO 1 implement excel export in all tables
 
@@ -101,6 +102,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.onFilter,
     this.tableController,
     this.exportPathForExcel,
+    this.enableSkipFrameWidgetForRows,
   }) :  super(key: key,);
 
   @override
@@ -483,7 +485,20 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       if (row==headerRowModel){
         return (widget.headerRowBuilder??_defaultGetRow).call(context, headerRowModel!);
       } else {
-        return (widget.rowBuilder??_defaultGetRow).call(context, row as RowModel<T>);
+        if (widget.enableSkipFrameWidgetForRows ?? filtered.length>50) {
+          return SkipFrameWidget(
+            paceholderBuilder: (context) {
+              return SizedBox(
+                height: row.height,
+              );
+            },
+            childBuilder: (context) {
+              return (widget.rowBuilder??_defaultGetRow).call(context, row as RowModel<T>);
+            },
+          );
+        } else {
+          return (widget.rowBuilder??_defaultGetRow).call(context, row as RowModel<T>);
+        }
       }
 
     }

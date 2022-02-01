@@ -2,7 +2,9 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:from_zero_ui/src/future_handling/future_handling.dart';
 import 'package:from_zero_ui/src/ui_components/drawer_menu_from_zero.dart';
+import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
 
 
 
@@ -32,6 +34,7 @@ class ExpansionTileFromZero extends StatefulWidget {
     Key? key,
     this.leading,
     required this.title,
+    this.titleExpanded,
     this.subtitle,
     this.backgroundColor,
     this.onExpansionChanged,
@@ -60,6 +63,7 @@ class ExpansionTileFromZero extends StatefulWidget {
   final void Function(bool)? onPostExpansionChanged;
   final int? style;
   final EdgeInsets actionPadding;
+  final Widget? titleExpanded;
 
   /// A widget to display before the title.
   ///
@@ -274,8 +278,16 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
           InkWell(
             onTap: _handleTap,
             child: Stack(
+              clipBehavior: Clip.none,
               children: [
-                widget.title,
+                AnimatedContainerFromChildSize(
+                  duration: Duration(milliseconds: 200),
+                  curve: Curves.easeOutCubic,
+                  child: Container(
+                    key: ValueKey(_isExpanded),
+                    child: _isExpanded ? (widget.titleExpanded??widget.title) : widget.title
+                  ),
+                ),
                 if (!(widget.trailing is SizedBox))
                   Positioned(
                     top: 0, bottom: 0,
@@ -315,7 +327,8 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
               ],
             ),
           ),
-          ClipRect(
+          ClipPath(
+            clipper: BottomClipper(),
             child: Align(
               alignment: widget.expandedAlignment ?? Alignment.center,
               heightFactor: _heightFactor.value,

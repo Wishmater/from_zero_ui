@@ -72,6 +72,10 @@ Implement UIScaling + Scaling picker widget (with slider)
 	
 popupFromZero improvement: on dektop, popup should not block content behind it by default (use Overlay)
 
+Appbar on top of fromZeroUI should be above header (appbar will span full window width)
+	in mobile mode, headerTitle still needs to be painted on the header itself
+	this will fix some visual bugs and some bugs with new windowBar
+
 
 
 
