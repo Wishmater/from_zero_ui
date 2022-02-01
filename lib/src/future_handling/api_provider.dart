@@ -23,7 +23,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
   late final ValueNotifier<double?> wholeTotalNotifier;
   late final ValueNotifier<double?> wholeProgressNotifier;
   late final ValueNotifier<double?> wholePercentageNotifier;
-  final List<StateNotifierProviderOverrideMixin<ApiState, AsyncValue>> _watching = [];
+  final List<ApiProvider> _watching = [];
   final List<CancelToken> _cancelTokens = [];
   void addCancelToken(CancelToken ct) {
     _cancelTokens.add(ct);
@@ -53,7 +53,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     _runFuture();
   }
 
-  Future<T> watch<T>(StateNotifierProviderOverrideMixin<ApiState<T>, AsyncValue<T>> watchProvider) async {
+  Future<T> watch<T>(ApiProvider<T> watchProvider) async {
     assert(_ref!=null);
     if (!_watching.contains(watchProvider)) {
       _watching.add(watchProvider);
@@ -65,40 +65,49 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
       newApiState.wholeProgressNotifier.addListener(_computeProgress);
       newApiState.wholePercentageNotifier.addListener(_computePercentage);
     }
-    // return await _ref.watch(watchProvider.notifier).future;
-    return await _ref!.watch((watchProvider as dynamic).future);
+    return _ref!.watch(watchProvider.future);
   }
 
-  void retry() {
+  // a new ref needs to be passed to read the watching notifiers. watch() won'y be called on it.
+  bool retry(WidgetRef? widgetRef) {
     bool refreshed = false;
-    if (_ref != null) {
-      for (final e in List<ApiProvider>.from(_watching)) {
-        _ref!.read(e).whenOrNull(
-          error: (error, stackTrace) {
-            _ref!.read(e.notifier).retry();
-            refreshed = true;
-          },
-        );
+    if ((widgetRef??_ref) != null) {
+      try {
+        final watchingNotifiers = _watching.map((e) => widgetRef==null
+            ? _ref!.read(e.notifier)
+            : widgetRef.read(e.notifier));
+        for (final e in watchingNotifiers) {
+          refreshed = refreshed || e.retry(widgetRef);
+        }
+      } catch (e, st) {
+        print (e); print (st);
+      }
+    }
+    if (!refreshed && state is AsyncError) {
+      _runFuture();
+      return true;
+    }
+    return refreshed;
+  }
+
+  void refresh(WidgetRef? widgetRef) {
+    bool refreshed = false;
+    if ((widgetRef??_ref) != null) {
+      final watchingNotifiers = _watching.map((e) => widgetRef==null
+          ? _ref!.read(e.notifier)
+          : widgetRef.read(e.notifier));
+      for (final e in watchingNotifiers) {
+        try {
+          e.refresh(widgetRef);
+          refreshed = true;
+        } catch (e, st) {
+          print (e); print (st);
+        }
       }
     }
     if (!refreshed) {
       _runFuture();
     }
-    // try { _ref.refresh(provider); } catch (_) {} // TODO 1 ??? how to refresh THIS provider ??? pretty sure it is not needed
-  }
-
-  void refresh() {
-    bool refreshed = false;
-    if (_ref != null) {
-      for (final e in _watching) {
-        _ref!.read(e.notifier).refresh();
-        refreshed = true;
-      }
-    }
-    if (!refreshed) {
-      _runFuture();
-    }
-    // try { _ref.refresh(provider); } catch (_) {} // TODO 1 ??? how to refresh THIS provider ??? pretty sure it is not needed
   }
 
 
@@ -114,6 +123,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     selfTotalNotifier.value = null;
     selfProgressNotifier.value = null;
     wholePercentageNotifier.value = null;
+    state = AsyncValue.loading();
     try {
       future = _create(this);
       if (future is Future<State>) {
@@ -239,7 +249,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
         );
       },
       errorBuilder: (context, error, stackTrace) {
-        return errorBuilder(context, error, stackTrace, stateNotifier.retry);
+        return errorBuilder(context, error, stackTrace, ()=>stateNotifier.retry(ref));
       },
       transitionBuilder: transitionBuilder,
       transitionDuration: transitionDuration,
@@ -308,8 +318,11 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
         return AnimatedBuilder(
           animation: listenable,
           builder: (context, child) {
-            final meaningfulValues = listenable.values.whereType<double>().toList();
-            final percentage = meaningfulValues.reduce((v, e) => v+e) / meaningfulValues.length;
+            double? percentage;
+            try {
+              final meaningfulValues = listenable.values.whereType<double>().toList();
+              percentage = meaningfulValues.reduce((v, e) => v+e) / meaningfulValues.length;
+            } catch (_) {}
             return loadingBuilder(context, percentage);
           },
         );
@@ -317,7 +330,7 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
       errorBuilder: (context, error, stackTrace) {
         return errorBuilder(context, error, stackTrace, () {
           for (final e in stateNotifiers) {
-            e.retry();
+            e.retry(ref);
           }
         });
       },

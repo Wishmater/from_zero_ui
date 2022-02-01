@@ -96,6 +96,10 @@ Considerations for a new model/dataClass solution
 	support immutability
 	easy way to declare computed properties
 
+Play around with Provider.autoDispose
+	it is impossible to call an autoDispose provider from a non-autoDispose provider
+	currently, the ApiProvider solution cannot use autoDispose, which could be a useful feature if enabled
+
 GoRouter -- there should be a way to "push" a subtree, 
 	this means the subtree will decide its normally with .go, but wont affect routes below it in the stack
 		PROPOSAL:

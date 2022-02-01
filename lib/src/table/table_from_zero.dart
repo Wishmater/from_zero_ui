@@ -724,10 +724,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           );
         }
       }
-      if (!(row.rowAddonIsCoveredByGestureDetector ?? true)){
+      if (row!=headerRowModel && !(row.rowAddonIsCoveredByGestureDetector ?? true)){
         result = _buildRowGestureDetector(
           context: context,
-          row: row,
+          row: row as RowModel<T>,
           child: result,
         );
       }
@@ -798,10 +798,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           );
         }
       }
-      if (row.rowAddonIsCoveredByGestureDetector ?? true){
+      if (row!=headerRowModel && (row.rowAddonIsCoveredByGestureDetector ?? true)){
         result = _buildRowGestureDetector(
           context: context,
-          row: row,
+          row: row as RowModel<T>,
           child: result,
         );
       }
@@ -850,16 +850,16 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     // );
 
   }
-  Widget _buildRowGestureDetector({required BuildContext context, required RowModel row, required Widget child}) {
+  Widget _buildRowGestureDetector({required BuildContext context, required RowModel<T> row, required Widget child}) {
     Widget result = child;
     if (row.onRowTap!=null) {
       result = InkWell(
         onTap: widget.enabled ? () => row.onRowTap!(row)
-            : row.onCheckBoxSelected!=null && row!=headerRowModel ? () {
-          if (row.onCheckBoxSelected!(row, !(row.selected??false)) ?? false) {
-            setState(() {});
-          }
-        } : null,
+            : row.onCheckBoxSelected!=null ? () {
+              if (row.onCheckBoxSelected!(row, !(row.selected??false)) ?? false) {
+                setState(() {});
+              }
+            } : null,
         onDoubleTap: widget.enabled&&row.onRowDoubleTap!=null ? () => row.onRowDoubleTap!(row) : null,
         onLongPress: widget.enabled&&row.onRowLongPress!=null ? () => row.onRowLongPress!(row) : null,
         onHover: widget.enabled&&row.onRowHover!=null ? (value) => row.onRowHover!(row, value) : null,

@@ -232,7 +232,7 @@ class ErrorSign extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
             if (onRetry!=null)
-              SizedBox(height: 20,),
+              SizedBox(height: 16,),
             if (onRetry!=null)
               TextButton(
                 style: TextButton.styleFrom(
