@@ -87,15 +87,19 @@ class GoRouteFromZero extends GoRoute {
   @override
   List<GoRouteFromZero> get routes => super.routes.cast<GoRouteFromZero>();
 
+  static GoRouteFromZero of(BuildContext context) {
+    return GoRouter.of(context).routerDelegate.matches.last.route as GoRouteFromZero;
+  }
+
   void go(BuildContext context, {
     Map<String, String> params = const {},
     Map<String, String> queryParams = const {},
     Object? extra,
   }) {
     GoRouter.of(context).goNamed(name!,
-      params: _getParams(params),
-      queryParams: _getQueryParams(queryParams),
-      extra: _getExtra(extra),
+      params: getParams(params),
+      queryParams: getQueryParams(queryParams),
+      extra: getExtra(extra),
     );
   }
 
@@ -105,9 +109,9 @@ class GoRouteFromZero extends GoRoute {
     Object? extra,
   }) {
     GoRouter.of(context).pushNamed(name!,
-      params: _getParams(params),
-      queryParams: _getQueryParams(queryParams),
-      extra: _getExtra(extra),
+      params: getParams(params),
+      queryParams: getQueryParams(queryParams),
+      extra: getExtra(extra),
     );
   }
 
@@ -124,11 +128,11 @@ class GoRouteFromZero extends GoRoute {
     );
   }
 
-  Map<String, String> _getParams(Map<String, String> params)
+  Map<String, String> getParams(Map<String, String> params)
       => {...defaultParams, ...params};
-  Map<String, String> _getQueryParams(Map<String, String> queryParams)
+  Map<String, String> getQueryParams(Map<String, String> queryParams)
       => {...defaultQueryParams, ...queryParams};
-  Object? _getExtra(Object? extra) {
+  Object? getExtra(Object? extra) {
     if ((extra==null || extra is Map) && defaultExtra is Map ) {
       return {
         if (extra!=null)
@@ -328,8 +332,10 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
         scaffoldChangeNotifier.setCurrentRouteState(state);
       }
 
-      if (built || !skipFirstRenderWhenPushing) {
+      // if (built || !skipFirstRenderWhenPushing) { // disabled because it breaks heroes
+      if (true) {
 
+        built = true;
         return widget.builder(context, widget.state);
 
       } else {

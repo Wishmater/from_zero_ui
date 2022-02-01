@@ -88,71 +88,75 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
         if (value==0) value = null;
         return Padding(
           padding: const EdgeInsets.all(12),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              Center(
-                child: SizedBox(
-                  width: 48, height: 48,
-                  child: InitiallyAnimatedWidget(
-                    duration: Duration(seconds: 1),
-                    curve: Curves.easeOut,
-                    repeat: true,
-                    builder: (loopingAnimation, child) {
-                      Color backgroundColor = ColorTween(begin: colorTransparent, end: colorMild).evaluate(loopingAnimation)!;
-                      return Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(2.5),
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: [colorTransparent, colorTransparent, backgroundColor,],
-                                  stops: [0, 0.25 + (0.75 * loopingAnimation.value), 1],
+          child: LimitedBox(
+            maxWidth: 128,
+            maxHeight: 128,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                Center(
+                  child: SizedBox(
+                    width: 48, height: 48,
+                    child: InitiallyAnimatedWidget(
+                      duration: Duration(seconds: 1),
+                      curve: Curves.easeOut,
+                      repeat: true,
+                      builder: (loopingAnimation, child) {
+                        Color backgroundColor = ColorTween(begin: colorTransparent, end: colorMild).evaluate(loopingAnimation)!;
+                        return Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(2.5),
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: RadialGradient(
+                                    colors: [colorTransparent, colorTransparent, backgroundColor,],
+                                    stops: [0, 0.25 + (0.75 * loopingAnimation.value), 1],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          CircularProgressIndicator(
-                            value: value,
-                            strokeWidth: 5,
-                            backgroundColor: backgroundColor,
-                            valueColor: ColorTween(begin: colorMedium, end: color).animate(loopingAnimation),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-              if (value!=null)
-                Center(
-                  child: OpacityGradient(
-                    direction: OpacityGradient.vertical,
-                    size: 5,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 1, bottom: 1,),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SlidingNumber(
-                            number: (value*100).round(),
-                            duration: Duration(milliseconds: 250),
-                            style: TextStyle(
-                              color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                            CircularProgressIndicator(
+                              value: value,
+                              strokeWidth: 5,
+                              backgroundColor: backgroundColor,
+                              valueColor: ColorTween(begin: colorMedium, end: color).animate(loopingAnimation),
                             ),
-                          ),
-                          Text('%', style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                          ),),
-                        ],
-                      ),
+                          ],
+                        );
+                      },
                     ),
                   ),
                 ),
-            ],
+                if (value!=null)
+                  Center(
+                    child: OpacityGradient(
+                      direction: OpacityGradient.vertical,
+                      size: 5,
+                      child: Padding(
+                        padding: const EdgeInsets.only(left: 1, bottom: 1,),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SlidingNumber(
+                              number: (value*100).round(),
+                              duration: Duration(milliseconds: 250),
+                              style: TextStyle(
+                                color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                              ),
+                            ),
+                            Text('%', style: TextStyle(
+                              color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                            ),),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
         );
       },

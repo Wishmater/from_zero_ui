@@ -62,8 +62,8 @@ class ResponsiveDrawerMenuItem{
   static List<ResponsiveDrawerMenuItem> fromGoRoutes({
     required List<GoRouteFromZero> routes,
     bool excludeRoutesThatDontWantToShow = false,
-    Map<String, dynamic>? params,
-    Map<String, dynamic>? queryParams,
+    Map<String, String> params = const {},
+    Map<String, String> queryParams = const {},
     Object? extra,
     bool dense = false,
     bool forcePopup = false,
@@ -98,9 +98,9 @@ class ResponsiveDrawerMenuItem{
             icon: e.icon,
             route: e.name,
             children: e.childrenAsDropdownInDrawerNavigation ? children : [],
-            params: params,
-            queryParams: queryParams,
-            extra: extra,
+            params: e.getParams(params),
+            queryParams: e.getQueryParams(queryParams),
+            extra: e.getExtra(extra),
             dense: dense,
             forcePopup: forcePopup,
             titleHorizontalOffset: titleHorizontalOffset,
@@ -160,11 +160,11 @@ class ResponsiveDrawerMenuItem{
 
 class DrawerMenuFromZero extends ConsumerStatefulWidget {
 
-  static const int goRouter = 10;
-  static const int alwaysReplaceInsteadOfPushing = 1;
-  static const int neverReplaceInsteadOfPushing = 2;
+  static const int go = 10;
+  static const int replace = 1;
+  static const int push = 2;
   @deprecated
-  static const int exceptRootReplaceInsteadOfPushing = 0;
+  static const int pushOnRoot = 0;
 
   static const int styleDrawerMenu = 0;
   static const int styleTree = 1;
@@ -173,7 +173,8 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
   final List<ResponsiveDrawerMenuItem> tabs;
   final int selected;
   final bool compact;
-  final int replaceInsteadOfPushing;
+  final int pushType;
+  final bool useGoRouter;
   final int depth;
   final double paddingRight;
   final bool popup;
@@ -188,8 +189,8 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
     @deprecated
     this.selected = -1,
     this.compact = false,
-    @deprecated
-    this.replaceInsteadOfPushing = goRouter,
+    this.pushType = go,
+    this.useGoRouter = true,
     this.depth = 0,
     this.paddingRight = 0,
     this.popup = false,
@@ -244,9 +245,13 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
     _selected = widget.selected;
     if (widget.selected<0 && widget.inferSelected) {
 
-      if (widget.replaceInsteadOfPushing == DrawerMenuFromZero.goRouter) {
+      if (widget.pushType == DrawerMenuFromZero.go) {
         final goRouter = GoRouter.of(context);
-        final location = goRouter.location;
+        String location = goRouter.location;
+        int queryParamsIndex = location.indexOf('?');
+        if (queryParamsIndex>=0) {
+          location = location.substring(0, queryParamsIndex);
+        }
         final matches = goRouter.routerDelegate.matches;
         final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
         Map<ResponsiveDrawerMenuItem, String> computedNames = {};
@@ -269,6 +274,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   return i;
                 }
               }
+              // print("$location -- $computedName");
               if (computedName == location) {
                 return i;
               }
@@ -284,7 +290,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
         // old deprecated way of inferring the selected route
         try {
-          String location = widget.replaceInsteadOfPushing == DrawerMenuFromZero.goRouter
+          String location = widget.pushType == DrawerMenuFromZero.go
               ? GoRouter.of(context).location
               : ModalRoute.of(context)!.settings.name!;
           List<String> paths = location.split('/')..removeWhere((e) => e.isEmpty);
@@ -374,7 +380,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
       } else{
 
         Future<bool> Function() onTap;
-        if (widget.replaceInsteadOfPushing==DrawerMenuFromZero.goRouter) {
+        if (widget.pushType==DrawerMenuFromZero.go) {
 
           onTap = (tabs[i].onTap!=null && !tabs[i].executeBothOnTapAndDefaultOnTap)
               ? () async {
@@ -407,18 +413,28 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             result = tabs[i].onTap?.call() ?? false;
             if (i!=selected && tabs[i].route!=null) {
               var navigator = Navigator.of(context);
+              var goRouter = widget.useGoRouter ? GoRouter.of(context) : null;
               try{
                 var scaffold = Scaffold.of(context);
                 if (scaffold.hasDrawer && scaffold.isDrawerOpen)
                   navigator.pop();
               } catch(_, __){}
-              if (widget.replaceInsteadOfPushing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPushing){
+              if (widget.pushType == DrawerMenuFromZero.pushOnRoot){
                 // ! this will break if the homeRoute is NOT in the stack
                 if (selected>=0 && tabs[selected].route==widget.homeRoute){
-                  navigator.pushNamed(
-                    tabs[i].route!,
-                    arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
-                  );
+                  if (goRouter==null) {
+                    navigator.pushNamed(
+                      tabs[i].route!,
+                      arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
+                    );
+                  } else {
+                    goRouter.pushNamed(
+                      tabs[i].route!,
+                      params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
+                      queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
+                      extra: tabs[i].extra,
+                    );
+                  }
                 } else{
                   if (tabs[i].route==widget.homeRoute){
                     if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
@@ -426,20 +442,39 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                     }
                   } else{
                     if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
-                      navigator.pushNamedAndRemoveUntil(
-                        tabs[i].route!,
-                        ModalRoute.withName(widget.homeRoute!),
-                        arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
-                      );
+                      if (goRouter==null) {
+                        navigator.pushNamedAndRemoveUntil(
+                          tabs[i].route!,
+                          ModalRoute.withName(widget.homeRoute!),
+                          arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
+                        );
+                      } else {
+                        navigator.popUntil(ModalRoute.withName(widget.homeRoute!));
+                        goRouter.pushNamed(
+                          tabs[i].route!,
+                          params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
+                          queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
+                          extra: tabs[i].extra,
+                        );
+                      }
                     }
                   }
                 }
-              } else if (widget.replaceInsteadOfPushing == DrawerMenuFromZero.neverReplaceInsteadOfPushing){
-                navigator.pushNamed(
-                  tabs[i].route!,
-                  arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
-                );
-              } else if (widget.replaceInsteadOfPushing == DrawerMenuFromZero.alwaysReplaceInsteadOfPushing){
+              } else if (widget.pushType == DrawerMenuFromZero.push){
+                if (goRouter==null) {
+                  navigator.pushNamed(
+                    tabs[i].route!,
+                    arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
+                  );
+                } else {
+                  goRouter.pushNamed(
+                    tabs[i].route!,
+                    params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
+                    queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
+                    extra: tabs[i].extra,
+                  );
+                }
+              } else if (widget.pushType == DrawerMenuFromZero.replace){
                 if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
                   List<String> routes = [];
                   if (widget.homeRoute!=null) {
@@ -456,17 +491,28 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   };
                   addRoutes(widget.parentTabs ?? _tabs);
                   bool passed = false;
-                  navigator.pushNamedAndRemoveUntil(
-                    tabs[i].route!,
-                        (Route<dynamic> route) {
-                      if (passed || route.isFirst) return true;
-                      if (routes.contains(route.settings.name)){
-                        passed = true;
-                      }
-                      return false;
-                    },
-                    arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
-                  );
+                  final until = (Route<dynamic> route) {
+                    if (passed || route.isFirst) return true;
+                    if (routes.contains(route.settings.name)){
+                      passed = true;
+                    }
+                    return false;
+                  };
+                  if (goRouter==null) {
+                    navigator.pushNamedAndRemoveUntil(
+                      tabs[i].route!,
+                      until,
+                      arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
+                    );
+                  } else {
+                    navigator.popUntil(until);
+                    goRouter.pushNamed(
+                      tabs[i].route!,
+                      params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
+                      queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
+                      extra: tabs[i].extra,
+                    );
+                  }
                 }
               }
               result = true;
@@ -534,9 +580,9 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                       selected: tabs[i].selectedChild,
                       inferSelected: false,
                       depth: widget.depth+1,
-                      replaceInsteadOfPushing: widget.replaceInsteadOfPushing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPushing
-                          ? (selected==0 ? DrawerMenuFromZero.neverReplaceInsteadOfPushing : DrawerMenuFromZero.alwaysReplaceInsteadOfPushing)
-                          : widget.replaceInsteadOfPushing,
+                      pushType: widget.pushType == DrawerMenuFromZero.pushOnRoot
+                          ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
+                          : widget.pushType,
                       style: widget.style,
                       homeRoute: widget.homeRoute,
                       parentTabs: widget.parentTabs ?? _tabs,
@@ -578,9 +624,9 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 inferSelected: false,
                 paddingRight: 16,
                 // replaceInsteadOfPushing: widget.replaceInsteadOfPushing,
-                replaceInsteadOfPushing: widget.replaceInsteadOfPushing == DrawerMenuFromZero.exceptRootReplaceInsteadOfPushing
-                    ? (selected==0 ? DrawerMenuFromZero.neverReplaceInsteadOfPushing : DrawerMenuFromZero.alwaysReplaceInsteadOfPushing)
-                    : widget.replaceInsteadOfPushing,
+                pushType: widget.pushType == DrawerMenuFromZero.pushOnRoot
+                    ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
+                    : widget.pushType,
                 homeRoute: widget.homeRoute,
                 parentTabs: widget.parentTabs ?? _tabs,
                 style: widget.style,
