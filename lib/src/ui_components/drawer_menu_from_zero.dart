@@ -23,8 +23,8 @@ class ResponsiveDrawerMenuItem{
   final String? subtitle;
   final String? subtitleRight;
   final String? route;
-  final Map<String, dynamic>? params;
-  final Map<String, dynamic>? queryParams;
+  final Map<String, String>? params;
+  final Map<String, String>? queryParams;
   final Object? extra;
   final Widget? icon;
   final List<ResponsiveDrawerMenuItem>? children;
@@ -69,9 +69,6 @@ class ResponsiveDrawerMenuItem{
     bool forcePopup = false,
     double titleHorizontalOffset = 0,
   }) {
-    if (excludeRoutesThatDontWantToShow) {
-      routes = routes.where((e) => e.showInDrawerNavigation).toList();
-    }
     return routes.mapIndexed((i, e) {
       final children = fromGoRoutes(
         routes: e.routes,
@@ -135,8 +132,8 @@ class ResponsiveDrawerMenuItem{
     String? subtitle,
     String? subtitleRight,
     String? route,
-    Map<String, dynamic>? params,
-    Map<String, dynamic>? queryParams,
+    Map<String, String>? params,
+    Map<String, String>? queryParams,
     Object? extra,
     Widget? icon,
     List<ResponsiveDrawerMenuItem>? children,
@@ -182,7 +179,7 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
   static const int replace = 1;
   static const int push = 2;
   @deprecated
-  static const int pushOnRoot = 0;
+  static const int keepRootAlive = 0;
 
   static const int styleDrawerMenu = 0;
   static const int styleTree = 1;
@@ -263,7 +260,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
     _selected = widget.selected;
     if (widget.selected<0 && widget.inferSelected) {
 
-      if (widget.pushType == DrawerMenuFromZero.go) {
+      if (widget.useGoRouter) {
         final goRouter = GoRouter.of(context);
         String location = goRouter.location;
         int queryParamsIndex = location.indexOf('?');
@@ -279,7 +276,9 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             final e = tabs[i];
             if (e.route!=null) {
               if (!computedNames.containsKey(e)) {
-                computedNames[e] = goRouter.namedLocation(e.route!);
+                computedNames[e] = goRouter.namedLocation(e.route!,
+                  params: e.params ?? {},
+                );
               }
               final computedName = computedNames[e]!;
               if (e.children!=null) {
@@ -292,7 +291,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   return i;
                 }
               }
-              print("$location -- $computedName");
+              // print("$location -- $computedName");
               if (computedName == location) {
                 return i;
               }
@@ -449,7 +448,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 if (scaffold.hasDrawer && scaffold.isDrawerOpen)
                   navigator.pop();
               } catch(_, __){}
-              if (widget.pushType == DrawerMenuFromZero.pushOnRoot){
+              if (widget.pushType == DrawerMenuFromZero.keepRootAlive){
                 // ! this will break if the homeRoute is NOT in the stack
                 if (selected>=0 && tabs[selected].route==widget.homeRoute){
                   if (goRouter==null) {
@@ -467,8 +466,13 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   }
                 } else{
                   if (tabs[i].route==widget.homeRoute){
-                    if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
-                      navigator.popUntil(ModalRoute.withName(widget.homeRoute!));
+                    if (goRouter==null) {
+                      if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
+                        navigator.popUntil(ModalRoute.withName(widget.homeRoute!));
+                      }
+                    } else {
+                      // TODO 1 make this a maybe pop
+                      goRouter.popUntil((match) => match.route.name==widget.homeRoute);
                     }
                   } else{
                     if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
@@ -480,8 +484,10 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                         );
                       } else {
                         navigator.popUntil(ModalRoute.withName(widget.homeRoute!));
-                        goRouter.pushNamed(
+                        // TODO 3 can I make this a maybe pop
+                        goRouter.pushNamedAndRemoveUntil(
                           tabs[i].route!,
+                          (match) => match.route.name==widget.homeRoute,
                           params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
                           queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
                           extra: tabs[i].extra,
@@ -521,23 +527,29 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   };
                   addRoutes(widget.parentTabs ?? _tabs);
                   bool passed = false;
-                  final until = (Route<dynamic> route) {
-                    if (passed || route.isFirst) return true;
-                    if (routes.contains(route.settings.name)){
-                      passed = true;
-                    }
-                    return false;
-                  };
                   if (goRouter==null) {
                     navigator.pushNamedAndRemoveUntil(
                       tabs[i].route!,
-                      until,
+                      (Route<dynamic> route) {
+                        if (passed || route.isFirst) return true;
+                        if (routes.contains(route.settings.name)){
+                          passed = true;
+                        }
+                        return false;
+                      },
                       arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
                     );
                   } else {
-                    navigator.popUntil(until);
-                    goRouter.pushNamed(
+                    // TODO 3 can I make this a maybe pop
+                    goRouter.pushNamedAndRemoveUntil(
                       tabs[i].route!,
+                      (route) {
+                        if (passed) return true;
+                        if (routes.contains(route.route.name)){
+                          passed = true;
+                        }
+                        return false;
+                      },
                       params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
                       queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
                       extra: tabs[i].extra,
@@ -606,7 +618,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                         selected: tabs[i].selectedChild,
                         inferSelected: false,
                         depth: widget.depth+1,
-                        pushType: widget.pushType == DrawerMenuFromZero.pushOnRoot
+                        pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
                             ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
                             : widget.pushType,
                         style: widget.style,
@@ -670,8 +682,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 selected: tabs[i].selectedChild,
                 inferSelected: false,
                 paddingRight: 16,
-                // replaceInsteadOfPushing: widget.replaceInsteadOfPushing,
-                pushType: widget.pushType == DrawerMenuFromZero.pushOnRoot
+                pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
                     ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
                     : widget.pushType,
                 homeRoute: widget.homeRoute,

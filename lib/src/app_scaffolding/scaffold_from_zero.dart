@@ -83,7 +83,6 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
   final bool constraintBodyOnXLargeScreens;
   final bool centerTitle;
   final double drawerPaddingTop;
-  final bool animateDrawer;
   final bool addFooterDivisions;
   final bool applyHeroToDrawerTitle;
   final bool alwaysShowHamburgerButtonOnMobile;
@@ -120,7 +119,6 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
     this.centerTitle = false,
     this.drawerPaddingTop = 6,
     this.initialExpandedAction,
-    this.animateDrawer = true,
     this.titleSpacing = 8,
     this.addFooterDivisions = true,
     this.applyHeroToDrawerTitle = true,
@@ -661,13 +659,13 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                               );
                             } else{
                               result = AnimatedBuilder(
-                                animation: secondaryAnimation,// ?? kAlwaysDismissedAnimation,
+                                animation: secondaryAnimation,
                                 builder: (context, child) => GestureDetector(
                                   onDoubleTap: () => _toggleDrawer(context, changeNotifierNotListen),
                                   child: IconButton(
                                     icon: AnimatedIcon(
                                       progress: widget.alwaysShowHamburgerButtonOnMobile ? kAlwaysDismissedAnimation
-                                          : secondaryAnimation,// ?? kAlwaysDismissedAnimation,
+                                          : secondaryAnimation,
                                       icon: AnimatedIcons.menu_arrow,
                                       color: (Theme.of(context).appBarTheme.brightness ?? Theme.of(context).primaryColorBrightness)
                                           == Brightness.light ? Colors.black : Colors.white,
@@ -883,14 +881,12 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                       builder: (context, ref, child) {
                                         final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
                                         Widget result = _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)==widget.compactDrawerWidth);
-                                        if (widget.animateDrawer){
-                                          result = widget.drawerContentTransitionBuilder(
-                                            child: result,
-                                            animation: animation,
-                                            secondaryAnimation: secondaryAnimation,
-                                            scaffoldChangeNotifier: changeNotifierNotListen,
-                                          );
-                                        }
+                                        result = widget.drawerContentTransitionBuilder(
+                                          child: result,
+                                          animation: animation,
+                                          secondaryAnimation: secondaryAnimation,
+                                          scaffoldChangeNotifier: changeNotifierNotListen,
+                                        );
                                         return result;
                                       },
                                     ),

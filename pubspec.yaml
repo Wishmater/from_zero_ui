@@ -34,7 +34,6 @@ dependencies:
   animations: ^2.0.0
   extended_image: ^3.0.0
   google_fonts: ^2.0.0
-  wave: ^0.1.0
   sliver_tools: ^0.2.5
   flutter_sticky_header: ^0.6.0
   scroll_to_index: ^2.0.0

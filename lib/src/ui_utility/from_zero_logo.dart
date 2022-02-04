@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:wave/config.dart';
-import 'package:wave/wave.dart';
+// import 'package:wave/config.dart';
+// import 'package:wave/wave.dart';
 
 
 class FromZeroBanner extends StatelessWidget {
@@ -27,41 +27,41 @@ class FromZeroBanner extends StatelessWidget {
                 flex: 4,
                 child: Transform.rotate(
                   angle: pi,
-                  child: WaveWidget(
-                    config: CustomConfig(
-//            gradients: [
-//              [Colors.red, Color(0xEEF44336)],
-//              [Colors.red[800], Color(0x77E57373)],
-//              [Colors.orange, Color(0x66FF9800)],
-//              [Colors.yellow, Color(0x55FFEB3B)]
-//            ],
-//            gradientBegin: Alignment.bottomLeft,
-//            gradientEnd: Alignment.topRight,
-                      durations: [35000, 19440, 10800, 6000],
-                      heightPercentages: [0.20, 0.23, 0.25, 0.30],
-//            heightPercentages: [0.16, 0.17, 0.18, 0.20],
-//            blur: MaskFilter.blur(BlurStyle.solid, 10),
-//            colors: [
-//              Colors.white70,
-//              Colors.white54,
-//              Colors.white30,
-//              Colors.white24,
-//            ],
-                      colors: [
-                        Colors.black54,
-                        Colors.black45,
-                        Colors.black26,
-                        Colors.black12,
-                      ],
-                    ),
-                    waveAmplitude: 2,
-                    backgroundColor: Colors.blue.shade900,
-                    heightPercentange: 0.5,
-                    size: Size(
-                      double.infinity,
-                      double.infinity,
-                    ),
-                  ),
+//                   child: WaveWidget(
+//                     config: CustomConfig(
+// //            gradients: [
+// //              [Colors.red, Color(0xEEF44336)],
+// //              [Colors.red[800], Color(0x77E57373)],
+// //              [Colors.orange, Color(0x66FF9800)],
+// //              [Colors.yellow, Color(0x55FFEB3B)]
+// //            ],
+// //            gradientBegin: Alignment.bottomLeft,
+// //            gradientEnd: Alignment.topRight,
+//                       durations: [35000, 19440, 10800, 6000],
+//                       heightPercentages: [0.20, 0.23, 0.25, 0.30],
+// //            heightPercentages: [0.16, 0.17, 0.18, 0.20],
+// //            blur: MaskFilter.blur(BlurStyle.solid, 10),
+// //            colors: [
+// //              Colors.white70,
+// //              Colors.white54,
+// //              Colors.white30,
+// //              Colors.white24,
+// //            ],
+//                       colors: [
+//                         Colors.black54,
+//                         Colors.black45,
+//                         Colors.black26,
+//                         Colors.black12,
+//                       ],
+//                     ),
+//                     waveAmplitude: 2,
+//                     backgroundColor: Colors.blue.shade900,
+//                     heightPercentange: 0.5,
+//                     size: Size(
+//                       double.infinity,
+//                       double.infinity,
+//                     ),
+//                   ),
                 ),
               ),
               Expanded(child: Container(), flex: 1,),

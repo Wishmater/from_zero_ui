@@ -631,6 +631,7 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
       if (header is RenderConstrainedLayoutBuilder<
           BoxValueConstraints<SliverStickyHeaderState>, RenderBox>) {
         // TODO 2 the state won't be correctly updated if the pin is due to external scrollController
+        // TODO 2 the state won't be correctly if footer==true
         double headerScrollRatioClamped = headerScrollRatio.clamp(0.0, 1.0);
 
         SliverStickyHeaderState state =
@@ -646,40 +647,46 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
           );
         }
       }
-
-      externalStuckOffset = determineStuckOffsetFromExternalController();
+      if (sticky) {
+        if (footer) {
+          stickAddedOffset = -1.0 * (geometry!.paintExtent + stickOffset - constraints.remainingPaintExtent).clamp(0, stickOffset);
+        } else {
+          stickAddedOffset = (constraints.scrollOffset + constraints.overlap).clamp(0, stickOffset);
+        }
+      }
+      externalStuckOffset = sticky ? determineStuckOffsetFromExternalController() : 0;
       if (footer) {
         switch (axisDirection) {
           case AxisDirection.up:
-            headerParentData!.paintOffset = Offset(0.0, headerPosition + externalStuckOffset);
+            headerParentData!.paintOffset = Offset(0.0, headerPosition + externalStuckOffset + stickAddedOffset);
             break;
           case AxisDirection.down:
             headerParentData!.paintOffset = Offset(
-                0.0, geometry!.paintExtent - headerPosition - _headerExtent! + externalStuckOffset);
+                0.0, geometry!.paintExtent - headerPosition - _headerExtent! + externalStuckOffset + stickAddedOffset);
             break;
           case AxisDirection.left:
-            headerParentData!.paintOffset = Offset(headerPosition + externalStuckOffset, 0.0);
+            headerParentData!.paintOffset = Offset(headerPosition + externalStuckOffset + stickAddedOffset, 0.0);
             break;
           case AxisDirection.right:
             headerParentData!.paintOffset = Offset(
-                geometry!.paintExtent - headerPosition - _headerExtent! + externalStuckOffset, 0.0);
+                geometry!.paintExtent - headerPosition - _headerExtent! + externalStuckOffset + stickAddedOffset, 0.0);
             break;
         }
       } else {
         switch (axisDirection) {
           case AxisDirection.up:
             headerParentData!.paintOffset = Offset(
-                0.0, geometry!.paintExtent - headerPosition - _headerExtent! + externalStuckOffset);
+                0.0, geometry!.paintExtent - headerPosition - _headerExtent! + externalStuckOffset + stickAddedOffset);
             break;
           case AxisDirection.down:
-            headerParentData!.paintOffset = Offset(0.0, headerPosition + externalStuckOffset);
+            headerParentData!.paintOffset = Offset(0.0, headerPosition + externalStuckOffset + stickAddedOffset);
             break;
           case AxisDirection.left:
             headerParentData!.paintOffset = Offset(
-                geometry!.paintExtent - headerPosition - _headerExtent! + externalStuckOffset, 0.0);
+                geometry!.paintExtent - headerPosition - _headerExtent! + externalStuckOffset + stickAddedOffset, 0.0);
             break;
           case AxisDirection.right:
-            headerParentData!.paintOffset = Offset(headerPosition + externalStuckOffset, 0.0);
+            headerParentData!.paintOffset = Offset(headerPosition + externalStuckOffset + stickAddedOffset, 0.0);
             break;
         }
       }
@@ -688,6 +695,7 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
   double get childScrollExtent => child?.geometry?.scrollExtent ?? 0.0;
   double get fullScrollExtent => childScrollExtent + (headerLogicalExtent??0);
   double externalStuckOffset = 0;
+  double stickAddedOffset = 0;
   double determineStuckOffsetFromExternalController() {
     try {
       final scrollPosition = scrollController!.position;
@@ -708,7 +716,6 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
       if (footer) {
         stuckOffset = (-(offsetToReveal - scrollPosition.pixels + stickOffset))
             .clamp(-double.infinity, 0);
-        // TODO 2 implement stick offset in main sliver calculation
       } else {
         stuckOffset = (scrollPosition.pixels - offsetToReveal + stickOffset)
             .clamp(0.0, fullScrollExtent - (_headerExtent??0.0));
@@ -722,16 +729,16 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
   bool hitTestChildren(SliverHitTestResult result,
       {required double mainAxisPosition, required double crossAxisPosition}) {
     assert(geometry!.hitTestExtent > 0.0);
-    final overlap = - constraints.overlap - externalStuckOffset;
+    final overlap = - constraints.overlap - externalStuckOffset - stickAddedOffset;
     final onHeader = footer
-        ? mainAxisPosition + overlap >= (fullScrollExtent-_headerExtent!)
+        ? mainAxisPosition + overlap >= (geometry!.paintExtent-_headerExtent!)
         : mainAxisPosition + overlap <= _headerExtent!;
     if (header != null && onHeader) {
       return hitTestBoxChild(
         BoxHitTestResult.wrap(SliverHitTestResult.wrap(result)),
         header!,
         mainAxisPosition: footer
-            ? fullScrollExtent - (mainAxisPosition + overlap)
+            ? (mainAxisPosition + overlap) - (geometry!.paintExtent-_headerExtent!)
             : mainAxisPosition + overlap,
         crossAxisPosition: crossAxisPosition,
       ) ||

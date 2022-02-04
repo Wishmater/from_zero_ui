@@ -360,9 +360,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         );
       }
 
+      // TODO 2 fix fatal error in animated list, seems to be a problem with row id equality
     } else {
 
-      // TODO 2 fix fatal error in animated list, seems to be a problem with row id equality
       result = SliverImplicitlyAnimatedList<RowModel<T>?>(
         items: filtered.isEmpty ? [null] : filtered,
         areItemsTheSame: (a, b) => a==b,
@@ -412,8 +412,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
               header,
               AnimatedPositioned(
                 left: 0, right: 0, bottom: -2,
-                height: state.isPinned ? 2 : 1,
+                height: state.isPinned ? 2 : 0,
                 duration: Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
                 child: const CustomPaint(
                   painter: const SimpleShadowPainter(
                     direction: SimpleShadowPainter.down,
@@ -525,7 +526,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                 canRequestFocus: false,
                 child: IgnorePointer(
                   child: Container(
-                    decoration: _getDecoration(row, -1),
+                    decoration: _getDecoration(row, null),
                     child: Opacity(
                       opacity: 0,
                       child: e.iconBuilder(
@@ -569,11 +570,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         if (result==null && col?.flex==0){
           return SizedBox.shrink();
         }
-        if (!kIsWeb && Platform.isWindows){
+        if (false && !kIsWeb && Platform.isWindows){ // TODO 3 completely remove old hack to prevent horizontal tearing in windows
           result = Stack(
             clipBehavior: Clip.none,
             children: [
-              Positioned(
+              Positioned( // old hack to prevent horizontal tearing in windows
                 top: row==headerRowModel ? 0 : -1,
                 bottom: -1, // bottom: i==filtered.length-1 ? 0 : -1,
                 left: j==0 ? 0 : -1,
@@ -739,7 +740,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           );
         }
       }
-      if (row!=headerRowModel && !(row.rowAddonIsCoveredByGestureDetector ?? true)){
+      if (row!=headerRowModel && !(row.rowAddonIsCoveredByGestureDetector??false)){
         result = _buildRowGestureDetector(
           context: context,
           row: row as RowModel<T>,
@@ -813,7 +814,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           );
         }
       }
-      if (row!=headerRowModel && (row.rowAddonIsCoveredByGestureDetector ?? true)){
+      if (row!=headerRowModel && (row.rowAddonIsCoveredByGestureDetector??false)){
         result = _buildRowGestureDetector(
           context: context,
           row: row as RowModel<T>,
@@ -842,7 +843,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       result = FocusTraversalGroup(
         policy: NoEnsureVisibleWidgetTraversalPolicy(),
         child: Container(
-          decoration: _getDecoration(row, -1),
+          decoration: _getDecoration(row, null),
           child: result,
         ),
       );
@@ -859,10 +860,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       result = builder(context, null);
     }
     return result;
-    // return FrameSeparateWidget( // TODO 2 experiment with frameSeparateWidget, just waiting for 100ms or less before buiding should be enough to counteract scroll jank
-    //   placeHolder: Container(height: row.height, ),
-    //   child: result,
-    // );
 
   }
   Widget _buildRowGestureDetector({required BuildContext context, required RowModel<T> row, required Widget child}) {

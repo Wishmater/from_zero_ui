@@ -39,20 +39,17 @@ final mainRoutes = [
                 path: 'same',
                 name: 'scaffold_same',
                 builder: (context, state) => PageScaffoldSame(),
-                showInDrawerNavigation: false,
               ),
               GoRouteFromZero(
                 path: 'inner',
                 name: 'scaffold_inner',
                 builder: (context, state) => PageScaffoldInner(),
-                showInDrawerNavigation: false,
                 pageScaffoldDepth: 1,
               ),
               GoRouteFromZero(
                 path: 'other',
                 name: 'scaffold_other',
                 builder: (context, state) => PageScaffoldOther(),
-                showInDrawerNavigation: false,
                 pageScaffoldId: 'other',
               ),
             ],
@@ -130,7 +127,6 @@ final settingsRoutes = [
     title: 'Settings',
     icon: Icon(Icons.settings),
     builder: (context, state) => PageSettings(),
-    showInDrawerNavigation: false,
     pageScaffoldId: 'settings',
   ),
 ];

@@ -28,10 +28,13 @@ Bug with condition filters on table
 Problems with excel export
 	Excel breaks sometimes when copy/paste ????
 	Export breaks when exporting large amounts of data (embarques 3 years)
+	!!! test with new version
 
 WAITING bug with slivers tearing on windows, once it is solved, remove patches from Table
 
-		
+Fix goRouter.go() ignoring willPop commands, this is MAJOR ISSUE
+	go() methods should check the willPop methods of all routes that will be removed
+	also make the pushNamedAndMaybeRemoveUntil() method worl as expected
 
 
 
@@ -76,6 +79,7 @@ Appbar on top of fromZeroUI should be above header (appbar will span full window
 	in mobile mode, headerTitle still needs to be painted on the header itself
 	this will fix some visual bugs and some bugs with new windowBar
 
+expanded state for actions in mobile view is broken
 
 
 

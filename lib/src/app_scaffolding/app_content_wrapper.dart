@@ -115,6 +115,7 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
                           appear: !value,
                           child: WindowBar(
                             backgroundColor: Theme.of(context).cardColor,
+                            iconTheme: Theme.of(context).iconTheme,
                             onMaximizeOrRestore: (context) {
                               // hack so the windowBar doesn't get stuck after maximize
                               context.findAncestorStateOfType<_AppearOnMouseOverState>()!.pressed = false;
@@ -207,6 +208,7 @@ class WindowBar extends StatelessWidget {
 
   final double? height;
   final Color? backgroundColor;
+  final IconThemeData? iconTheme;
   final bool? Function(BuildContext context)? onMinimize;
   final bool? Function(BuildContext context)? onMaximizeOrRestore;
   final bool? Function(BuildContext context)? onClose;
@@ -218,10 +220,13 @@ class WindowBar extends StatelessWidget {
     this.onMinimize,
     this.onMaximizeOrRestore,
     this.onClose,
+    this.iconTheme,
   })  : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final iconTheme = this.iconTheme ?? theme.appBarTheme.iconTheme ?? theme.primaryIconTheme;
     return Container(
       height: height ?? (appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight),
       color: backgroundColor,
@@ -237,11 +242,11 @@ class WindowBar extends StatelessWidget {
                 }
               },
               colors: WindowButtonColors(
-                mouseOver: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.1),
-                mouseDown: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.2),
-                iconNormal: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
-                iconMouseOver: Theme.of(context).textTheme.bodyText1!.color!,
-                iconMouseDown: Theme.of(context).textTheme.bodyText1!.color!,
+                mouseOver: iconTheme.color!.withOpacity(0.1),
+                mouseDown: iconTheme.color!.withOpacity(0.2),
+                iconNormal: iconTheme.color!.withOpacity(0.8),
+                iconMouseOver: iconTheme.color!,
+                iconMouseDown: iconTheme.color!,
               ),
             ),
             WindowButton(
@@ -256,11 +261,11 @@ class WindowBar extends StatelessWidget {
                 }
               },
               colors: WindowButtonColors(
-                mouseOver: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.1),
-                mouseDown: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.2),
-                iconNormal: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
-                iconMouseOver: Theme.of(context).textTheme.bodyText1!.color!,
-                iconMouseDown: Theme.of(context).textTheme.bodyText1!.color!,
+                mouseOver: iconTheme.color!.withOpacity(0.1),
+                mouseDown: iconTheme.color!.withOpacity(0.2),
+                iconNormal: iconTheme.color!.withOpacity(0.8),
+                iconMouseOver: iconTheme.color!,
+                iconMouseDown: iconTheme.color!,
               ),
             ),
             CloseWindowButton(
@@ -273,7 +278,7 @@ class WindowBar extends StatelessWidget {
               colors: WindowButtonColors(
                 mouseOver: Color(0xFFD32F2F),
                 mouseDown: Color(0xFFB71C1C),
-                iconNormal: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+                iconNormal: iconTheme.color!.withOpacity(0.8),
                 iconMouseOver: Colors.white,
                 iconMouseDown: Colors.white,
               ),

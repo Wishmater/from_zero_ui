@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -5,10 +7,93 @@ import 'package:go_router/go_router.dart';
 import 'package:go_router/src/go_router_delegate.dart';
 import 'package:go_router/src/typedefs.dart';
 import 'package:go_router/src/inherited_go_router.dart';
+import 'package:go_router/src/go_route_match.dart';
 
 
 
 bool skipFirstRenderWhenPushing = true;
+
+
+extension Replace on GoRouter {
+
+  void pushReplacementNamed(String name, {
+    Map<String, String> params = const {},
+    Map<String, String> queryParams = const {},
+    Object? extra,
+  }) {
+    routerDelegate.matches.removeLast();
+    pushNamed(name,
+      params: params,
+      queryParams: queryParams,
+      extra: extra,
+    );
+  }
+
+  void pushNamedAndRemoveUntil(String name,
+      bool Function(GoRouteMatch match) stop, {
+    Map<String, String> params = const {},
+    Map<String, String> queryParams = const {},
+    Object? extra,
+  }) {
+    popUntil(stop);
+    pushNamed(name,
+      params: params,
+      queryParams: queryParams,
+      extra: extra,
+    );
+  }
+
+  /// This causes routes to first be popped, and then new one pushed, which might bring some visual issues
+  void pushNamedAndMaybeRemoveUntil(
+      BuildContext context,
+      String name,
+      bool Function(GoRouteMatch match) stop, {
+        Map<String, String> params = const {},
+        Map<String, String> queryParams = const {},
+        Object? extra,
+      }) {
+    maybePopUntil(context, stop);
+    pushNamed(name,
+      params: params,
+      queryParams: queryParams,
+      extra: extra,
+    );
+  }
+
+  void popUntil(bool Function(GoRouteMatch match) stop) {
+    bool remove = true;
+    do {
+      final last = routerDelegate.matches.last;
+      remove = routerDelegate.matches.length>1 && !stop(last);
+      if (remove) {
+        routerDelegate.matches.removeLast();
+      }
+    } while (remove);
+    _safeNotifyListeners();
+  }
+
+  /// returns true if successfully popped until wanted
+  Future<bool> maybePopUntil(context, bool Function(GoRouteMatch match) stop) async {
+    bool remove = true;
+    bool blocked = false;
+    do {
+      final last = routerDelegate.matches.last;
+      remove = routerDelegate.matches.length>1 && !stop(last);
+      if (remove) {
+        blocked = !(await Navigator.of(context).maybePop());
+      }
+    } while (remove && !blocked);
+    _safeNotifyListeners();
+    return !blocked;
+  }
+
+  void _safeNotifyListeners() {
+    WidgetsBinding.instance == null
+        ? routerDelegate.notifyListeners()
+        : scheduleMicrotask(routerDelegate.notifyListeners);
+  }
+
+}
 
 
 class GoRouteFromZero extends GoRoute {
@@ -23,8 +108,6 @@ class GoRouteFromZero extends GoRoute {
   String pageScaffoldId;
   /// Scaffold will perform a SharedZAxisTransition if the depth is different (and not -1)
   int pageScaffoldDepth;
-  /// If false, won't be shown when building DrawerMenu from routes, default true
-  bool showInDrawerNavigation;
   /// If false will draw children in DrawerMenu in the same depth as this route, instead of the default expansion tile
   bool childrenAsDropdownInDrawerNavigation;
 
@@ -39,7 +122,6 @@ class GoRouteFromZero extends GoRoute {
     List<GoRouteFromZero> routes = const [],
     this.pageScaffoldId = 'main',
     this.pageScaffoldDepth = 0,
-    this.showInDrawerNavigation = true,
     this.childrenAsDropdownInDrawerNavigation = true,
   }) : super(
     path: path,
@@ -65,7 +147,6 @@ class GoRouteFromZero extends GoRoute {
     List<GoRouteFromZero>? routes,
     String? pageScaffoldId,
     int? pageScaffoldDepth,
-    bool? showInDrawerNavigation,
     bool? childrenAsDropdownInDrawerNavigation,
   }) {
     return GoRouteFromZero(
@@ -79,7 +160,6 @@ class GoRouteFromZero extends GoRoute {
       routes: routes ?? this.routes,
       pageScaffoldId: pageScaffoldId ?? this.pageScaffoldId,
       pageScaffoldDepth: pageScaffoldDepth ?? this.pageScaffoldDepth,
-      showInDrawerNavigation: showInDrawerNavigation ?? this.showInDrawerNavigation,
       childrenAsDropdownInDrawerNavigation: childrenAsDropdownInDrawerNavigation ?? this.childrenAsDropdownInDrawerNavigation,
     );
   }
@@ -120,8 +200,7 @@ class GoRouteFromZero extends GoRoute {
     Map<String, String> queryParams = const {},
     Object? extra,
   }) {
-    GoRouter.of(context).pop(context);
-    push(context,
+    GoRouter.of(context).pushReplacementNamed(name!,
       params: params,
       queryParams: queryParams,
       extra: extra,
@@ -222,7 +301,6 @@ class GoRouteGroupFromZero extends GoRouteFromZero {
     subtitle: subtitle,
     icon: icon ?? const SizedBox.shrink(),
     routes: routes,
-    showInDrawerNavigation: showInDrawerNavigation,
   );
 
 }
