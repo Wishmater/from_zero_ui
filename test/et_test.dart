@@ -476,7 +476,7 @@ DAO getEtDao() {
                 hiddenGetter: (field, dao) => (dao.props['tipoDocumento'] as ComboField).value==null,
                 type: StringFieldType.long,
               ),
-              'contenedores': ListField(
+              'contenedores': ListField<DAO>(
                 uiNameGetter: (field, dao) => 'Contenedores',
                 objects: [],
                 tableCellsEditable: true,
@@ -542,7 +542,7 @@ DAO getEtDao() {
                           digitsAfterComma: 2,
                           validatorsGetter: (field, dao) => [fieldValidatorRequired, fieldValidatorNumberNotZero, fieldValidatorNumberNotNegative],
                         ),
-                        'sellos': ListField(
+                        'sellos': ListField<DAO>(
                           uiNameGetter: (field, dao) => 'Sellos',
                           tableColumnWidth: 80,
                           objects: [],
@@ -783,7 +783,7 @@ DAO getEtDao() {
           ),
           FieldGroup(
             fields: {
-              'notifies': ListField(
+              'notifies': ListField<DAO>(
                 uiNameGetter: (field, dao) => 'Notify',
                 objects: [],
                 tableCellsEditable: true,

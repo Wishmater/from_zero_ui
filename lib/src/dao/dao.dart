@@ -13,18 +13,18 @@ import 'package:preload_page_view/preload_page_view.dart';
 import 'field_list.dart';
 
 
-typedef Future<ModelType?> OnSaveCallback<ModelType>(BuildContext context, DAO e);
-typedef Widget DAOWidgetBuilder(BuildContext context, DAO dao);
-typedef T DAOValueGetter<T>(DAO dao);
+typedef Future<ModelType?> OnSaveCallback<ModelType>(BuildContext context, DAO<ModelType> e);
+typedef Widget DAOWidgetBuilder<ModelType>(BuildContext context, DAO<ModelType> dao);
+typedef T DAOValueGetter<T, ModelType>(DAO<ModelType> dao);
 
 class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
   dynamic id;
-  DAOValueGetter<String> classUiNameGetter;
+  DAOValueGetter<String, ModelType> classUiNameGetter;
   String get classUiName => classUiNameGetter(this);
-  DAOValueGetter<String> classUiNamePluralGetter;
+  DAOValueGetter<String, ModelType> classUiNamePluralGetter;
   String get classUiNamePlural => classUiNamePluralGetter(this);
-  DAOValueGetter<String> uiNameGetter;
+  DAOValueGetter<String, ModelType> uiNameGetter;
   String get uiName => uiNameGetter(this);
   /// props shouldn't be added or removed manually, only changes at construction and on load()
   List<FieldGroup> fieldGroups;
@@ -35,9 +35,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     };
   }
   OnSaveCallback<ModelType>? onSave;
-  OnSaveCallback? onDelete;
-  List<ValueChanged<DAO>> _selfUpdateListeners = [];
-  DAOWidgetBuilder? viewWidgetBuilder;
+  OnSaveCallback<ModelType>? onDelete;
+  List<ValueChanged<DAO<ModelType>>> _selfUpdateListeners = [];
+  DAOWidgetBuilder<ModelType>? viewWidgetBuilder;
   bool useIntrinsicHeightForViewDialog;
   double viewDialogWidth;
   double formDialogWidth;
@@ -48,7 +48,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
   DAO({
     required this.classUiNameGetter,
-    DAOValueGetter<String>? classUiNamePluralGetter,
+    DAOValueGetter<String, ModelType>? classUiNamePluralGetter,
     required this.uiNameGetter,
     this.id,
     this.fieldGroups = const [],
@@ -82,15 +82,15 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         }
 
   /// @mustOverride
-  DAO copyWith({
-    DAOValueGetter<String>? classUiNameGetter,
-    DAOValueGetter<String>? classUiNamePluralGetter,
-    DAOValueGetter<String>? uiNameGetter,
+  DAO<ModelType> copyWith({
+    DAOValueGetter<String, ModelType>? classUiNameGetter,
+    DAOValueGetter<String, ModelType>? classUiNamePluralGetter,
+    DAOValueGetter<String, ModelType>? uiNameGetter,
     dynamic id,
     List<FieldGroup>? fieldGroups,
-    OnSaveCallback? onSave,
-    OnSaveCallback? onDelete,
-    DAOWidgetBuilder? viewWidgetBuilder,
+    OnSaveCallback<ModelType>? onSave,
+    OnSaveCallback<ModelType>? onDelete,
+    DAOWidgetBuilder<ModelType>? viewWidgetBuilder,
     bool? useIntrinsicHeightForViewDialog,
     double? viewDialogWidth,
     double? formDialogWidth,
@@ -101,7 +101,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     List<List<Field>>? redoRecord,
     DAO? parentDAO,
   }) {
-    final result = DAO(
+    final result = DAO<ModelType>(
       id: id??this.id,
       classUiNameGetter: classUiNameGetter??this.classUiNameGetter,
       fieldGroups: fieldGroups??this.fieldGroups.map((e) => e.copyWith()).toList(),

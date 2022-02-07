@@ -16,11 +16,11 @@ typedef List<RowAction<T>> RowActionsBuilder<T>(BuildContext context);
 
 
 
-class ListField extends Field<ComparableList<DAO>> {
+class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
-  DAO objectTemplate;
+  T objectTemplate;
   TableController tableController;
-  Future<List<DAO>> Function(BuildContext context)? availableObjectsPoolGetter;
+  Future<List<T>> Function(BuildContext context)? availableObjectsPoolGetter;
   bool allowDuplicateObjectsFromAvailablePool;
   bool showObjectsFromAvailablePoolAsTable;
   bool allowAddNew;
@@ -41,7 +41,7 @@ class ListField extends Field<ComparableList<DAO>> {
   bool skipDeleteConfirmation;
   bool showTableHeaders;
   bool showDefaultSnackBars;
-  RowActionsBuilder<DAO>? extraRowActionsBuilder; //TODO 3 also allow global action builders
+  RowActionsBuilder<T>? extraRowActionsBuilder; //TODO 3 also allow global action builders
   bool showEditDialogOnAdd;
   bool showAddButtonAtEndOfTable;
   Widget? tableErrorWidget;
@@ -52,17 +52,17 @@ class ListField extends Field<ComparableList<DAO>> {
   bool expandHorizontally;
   List<ValidationError> listValidationErrors = [];
 
-  List<DAO> get objects => value!.list;
-  List<DAO> get dbObjects => dbValue!.list;
+  List<T> get objects => value!.list;
+  List<T> get dbObjects => dbValue!.list;
   @override
-  set value(ComparableList<DAO>? value) {
+  set value(ComparableList<T>? value) {
     assert(value!=null, 'ListField is non-nullable by design.');
     super.value = value;
     tableController.reInit();
   }
 
-  ValueNotifier<Map<DAO, bool>> selectedObjects = ValueNotifier({});
-  ValueNotifier<List<DAO>?> filtered = ValueNotifier(null);
+  ValueNotifier<Map<T, bool>> selectedObjects = ValueNotifier({});
+  ValueNotifier<List<T>?> filtered = ValueNotifier(null);
 
   static String defaultToString(ListField field) {
     return field.objects.length>5
@@ -89,8 +89,8 @@ class ListField extends Field<ComparableList<DAO>> {
   ListField({
     required FieldValueGetter<String, Field> uiNameGetter,
     required this.objectTemplate,
-    required List<DAO> objects,
-    List<DAO>? dbObjects,
+    required List<T> objects,
+    List<T>? dbObjects,
     this.availableObjectsPoolGetter,
     this.allowDuplicateObjectsFromAvailablePool = false,
     this.showObjectsFromAvailablePoolAsTable = false,
@@ -128,16 +128,16 @@ class ListField extends Field<ComparableList<DAO>> {
     FieldValueGetter<bool, Field>? hiddenInFormGetter,
     this.initialSortedColumn,
     this.onRowTap,
-    FieldValueGetter<List<FieldValidator<ComparableList<DAO>>>, Field>? validatorsGetter,
+    FieldValueGetter<List<FieldValidator<ComparableList<T>>>, Field>? validatorsGetter,
     bool validateOnlyOnConfirm = false,
     this.tableSortable,
     this.tableFilterable,
     FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
-    List<ComparableList<DAO>?>? undoValues,
-    List<ComparableList<DAO>?>? redoValues,
+    List<ComparableList<T>?>? undoValues,
+    List<ComparableList<T>?>? redoValues,
     GlobalKey? fieldGlobalKey,
     bool invalidateNonEmptyValuesIfHiddenInForm = true,
-    ComparableList<DAO>? defaultValue,
+    ComparableList<T>? defaultValue,
     this.expandHorizontally = true,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
@@ -174,7 +174,7 @@ class ListField extends Field<ComparableList<DAO>> {
           redoValues: redoValues,
           fieldGlobalKey: fieldGlobalKey ?? GlobalKey(),
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
-          defaultValue: defaultValue ?? ComparableList<DAO>(),
+          defaultValue: defaultValue ?? ComparableList<T>(),
           backgroundColor: backgroundColor,
           actions: actions,
         ) {
@@ -232,20 +232,20 @@ class ListField extends Field<ComparableList<DAO>> {
   }
 
   @override
-  ListField copyWith({
+  ListField<T> copyWith({
     FieldValueGetter<String, Field>? uiNameGetter,
-    ComparableList<DAO>? value,
-    ComparableList<DAO>? dbValue,
+    ComparableList<T>? value,
+    ComparableList<T>? dbValue,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
     FieldValueGetter<bool, Field>? clearableGetter,
     double? maxWidth,
     double? minWidth,
     double? flex,
-    DAO? objectTemplate,
-    Future<List<DAO>>? futureObjects,
-    List<DAO>? objects,
-    List<DAO>? dbObjects,
+    T? objectTemplate,
+    Future<List<T>>? futureObjects,
+    List<T>? objects,
+    List<T>? dbObjects,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -258,13 +258,13 @@ class ListField extends Field<ComparableList<DAO>> {
     Map<double, ActionState>? actionDeleteBreakpoints,
     bool? skipDeleteConfirmation,
     bool? showTableHeaders,
-    Future<List<DAO>> Function(BuildContext contex)? availableObjectsPoolGetter,
+    Future<List<T>> Function(BuildContext contex)? availableObjectsPoolGetter,
     bool? allowDuplicateObjectsFromAvailablePool,
     bool? showObjectsFromAvailablePoolAsTable,
     bool? allowAddNew,
     bool? asPopup,
     String Function(ListField field)? toStringGetter,
-    RowActionsBuilder<DAO>? extraRowActionBuilders,
+    RowActionsBuilder<T>? extraRowActionBuilders,
     int? initialSortColumn,
     bool? tableCellsEditable,
     bool? allowMultipleSelection,
@@ -273,29 +273,29 @@ class ListField extends Field<ComparableList<DAO>> {
     bool? showEditDialogOnAdd,
     Widget? tableErrorWidget,
     bool? showDefaultSnackBars,
-    FieldValueGetter<List<FieldValidator<ComparableList<DAO>>>, Field>? validatorsGetter,
+    FieldValueGetter<List<FieldValidator<ComparableList<T>>>, Field>? validatorsGetter,
     bool? validateOnlyOnConfirm,
     TableController? tableController,
     bool? tableSortable,
     bool? tableFilterable,
     FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
-    List<ComparableList<DAO>?>? undoValues,
-    List<ComparableList<DAO>?>? redoValues,
+    List<ComparableList<T>?>? undoValues,
+    List<ComparableList<T>?>? redoValues,
     bool? invalidateNonEmptyValuesIfHiddenInForm,
-    ComparableList<DAO>? defaultValue,
+    ComparableList<T>? defaultValue,
     bool? expandHorizontally,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
   }) {
-    return ListField(
+    return ListField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
       minWidth: minWidth??this.minWidth,
       flex: flex??this.flex,
       objectTemplate: objectTemplate??this.objectTemplate,
-      objects: objects??this.objects.map((e) => e.copyWith()).toList(),
-      dbObjects: dbObjects??objects??this.dbObjects.map((e) => e.copyWith()).toList(),
+      objects: objects??this.objects.map((e) => e.copyWith() as T).toList(),
+      dbObjects: dbObjects??objects??this.dbObjects.map((e) => e.copyWith() as T).toList(),
       hintGetter: hintGetter??this.hintGetter,
       tooltipGetter: tooltipGetter??this.tooltipGetter,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
@@ -346,8 +346,8 @@ class ListField extends Field<ComparableList<DAO>> {
     });
   }
 
-  void addRow (DAO element, [int? insertIndex]) => addRows([element], insertIndex);
-  void addRows (List<DAO> elements, [int? insertIndex]) {
+  void addRow (T element, [int? insertIndex]) => addRows([element], insertIndex);
+  void addRows (List<T> elements, [int? insertIndex]) {
     for (final e in elements) {
       e.addListener(notifyListeners);
       e.parentDAO = dao;
@@ -365,24 +365,24 @@ class ListField extends Field<ComparableList<DAO>> {
     focusObject(elements.first);
   }
 
-  void duplicateRow(DAO element) => duplicateRows([element]);
-  void duplicateRows(List<DAO> elements) {
+  void duplicateRow(T element) => duplicateRows([element]);
+  void duplicateRows(List<T> elements) {
     final newValue = value!.copyWith();
     elements.forEach((e) {
       e.parentDAO = dao;
       int index = newValue.indexOf(e);
       if (index<0) {
-        newValue.add(e.copyWith());
+        newValue.add(e.copyWith() as T);
       } else {
-        newValue.insert(index+1, e.copyWith());
+        newValue.insert(index+1, e.copyWith() as T);
       }
     });
     value = newValue;
     focusObject(elements.first);
   }
 
-  Future<bool> removeRow(DAO element) => removeRows([element]);
-  Future<bool> removeRows(List<DAO> elements) async {
+  Future<bool> removeRow(T element) => removeRows([element]);
+  Future<bool> removeRows(List<T> elements) async {
     bool result = false;
     final newValue = value!.copyWith();
     elements.forEach((e) {
@@ -395,7 +395,7 @@ class ListField extends Field<ComparableList<DAO>> {
   }
 
 
-  void focusObject(DAO object) {
+  void focusObject(T object) {
     WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
       if (tableCellsEditable) {
         object.props.values.firstOrNullWhere((e) => !e.hiddenInForm)?.focusNode.requestFocus();
@@ -406,19 +406,19 @@ class ListField extends Field<ComparableList<DAO>> {
   }
 
   void maybeAddRow(context, [int? insertIndex]) async { // TODO 3 implement disabled logic in ListField (color + tooltip + mouseRegion)
-    DAO emptyDAO = objectTemplate.copyWith();
+    T emptyDAO = objectTemplate.copyWith() as T;
     if (availableObjectsPoolGetter!=null) {
       var availableObjects = availableObjectsPoolGetter!(context);
       if (!allowDuplicateObjectsFromAvailablePool) {
         availableObjects = availableObjects.then((v) => v.where((e) => !objects.contains(e)).toList());
       }
-      DAO? selected;
+      T? selected;
       if (showObjectsFromAvailablePoolAsTable) {
         final previousOnSave = emptyDAO.onSave;
         if (previousOnSave!=null) {
           final newOnSave;
           newOnSave = (context, e) async {
-            DAO? newDAO = await previousOnSave(context, e);
+            T? newDAO = await previousOnSave(context, e);
             if (newDAO!=null) {
               WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
                 Navigator.of(context).pop(newDAO);
@@ -428,7 +428,7 @@ class ListField extends Field<ComparableList<DAO>> {
           };
           emptyDAO = emptyDAO.copyWith(
             onSave: newOnSave,
-          );
+          ) as T;
         }
         Widget content = AnimatedBuilder(
           animation:  this,
@@ -445,7 +445,7 @@ class ListField extends Field<ComparableList<DAO>> {
                   ),
                 ),
                 Expanded(
-                  child: FutureBuilderFromZero<List<DAO>>(
+                  child: FutureBuilderFromZero<List<T>>(
                     future: availableObjects,
                     successBuilder: (context, data) {
                       return ScrollbarFromZero(
@@ -535,7 +535,7 @@ class ListField extends Field<ComparableList<DAO>> {
           builder: (context) {
             return Card(
               clipBehavior: Clip.hardEdge,
-              child: ComboFromZeroPopup<DAO>(
+              child: ComboFromZeroPopup<T>(
                 possibleValues: objects,
                 onSelected: (value) {
                   selected = value;
@@ -588,7 +588,7 @@ class ListField extends Field<ComparableList<DAO>> {
     }
   }
 
-  Future<bool> maybeDelete(BuildContext context, List<DAO> elements,) async {
+  Future<bool> maybeDelete(BuildContext context, List<T> elements,) async {
     if (elements.isEmpty) return false;
     bool? delete = skipDeleteConfirmation || (await showDialog(
       context: context,
@@ -653,10 +653,10 @@ class ListField extends Field<ComparableList<DAO>> {
     return false;
   }
 
-  static void maybeEditMultiple(BuildContext context, List<DAO> elements) async {
+  static void maybeEditMultiple<T extends DAO>(BuildContext context, List<T> elements) async {
     // TODO 3 test this well, rework it visually to be like maybeEdit
 
-    final DAO dao = elements.first.copyWith();
+    final T dao = elements.first.copyWith() as T;
     // change hints and clear all properties
     dao.beginUndoTransaction();
     dao.props.forEach((key, value) {
@@ -1039,7 +1039,7 @@ class ListField extends Field<ComparableList<DAO>> {
   }
 
   late final errorWidgetFocusNode = FocusNode();
-  late Map<DAO, RowModel<DAO>> builtRows;
+  late Map<T, RowModel<T>> builtRows;
   List<Widget> buildFullTableWidgets(BuildContext context, {
     bool addCard=true,
     bool asSliver = true,
@@ -1136,7 +1136,7 @@ class ListField extends Field<ComparableList<DAO>> {
               // TODO 2 performance opportunity: if asSliver, should return table as sliver, without ever wrapping in customScrollView
               shrinkWrap: !expandToFillContainer,
               slivers: [
-                TableFromZero<DAO>(
+                TableFromZero<T>(
                   // key: ValueKey(objects.length),
                   scrollController: mainScrollController,
                   // maxWidth: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
@@ -1181,7 +1181,7 @@ class ListField extends Field<ComparableList<DAO>> {
                     if (extraRowActions.isNotEmpty)
                       RowAction.divider(),
                     if ((allowAddNew||availableObjectsPoolGetter!=null))
-                      RowAction<DAO>(
+                      RowAction<T>(
                         title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
                         icon: Icon(Icons.add),
                         breakpoints: {0: ActionState.popup,},
@@ -1191,7 +1191,7 @@ class ListField extends Field<ComparableList<DAO>> {
                       ),
                     if ((allowAddNew||availableObjectsPoolGetter!=null))
                       RowAction.divider(),
-                    RowAction<DAO>(
+                    RowAction<T>(
                       icon: Icon(Icons.remove_red_eye),
                       title: FromZeroLocalizations.of(context).translate('view'),
                       breakpoints: actionViewBreakpoints,
@@ -1199,7 +1199,7 @@ class ListField extends Field<ComparableList<DAO>> {
                         row.id.pushViewDialog(context);
                       },
                     ),
-                    RowAction<DAO>(
+                    RowAction<T>(
                       icon: Icon(Icons.edit_outlined),
                       title: FromZeroLocalizations.of(context).translate('edit'),
                       breakpoints: actionEditBreakpoints,
@@ -1210,7 +1210,7 @@ class ListField extends Field<ComparableList<DAO>> {
                         }
                       },
                     ),
-                    RowAction<DAO>(
+                    RowAction<T>(
                       icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
                       title: FromZeroLocalizations.of(context).translate('duplicate'),
                       breakpoints: actionDuplicateBreakpoints,
@@ -1218,7 +1218,7 @@ class ListField extends Field<ComparableList<DAO>> {
                         duplicateRows([row.id]);
                       },
                     ),
-                    RowAction<DAO>(
+                    RowAction<T>(
                       icon: Icon(Icons.delete_forever_outlined),
                       title: FromZeroLocalizations.of(context).translate('delete'),
                       breakpoints: actionDeleteBreakpoints,
@@ -1421,7 +1421,7 @@ class ListField extends Field<ComparableList<DAO>> {
     collapsed ??= this.collapsed;
     return ValueListenableBuilder(
       valueListenable: filtered,
-      builder: (context, List<DAO>? filtered, child) {
+      builder: (context, List<T>? filtered, child) {
         return Theme(
           data: Theme.of(context).copyWith(
             appBarTheme: AppBarTheme(
@@ -1461,7 +1461,7 @@ class ListField extends Field<ComparableList<DAO>> {
                           style: Theme.of(context).textTheme.headline6,
                         ),
                         if (filtered!=null)
-                          ValueListenableBuilder<Map<DAO, bool>>(
+                          ValueListenableBuilder<Map<T, bool>>(
                             valueListenable: selectedObjects,
                             builder: (context, selectedObjects, child) {
                               int count = filtered.where((element) => selectedObjects[element]==true).length;
@@ -1511,7 +1511,7 @@ class ListField extends Field<ComparableList<DAO>> {
 
   @override
   List<ActionFromZero> buildDefaultActions(BuildContext context) {
-    List<DAO> currentSelected = filtered.value?.where((element) => selectedObjects.value[element]==true).toList() ?? [];
+    List<T> currentSelected = filtered.value?.where((element) => selectedObjects.value[element]==true).toList() ?? [];
     return [
       if (!collapsed && currentSelected.length>0)
         ActionFromZero(
