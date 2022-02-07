@@ -49,7 +49,7 @@ class _PageHomeState extends State<PageHome> {
             ),
             'test_combo': ComboField(
               uiNameGetter: (field, dao) => 'Combo Test',
-              possibleValuesGetter: (field, dao) => List.generate(40, (index) {
+              possibleValuesGetter: (context, field, dao) => List.generate(40, (index) {
                 return DAO(
                   uiNameGetter: (dao) => 'Item $index',
                   classUiNameGetter: (dao) => 'Item',

@@ -14,8 +14,9 @@ class ComboFromZero<T> extends StatefulWidget {
 
   final T? value;
   final List<T>? possibleValues;
-  final AsyncValue<List<T>>? asyncPossibleValues;
-  final Future<List<T>>? futurePossibleValues;
+  final AsyncValue<List<T>>? possibleValuesAsync;
+  final Future<List<T>>? possibleValuesFuture;
+  final ApiProvider<List<T>>? possibleValuesProvider;
   final VoidCallback? onCanceled;
   final OnPopupItemSelected<T>? onSelected;
   final bool showSearchBox;
@@ -36,8 +37,9 @@ class ComboFromZero<T> extends StatefulWidget {
   ComboFromZero({
     this.value,
     this.possibleValues,
-    this.asyncPossibleValues,
-    this.futurePossibleValues,
+    this.possibleValuesAsync,
+    this.possibleValuesFuture,
+    this.possibleValuesProvider,
     this.onSelected,
     this.onCanceled,
     this.showSearchBox=true,
@@ -54,7 +56,9 @@ class ComboFromZero<T> extends StatefulWidget {
     this.focusNode,
     this.popupWidgetBuilder,
     this.buttonPadding,
-  }) :  assert(possibleValues!=null || futurePossibleValues!=null);
+  }) :  assert(possibleValues!=null
+              || possibleValuesFuture!=null
+              || possibleValuesProvider!=null);
 
   @override
   _ComboFromZeroState<T> createState() => _ComboFromZeroState<T>();
@@ -102,167 +106,150 @@ class ComboFromZero<T> extends StatefulWidget {
 
 class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
 
-  List<T>? possibleValues;
   GlobalKey buttonKey = GlobalKey();
-
-  @override
-  void initState() {
-    super.initState();
-    init();
-  }
-  @override
-  void didUpdateWidget(covariant ComboFromZero<T> oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.possibleValues != widget.possibleValues) {
-      init();
-    } else if (oldWidget.asyncPossibleValues != widget.asyncPossibleValues) {
-      init();
-    } else if (oldWidget.futurePossibleValues!=widget.futurePossibleValues) {
-      init();
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        setState(() {
-          possibleValues = (widget.possibleValues==null ? null : List.from(widget.possibleValues!));
-        });
-      });
-    }
-  }
-  void init() async {
-    possibleValues = (widget.possibleValues==null ? null : List.from(widget.possibleValues!)) ?? possibleValues;
-    // if (widget.sort) sort();
-    if (widget.asyncPossibleValues!=null) {
-      possibleValues = widget.asyncPossibleValues!.mapOrNull(
-        data: (data) => List.from(data.value),
-      ) ?? possibleValues;
-    }
-    if (widget.futurePossibleValues!=null) {
-      possibleValues = List.from(await widget.futurePossibleValues!);
-      // if (widget.sort) sort();
-      setState(() {});
-    }
-  }
-  // void sort() { // sorting is now delegated to the tableFromZero in the popup
-  //   if (possibleValues!=null) {
-  //     possibleValues!.sort((a, b) {
-  //       return a.toString().compareTo(b.toString());
-  //     });
-  //   }
-  // }
 
   late final buttonFocusNode = widget.focusNode ?? FocusNode();
   @override
   Widget build(BuildContext context) {
     Widget result;
-    if (possibleValues==null) {
-      result = SizedBox(
-        width: 64,
-        height: 38,
-        child: Center(
-          child: SizedBox(
-            width: 26,
-            height: 26,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-            ),
-          ),
-        ),
+    if (widget.possibleValuesProvider!=null) {
+      result = ApiProviderBuilder<List<T>>(
+        provider: widget.possibleValuesProvider!,
+        dataBuilder: _build,
+        loadingBuilder: _buildLoading,
+        errorBuilder: _buildError,
+      );
+    } else if (widget.possibleValuesFuture!=null) {
+      result = FutureBuilderFromZero<List<T>>(
+        future: widget.possibleValuesFuture!,
+        successBuilder: _build,
+        loadingBuilder: _buildLoading,
+        errorBuilder: (context, error, stackTrace) => _buildError(context, error, stackTrace is StackTrace ? stackTrace : null),
+      );
+    } else if (widget.possibleValuesAsync!=null) {
+      result = AsyncValueBuilder<List<T>>(
+        asyncValue: widget.possibleValuesAsync!,
+        dataBuilder: _build,
+        loadingBuilder: _buildLoading,
+        errorBuilder: _buildError,
       );
     } else {
-      Widget child;
-      if (widget.buttonChildBuilder==null) {
-        child = ComboFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable,
-          showDropdownIcon: widget.showDropdownIcon,
-        );
-      } else {
-        child = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable,
-          showDropdownIcon: widget.showDropdownIcon,
-        );
-      }
-      result = Stack(
-        children: [
-          TextButton(
-            key: buttonKey,
-            style: TextButton.styleFrom(
-              padding: widget.buttonPadding,
-            ),
-            child: Center(
-              child: OverflowScroll(
-                child: child,
-                scrollDirection: Axis.vertical,
-              ),
-            ),
-            focusNode: buttonFocusNode,
-            onPressed: widget.enabled ? () async {
-              buttonFocusNode.requestFocus();
-              bool? accepted = await showPopupFromZero<bool>(
-                context: context,
-                anchorKey: buttonKey,
-                width: widget.popupWidth,
-                builder: (context) {
-                  return ComboFromZeroPopup<T>(
-                    possibleValues: possibleValues!,
-                    onSelected: widget.onSelected,
-                    onCanceled: widget.onCanceled,
-                    value: widget.value,
-                    sort: widget.sort,
-                    showSearchBox: widget.showSearchBox,
-                    showViewActionOnDAOs: widget.showViewActionOnDAOs,
-                    title: widget.title,
-                    extraWidget: widget.extraWidget,
-                    popupWidgetBuilder: widget.popupWidgetBuilder,
-                  );
-                },
-              );
-              if (accepted!=true) {
-                widget.onCanceled?.call();
-              }
-            } : null,
+      return _build(context, widget.possibleValues!);
+    }
+    return result;
+  }
+
+  Widget _buildError(BuildContext context, Object? error, StackTrace? stackTrace, [VoidCallback? onRetry]) {
+    return SizedBox(
+      width: 64,
+      height: 38,
+      child: Center(
+        child: SizedBox(
+          width: 26,
+          height: 26,
+          child: ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, onRetry), // TODO 1 implement compact errorBuilder, this will overflow
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoading(BuildContext context, [double? progress]) {
+    return SizedBox(
+      width: 64,
+      height: 38,
+      child: Center(
+        child: SizedBox(
+          width: 26,
+          height: 26,
+          child: ApiProviderBuilder.defaultLoadingBuilder(context, progress),
+        ),
+      ),
+    );
+  }
+
+  Widget _build(BuildContext context, List<T>? possibleValues,) {
+    Widget result;
+    if (widget.buttonChildBuilder==null) {
+      result = ComboFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable,
+        showDropdownIcon: widget.showDropdownIcon,
+      );
+    } else {
+      result = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable,
+        showDropdownIcon: widget.showDropdownIcon,
+      );
+    }
+    result = Stack(
+      children: [
+        TextButton(
+          key: buttonKey,
+          style: TextButton.styleFrom(
+            padding: widget.buttonPadding,
           ),
-          if (widget.enabled && widget.clearable)
-            Positioned(
-              right: 8, top: 0, bottom: 0,
-              child: ExcludeFocus(
-                child: Center(
-                  child: AnimatedSwitcher(
-                    duration: Duration(milliseconds: 300),
-                    switchInCurve: Curves.easeOutCubic,
-                    transitionBuilder: (child, animation) {
-                      return SizeTransition(
-                        sizeFactor: animation,
-                        child: FadeTransition(
-                          opacity: animation,
-                          child: child,
-                        ),
-                      );
+          child: Center(
+            child: OverflowScroll(
+              child: result,
+              scrollDirection: Axis.vertical,
+            ),
+          ),
+          focusNode: buttonFocusNode,
+          onPressed: widget.enabled ? () async {
+            buttonFocusNode.requestFocus();
+            bool? accepted = await showPopupFromZero<bool>(
+              context: context,
+              anchorKey: buttonKey,
+              width: widget.popupWidth,
+              builder: (context) {
+                return ComboFromZeroPopup<T>(
+                  possibleValues: possibleValues!,
+                  onSelected: widget.onSelected,
+                  onCanceled: widget.onCanceled,
+                  value: widget.value,
+                  sort: widget.sort,
+                  showSearchBox: widget.showSearchBox,
+                  showViewActionOnDAOs: widget.showViewActionOnDAOs,
+                  title: widget.title,
+                  extraWidget: widget.extraWidget,
+                  popupWidgetBuilder: widget.popupWidgetBuilder,
+                );
+              },
+            );
+            if (accepted!=true) {
+              widget.onCanceled?.call();
+            }
+          } : null,
+        ),
+        if (widget.enabled && widget.clearable)
+          Positioned(
+            right: 8, top: 0, bottom: 0,
+            child: ExcludeFocus(
+              child: Center(
+                child: AnimatedSwitcher(
+                  duration: Duration(milliseconds: 300),
+                  switchInCurve: Curves.easeOutCubic,
+                  transitionBuilder: (child, animation) {
+                    return SizeTransition(
+                      sizeFactor: animation,
+                      child: FadeTransition(
+                        opacity: animation,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: widget.value!=null ? IconButton(
+                    icon: Icon(Icons.close),
+                    tooltip: FromZeroLocalizations.of(context).translate('clear'),
+                    splashRadius: 20,
+                    onPressed: () {
+                      widget.onSelected?.call(null);
                     },
-                    child: widget.value!=null ? IconButton(
-                      icon: Icon(Icons.close),
-                      tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                      splashRadius: 20,
-                      onPressed: () {
-                        widget.onSelected?.call(null);
-                      },
-                    ) : SizedBox.shrink(),
-                  ),
+                  ) : SizedBox.shrink(),
                 ),
               ),
             ),
-        ],
-      );
-    }
-    return result;
-    // TODO 3 apply transition switcher, solve problems with duplicate key and stack constraints
-    return PageTransitionSwitcher(
-      child: result,
-      duration: Duration(milliseconds: 300,),
-      transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
-        return FadeThroughTransition(
-          child: child,
-          fillColor: Colors.transparent,
-          animation: primaryAnimation,
-          secondaryAnimation: secondaryAnimation,
-        );
-      },
+          ),
+      ],
     );
+    return result;
   }
 
 }

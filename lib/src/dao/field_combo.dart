@@ -1,3 +1,4 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -8,10 +9,9 @@ import 'package:from_zero_ui/src/dao/field_validators.dart';
 
 class ComboField<T extends DAO> extends Field<T> {
 
-  final FieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter;
-  List<T>? get possibleValues => possibleValuesGetter?.call(this, dao);
-  final FieldValueGetter<Future<List<T>>?, ComboField<T>>? futurePossibleValuesGetter;
-  Future<List<T>>? get futurePossibleValues => futurePossibleValuesGetter?.call(this, dao);
+  final ContextFulFieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter;
+  final ContextFulFieldValueGetter<Future<List<T>>?, ComboField<T>>? possibleValuesFutureGetter;
+  final ContextFulFieldValueGetter<ApiProvider<List<T>>?, ComboField<T>>? possibleValuesProviderGetter;
   final bool showSearchBox;
   final ExtraWidgetBuilder<T>? extraWidget;
   final FieldValueGetter<DAO?, ComboField<T>>? newObjectTemplateGetter;
@@ -33,7 +33,8 @@ class ComboField<T extends DAO> extends Field<T> {
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
     this.possibleValuesGetter,
-    this.futurePossibleValuesGetter,
+    this.possibleValuesFutureGetter,
+    this.possibleValuesProviderGetter,
     this.sort = true,
     this.showSearchBox = true,
     this.showViewActionOnDAOs = true,
@@ -57,8 +58,9 @@ class ComboField<T extends DAO> extends Field<T> {
     T? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
-  }) :  assert(possibleValuesGetter!=null || futurePossibleValuesGetter!=null),
-        assert(possibleValuesGetter==null || futurePossibleValuesGetter==null),
+  }) :  assert(possibleValuesGetter!=null
+              || possibleValuesFutureGetter!=null
+              || possibleValuesProviderGetter!=null),
         super(
           uiNameGetter: uiNameGetter,
           value: value,
@@ -96,8 +98,9 @@ class ComboField<T extends DAO> extends Field<T> {
     double? maxWidth,
     double? minWidth,
     double? flex,
-    FieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter,
-    FieldValueGetter<Future<List<T>>?, ComboField<T>>? futurePossibleValuesGetter,
+    ContextFulFieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter,
+    ContextFulFieldValueGetter<Future<List<T>>?, ComboField<T>>? possibleValuesFutureGetter,
+    ContextFulFieldValueGetter<ApiProvider<List<T>>?, ComboField<T>>? possibleValuesProviderGetter,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
     bool? sort,
@@ -116,6 +119,7 @@ class ComboField<T extends DAO> extends Field<T> {
     FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
     List<T?>? undoValues,
     List<T?>? redoValues,
+    bool? invalidateValuesNotInPossibleValues,
     GlobalKey? fieldGlobalKey,
     bool? invalidateNonEmptyValuesIfHiddenInForm,
     T? defaultValue,
@@ -131,7 +135,8 @@ class ComboField<T extends DAO> extends Field<T> {
       minWidth: minWidth??this.minWidth,
       flex: flex??this.flex,
       possibleValuesGetter: possibleValuesGetter??this.possibleValuesGetter,
-      futurePossibleValuesGetter: futurePossibleValuesGetter??this.futurePossibleValuesGetter,
+      possibleValuesFutureGetter: possibleValuesFutureGetter??this.possibleValuesFutureGetter,
+      possibleValuesProviderGetter: possibleValuesProviderGetter??this.possibleValuesProviderGetter,
       hintGetter: hintGetter??this.hintGetter,
       tooltipGetter: tooltipGetter??this.tooltipGetter,
       sort: sort??this.sort,
@@ -149,6 +154,7 @@ class ComboField<T extends DAO> extends Field<T> {
       colModelBuilder: colModelBuilder ?? this.colModelBuilder,
       undoValues: undoValues ?? List.from(this.undoValues),
       redoValues: redoValues ?? List.from(this.redoValues),
+      invalidateValuesNotInPossibleValues: invalidateValuesNotInPossibleValues ?? this.invalidateValuesNotInPossibleValues,
       invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
@@ -161,11 +167,17 @@ class ComboField<T extends DAO> extends Field<T> {
     bool validateIfNotEdited=false,
   }) async {
     super.validate(context, dao, validateIfNotEdited: validateIfNotEdited);
-    List<T> possibleValues;
-    if (futurePossibleValues!=null) {
-      possibleValues = await futurePossibleValues!;
+    final List<T> possibleValues;
+    final provider = possibleValuesProviderGetter?.call(context, this, dao);
+    if (provider!=null) {
+      possibleValues = await (context as WidgetRef).read(provider.future);
     } else {
-      possibleValues = this.possibleValues!;
+      final future = possibleValuesFutureGetter?.call(context, this, dao);
+      if (future!=null) {
+        possibleValues = await future;
+      } else {
+        possibleValues = possibleValuesGetter!.call(context, this, dao)!;
+      }
     }
     if (invalidateValuesNotInPossibleValues && value!=null && !possibleValues.contains(value)) {
       validationErrors.add(InvalidatingError<T>(
@@ -297,8 +309,9 @@ class ComboField<T extends DAO> extends Field<T> {
           title: uiName,
           hint: hint,
           value: value,
-          possibleValues: possibleValues,
-          futurePossibleValues: futurePossibleValues,
+          possibleValues: possibleValuesGetter?.call(context, this, dao),
+          possibleValuesFuture: possibleValuesFutureGetter?.call(context, this, dao),
+          possibleValuesProvider: possibleValuesProviderGetter?.call(context, this, dao),
           sort: sort,
           showSearchBox: showSearchBox,
           onSelected: _onSelected,

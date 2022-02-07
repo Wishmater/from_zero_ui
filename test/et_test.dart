@@ -18,7 +18,7 @@ DAO getEtDao() {
                 validatorsGetter: (field, dao) => [
                   fieldValidatorRequired,
                 ],
-                possibleValuesGetter: (field, dao) => [
+                possibleValuesGetter: (context, field, dao) => [
                   DAO(id: 'MPG Cuba', uiNameGetter: (dao) => 'MPG Cuba', classUiNameGetter: (dao) => 'Oficina MPG',),
                   DAO(id: 'MPG Madrid', uiNameGetter: (dao) => 'MPG Madrid', classUiNameGetter: (dao) => 'Oficina MPG',),
                   DAO(id: 'MPG Barcelona', uiNameGetter: (dao) => 'MPG Barcelona', classUiNameGetter: (dao) => 'Oficina MPG',),
@@ -34,7 +34,7 @@ DAO getEtDao() {
                 validatorsGetter: (field, dao) => [
                   fieldValidatorRequired,
                 ],
-                possibleValuesGetter: (field, dao) => [
+                possibleValuesGetter: (context, field, dao) => [
                   DAO(id: 'Cliente 1', uiNameGetter: (dao) => 'Cliente 1', classUiNameGetter: (dao) => 'Cliente',),
                   DAO(id: 'Cliente 2', uiNameGetter: (dao) => 'Cliente 2', classUiNameGetter: (dao) => 'Cliente',),
                   DAO(id: 'Cliente 3', uiNameGetter: (dao) => 'Cliente 3', classUiNameGetter: (dao) => 'Cliente',),
@@ -91,7 +91,7 @@ DAO getEtDao() {
                   },
                   fieldValidatorRequired,
                 ],
-                possibleValuesGetter: (field, dao) => [
+                possibleValuesGetter: (context, field, dao) => [
                   DAO(id: 'FCL', uiNameGetter: (dao) => 'FCL', classUiNameGetter: (dao) => 'Servicio',),
                   DAO(id: 'LCL', uiNameGetter: (dao) => 'LCL', classUiNameGetter: (dao) => 'Servicio',),
                   DAO(id: 'Aéreo', uiNameGetter: (dao) => 'Aéreo', classUiNameGetter: (dao) => 'Servicio',),
@@ -116,7 +116,7 @@ DAO getEtDao() {
                   },
                   (context, dao, field,) => fieldValidatorRequired(context, dao, field, severity: ValidationErrorSeverity.unfinished),
                 ],
-                possibleValuesGetter: (field, dao) => [
+                possibleValuesGetter: (context, field, dao) => [
                   DAO(id: 'Lugar 1', uiNameGetter: (dao) => 'Lugar 1', classUiNameGetter: (dao) => 'Origen',),
                   DAO(id: 'Lugar 2', uiNameGetter: (dao) => 'Lugar 2', classUiNameGetter: (dao) => 'Origen',),
                   DAO(id: 'Lugar 3', uiNameGetter: (dao) => 'Lugar 3', classUiNameGetter: (dao) => 'Origen',),
@@ -126,7 +126,7 @@ DAO getEtDao() {
               ),
               'destino': ComboField(
                 uiNameGetter: (field, dao) => 'Destino',
-                possibleValuesGetter: (field, dao) => [
+                possibleValuesGetter: (context, field, dao) => [
                   DAO(id: 'Lugar 1', uiNameGetter: (dao) => 'Lugar 1', classUiNameGetter: (dao) => 'Destino',),
                   DAO(id: 'Lugar 2', uiNameGetter: (dao) => 'Lugar 2', classUiNameGetter: (dao) => 'Destino',),
                   DAO(id: 'Lugar 3', uiNameGetter: (dao) => 'Lugar 3', classUiNameGetter: (dao) => 'Destino',),
@@ -292,7 +292,7 @@ DAO getEtDao() {
                 final value = (dao.props['servicio'] as ComboField).value?.id;
                 return value!='FCL' && value!='LCL' && value!='Aéreo';
               },
-              possibleValuesGetter: (field, dao) {
+              possibleValuesGetter: (context, field, dao) {
                 final value = (dao.props['servicio'] as ComboField).value?.id;
                 if (value=='FCL') {
                   return [
@@ -369,7 +369,7 @@ DAO getEtDao() {
               sort: false,
               uiNameGetter: (field, dao) => 'Incoterm',
               hiddenGetter: (field, dao) => (dao.props['tipoDocumento'] as ComboField).value==null, // TODO 3 hide if not embarque
-              possibleValuesGetter: (field, dao) => [
+              possibleValuesGetter: (context, field, dao) => [
                 DAO(id: 'EXW', uiNameGetter: (dao) => 'EXW', classUiNameGetter: (dao) => 'Incoterm',),
                 DAO(id: 'FCA', uiNameGetter: (dao) => 'FCA', classUiNameGetter: (dao) => 'Incoterm',),
                 DAO(id: 'CPT', uiNameGetter: (dao) => 'CPT', classUiNameGetter: (dao) => 'Incoterm',),
@@ -384,7 +384,7 @@ DAO getEtDao() {
               sort: false,
               uiNameGetter: (field, dao) => 'Emisión',
               hiddenGetter: (field, dao) => (dao.props['tipoDocumento'] as ComboField).value==null,
-              possibleValuesGetter: (field, dao) => [
+              possibleValuesGetter: (context, field, dao) => [
                 DAO(id: "Origen", uiNameGetter: (dao) => "Origen", classUiNameGetter: (dao) => 'Emisión',),
                 DAO(id: "Destino", uiNameGetter: (dao) => "Destino", classUiNameGetter: (dao) => 'Emisión',),
               ],
@@ -394,7 +394,7 @@ DAO getEtDao() {
               sort: false,
               uiNameGetter: (field, dao) => 'Términos',
               hiddenGetter: (field, dao) => (dao.props['tipoDocumento'] as ComboField).value==null,
-              possibleValuesGetter: (field, dao) => [
+              possibleValuesGetter: (context, field, dao) => [
                 DAO(id: "Prepaid", uiNameGetter: (dao) => "Prepaid", classUiNameGetter: (dao) => 'Forma de Pago',),
                 DAO(id: "Collect", uiNameGetter: (dao) => "Collect", classUiNameGetter: (dao) => 'Forma de Pago',),
                 DAO(id: "Elsewhere", uiNameGetter: (dao) => "Elsewhere", classUiNameGetter: (dao) => 'Forma de Pago',),
@@ -405,7 +405,7 @@ DAO getEtDao() {
               sort: false,
               uiNameGetter: (field, dao) => 'Responsable',
               hiddenGetter: (field, dao) => (dao.props['tipoDocumento'] as ComboField).value==null,
-              possibleValuesGetter: (field, dao) => [
+              possibleValuesGetter: (context, field, dao) => [
                 DAO(id: "Cliente", uiNameGetter: (dao) => "Cliente", classUiNameGetter: (dao) => 'Responsable de Pago',),
                 DAO(id: "Agente", uiNameGetter: (dao) => "Agente", classUiNameGetter: (dao) => 'Responsable de Pago',),
                 DAO(id: "Consignatario", uiNameGetter: (dao) => "Consignatario", classUiNameGetter: (dao) => 'Responsable de Pago',),
@@ -516,7 +516,7 @@ DAO getEtDao() {
                           clearableGetter: (field, dao) => false,
                           uiNameGetter: (field, dao) => 'Tipo',
                           tableColumnWidth: 96,
-                          possibleValuesGetter: (field, dao) => [
+                          possibleValuesGetter: (context, field, dao) => [
                             DAO(id: "20' DV", uiNameGetter: (dao) => "20' DV", classUiNameGetter: (dao) => 'Tipo de Contenedor',),
                             DAO(id: "40' DV", uiNameGetter: (dao) => "40' DV", classUiNameGetter: (dao) => 'Tipo de Contenedor',),
                           ],
@@ -588,7 +588,7 @@ DAO getEtDao() {
               'transportista': ComboField(
                 uiNameGetter: (field, dao) => dao.props['servicio']!.value=='Aereo' ? 'Aerolínea' : 'Naviera',
                 hiddenGetter: (field, dao) => (dao.props['tipoDocumento'] as ComboField).value==null,
-                possibleValuesGetter: (field, dao) => [
+                possibleValuesGetter: (context, field, dao) => [
                   DAO(id: "Entidad 1", uiNameGetter: (dao) => "Entidad 1", classUiNameGetter: (dao) => 'Entidad',),
                   DAO(id: "Entidad 2", uiNameGetter: (dao) => "Entidad 2", classUiNameGetter: (dao) => 'Entidad',),
                   DAO(id: "Entidad 3", uiNameGetter: (dao) => "Entidad 3", classUiNameGetter: (dao) => 'Entidad',),
@@ -603,7 +603,7 @@ DAO getEtDao() {
               'agente': ComboField(
                 uiNameGetter: (field, dao) => 'Agente',
                 hiddenGetter: (field, dao) => (dao.props['tipoDocumento'] as ComboField).value==null,
-                possibleValuesGetter: (field, dao) => [
+                possibleValuesGetter: (context, field, dao) => [
                   DAO(id: "Entidad 1", uiNameGetter: (dao) => "Entidad 1", classUiNameGetter: (dao) => 'Entidad',),
                   DAO(id: "Entidad 2", uiNameGetter: (dao) => "Entidad 2", classUiNameGetter: (dao) => 'Entidad',),
                   DAO(id: "Entidad 3", uiNameGetter: (dao) => "Entidad 3", classUiNameGetter: (dao) => 'Entidad',),
@@ -649,7 +649,7 @@ DAO getEtDao() {
               'embarcador': ComboField(
                 uiNameGetter: (field, dao) => 'Embarcador',
                 hiddenGetter: (field, dao) => (dao.props['tipoDocumento'] as ComboField).value==null,
-                possibleValuesGetter: (field, dao) => [
+                possibleValuesGetter: (context, field, dao) => [
                   DAO(id: "Entidad 1", uiNameGetter: (dao) => "Entidad 1", classUiNameGetter: (dao) => 'Entidad',),
                   DAO(id: "Entidad 2", uiNameGetter: (dao) => "Entidad 2", classUiNameGetter: (dao) => 'Entidad',),
                   DAO(id: "Entidad 3", uiNameGetter: (dao) => "Entidad 3", classUiNameGetter: (dao) => 'Entidad',),
@@ -695,7 +695,7 @@ DAO getEtDao() {
               'consignatario': ComboField(
                 uiNameGetter: (field, dao) => 'Consignatario',
                 hiddenGetter: (field, dao) => (dao.props['tipoDocumento'] as ComboField).value==null,
-                possibleValuesGetter: (field, dao) => [
+                possibleValuesGetter: (context, field, dao) => [
                   DAO(id: "Entidad 1", uiNameGetter: (dao) => "Entidad 1", classUiNameGetter: (dao) => 'Entidad',),
                   DAO(id: "Entidad 2", uiNameGetter: (dao) => "Entidad 2", classUiNameGetter: (dao) => 'Entidad',),
                   DAO(id: "Entidad 3", uiNameGetter: (dao) => "Entidad 3", classUiNameGetter: (dao) => 'Entidad',),
@@ -741,7 +741,7 @@ DAO getEtDao() {
               'nacional': ComboField(
                 uiNameGetter: (field, dao) => 'Transitario Nacional',
                 hiddenGetter: (field, dao) => (dao.props['tipoDocumento'] as ComboField).value==null,
-                possibleValuesGetter: (field, dao) => [
+                possibleValuesGetter: (context, field, dao) => [
                   DAO(id: "Entidad 1", uiNameGetter: (dao) => "Entidad 1", classUiNameGetter: (dao) => 'Entidad',),
                   DAO(id: "Entidad 2", uiNameGetter: (dao) => "Entidad 2", classUiNameGetter: (dao) => 'Entidad',),
                   DAO(id: "Entidad 3", uiNameGetter: (dao) => "Entidad 3", classUiNameGetter: (dao) => 'Entidad',),

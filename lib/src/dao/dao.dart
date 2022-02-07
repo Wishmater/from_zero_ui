@@ -13,11 +13,11 @@ import 'package:preload_page_view/preload_page_view.dart';
 import 'field_list.dart';
 
 
-typedef Future<DAO?> OnSaveCallback(BuildContext context, DAO e);
+typedef Future<ModelType?> OnSaveCallback<ModelType>(BuildContext context, DAO e);
 typedef Widget DAOWidgetBuilder(BuildContext context, DAO dao);
 typedef T DAOValueGetter<T>(DAO dao);
 
-class DAO extends ChangeNotifier implements Comparable {
+class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
   dynamic id;
   DAOValueGetter<String> classUiNameGetter;
@@ -34,7 +34,7 @@ class DAO extends ChangeNotifier implements Comparable {
         ...fieldGroups.map((e) => e.props).reduce((value, element) => {...value, ...element}),
     };
   }
-  OnSaveCallback? onSave;
+  OnSaveCallback<ModelType>? onSave;
   OnSaveCallback? onDelete;
   List<ValueChanged<DAO>> _selfUpdateListeners = [];
   DAOWidgetBuilder? viewWidgetBuilder;
