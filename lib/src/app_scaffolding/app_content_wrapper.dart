@@ -1,6 +1,11 @@
+import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:dartx/dartx.dart';
+import 'package:enough_convert/enough_convert.dart';
+import 'package:convert/convert.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/snackbar_host_from_zero.dart';
 import 'package:go_router/go_router.dart';
+import 'package:path/path.dart' as p;
 
 
 
@@ -43,6 +49,8 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
 
   @override
   _FromZeroAppContentWrapperState createState() => _FromZeroAppContentWrapperState();
+
+  static BuildContext? navigatorContext;
 
 }
 
@@ -119,6 +127,7 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
                           child: WindowBar(
                             backgroundColor: Theme.of(context).cardColor,
                             iconTheme: Theme.of(context).iconTheme,
+                            navigatorContext: FromZeroAppContentWrapper.navigatorContext,
                             onMaximizeOrRestore: (context) {
                               // hack so the windowBar doesn't get stuck after maximize
                               context.findAncestorStateOfType<_AppearOnMouseOverState>()!.pressed = false;
@@ -161,6 +170,14 @@ class _AppearOnMouseOverState extends State<AppearOnMouseOver> {
 
   bool visible = false;
   bool pressed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!kIsWeb && Platform.isWindows && WindowEventListener.listeningCount==0) {
+      WindowEventListener().listen(() => FromZeroAppContentWrapper.navigatorContext!);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -215,6 +232,7 @@ class WindowBar extends StatelessWidget {
   final bool? Function(BuildContext context)? onMinimize;
   final bool? Function(BuildContext context)? onMaximizeOrRestore;
   final bool? Function(BuildContext context)? onClose;
+  final BuildContext? navigatorContext;
 
   const WindowBar({
     Key? key,
@@ -224,6 +242,7 @@ class WindowBar extends StatelessWidget {
     this.onMaximizeOrRestore,
     this.onClose,
     this.iconTheme,
+    this.navigatorContext,
   })  : super(key: key);
 
   @override
@@ -274,38 +293,60 @@ class WindowBar extends StatelessWidget {
             CloseWindowButton(
               animate: true,
               onPressed: () async {
-                if (onClose?.call(context) ?? true) {
+                if (onClose?.call(navigatorContext ?? context) ?? true) {
                   GoRouter? goRouter;
-                  try { goRouter = GoRouter.of(context); } catch(_){}
-                  final navigator = Navigator.of(context);
+                  try { goRouter = GoRouter.of(navigatorContext ?? context); } catch(_){}
+                  final navigator = Navigator.of(navigatorContext ?? context);
                   while (true) {
-                    if (true) {
-                    // if (goRouter==null) {
+                    if (goRouter==null) {
 
-                      final route = ModalRoute.of(context);
+                      final route = ModalRoute.of(navigatorContext ?? context);
                       final canPop = navigator.canPop();
                       final isModal = route!=null && route.settings.name==null;
                       if (!canPop) {
                         if (route==null || (await route.willPop())!=RoutePopDisposition.doNotPop) {
                           // if successfully popped last route, exit app
-                          print ('exit');
-                          // exit(0);
-                          return;
+                          exit(0);
                         }
                       } else {
                         if (await navigator.maybePop()) {
                           if (isModal) {
-                            // if route is a modal, stop iteration
+                            // if route was a modal, stop iteration
                             return;
                           }
                         } else {
-                          print ('false');
                           // if route refused to pop, stop iteration
                           return;
                         }
                       }
 
                     } else {
+
+                      final route = ModalRoute.of(navigatorContext ?? context);
+                      final goRoute = goRouter.routerDelegate.matches.last.route;
+                      final canPop = navigator.canPop();
+                      if (!canPop) {
+                        if (route==null || (await route.willPop())!=RoutePopDisposition.doNotPop) {
+                          // if successfully popped last route, exit app
+                          exit(0);
+                        }
+                      } else {
+                        if (await navigator.maybePop()) {
+                          final previousGoRouteFromZero = goRoute is GoRouteFromZero ? goRoute : null;
+                          final newGoRoute = goRouter.routerDelegate.matches.last.route;
+                          final newGoRouteFromZero = newGoRoute is GoRouteFromZero ? newGoRoute : null;
+                          if (newGoRoute==goRoute) {
+                            // if route was a modal, stop iteration
+                            return;
+                          } else if (previousGoRouteFromZero?.pageScaffoldId!=newGoRouteFromZero?.pageScaffoldId) {
+                            // if new route is a different scaffold ID, stop iteration
+                            return;
+                          }
+                        } else {
+                          // if route refused to pop, stop iteration
+                          return;
+                        }
+                      }
 
                     }
                     return;
@@ -466,6 +507,66 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
         //         && (currentScaffold.title as Text).data == (previousScaffold.title as Text).data));
               // because of the change to using routes, we lost the ability to compare the titles of the different pages
               // could still be done if the pages put it here, but is messy and not really necessary
+  }
+
+}
+
+
+
+class WindowEventListener{
+
+  static int listeningCount = 0;
+
+  int currentIndex = 0;
+
+  listen(BuildContext Function() navigatorContextGetter) async {
+    String scriptPath = Platform.script.path.substring(1, Platform.script.path.indexOf(Platform.script.pathSegments.last))
+        .replaceAll('%20', ' ');
+    File file = File(p.join(scriptPath, 'events.txt'));
+    listeningCount++;
+    while(true){
+      try{
+        // String wholeString = await file.readAsString(); // encoding: Encoding.
+        // final bytes = await file.readAsBytes();
+        final bytes8 = await file.readAsBytes();
+        final bytes = <int>[];
+        for (int i=0; i<bytes8.length; i+=2) {
+          bytes.add(bytes8[i]); // hack for utf16 encoding
+        }
+        // String wholeString = Utf16leBytesToCodeUnitsDecoder(bytes).decodeRest();
+        String wholeString = (const Windows1252Codec(allowInvalid: true,)).decode(bytes);
+        // String wholeString = (const Latin16Decoder(allowInvalid: true,)).convert(bytes);
+        // String wholeString = utf8.decode(bytes, allowMalformed: true);
+        // String wholeString = String.fromCharCodes(bytes);
+        List<String> events = wholeString.split("\r\n")..removeLast();
+        // print('String: $wholeString');print(events);
+        for (int i = currentIndex; i<events.length; i++){
+          print ("Window event handled: ${events[i]}");
+          switch(events[i]){
+            case 'WM_CLOSE':
+              final navigatorContext = navigatorContextGetter();
+              NavigatorState navigator = Navigator.of(navigatorContext);
+              final route = ModalRoute.of(navigatorContext);
+              final canPop = navigator.canPop();
+              if (!canPop) {
+                if (route==null || (await route.willPop())!=RoutePopDisposition.doNotPop) {
+                  // if successfully popped last route, exit app
+                  exit(0);
+                }
+              } else {
+                if (!await navigator.maybePop()) {
+                  // if route refused to pop, stop iteration
+                  return;
+                }
+              }
+              break;
+          }
+        }
+        currentIndex = events.length;
+      } catch (_){}
+      await Future.delayed(Duration(milliseconds: 50));
+    }
+    listeningCount--;
   }
 
 }

@@ -864,14 +864,17 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   }
   Widget _buildRowGestureDetector({required BuildContext context, required RowModel<T> row, required Widget child}) {
     Widget result = child;
-    if (row.onRowTap!=null) {
+    if (row.onRowTap!=null || row.onCheckBoxSelected!=null) {
       result = InkWell(
-        onTap: widget.enabled ? () => row.onRowTap!(row)
-            : row.onCheckBoxSelected!=null ? () {
-              if (row.onCheckBoxSelected!(row, !(row.selected??false)) ?? false) {
-                setState(() {});
-              }
-            } : null,
+        onTap: !widget.enabled ? null
+            : row.onRowTap!=null ? () => row.onRowTap!(row)
+            : row.onCheckBoxSelected!=null
+                ? () {
+                    if (row.onCheckBoxSelected!(row, !(row.selected??false)) ?? false) {
+                      setState(() {});
+                    }
+                  }
+            : null,
         onDoubleTap: widget.enabled&&row.onRowDoubleTap!=null ? () => row.onRowDoubleTap!(row) : null,
         onLongPress: widget.enabled&&row.onRowLongPress!=null ? () => row.onRowLongPress!(row) : null,
         onHover: widget.enabled&&row.onRowHover!=null ? (value) => row.onRowHover!(row, value) : null,

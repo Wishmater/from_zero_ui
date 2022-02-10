@@ -278,6 +278,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.1"
+  enough_convert:
+    dependency: "direct main"
+    description:
+      name: enough_convert
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "1.4.0"
   ensure_visible_when_focused:
     dependency: "direct main"
     description:

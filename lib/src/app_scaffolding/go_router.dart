@@ -129,11 +129,13 @@ class GoRouteFromZero extends GoRoute {
     builder: builder,
     redirect: redirect,
     routes: routes,
-    pageBuilder: (context, state) => CustomTransitionPage<void>(
-      key: state.pageKey,
-      child: OnlyOnActiveBuilder(builder: builder, state: state,),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
-    ),
+    pageBuilder: (context, state) {
+      return CustomTransitionPage<void>(
+        key: state.pageKey,
+        child: OnlyOnActiveBuilder(builder: builder, state: state,),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
+      );
+    },
   );
 
   GoRouteFromZero copyWith({
@@ -366,6 +368,7 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
   @override
   void initState() {
     super.initState();
+    FromZeroAppContentWrapper.navigatorContext = context;
     // for some reason, GoRouter doesn't allow of(context, listen: false) ...
     final inherited = context.getElementForInheritedWidgetOfExactType<InheritedGoRouter>();
     assert(inherited != null, 'No GoRouter found in context');
