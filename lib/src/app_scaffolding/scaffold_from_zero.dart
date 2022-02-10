@@ -572,6 +572,14 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         child: body,
       );
     }
+    if (widget.appbarType==ScaffoldFromZero.appbarTypeNone) {
+      body = Column(
+        children: [
+          WindowBar(backgroundColor: Theme.of(context).cardColor,),
+          Expanded(child: body),
+        ],
+      );
+    }
     Widget result = Consumer(
       builder: (context, ref, child) {
         final appbarChangeNotifier = ref.watch(fromZeroAppbarChangeNotifierProvider);
@@ -602,7 +610,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                 ),
               ),
 
-            //APPBAR
+            // APPBAR
             if (widget.appbarType != ScaffoldFromZero.appbarTypeNone)
               AnimatedPositioned(
                 duration: widget.appbarAnimationDuration,

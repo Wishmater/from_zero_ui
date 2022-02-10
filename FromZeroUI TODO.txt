@@ -30,11 +30,11 @@ Problems with excel export
 	Export breaks when exporting large amounts of data (embarques 3 years)
 	!!! test with new version
 
-WAITING bug with slivers tearing on windows, once it is solved, remove patches from Table
-
 Fix goRouter.go() ignoring willPop commands, this is MAJOR ISSUE
 	go() methods should check the willPop methods of all routes that will be removed
 	also make the pushNamedAndMaybeRemoveUntil() method worl as expected
+
+
 
 
 
@@ -42,12 +42,13 @@ Fix goRouter.go() ignoring willPop commands, this is MAJOR ISSUE
 P1
 **********************************************************************
 
-Table -- fix implicitlyAnimatedTable, make it default for <10 items
 
 fix part of the screen not being draggable on really big screens
 	maybe just deprecate limitWidthOnBigScreens
 	
 popupFromZero doesn't reposition child in response to window resize
+
+right click on appbar shows incoherent actions (expanded, disabled)
 
 
 
@@ -57,23 +58,16 @@ popupFromZero doesn't reposition child in response to window resize
 P2
 **********************************************************************
 
+Table -- fix implicitlyAnimatedTable, make it default for <10 items
+
 Table Feature -- Sticky columns 
 
 Table Feature -- Reorder columns
 
 Table Feature -- Resize columns (hard)
-
-Table -- fix scroll shadow to actually swap states 
-	the state notification for stickyHeader using external scrollController does not work
-	maybe make the shadow change more noticeable (smaller when not pinned)
-	
-Windows Increase mouse wheel scroll speed and add anmation
-	only when the mouse wheel is click (not smooth)
 	
 Implement UIScaling + Scaling picker widget (with slider)
 	take initial system textScale as UI scaling
-	
-popupFromZero improvement: on dektop, popup should not block content behind it by default (use Overlay)
 
 Appbar on top of fromZeroUI should be above header (appbar will span full window width)
 	in mobile mode, headerTitle still needs to be painted on the header itself
@@ -81,12 +75,21 @@ Appbar on top of fromZeroUI should be above header (appbar will span full window
 
 expanded state for actions in mobile view is broken
 
+add icon/title to WindowBar on desktop when aproppriate
+
+
+
 
 
 
 **********************************************************************
 P3
 **********************************************************************
+	
+Windows Increase mouse wheel scroll speed and add animation
+	only when the mouse wheel is click (not smooth)
+	
+popupFromZero improvement: on dektop, popup should not block content behind it by default (use Overlay)
 
 Organize dependencies
 	remove all dependency overrides
