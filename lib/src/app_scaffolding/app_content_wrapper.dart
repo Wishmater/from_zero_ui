@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -6,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/snackbar_host_from_zero.dart';
+import 'package:go_router/go_router.dart';
 
 
 
@@ -270,9 +273,43 @@ class WindowBar extends StatelessWidget {
             ),
             CloseWindowButton(
               animate: true,
-              onPressed: () {
+              onPressed: () async {
                 if (onClose?.call(context) ?? true) {
-                  appWindow.close();
+                  GoRouter? goRouter;
+                  try { goRouter = GoRouter.of(context); } catch(_){}
+                  final navigator = Navigator.of(context);
+                  while (true) {
+                    if (true) {
+                    // if (goRouter==null) {
+
+                      final route = ModalRoute.of(context);
+                      final canPop = navigator.canPop();
+                      final isModal = route!=null && route.settings.name==null;
+                      if (!canPop) {
+                        if (route==null || (await route.willPop())!=RoutePopDisposition.doNotPop) {
+                          // if successfully popped last route, exit app
+                          print ('exit');
+                          // exit(0);
+                          return;
+                        }
+                      } else {
+                        if (await navigator.maybePop()) {
+                          if (isModal) {
+                            // if route is a modal, stop iteration
+                            return;
+                          }
+                        } else {
+                          print ('false');
+                          // if route refused to pop, stop iteration
+                          return;
+                        }
+                      }
+
+                    } else {
+
+                    }
+                    return;
+                  }
                 }
               },
               colors: WindowButtonColors(
