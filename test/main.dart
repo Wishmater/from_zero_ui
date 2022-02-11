@@ -78,7 +78,10 @@ class MyApp extends StatelessWidget {
               ...fromZeroDefaultShortcuts,
             },
             builder: (context, child) {
-              return FromZeroAppContentWrapper(child: child);
+              return FromZeroAppContentWrapper(
+                child: child,
+                goRouter: _router,
+              );
             },
             routeInformationParser: _router.routeInformationParser,
             routerDelegate: _router.routerDelegate,

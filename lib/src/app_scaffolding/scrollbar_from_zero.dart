@@ -271,8 +271,8 @@ class AlwaysAttachedScrollController implements ScrollController {
     if (parent==null || parent!.positions.isEmpty) {
       return lastPosition ?? dummyScrollPosition;
     } else {
-      lastPosition = parent!.position;
-      return parent!.position;
+      lastPosition = parent!.positions.first;
+      return parent!.positions.first;
     }
   }
 

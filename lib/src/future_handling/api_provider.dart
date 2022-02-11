@@ -265,8 +265,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   }
 
   static Widget defaultErrorBuilder(BuildContext context, Object? error, StackTrace? stackTrace, VoidCallback? onRetry) {
-    print(error);
-    print(stackTrace);
+    // print(error);
+    // print(stackTrace);
     return ErrorSign(
       key: ValueKey(error),
       icon: const Icon(MaterialCommunityIcons.wifi_off),

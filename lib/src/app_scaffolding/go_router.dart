@@ -368,7 +368,6 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
   @override
   void initState() {
     super.initState();
-    FromZeroAppContentWrapper.navigatorContext = context;
     // for some reason, GoRouter doesn't allow of(context, listen: false) ...
     final inherited = context.getElementForInheritedWidgetOfExactType<InheritedGoRouter>();
     assert(inherited != null, 'No GoRouter found in context');
