@@ -62,7 +62,7 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
   void initState() {
     super.initState();
     if (!kIsWeb && Platform.isWindows && WindowEventListener.listeningCount==0) {
-      WindowEventListener().listen(() => widget.goRouter.routerDelegate.navigatorKey.currentState!);
+      WindowEventListener().listen(() => widget.goRouter);
     }
   }
 
@@ -294,56 +294,8 @@ class WindowBar extends StatelessWidget {
               animate: true,
               onPressed: () async {
                 if (onClose?.call(context) ?? true) {
-                  GoRouter goRouter = this.goRouter ?? GoRouter.of(context);
-                  final navigator = goRouter.routerDelegate.navigatorKey.currentState!;
-                  while (true) {
-                    if (goRouter==null) {
-
-                      // this definitely does NOT work
-                      final canPop = navigator.canPop();
-                      final isModal = false; // can't know...
-                      if (await navigator.maybePop()) {
-                        if (!canPop) { // this might not wotk, tehepero
-                          // if successfully popped last route, exit app
-                          exit(0);
-                        }
-                        if (isModal) {
-                          // if route was a modal, stop iteration
-                          return;
-                        }
-                      } else { // BUG: maybePop returns true even if route refused to pop
-                        // if route refused to pop, stop iteration
-                        return;
-                      }
-
-                    } else {
-
-                      final goRoute = goRouter.routerDelegate.matches.last.route;
-                      print ('Trying to pop ${goRouter.routerDelegate.matches.last.subloc}');
-                      if (await navigator.maybePop()) {
-                        final previousGoRouteFromZero = goRoute is GoRouteFromZero ? goRoute : null;
-                        final newGoRoute = goRouter.routerDelegate.matches.last.route;
-                        final newGoRouteFromZero = newGoRoute is GoRouteFromZero ? newGoRoute : null;
-                        if (newGoRoute==goRoute) {
-                          // if route refused to pop, or popped route was a modal, stop iteration
-                          print('  Route refused to pop, or popped route was a modal, stopping iteration...');
-                          return;
-                        }
-                        if (previousGoRouteFromZero?.pageScaffoldId!=newGoRouteFromZero?.pageScaffoldId) {
-                          // if new route is a different scaffold ID, stop iteration
-                          print('  New route is a different scaffold ID, stopping iteration...');
-                          return;
-                        }
-                      } else {
-                        // if successfully popped last route, exit app (maybePop only false when popDisposition==bubble)
-                        print ('  If successfully popped last route, exit app');
-                        // exit(0);
-                        return;
-                      }
-                      print ('  Popped successfully, continuing popping iteration...');
-
-                    }
-                  }
+                  final goRouter = this.goRouter ?? GoRouter.of(context);
+                  await smartMultiPop(goRouter);
                 }
               },
               colors: WindowButtonColors(
@@ -358,6 +310,38 @@ class WindowBar extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// used when trying to close the window
+  static smartMultiPop(GoRouter goRouter) async {
+    final navigator = goRouter.routerDelegate.navigatorKey.currentState!;
+    while (true) {
+
+      final goRoute = goRouter.routerDelegate.matches.last.route;
+      print ('Trying to pop ${goRouter.routerDelegate.matches.last.subloc}');
+      if (await navigator.maybePop()) {
+        final previousGoRouteFromZero = goRoute is GoRouteFromZero ? goRoute : null;
+        final newGoRoute = goRouter.routerDelegate.matches.last.route;
+        final newGoRouteFromZero = newGoRoute is GoRouteFromZero ? newGoRoute : null;
+        if (newGoRoute==goRoute) {
+          // if route refused to pop, or popped route was a modal, stop iteration
+          print('  Route refused to pop, or popped route was a modal, stopping iteration...');
+          return;
+        }
+        if (previousGoRouteFromZero?.pageScaffoldId!=newGoRouteFromZero?.pageScaffoldId) {
+          // if new route is a different scaffold ID, stop iteration
+          print('  New route is a different scaffold ID, stopping iteration...');
+          return;
+        }
+      } else {
+        // if successfully popped last route, exit app (maybePop only false when popDisposition==bubble)
+        print ('  Successfully popped last route, exiting app...');
+        exit(0);
+        return;
+      }
+      print ('  Popped successfully, continuing popping iteration...');
+
+    }
   }
 }
 
@@ -537,18 +521,8 @@ class WindowEventListener{
           print ("Window event handled: ${events[i]}");
           switch(events[i]){
             case 'WM_CLOSE':
-              GoRouter goRouter = routerGetter();
-              NavigatorState navigator = navigatorGetter();
-              final canPop = navigator.canPop();
-              if (await navigator.maybePop()) {
-                if (!canPop) {
-                  // if successfully popped last route, exit app
-                  exit(0);
-                }
-              } else {
-                // if route refused to pop, stop iteration
-                return;
-              }
+              final goRouter = routerGetter();
+              WindowBar.smartMultiPop(goRouter);
               break;
           }
         }

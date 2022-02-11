@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:animations/animations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
@@ -80,7 +81,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
           refreshed = refreshed || e.retry(widgetRef);
         }
       } catch (e, st) {
-        print (e); print (st);
+        // print (e); print (st);
       }
     }
     if (!refreshed && state is AsyncError) {
@@ -101,7 +102,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
           e.refresh(widgetRef);
           refreshed = true;
         } catch (e, st) {
-          print (e); print (st);
+          // print (e); print (st);
         }
       }
     }
@@ -118,7 +119,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     super.dispose();
   }
 
-  void _runFuture() {
+  void _runFuture() async {
     cancel();
     selfTotalNotifier.value = null;
     selfProgressNotifier.value = null;
@@ -127,20 +128,17 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     try {
       future = _create(this);
       if (future is Future<State>) {
-        (future as Future<State>).then(
-              (event) {
-            if (_running) {
-              state = AsyncValue<State>.data(event);
-            }
-          },
-          // ignore: avoid_types_on_closure_parameters
-          onError: (Object err, StackTrace stack) {
-            if (_running) {
-              state = AsyncValue<State>.error(err, stackTrace: stack);
-            }
-            cancel();
-          },
-        );
+        try {
+          final event = await future;
+          if (_running) {
+            state = AsyncValue<State>.data(event);
+          }
+        } catch (err, stack) {
+          if (_running) {
+            state = AsyncValue<State>.error(err, stackTrace: stack);
+          }
+          cancel();
+        }
       } else {
         state = AsyncData(future as State);
       }
@@ -267,12 +265,94 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   static Widget defaultErrorBuilder(BuildContext context, Object? error, StackTrace? stackTrace, VoidCallback? onRetry) {
     // print(error);
     // print(stackTrace);
-    return ErrorSign(
-      key: ValueKey(error),
-      icon: const Icon(MaterialCommunityIcons.wifi_off),
-      title: FromZeroLocalizations.of(context).translate("error_connection"),
-      subtitle: FromZeroLocalizations.of(context).translate("error_connection_details"),
-      onRetry: onRetry,
+    if (error is DioError) {
+      if (error.type==DioErrorType.RESPONSE) {
+        if (error.response.statusCode==404) {
+          return ErrorSign(
+            key: ValueKey(error),
+            icon: const Icon(Icons.error_outline),
+            title: 'Recurso no Encontrado', // TODO 3 internationalize
+            subtitle: 'Por favor, notifique a su administrador de sistema', // TODO 3 internationalize
+            onRetry: onRetry,
+          );
+        } else if (error.response.statusCode==400) {
+          return ErrorSign(
+            key: ValueKey(error),
+            icon: const Icon(Icons.do_disturb_on_outlined),
+            title: 'Error de Autenticación', // TODO 3 internationalize
+            subtitle: 'Intente cerrar la aplicación y autenticarse de nuevo.', // TODO 3 internationalize
+          );
+        } else if (error.response.statusCode==403) {
+          return ErrorSign(
+            key: ValueKey(error),
+            icon: const Icon(Icons.do_disturb_on_outlined),
+            title: 'Error de Autorización', // TODO 3 internationalize
+            subtitle: 'Usted no tiene permiso para acceder al recurso solicitado.', // TODO 3 internationalize
+          );
+        } else {
+          return ErrorSign(
+            key: ValueKey(error),
+            icon: const Icon(Icons.report_problem_outlined),
+            title: 'Error Interno del Servidor', // TODO 3 internationalize
+            subtitle: 'Por favor, notifique a su administrador de sistema', // TODO 3 internationalize
+            retryButton: _buildErrorDetailsButton(context, error, stackTrace),
+          );
+        }
+      } else {
+        return ErrorSign(
+          key: ValueKey(error),
+          icon: const Icon(MaterialCommunityIcons.wifi_off),
+          title: FromZeroLocalizations.of(context).translate("error_connection"),
+          subtitle: FromZeroLocalizations.of(context).translate("error_connection_details"),
+          onRetry: onRetry,
+        );
+      }
+    } else {
+      return ErrorSign(
+        key: ValueKey(error),
+        icon: const Icon(Icons.report_problem_outlined),
+        title: "Error Inesperado", // TODO 3 internationalize
+        subtitle: "Por favor, notifique a su administrador de sistema", // TODO 3 internationalize
+        retryButton: _buildErrorDetailsButton(context, error, stackTrace),
+      );
+    }
+  }
+  static Widget _buildErrorDetailsButton(BuildContext context, Object? error, StackTrace? stackTrace) {
+    return TextButton(
+      style: TextButton.styleFrom(
+          primary: Theme.of(context).textTheme.bodyText1!.color!,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(width: 8,),
+          Icon(Icons.info_outlined),
+          SizedBox(width: 4,),
+          Text('Detalles del Error', // TODO 3 internationalize
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
+          ),
+          SizedBox(width: 8,),
+        ],
+      ),
+      onPressed: () {
+        showModal(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: Text('Detalles del Error'),
+              content: SelectableText("$error\r\n\r\n$stackTrace}"),
+              actions: [
+                TextButton(
+                  child: Text('Cerrar'), // TODO 3 internationalize
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

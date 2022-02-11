@@ -261,27 +261,35 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
     if (widget.selected<0 && widget.inferSelected) {
 
       if (widget.useGoRouter) {
-        final goRouter = GoRouter.of(context);
-        String location = goRouter.location;
-        int queryParamsIndex = location.indexOf('?');
-        if (queryParamsIndex>=0) {
-          location = location.substring(0, queryParamsIndex);
-        }
-        final matches = goRouter.routerDelegate.matches;
-        final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
-        Map<ResponsiveDrawerMenuItem, String> computedNames = {};
-        int Function(List<ResponsiveDrawerMenuItem>, GoRouteMatch)? getSelectedIndex;
-        getSelectedIndex = (tabs, match) {
-          for (int i=0; i<tabs.length; i++) {
-            final e = tabs[i];
-            if (e.route!=null) {
-              if (!computedNames.containsKey(e)) {
-                computedNames[e] = goRouter.namedLocation(e.route!,
-                  params: e.params ?? {},
-                );
-              }
-              final computedName = computedNames[e]!;
-              if (e.children!=null) {
+
+        bool useNames = true;
+        if (useNames) {
+
+          final goRouter = GoRouter.of(context);
+          final matches = goRouter.routerDelegate.matches;
+          final currentRouteName = matches.last.route.name?.replaceAll('_', '');
+          final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
+          int Function(List<ResponsiveDrawerMenuItem>, GoRouteMatch)? getSelectedIndex;
+          getSelectedIndex = (tabs, match) {
+            for (int i=0; i<tabs.length; i++) {
+              final e = tabs[i];
+              if (e.route!=null) {
+                final name = e.route?.replaceAll('_', ''); // hack to allow duplicated routes to triger properly
+                if (e.children!=null) {
+                  int innerIndex = getSelectedIndex!(e.children!, match);
+                  if (innerIndex>=0) {
+                    tabs[i] = e.copyWith(
+                      selectedChild: innerIndex,
+                    );
+                    scaffoldChangeNotifier.isTreeNodeExpanded[e.uniqueId] = true;
+                    return i;
+                  }
+                }
+                // print("$name -- $currentRouteName");
+                if (name == currentRouteName) {
+                  return i;
+                }
+              } else if (e.children!=null) {
                 int innerIndex = getSelectedIndex!(e.children!, match);
                 if (innerIndex>=0) {
                   tabs[i] = e.copyWith(
@@ -291,25 +299,67 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   return i;
                 }
               }
-              // print("$location -- $computedName");
-              if (computedName == location) {
-                return i;
-              }
-            } else if (e.children!=null) {
-              int innerIndex = getSelectedIndex!(e.children!, match);
-              if (innerIndex>=0) {
-                tabs[i] = e.copyWith(
-                  selectedChild: innerIndex,
-                );
-                scaffoldChangeNotifier.isTreeNodeExpanded[e.uniqueId] = true;
-                return i;
+            }
+            return -1;
+          };
+          for (int i=matches.lastIndex; i>=0 && _selected<0; i--) {
+            _selected = getSelectedIndex(_tabs, matches[i]);
+          }
+
+        } else {
+
+          // old deprecated method of comparing using computed paths
+          final goRouter = GoRouter.of(context);
+          String location = goRouter.location;
+          int queryParamsIndex = location.indexOf('?');
+          if (queryParamsIndex>=0) {
+            location = location.substring(0, queryParamsIndex);
+          }
+          final matches = goRouter.routerDelegate.matches;
+          final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
+          Map<ResponsiveDrawerMenuItem, String> computedNames = {};
+          int Function(List<ResponsiveDrawerMenuItem>, GoRouteMatch)? getSelectedIndex;
+          getSelectedIndex = (tabs, match) {
+            for (int i=0; i<tabs.length; i++) {
+              final e = tabs[i];
+              if (e.route!=null) {
+                if (!computedNames.containsKey(e)) {
+                  computedNames[e] = goRouter.namedLocation(e.route!,
+                    params: e.params ?? {},
+                  );
+                }
+                final computedName = computedNames[e]!;
+                if (e.children!=null) {
+                  int innerIndex = getSelectedIndex!(e.children!, match);
+                  if (innerIndex>=0) {
+                    tabs[i] = e.copyWith(
+                      selectedChild: innerIndex,
+                    );
+                    scaffoldChangeNotifier.isTreeNodeExpanded[e.uniqueId] = true;
+                    return i;
+                  }
+                }
+                // print("$location -- $computedName");
+                if (computedName == location) {
+                  return i;
+                }
+              } else if (e.children!=null) {
+                int innerIndex = getSelectedIndex!(e.children!, match);
+                if (innerIndex>=0) {
+                  tabs[i] = e.copyWith(
+                    selectedChild: innerIndex,
+                  );
+                  scaffoldChangeNotifier.isTreeNodeExpanded[e.uniqueId] = true;
+                  return i;
+                }
               }
             }
+            return -1;
+          };
+          for (int i=matches.lastIndex; i>=0 && _selected<0; i--) {
+            _selected = getSelectedIndex(_tabs, matches[i]);
           }
-          return -1;
-        };
-        for (int i=matches.lastIndex; i>=0 && _selected<0; i--) {
-          _selected = getSelectedIndex(_tabs, matches[i]);
+
         }
 
       } else {
@@ -365,6 +415,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
       _updateTabs();
     }
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: _getWidgets(context, _tabs, _selected),
     );
   }
@@ -673,22 +724,20 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             popupAlignment: Alignment.bottomRight,
             useCursorLocation: false,
             contextMenuWidth: 304,
-            contextMenuWidget: IntrinsicHeight(
-              child: DrawerMenuFromZero(
-                popup: true,
-                tabs: tabs[i].children!,
-                // tabs: [tabs[i].children!.first],
-                compact: false,
-                selected: tabs[i].selectedChild,
-                inferSelected: false,
-                paddingRight: 16,
-                pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
-                    ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
-                    : widget.pushType,
-                homeRoute: widget.homeRoute,
-                parentTabs: widget.parentTabs ?? _tabs,
-                style: widget.style,
-              ),
+            contextMenuWidget: DrawerMenuFromZero(
+              popup: true,
+              tabs: tabs[i].children!,
+              // tabs: [tabs[i].children!.first],
+              compact: false,
+              selected: tabs[i].selectedChild,
+              inferSelected: false,
+              paddingRight: 16,
+              pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
+                  ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
+                  : widget.pushType,
+              homeRoute: widget.homeRoute,
+              parentTabs: widget.parentTabs ?? _tabs,
+              style: widget.style,
             ),
           );
 

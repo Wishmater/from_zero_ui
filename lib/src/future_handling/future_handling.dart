@@ -204,8 +204,16 @@ class ErrorSign extends StatelessWidget {
   final String? subtitle;
   final VoidCallback? onRetry;
   final Widget? icon;
+  final Widget? retryButton;
 
-  ErrorSign({required this.title, this.subtitle, this.onRetry, this.icon, Key? key}) : super(key: key);
+  ErrorSign({
+    Key? key,
+    required this.title,
+    this.subtitle,
+    this.icon,
+    this.onRetry,
+    this.retryButton,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -235,10 +243,10 @@ class ErrorSign extends StatelessWidget {
                 style: Theme.of(context).textTheme.bodyText1,
                 textAlign: TextAlign.center,
               ),
-            if (onRetry!=null)
+            if (retryButton!=null || onRetry!=null)
               SizedBox(height: 16,),
-            if (onRetry!=null)
-              TextButton(
+            if (retryButton!=null || onRetry!=null)
+              retryButton ?? TextButton(
                 style: TextButton.styleFrom(
                   primary: Theme.of(context).brightness==Brightness.light
                       ? Colors.blue.shade500
@@ -279,8 +287,8 @@ Widget _defaultLoadingBuilder(context){
 
 @deprecated
 Widget defaultErrorBuilder(context, error, stackTrace){
-  print(error);
-  print(stackTrace);
+  // print(error);
+  // print(stackTrace);
   return ErrorSign(
     icon: Icon(Icons.error_outline), //size: 64, color: Theme.of(context).errorColor,
     title: FromZeroLocalizations.of(context).translate("error"),
