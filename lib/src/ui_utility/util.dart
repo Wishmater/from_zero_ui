@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:intl/intl.dart';
 
 
@@ -104,16 +105,28 @@ class ValueString<T> with Comparable implements ContainsValue {
 
 }
 
-class NumValueString<T extends num> extends ValueString<T> {
 
-  NumValueString(T? value, NumberFormat formatter)
+class ValueStringNum<T extends num> extends ValueString<T> {
+
+  ValueStringNum(T? value, NumberFormat formatter)
       : super(value ?? (0.0 as T), value==null ? '' : formatter.format(value));
 
 }
 
 
+class ValueStringReference<T> extends ValueString<T> {
 
+  String Function(T value) toStringFunction;
 
+  ValueStringReference(T value, this.toStringFunction)
+      : super (value, null);
+
+  @override
+  String toString() {
+    return value==null ? '' : toStringFunction(value!);
+  }
+
+}
 
 
 

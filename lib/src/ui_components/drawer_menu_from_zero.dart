@@ -845,26 +845,20 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
       this.subtitleRight}) : super(key: key);
 
   @override
-  _DrawerMenuButtonFromZeroState createState() => _DrawerMenuButtonFromZeroState(selectedColor);
+  _DrawerMenuButtonFromZeroState createState() => _DrawerMenuButtonFromZeroState();
 
 }
 
 class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
 
-  Color? selectedColor;
-
-  _DrawerMenuButtonFromZeroState(this.selectedColor);
+  _DrawerMenuButtonFromZeroState();
 
   @override
   Widget build(BuildContext context) {
-    if (widget.selectedColor==null){
-      selectedColor = Theme.of(context).brightness==Brightness.dark
-          ? Theme.of(context).accentColor
-          : Theme.of(context).primaryColor;
-    }
+    final selectedColor = widget.selectedColor ?? Theme.of(context).indicatorColor;
     return Container(
       color: widget.selected
-          ? selectedColor!.withOpacity(0.05)
+          ? selectedColor.withOpacity(0.05)
           : Colors.transparent,
       child: ListTile(
         selected: widget.selected,
@@ -882,13 +876,13 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 children: [
                   Expanded(
                     child: Text(widget.subtitle!, style: TextStyle(
-                        color: widget.selected ? selectedColor!.withOpacity(0.75)
+                        color: widget.selected ? selectedColor.withOpacity(0.75)
                             : Theme.of(context).textTheme.caption!.color
                     ),),
                   ),
                   if (widget.subtitleRight!=null)
                     Text(widget.subtitleRight!, style: TextStyle(
-                        color: widget.selected ? selectedColor!.withOpacity(0.75)
+                        color: widget.selected ? selectedColor.withOpacity(0.75)
                             : Theme.of(context).textTheme.caption!.color
                       ),
                       textAlign: TextAlign.right,

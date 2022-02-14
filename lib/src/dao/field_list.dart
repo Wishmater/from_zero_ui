@@ -65,13 +65,23 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   ValueNotifier<List<T>?> filtered = ValueNotifier(null);
 
   static String defaultToString(ListField field) {
-    return field.objects.length>5
-        ? defaultToStringCount(field)
-        : defaultToStringAll(field);
+    return listToStringSmart(field.objects,
+      modelNameSingular: field.objectTemplate.classUiName,
+      modelNamePlural: field.objectTemplate.classUiNamePlural,
+    );
   }
-  static String defaultToStringAll(ListField field) {
+  static String listToStringSmart(List list, {
+    String? modelNameSingular,
+    String? modelNamePlural,
+    BuildContext? context, // for localization
+  }) {
+    return list.length>5
+        ? listToStringCount(list)
+        : listToStringAll(list);
+  }
+  static String listToStringAll(List list) {
     String result = '';
-    for (final e in field.objects) {
+    for (final e in list) {
       if (result.isNotEmpty) {
         result += ', ';
       }
@@ -79,11 +89,17 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     }
     return result;
   }
-  static String defaultToStringCount(ListField field) {
-    final name = field.objects.length==1
-        ? field.objectTemplate.classUiName
-        : field.objectTemplate.classUiNamePlural;
-    return '${field.objects.length} $name';
+  static String listToStringCount(List list, {
+    String? modelNameSingular,
+    String? modelNamePlural,
+    BuildContext? context, // for localization
+  }) {
+    final name = list.length==1
+        ? (modelNameSingular ?? (context==null ? ''
+            : FromZeroLocalizations.of(context).translate('element_sing')))
+        : (modelNamePlural ?? (context==null ? ''
+            : FromZeroLocalizations.of(context).translate('element_plur')));
+    return '${list.length} $name';
   }
 
   ListField({

@@ -67,7 +67,6 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   @override
   Widget build(BuildContext context) {
 
-    // TODO 2 should this be done ??
     if (widget.controller==null) {
       return widget.child;
     }

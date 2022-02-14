@@ -1423,7 +1423,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     return widget.columns?[colKey]?.alignment ?? TextAlign.left;
   }
 
-  TextStyle? _getStyle(BuildContext context, RowModel<T> row, int j){
+  TextStyle? _getStyle(BuildContext context, RowModel<T> row, dynamic j){
     TextStyle? style;
     if (widget.rowStyleTakesPriorityOverColumn){
       style = row.textStyle ?? widget.columns?[j]?.textStyle;
