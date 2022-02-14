@@ -739,11 +739,13 @@ class _SkipFrameWidgetState extends State<SkipFrameWidget> {
 
   void skipNextFrame() {
     WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-      skipFramesLeft--;
-      if (skipFramesLeft > 1) {
-        skipNextFrame();
-      } else {
-        setState(() {});
+      if (mounted) {
+        skipFramesLeft--;
+        if (skipFramesLeft > 0) {
+          skipNextFrame();
+        } else {
+          setState(() {});
+        }
       }
     });
   }

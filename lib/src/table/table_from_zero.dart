@@ -46,7 +46,7 @@ class TableFromZero<T> extends StatefulWidget {
   final double stickyOffset;
   final double footerStickyOffset;
   final bool alternateRowBackgroundBrightness;
-  final bool alternateRowBackgroundSmartly;
+  final bool? alternateRowBackgroundSmartly;
   final bool rowStyleTakesPriorityOverColumn;
   final bool hideIfNoRows;
   final bool? implicitlyAnimated;
@@ -82,7 +82,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.stickyOffset = 0,
     this.footerStickyOffset = 0,
     this.alternateRowBackgroundBrightness = true,
-    this.alternateRowBackgroundSmartly = true,
+    this.alternateRowBackgroundSmartly,
     this.rowStyleTakesPriorityOverColumn = true,
     this.hideIfNoRows = false,
     this.implicitlyAnimated,
@@ -258,9 +258,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       widget.columns!.forEach((key, col) {
         List<dynamic> available = [];
         if (col.filterEnabled ?? true) {
-          widget.rows.forEach((element) {
-            if (!available.contains(element.values[key]))
-              available.add(element.values[key]);
+          widget.rows.forEach((row) {
+            final element = row.values[key];
+            if (element is List) {
+              for (final e in element) {
+                if (!available.contains(e)) {
+                  available.add(e);
+                }
+              }
+            } else {
+              if (!available.contains(element)) {
+                available.add(element);
+              }
+            }
           });
         }
         bool sortAscending = col.defaultSortAscending ?? true;
@@ -570,29 +580,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         if (result==null && col?.flex==0){
           return SizedBox.shrink();
         }
-        if (false && !kIsWeb && Platform.isWindows){ // TODO 3 completely remove old hack to prevent horizontal tearing in windows
-          result = Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Positioned( // old hack to prevent horizontal tearing in windows
-                top: row==headerRowModel ? 0 : -1,
-                bottom: -1, // bottom: i==filtered.length-1 ? 0 : -1,
-                left: j==0 ? 0 : -1,
-                right: j==cols-1 ? 0 : -1,
-                child: Container(
-                  decoration: _getDecoration(row, colKey),
-                ),
-              ),
-              if (result!=null)
-                result,
-            ],
-          );
-        } else{
-          result = Container(
-            decoration: _getDecoration(row, colKey),
-            child: result,
-          );
-        }
+        result = Container(
+          decoration: _getDecoration(row, colKey),
+          child: result,
+        );
         if (addSizing){
           if (col?.width!=null){
             result = SizedBox(width: col!.width, child: result,);
@@ -711,7 +702,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         result = ScrollOpacityGradient(
           scrollController: sharedController,
           direction: OpacityGradient.horizontal,
-          child: row==headerRowModel // TODO 2 scrollbar might not work in tables with no header
+          child: row==headerRowModel // TODO 2 horizontal scrollbar might not work in tables with no header
               ? NotificationRelayerListener(
                 controller: notificationRelayController,
                 consumeRelayedNotifications: true,
@@ -1057,7 +1048,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     return result;
   }
 
-  void showFilterDialog(int j) async{
+  void showFilterDialog(dynamic j) async{
     final col = widget.columns?[j];
     ScrollController filtersScrollController = ScrollController();
     TableController filterTableController = TableController();
@@ -1129,7 +1120,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                               ),
                               PopupMenuButton<ConditionFilter>(
                                 tooltip: FromZeroLocalizations.of(context).translate('add_condition_filter'),
-                                offset: Offset(128, 32),
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
                                   child: Row(
@@ -1207,14 +1197,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                           ),
                         },
                         rows: availableFilters[j]!.map((e) {
-                          return SimpleRowModel<T>(
+                          return SimpleRowModel(
                             id: e,
-                            values: {0: e.toString()},
+                            values: {0: e},
                             selected: valueFilters[j]![e] ?? false,
                             onCheckBoxSelected: (row, selected) {
                               modified = true;
                               valueFilters[j]![row.id] = selected!;
-                              (row as SimpleRowModel<T>).selected = selected;
+                              (row as SimpleRowModel).selected = selected;
                               return true;
                             },
                           );
@@ -1258,7 +1248,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                                           filterPopupSetState(() {
                                             filterTableController.filtered!.forEach((row) {
                                               valueFilters[j]![row.id] = true;
-                                              (row as SimpleRowModel<T>).selected = true;
+                                              (row as SimpleRowModel).selected = true;
                                             });
                                           });
                                         },
@@ -1272,7 +1262,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                                           filterPopupSetState(() {
                                             filterTableController.filtered!.forEach((row) {
                                               valueFilters[j]![row.id] = false;
-                                              (row as SimpleRowModel<T>).selected = false;
+                                              (row as SimpleRowModel).selected = false;
                                             });
                                           });
                                         },
@@ -1346,7 +1336,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
   Widget defaultCellBuilder(BuildContext context, RowModel<T> row, dynamic colKey) {
     // final col = widget.columns?[colKey];
-    String message = row.values[colKey]!=null ? row.values[colKey].toString() : "";
+    final value = row.values[colKey];
+    String message;
+    if (value is List) {
+      message = ListField.listToStringAll(value);
+    } else {
+      message = value!=null ? value.toString() : "";
+    }
     final autoSizeTextMaxLines = 1;
     Widget result = AutoSizeText(
       message,
@@ -1407,10 +1403,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   }
   bool _shouldApplyDarkerBackground(Color? current, RowModel row, dynamic colKey, bool header){
 //    if (filtered[i]!=row) return false;
-    int i = row is! RowModel<T> ? 0 : filtered.indexOf(row);
-    if (i<=0) {
+    int i = row is! RowModel<T> ? -1 : filtered.indexOf(row);
+    if (i<0) {
       return false;
-    } else if (!widget.alternateRowBackgroundSmartly || i > filtered.length) {
+    } else if (i==0) {
+      return true;
+    } else if (!(widget.alternateRowBackgroundSmartly??filtered.length<50) || i > filtered.length) {
       return i.isOdd;
     } else {
       Color? previous = _getBackgroundColor(filtered[i-1], colKey, header);
@@ -1461,7 +1459,18 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       bool pass = true;
       for (final key in valueFilters.keys) {
         if (filtersApplied[key]!) {
-          pass = valueFilters[key]![element.values[key]] ?? false;
+          final value = element.values[key];
+          if (value is List) {
+            pass = false;
+            for (final e in value) {
+              pass = valueFilters[key]![e] ?? false;
+              if (pass) {
+                break; // make it pass true if at least 1 element is accepted
+              }
+            }
+          } else {
+            pass = valueFilters[key]![value] ?? false;
+          }
         }
         if (!pass) {
           break;

@@ -217,7 +217,7 @@ class ErrorSign extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    Widget result = Padding(
       padding: const EdgeInsets.all(12.0),
       child: Center(
         child: Column(
@@ -270,6 +270,15 @@ class ErrorSign extends StatelessWidget {
         ),
       ),
     );
+    final scrollController = ScrollController();
+    result = ScrollbarFromZero(
+      controller: scrollController,
+      child: SingleChildScrollView(
+        controller: scrollController,
+        child: result,
+      ),
+    );
+    return result;
   }
 
 }

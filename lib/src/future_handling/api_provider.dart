@@ -259,7 +259,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   static Widget defaultLoadingBuilder(BuildContext context, double? progress) {
     return LoadingSign(
       value: progress,
-      color: Theme.of(context).indicatorColor,
+      color: Theme.of(context).splashColor.withOpacity(1),
     );
   }
 

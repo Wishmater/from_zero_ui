@@ -316,7 +316,9 @@ class ComboField<T extends DAO> extends Field<T> {
           showSearchBox: showSearchBox,
           onSelected: _onSelected,
           // popupWidth: maxWidth,
-          buttonPadding: dense ? EdgeInsets.zero : null,
+          buttonStyle: TextButton.styleFrom(
+            padding: dense ? EdgeInsets.zero : null,
+          ),
           buttonChildBuilder: (context, title, hint, value, enabled, clearable, {showDropdownIcon=false}) {
             return buttonContentBuilder(context, title, hint, value, enabled, clearable,
               showDropdownIcon: showDropdownIcon,

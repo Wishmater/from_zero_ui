@@ -32,7 +32,7 @@ class ComboFromZero<T> extends StatefulWidget {
   final ExtraWidgetBuilder<T>? extraWidget;
   final FocusNode? focusNode;
   final Widget Function(T value)? popupWidgetBuilder;
-  final EdgeInsets? buttonPadding;
+  final ButtonStyle? buttonStyle;
 
   ComboFromZero({
     this.value,
@@ -55,7 +55,7 @@ class ComboFromZero<T> extends StatefulWidget {
     this.extraWidget,
     this.focusNode,
     this.popupWidgetBuilder,
-    this.buttonPadding,
+    this.buttonStyle,
   }) :  assert(possibleValues!=null
               || possibleValuesFuture!=null
               || possibleValuesProvider!=null);
@@ -182,9 +182,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
       children: [
         TextButton(
           key: buttonKey,
-          style: TextButton.styleFrom(
-            padding: widget.buttonPadding,
-          ),
+          style: widget.buttonStyle,
           child: Center(
             child: OverflowScroll(
               child: result,

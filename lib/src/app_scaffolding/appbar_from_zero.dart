@@ -8,7 +8,6 @@ import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
 
 
-
 class AppbarFromZero extends StatefulWidget {
 
 //  final Widget leading;
@@ -135,6 +134,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
         builder: (context, constraints) {
           List<Widget> actions = [];
           List<ActionFromZero> overflows = [];
+          List<ActionFromZero> contextMenuActions = [];
           List<Widget> expanded = [];
           List<int> removeIndices = [];
           if (forceExpanded!=null){
@@ -146,22 +146,31 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
             actions = List.from(widget.actions);
             for (int i=0; i<actions.length; i++){
               if (actions[i] is ActionFromZero){
-                ActionFromZero action = actions[i] as ActionFromZero;
+                ActionFromZero action = (actions[i] as ActionFromZero);
+                action = action.copyWith(
+                  onTap: _getOnTap(action),
+                );
                 ActionState state = action.getStateForMaxWidth(constraints.maxWidth);
                 switch (state){
                   case ActionState.none:
+                    removeIndices.add(i);
+                    break;
                   case ActionState.popup:
+                    contextMenuActions.add(action);
                     removeIndices.add(i);
                     break;
                   case ActionState.overflow:
                     overflows.add(action);
+                    contextMenuActions.add(action);
                     removeIndices.add(i);
                     break;
                   case ActionState.icon:
                     actions[i] = action.buildIcon(context);
+                    contextMenuActions.add(action);
                     break;
                   case ActionState.button:
                     actions[i] = action.buildButton(context);
+                    contextMenuActions.add(action);
                     break;
                   case ActionState.expanded:
                     if (action.centerExpanded){
@@ -181,7 +190,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
                   icon: Icon(Icons.more_vert),
                   anchorAlignment: Alignment.bottomCenter,
                   popupAlignment: Alignment.bottomCenter,
-                  actions: overflows.map((e) => e.copyWith(onTap: (context) => _getOnTap(e)?.call(context),)).toList(),
+                  actions: overflows,
                 ),
               );
             }
@@ -266,23 +275,26 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
               child: SizedBox(
                 key: ValueKey(forceExpanded!=null ? forceExpanded : expanded.isEmpty),
                 height: toolbarHeight,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: forceExpanded==null ? expanded : [
-                    Expanded(
-                      child: forceExpanded!.buildExpanded(context),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.close),
-                      onPressed: () {
-                        setState(() {
-                          forceExpanded = null;
-                          widget.onUnexpanded?.call();
-                        });
-                      },
-                    ),
-                  ],
+                child: Padding(
+                  padding: EdgeInsets.only(top: showWindowButtons ? titleBarHeight*0.7 : 0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: forceExpanded==null ? expanded : [
+                      Expanded(
+                        child: forceExpanded!.buildExpanded(context),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close),
+                        onPressed: () {
+                          setState(() {
+                            forceExpanded = null;
+                            widget.onUnexpanded?.call();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -335,12 +347,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
           if (widget.addContextMenu) {
             result = ContextMenuFromZero(
               onShowMenu: widget.onShowContextMenu,
-              actions: widget.actions
-                    .whereType<ActionFromZero>()
-                    .where((e) => e.getStateForMaxWidth(constraints.maxWidth).shownOnContextMenu)
-                    .map((e) {
-                      return e.copyWith(onTap: _getOnTap(e));
-                    }).toList(),
+              actions: contextMenuActions,
               child: result,
             );
           }
@@ -369,8 +376,8 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
     if (!action.enabled) {
       return null;
     }
-    if (action.onTap==null && action.expandedBuilder!=null){
-      return (context){
+    if (action.onTap==null && action.expandedBuilder!=null && forceExpanded!=action) {
+      return (context) {
         setState(() {
           forceExpanded = action;
           widget.onExpanded?.call(action);
