@@ -90,7 +90,7 @@ class ComboField<T extends DAO> extends Field<T> {
         );
 
   @override
-  ComboField copyWith({
+  ComboField<T> copyWith({
     FieldValueGetter<String, Field>? uiNameGetter,
     T? value,
     T? dbValue,

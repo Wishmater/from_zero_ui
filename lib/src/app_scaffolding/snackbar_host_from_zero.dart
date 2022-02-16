@@ -78,11 +78,11 @@ class SnackBarHostFromZero extends ConsumerStatefulWidget {
   }) : super(key: key,);
 
   @override
-  _SnackBarHostFromZeroState createState() => _SnackBarHostFromZeroState();
+  SnackBarHostFromZeroState createState() => SnackBarHostFromZeroState();
 
 }
 
-class _SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
+class SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
 
   SnackBarFromZero? lastShownSnackBar;
 

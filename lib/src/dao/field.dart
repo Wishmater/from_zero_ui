@@ -63,9 +63,11 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       passedFirstEdit = true;
       addUndoEntry(_value);
       _value = value;
-      dao.validate(dao.contextForValidation!,
-        validateNonEditedFields: false,
-      );
+      if (dao.contextForValidation!=null) {
+        dao.validate(dao.contextForValidation!,
+          validateNonEditedFields: false,
+        );
+      }
       notifyListeners();
     }
   }
@@ -115,7 +117,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
         this.hiddenInViewGetter = hiddenInViewGetter ?? hiddenGetter ?? falseFieldGetter,
         this.hiddenInFormGetter = hiddenInFormGetter ?? hiddenGetter ?? falseFieldGetter;
 
-  Field copyWith({
+  Field<T> copyWith({
     FieldValueGetter<String, Field>? uiNameGetter,
     T? value,
     T? dbValue,
@@ -343,47 +345,30 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Expanded(
-              flex: 1000000,
-              child: Text(uiName,
-                style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                  color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+              child: SelectableText(toString(),
+                style: Theme.of(context).textTheme.subtitle1,
+              ),
+            ),
+            if (showViewButtons && (value is DAO))
+              Padding(
+                padding: EdgeInsets.only(left: 12),
+                child: IconButton(
+                  icon: Icon(Icons.info_outline),
+                  padding: EdgeInsets.all(0),
+                  constraints: BoxConstraints(maxHeight: 32),
+                  onPressed: () => (value as DAO).pushViewDialog(context),
                 ),
-                textAlign: TextAlign.right,
               ),
-            ),
-            Container(
-              height: 24,
-              child: VerticalDivider(width: 16,),
-            ),
-            Expanded(
-              flex: 1618034,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text(toString(),
-                      style: Theme.of(context).textTheme.subtitle1,
-                    ),
-                  ),
-                  if (showViewButtons && (value is DAO))
-                    IconButton(
-                      icon: Icon(Icons.remove_red_eye),
-                      padding: EdgeInsets.all(0),
-                      constraints: BoxConstraints(maxHeight: 32),
-                      onPressed: () => (value as DAO).pushViewDialog(context),
-                    ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  List<ActionFromZero> buildDefaultActions(BuildContext context) {
+  List<ActionFromZero> buildDefaultActions(BuildContext context, {FocusNode? focusNode}) {
     return [
       ActionFromZero(
         title: 'Deshacer', // TODO 1 internationalize

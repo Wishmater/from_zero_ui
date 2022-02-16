@@ -325,7 +325,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool success = true;
     List<Future<bool>> results = [];
     for (final e in props.values) {
-      results.add(e.validate(context, this, validateIfNotEdited: validateNonEditedFields)..then((v) => notifyListeners()));
+      results.add(e.validate(contextForValidation!, this, validateIfNotEdited: validateNonEditedFields)..then((v) => notifyListeners()));
     }
     for (final e in results) {
       success = await e;
@@ -438,7 +438,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool newInstance = id==null || id==-1;
     bool success = false;
     try {
-      success = onSave==null || (await onSave!.call(context, this))!=null;
+      success = onSave==null || (await onSave!.call(contextForValidation??context, this))!=null;
     } catch (e, st) {
       success = false;
       print(e); print(st);
@@ -575,7 +575,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             for (final e in fieldGroups) {
               if (e.props.values.where((e) => !e.hiddenInForm).isNotEmpty) {
                 bool asPrimary = !widescreen || e.primary;
-                final name = e.name ?? 'Grupo $i';
+                final name = e.name ?? 'Grupo $i'; // TODO 3 internationalize
                 final scrollController = asPrimary ? primaryScrollController : ScrollController();
                 Widget groupWidget = buildGroupWidget(
                   context: context,
@@ -665,12 +665,15 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                     padding: const EdgeInsets.symmetric(horizontal: 12,),
                                     child: SingleChildScrollView(
                                       controller: primaryScrollController,
-                                      child: FocusTraversalOrder(
-                                        order: NumericFocusOrder(1),
-                                        child: FocusTraversalGroup(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: primaryFormWidgets,
+                                      child: Padding(
+                                        padding: const EdgeInsets.only(bottom: 16),
+                                        child: FocusTraversalOrder(
+                                          order: NumericFocusOrder(1),
+                                          child: FocusTraversalGroup(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: primaryFormWidgets,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -688,41 +691,42 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                     width: formDialogWidth+12+16,
                                     child: Column(
                                       children: [
-                                        ExcludeFocus(
-                                          child: ScrollbarFromZero(
-                                            controller: tabBarScrollController,
-                                            opacityGradientDirection: OpacityGradient.horizontal,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(right: 12, bottom: PlatformExtended.isDesktop ? 8 : 0,),
-                                              child: SingleChildScrollView(
-                                                scrollDirection: Axis.horizontal,
-                                                controller: tabBarScrollController,
-                                                child: IntrinsicWidth(
-                                                  child: Card(
-                                                    clipBehavior: Clip.hardEdge,
-                                                    child: TabBar( // TODO 3 replace this with an actual widget: PageIndicatorFromzero. Allow to have an indicator + building children dinamically according to selected
-                                                      isScrollable: true,
-                                                      indicatorWeight: 3,
-                                                      tabs: secondaryFormWidgets.keys.map((e) {
-                                                        return Container(
-                                                          height: 32,
-                                                          alignment: Alignment.center,
-                                                          child: Text(e, style: Theme.of(context).textTheme.subtitle1,),
-                                                        );
-                                                      }).toList(),
-                                                      onTap: (value) {
-                                                        pageController.animateToPage(value,
-                                                          duration: kTabScrollDuration,
-                                                          curve: Curves.ease,
-                                                        );
-                                                      },
+                                        if (secondaryFormWidgets.length>1 || secondaryFormWidgets.keys.first!='Grupo 1') // TODO 3 internationalize
+                                          ExcludeFocus(
+                                            child: ScrollbarFromZero(
+                                              controller: tabBarScrollController,
+                                              opacityGradientDirection: OpacityGradient.horizontal,
+                                              child: Padding(
+                                                padding: EdgeInsets.only(right: 12, bottom: PlatformExtended.isDesktop ? 8 : 0,),
+                                                child: SingleChildScrollView(
+                                                  scrollDirection: Axis.horizontal,
+                                                  controller: tabBarScrollController,
+                                                  child: IntrinsicWidth(
+                                                    child: Card(
+                                                      clipBehavior: Clip.hardEdge,
+                                                      child: TabBar( // TODO 3 replace this with an actual widget: PageIndicatorFromzero. Allow to have an indicator + building children dinamically according to selected
+                                                        isScrollable: true,
+                                                        indicatorWeight: 3,
+                                                        tabs: secondaryFormWidgets.keys.map((e) {
+                                                          return Container(
+                                                            height: 32,
+                                                            alignment: Alignment.center,
+                                                            child: Text(e, style: Theme.of(context).textTheme.subtitle1,),
+                                                          );
+                                                        }).toList(),
+                                                        onTap: (value) {
+                                                          pageController.animateToPage(value,
+                                                            duration: kTabScrollDuration,
+                                                            curve: Curves.ease,
+                                                          );
+                                                        },
+                                                      ),
                                                     ),
                                                   ),
                                                 ),
                                               ),
                                             ),
                                           ),
-                                        ),
                                         SizedBox(
                                           height: 0,
                                           child: TabBarView(
@@ -746,7 +750,14 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                                       child: FocusTraversalGroup(
                                                         child: SingleChildScrollView(
                                                           controller: secondaryScrollControllers[e],
-                                                          child: secondaryFormWidgets[e]!,
+                                                          child: Padding(
+                                                            padding: EdgeInsets.only(
+                                                              top: secondaryFormWidgets.length==1 && secondaryFormWidgets.keys.first=='Grupo 1'
+                                                                  ? 12 : 0,
+                                                              bottom: 28,
+                                                            ),
+                                                            child: secondaryFormWidgets[e]!,
+                                                          ),
                                                         ),
                                                       ),
                                                     ),
@@ -792,7 +803,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 allowSetInvalidatingFieldsToDefaultValues = allowSetInvalidatingFieldsToDefaultValues && error.allowSetThisFieldToDefaultValue;
                 allowUndoInvalidatingChanges = allowUndoInvalidatingChanges && error.allowUndoInvalidatingChange;
                 if (error.showVisualConfirmation) {
-                  invalidatingErrors[error] = e;
+                  invalidatingErrors[error] = error.field;
                 } else {
                   autoResolveInvalidatingErrors.add(error);
                 }
@@ -959,13 +970,17 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           actions: {
             UndoIntent: CallbackAction(
               onInvoke: (intent) {
-                undo();
+                if (_undoRecord.isNotEmpty) {
+                  undo();
+                }
                 return false;
               },
             ),
             RedoIntent: CallbackAction(
               onInvoke: (intent) {
-                redo();
+                if (_redoRecord.isNotEmpty) {
+                  redo();
+                }
                 return false;
               },
             ),
@@ -996,75 +1011,77 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     Widget content = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(uiName,
-                          style: Theme.of(context).textTheme.headline6,
-                        ),
-                        if (uiName.isNotEmpty)
-                          Text(classUiName,
-                            style: Theme.of(context).textTheme.subtitle2,
+        return IntrinsicWidth(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SelectableText(uiName,
+                            style: Theme.of(context).textTheme.headline6,
                           ),
-                      ],
+                          if (uiName.isNotEmpty)
+                            SelectableText(classUiName,
+                              style: Theme.of(context).textTheme.subtitle2,
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-                  if (showEditButton ?? viewDialogShowsEditButton ?? onSave!=null)
-                    TextButton(
-                      onPressed: () {
-                        maybeEdit(context);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.edit_outlined),
-                            SizedBox(width: 8,),
-                            Text('${FromZeroLocalizations.of(context).translate('edit')}', style: TextStyle(fontSize: 16),),
-                            SizedBox(width: 8,),
-                          ],
+                    if (showEditButton ?? viewDialogShowsEditButton ?? onSave!=null)
+                      TextButton(
+                        onPressed: () {
+                          maybeEdit(context);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.edit_outlined),
+                              SizedBox(width: 8,),
+                              Text('${FromZeroLocalizations.of(context).translate('edit')}', style: TextStyle(fontSize: 16),),
+                              SizedBox(width: 8,),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: buildViewWidget(context),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  FlatButton(
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              Expanded(
+                child: buildViewWidget(context),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    FlatButton(
+                      child: Padding(
+                        padding: const EdgeInsets.all(6.0),
+                        child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
                       ),
+                      textColor: Theme.of(context).textTheme.caption!.color,
+                      onPressed: () {
+                        Navigator.of(context).pop(); // Dismiss alert dialog
+                      },
                     ),
-                    textColor: Theme.of(context).textTheme.caption!.color,
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Dismiss alert dialog
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         );
       },
     );
@@ -1093,18 +1110,50 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       controller: scrollController,
       child: SingleChildScrollView(
         controller: scrollController,
-        child: Column(
-          children: props.values.where((e) => !e.hiddenInView).map((e) {
-            clear = !clear;
-            return Material(
-              color: clear ? Theme.of(context).cardColor
-                  : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
-              child: e.buildViewWidget(context,
-                linkToInnerDAOs: this.viewDialogLinksToInnerDAOs,
-                showViewButtons: this.viewDialogShowsViewButtons,
-              ),
-            );
-          }).toList(),
+        child: IntrinsicWidth(
+          child: Column(
+            children: props.values.where((e) => !e.hiddenInView).map((e) {
+              clear = !clear;
+              return Material(
+                color: clear ? Theme.of(context).cardColor
+                    : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 1000000,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                          alignment: Alignment.centerRight,
+                          child: SelectableText(e.uiName,
+                            style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                              color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+                            ),
+                            textAlign: TextAlign.right,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: 24,
+                        child: VerticalDivider(width: 0,),
+                      ),
+                      Expanded(
+                        flex: 1618034,
+                        child: Container(
+                          alignment: Alignment.centerLeft,
+                          child: e.buildViewWidget(context,
+                            linkToInnerDAOs: this.viewDialogLinksToInnerDAOs,
+                            showViewButtons: this.viewDialogShowsViewButtons,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );

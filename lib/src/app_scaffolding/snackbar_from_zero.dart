@@ -74,7 +74,9 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
     if (controller!=null) {
       throw Exception('Already showed this SnackBar');
     }
-    final host = ((context??this.context) as WidgetRef).read(fromZeroSnackBarHostControllerProvider);
+    final ref = ((context??this.context).findAncestorStateOfType<SnackBarHostFromZeroState>()?.ref)
+                ?? (context??this.context) as WidgetRef;
+    final host = ref.read(fromZeroSnackBarHostControllerProvider);
     controller = SnackBarControllerFromZero(
       host: host,
       snackBar: this,

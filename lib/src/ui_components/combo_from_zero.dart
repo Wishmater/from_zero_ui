@@ -192,7 +192,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
           focusNode: buttonFocusNode,
           onPressed: widget.enabled ? () async {
             buttonFocusNode.requestFocus();
-            bool? accepted = await showPopupFromZero<bool>(
+            T? selected = await showPopupFromZero<T>(
               context: context,
               anchorKey: buttonKey,
               width: widget.popupWidth,
@@ -211,7 +211,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
                 );
               },
             );
-            if (accepted!=true) {
+            if (selected!=null) {
               widget.onCanceled?.call();
             }
           } : null,
@@ -332,7 +332,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                 ? [
                     RowAction<T>(
                       title: FromZeroLocalizations.of(context).translate('view'),
-                      icon: Icon(Icons.remove_red_eye),
+                      icon: Icon(Icons.info_outline),
                       onRowTap: (context, row) {
                         (row.id as DAO).pushViewDialog(context);
                       },
@@ -397,7 +397,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
   void _select(T e) {
     bool? pop = widget.onSelected?.call(e);
     if (pop??true) {
-      Navigator.of(context).pop(true);
+      Navigator.of(context).pop(e);
     }
   }
 

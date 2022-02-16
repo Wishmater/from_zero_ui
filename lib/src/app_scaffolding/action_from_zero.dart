@@ -170,6 +170,8 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
       onDoubleTap: () => !enabled ? null : onTap?.call(context),
       child: TextButton(
         style: TextButton.styleFrom(
+          primary: Theme.of(context).appBarTheme.toolbarTextStyle?.color
+              ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
           padding: EdgeInsets.zero,
         ),
         onPressed: !enabled ? null : (){
@@ -179,11 +181,11 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            SizedBox(width: 6),
+            SizedBox(width: 8),
             if (icon!=null)
               icon,
             if (icon!=null)
-              SizedBox(width: 8,),
+              SizedBox(width: 6,),
             Text(title,
               style: TextStyle(
                 fontSize: 16,
@@ -191,7 +193,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
                   ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
               ),
             ),
-            SizedBox(width: 6),
+            SizedBox(width: 8),
           ],
         ),
       ),

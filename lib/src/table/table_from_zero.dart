@@ -417,7 +417,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                 ? headerRowModel!.rowAddon!
                 : _getRow(context, headerRowModel!)
             : null
-        : null;
+        : headerRowModel?.rowAddon;
     if (header!=null) {
       result = SliverStickyHeader.builder(
         sliver: result,
@@ -763,18 +763,21 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         );
       }
       if (rowActions.isNotEmpty) {
-        result = AppbarFromZero(
-          title: result,
-          actions: rowActions,
-          useFlutterAppbar: false,
-          toolbarHeight: row.height,
-          addContextMenu: row!=headerRowModel,
-          onShowContextMenu: () => row.focusNode.requestFocus(),
-          skipTraversalForActions: true,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          paddingRight: 0,
-          titleSpacing: 0,
+        result = Material(
+          type: MaterialType.transparency,
+          child: AppbarFromZero(
+            title: result,
+            actions: rowActions,
+            useFlutterAppbar: false,
+            toolbarHeight: row.height,
+            addContextMenu: row!=headerRowModel,
+            onShowContextMenu: () => row.focusNode.requestFocus(),
+            skipTraversalForActions: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            paddingRight: 0,
+            titleSpacing: 0,
+          ),
         );
       }
       if (row.rowAddon!=null) {
@@ -865,6 +868,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     } else {
       result = builder(context, null);
     }
+    result = ClipRect(
+      clipBehavior: Clip.hardEdge,
+      child: result,
+    );
     return result;
 
   }

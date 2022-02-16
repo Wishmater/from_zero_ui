@@ -129,13 +129,13 @@ ValidationError? fieldValidatorStringIsEmail(BuildContext context, DAO dao, Fiel
 
 
 
-class FieldDiffMessage extends StatelessWidget {
+class FieldDiffMessage<T extends Comparable> extends StatelessWidget {
 
-  final Field field;
-  final dynamic oldValue;
-  final dynamic newValue;
-  late final Field oldValueField;
-  late final Field newdValueField;
+  final Field<T> field;
+  final T? oldValue;
+  final T? newValue;
+  late final Field<T> oldValueField;
+  late final Field<T> newdValueField;
 
   FieldDiffMessage({
     Key? key,

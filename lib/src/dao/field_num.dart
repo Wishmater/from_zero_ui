@@ -266,50 +266,19 @@ class NumField extends Field<num> {
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [
               Positioned.fill(
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 300),
-                  color: dense && validationErrors.isNotEmpty
-                      ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
-                      : backgroundColor?.call(context, this, dao),
-                  curve: Curves.easeOut,
-                ),
-              ),
-              Positioned(
-                top: 0, left: 0, right: 0,
                 child: AnimatedBuilder(
                   animation: focusNode,
                   builder: (context, child) {
+                    final backgroundColor = this.backgroundColor?.call(context, this, dao);
+                    final focusColor = Theme.of(context).focusColor.withOpacity(Theme.of(context).focusColor.opacity*0.6);
                     return AnimatedContainer(
-                      height: focusNode.hasFocus ? 12 : 0,
-                      duration: Duration(milliseconds: 300),
-                      curve: Curves.easeOutCubic,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.blue.withOpacity(0), Colors.blue.withOpacity(0.1), Colors.blue.withOpacity(0.1),],
-                          begin: Alignment.bottomCenter, end: Alignment.topCenter,
-                          stops: [0, 0.4, 1],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              Positioned(
-                bottom: dense ? 10 : 0, left: 0, right: 0,
-                child: AnimatedBuilder(
-                  animation: focusNode,
-                  builder: (context, child) {
-                    return AnimatedContainer(
-                      height: focusNode.hasFocus ? 12 : 0,
-                      duration: Duration(milliseconds: 300),
-                      curve: Curves.easeOutCubic,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [Colors.blue.withOpacity(0), Colors.blue.withOpacity(0.1), Colors.blue.withOpacity(0.1),],
-                          begin: Alignment.topCenter, end: Alignment.bottomCenter,
-                          stops: [0, 0.4, 1],
-                        ),
-                      ),
+                      duration: Duration(milliseconds: 250),
+                      color: dense && validationErrors.isNotEmpty
+                          ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+                          : focusNode.hasFocus  ? backgroundColor!=null ? Color.alphaBlend(focusColor, backgroundColor)
+                          : focusColor
+                          : focusColor.withOpacity(0),
+                      curve: Curves.easeOut,
                     );
                   },
                 ),

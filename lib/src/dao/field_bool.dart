@@ -268,33 +268,39 @@ class BoolField extends Field<BoolComparable> {
               value: value!.value,
               dense: true,
               controlAffinity: listTileControlAffinity,
-              contentPadding: EdgeInsets.symmetric(horizontal: dense ? 0 : 12),
+              contentPadding: EdgeInsets.only(left: dense ? 0 : 12, right: dense ? 0 : 12, bottom: 7),
               tileColor: dense && validationErrors.isNotEmpty
                   ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
                   : backgroundColor?.call(context, this, dao),
               checkColor: selectedColor?.call(context, this, dao),
-              title: dense || !showBothNeutralAndSpecificUiName ? null : Transform.translate(
-                offset: Offset(
-                  listTileControlAffinity==ListTileControlAffinity.leading ? -12 : 3,
-                  -4,
-                ),
-                child: Text(uiName, style: Theme.of(context).textTheme.caption!.copyWith(
-                  color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                ),),
-              ),
-              subtitle: Transform.translate(
-                offset:  Offset(
-                  listTileControlAffinity==ListTileControlAffinity.leading ? -12 : 3,
-                  !dense && showBothNeutralAndSpecificUiName ? -4 : -10,
-                ),
-                child: Text(uiNameValue, style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                  color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
-                ),),
-              ),
               onChanged: !enabled ? null : (value) {
                 focusNode.requestFocus();
                 this.value = value!.comparable;
               },
+              title: Transform.translate(
+                offset: Offset(
+                  listTileControlAffinity==ListTileControlAffinity.leading ? -12 : 3,
+                  -1,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!dense && showBothNeutralAndSpecificUiName)
+                      Text(uiName,
+                        style: Theme.of(context).textTheme.caption!.copyWith(
+                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                        ),
+                      ),
+                    Text(uiNameValue,
+                      style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                        color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                        height: 1.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
             break;
           case BoolFieldDisplayType.switchTile:

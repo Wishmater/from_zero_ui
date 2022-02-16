@@ -233,7 +233,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         ...actions,
-                        SizedBox(width: showWindowButtons ? 2 : 0,),
+                        SizedBox(width: showWindowButtons ? 8 : 0,),
                       ],
                     ),
                   ),

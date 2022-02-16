@@ -714,7 +714,7 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
 
       double stuckOffset;
       if (footer) {
-        stuckOffset = (-(offsetToReveal - scrollPosition.pixels + stickOffset))
+        stuckOffset = (-(offsetToReveal - scrollPosition.pixels + math.min(stickOffset, scrollPosition.maxScrollExtent)))
             .clamp(-double.infinity, 0);
       } else {
         stuckOffset = (scrollPosition.pixels - offsetToReveal + stickOffset)
