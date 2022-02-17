@@ -48,8 +48,6 @@ fix part of the screen not being draggable on really big screens
 	
 popupFromZero doesn't reposition child in response to window resize
 
-right click on appbar shows incoherent actions (expanded, disabled)
-
 
 
 
@@ -58,6 +56,9 @@ right click on appbar shows incoherent actions (expanded, disabled)
 P2
 **********************************************************************
 
+StringField should mark as edited as soon as you start typing
+	this is noticeable because save button doesn't light up when typing
+	
 Table -- fix implicitlyAnimatedTable, make it default for <10 items
 
 Table Feature -- Sticky columns 
