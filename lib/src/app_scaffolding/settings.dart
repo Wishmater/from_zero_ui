@@ -179,23 +179,62 @@ class ThemeSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton( //TODO 2 generalize THIS into DropdownFromZero, add comodities
-      child: ListTile(
-        title: Text(FromZeroLocalizations.of(context).translate("theme")),
-        subtitle: Text(themeParameters.themeNames(context)[themeParameters.selectedTheme]),
-        leading: themeParameters.themeIcons[themeParameters.selectedTheme],
-        trailing: Icon(Icons.arrow_drop_down),
-      ),
-      itemBuilder: (context) => List.generate(themeParameters.themes.length, (index) => PopupMenuItem(
-        value: index,
-        child: ListTile(
-          title: Text(themeParameters.themeNames(context)[index]),
-          leading: themeParameters.themeIcons[index],
-          contentPadding: EdgeInsets.all(0),
-        ),
-      )),
-      initialValue: themeParameters.selectedTheme,
-      onSelected: (int value) => value!=themeParameters.selectedTheme ? themeParameters.selectedTheme = value : null,
+    return ComboFromZero<int>(
+      title: FromZeroLocalizations.of(context).translate("theme"),
+      value: themeParameters.selectedTheme,
+      showSearchBox: false,
+      clearable: false,
+      popupRowHeight: 48,
+      possibleValues: List.generate(themeParameters.themes.length, (index)=>index),
+      onSelected: (int? value) {
+        if (value!=null && value!=themeParameters.selectedTheme) {
+          themeParameters.selectedTheme = value;
+        }
+        return true;
+      },
+      buttonChildBuilder: (context, title, hint, value, enabled, clearable, {showDropdownIcon=false}) {
+        return IconTheme(
+          data: Theme.of(context).iconTheme,
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SizedBox(width: 6,),
+                themeParameters.themeIcons[themeParameters.selectedTheme],
+                SizedBox(width: 12,),
+                Expanded(
+                  child: MaterialKeyValuePair(
+                    title: title,
+                    value: themeParameters.themeNames(context)[themeParameters.selectedTheme],
+                    valueStyle: Theme.of(context).textTheme.subtitle1,
+                  ),
+                ),
+                SizedBox(width: 4,),
+                Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyText1!.color,),
+                SizedBox(width: 4,),
+              ],
+            ),
+          ),
+        );
+      },
+      popupWidgetBuilder: (value) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            SizedBox(width: 4,),
+            themeParameters.themeIcons[value],
+            SizedBox(width: 12,),
+            Expanded(
+              child: Text(themeParameters.themeNames(context)[value],
+                style: Theme.of(context).textTheme.subtitle1,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

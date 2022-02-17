@@ -267,6 +267,7 @@ class StringField extends Field<String> {
         }
       }
     });
+    bool labelAlwaysFloating = !(enabled&&hint==null);
     Widget result = NotificationListener(
       onNotification: (notification) => true,
       child: AnimatedBuilder(
@@ -312,13 +313,16 @@ class StringField extends Field<String> {
                   decoration: inputDecoration??InputDecoration(
                     border: InputBorder.none,
                     alignLabelWithHint: dense,
-                    label: Text(uiName,
-                      softWrap: false,
-                      overflow: TextOverflow.fade,
+                    label: Padding(
+                      padding: EdgeInsets.only(top: !dense&&labelAlwaysFloating ? 12 : 0),
+                      child: Text(uiName,
+                        softWrap: false,
+                        overflow: TextOverflow.fade,
+                      ),
                     ),
                     hintText: hint,
-                    floatingLabelBehavior: enabled&&hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
-                    labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
+                    floatingLabelBehavior: !labelAlwaysFloating ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
+                    labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : labelAlwaysFloating ? 1 : 1.85,
                       color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
                     ),
                     hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),

@@ -33,6 +33,8 @@ class ComboFromZero<T> extends StatefulWidget {
   final FocusNode? focusNode;
   final Widget Function(T value)? popupWidgetBuilder;
   final ButtonStyle? buttonStyle;
+  final double popupRowHeight;
+  final bool useFixedPopupRowHeight;
 
   ComboFromZero({
     this.value,
@@ -56,6 +58,8 @@ class ComboFromZero<T> extends StatefulWidget {
     this.focusNode,
     this.popupWidgetBuilder,
     this.buttonStyle,
+    this.popupRowHeight = 38,
+    this.useFixedPopupRowHeight = true,
   }) :  assert(possibleValues!=null
               || possibleValuesFuture!=null
               || possibleValuesProvider!=null);
@@ -208,6 +212,8 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
                   title: widget.title,
                   extraWidget: widget.extraWidget,
                   popupWidgetBuilder: widget.popupWidgetBuilder,
+                  rowHeight: widget.popupRowHeight,
+                  useFixedRowHeight: widget.useFixedPopupRowHeight,
                 );
               },
             );
@@ -266,6 +272,8 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
   final String? title;
   final ExtraWidgetBuilder<T>? extraWidget;
   final Widget Function(T value)? popupWidgetBuilder;
+  final double rowHeight;
+  final bool useFixedRowHeight;
 
   ComboFromZeroPopup({
     required this.possibleValues,
@@ -278,6 +286,8 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
     this.title,
     this.extraWidget,
     this.popupWidgetBuilder,
+    this.rowHeight = 38,
+    this.useFixedRowHeight = true,
   });
 
   @override
@@ -310,6 +320,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
             tableController: tableController,
             tableHorizontalPadding: 8,
             initialSortedColumn: widget.sort ? 0 : -1,
+            enableFixedHeightForListRows: widget.useFixedRowHeight,
             cellBuilder: widget.popupWidgetBuilder==null ? null
                 : (context, row, colKey) => widget.popupWidgetBuilder!(row.id),
             onFilter: (filtered) {
@@ -322,6 +333,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
               return SimpleRowModel(
                 id: e,
                 values: {0: e.toString()},
+                height: widget.rowHeight,
                 backgroundColor: widget.value==e ? Theme.of(context).toggleableActiveColor.withOpacity(0.1) : null,
                 onRowTap: (value) {
                   _select(e);
