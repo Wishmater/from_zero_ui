@@ -239,11 +239,16 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     final superResult = super.validate(context, dao, validateIfNotEdited: validateIfNotEdited);
     listValidationErrors = List.from(validationErrors);
     List<Future<bool>> results = [];
+    final templateProps = objectTemplate.props;
     for (final e in objects) {
-      for (final f in e.props.values) {
-        results.add(f.validate(context, e,
-          validateIfNotEdited: validateIfNotEdited,
-        ));
+      final objectProps = e.props;
+      for (final key in templateProps.keys) {
+        final field = objectProps[key];
+        if (field!=null) {
+          results.add(field.validate(context, e,
+            validateIfNotEdited: validateIfNotEdited,
+          ));
+        }
       }
     }
     bool success = await superResult;
@@ -251,7 +256,13 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       success = success && await e;
     }
     for (final e in objects) {
-      validationErrors.addAll(e.validationErrors);
+      final objectProps = e.props;
+      for (final key in templateProps.keys) {
+        final field = objectProps[key];
+        if (field!=null) {
+          validationErrors.addAll(e.validationErrors);
+        }
+      }
     }
     validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
     return validationErrors.where((e) => e.isBlocking).isEmpty;
@@ -438,7 +449,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   }
 
   void maybeAddRow(context, [int? insertIndex]) async { // TODO 3 implement disabled logic in ListField (color + tooltip + mouseRegion)
-    T emptyDAO = objectTemplate.copyWith() as T;
+    T emptyDAO = (objectTemplate.copyWith() as T)..id=null;
     if (hasAvailableObjectsPool) {
       T? selected;
       if (showObjectsFromAvailablePoolAsTable) {
@@ -461,47 +472,60 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         Widget content = AnimatedBuilder(
           animation:  this,
           builder: (context, child) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            return Stack(
               children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
-                  child: Text('${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
-                    style: Theme.of(context).textTheme.headline6,
-                  ),
-                ),
-                Expanded(
-                  child: availableObjectsPoolProvider==null
-                      ? FutureBuilderFromZero<List<T>>(
-                          future: availableObjectsPoolGetter!(context),
-                          successBuilder: (context, data) {
-                            return _availablePoolTableDataBuilder(context, data, emptyDAO);
-                          },
-                        )
-                      : ApiProviderBuilder<List<T>>(
-                          provider: availableObjectsPoolProvider!(context),
-                          dataBuilder: (context, data) {
-                            return _availablePoolTableDataBuilder(context, data, emptyDAO);
-                          },
-                        ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                availableObjectsPoolProvider==null
+                    ? FutureBuilderFromZero<List<T>>(
+                        future: availableObjectsPoolGetter!(context),
+                        successBuilder: (context, data) {
+                          return _availablePoolTableDataBuilder(context, data, emptyDAO);
+                        },
+                      )
+                    : ApiProviderBuilder<List<T>>(
+                        provider: availableObjectsPoolProvider!(context),
+                        dataBuilder: (context, data) {
+                          return _availablePoolTableDataBuilder(context, data, emptyDAO);
+                        },
+                      ),
+                Positioned(
+                  bottom: 0, left: 0, right: 0,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      FlatButton(
-                        child: Padding(
-                          padding: const EdgeInsets.all(6.0),
-                          child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      Container(
+                        height: 16,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Theme.of(context).cardColor.withOpacity(0),
+                              Theme.of(context).cardColor,
+                            ],
                           ),
                         ),
-                        textColor: Theme.of(context).textTheme.caption!.color,
-                        onPressed: () {
-                          Navigator.of(context).pop(); // Dismiss alert dialog
-                        },
+                      ),
+                      Container(
+                        alignment: Alignment.centerRight,
+                        padding: EdgeInsets.only(bottom: 8, right: 16,),
+                        color: Theme.of(context).cardColor,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            FlatButton(
+                              child: Padding(
+                                padding: const EdgeInsets.all(6.0),
+                                child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              textColor: Theme.of(context).textTheme.caption!.color,
+                              onPressed: () {
+                                Navigator.of(context).pop(); // Dismiss alert dialog
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -535,43 +559,67 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           context: context,
           anchorKey: headerGlobalKey,
           builder: (context) {
-            return Column(
-              mainAxisSize: MainAxisSize.min,
+            return Stack(
               children: [
-                availableObjectsPoolProvider==null
-                    ? FutureBuilderFromZero<List<T>>(
-                        future: availableObjectsPoolGetter!(context),
-                        successBuilder: (context, data) {
-                          return _availablePoolComboDataBuilder(context, data, emptyDAO);
-                        },
-                      )
-                    : ApiProviderBuilder<List<T>>(
-                        provider: availableObjectsPoolProvider!(context),
-                        dataBuilder: (context, data) {
-                          return _availablePoolComboDataBuilder(context, data, emptyDAO);
-                        },
-                      ),
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  padding: const EdgeInsets.only(bottom: 16+42,),
+                  child: availableObjectsPoolProvider==null
+                      ? FutureBuilderFromZero<List<T>>(
+                          future: availableObjectsPoolGetter!(context),
+                          successBuilder: (context, data) {
+                            return _availablePoolComboDataBuilder(context, data, emptyDAO);
+                          },
+                        )
+                      : ApiProviderBuilder<List<T>>(
+                          provider: availableObjectsPoolProvider!(context),
+                          dataBuilder: (context, data) {
+                            return _availablePoolComboDataBuilder(context, data, emptyDAO);
+                          },
+                        ),
+                ),
+                Positioned(
+                  bottom: 0, left: 0, right: 0,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      FlatButton(
-                        child: Padding(
-                          padding: const EdgeInsets.all(6.0),
-                          child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      Container(
+                        height: 16,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Theme.of(context).cardColor.withOpacity(0),
+                              Theme.of(context).cardColor,
+                            ],
                           ),
                         ),
-                        textColor: Theme.of(context).textTheme.caption!.color,
-                        onPressed: () {
-                          Navigator.of(context).pop(); // Dismiss alert dialog
-                        },
+                      ),
+                      Container(
+                        alignment: Alignment.centerRight,
+                        padding: EdgeInsets.only(bottom: 8, right: 16,),
+                        color: Theme.of(context).cardColor,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            FlatButton(
+                              child: Padding(
+                                padding: const EdgeInsets.all(6.0),
+                                child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                              textColor: Theme.of(context).textTheme.caption!.color,
+                              onPressed: () {
+                                Navigator.of(context).pop(); // Dismiss alert dialog
+                              },
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
                 ),
-
               ],
             );
           },
@@ -606,21 +654,30 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
             child: Padding(
               padding: const EdgeInsets.only(top: 16, bottom: 32),
               child: Column(
-                children: ListField(
-                  uiNameGetter: (field, dao) => emptyDAO.classUiNamePluralGetter(dao),
-                  objectTemplate: emptyDAO,
-                  tableCellsEditable: false,
-                  collapsible: false,
-                  actionDeleteBreakpoints: {0: ActionState.none},
-                  objects: data,
-                  allowAddNew: allowAddNew && emptyDAO.onSave!=null,
-                  onRowTap: (value) {
-                    Navigator.of(context).pop(value.id);
-                  },
-                ).buildFieldEditorWidgets(context,
-                  expandToFillContainer: true,
-                  asSliver: false,
-                ),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
+                    child: Text('${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
+                      style: Theme.of(context).textTheme.headline6,
+                    ),
+                  ),
+                  ...ListField(
+                    uiNameGetter: (field, dao) => emptyDAO.classUiNamePluralGetter(dao),
+                    objectTemplate: emptyDAO,
+                    tableCellsEditable: false,
+                    collapsible: false,
+                    actionDeleteBreakpoints: {0: ActionState.none},
+                    objects: data,
+                    allowAddNew: allowAddNew && emptyDAO.onSave!=null,
+                    onRowTap: (value) {
+                      Navigator.of(context).pop(value.id);
+                    },
+                  ).buildFieldEditorWidgets(context,
+                    expandToFillContainer: true,
+                    asSliver: false,
+                  ),
+                  SizedBox(height: 16+42,),
+                ],
               ),
             ),
           ),

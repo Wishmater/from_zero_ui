@@ -11,6 +11,7 @@ import 'package:riverpod/riverpod.dart';
 
 
 typedef ApiProvider<T> = StateNotifierProvider<ApiState<T>, AsyncValue<T>>;
+typedef ApiProviderFamily<T, P> = StateNotifierProviderFamily<ApiState<T>, AsyncValue<T>, P>;
 
 class ApiState<State> extends StateNotifier<AsyncValue<State>> {
 

@@ -72,7 +72,7 @@
     "deleted": "deleted",
     "successfully": "successfully",
     "connection_error_long": "Connection error. Make sure you are connected.",
-    "no_data": "No data to show...",
+    "no_data": "No data...",
     "no_data_desc": "There is no data for this report.",
     "no_data_filters": "Try disabling filters.",
     "no_data_add": "You can add data clicking on the 'add' button in the top right of the table.",

@@ -1,5 +1,9 @@
 
 
+
+
+
+
 **********************************************************************
 P0
 **********************************************************************
@@ -30,9 +34,9 @@ Problems with excel export
 	Export breaks when exporting large amounts of data (embarques 3 years)
 	!!! test with new version
 
-Fix goRouter.go() ignoring willPop commands, this is MAJOR ISSUE
+??? Fix goRouter.go() ignoring willPop commands, this is MAJOR ISSUE
 	go() methods should check the willPop methods of all routes that will be removed
-	also make the pushNamedAndMaybeRemoveUntil() method worl as expected
+	also make the pushNamedAndMaybeRemoveUntil() method work as expected
 
 
 

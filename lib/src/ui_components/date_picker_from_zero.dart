@@ -114,15 +114,12 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
               context: context,
               anchorKey: buttonKey,
               builder: (context) {
-                return Card(
-                  clipBehavior: Clip.hardEdge,
-                  child: DatePickerFromZeroPopup(
-                    title: widget.title,
-                    value: widget.value,
-                    firstDate: widget.firstDate,
-                    lastDate: widget.lastDate,
-                    onSelected: widget.onSelected,
-                  ),
+                return DatePickerFromZeroPopup(
+                  title: widget.title,
+                  value: widget.value,
+                  firstDate: widget.firstDate,
+                  lastDate: widget.lastDate,
+                  onSelected: widget.onSelected,
                 );
               },
             );

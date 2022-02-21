@@ -11,7 +11,6 @@ import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../change_notifiers/theme_parameters.dart';
-import '../../et_test.dart';
 import '../../router.dart';
 
 class PageHome extends StatefulWidget {
@@ -89,27 +88,6 @@ class _PageHomeState extends State<PageHome> {
         tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: settingsRoutes),
         compact: compact,
       ),
-      actions: [
-        ActionFromZero(title: "Test Action", onTap: (appbarContext){
-          getEtDao().maybeEdit(context);
-        },),
-        ActionFromZero(title: "Test Action", onTap: (appbarContext){
-          getEtDao().maybeEdit(context);
-        },
-          icon: Icon(Icons.call),
-          breakpoints: {0: ActionState.icon},
-        ),
-        ActionFromZero(title: "Test Action", onTap: (appbarContext){
-          getEtDao().maybeEdit(context);
-        },
-          icon: Icon(Icons.call),
-          breakpoints: {0: ActionState.icon},),
-        ActionFromZero(title: "Test Action", onTap: (appbarContext){
-          getEtDao().maybeEdit(context);
-        },
-          icon: Icon(Icons.call),
-          breakpoints: {0: ActionState.icon},),
-      ],
     );
   }
 

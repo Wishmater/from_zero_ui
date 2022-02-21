@@ -217,65 +217,65 @@ class ErrorSign extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget result = Padding(
-      padding: const EdgeInsets.all(12.0),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon!=null)
-              IconTheme(
-                data: Theme.of(context).iconTheme.copyWith(size: 64, color: Theme.of(context).disabledColor,),
-                child: icon!,
-              ),
-            if (icon!=null)
-              SizedBox(height: 4,),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.headline6,
-              textAlign: TextAlign.center,
-            ),
-            if (subtitle!=null)
-              SizedBox(height: 8,),
-            if (subtitle!=null)
-              Text(
-                subtitle!,
-                style: Theme.of(context).textTheme.bodyText1,
-                textAlign: TextAlign.center,
-              ),
-            if (retryButton!=null || onRetry!=null)
-              SizedBox(height: 16,),
-            if (retryButton!=null || onRetry!=null)
-              retryButton ?? TextButton(
-                style: TextButton.styleFrom(
-                  primary: Theme.of(context).brightness==Brightness.light
-                      ? Colors.blue.shade500
-                      : Colors.blue.shade400
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(width: 8,),
-                    Icon(Icons.refresh),
-                    SizedBox(width: 4,),
-                    Text(FromZeroLocalizations.of(context).translate("retry"),
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
-                    ),
-                    SizedBox(width: 8,),
-                  ],
-                ),
-                onPressed: onRetry,
-              ),
-          ],
+    Widget result = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (icon!=null)
+          IconTheme(
+            data: Theme.of(context).iconTheme.copyWith(size: 64, color: Theme.of(context).disabledColor,),
+            child: icon!,
+          ),
+        if (icon!=null)
+          SizedBox(height: 4,),
+        Text(
+          title,
+          style: Theme.of(context).textTheme.headline6,
+          textAlign: TextAlign.center,
         ),
-      ),
+        if (subtitle!=null)
+          SizedBox(height: 8,),
+        if (subtitle!=null)
+          Text(
+            subtitle!,
+            style: Theme.of(context).textTheme.bodyText1,
+            textAlign: TextAlign.center,
+          ),
+        if (retryButton!=null || onRetry!=null)
+          SizedBox(height: 16,),
+        if (retryButton!=null || onRetry!=null)
+          retryButton ?? TextButton(
+            style: TextButton.styleFrom(
+              primary: Theme.of(context).brightness==Brightness.light
+                  ? Colors.blue.shade500
+                  : Colors.blue.shade400
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(width: 8,),
+                Icon(Icons.refresh),
+                SizedBox(width: 4,),
+                Text(FromZeroLocalizations.of(context).translate("retry"),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
+                ),
+                SizedBox(width: 8,),
+              ],
+            ),
+            onPressed: onRetry,
+          ),
+      ],
     );
     final scrollController = ScrollController();
-    result = ScrollbarFromZero(
-      controller: scrollController,
-      child: SingleChildScrollView(
-        controller: scrollController,
-        child: result,
+    result = Padding(
+      padding: const EdgeInsets.all(12.0),
+      child: Center(
+        child: ScrollbarFromZero(
+          controller: scrollController,
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: result,
+          ),
+        ),
       ),
     );
     return result;

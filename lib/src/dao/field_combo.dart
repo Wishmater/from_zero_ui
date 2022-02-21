@@ -11,7 +11,11 @@ class ComboField<T extends DAO> extends Field<T> {
 
   final ContextFulFieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter;
   final ContextFulFieldValueGetter<Future<List<T>>?, ComboField<T>>? possibleValuesFutureGetter;
-  final ContextFulFieldValueGetter<ApiProvider<List<T>>?, ComboField<T>>? possibleValuesProviderGetter;
+  final ContextFulFieldValueGetter<
+          StateNotifierProviderOverrideMixin<ApiState<List<T>>,
+          AsyncValue<List<T>>
+      >?,
+      ComboField<T>>? possibleValuesProviderGetter;
   final bool showSearchBox;
   final ExtraWidgetBuilder<T>? extraWidget;
   final FieldValueGetter<DAO?, ComboField<T>>? newObjectTemplateGetter;
@@ -170,7 +174,7 @@ class ComboField<T extends DAO> extends Field<T> {
     final List<T> possibleValues;
     final provider = possibleValuesProviderGetter?.call(context, this, dao);
     if (provider!=null) {
-      possibleValues = await (context as WidgetRef).read(provider.future);
+      possibleValues = await (context as WidgetRef).read(provider.notifier).future;
     } else {
       final future = possibleValuesFutureGetter?.call(context, this, dao);
       if (future!=null) {
@@ -180,6 +184,8 @@ class ComboField<T extends DAO> extends Field<T> {
       }
     }
     if (invalidateValuesNotInPossibleValues && value!=null && !possibleValues.contains(value)) {
+      print(value);
+      print(possibleValues);
       validationErrors.add(InvalidatingError<T>(
         field: this,
         error: FromZeroLocalizations.of(context).translate("validation_combo_not_possible"),
