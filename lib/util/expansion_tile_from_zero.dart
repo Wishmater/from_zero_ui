@@ -249,13 +249,13 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
     // final Color borderSideColor = _borderColor.value;
 
     return Container(
-      // decoration: BoxDecoration(
-      //   color: _backgroundColor.value,
-      //   border: Border(
-      //     top: BorderSide(color: borderSideColor),
-      //     bottom: BorderSide(color: borderSideColor),
-      //   ),
-      // ),
+      decoration: BoxDecoration(
+        color: _backgroundColor.value,
+        // border: Border(
+        //   top: BorderSide(color: borderSideColor),
+        //   bottom: BorderSide(color: borderSideColor),
+        // ),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
@@ -346,10 +346,10 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
     _borderColorTween.end = theme.dividerColor;
     _headerColorTween
       ..begin = theme.textTheme.subtitle1!.color
-      ..end = theme.accentColor;
+      ..end = theme.indicatorColor;
     _iconColorTween
       ..begin = theme.unselectedWidgetColor
-      ..end = theme.accentColor;
+      ..end = theme.splashColor.withOpacity(1);
     _backgroundColorTween.end = widget.backgroundColor;
     super.didChangeDependencies();
   }

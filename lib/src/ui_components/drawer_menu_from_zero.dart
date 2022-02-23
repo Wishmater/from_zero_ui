@@ -855,10 +855,12 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
 
   @override
   Widget build(BuildContext context) {
-    final selectedColor = widget.selectedColor ?? Theme.of(context).indicatorColor;
+    final theme = Theme.of(context);
+    final selectedColor = widget.selectedColor
+        ?? Color.lerp(theme.textTheme.bodyText1!.color, theme.indicatorColor, 0.7)!;
     return Container(
       color: widget.selected
-          ? selectedColor.withOpacity(0.05)
+          ? theme.splashColor
           : Colors.transparent,
       child: ListTile(
         selected: widget.selected,
@@ -866,7 +868,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
           offset: Offset(widget.titleHorizontalOffset, 0),
           child: Text(widget.title, style: TextStyle(
               fontSize: 16,
-              color: widget.selected ? selectedColor : Theme.of(context).textTheme.bodyText1!.color
+              color: widget.selected ? selectedColor : theme.textTheme.bodyText1!.color
           ),),
         ),
         subtitle: widget.subtitle==null||widget.compact ? null
@@ -877,13 +879,13 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                   Expanded(
                     child: Text(widget.subtitle!, style: TextStyle(
                         color: widget.selected ? selectedColor.withOpacity(0.75)
-                            : Theme.of(context).textTheme.caption!.color
+                            : theme.textTheme.caption!.color
                     ),),
                   ),
                   if (widget.subtitleRight!=null)
                     Text(widget.subtitleRight!, style: TextStyle(
                         color: widget.selected ? selectedColor.withOpacity(0.75)
-                            : Theme.of(context).textTheme.caption!.color
+                            : theme.textTheme.caption!.color
                       ),
                       textAlign: TextAlign.right,
                     ),
@@ -912,9 +914,9 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                   ),
                 );
                 result = IconTheme(
-                  data: Theme.of(context).iconTheme.copyWith(
+                  data: theme.iconTheme.copyWith(
                     color: widget.selected ? selectedColor
-                        : Theme.of(context).brightness==Brightness.light? Colors.black45 : null,
+                        : theme.brightness==Brightness.light? Colors.black45 : null,
                   ),
                   child: result,
                 );

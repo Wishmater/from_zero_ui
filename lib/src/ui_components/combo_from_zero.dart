@@ -27,6 +27,7 @@ class ComboFromZero<T> extends StatefulWidget {
   final bool sort;
   final bool showViewActionOnDAOs;
   final bool showDropdownIcon;
+  final bool blockComboWhilePossibleValuesLoad;
   final ButtonChildBuilder<T>? buttonChildBuilder;
   final double? popupWidth;
   final ExtraWidgetBuilder<T>? extraWidget;
@@ -60,6 +61,7 @@ class ComboFromZero<T> extends StatefulWidget {
     this.buttonStyle,
     this.popupRowHeight = 38,
     this.useFixedPopupRowHeight = true,
+    this.blockComboWhilePossibleValuesLoad = false,
   }) :  assert(possibleValues!=null
               || possibleValuesFuture!=null
               || possibleValuesProvider!=null);
@@ -116,62 +118,79 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
   @override
   Widget build(BuildContext context) {
     Widget result;
-    if (widget.possibleValuesProvider!=null) {
-      result = ApiProviderBuilder<List<T>>(
-        provider: widget.possibleValuesProvider!,
-        dataBuilder: _build,
-        loadingBuilder: _buildLoading,
-        errorBuilder: _buildError,
-      );
-    } else if (widget.possibleValuesFuture!=null) {
-      result = FutureBuilderFromZero<List<T>>(
-        future: widget.possibleValuesFuture!,
-        successBuilder: _build,
-        loadingBuilder: _buildLoading,
-        errorBuilder: (context, error, stackTrace) => _buildError(context, error, stackTrace is StackTrace ? stackTrace : null),
-      );
-    } else if (widget.possibleValuesAsync!=null) {
-      result = AsyncValueBuilder<List<T>>(
-        asyncValue: widget.possibleValuesAsync!,
-        dataBuilder: _build,
-        loadingBuilder: _buildLoading,
-        errorBuilder: _buildError,
-      );
+    if (widget.blockComboWhilePossibleValuesLoad) {
+      if (widget.possibleValuesProvider!=null) {
+        result = ApiProviderBuilder<List<T>>(
+          provider: widget.possibleValuesProvider!,
+          dataBuilder: _buildCombo,
+          loadingBuilder: _buildComboLoading,
+          errorBuilder: _buildComboError,
+        );
+      } else if (widget.possibleValuesFuture!=null) {
+        result = FutureBuilderFromZero<List<T>>(
+          future: widget.possibleValuesFuture!,
+          successBuilder: _buildCombo,
+          loadingBuilder: _buildComboLoading,
+          errorBuilder: (context, error, stackTrace) => _buildComboError(context, error, stackTrace is StackTrace ? stackTrace : null),
+        );
+      } else if (widget.possibleValuesAsync!=null) {
+        result = AsyncValueBuilder<List<T>>(
+          asyncValue: widget.possibleValuesAsync!,
+          dataBuilder: _buildCombo,
+          loadingBuilder: _buildComboLoading,
+          errorBuilder: _buildComboError,
+        );
+      } else {
+        result = _buildCombo(context, widget.possibleValues!);
+      }
     } else {
-      return _build(context, widget.possibleValues!);
+      result = _buildCombo(context, null);
     }
     return result;
   }
 
-  Widget _buildError(BuildContext context, Object? error, StackTrace? stackTrace, [VoidCallback? onRetry]) {
-    return SizedBox(
-      width: 64,
-      height: 38,
-      child: Center(
-        child: SizedBox(
-          width: 26,
-          height: 26,
-          child: ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, onRetry), // TODO 1 implement compact errorBuilder, this will overflow
-        ),
+  Widget _buildComboError(BuildContext context, Object? error, StackTrace? stackTrace, [VoidCallback? onRetry]) {
+    return LimitedBox(
+      maxWidth: 256,
+      maxHeight: 64,
+      child: ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, onRetry),
+    );
+  }
+
+  Widget _buildComboLoading(BuildContext context, [double? progress]) {
+    Widget result;
+    if (widget.buttonChildBuilder==null) {
+      result = ComboFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable,
+        showDropdownIcon: widget.showDropdownIcon,
+      );
+    } else {
+      result = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable,
+        showDropdownIcon: widget.showDropdownIcon,
+      );
+    }
+    return LimitedBox(
+      maxWidth: 256,
+      maxHeight: 64,
+      child: Stack(
+        children: [
+          Padding(
+            padding: widget.buttonStyle?.padding?.resolve({})
+                ?? EdgeInsets.symmetric(horizontal: 8),
+            child: result,
+          ),
+          Positioned.fill(
+            child: Container(
+              alignment: Alignment.center,
+              color: Theme.of(context).disabledColor,
+              child: ApiProviderBuilder.defaultLoadingBuilder(context, progress),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildLoading(BuildContext context, [double? progress]) {
-    return SizedBox(
-      width: 64,
-      height: 38,
-      child: Center(
-        child: SizedBox(
-          width: 26,
-          height: 26,
-          child: ApiProviderBuilder.defaultLoadingBuilder(context, progress),
-        ),
-      ),
-    );
-  }
-
-  Widget _build(BuildContext context, List<T>? possibleValues,) {
+  Widget _buildCombo(BuildContext context, List<T>? possibleValues,) {
     Widget result;
     if (widget.buttonChildBuilder==null) {
       result = ComboFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable,
@@ -201,20 +220,36 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
               anchorKey: buttonKey,
               width: widget.popupWidth,
               builder: (context) {
-                return ComboFromZeroPopup<T>(
-                  possibleValues: possibleValues!,
-                  onSelected: widget.onSelected,
-                  onCanceled: widget.onCanceled,
-                  value: widget.value,
-                  sort: widget.sort,
-                  showSearchBox: widget.showSearchBox,
-                  showViewActionOnDAOs: widget.showViewActionOnDAOs,
-                  title: widget.title,
-                  extraWidget: widget.extraWidget,
-                  popupWidgetBuilder: widget.popupWidgetBuilder,
-                  rowHeight: widget.popupRowHeight,
-                  useFixedRowHeight: widget.useFixedPopupRowHeight,
-                );
+                Widget result;
+                if (possibleValues!=null) {
+                  result = _buildPopup(context, possibleValues);
+                } else {
+                  if (widget.possibleValuesProvider!=null) {
+                    result = ApiProviderBuilder<List<T>>(
+                      provider: widget.possibleValuesProvider!,
+                      dataBuilder: _buildPopup,
+                      loadingBuilder: _buildPopupLoading,
+                      errorBuilder: _buildPopupError,
+                    );
+                  } else if (widget.possibleValuesFuture!=null) {
+                    result = FutureBuilderFromZero<List<T>>(
+                      future: widget.possibleValuesFuture!,
+                      successBuilder: _buildPopup,
+                      loadingBuilder: _buildPopupLoading,
+                      errorBuilder: (context, error, stackTrace) => _buildPopupError(context, error, stackTrace is StackTrace ? stackTrace : null),
+                    );
+                  } else if (widget.possibleValuesAsync!=null) {
+                    result = AsyncValueBuilder<List<T>>(
+                      asyncValue: widget.possibleValuesAsync!,
+                      dataBuilder: _buildPopup,
+                      loadingBuilder: _buildPopupLoading,
+                      errorBuilder: _buildPopupError,
+                    );
+                  } else {
+                    result = _buildPopup(context, widget.possibleValues!);
+                  }
+                }
+                return result;
               },
             );
             if (selected!=null) {
@@ -254,6 +289,36 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
       ],
     );
     return result;
+  }
+
+  Widget _buildPopup(BuildContext context, List<T> possibleValues,) {
+    return ComboFromZeroPopup<T>(
+      possibleValues: possibleValues,
+      onSelected: widget.onSelected,
+      onCanceled: widget.onCanceled,
+      value: widget.value,
+      sort: widget.sort,
+      showSearchBox: widget.showSearchBox,
+      showViewActionOnDAOs: widget.showViewActionOnDAOs,
+      title: widget.title,
+      extraWidget: widget.extraWidget,
+      popupWidgetBuilder: widget.popupWidgetBuilder,
+      rowHeight: widget.popupRowHeight,
+      useFixedRowHeight: widget.useFixedPopupRowHeight,
+    );
+  }
+
+  Widget _buildPopupError(BuildContext context, Object? error, StackTrace? stackTrace, [VoidCallback? onRetry]) {
+    return IntrinsicHeight(
+      child: ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, onRetry),
+    );
+  }
+
+  Widget _buildPopupLoading(BuildContext context, [double? progress]) {
+    return SizedBox(
+      height: 128,
+      child: ApiProviderBuilder.defaultLoadingBuilder(context, progress),
+    );
   }
 
 }

@@ -477,12 +477,16 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                 availableObjectsPoolProvider==null
                     ? FutureBuilderFromZero<List<T>>(
                         future: availableObjectsPoolGetter!(context),
+                        loadingBuilder: _availablePoolLoadingBuilder,
+                        errorBuilder: (context, error, stackTrace) => _availablePoolErrorBuilder(context, error, stackTrace is StackTrace ? stackTrace : null),
                         successBuilder: (context, data) {
                           return _availablePoolTableDataBuilder(context, data, emptyDAO);
                         },
                       )
                     : ApiProviderBuilder<List<T>>(
                         provider: availableObjectsPoolProvider!(context),
+                        loadingBuilder: _availablePoolLoadingBuilder,
+                        errorBuilder: _availablePoolErrorBuilder,
                         dataBuilder: (context, data) {
                           return _availablePoolTableDataBuilder(context, data, emptyDAO);
                         },
@@ -566,12 +570,16 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                   child: availableObjectsPoolProvider==null
                       ? FutureBuilderFromZero<List<T>>(
                           future: availableObjectsPoolGetter!(context),
+                          loadingBuilder: _availablePoolLoadingBuilder,
+                          errorBuilder: (context, error, stackTrace) => _availablePoolErrorBuilder(context, error, stackTrace is StackTrace ? stackTrace : null),
                           successBuilder: (context, data) {
                             return _availablePoolComboDataBuilder(context, data, emptyDAO);
                           },
                         )
                       : ApiProviderBuilder<List<T>>(
                           provider: availableObjectsPoolProvider!(context),
+                          loadingBuilder: _availablePoolLoadingBuilder,
+                          errorBuilder: _availablePoolErrorBuilder,
                           dataBuilder: (context, data) {
                             return _availablePoolComboDataBuilder(context, data, emptyDAO);
                           },
@@ -637,6 +645,18 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         addRow(emptyDAO, insertIndex);
       }
     }
+  }
+  Widget _availablePoolErrorBuilder(BuildContext context, Object? error, StackTrace? stackTrace, [VoidCallback? onRetry]) {
+    return IntrinsicHeight(
+      child: ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, onRetry),
+    );
+  }
+
+  Widget _availablePoolLoadingBuilder(BuildContext context, [double? progress]) {
+    return SizedBox(
+      height: 128,
+      child: ApiProviderBuilder.defaultLoadingBuilder(context, progress),
+    );
   }
   Widget _availablePoolTableDataBuilder(BuildContext context, List<T> data, T emptyDAO) {
     ScrollController scrollController = ScrollController();

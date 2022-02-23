@@ -95,18 +95,17 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
               fit: StackFit.expand,
               children: [
                 Center(
-                  child: SizedBox(
-                    width: 48, height: 48,
-                    child: InitiallyAnimatedWidget(
-                      duration: Duration(seconds: 1),
-                      curve: Curves.easeOut,
-                      repeat: true,
-                      builder: (loopingAnimation, child) {
-                        Color backgroundColor = ColorTween(begin: colorTransparent, end: colorMild).evaluate(loopingAnimation)!;
-                        return Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Padding(
+                  child: InitiallyAnimatedWidget(
+                    duration: Duration(seconds: 1),
+                    curve: Curves.easeOut,
+                    repeat: true,
+                    builder: (loopingAnimation, child) {
+                      Color backgroundColor = ColorTween(begin: colorTransparent, end: colorMild).evaluate(loopingAnimation)!;
+                      return Stack(
+                        // fit: StackFit.expand,
+                        children: [
+                          Positioned.fill(
+                            child: Padding(
                               padding: const EdgeInsets.all(2.5),
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
@@ -118,16 +117,22 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
                                 ),
                               ),
                             ),
-                            CircularProgressIndicator(
-                              value: value,
-                              strokeWidth: 5,
-                              backgroundColor: backgroundColor,
-                              valueColor: ColorTween(begin: colorMedium, end: color).animate(loopingAnimation),
+                          ),
+                          SizedBox(
+                            width: 48, height: 48,
+                            child: AspectRatio(
+                              aspectRatio: 1,
+                              child: CircularProgressIndicator(
+                                value: value,
+                                strokeWidth: 5,
+                                backgroundColor: backgroundColor,
+                                valueColor: ColorTween(begin: colorMedium, end: color).animate(loopingAnimation),
+                              ),
                             ),
-                          ],
-                        );
-                      },
-                    ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 if (value!=null)
