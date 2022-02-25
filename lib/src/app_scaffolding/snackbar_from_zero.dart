@@ -1,4 +1,6 @@
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/src/app_scaffolding/app_content_wrapper.dart';
@@ -73,7 +75,7 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
         super(key: key,);
 
   @override
-  _SnackBarFromZeroState createState() => _SnackBarFromZeroState();
+  SnackBarFromZeroState createState() => SnackBarFromZeroState();
 
   SnackBarControllerFromZero show([BuildContext? context]){
     try {
@@ -100,7 +102,7 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
 
 }
 
-class _SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerProviderStateMixin {
+class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerProviderStateMixin {
 
   AnimationController? animationController;
 
@@ -108,11 +110,16 @@ class _SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with Ticker
   void initState() {
     super.initState();
     widget.controller?.setState = setState;
-    if (widget.duration!=null && widget.progressIndicator==null) {
+    if (widget.duration!=null) {
       animationController = AnimationController(
         vsync: this,
         duration: widget.duration,
       );
+      animationController!.addStatusListener((status) {
+        if (status==AnimationStatus.completed) {
+          widget.dismiss();
+        }
+      });
       animationController!.forward();
     }
   }
@@ -223,8 +230,10 @@ class _SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with Ticker
     Widget progressIndicator;
     if (widget.progressIndicator!=null) {
       progressIndicator = widget.progressIndicator!;
+    } else if (!widget.showProgressIndicatorForRemainingTime){
+      progressIndicator = SizedBox.shrink();
     } else {
-      if (animationController==null || !widget.showProgressIndicatorForRemainingTime) {
+      if (animationController==null) {
         progressIndicator = LinearProgressIndicator(
           valueColor: AlwaysStoppedAnimation(actionColor),
           backgroundColor: type==null ? null : SnackBarFromZero.softColors[type],
@@ -233,11 +242,6 @@ class _SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with Ticker
         progressIndicator = AnimatedBuilder(
           animation: animationController!,
           builder: (context, child) {
-            if (animationController!.isCompleted) {
-              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-                widget.dismiss();
-              });
-            }
             return LinearProgressIndicator(
               value: 1 - animationController!.value,
               valueColor: AlwaysStoppedAnimation(actionColor),
@@ -282,10 +286,10 @@ class _SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with Ticker
       result = MouseRegion(
         child: result,
         onEnter: (event) {
-          animationController!.stop();
+          animationController?.stop();
         },
         onExit: (event) {
-          animationController!.forward();
+          animationController?.forward();
         },
       );
     }

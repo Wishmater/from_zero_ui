@@ -77,11 +77,11 @@ class AsyncValueBuilder<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget result = asyncValue.when(
       data: (data) => Container(
-        key: ValueKey('data'),
+        key: ValueKey(data.hashCode),
         child: dataBuilder(context, data),
       ),
       error: (error, stackTrace) => Container(
-        key: ValueKey('error'),
+        key: ValueKey(error.hashCode),
         child: errorBuilder(context, error, stackTrace),
       ),
       loading: () => Container(
@@ -165,12 +165,12 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
     Widget result;
     if (error!=null) {
       result = Container(
-        key: ValueKey('error'),
+        key: ValueKey(error.hashCode),
         child: errorBuilder(context, error!, stackTrace),
       );
     } else if (data.length==asyncValues.length) {
       result = Container(
-        key: ValueKey('data'),
+        key: ValueKey(data.hashCode),
         child: dataBuilder(context, data),
       );
     } else {

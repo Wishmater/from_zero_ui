@@ -14,6 +14,9 @@ import 'field_list.dart';
 
 
 typedef Future<ModelType?> OnSaveCallback<ModelType>(BuildContext context, DAO<ModelType> e);
+typedef ApiState<ModelType?> OnSaveAPICallback<ModelType>(BuildContext context, DAO<ModelType> e);
+typedef Future<String?> OnDeleteCallback<ModelType>(BuildContext context, DAO<ModelType> e);
+typedef ApiState<String?> OnDeleteAPICallback<ModelType>(BuildContext context, DAO<ModelType> e);
 typedef Widget DAOWidgetBuilder<ModelType>(BuildContext context, DAO<ModelType> dao);
 typedef T DAOValueGetter<T, ModelType>(DAO<ModelType> dao);
 
@@ -35,7 +38,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     };
   }
   OnSaveCallback<ModelType>? onSave;
-  OnSaveCallback<ModelType>? onDelete;
+  OnSaveAPICallback<ModelType>? onSaveAPI;
+  OnDeleteCallback<ModelType>? onDelete;
+  OnDeleteAPICallback<ModelType>? onDeleteAPI;
   List<ValueChanged<DAO<ModelType>>> _selfUpdateListeners = [];
   DAOWidgetBuilder<ModelType>? viewWidgetBuilder;
   bool useIntrinsicHeightForViewDialog;
@@ -53,7 +58,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.id,
     this.fieldGroups = const [],
     this.onSave,
+    this.onSaveAPI,
     this.onDelete,
+    this.onDeleteAPI,
     this.viewWidgetBuilder,
     this.useIntrinsicHeightForViewDialog = true,
     this.viewDialogWidth = 512,
@@ -89,7 +96,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     dynamic id,
     List<FieldGroup>? fieldGroups,
     OnSaveCallback<ModelType>? onSave,
-    OnSaveCallback<ModelType>? onDelete,
+    OnSaveAPICallback<ModelType>? onSaveAPI,
+    OnDeleteCallback<ModelType>? onDelete,
+    OnDeleteAPICallback<ModelType>? onDeleteAPI,
     DAOWidgetBuilder<ModelType>? viewWidgetBuilder,
     bool? useIntrinsicHeightForViewDialog,
     double? viewDialogWidth,
@@ -108,7 +117,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       classUiNamePluralGetter: classUiNamePluralGetter??this.classUiNamePluralGetter,
       uiNameGetter: uiNameGetter??this.uiNameGetter,
       onSave: onSave??this.onSave,
+      onSaveAPI: onSaveAPI??this.onSaveAPI,
       onDelete: onDelete??this.onDelete,
+      onDeleteAPI: onDeleteAPI??this.onDeleteAPI,
       viewWidgetBuilder: viewWidgetBuilder??this.viewWidgetBuilder,
       useIntrinsicHeightForViewDialog: useIntrinsicHeightForViewDialog??this.useIntrinsicHeightForViewDialog,
       viewDialogWidth: viewDialogWidth??this.viewDialogWidth,
@@ -127,6 +138,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   bool get isNew => id==null;
   bool get isEdited => props.values.any((element) => element.isEdited);
   List<ValidationError> get validationErrors => props.values.map((e) => e.validationErrors).flatten().toList();
+  bool get canSave => onSave!=null || onSaveAPI!=null;
+  bool get canDelete => onDelete!=null || onDeleteAPI!=null;
 
   @override
   int compareTo(other) => (other is DAO) ? uiName.compareTo(other.uiName) : -1;
@@ -461,11 +474,71 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     return success;
   }
 
-  Future<bool> delete(context, {bool? showDefaultSnackBar,}) async {
+
+  Future<bool> maybeDelete(BuildContext context, {
+    bool? showDefaultSnackBars,
+  }) async {
+    bool confirm = true;
+    bool askForDeleteConfirmation = true;
+    if (askForDeleteConfirmation) {
+      confirm = await showModal(
+        context: context,
+        builder: (context) {
+          return SizedBox(
+            width: formDialogWidth-32,
+            child: AlertDialog(
+              title: Text(FromZeroLocalizations.of(context).translate('confirm_delete_title')),
+              content: Text('${FromZeroLocalizations.of(context).translate('confirm_delete_desc')} $uiName?'),
+              actions: [
+                FlatButton(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  textColor: Theme.of(context).textTheme.caption!.color,
+                  onPressed: () {
+                    Navigator.of(context).pop(false); // Dismiss alert dialog
+                  },
+                ),
+                FlatButton(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Text(FromZeroLocalizations.of(context).translate('delete_caps'),
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  textColor: Colors.red,
+                  onPressed: () {
+                    Navigator.of(context).pop(true); // Dismiss alert dialog
+                  },
+                ),
+                SizedBox(width: 2,),
+              ],
+            ),
+          );
+        },
+      ) ?? false;
+    }
+    if (confirm) {
+      return delete(context,
+        showDefaultSnackBar: showDefaultSnackBars,
+      );
+    } else {
+      return false;
+    }
+  }
+
+  Future<bool> delete(context, {
+    bool? showDefaultSnackBar,
+  }) async {
     bool success = false;
-    showDefaultSnackBar = showDefaultSnackBar ?? onDelete!=null;
+    String? errorString;
+    showDefaultSnackBar = showDefaultSnackBar ?? canDelete;
     try {
-      success = onDelete==null || await onDelete!.call(context, this)!=null;
+      errorString = await onDelete?.call(context, this);
+      success = errorString==null;
     } catch (e, st) {
       success = false;
       print(e); print(st);
@@ -476,7 +549,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         type: success ? SnackBarFromZero.success : SnackBarFromZero.error,
         title: Text(success
             ? '$classUiName ${FromZeroLocalizations.of(context).translate("deleted")} ${FromZeroLocalizations.of(context).translate("successfully")}.'
-            : FromZeroLocalizations.of(context).translate("connection_error_long")),
+            : (errorString ?? FromZeroLocalizations.of(context).translate("connection_error_long"))),
       ).show(context);
     }
     return success;
@@ -1036,7 +1109,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                         ],
                       ),
                     ),
-                    if (showEditButton ?? viewDialogShowsEditButton ?? onSave!=null)
+                    if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
                       TextButton(
                         onPressed: () {
                           maybeEdit(context);
@@ -1113,17 +1186,17 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
     bool clear = false;
     bool first = true;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: fieldGroups.map((group) {
-        final fields = group.props.values.where((e) => !e.hiddenInView);
-        Widget result;
-        if (fields.isEmpty) {
-          result = SizedBox.shrink();
-        } else {
-          result = IntrinsicWidth(
-            child: Column(
+    return IntrinsicWidth(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: fieldGroups.map((group) {
+          final fields = group.props.values.where((e) => !e.hiddenInView);
+          Widget result;
+          if (fields.isEmpty) {
+            result = SizedBox.shrink();
+          } else {
+            result = Column(
               children: fields.map((e) {
                 clear = !clear;
                 return Material(
@@ -1165,35 +1238,35 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   ),
                 );
               }).toList(),
-            ),
-          );
-        }
-        if (!first || group.name!=null) {
-          result = Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (!first)
-                Container(
-                  height: 8,
-                  color: Theme.of(context).dividerColor,
-                ),
-              if (group.name!=null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 12),
-                  child: Text(group.name!,
-                    style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                      fontWeight: FontWeight.w600,
+            );
+          }
+          if (!first || group.name!=null) {
+            result = Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!first)
+                  Container(
+                    height: 8,
+                    color: Theme.of(context).dividerColor,
+                  ),
+                if (group.name!=null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 12),
+                    child: Text(group.name!,
+                      style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
-              result,
-            ],
-          );
-        }
-        first = false;
-        return result;
-      }).toList(),
+                result,
+              ],
+            );
+          }
+          first = false;
+          return result;
+        }).toList(),
+      ),
     );
   }
 
@@ -1525,7 +1598,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                         ),
                       ),
                       onPressed: isEdited ? () async {
-                        if (onSave!=null) {
+                        if (canSave) {
                           showModal(
                             context: context,
                             configuration: const FadeScaleTransitionConfiguration(barrierDismissible: false,),
@@ -1538,7 +1611,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                           showDefaultSnackBars: showDefaultSnackBars,
                           askForSaveConfirmation: askForSaveConfirmation,
                         );
-                        if (onSave!=null) {
+                        if (canSave) {
                           Navigator.of(context).pop();
                         }
                         if (success) {
