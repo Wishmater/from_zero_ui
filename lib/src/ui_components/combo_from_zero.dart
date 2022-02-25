@@ -390,7 +390,8 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                 : (context, row, colKey) => widget.popupWidgetBuilder!(row.id),
             onFilter: (filtered) {
               if (searchQuery!=null && searchQuery!.isNotEmpty) {
-                return filtered.where((e) => e.id.toString().toUpperCase().contains(searchQuery!.toUpperCase())).toList();
+                return filtered.where((e) => e.id.toString().toUpperCase()
+                    .contains(searchQuery!.toUpperCase())).toList();
               }
               return filtered;
             },
@@ -399,7 +400,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                 id: e,
                 values: {0: e.toString()},
                 height: widget.rowHeight,
-                backgroundColor: widget.value==e ? Theme.of(context).toggleableActiveColor.withOpacity(0.1) : null,
+                backgroundColor: widget.value==e ? Theme.of(context).splashColor.withOpacity(0.2) : null,
                 onRowTap: (value) {
                   _select(e);
                 },

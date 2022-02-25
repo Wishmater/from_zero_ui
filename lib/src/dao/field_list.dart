@@ -10,6 +10,7 @@ import 'package:from_zero_ui/src/dao/dao.dart';
 import 'package:from_zero_ui/src/dao/field.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
+import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
 
 
 typedef List<RowAction<T>> RowActionsBuilder<T>(BuildContext context);
@@ -163,6 +164,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     this.expandHorizontally = true,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<ComparableList<T>> viewWidgetBuilder = ListField.defaultViewWidgetBuilder,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         assert(!updateObjectsInRealTime || (availableObjectsPoolGetter==null && availableObjectsPoolProvider==null)
                     , 'It makes no sense to save/delete in real time if adding from a pool of pre-saved objects'),
@@ -201,6 +203,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           defaultValue: defaultValue ?? ComparableList<T>(),
           backgroundColor: backgroundColor,
           actions: actions,
+          viewWidgetBuilder: viewWidgetBuilder,
         ) {
     addListeners();
   }
@@ -326,6 +329,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     bool? expandHorizontally,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<ComparableList<T>>? viewWidgetBuilder,
   }) {
     return ListField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -380,6 +384,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       expandHorizontally: expandHorizontally ?? this.expandHorizontally,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
+      viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
     );
   }
 
@@ -1525,27 +1530,57 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     );
   }
 
-  Widget buildViewWidget(BuildContext context, {
+
+  static Widget defaultViewWidgetBuilder<T extends DAO>
+  (BuildContext context, Field<ComparableList<DAO>> fieldParam, {
     bool linkToInnerDAOs=true,
     bool showViewButtons=true,
   }) {
-    if (hiddenInView) {
+    if (fieldParam.hiddenInView) {
       return SizedBox.shrink();
     }
-    final uiNames = objects.map((e) => e.toString()).toList()..sort();
+    final field = fieldParam as ListField;
+    final uiNames = field.objects.map((e) => e.toString()).toList()..sort();
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 3),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: uiNames.mapIndexed((i, e) {
-          return InkWell(
-            onTap: () => linkToInnerDAOs ? objects[i].pushViewDialog(context) : null,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 12),
-              child: Text(e,
-                style: Theme.of(context).textTheme.subtitle1,
+          final onTap = linkToInnerDAOs
+              ? () => field.objects[i].pushViewDialog(context)
+              : null;
+          return Stack(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: SelectableText(e,
+                        style: Theme.of(context).textTheme.subtitle1,
+                      ),
+                    ),
+                    if (showViewButtons && onTap!=null)
+                      Padding(
+                        padding: EdgeInsets.only(left: 12),
+                        child: IconButton(
+                          icon: Icon(Icons.info_outline),
+                          padding: EdgeInsets.all(0),
+                          constraints: BoxConstraints(maxHeight: 32),
+                          onPressed: onTap,
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
+              if (onTap!=null)
+                Positioned.fill(
+                  child: translucent.InkWell(
+                    onTap: onTap,
+                  ),
+                ),
+            ],
           );
         }).toList(),
       ),

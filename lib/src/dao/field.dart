@@ -1,6 +1,6 @@
 import 'dart:math';
-
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
@@ -10,10 +10,12 @@ import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
 import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
 import 'package:from_zero_ui/src/ui_utility/util.dart';
 import 'package:dartx/dartx.dart';
+import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
 
 typedef ValidationError? FieldValidator<T extends Comparable>(BuildContext context, DAO dao, Field<T> field);
 typedef T FieldValueGetter<T, R extends Field>(R field, DAO dao);
 typedef T ContextFulFieldValueGetter<T, R extends Field>(BuildContext context, R field, DAO dao);
+typedef Widget ViewWidgetBuilder<T extends Comparable>(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons,});
 bool trueFieldGetter(_, __) => true;
 bool falseFieldGetter(_, __) => false;
 List defaultValidatorsGetter(_, __) => [];
@@ -54,6 +56,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   bool invalidateNonEmptyValuesIfHiddenInForm;
   ContextFulFieldValueGetter<Color?, Field>? backgroundColor;
   ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions;
+  ViewWidgetBuilder<T> viewWidgetBuilder;
 
   T? _value;
   T? get value => _value;
@@ -107,6 +110,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     this.defaultValue,
     this.backgroundColor,
     this.actions,
+    this.viewWidgetBuilder = Field.defaultViewWidgetBuilder,
   }) :  this._value = value,
         this.dbValue = dbValue ?? value,
         this.undoValues = undoValues ?? [],
@@ -141,6 +145,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     T? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<T>? viewWidgetBuilder,
   }) {
     return Field<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -165,6 +170,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
+      viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
     );
   }
 
@@ -337,34 +343,55 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool linkToInnerDAOs=true,
     bool showViewButtons=true,
   }) {
-    if (hiddenInView) {
+    return viewWidgetBuilder(context, this,
+      linkToInnerDAOs: linkToInnerDAOs,
+      showViewButtons: showViewButtons,
+    );
+  }
+  static Widget defaultViewWidgetBuilder<T extends Comparable>
+  (BuildContext context, Field field, {
+    bool linkToInnerDAOs=true,
+    bool showViewButtons=true,
+  }) {
+    if (field.hiddenInView) {
       return SizedBox.shrink();
     }
-    return InkWell(
-      onTap: linkToInnerDAOs&&(value is DAO) ? ()=>(value as DAO).pushViewDialog(context) : null,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: SelectableText(toString(),
-                style: Theme.of(context).textTheme.subtitle1,
-              ),
-            ),
-            if (showViewButtons && (value is DAO))
-              Padding(
-                padding: EdgeInsets.only(left: 12),
-                child: IconButton(
-                  icon: Icon(Icons.info_outline),
-                  padding: EdgeInsets.all(0),
-                  constraints: BoxConstraints(maxHeight: 32),
-                  onPressed: () => (value as DAO).pushViewDialog(context),
+    final onTap = linkToInnerDAOs && (field.value is DAO)
+        ? ()=>(field.value as DAO).pushViewDialog(context)
+        : null;
+    return Stack(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: SelectableText(field.toString(),
+                  style: Theme.of(context).textTheme.subtitle1,
                 ),
               ),
-          ],
+              if (showViewButtons && (field.value is DAO))
+                Padding(
+                  padding: EdgeInsets.only(left: 12),
+                  child: IconButton(
+                    icon: Icon(Icons.info_outline),
+                    padding: EdgeInsets.all(0),
+                    constraints: BoxConstraints(maxHeight: 32),
+                    onPressed: () => (field.value as DAO).pushViewDialog(context),
+                  ),
+                ),
+            ],
+          ),
         ),
-      ),
+        if (onTap!=null)
+          Positioned.fill(
+            child: translucent.InkWell(
+              onTap: onTap,
+              // mouseCursor: SystemMouseCursors.text,
+            ),
+          ),
+      ],
     );
   }
 

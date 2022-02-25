@@ -45,6 +45,7 @@ class DateField extends Field<DateTime> {
     DateTime? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<DateTime> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
   }) :  this.firstDate = firstDate ?? DateTime(1900),
         this.lastDate = lastDate ?? DateTime(2200),
         this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY),
@@ -74,6 +75,7 @@ class DateField extends Field<DateTime> {
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,
           actions: actions,
+          viewWidgetBuilder: viewWidgetBuilder,
         );
 
   @override
@@ -103,6 +105,7 @@ class DateField extends Field<DateTime> {
     DateTime? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<DateTime>? viewWidgetBuilder,
   }) {
     return DateField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -129,6 +132,7 @@ class DateField extends Field<DateTime> {
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
+      viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
     );
   }
 

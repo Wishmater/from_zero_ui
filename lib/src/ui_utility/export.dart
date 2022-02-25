@@ -47,7 +47,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
   final BuildContext? scaffoldContext;
   final Widget? dummyChild;
   final List<GlobalKey>? significantWidgetsKeys;
-  final Map<String, GlobalKey<TableFromZeroState>>? Function()? excelSheets;
+  final Map<String, TableController>? Function()? excelSheets;
   final bool isPdfFormatAvailable;
   final bool isPngFormatAvailable;
 

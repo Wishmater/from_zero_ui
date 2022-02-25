@@ -82,6 +82,7 @@ class NumField extends Field<num> {
     num? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<num> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
   }) :  controller = TextEditingController(text: toStringStatic(value, formatter)),
         super(
           uiNameGetter: uiNameGetter,
@@ -109,6 +110,7 @@ class NumField extends Field<num> {
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,
           actions: actions,
+          viewWidgetBuilder: viewWidgetBuilder,
         );
 
   @override
@@ -146,6 +148,7 @@ class NumField extends Field<num> {
     num? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<num>? viewWidgetBuilder,
   }) {
     return NumField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -172,6 +175,7 @@ class NumField extends Field<num> {
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
+      viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
     );
   }
 

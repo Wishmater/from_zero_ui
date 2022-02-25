@@ -1,4 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
@@ -108,6 +109,7 @@ class BoolField extends Field<BoolComparable> {
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     this.selectedColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<BoolComparable> viewWidgetBuilder = BoolField.defaultViewWidgetBuilder,
   }) :  showBothNeutralAndSpecificUiName = showBothNeutralAndSpecificUiName ?? (uiNameFalseGetter!=null||uiNameTrueGetter!=null),
         super(
           uiNameGetter: uiNameGetter,
@@ -139,6 +141,7 @@ class BoolField extends Field<BoolComparable> {
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,
           actions: actions,
+          viewWidgetBuilder: viewWidgetBuilder,
         );
 
   @override
@@ -171,6 +174,7 @@ class BoolField extends Field<BoolComparable> {
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<Color?, Field>? selectedColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<BoolComparable>? viewWidgetBuilder,
   }) {
     return BoolField(
       displayType: displayType??this.displayType,
@@ -199,6 +203,58 @@ class BoolField extends Field<BoolComparable> {
       backgroundColor: backgroundColor ?? this.backgroundColor,
       selectedColor: selectedColor ?? this.selectedColor,
       actions: actions ?? this.actions,
+      viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
+    );
+  }
+
+
+  static Widget defaultViewWidgetBuilder
+  (BuildContext context, Field<BoolComparable> fieldParam, {
+    bool linkToInnerDAOs=true,
+    bool showViewButtons=true,
+  }) {
+    if (fieldParam.hiddenInView) {
+      return SizedBox.shrink();
+    }
+    final field = fieldParam as BoolField;
+    final value = field.value!.value;
+    final valueName = value
+        ? field.uiNameTrueGetter==null ? null : field.uiNameTrue
+        : field.uiNameFalseGetter==null ? null : field.uiNameFalse;
+    Widget? icon;
+    if (field.displayType==BoolFieldDisplayType.checkBoxTile
+        || field.displayType==BoolFieldDisplayType.compactCheckBox) {
+      icon = value
+          ? Icon(Icons.check,
+            color: Colors.green,
+          )
+          : Icon(Icons.close,
+            color: Colors.red,
+          );
+    } else if (field.displayType==BoolFieldDisplayType.switchTile
+        || field.displayType==BoolFieldDisplayType.compactSwitch) {
+      icon = value
+          ? Icon(MaterialCommunityIcons.toggle_switch,
+            color: Colors.green,
+          )
+          : Icon(MaterialCommunityIcons.toggle_switch_off_outline,
+            color: Colors.red,
+          );
+    }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      child: Row(
+        children: [
+          if (icon!=null)
+            icon,
+          if (icon!=null)
+            SizedBox(width: 2,),
+          if (valueName!=null)
+            SelectableText(valueName,
+              style: Theme.of(context).textTheme.subtitle1,
+            ),
+        ],
+      ),
     );
   }
 

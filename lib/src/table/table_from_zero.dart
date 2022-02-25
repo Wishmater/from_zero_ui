@@ -287,6 +287,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       });
     }
     if (widget.tableController!=null) {
+      widget.tableController!.currentState = this;
       widget.tableController!._filter = () {
         List<RowModel<T>> result = [];
         if (mounted){
@@ -1568,6 +1569,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
 class TableController<T> extends ChangeNotifier {
 
+  TableFromZeroState<T>? currentState;
   Map<dynamic, List<ConditionFilter>>? initialConditionFilters;
   Map<dynamic, List<ConditionFilter>>? conditionFilters;
   Map<dynamic, Map<Object, bool>>? initialValueFilters;

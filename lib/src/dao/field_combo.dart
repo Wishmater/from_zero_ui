@@ -62,6 +62,7 @@ class ComboField<T extends DAO> extends Field<T> {
     T? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<T> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
   }) :  assert(possibleValuesGetter!=null
               || possibleValuesFutureGetter!=null
               || possibleValuesProviderGetter!=null),
@@ -91,6 +92,7 @@ class ComboField<T extends DAO> extends Field<T> {
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,
           actions: actions,
+          viewWidgetBuilder: viewWidgetBuilder,
         );
 
   @override
@@ -129,6 +131,7 @@ class ComboField<T extends DAO> extends Field<T> {
     T? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<T>? viewWidgetBuilder,
   }) {
     return ComboField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -163,6 +166,7 @@ class ComboField<T extends DAO> extends Field<T> {
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
+      viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
     );
   }
 

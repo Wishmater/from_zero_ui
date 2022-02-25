@@ -43,11 +43,13 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
   final Widget? message;
   final Widget? content; /// Overrides title and message
   final Widget? progressIndicator;
+  final bool showProgressIndicatorForRemainingTime;
   final List<Widget>? actions;
   final double? width;
   final Widget? widget; /// Overrides everything else
   final VoidCallback? onCancel;
-  SnackBarControllerFromZero? controller;
+  final ValueNotifier<bool> blockUI;
+  late final SnackBarControllerFromZero? controller;
 
 
   SnackBarFromZero({
@@ -62,18 +64,23 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
     this.message,
     this.content,
     this.progressIndicator,
+    this.showProgressIndicatorForRemainingTime = false,
     this.actions,
     this.widget,
     this.onCancel,
-  })  : super(key: key,);
+    bool blockUI = false,
+  })  : this.blockUI = ValueNotifier(blockUI),
+        super(key: key,);
 
   @override
   _SnackBarFromZeroState createState() => _SnackBarFromZeroState();
 
   SnackBarControllerFromZero show([BuildContext? context]){
-    if (controller!=null) {
-      throw Exception('Already showed this SnackBar');
-    }
+    try {
+      if (controller!=null) {
+        throw Exception('Already showed this SnackBar');
+      }
+    } catch (_) {}
     final ref = ((context??this.context).findAncestorStateOfType<SnackBarHostFromZeroState>()?.ref)
                 ?? (context??this.context) as WidgetRef;
     final host = ref.read(fromZeroSnackBarHostControllerProvider);
@@ -86,9 +93,9 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
   }
 
   void dismiss(){
-    if (controller!=null) {
-      controller!.dismiss();
-    }
+    try {
+      controller?.dismiss();
+    } catch (_) {}
   }
 
 }
@@ -217,7 +224,7 @@ class _SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with Ticker
     if (widget.progressIndicator!=null) {
       progressIndicator = widget.progressIndicator!;
     } else {
-      if (animationController==null) {
+      if (animationController==null || !widget.showProgressIndicatorForRemainingTime) {
         progressIndicator = LinearProgressIndicator(
           valueColor: AlwaysStoppedAnimation(actionColor),
           backgroundColor: type==null ? null : SnackBarFromZero.softColors[type],
@@ -299,4 +306,5 @@ class _SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with Ticker
     );
     return result;
   }
+
 }

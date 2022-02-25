@@ -100,6 +100,7 @@ class StringField extends Field<String> {
     String? defaultValue = '',
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<String> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
   }) :  this.minLines = minLines ?? (type==StringFieldType.short ? null : 3),
         this.maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
         this.showObfuscationToggleButton = showObfuscationToggleButton ?? obfuscate,
@@ -130,6 +131,7 @@ class StringField extends Field<String> {
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,
           actions: actions,
+          viewWidgetBuilder: viewWidgetBuilder,
         );
 
 
@@ -162,6 +164,7 @@ class StringField extends Field<String> {
     String? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ViewWidgetBuilder<String>? viewWidgetBuilder,
   }) {
     return StringField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -190,6 +193,7 @@ class StringField extends Field<String> {
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
+      viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
     );
   }
 

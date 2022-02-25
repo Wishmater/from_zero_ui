@@ -1008,6 +1008,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   Future<dynamic> pushViewDialog(BuildContext context, {
     bool? showEditButton,
   }) {
+    ScrollController scrollController = ScrollController();
     Widget content = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
@@ -1058,7 +1059,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 ),
               ),
               Expanded(
-                child: buildViewWidget(context),
+                child: ScrollbarFromZero(
+                  controller: scrollController,
+                  child: SingleChildScrollView(
+                    controller: scrollController,
+                    child: buildViewWidget(context),
+                  ),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
@@ -1104,58 +1111,89 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     if (viewWidgetBuilder!=null) {
       return viewWidgetBuilder!(context, this);
     }
-    ScrollController scrollController = ScrollController();
     bool clear = false;
-    return ScrollbarFromZero(
-      controller: scrollController,
-      child: SingleChildScrollView(
-        controller: scrollController,
-        child: IntrinsicWidth(
-          child: Column(
-            children: props.values.where((e) => !e.hiddenInView).map((e) {
-              clear = !clear;
-              return Material(
-                color: clear ? Theme.of(context).cardColor
-                    : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
-                child: IntrinsicHeight(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        flex: 1000000,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                          alignment: Alignment.centerRight,
-                          child: SelectableText(e.uiName,
-                            style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                              color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+    bool first = true;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: fieldGroups.map((group) {
+        final fields = group.props.values.where((e) => !e.hiddenInView);
+        Widget result;
+        if (fields.isEmpty) {
+          result = SizedBox.shrink();
+        } else {
+          result = IntrinsicWidth(
+            child: Column(
+              children: fields.map((e) {
+                clear = !clear;
+                return Material(
+                  color: clear ? Theme.of(context).cardColor
+                      : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          flex: 1000000,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                            alignment: Alignment.centerRight,
+                            child: SelectableText(e.uiName,
+                              style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                                color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+                              ),
+                              textAlign: TextAlign.right,
                             ),
-                            textAlign: TextAlign.right,
                           ),
                         ),
-                      ),
-                      Container(
-                        height: 24,
-                        child: VerticalDivider(width: 0,),
-                      ),
-                      Expanded(
-                        flex: 1618034,
-                        child: Container(
-                          alignment: Alignment.centerLeft,
-                          child: e.buildViewWidget(context,
-                            linkToInnerDAOs: this.viewDialogLinksToInnerDAOs,
-                            showViewButtons: this.viewDialogShowsViewButtons,
+                        Container(
+                          height: 24,
+                          child: VerticalDivider(width: 0,),
+                        ),
+                        Expanded(
+                          flex: 1618034,
+                          child: Container(
+                            alignment: Alignment.centerLeft,
+                            child: e.buildViewWidget(context,
+                              linkToInnerDAOs: this.viewDialogLinksToInnerDAOs,
+                              showViewButtons: this.viewDialogShowsViewButtons,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          );
+        }
+        if (!first || group.name!=null) {
+          result = Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!first)
+                Container(
+                  height: 8,
+                  color: Theme.of(context).dividerColor,
+                ),
+              if (group.name!=null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 12),
+                  child: Text(group.name!,
+                    style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              );
-            }).toList(),
-          ),
-        ),
-      ),
+              result,
+            ],
+          );
+        }
+        first = false;
+        return result;
+      }).toList(),
     );
   }
 
