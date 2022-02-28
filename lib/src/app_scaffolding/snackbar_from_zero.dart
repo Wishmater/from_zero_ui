@@ -31,7 +31,12 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
     Icon(Icons.info_outline),
     Icon(Icons.check_circle),
     Icon(Icons.warning),
-    CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(Colors.blue.shade500),),
+    SizedBox(
+      width: 32, height: 32,
+      child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation(Colors.blue.shade500),
+      ),
+    ),
   ];
   static const behaviourFixed = 10;
   static const behaviourFloating = 11;
@@ -75,7 +80,7 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
         super(key: key,);
 
   @override
-  SnackBarFromZeroState createState() => SnackBarFromZeroState();
+  ConsumerState<SnackBarFromZero> createState() => SnackBarFromZeroState();
 
   SnackBarControllerFromZero show([BuildContext? context]){
     try {
@@ -143,7 +148,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
         : SnackBarFromZero.colors[type];
     Widget result = Row(
       children: [
-        SizedBox(width: 8,),
+        SizedBox(width: 10,),
         if (widget.icon!=null || type!=null)
           widget.icon ?? SnackBarFromZero.icons[type!],
         SizedBox(width: 8,),
@@ -276,7 +281,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
           borderRadius: BorderRadius.all(Radius.circular(28)),
         ),
         color: backgroundColor,
-        clipBehavior: Clip.hardEdge,
+        clipBehavior: Clip.antiAlias,
         elevation: 12,
         shadowColor: Colors.black,
         child: result,

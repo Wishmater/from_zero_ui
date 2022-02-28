@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:animations/animations.dart';
@@ -7,16 +8,20 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:dartx/dartx.dart';
+import 'package:from_zero_ui/src/app_scaffolding/api_snackbar.dart';
 import 'package:from_zero_ui/src/dao/field.dart';
 import 'package:from_zero_ui/src/dao/field_validators.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 import 'field_list.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
 typedef Future<ModelType?> OnSaveCallback<ModelType>(BuildContext context, DAO<ModelType> e);
 typedef ApiState<ModelType?> OnSaveAPICallback<ModelType>(BuildContext context, DAO<ModelType> e);
+typedef void OnDidSaveCallback<ModelType>(BuildContext context, ModelType? model, DAO<ModelType> dao);
 typedef Future<String?> OnDeleteCallback<ModelType>(BuildContext context, DAO<ModelType> e);
-typedef ApiState<String?> OnDeleteAPICallback<ModelType>(BuildContext context, DAO<ModelType> e);
+typedef ApiState OnDeleteAPICallback<ModelType>(BuildContext context, DAO<ModelType> e);
+typedef void OnDidDeleteCallback<ModelType>(BuildContext context, DAO<ModelType> dao);
 typedef Widget DAOWidgetBuilder<ModelType>(BuildContext context, DAO<ModelType> dao);
 typedef T DAOValueGetter<T, ModelType>(DAO<ModelType> dao);
 
@@ -39,8 +44,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
   OnSaveCallback<ModelType>? onSave;
   OnSaveAPICallback<ModelType>? onSaveAPI;
+  OnDidSaveCallback<ModelType>? onDidSave;
   OnDeleteCallback<ModelType>? onDelete;
   OnDeleteAPICallback<ModelType>? onDeleteAPI;
+  OnDidDeleteCallback<ModelType>? onDidDelete;
   List<ValueChanged<DAO<ModelType>>> _selfUpdateListeners = [];
   DAOWidgetBuilder<ModelType>? viewWidgetBuilder;
   bool useIntrinsicHeightForViewDialog;
@@ -59,8 +66,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.fieldGroups = const [],
     this.onSave,
     this.onSaveAPI,
+    this.onDidSave,
     this.onDelete,
     this.onDeleteAPI,
+    this.onDidDelete,
     this.viewWidgetBuilder,
     this.useIntrinsicHeightForViewDialog = true,
     this.viewDialogWidth = 512,
@@ -97,8 +106,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     List<FieldGroup>? fieldGroups,
     OnSaveCallback<ModelType>? onSave,
     OnSaveAPICallback<ModelType>? onSaveAPI,
+    OnDidSaveCallback<ModelType>? onDidSave,
     OnDeleteCallback<ModelType>? onDelete,
     OnDeleteAPICallback<ModelType>? onDeleteAPI,
+    OnDidDeleteCallback<ModelType>? onDidDelete,
     DAOWidgetBuilder<ModelType>? viewWidgetBuilder,
     bool? useIntrinsicHeightForViewDialog,
     double? viewDialogWidth,
@@ -118,8 +129,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       uiNameGetter: uiNameGetter??this.uiNameGetter,
       onSave: onSave??this.onSave,
       onSaveAPI: onSaveAPI??this.onSaveAPI,
+      onDidSave: onDidSave??this.onDidSave,
       onDelete: onDelete??this.onDelete,
       onDeleteAPI: onDeleteAPI??this.onDeleteAPI,
+      onDidDelete: onDidDelete??this.onDidDelete,
       viewWidgetBuilder: viewWidgetBuilder??this.viewWidgetBuilder,
       useIntrinsicHeightForViewDialog: useIntrinsicHeightForViewDialog??this.useIntrinsicHeightForViewDialog,
       viewDialogWidth: viewDialogWidth??this.viewDialogWidth,
@@ -362,7 +375,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
 
 
-  Future<bool> maybeSave(BuildContext context, {
+  Future<ModelType?> maybeSave(BuildContext context, {
     bool updateDbValuesAfterSuccessfulSave=true,
     bool showDefaultSnackBars=true,
     bool askForSaveConfirmation=true,
@@ -372,7 +385,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       focusBlockingField: true,
     );
     if (!validation) {
-      return false;
+      return null;
     }
     bool? confirm = true;
     if (askForSaveConfirmation) {
@@ -430,11 +443,11 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         showDefaultSnackBar: showDefaultSnackBars,
       );
     } else {
-      return false;
+      return null;
     }
   }
 
-  Future<bool> save(context, {
+  Future<ModelType?> save(context, {
     bool updateDbValuesAfterSuccessfulSave=true,
     bool showDefaultSnackBar=true,
     bool skipValidation=false,
@@ -445,23 +458,54 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         focusBlockingField: true,
       );
       if (!validation) {
-        return false;
+        return null;
       }
     }
     bool newInstance = id==null || id==-1;
     bool success = false;
-    try {
-      success = onSave==null || (await onSave!.call(contextForValidation??context, this))!=null;
-    } catch (e, st) {
-      success = false;
-      print(e); print(st);
+    ModelType? model;
+    if (onSaveAPI!=null) {
+      final stateNotifier = onSaveAPI!.call(contextForValidation??context, this);
+      final Completer completer = Completer();
+      final removeListener = stateNotifier.addListener((state) {
+        state.mapOrNull(
+          data: (data) {
+            completer.complete(data.value);
+            return model = data.value;
+          },
+          loading: (loading) => model = null,
+          error: (error) => model = null,
+        );
+      });
+      final controller = APISnackBar(
+        context: context,
+        stateNotifier: stateNotifier,
+        successTitle: '$classUiName ${newInstance ? FromZeroLocalizations.of(context).translate("added")
+            : FromZeroLocalizations.of(context).translate("edited")} ${FromZeroLocalizations.of(context).translate("successfully")}.',
+      ).show();
+      await Future.any([controller.closed, completer.future]);
+      success = model!=null;
+      removeListener();
+    } else if (onSave==null) {
+      success = true;
+    } else {
+      try {
+        model = await onSave!.call(contextForValidation??context, this);
+        success = model!=null;
+      } catch (e, st) {
+        success = false;
+        print(e); print(st);
+      }
+    }
+    if (success) {
+      onDidSave?.call(contextForValidation??context, model, this);
     }
     if (updateDbValuesAfterSuccessfulSave && success) {
       props.forEach((key, value) {
         value.dbValue = value.value;
       });
     }
-    if (showDefaultSnackBar) {
+    if (onSaveAPI==null && showDefaultSnackBar) {
       SnackBarFromZero(
         context: context,
         type: success ? SnackBarFromZero.success : SnackBarFromZero.error,
@@ -471,7 +515,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             : FromZeroLocalizations.of(context).translate("connection_error_long")),
       ).show(context);
     }
-    return success;
+    return model;
   }
 
 
@@ -536,21 +580,46 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool success = false;
     String? errorString;
     showDefaultSnackBar = showDefaultSnackBar ?? canDelete;
-    try {
-      errorString = await onDelete?.call(context, this);
-      success = errorString==null;
-    } catch (e, st) {
-      success = false;
-      print(e); print(st);
-    }
-    if (showDefaultSnackBar) {
-      SnackBarFromZero(
+    if (onDeleteAPI!=null) {
+      final stateNotifier = onDeleteAPI!.call(contextForValidation??context, this);
+      final Completer completer = Completer();
+      final removeListener = stateNotifier.addListener((state) {
+        state.mapOrNull(
+          data: (data) {
+            completer.complete(true);
+            return success = true;
+          },
+          loading: (loading) => success = false,
+          error: (error) => success = false,
+        );
+      });
+      final controller = APISnackBar(
         context: context,
-        type: success ? SnackBarFromZero.success : SnackBarFromZero.error,
-        title: Text(success
-            ? '$classUiName ${FromZeroLocalizations.of(context).translate("deleted")} ${FromZeroLocalizations.of(context).translate("successfully")}.'
-            : (errorString ?? FromZeroLocalizations.of(context).translate("connection_error_long"))),
-      ).show(context);
+        stateNotifier: stateNotifier,
+        successTitle: '$classUiName ${FromZeroLocalizations.of(context).translate("deleted")} ${FromZeroLocalizations.of(context).translate("successfully")}.',
+      ).show();
+      await Future.any([controller.closed, completer.future]);
+      removeListener();
+    } else {
+      try {
+        errorString = await onDelete?.call(contextForValidation??context, this);
+        success = errorString==null;
+      } catch (e, st) {
+        success = false;
+        print(e); print(st);
+      }
+      if (showDefaultSnackBar) {
+        SnackBarFromZero(
+          context: context,
+          type: success ? SnackBarFromZero.success : SnackBarFromZero.error,
+          title: Text(success
+              ? '$classUiName ${FromZeroLocalizations.of(context).translate("deleted")} ${FromZeroLocalizations.of(context).translate("successfully")}.'
+              : (errorString ?? FromZeroLocalizations.of(context).translate("connection_error_long"))),
+        ).show(context);
+      }
+    }
+    if (success) {
+      onDidDelete?.call(contextForValidation??context, this);
     }
     return success;
   }
@@ -609,7 +678,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
   }
 
-  Future<bool> maybeEdit(BuildContext context, {
+  Future<ModelType?> maybeEdit(BuildContext context, {
     bool showDefaultSnackBars = true,
     bool showRevertChanges = false,
     bool askForSaveConfirmation = true,
@@ -1067,14 +1136,14 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
       focusNode.requestFocus();
     });
-    bool? confirm = await showModal(
+    ModelType? confirm = await showModal(
       context: context,
       builder: (modalContext) {
         return content;
       },
     );
     _contextForValidation = null;
-    return confirm??false;
+    return confirm;
   }
 
 
@@ -1564,7 +1633,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                         ),
                         textColor: Theme.of(context).textTheme.caption!.color,
                         onPressed: () {
-                          Navigator.of(context).maybePop(false); // Dismiss alert dialog
+                          Navigator.of(context).maybePop(null);
                         },
                       ),
                     ),
@@ -1598,25 +1667,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                         ),
                       ),
                       onPressed: isEdited ? () async {
-                        if (canSave) {
-                          showModal(
-                            context: context,
-                            configuration: const FadeScaleTransitionConfiguration(barrierDismissible: false,),
-                            builder: (context) {
-                              return LoadingSign();
-                            },
-                          );
-                        }
-                        bool success = await maybeSave(context,
+                        ModelType? result = await maybeSave(context,
                           showDefaultSnackBars: showDefaultSnackBars,
                           askForSaveConfirmation: askForSaveConfirmation,
                         );
-                        if (canSave) {
-                          Navigator.of(context).pop();
-                        }
-                        if (success) {
+                        if (result != null) {
                           if (popAfterSuccessfulSave) {
-                            Navigator.of(context).pop(true);
+                            Navigator.of(context).pop(result);
                           }
                         }
                       } : null,

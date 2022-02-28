@@ -106,7 +106,8 @@ class SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
               return IgnorePointer(
                 ignoring: !blockUI,
                 child: AnimatedContainer(
-                  duration: Duration(milliseconds: 300),
+                  duration: Duration(milliseconds: 250),
+                  curve: Curves.ease,
                   color: blockUI
                       ? Colors.black54
                       : Colors.black.withOpacity(0),

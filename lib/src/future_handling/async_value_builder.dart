@@ -20,6 +20,7 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
   final Duration transitionDuration;
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
+  final bool applyAnimatedContainerFromChildSize;
 
   const FutureProviderBuilder({
     Key? key,
@@ -31,6 +32,7 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
     this.transitionDuration = const Duration(milliseconds: 300),
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
+    this.applyAnimatedContainerFromChildSize = false,
   }) : super(key: key);
 
   @override
@@ -44,6 +46,7 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
       transitionDuration: transitionDuration,
       transitionInCurve: transitionInCurve,
       transitionOutCurve: transitionOutCurve,
+      applyAnimatedContainerFromChildSize: applyAnimatedContainerFromChildSize,
     );
   }
 
@@ -60,6 +63,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
   final Duration transitionDuration;
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
+  final bool applyAnimatedContainerFromChildSize;
 
   const AsyncValueBuilder({
     Key? key,
@@ -71,6 +75,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
     this.transitionDuration = const Duration(milliseconds: 300),
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
+    this.applyAnimatedContainerFromChildSize = false,
   }) : super(key: key);
 
   @override
@@ -96,6 +101,12 @@ class AsyncValueBuilder<T> extends StatelessWidget {
       switchOutCurve: transitionOutCurve,
       transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
     );
+    if (applyAnimatedContainerFromChildSize) {
+      result = AnimatedContainerFromChildSize(
+        duration: transitionDuration,
+        child: result,
+      );
+    }
     return result;
   }
 
@@ -134,6 +145,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
   final Duration transitionDuration;
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
+  final bool applyAnimatedContainerFromChildSize;
 
   const AsyncValueMultiBuilder({
     Key? key,
@@ -145,6 +157,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
     this.transitionDuration = const Duration(milliseconds: 300),
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
+    this.applyAnimatedContainerFromChildSize = false,
   }) : super(key: key);
 
   @override
@@ -170,7 +183,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
       );
     } else if (data.length==asyncValues.length) {
       result = Container(
-        key: ValueKey(data.hashCode),
+        key: ValueKey(asyncValues.map((e) => e.hashCode).reduce((v, e) => v+e)),
         child: dataBuilder(context, data),
       );
     } else {
@@ -186,6 +199,12 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
       switchOutCurve: transitionOutCurve,
       transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
     );
+    if (applyAnimatedContainerFromChildSize) {
+      result = AnimatedContainerFromChildSize(
+        duration: transitionDuration,
+        child: result,
+      );
+    }
     return result;
   }
 

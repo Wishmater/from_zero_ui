@@ -219,6 +219,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   final Duration transitionDuration;
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
+  final bool applyAnimatedContainerFromChildSize;
 
   const ApiProviderBuilder({
     Key? key,
@@ -230,6 +231,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     this.transitionDuration = const Duration(milliseconds: 300),
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
+    this.applyAnimatedContainerFromChildSize = false,
   }) : super(key: key);
 
   @override
@@ -254,6 +256,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
       transitionDuration: transitionDuration,
       transitionInCurve: transitionInCurve,
       transitionOutCurve: transitionOutCurve,
+      applyAnimatedContainerFromChildSize: applyAnimatedContainerFromChildSize,
     );
   }
 
@@ -281,8 +284,9 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
           return ErrorSign(
             key: ValueKey(error),
             icon: const Icon(Icons.do_disturb_on_outlined),
-            title: 'Error de Autenticación', // TODO 3 internationalize
-            subtitle: 'Intente cerrar la aplicación y autenticarse de nuevo.', // TODO 3 internationalize
+            title: error.response.data.toString(),
+            // title: 'Error de Autenticación',
+            // subtitle: 'Intente cerrar la aplicación y autenticarse de nuevo.',
           );
         } else if (error.response.statusCode==403) {
           return ErrorSign(
@@ -371,6 +375,7 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
   final Duration transitionDuration;
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
+  final bool applyAnimatedContainerFromChildSize;
 
   const ApiProviderMultiBuilder({
     Key? key,
@@ -382,6 +387,7 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
     this.transitionDuration = const Duration(milliseconds: 300),
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
+    this.applyAnimatedContainerFromChildSize = false,
   }) : super(key: key);
 
   @override
@@ -420,6 +426,7 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
       transitionDuration: transitionDuration,
       transitionInCurve: transitionInCurve,
       transitionOutCurve: transitionOutCurve,
+      applyAnimatedContainerFromChildSize: applyAnimatedContainerFromChildSize,
     );
   }
 
@@ -434,4 +441,80 @@ class MultiValueListenable<T> extends ChangeNotifier {
     }
   }
   List<T> get values => _notifiers.map((e) => e.value).toList();
+}
+
+
+
+class ApiStateBuilder<T> extends ConsumerStatefulWidget {
+
+  final ApiState<T> stateNotifier;
+  final DataBuilder<T> dataBuilder;
+  final ApiLoadingBuilder loadingBuilder;
+  final ApiErrorBuilder errorBuilder;
+  final FutureTransitionBuilder transitionBuilder;
+  final Duration transitionDuration;
+  final Curve transitionInCurve;
+  final Curve transitionOutCurve;
+  final bool applyAnimatedContainerFromChildSize;
+
+  const ApiStateBuilder({
+    Key? key,
+    required this.stateNotifier,
+    required this.dataBuilder,
+    this.loadingBuilder = ApiProviderBuilder.defaultLoadingBuilder,
+    this.errorBuilder = ApiProviderBuilder.defaultErrorBuilder,
+    this.transitionBuilder = AsyncValueBuilder.defaultTransitionBuilder,
+    this.transitionDuration = const Duration(milliseconds: 300),
+    this.transitionInCurve = Curves.easeOutCubic,
+    this.transitionOutCurve = Curves.easeInCubic,
+    this.applyAnimatedContainerFromChildSize = false,
+  }) : super(key: key);
+
+  @override
+  _ApiStateBuilderState<T> createState() => _ApiStateBuilderState<T>();
+
+}
+
+class _ApiStateBuilderState<T> extends ConsumerState<ApiStateBuilder<T>> {
+
+  late AsyncValue<T> value;
+
+  @override
+  void initState() {
+    super.initState();
+    value = widget.stateNotifier.state;
+    widget.stateNotifier.addListener((state) {
+      if (mounted) {
+        setState(() {
+          value = state;
+        });
+      }
+    }, fireImmediately: false,);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AsyncValueBuilder<T>(
+      asyncValue: value,
+      dataBuilder: widget.dataBuilder,
+      loadingBuilder: (context) {
+        return ValueListenableBuilder<double?>(
+          valueListenable: widget.stateNotifier.wholePercentageNotifier,
+          builder: (context, percentage, child) {
+            return widget.loadingBuilder(context, percentage);
+          },
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return widget.errorBuilder(
+            context, error, stackTrace, () => widget.stateNotifier.retry(ref));
+      },
+      transitionBuilder: widget.transitionBuilder,
+      transitionDuration: widget.transitionDuration,
+      transitionInCurve: widget.transitionInCurve,
+      transitionOutCurve: widget.transitionOutCurve,
+      applyAnimatedContainerFromChildSize: widget.applyAnimatedContainerFromChildSize,
+    );
+  }
+
 }

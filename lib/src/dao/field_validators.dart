@@ -1,4 +1,5 @@
 import 'package:email_validator/email_validator.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao/dao.dart';
@@ -53,7 +54,7 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
     required Field<T> field,
     required String error,
     this.defaultValue,
-    this.showVisualConfirmation = true,
+    this.showVisualConfirmation = !kReleaseMode,
     this.allowUndoInvalidatingChange = true,
     this.allowSetThisFieldToDefaultValue = true,
   })  : assert(showVisualConfirmation || allowUndoInvalidatingChange),
