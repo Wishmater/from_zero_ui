@@ -456,16 +456,24 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         footer: true,
         overlapsContent: true,
         stickOffset: 12,
-        header: ScrollbarFromZero(
-          controller: sharedController,
-          opacityGradientDirection: OpacityGradient.horizontal,
-          child: SizedBox(
-            height: 12,
-            child: NotificationRelayer(
-              controller: notificationRelayController,
-              child: Container(),
-            ),
-          ),
+        header: LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth < widget.minWidth!) {
+              return ScrollbarFromZero(
+                controller: sharedController,
+                opacityGradientDirection: OpacityGradient.horizontal,
+                child: SizedBox(
+                  height: 12,
+                  child: NotificationRelayer(
+                    controller: notificationRelayController,
+                    child: Container(),
+                  ),
+                ),
+              );
+            } else {
+              return SizedBox.shrink();
+            }
+          },
         ),
       );
     }
@@ -635,7 +643,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                         }
                       } else {
                         if (row.onCheckBoxSelected!(row, value) ?? false) {
-                          setState(() {});
+                          checkboxSetState(() {});
                         }
                       }
                     },
@@ -1269,7 +1277,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                                         onPressed: () {
                                           modified = true;
                                           filterPopupSetState(() {
-                                            filterTableController.filtered!.forEach((row) {
+                                            filterTableController.filtered.forEach((row) {
                                               valueFilters[j]![row.id] = true;
                                               (row as SimpleRowModel).selected = true;
                                             });
@@ -1283,7 +1291,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                                         onPressed: () {
                                           modified = true;
                                           filterPopupSetState(() {
-                                            filterTableController.filtered!.forEach((row) {
+                                            filterTableController.filtered.forEach((row) {
                                               valueFilters[j]![row.id] = false;
                                               (row as SimpleRowModel).selected = false;
                                             });
@@ -1475,8 +1483,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   }
   _sort(List<RowModel<T>> list) {
     mergeSort(list, compare: ((RowModel<T> a, RowModel<T> b){
-      if (a.alwaysOnTop!=null || b.alwaysOnTop!=null) {
-        if (a.alwaysOnTop==b.alwaysOnTop) return 0;
+      if (a.alwaysOnTop!=null || b.alwaysOnTop!=null && a.alwaysOnTop!=b.alwaysOnTop) {
         if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
         if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1;
       }
@@ -1626,7 +1633,7 @@ class TableController<T> extends ChangeNotifier {
     _reInit?.call();
   }
 
-  List<RowModel<T>> Function()? _getFiltered;
-  List<RowModel<T>>? get filtered => _getFiltered?.call();
+  late List<RowModel<T>> Function() _getFiltered;
+  List<RowModel<T>> get filtered => _getFiltered();
 
 }

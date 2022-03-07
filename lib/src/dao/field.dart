@@ -472,3 +472,12 @@ class FieldGroup {
   }
 
 }
+
+
+
+class HiddenValueField<T> extends Field<BoolComparable> {
+  T hiddenValue;
+  HiddenValueField(this.hiddenValue) : super(
+    uiNameGetter: (field, dao) => '',
+  );
+}

@@ -1,4 +1,5 @@
 import 'package:animations/animations.dart';
+import 'package:from_zero_ui/src/table/table_header.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/cupertino.dart';
@@ -20,7 +21,7 @@ typedef List<RowAction<T>> RowActionsBuilder<T>(BuildContext context);
 class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
   T objectTemplate;
-  TableController tableController;
+  TableController<T> tableController;
   Future<List<T>> Function(BuildContext context)? availableObjectsPoolGetter;
   ApiProvider<List<T>> Function(BuildContext context)? availableObjectsPoolProvider;
   bool allowDuplicateObjectsFromAvailablePool;
@@ -55,6 +56,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   bool? tableFilterable;
   bool expandHorizontally;
   List<ValidationError> listValidationErrors = [];
+  Widget? icon; /// only used if !collapsible
 
   List<T> get objects => value!.list;
   List<T> get dbObjects => dbValue!.list;
@@ -66,7 +68,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   }
 
   ValueNotifier<Map<T, bool>> selectedObjects = ValueNotifier({});
-  ValueNotifier<List<T>?> filtered = ValueNotifier(null);
 
   static String defaultToString(ListField field) {
     return listToStringSmart(field.objects,
@@ -115,13 +116,13 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     this.availableObjectsPoolProvider,
     this.allowDuplicateObjectsFromAvailablePool = false,
     this.showObjectsFromAvailablePoolAsTable = false,
-    this.allowAddNew = true,
+    bool? allowAddNew,
     FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, /// Unused in table
     this.tableCellsEditable = false,
     double maxWidth = double.infinity,
     double minWidth = 0,
     double flex = 0,
-    TableController? tableController,
+    TableController<T>? tableController,
     this.collapsed = false,
     this.allowMultipleSelection = false,
     this.collapsible = true,
@@ -165,10 +166,11 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<ComparableList<T>> viewWidgetBuilder = ListField.defaultViewWidgetBuilder,
+    this.icon,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         assert(!updateObjectsInRealTime || (availableObjectsPoolGetter==null && availableObjectsPoolProvider==null)
                     , 'It makes no sense to save/delete in real time if adding from a pool of pre-saved objects'),
-        this.tableFilterable = tableFilterable ?? !tableCellsEditable,
+        this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
         this.showDefaultSnackBars = showDefaultSnackBars ?? updateObjectsInRealTime,
         this.skipDeleteConfirmation = skipDeleteConfirmation ?? !updateObjectsInRealTime,
@@ -178,6 +180,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         this.actionDeleteBreakpoints = actionDeleteBreakpoints ?? {0: ActionState.icon},
         this.actionViewBreakpoints = actionViewBreakpoints ?? (viewOnRowTap ?? (onRowTap==null && !tableCellsEditable) ? {0: ActionState.popup} : {0: ActionState.icon}),
         this.tableController = tableController ?? TableController(),
+        this.allowAddNew = objectTemplate.canSave,
         super(
           uiNameGetter: uiNameGetter,
           value: ComparableList(list: objects),
@@ -318,7 +321,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     bool? showDefaultSnackBars,
     FieldValueGetter<List<FieldValidator<ComparableList<T>>>, Field>? validatorsGetter,
     bool? validateOnlyOnConfirm,
-    TableController? tableController,
+    TableController<T>? tableController,
     bool? tableSortable,
     bool? tableFilterable,
     FieldValueGetter<SimpleColModel, Field>? colModelBuilder,
@@ -330,6 +333,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<ComparableList<T>>? viewWidgetBuilder,
+    Widget? icon,
   }) {
     return ListField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -385,6 +389,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
+      icon: icon ?? this.icon,
     );
   }
 
@@ -458,20 +463,23 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     if (hasAvailableObjectsPool) {
       T? selected;
       if (showObjectsFromAvailablePoolAsTable) {
-        final previousOnSave = emptyDAO.onSave;
-        if (previousOnSave!=null) {
-          final newOnSave;
-          newOnSave = (context, e) async {
-            T? newDAO = await previousOnSave(context, e);
-            if (newDAO!=null) {
-              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-                Navigator.of(context).pop(newDAO);
-              });
-            }
-            return newDAO;
+        final onDidSave = (context, model, dao) {
+          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+            Navigator.of(context).pop(dao);
+          });
+        };
+        final previousOnDidSave = emptyDAO.onDidSave;
+        if (previousOnDidSave!=null) {
+          final newOnDidSave = (context, model, dao) async {
+            previousOnDidSave(context, model, dao);
+            onDidSave(context, model, dao);
           };
           emptyDAO = emptyDAO.copyWith(
-            onSave: newOnSave,
+            onDidSave: newOnDidSave,
+          ) as T;
+        } else {
+          emptyDAO = emptyDAO.copyWith(
+            onDidSave: onDidSave,
           ) as T;
         }
         Widget content = AnimatedBuilder(
@@ -642,11 +650,11 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         addRow(selected, insertIndex);
       }
     } else {
-      bool add = true;
+      dynamic result;
       if (showEditDialogOnAdd) {
-        add = await emptyDAO.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+        result = await emptyDAO.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
       }
-      if (add) {
+      if (result!=null) {
         addRow(emptyDAO, insertIndex);
       }
     }
@@ -693,7 +701,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                     collapsible: false,
                     actionDeleteBreakpoints: {0: ActionState.none},
                     objects: data,
-                    allowAddNew: allowAddNew && emptyDAO.onSave!=null,
+                    allowAddNew: allowAddNew && emptyDAO.canSave,
                     onRowTap: (value) {
                       Navigator.of(context).pop(value.id);
                     },
@@ -1286,171 +1294,174 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
             backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
             onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
               selectedObjects.value[row.id] = focused??false;
+              (row as SimpleRowModel).selected = focused??false;
               selectedObjects.notifyListeners();
+              tableController.notifyListeners();
               notifyListeners();
+              return true;
             } : null,
           );
         }
         final extraRowActions = extraRowActionsBuilder?.call(context) ?? [];
-        return Material(
-          color: Theme.of(context).cardColor,
-          child: Container(
-            color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
-            child: CustomScrollView(
-              // TODO 2 performance opportunity: if asSliver, should return table as sliver, without ever wrapping in customScrollView
-              shrinkWrap: !expandToFillContainer,
-              slivers: [
-                TableFromZero<T>(
-                  // key: ValueKey(objects.length),
-                  scrollController: mainScrollController,
-                  // maxWidth: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
-                  minWidth: width,
-                  initialSortedColumn: initialSortedColumn ?? 0,
-                  tableController: tableController,
-                  alternateRowBackgroundSmartly: false,
-                  columns: propsShownOnTable.map((key, value) {
-                    final SimpleColModel result = value.getColModel();
-                    if (tableFilterable!=null) {
-                      result.filterEnabled = tableFilterable;
-                    }
-                    if (tableSortable!=null) {
-                      result.sortEnabled = tableSortable;
-                    }
-                    return MapEntry(key, result);
-                  }),
-                  showHeaders: showTableHeaders,
-                  footerStickyOffset: 12,
-                  rows: builtRows.values.toList(),
-                  cellBuilder: tableCellsEditable ? (context, row, colKey) {
-                    final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
-                      expandToFillContainer: false,
-                      addCard: false,
-                      asSliver: false,
-                      dense: true,
-                    );
-                    return SizedBox(
-                      height: rowHeight,
-                      child: OverflowBox(
-                        minHeight: rowHeight, maxHeight: double.infinity,
-                        alignment: Alignment(0, -0.4),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: widgets,
-                        ),
-                      ),
-                    );
-                  } : null,
-                  rowActions: [
-                    ...extraRowActions,
-                    if (extraRowActions.isNotEmpty)
-                      RowAction.divider(),
-                    if ((allowAddNew||hasAvailableObjectsPool))
-                      RowAction<T>(
-                        title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
-                        icon: Icon(Icons.add),
-                        breakpoints: {0: ActionState.popup,},
-                        onRowTap: (context, row) {
-                          row.focusNode.requestFocus();
-                          maybeAddRow(context, objects.indexOf(row.id)+1);
-                        },
-                      ),
-                    if ((allowAddNew||hasAvailableObjectsPool))
-                      RowAction.divider(),
-                    RowAction<T>(
-                      icon: Icon(Icons.info_outline),
-                      title: FromZeroLocalizations.of(context).translate('view'),
-                      breakpoints: actionViewBreakpoints,
-                      onRowTap: (context, row) async {
-                        row.focusNode.requestFocus();
-                        row.id.pushViewDialog(context);
-                      },
-                    ),
-                    RowAction<T>(
-                      icon: Icon(Icons.edit_outlined),
-                      title: FromZeroLocalizations.of(context).translate('edit'),
-                      breakpoints: actionEditBreakpoints,
-                      onRowTap: (context, row) async {
-                        row.focusNode.requestFocus();
-                        if (await row.id.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars)) {
-                          passedFirstEdit = true;
-                          notifyListeners();
-                        }
-                      },
-                    ),
-                    RowAction<T>(
-                      icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
-                      title: FromZeroLocalizations.of(context).translate('duplicate'),
-                      breakpoints: actionDuplicateBreakpoints,
-                      onRowTap: (context, row) async {
-                        row.focusNode.requestFocus();
-                        duplicateRows([row.id]);
-                      },
-                    ),
-                    RowAction<T>(
-                      icon: Icon(allowAddNew ? Icons.delete_forever_outlined : Icons.clear),
-                      title: FromZeroLocalizations.of(context).translate('delete'),
-                      breakpoints: actionDeleteBreakpoints,
-                      onRowTap: (context, row) async {
-                        row.focusNode.requestFocus();
-                        if (await maybeDelete(context, [row.id])) {
-                          passedFirstEdit = true;
-                          notifyListeners();
-                        }
-                      },
-                    ),
-                  ],
-                  onFilter: (rows) {
-                    filtered.value = rows.map((e) => e.id).toList();
-                    return rows;
-                  },
-                  onAllSelected: allowMultipleSelection ? (value, rows) {
-                    filtered.value = rows.map((e) => e.id).toList();
-                    filtered.value!.forEach((element) {
-                      selectedObjects.value[element] = value??false;
-                      selectedObjects.notifyListeners();
-                    });
+        Widget result = TableFromZero<T>(
+          // key: ValueKey(objects.length),
+          scrollController: mainScrollController,
+          // maxWidth: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
+          minWidth: width,
+          initialSortedColumn: initialSortedColumn ?? 0,
+          tableController: tableController,
+          alternateRowBackgroundSmartly: false,
+          columns: propsShownOnTable.map((key, value) {
+            final SimpleColModel result = value.getColModel();
+            if (tableFilterable!=null) {
+              result.filterEnabled = tableFilterable;
+            }
+            if (tableSortable!=null) {
+              result.sortEnabled = tableSortable;
+            }
+            return MapEntry(key, result);
+          }),
+          showHeaders: showTableHeaders,
+          footerStickyOffset: 12,
+          rows: builtRows.values.toList(),
+          cellBuilder: tableCellsEditable ? (context, row, colKey) {
+            final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
+              expandToFillContainer: false,
+              addCard: false,
+              asSliver: false,
+              dense: true,
+            );
+            return SizedBox(
+              height: rowHeight,
+              child: OverflowBox(
+                minHeight: rowHeight, maxHeight: double.infinity,
+                alignment: Alignment(0, -0.4),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: widgets,
+                ),
+              ),
+            );
+          } : null,
+          rowActions: [
+            ...extraRowActions,
+            if (extraRowActions.isNotEmpty)
+              RowAction.divider(),
+            if ((allowAddNew||hasAvailableObjectsPool))
+              RowAction<T>(
+                title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
+                icon: Icon(Icons.add),
+                breakpoints: {0: ActionState.popup,},
+                onRowTap: (context, row) {
+                  row.focusNode.requestFocus();
+                  maybeAddRow(context, objects.indexOf(row.id)+1);
+                },
+              ),
+            if ((allowAddNew||hasAvailableObjectsPool))
+              RowAction.divider(),
+            RowAction<T>(
+              icon: Icon(Icons.info_outline),
+              title: FromZeroLocalizations.of(context).translate('view'),
+              breakpoints: actionViewBreakpoints,
+              onRowTap: (context, row) async {
+                row.focusNode.requestFocus();
+                row.id.pushViewDialog(context);
+              },
+            ),
+            RowAction<T>(
+              icon: Icon(Icons.edit_outlined),
+              title: FromZeroLocalizations.of(context).translate('edit'),
+              breakpoints: actionEditBreakpoints,
+              onRowTap: (context, row) async {
+                row.focusNode.requestFocus();
+                final result = await row.id.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+                if (result!=null) {
+                  passedFirstEdit = true;
+                  notifyListeners();
+                }
+              },
+            ),
+            RowAction<T>(
+              icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
+              title: FromZeroLocalizations.of(context).translate('duplicate'),
+              breakpoints: actionDuplicateBreakpoints,
+              onRowTap: (context, row) async {
+                row.focusNode.requestFocus();
+                duplicateRows([row.id]);
+              },
+            ),
+            if (objectTemplate.canDelete) // TODO 3 maybe add allowDelete param
+              RowAction<T>(
+                icon: Icon(allowAddNew ? Icons.delete_forever_outlined : Icons.clear),
+                title: FromZeroLocalizations.of(context).translate('delete'),
+                breakpoints: actionDeleteBreakpoints,
+                onRowTap: (context, row) async {
+                  row.focusNode.requestFocus();
+                  if (await maybeDelete(context, [row.id])) {
+                    passedFirstEdit = true;
                     notifyListeners();
-                  } : null,
-                  emptyWidget: tableErrorWidget
-                      ?? ContextMenuFromZero(
-                        actions: actions,
-                        onShowMenu: () => errorWidgetFocusNode.requestFocus(),
-                        child: Focus(
-                          focusNode: errorWidgetFocusNode,
-                          skipTraversal: true,
-                          child: SizedBox(
-                            width: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
-                            child: Material(
-                              color: Theme.of(context).cardColor,
-                              child: InkWell(
-                                onTap: () {
-                                  maybeAddRow(context);
-                                },
-                                child: ErrorSign(
-                                  title: FromZeroLocalizations.of(context).translate('no_data'),
-                                  subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
-                                ),
-                              ),
-                            ),
-                          ),
+                  }
+                },
+              ),
+          ],
+          onAllSelected: allowMultipleSelection ? (value, rows) {
+            rows.forEach((row) {
+              selectedObjects.value[row.id] = value??false;
+              (row as SimpleRowModel).selected = value??false;
+            });
+            selectedObjects.notifyListeners();
+            tableController.notifyListeners();
+            notifyListeners();
+          } : null,
+          emptyWidget: tableErrorWidget
+              ?? ContextMenuFromZero(
+                actions: actions,
+                onShowMenu: () => errorWidgetFocusNode.requestFocus(),
+                child: Focus(
+                  focusNode: errorWidgetFocusNode,
+                  skipTraversal: true,
+                  child: SizedBox(
+                    width: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
+                    child: Material(
+                      color: Theme.of(context).cardColor,
+                      child: InkWell(
+                        onTap: () {
+                          maybeAddRow(context);
+                        },
+                        child: ErrorSign(
+                          title: FromZeroLocalizations.of(context).translate('no_data'),
+                          subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
                         ),
                       ),
-                  headerRowModel: SimpleRowModel(
-                    id: 'header', values: {},
-                    rowAddonIsCoveredByScrollable: false,
-                    rowAddonIsCoveredByBackground: false,
-                    rowAddon: _buildTableHeader(context,
-                      actions: actions,
-                      focusNode: focusNode!,
-                      collapsed: collapsed,
-                      collapsible: collapsible,
                     ),
                   ),
                 ),
-              ],
+              ),
+          headerRowModel: SimpleRowModel(
+            id: 'header', values: {},
+            rowAddonIsCoveredByScrollable: false,
+            rowAddonIsCoveredByBackground: false,
+            rowAddon: _buildTableHeader(context,
+              actions: actions,
+              focusNode: focusNode!,
+              collapsed: collapsed,
+              collapsible: collapsible,
             ),
           ),
         );
+        if (!asSliver) {
+          result = Material(
+            color: Theme.of(context).cardColor,
+            child: Container(
+              color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
+              child: CustomScrollView(
+                shrinkWrap: !expandToFillContainer,
+                slivers: [result],
+              ),
+            ),
+          );
+        }
+        return result;
       }
     );
     if (!asSliver && addCard) { // TODO 3 implement addCard in table slivers, VERY HARD IPMLEMENTATION FOR LOW REWARD
@@ -1596,104 +1607,38 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   }) {
     collapsible ??= this.collapsible;
     collapsed ??= this.collapsed;
-    return ValueListenableBuilder(
-      valueListenable: filtered,
-      builder: (context, List<T>? filtered, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            appBarTheme: AppBarTheme(
-              color: Material.of(context)!.color ?? Theme.of(context).cardColor, // Colors.transparent
-              iconTheme: Theme.of(context).iconTheme,
-              titleTextStyle: Theme.of(context).textTheme.subtitle1,
-              toolbarTextStyle: Theme.of(context).textTheme.bodyText1,
-            ),
+    return EnsureVisibleWhenFocused(
+      focusNode: focusNode,
+      child: Focus(
+        focusNode: focusNode,
+        key: headerGlobalKey,
+        skipTraversal: true,
+        canRequestFocus: true,
+        child: TableHeaderFromZero(
+          controller: tableController,
+          title: Text(uiName),
+          actions: actions,
+          onShowAppbarContextMenu: () => focusNode.requestFocus(),
+          leading: !collapsible ? icon : IconButton(
+            icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
+            onPressed: () {
+              focusNode.requestFocus();
+              this.collapsed = !this.collapsed;
+              notifyListeners();
+            },
           ),
-          child: EnsureVisibleWhenFocused(
-            focusNode: focusNode,
-            child: Focus(
-              focusNode: focusNode,
-              skipTraversal: true,
-              canRequestFocus: true,
-              child: AppbarFromZero(
-                titleSpacing: 0,
-                key: headerGlobalKey,
-                onShowContextMenu: () => focusNode.requestFocus(),
-                title: Row(
-                  children: [
-                    SizedBox(width: 9,),
-                    collapsible! ? IconButton(
-                      icon: Icon(collapsed! ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
-                      onPressed: () {
-                        focusNode.requestFocus();
-                        this.collapsed = !this.collapsed;
-                        notifyListeners();
-                      },
-                    ) : SizedBox(width: allowMultipleSelection ? 41 : 0,),
-                    SizedBox(width: 9,),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(uiName,
-                          style: Theme.of(context).textTheme.headline6,
-                        ),
-                        if (filtered!=null)
-                          ValueListenableBuilder<Map<T, bool>>(
-                            valueListenable: selectedObjects,
-                            builder: (context, selectedObjects, child) {
-                              int count = filtered.where((element) => selectedObjects[element]==true).length;
-                              Widget result;
-                              final objects = collapsed! ? this.objects : filtered;
-                              if (collapsed || count==0) {
-                                if (showElementCount) {
-                                  result = Text(objects.length==0 ? FromZeroLocalizations.of(context).translate('no_elements')
-                                      : '${objects.length} ${objects.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
-                                      : FromZeroLocalizations.of(context).translate('element_sing')}',
-                                    // key: ValueKey('normal'),
-                                    style: Theme.of(context).textTheme.caption,
-                                  );
-                                } else {
-                                  result = SizedBox.shrink();
-                                }
-                              } else {
-                                result = Text('$count ${count>1 ? FromZeroLocalizations.of(context).translate('selected_plur')
-                                    : FromZeroLocalizations.of(context).translate('selected_sing')}',
-                                  // key: ValueKey('selected'),
-                                  style: Theme.of(context).textTheme.caption,
-                                );
-                              }
-                              return AnimatedSwitcher(
-                                duration: Duration(milliseconds: 300),
-                                switchInCurve: Curves.easeOutCubic,
-                                child: result,
-                                transitionBuilder: (child, animation) {
-                                  return SizeTransition(
-                                    axisAlignment: -1,
-                                    sizeFactor: animation,
-                                    child: child,
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-                elevation: 0,
-                actions: actions,
-              ),
-            ),
-          ),
-        );
-      },
+        ),
+      ),
     );
   }
 
   @override
   List<ActionFromZero> buildDefaultActions(BuildContext context, {FocusNode? focusNode}) {
     focusNode ??= this.focusNode;
-    List<T> currentSelected = filtered.value?.where((element) => selectedObjects.value[element]==true).toList() ?? [];
+    List<T> currentSelected = [];
+    try {
+      currentSelected = tableController.filtered.where((element) => selectedObjects.value[element]==true).map((e) => e.id).toList();
+    } catch (_) {}
     return [
       if (!collapsed && currentSelected.length>0)
         ActionFromZero(
@@ -1721,7 +1666,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           },
           breakpoints: actionDuplicateBreakpoints[0]==ActionState.none ? actionDuplicateBreakpoints : null,
         ),
-      if (!collapsed && currentSelected.length>0)
+      if (!collapsed && currentSelected.length>0 && objectTemplate.canDelete)
         ActionFromZero(
           icon: IconBackground(
             color: Theme.of(context).accentColor.withOpacity(0.25),

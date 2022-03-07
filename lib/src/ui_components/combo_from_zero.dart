@@ -454,7 +454,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                           tableController.filter();
                         },
                         onFieldSubmitted: (value) {
-                          final filtered = tableController.filtered!;
+                          final filtered = tableController.filtered;
                           if (filtered.length==1) {
                             _select(filtered.first.id);
                           }

@@ -34,6 +34,7 @@ export 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
 export 'package:from_zero_ui/src/table/table_from_zero.dart';
 export 'package:from_zero_ui/src/table/table_from_zero_models.dart';
 export 'package:from_zero_ui/src/table/table_from_zero_filters.dart';
+export 'package:from_zero_ui/src/table/table_header.dart';
 export 'package:from_zero_ui/src/animations/heroes_from_zero.dart';
 
 export 'package:from_zero_ui/src/ui_utility/export.dart';

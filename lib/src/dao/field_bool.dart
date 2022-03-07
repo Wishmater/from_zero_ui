@@ -17,7 +17,7 @@ class BoolComparable with Comparable {
   const BoolComparable(this.value);
 
   @override
-  String toString() => value.toString();
+  String toString() => value ? 'SÍ': 'NO'; // TODO 3 internationalize
 
   @override
   bool operator == (dynamic other) => other is BoolComparable && this.value==other.value;

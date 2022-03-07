@@ -1277,12 +1277,12 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       children: [
                         Expanded(
                           flex: 1000000,
-                          child: Container(
+                          child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                            alignment: Alignment.centerRight,
                             child: SelectableText(e.uiName,
                               style: Theme.of(context).textTheme.bodyText1!.copyWith(
                                 color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+                                wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
                               ),
                               textAlign: TextAlign.right,
                             ),
