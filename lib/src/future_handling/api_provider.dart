@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:animations/animations.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -285,6 +286,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
             key: ValueKey(error),
             icon: const Icon(Icons.do_disturb_on_outlined),
             title: error.response.data.toString(),
+            onRetry: kReleaseMode ? null : onRetry,
             // title: 'Error de Autenticación',
             // subtitle: 'Intente cerrar la aplicación y autenticarse de nuevo.',
           );
@@ -294,6 +296,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
             icon: const Icon(Icons.do_disturb_on_outlined),
             title: 'Error de Autorización', // TODO 3 internationalize
             subtitle: 'Usted no tiene permiso para acceder al recurso solicitado.', // TODO 3 internationalize
+            onRetry: kReleaseMode ? null : onRetry,
           );
         } else {
           return ErrorSign(
@@ -301,7 +304,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
             icon: const Icon(Icons.report_problem_outlined),
             title: 'Error Interno del Servidor', // TODO 3 internationalize
             subtitle: 'Por favor, notifique a su administrador de sistema', // TODO 3 internationalize
-            retryButton: _buildErrorDetailsButton(context, error, stackTrace),
+            retryButton: _buildErrorDetailsButton(context, error, stackTrace, onRetry),
           );
         }
       } else {
@@ -319,12 +322,12 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
         icon: const Icon(Icons.report_problem_outlined),
         title: "Error Inesperado", // TODO 3 internationalize
         subtitle: "Por favor, notifique a su administrador de sistema", // TODO 3 internationalize
-        retryButton: _buildErrorDetailsButton(context, error, stackTrace),
+        retryButton: _buildErrorDetailsButton(context, error, stackTrace, onRetry),
       );
     }
   }
-  static Widget _buildErrorDetailsButton(BuildContext context, Object? error, StackTrace? stackTrace) {
-    return TextButton(
+  static Widget _buildErrorDetailsButton(BuildContext context, Object? error, StackTrace? stackTrace, [VoidCallback? onRetry]) {
+    Widget result = TextButton(
       style: TextButton.styleFrom(
           primary: Theme.of(context).textTheme.bodyText1!.color!,
       ),
@@ -360,6 +363,36 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
         );
       },
     );
+    if (!kReleaseMode) {
+      result = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          result,
+          SizedBox(height: 8,),
+          TextButton(
+            style: TextButton.styleFrom(
+                primary: Theme.of(context).brightness==Brightness.light
+                    ? Colors.blue.shade500
+                    : Colors.blue.shade400
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(width: 8,),
+                Icon(Icons.refresh),
+                SizedBox(width: 4,),
+                Text(FromZeroLocalizations.of(context).translate("retry"),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
+                ),
+                SizedBox(width: 8,),
+              ],
+            ),
+            onPressed: onRetry,
+          )
+        ],
+      );
+    }
+    return result;
   }
 
 }

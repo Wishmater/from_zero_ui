@@ -172,6 +172,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
   bool blockNotifyListeners = false;
   BuildContext? _contextForValidation;
+  set contextForValidation(BuildContext? value) => _contextForValidation = value;
   BuildContext? get contextForValidation => parentDAO?.contextForValidation ?? this._contextForValidation;
   @override
   void notifyListeners() {
@@ -192,6 +193,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
 
   void revertChanges() {
+    _undoRecord.clear();
+    _redoRecord.clear();
     props.forEach((key, value) {
       value.revertChanges();
     });
@@ -384,7 +387,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       validateNonEditedFields: true,
       focusBlockingField: true,
     );
-    if (!validation) {
+    if (!validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
       return null;
     }
     bool? confirm = true;
@@ -503,7 +506,11 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     if (updateDbValuesAfterSuccessfulSave && success) {
       props.forEach((key, value) {
         value.dbValue = value.value;
+        value.undoValues.clear();
+        value.redoValues.clear();
       });
+      _undoRecord.clear();
+      _redoRecord.clear();
     }
     if (onSaveAPI==null && showDefaultSnackBar) {
       SnackBarFromZero(
@@ -687,9 +694,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     final props = this.props;
     props.values.forEach((e) {
       e.passedFirstEdit = false;
+      e.undoValues.clear();
+      e.redoValues.clear();
       e.validationErrors = [];
     });
-    _contextForValidation = context;
+    _undoRecord.clear();
+    _redoRecord.clear();
+    _contextForValidation = _contextForValidation ?? context;
     validate(context,
       validateNonEditedFields: false,
       focusBlockingField: false,
@@ -1160,7 +1171,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
+                padding: const EdgeInsets.only(top: 24, left: 32, right: 8, bottom: 8,),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1189,10 +1200,11 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                              SizedBox(width: 2,),
                               Icon(Icons.edit_outlined),
-                              SizedBox(width: 8,),
+                              SizedBox(width: 6,),
                               Text('${FromZeroLocalizations.of(context).translate('edit')}', style: TextStyle(fontSize: 16),),
-                              SizedBox(width: 8,),
+                              SizedBox(width: 4,),
                             ],
                           ),
                         ),

@@ -29,7 +29,7 @@ class StringField extends Field<String> {
 
   set value(String? v) {
     v ??= '';
-    if (v.isEmpty || v.characters.last==' ' || v.characters.last=='\n') {
+    if (v.isEmpty || v.characters.last==' ' || v.characters.last=='\n' || !isEdited) {
       super.value = v;
       syncTextEditingController();
     } else if (value!=controller.text) {
@@ -57,6 +57,11 @@ class StringField extends Field<String> {
       removeEntryFromDAO: removeEntryFromDAO,
       requestFocus: requestFocus,
     );
+    syncTextEditingController();
+  }
+  @override
+  void revertChanges() {
+    super.revertChanges();
     syncTextEditingController();
   }
 

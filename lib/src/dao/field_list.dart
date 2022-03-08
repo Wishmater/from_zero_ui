@@ -40,7 +40,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   Map<double, ActionState> actionDeleteBreakpoints;
   /// this means that save() will be called on the object when adding a row
   /// and delete() will be called when removing a row, default false
-  bool updateObjectsInRealTime;
   bool skipDeleteConfirmation;
   bool showTableHeaders;
   bool showElementCount;
@@ -50,7 +49,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   bool showEditDialogOnAdd;
   bool showAddButtonAtEndOfTable;
   Widget? tableErrorWidget;
-  int? initialSortedColumn;
+  dynamic? initialSortedColumn;
   ValueChanged<RowModel>? onRowTap;
   bool? tableSortable;
   bool? tableFilterable;
@@ -136,7 +135,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     this.showTableHeaders = true,
     this.showElementCount = true,
     this.rowHeight,
-    this.updateObjectsInRealTime = false,
     bool? showDefaultSnackBars,
     bool? skipDeleteConfirmation,
     this.extraRowActionsBuilder,
@@ -168,12 +166,10 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     ViewWidgetBuilder<ComparableList<T>> viewWidgetBuilder = ListField.defaultViewWidgetBuilder,
     this.icon,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
-        assert(!updateObjectsInRealTime || (availableObjectsPoolGetter==null && availableObjectsPoolProvider==null)
-                    , 'It makes no sense to save/delete in real time if adding from a pool of pre-saved objects'),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
-        this.showDefaultSnackBars = showDefaultSnackBars ?? updateObjectsInRealTime,
-        this.skipDeleteConfirmation = skipDeleteConfirmation ?? !updateObjectsInRealTime,
+        this.showDefaultSnackBars = showDefaultSnackBars ?? objectTemplate.canSave,
+        this.skipDeleteConfirmation = skipDeleteConfirmation ?? !objectTemplate.canDelete,
         this.viewOnRowTap = viewOnRowTap ?? (onRowTap==null && !tableCellsEditable),
         this.actionEditBreakpoints = actionEditBreakpoints ?? {0: ActionState.popup},
         this.actionDuplicateBreakpoints = actionDuplicateBreakpoints ?? {0: ActionState.none},
@@ -460,6 +456,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
   void maybeAddRow(context, [int? insertIndex]) async { // TODO 3 implement disabled logic in ListField (color + tooltip + mouseRegion)
     T emptyDAO = (objectTemplate.copyWith() as T)..id=null;
+    emptyDAO.contextForValidation = dao.contextForValidation;
     if (hasAvailableObjectsPool) {
       T? selected;
       if (showObjectsFromAvailablePoolAsTable) {
@@ -797,19 +794,11 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     ) ?? false);
     if (delete) {
       bool result = false;
-      if (updateObjectsInRealTime) {
+      if (!hasAvailableObjectsPool && objectTemplate.canDelete) {
         if (elements.length>1) {
-          throw new UnimplementedError('multiple deletion realtime handling not implemented');
+          throw new UnimplementedError('multiple deletion handling not implemented');
         }
-        showModal(
-          context: context,
-          configuration: const FadeScaleTransitionConfiguration(barrierDismissible: false,),
-          builder: (context) {
-            return LoadingSign();
-          },
-        );
-        result = await elements.first.delete(context, showDefaultSnackBar: showDefaultSnackBars);
-        Navigator.of(context).pop();
+        result = await elements.first.delete(dao.contextForValidation ?? context, showDefaultSnackBar: showDefaultSnackBars);
         if (result) {
           result = await removeRows(elements);
         }
@@ -1308,7 +1297,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           scrollController: mainScrollController,
           // maxWidth: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
           minWidth: width,
-          initialSortedColumn: initialSortedColumn ?? 0,
+          initialSortedColumn: initialSortedColumn,
           tableController: tableController,
           alternateRowBackgroundSmartly: false,
           columns: propsShownOnTable.map((key, value) {
@@ -1373,8 +1362,10 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
               title: FromZeroLocalizations.of(context).translate('edit'),
               breakpoints: actionEditBreakpoints,
               onRowTap: (context, row) async {
-                row.focusNode.requestFocus();
+                row.id.parentDAO = null;
+                row.id.contextForValidation = dao.contextForValidation;
                 final result = await row.id.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+                row.id.parentDAO = dao;
                 if (result!=null) {
                   passedFirstEdit = true;
                   notifyListeners();

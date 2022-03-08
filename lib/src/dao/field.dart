@@ -189,10 +189,10 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   int compareTo(other) => other is Field ? value==null||(value is String && (value as String).isEmpty) ? 1 : other.value==null ? -1 : value!.compareTo(other.value) : 1;
 
   void revertChanges() {
-    value = dbValue;
-    undoValues = [];
+    _value = dbValue;
+    undoValues.clear();
     dao.removeAllUndoEntries(this);
-    redoValues = [];
+    redoValues.clear();
     dao.removeAllRedoEntries(this);
     notifyListeners();
   }
@@ -479,5 +479,10 @@ class HiddenValueField<T> extends Field<BoolComparable> {
   T hiddenValue;
   HiddenValueField(this.hiddenValue) : super(
     uiNameGetter: (field, dao) => '',
+    hiddenGetter: (field, dao) => true,
   );
+  @override
+  Field<BoolComparable> copyWith({FieldValueGetter<String, Field<Comparable>>? uiNameGetter, BoolComparable? value, BoolComparable? dbValue, FieldValueGetter<bool, Field<Comparable>>? clearableGetter, double? maxWidth, double? minWidth, double? flex, FieldValueGetter<String?, Field<Comparable>>? hintGetter, FieldValueGetter<String?, Field<Comparable>>? tooltipGetter, double? tableColumnWidth, FieldValueGetter<bool, Field<Comparable>>? hiddenGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInTableGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInViewGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInFormGetter, FieldValueGetter<List<FieldValidator<BoolComparable>>, Field<Comparable>>? validatorsGetter, bool? validateOnlyOnConfirm, FieldValueGetter<SimpleColModel, Field<Comparable>>? colModelBuilder, List<BoolComparable?>? undoValues, List<BoolComparable?>? redoValues, bool? invalidateNonEmptyValuesIfHiddenInForm, BoolComparable? defaultValue, ContextFulFieldValueGetter<Color?, Field<Comparable>>? backgroundColor, ContextFulFieldValueGetter<List<ActionFromZero<Function>>, Field<Comparable>>? actions, ViewWidgetBuilder<BoolComparable>? viewWidgetBuilder}) {
+    return HiddenValueField(hiddenValue);
+  }
 }

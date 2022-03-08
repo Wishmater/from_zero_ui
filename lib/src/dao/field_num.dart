@@ -43,6 +43,11 @@ class NumField extends Field<num> {
     );
     syncTextEditingController();
   }
+  @override
+  void revertChanges() {
+    super.revertChanges();
+    syncTextEditingController();
+  }
 
   void syncTextEditingController() {
     final textVal = _getTextVal(controller.text);
