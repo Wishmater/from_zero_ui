@@ -36,7 +36,7 @@ class DateField extends Field<DateTime> {
     FieldValueGetter<bool, Field>? hiddenInFormGetter,
     FieldValueGetter<List<FieldValidator<DateTime>>, Field>? validatorsGetter,
     bool validateOnlyOnConfirm = false,
-    FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
+    FieldValueGetter<SimpleColModel, Field> colModelBuilder = DateField.dateFieldDefaultGetColumn,
     List<DateTime?>? undoValues,
     List<DateTime?>? redoValues,
     GlobalKey? fieldGlobalKey,
@@ -331,6 +331,15 @@ class DateField extends Field<DateTime> {
           SizedBox(width: dense ? 0 : 4,),
         ],
       ),
+    );
+  }
+
+  static SimpleColModel dateFieldDefaultGetColumn(Field field, DAO dao) {
+    return SimpleColModel(
+      name: field.uiName,
+      filterEnabled: true,
+      defaultSortAscending: false,
+      flex: field.tableColumnWidth?.round(),
     );
   }
 

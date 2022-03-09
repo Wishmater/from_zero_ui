@@ -49,13 +49,14 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   bool showEditDialogOnAdd;
   bool showAddButtonAtEndOfTable;
   Widget? tableErrorWidget;
-  dynamic? initialSortedColumn;
+  dynamic initialSortedColumn;
   ValueChanged<RowModel>? onRowTap;
   bool? tableSortable;
   bool? tableFilterable;
   bool expandHorizontally;
   List<ValidationError> listValidationErrors = [];
   Widget? icon; /// only used if !collapsible
+  List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
 
   List<T> get objects => value!.list;
   List<T> get dbObjects => dbValue!.list;
@@ -165,6 +166,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<ComparableList<T>> viewWidgetBuilder = ListField.defaultViewWidgetBuilder,
     this.icon,
+    this.onFilter,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
@@ -330,6 +332,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<ComparableList<T>>? viewWidgetBuilder,
     Widget? icon,
+    List<RowModel<T>> Function(List<RowModel<T>>)? onFilter,
   }) {
     return ListField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -386,6 +389,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       actions: actions ?? this.actions,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       icon: icon ?? this.icon,
+      onFilter: onFilter ?? this.onFilter,
     );
   }
 
@@ -1300,6 +1304,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           initialSortedColumn: initialSortedColumn,
           tableController: tableController,
           alternateRowBackgroundSmartly: false,
+          onFilter: onFilter,
           columns: propsShownOnTable.map((key, value) {
             final SimpleColModel result = value.getColModel();
             if (tableFilterable!=null) {
