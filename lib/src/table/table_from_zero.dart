@@ -276,7 +276,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         bool sortAscending = col.defaultSortAscending ?? true;
         available.sort((a, b) {
           int result;
-          if (a is Comparable) {
+          if (a==null || b==null) {
+            if (a==null && b==null) {
+              return 0;
+            } else if (a==null) {
+              return -1;
+            } else {
+              return 1;
+            }
+          } else if (a is Comparable) {
             result = a.compareTo(b);
           } else {
             result = a.toString().compareTo(b.toString());

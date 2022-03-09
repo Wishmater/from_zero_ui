@@ -203,9 +203,9 @@ class GoRouteFromZero extends GoRoute {
     Object? extra,
   }) {
     GoRouter.of(context).pushReplacementNamed(name!,
-      params: params,
-      queryParams: queryParams,
-      extra: extra,
+      params: getParams(params),
+      queryParams: getQueryParams(queryParams),
+      extra: getExtra(extra),
     );
   }
 

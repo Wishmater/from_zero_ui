@@ -515,9 +515,9 @@ class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
   }
 
   void update(){
-    setState(() {
-
-    });
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   @override

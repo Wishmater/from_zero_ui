@@ -458,6 +458,7 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
   final Widget child;
   final Alignment alignment;
   final Clip clipBehavior;
+  final ValueNotifier<Size?>? sizeNotifier;
 
   AnimatedContainerFromChildSize({
     required this.child,
@@ -465,6 +466,7 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
     this.alignment = Alignment.topLeft,
     this.curve = Curves.easeOutCubic,
     this.clipBehavior = Clip.none,
+    this.sizeNotifier,
     Key? key,
   })  : super(key: key);
 
@@ -478,7 +480,13 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
 
   GlobalKey globalKey = GlobalKey();
   Size? previousSize;
-  Size? size; //TODO 3 use a provider for sizes to notify parents of changes and allow nesting
+  Size? _size;
+  Size? get size => _size;
+  set size(Size? value) {
+    _size = value;
+    widget.sizeNotifier?.value = value;
+  }
+
   bool skipNextCalculation = false;
   late int initialTimestamp;
 

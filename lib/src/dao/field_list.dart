@@ -12,6 +12,7 @@ import 'package:from_zero_ui/src/dao/field.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
+import 'package:sliver_tools/sliver_tools.dart';
 
 
 typedef List<RowAction<T>> RowActionsBuilder<T>(BuildContext context);
@@ -1444,6 +1445,10 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
               collapsible: collapsible,
             ),
           ),
+        );
+        result = SliverCrossAxisConstrained(
+          maxCrossAxisExtent: width*1.6,
+          child: result,
         );
         if (!asSliver) {
           result = Material(
