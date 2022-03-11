@@ -32,13 +32,13 @@ class NotificationRelayController {
 }
 
 
-class NotificationRelayerListener extends StatelessWidget {
+class NotificationRelayListener extends StatelessWidget {
 
   final Widget child;
   final NotificationRelayController controller;
   final bool consumeRelayedNotifications;
 
-  const NotificationRelayerListener({
+  const NotificationRelayListener({
     required this.child,
     required this.controller,
     this.consumeRelayedNotifications = false,
@@ -76,9 +76,18 @@ class NotificationRelayer extends StatefulWidget {
 }
 class _NotificationRelayerState extends State<NotificationRelayer> {
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+    super.initState();
     widget.controller.addListener(_relay);
+  }
+
+  @override
+  void didUpdateWidget(covariant NotificationRelayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_relay);
+      widget.controller.addListener(_relay);
+    }
   }
 
   @override

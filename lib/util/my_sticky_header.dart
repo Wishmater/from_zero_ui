@@ -39,6 +39,7 @@ class StickyHeader extends MultiChildRenderObjectWidget {
     this.controller,
     this.callback,
     this.stickOffset = 0,
+    this.footer = false,
   }) : super(
     key: key,
     // Note: The order of the children must be preserved for the RenderObject.
@@ -63,6 +64,8 @@ class StickyHeader extends MultiChildRenderObjectWidget {
   /// consider using [StickyHeaderBuilder] instead.
   final RenderStickyHeaderCallback? callback;
 
+  final bool footer;
+
   @override
   RenderStickyHeader createRenderObject(BuildContext context) {
 //    final scrollPosition = this.controller?.position ?? Scrollable.of(context).position;
@@ -73,6 +76,7 @@ class StickyHeader extends MultiChildRenderObjectWidget {
       callback: this.callback,
       overlapHeaders: this.overlapHeaders,
       stickOffset: stickOffset,
+      footer: footer,
     );
   }
 
@@ -105,6 +109,7 @@ class StickyHeaderBuilder extends StatefulWidget {
     this.overlapHeaders: false,
     this.controller,
     this.stickOffset = 0,
+    this.footer = false,
   }) : super(key: key);
 
   final double stickOffset;
@@ -121,6 +126,8 @@ class StickyHeaderBuilder extends StatefulWidget {
 
   /// Optional [ScrollController] that will be used by the widget instead of the default inherited one.
   final ScrollController? controller;
+
+  final bool footer;
 
   @override
   _StickyHeaderBuilderState createState() => _StickyHeaderBuilderState();
@@ -139,6 +146,7 @@ class _StickyHeaderBuilderState extends State<StickyHeaderBuilder> {
       ),
       content: widget.content,
       controller: widget.controller,
+      footer: widget.footer,
       callback: (double stuckAmount) {
         if (_stuckAmount != stuckAmount) {
           _stuckAmount = stuckAmount;
@@ -178,6 +186,7 @@ class RenderStickyHeader extends RenderBox
   ScrollController? _scrollController;
   bool _overlapHeaders;
   double stickOffset;
+  bool footer;
 
   RenderStickyHeader({
     ScrollPosition? scrollPosition,
@@ -187,6 +196,7 @@ class RenderStickyHeader extends RenderBox
     RenderBox? header,
     RenderBox? content,
     this.stickOffset = 0,
+    this.footer = false,
   })  : _scrollPosition = scrollPosition,
         _scrollController = scrollController,
         _callback = callback,
@@ -215,16 +225,13 @@ class RenderStickyHeader extends RenderBox
     }
     final ScrollController? oldValue = _scrollController;
     _scrollController = newValue;
+    markNeedsLayout();
     if (attached) {
       oldValue?.removeListener(markNeedsLayout);
       newValue?.addListener(markNeedsLayout);
     }
   }
-
-  void updateScrollPosition(){
-
-  }
-
+  
   set callback(RenderStickyHeaderCallback? newValue) {
     if (_callback == newValue) {
       return;
@@ -316,7 +323,13 @@ class RenderStickyHeader extends RenderBox
     try {
       final scrollBox = scrollPosition!.context.notificationContext?.findRenderObject();
       if (scrollBox?.attached ?? false) {
-        return localToGlobal(Offset(0, -stickOffset,), ancestor: scrollBox).dy;
+        final stickOffset = footer ? this.stickOffset : -this.stickOffset;
+        double result = localToGlobal(Offset(0, stickOffset,), ancestor: scrollBox).dy;
+        if (footer) {
+          result -= scrollPosition!.viewportDimension;
+          result += _headerBox.size.height;
+        }
+        return result;
       }
     } catch(e) {
       // ignore and fall-through and return 0.0

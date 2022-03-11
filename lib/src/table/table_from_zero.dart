@@ -735,7 +735,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           scrollController: sharedController,
           direction: OpacityGradient.horizontal,
           child: row==headerRowModel // TODO 2 horizontal scrollbar might not work in tables with no header
-              ? NotificationRelayerListener(
+              ? NotificationRelayListener(
                 controller: notificationRelayController,
                 consumeRelayedNotifications: true,
                 child: result,
@@ -821,7 +821,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           bottom = addon;
         }
         if (row.rowAddonIsSticky ?? widget.enableStickyHeaders){
-          result = StickyHeader(
+          result = StickyHeader( // TODO 2 this is probably broken, use SliverStickyHeader instead
             controller: widget.scrollController,
             header: top,
             content: result,

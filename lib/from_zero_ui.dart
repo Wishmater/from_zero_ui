@@ -39,6 +39,7 @@ export 'package:from_zero_ui/src/animations/heroes_from_zero.dart';
 
 export 'package:from_zero_ui/src/ui_utility/export.dart';
 export 'package:from_zero_ui/src/ui_utility/gesture_relayer.dart';
+export 'package:from_zero_ui/src/ui_utility/notification_relayer.dart';
 export 'package:from_zero_ui/util/my_tooltip.dart';
 
 export 'package:from_zero_ui/src/animations/exposed_transitions.dart';

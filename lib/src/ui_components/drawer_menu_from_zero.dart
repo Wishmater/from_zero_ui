@@ -779,7 +779,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
           child,
           if (widget.depth>0)
             Positioned(
-              left: 11, right: 0, bottom: -1, top: -1,
+              left: 11, right: 0, bottom: -12, top: -12,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 crossAxisAlignment: CrossAxisAlignment.start,

@@ -49,7 +49,7 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
   FromZeroAppContentWrapper({
     required this.child,
     required this.goRouter,
-    this.allowDraggingWithMouseDownOnDesktop = true, // TODO 1 probably this should be false
+    this.allowDraggingWithMouseDownOnDesktop = !kReleaseMode,
   });
 
   @override

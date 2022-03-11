@@ -46,21 +46,23 @@ class ResponsiveHorizontalInsetsSliver extends StatelessWidget {
 class ResponsiveHorizontalInsets extends StatelessWidget {
 
   final Widget child;
-  final double padding;
+  final double bigPadding;
+  final double smallPadding;
   /// Screen width required to add padding
   final double breakpoint;
 
   ResponsiveHorizontalInsets({
     Key? key,
     required this.child,
-    this.padding = 12,
+    this.smallPadding = 0,
+    this.bigPadding = 12,
     this.breakpoint = ScaffoldFromZero.screenSizeMedium,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < breakpoint ? 0 : padding),
+      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < breakpoint ? smallPadding : bigPadding),
       child: child,
     );
   }
@@ -406,6 +408,7 @@ class OverflowScroll extends StatefulWidget {
   final Duration initialAutoscrollWaitTime;
   final Axis scrollDirection;
   final Widget child;
+  final bool consumeScrollNotifications;
 
   OverflowScroll({
     required this.child,
@@ -415,6 +418,7 @@ class OverflowScroll extends StatefulWidget {
     this.autoscrollWaitTime = const Duration(seconds: 5),
     this.initialAutoscrollWaitTime = const Duration(seconds: 3),
     this.scrollDirection = Axis.horizontal,
+    this.consumeScrollNotifications = true,
     Key? key,
   }): super(key: key);
 
@@ -435,6 +439,14 @@ class _OverflowScrollState extends State<OverflowScroll> {
     super.initState();
   }
 
+  @override
+  void didUpdateWidget(covariant OverflowScroll oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.scrollController!=null) {
+      scrollController = widget.scrollController!;
+    }
+  }
+
   void _scroll([bool forward=true, Duration? waitDuration]) async{
     await Future.delayed(waitDuration ?? widget.autoscrollWaitTime);
     try {
@@ -452,7 +464,7 @@ class _OverflowScrollState extends State<OverflowScroll> {
   Widget build(BuildContext context) {
     Widget result;
     result = NotificationListener(
-      onNotification: (notification) => true,
+      onNotification: (notification) => widget.consumeScrollNotifications,
       child: SingleChildScrollView(
         controller: scrollController,
         scrollDirection: widget.scrollDirection,
@@ -471,6 +483,79 @@ class _OverflowScrollState extends State<OverflowScroll> {
   }
 
 }
+
+
+class ExpandIconButton extends StatefulWidget {
+
+  final bool value;
+  final Function(bool value)? onPressed;
+  final EdgeInsetsGeometry padding;
+
+  const ExpandIconButton({
+    required this.value,
+    required this.onPressed,
+    this.padding = const EdgeInsets.all(8),
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  _ExpandIconButtonState createState() => _ExpandIconButtonState();
+
+}
+
+class _ExpandIconButtonState extends State<ExpandIconButton> with SingleTickerProviderStateMixin {
+
+  late final AnimationController controlPanelAnimationController;
+  late final Animatable<double> _halfTween;
+  late final Animation<double> _iconTurns;
+
+  @override
+  void initState() {
+    super.initState();
+    _halfTween = Tween<double>(begin: 0.0, end: 0.5);
+    controlPanelAnimationController = AnimationController(duration: Duration(milliseconds: 300), vsync: this);
+    controlPanelAnimationController.value = widget.value ? 1 : 0;
+    _iconTurns = controlPanelAnimationController.drive(_halfTween.chain(CurveTween(curve: Curves.easeIn)));
+  }
+
+  @override
+  void didUpdateWidget(covariant ExpandIconButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value) {
+      controlPanelAnimationController.forward();
+    } else {
+      controlPanelAnimationController.reverse();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      iconSize: 32,
+      padding: widget.padding,
+      onPressed: widget.onPressed==null ? null : () {
+        widget.onPressed!(!widget.value);
+      },
+      icon: RotationTransition(
+        turns: _iconTurns,
+        child: AnimatedBuilder(
+          animation: controlPanelAnimationController,
+          builder: (context, child) {
+            return Icon(Icons.expand_more,
+              color: ColorTween(
+                end: Theme.of(context).splashColor.withOpacity(1),
+                begin: Theme.of(context).textTheme.bodyText1!.color!,
+              ).evaluate(controlPanelAnimationController),
+              size: 32,
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+}
+
 
 
 class ReturnToTopButton extends ConsumerStatefulWidget {

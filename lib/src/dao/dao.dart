@@ -1261,7 +1261,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       },
     );
   }
-  Widget buildViewWidget(BuildContext context) {
+  Widget buildViewWidget(BuildContext context, {
+    List<FieldGroup>? fieldGroups,
+  }) {
+    fieldGroups ??= this.fieldGroups;
     if (viewWidgetBuilder!=null) {
       return viewWidgetBuilder!(context, this);
     }
