@@ -371,23 +371,29 @@ class BoolField extends Field<BoolComparable> {
                   : backgroundColor?.call(context, this, dao),
               activeColor: selectedColor?.call(context, this, dao),
               activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
-              title: dense || !showBothNeutralAndSpecificUiName ? null : Transform.translate(
+              title: Transform.translate(
                 offset: Offset(
-                  listTileControlAffinity==ListTileControlAffinity.leading ? -8 : 7,
-                  -4,
+                  listTileControlAffinity==ListTileControlAffinity.leading ? -12 : 3,
+                  -1,
                 ),
-                child: Text(uiName, style: Theme.of(context).textTheme.caption!.copyWith(
-                  color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                ),),
-              ),
-              subtitle:  Transform.translate(
-                offset:  Offset(
-                  listTileControlAffinity==ListTileControlAffinity.leading ? -8 : 7,
-                  !dense && showBothNeutralAndSpecificUiName ? -4 : -10,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!dense && showBothNeutralAndSpecificUiName)
+                      Text(uiName,
+                        style: Theme.of(context).textTheme.caption!.copyWith(
+                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                        ),
+                      ),
+                    Text(uiNameValue,
+                      style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                        color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                        height: 1.2,
+                      ),
+                    ),
+                  ],
                 ),
-                child: Text(uiNameValue, style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                  color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
-                ),),
               ),
               onChanged: !enabled ? null : (value) {
                 focusNode.requestFocus();

@@ -49,6 +49,7 @@ P1
 
 fix part of the screen not being draggable on really big screens
 	maybe just deprecate limitWidthOnBigScreens
+	??? maybe we can apply GestureRelayer, but it seems hard
 	
 popupFromZero doesn't reposition child in response to window resize
 

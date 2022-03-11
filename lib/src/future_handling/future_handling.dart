@@ -35,6 +35,8 @@ class LoadingSign extends ImplicitlyAnimatedWidget {
 
   final double? value;
   final Color? color;
+  final EdgeInsets padding;
+  final double size;
 
   const LoadingSign({
     Key? key,
@@ -44,6 +46,8 @@ class LoadingSign extends ImplicitlyAnimatedWidget {
     Duration duration = const Duration(milliseconds: 250),
     /// for animating value
     Curve curve = Curves.easeOutCubic,
+    this.padding = const EdgeInsets.all(12),
+    this.size = 48,
   }) :  super(
     key: key,
     duration: duration,
@@ -81,13 +85,19 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
     Color colorMedium = color.withOpacity(0.8);
     Color colorMild = color.withOpacity(0.2);
     Color colorTransparent = color.withOpacity(0);
+    double fontSize = widget.size*0.3;
+    double strokeWidth = widget.size*0.1;
+    if (widget.size < 36) {
+      fontSize = 0;
+      strokeWidth *= 2;
+    }
     return AnimatedBuilder(
       animation: animation,
       builder: (context, child) {
         double? value = _valueTween?.evaluate(animation);
         if (value==0) value = null;
         return Padding(
-          padding: const EdgeInsets.all(12),
+          padding: widget.padding,
           child: LimitedBox(
             maxWidth: 128,
             maxHeight: 128,
@@ -106,7 +116,7 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
                         children: [
                           Positioned.fill(
                             child: Padding(
-                              padding: const EdgeInsets.all(2.5),
+                              padding: EdgeInsets.all(strokeWidth/2),
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
@@ -119,12 +129,12 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
                             ),
                           ),
                           SizedBox(
-                            width: 48, height: 48,
+                            width: widget.size, height: widget.size,
                             child: AspectRatio(
                               aspectRatio: 1,
                               child: CircularProgressIndicator(
                                 value: value,
-                                strokeWidth: 5,
+                                strokeWidth: strokeWidth,
                                 backgroundColor: backgroundColor,
                                 valueColor: ColorTween(begin: colorMedium, end: color).animate(loopingAnimation),
                               ),
@@ -135,7 +145,7 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
                     },
                   ),
                 ),
-                if (value!=null)
+                if (value!=null && fontSize>0)
                   Center(
                     child: OpacityGradient(
                       direction: OpacityGradient.vertical,
@@ -149,10 +159,12 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
                               number: (value*100).round(),
                               duration: Duration(milliseconds: 250),
                               style: TextStyle(
+                                fontSize: fontSize,
                                 color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
                               ),
                             ),
                             Text('%', style: TextStyle(
+                              fontSize: fontSize,
                               color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
                             ),),
                           ],

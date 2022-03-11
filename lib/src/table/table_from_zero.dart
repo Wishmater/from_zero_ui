@@ -112,7 +112,7 @@ class TableFromZero<T> extends StatefulWidget {
 
 
 
-class TrackingScrollControllerFixedPosition extends TrackingScrollController {
+class TrackingScrollControllerFomZero extends TrackingScrollController {
 
   ScrollPosition get position {
     assert(positions.isNotEmpty, 'ScrollController not attached to any scroll views.');
@@ -174,7 +174,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     }
   }
 
-  late TrackingScrollControllerFixedPosition sharedController;
+  late TrackingScrollControllerFomZero sharedController;
   RowModel? headerRowModel;
 
   TableFromZeroState();
@@ -184,7 +184,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   @override
   void initState() {
     super.initState();
-    sharedController = TrackingScrollControllerFixedPosition();
+    sharedController = TrackingScrollControllerFomZero();
     sharedController.addListener(() {
       if (!lockScrollUpdates){
         double? newPosition;

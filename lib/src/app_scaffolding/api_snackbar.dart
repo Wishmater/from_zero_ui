@@ -287,35 +287,11 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
     } else {
       if (error is String) {
         title = error;
-      } else if (error is DioError) {
-        if (error.type==DioErrorType.RESPONSE) {
-          if (error.response.statusCode==404) {
-            title = 'Recurso no Encontrado'; // TODO 3 internationalize
-            message = 'Por favor, notifique a su administrador de sistema'; // TODO 3 internationalize
-          } else if (error.response.statusCode==400) {
-            showRetry = false;
-            icon = const Icon(Icons.do_disturb_on_outlined);
-            title = error.response.data.toString();
-            // title = 'Error de Autenticación';
-            // message = 'Intente cerrar la aplicación y autenticarse de nuevo';
-          } else if (error.response.statusCode==403) {
-            showRetry = false;
-            icon = const Icon(Icons.do_disturb_on_outlined);
-            title = 'Error de Autorización'; // TODO 3 internationalize
-            message = 'Usted no tiene permiso para acceder al recurso solicitado'; // TODO 3 internationalize
-          } else {
-            title = 'Error Interno del Servidor'; // TODO 3 internationalize
-            message = 'Por favor, notifique a su administrador de sistema'; // TODO 3 internationalize
-          }
-        } else {
-          icon = const Icon(MaterialCommunityIcons.wifi_off);
-          title = FromZeroLocalizations.of(context).translate("error_connection");
-          message = FromZeroLocalizations.of(context).translate("error_connection_details");
-        }
       } else {
-        icon = const Icon(MaterialCommunityIcons.wifi_off);
-        title = 'Error Inesperado'; // TODO 3 internationalize
-        message = 'Por favor, notifique a su administrador de sistema'; // TODO 3 internationalize
+        showRetry = ApiProviderBuilder.isErrorRetryable(context, error, stackTrace);
+        icon = ApiProviderBuilder.getErrorIcon(context, error, stackTrace);
+        title = ApiProviderBuilder.getErrorTitle(context, error, stackTrace);
+        message = ApiProviderBuilder.getErrorSubtitle(context, error, stackTrace);
       }
     }
     bool showAcceptInsteadOfClose = error!=null && !showRetry;

@@ -868,6 +868,63 @@ class _KeepAliveMixinWidgetState extends State<KeepAliveMixinWidget> with
 
 
 
+// class ScrollRelayer extends StatelessWidget {
+//
+//   final TrackingScrollControllerFomZero controller;
+//   final Widget child;
+//
+//   ScrollRelayer({
+//     required this.controller,
+//     required this.child,
+//     Key? key,
+//   }) : super(key: key);
+//
+//   final GlobalKey<ScrollableState> scrollableGlobalKey = GlobalKey();
+//
+//   @override
+//   Widget build(BuildContext context) {
+//     WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+//       final position = scrollableGlobalKey.currentState!.position;
+//       final controllerPositions = (controller.positions as List<ScrollPosition>);
+//       // controllerPositions.remove(position);
+//       // controllerPositions.add(position);
+//     });
+//     return Scrollable(
+//       controller: controller,
+//       key: scrollableGlobalKey,
+//       viewportBuilder: (context, position) {
+//         return AnimatedBuilder(
+//           animation: controller,
+//           child: child,
+//           builder: (context, child) {
+//             double? height;
+//             try {
+//               final position = controller.position;
+//               height = position.viewportDimension + position.maxScrollExtent;
+//             } catch(_) {}
+//             print (height);
+//             return Stack(
+//               children: [
+//                 child!,
+//                 Viewport(
+//                   offset: position,
+//                   slivers: [
+//                     SliverToBoxAdapter(
+//                       child: SizedBox(height: height,),
+//                     ),
+//                   ],
+//                 ),
+//               ],
+//             );
+//           },
+//         );
+//       },
+//     );
+//   }
+// }
+
+
+
 class FlexibleLayoutFromZero extends StatelessWidget {
 
   final Axis axis;

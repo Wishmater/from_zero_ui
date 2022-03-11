@@ -8,6 +8,7 @@ import 'package:enough_convert/enough_convert.dart';
 import 'package:convert/convert.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,10 +44,12 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
 
   final child;
   final GoRouter goRouter;
+  final bool allowDraggingWithMouseDownOnDesktop;
 
   FromZeroAppContentWrapper({
     required this.child,
     required this.goRouter,
+    this.allowDraggingWithMouseDownOnDesktop = true, // TODO 1 probably this should be false
   });
 
   @override
@@ -71,8 +74,18 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
     //TODO 3 add restrictions to fontSize, uiScale logic, etc. here
     final screen = ref.read(fromZeroScreenProvider);
     final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
+    ScrollBehavior scrollConfiguration = ScrollConfiguration.of(context).copyWith(
+      scrollbars: false,
+    );
+    if (widget.allowDraggingWithMouseDownOnDesktop) {
+      scrollConfiguration = scrollConfiguration.copyWith(
+        dragDevices: {
+          ...PointerDeviceKind.values,
+        },
+      );
+    }
     return ScrollConfiguration(
-      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+      behavior: scrollConfiguration,
       child: LayoutBuilder(
         builder: (context, constraints) {
           double screenWidth = scaffoldChangeNotifier._previousWidth ?? 1280;
@@ -534,3 +547,4 @@ class WindowEventListener{
   }
 
 }
+
