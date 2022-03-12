@@ -26,6 +26,13 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/rendering.dart' as rendering;
 
+
+enum FileAutoOpenType {
+  none,
+  file,
+  folder,
+}
+
 class Export extends StatefulWidget { //TODO 3 internationalize
 
   static const List<String> defaultSizesUI = ["Carta", "A4", "4:3", "16:9",];
@@ -37,7 +44,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
   final Widget Function(BuildContext context, int index, int currentSize, bool portrait, double scale, String format)? childBuilder;
   final Widget Function(BuildContext context, int index, int currentSize, bool portrait, double scale, String format, ScrollController scrollController)? scrollableChildBuilder;
   final double scrollableStickyOffset;
-  final ThemeParametersFromZero themeParameters;
+  final ThemeParametersFromZero? themeParameters;
   final FutureOr<String> path;
   final String title;
   final ThemeData exportThemeData;
@@ -50,6 +57,30 @@ class Export extends StatefulWidget { //TODO 3 internationalize
   final Map<String, TableController>? Function()? excelSheets;
   final bool isPdfFormatAvailable;
   final bool isPngFormatAvailable;
+  final bool autoExport;
+  final FileAutoOpenType autoOpenFile;
+
+  Export.excelOnly({
+    Key? key,
+    required this.path,
+    required this.title,
+    required this.scaffoldContext,
+    required this.excelSheets,
+    this.actions = const [],
+    this.autoExport = true,
+    this.autoOpenFile = FileAutoOpenType.file,
+  })  : isPdfFormatAvailable = false,
+        isPngFormatAvailable = false,childBuilder = null,
+        childrenCount = null,
+        textEditingControllers = null,
+        showTitle = false,
+        significantWidgetsKeys = null,
+        scrollableChildBuilder = null,
+        scrollableStickyOffset = 0,
+        dummyChild = null,
+        themeParameters = null,
+        exportThemeData = ThemeData(),
+        super(key: key);
 
   Export.scrollable({
     Key? key,
@@ -67,8 +98,10 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     this.excelSheets,
     this.isPdfFormatAvailable = true,
     this.isPngFormatAvailable = true,
+    this.autoExport = true,
+    this.autoOpenFile = FileAutoOpenType.file,
   })  : this.showTitle = showTitle ?? textEditingControllers==null ? true : false,
-        this.exportThemeData =  themeParameters.lightTheme.copyWith(
+        this.exportThemeData =  (themeParameters?.lightTheme ?? ThemeData()).copyWith(
           canvasColor: Colors.white,
           cardColor: Colors.white,
           cardTheme: CardTheme(
@@ -85,7 +118,9 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     required this.themeParameters,
     this.isPdfFormatAvailable = true,
     this.isPngFormatAvailable = true,
-  }) :  childBuilder = null,
+  }) :  autoExport = true,
+        autoOpenFile = FileAutoOpenType.file,
+        childBuilder = null,
         childrenCount = null,
         path = '',
         title = '',
@@ -97,7 +132,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
         scrollableChildBuilder = null,
         excelSheets = null,
         scrollableStickyOffset = 0,
-        exportThemeData = themeParameters.lightTheme;
+        exportThemeData = (themeParameters?.lightTheme ?? ThemeData());
 
   Export({
     Key? key,
@@ -115,8 +150,10 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     this.significantWidgetsKeys,
     this.isPdfFormatAvailable = true,
     this.isPngFormatAvailable = true,
+    this.autoExport = true,
+    this.autoOpenFile = FileAutoOpenType.file,
   })  : this.showTitle = showTitle ?? textEditingControllers==null ? true : false,
-        this.exportThemeData =  themeParameters.lightTheme.copyWith(
+        this.exportThemeData =  (themeParameters?.lightTheme ?? ThemeData()).copyWith(
           canvasColor: Colors.white,
           cardColor: Colors.white,
           cardTheme: CardTheme(
@@ -190,11 +227,6 @@ class ExportState extends State<Export> {
   @override
   void initState() {
     super.initState();
-    if (supportedFormats.length==1 && supportedFormats.first=='Excel') {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-        _onExportButtonPressed();
-      });
-    }
     if (widget.scrollableChildBuilder!=null){
       widget.childrenCount = ((currentSize, bool portrait, double scale, String format){
         if (first){
@@ -256,6 +288,11 @@ class ExportState extends State<Export> {
     currentPageNotifier.addListener(() {
 
     });
+    if (widget.autoExport) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        _onExportButtonPressed();
+      });
+    }
   }
 
   @override
@@ -269,43 +306,50 @@ class ExportState extends State<Export> {
 
   void _onExportButtonPressed() async{
     await export();
-    Navigator.of(context).pop();
-    if (filePath!=null){
+    if (filePath!=null) {
+      final openFile = () async {
+        if (Platform.isAndroid){
+          OpenFile.open(filePath);
+        } else{
+          await launch(filePath);
+        }
+      };
+      final openFolder = () async {
+        if (Platform.isAndroid){
+          OpenFile.open(directoryPath);
+        } else{
+          await launch(directoryPath);
+        }
+      };
       Navigator.of(context).pop();
-      String path = await widget.path;
-      if (Platform.isWindows){
-        path = path.replaceAll("/", "\\");
-      }
-      SnackBarFromZero(
-        context: widget.scaffoldContext!,
-        type: SnackBarFromZero.success,
-        title: Text("Archivo exportado con exito a"),
-        message: Text(pathUi),
-        duration: 10.seconds,
-        actions: [
-          SnackBarAction(
-            label: "ABRIR",
-            onPressed: () async {
-              if (Platform.isAndroid){
-                OpenFile.open(filePath);
-              } else{
-                await launch(filePath);
-              }
-            },
-          ),
-          if (Platform.isWindows)
+      if (widget.autoOpenFile == FileAutoOpenType.file) {
+        openFile();
+      } else if (widget.autoOpenFile == FileAutoOpenType.folder) {
+        openFolder();
+      } else {
+        String path = await widget.path;
+        if (Platform.isWindows){
+          path = path.replaceAll("/", "\\");
+        }
+        SnackBarFromZero(
+          context: widget.scaffoldContext!,
+          type: SnackBarFromZero.success,
+          title: Text("Archivo exportado con exito a"),
+          message: Text(pathUi),
+          duration: 10.seconds,
+          actions: [
             SnackBarAction(
-              label: "ABRIR CARPETA",
-              onPressed: () async {
-                if (Platform.isAndroid){
-                  OpenFile.open(directoryPath);
-                } else{
-                  await launch(directoryPath);
-                }
-              },
+              label: "ABRIR",
+              onPressed: openFile,
             ),
-        ],
-      ).show();
+            if (Platform.isWindows)
+              SnackBarAction(
+                label: "ABRIR CARPETA",
+                onPressed: openFolder,
+              ),
+          ],
+        ).show();
+      }
     }
   }
 
@@ -403,7 +447,7 @@ class ExportState extends State<Export> {
     widget.excelSheets!()!.forEach((key, value) {
       Sheet sheetObject = excel[key];
       for (var i = value.currentState!.widget.columns==null ? 0 : -1; i < value.currentState!.filtered.length; ++i) {
-        RowModel? row;
+        RowModel row;
         if (i==-1) {
           row = SimpleRowModel(
             id: value.currentState!.widget.columns,
@@ -412,10 +456,14 @@ class ExportState extends State<Export> {
         } else{
           row = value.currentState!.filtered[i];
         }
-        if (row!=null && row.alwaysOnTop==null){
-          for (var j = 0; j < row.values.length; ++j) {
+        if (row.alwaysOnTop==null){
+          final keys = (value.currentState!.widget.columns?.keys
+                          .where((e) => value.currentState!.widget.columns![e]!.flex!=0)
+              ?? row.values.keys).toList();
+          for (int j=0; j<keys.length; j++) {
+            final key = keys[j];
             // ColModel? col = value.columns?[j];
-            ColModel? col = value.currentState!.widget.columns==null ? null : value.currentState!.widget.columns![j];
+            ColModel? col = value.currentState!.widget.columns==null ? null : value.currentState!.widget.columns![key];
             Color? backgroundColor;
             if (i==-1){
               backgroundColor = col?.backgroundColor;
@@ -454,14 +502,26 @@ class ExportState extends State<Export> {
               cellStyle.backgroundColor = backgroundColor.toHex(includeAlpha: false);
             }
             cellStyle.fontSize = 12;
-            if (row.values[j] is FormattedNum){
-              cell.value = (row.values[j] as FormattedNum).value;
-            } else if (row.values[j] is ValueString){
-              cell.value = (row.values[j] as ValueString).value;
-            } else if (row.values[j] is NumGroupComparingBySum){
-              cell.value = (row.values[j] as NumGroupComparingBySum).value;
+            final cellValue;
+            if (row.values[key] is FormattedNum){
+              cellValue = (row.values[key] as FormattedNum).value;
+            } else if (row.values[key] is ValueString){
+              cellValue = (row.values[key] as ValueString).value==null ? null
+                  : (row.values[key] as ValueString).value is num
+                      ? (row.values[key] as ValueString).value
+                      : (row.values[key] as ValueString).string;
+            } else if (row.values[key] is NumGroupComparingBySum){
+              cellValue = (row.values[key] as NumGroupComparingBySum).value;
             } else {
-              cell.value = row.values[j];
+              cellValue = row.values[key]==null ? null
+                  : row.values[key];
+            }
+            if (cellValue==null || cellValue is num) {
+              cell.value = cellValue ?? '';
+            } else if (cellValue is List) {
+              cell.value = ListField.listToStringAll(cellValue);
+            } else {
+              cell.value = cellValue.toString();
             }
             cell.cellStyle = cellStyle;
           }
@@ -493,14 +553,14 @@ class ExportState extends State<Export> {
     if (!mounted) return;
     file..createSync(recursive: true)
         ..writeAsBytesSync(encoded);
-    doneExports = widget.childrenCount!(currentSize, portrait, scale, format,);
+    doneExports = widget.childrenCount?.call(currentSize, portrait, scale, format,)??1;
   }
 
 
   @override
   Widget build(BuildContext context) {
     if (widget.dummyChild!=null) return widget.dummyChild!;
-    while (textEditingControllers.length<widget.childrenCount!(currentSize, portrait, scale, format,)){
+    while (textEditingControllers.length<(widget.childrenCount?.call(currentSize, portrait, scale, format,)??1)){
       textEditingControllers.add(
         widget.textEditingControllers==null ? TextEditingController()
           : widget.textEditingControllers!.length > textEditingControllers.length
@@ -508,7 +568,7 @@ class ExportState extends State<Export> {
             : widget.textEditingControllers!.last ?? TextEditingController()
       );
     }
-    while (boundaryKeys.length < widget.childrenCount!(currentSize, portrait, scale, format,)){
+    while (boundaryKeys.length < (widget.childrenCount?.call(currentSize, portrait, scale, format,)??1)){
       boundaryKeys.add(GlobalKey());
     }
     var size = Size(
@@ -557,9 +617,10 @@ class ExportState extends State<Export> {
         );
         doneExports = 0;
         _export(size);
-        while (doneExports<widget.childrenCount!(currentSize, portrait, scale, format,)){
-          await Future.delayed(100.milliseconds);
-        }
+        do {
+          await Future.delayed(500.milliseconds);
+        } while (doneExports<(widget.childrenCount?.call(currentSize, portrait, scale, format,)??1));
+        Navigator.of(context).pop();
       }
     };
     return Dialog(
@@ -594,7 +655,7 @@ class ExportState extends State<Export> {
                             result = PageView.builder(
                               key: pageViewKey,
                               controller: controller,
-                              itemCount: widget.childrenCount!(currentSize, portrait, scale, format,),
+                              itemCount: widget.childrenCount?.call(currentSize, portrait, scale, format,)??10,
                               itemBuilder: (context, index) => Center(
                                 child: ValueListenableBuilder(
                                   valueListenable: textEditingControllers[index],
@@ -609,7 +670,7 @@ class ExportState extends State<Export> {
                                 isInside: true,
                                 pageController: controller,
                                 currentPageNotifier: currentPageNotifier,
-                                itemCount: widget.childrenCount!(currentSize, portrait, scale, format,),
+                                itemCount: widget.childrenCount?.call(currentSize, portrait, scale, format,)??1,
                                 child: result,
                               );
                             }
@@ -621,16 +682,16 @@ class ExportState extends State<Export> {
 //                        "Vista Previa", //(Página ${controller.page}/${pages.length})
 //                        style: Theme.of(context).textTheme.caption.copyWith(color: Colors.black),
 //                      ),
-                      if(widget.childrenCount!(currentSize, portrait, scale, format,)>1)
-                      CirclePageIndicator(
-                        itemCount: widget.childrenCount!(currentSize, portrait, scale, format,),
-                        currentPageNotifier: currentPageNotifier,
-                        onPageSelected: (value) => controller.animateToPage(value, duration: 300.milliseconds, curve: Curves.easeOut),
-                        size: 10,
-                        selectedSize: 12,
-                        dotColor: Colors.grey.shade600,
-                        selectedDotColor: Theme.of(context).accentColor,
-                      ),
+                      if((widget.childrenCount?.call(currentSize, portrait, scale, format,)??1) > 1)
+                        CirclePageIndicator(
+                          itemCount: widget.childrenCount?.call(currentSize, portrait, scale, format,)??1,
+                          currentPageNotifier: currentPageNotifier,
+                          onPageSelected: (value) => controller.animateToPage(value, duration: 300.milliseconds, curve: Curves.easeOut),
+                          size: 10,
+                          selectedSize: 12,
+                          dotColor: Colors.grey.shade600,
+                          selectedDotColor: Theme.of(context).accentColor,
+                        ),
                     ],
                   ),
                 ),

@@ -12,7 +12,7 @@ abstract class ConditionFilter<T> {
   String getUiName(BuildContext context);
   String getExtraUiName(BuildContext context);
   String getExtraUiTooltipFromZero(BuildContext context);
-  bool isAllowed(dynamic value, Map<dynamic, T> values, int index);
+  bool isAllowed(dynamic value, Map<dynamic, T> values, dynamic key);
   late FocusNode focusNode = FocusNode();
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,});
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:animations/animations.dart';
 import 'package:from_zero_ui/src/table/table_header.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
@@ -58,6 +60,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   List<ValidationError> listValidationErrors = [];
   Widget? icon; /// only used if !collapsible
   List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
+  FutureOr<String>? exportPathForExcel;
 
   List<T> get objects => value!.list;
   List<T> get dbObjects => dbValue!.list;
@@ -168,6 +171,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     ViewWidgetBuilder<ComparableList<T>> viewWidgetBuilder = ListField.defaultViewWidgetBuilder,
     this.icon,
     this.onFilter,
+    this.exportPathForExcel,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
@@ -334,6 +338,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     ViewWidgetBuilder<ComparableList<T>>? viewWidgetBuilder,
     Widget? icon,
     List<RowModel<T>> Function(List<RowModel<T>>)? onFilter,
+    FutureOr<String>? exportPathForExcel,
   }) {
     return ListField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -391,6 +396,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       icon: icon ?? this.icon,
       onFilter: onFilter ?? this.onFilter,
+      exportPathForExcel: exportPathForExcel ?? this.exportPathForExcel,
     );
   }
 
@@ -1300,12 +1306,12 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         Widget result = TableFromZero<T>(
           // key: ValueKey(objects.length),
           scrollController: mainScrollController,
-          // maxWidth: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
           minWidth: width,
           initialSortedColumn: initialSortedColumn,
           tableController: tableController,
           alternateRowBackgroundSmartly: false,
           onFilter: onFilter,
+          exportPathForExcel: exportPathForExcel,
           columns: propsShownOnTable.map((key, value) {
             final SimpleColModel result = value.getColModel();
             if (tableFilterable!=null) {
@@ -1446,10 +1452,12 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
             ),
           ),
         );
-        result = SliverCrossAxisConstrained(
-          maxCrossAxisExtent: width*1.6,
-          child: result,
-        );
+        if (!expandHorizontally) {
+          result = SliverCrossAxisConstrained(
+            maxCrossAxisExtent: maxWidth==double.infinity ? width*1.6 : maxWidth,
+            child: result,
+          );
+        }
         if (!asSliver) {
           result = Material(
             color: Theme.of(context).cardColor,
@@ -1620,6 +1628,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           title: Text(uiName),
           actions: actions,
           onShowAppbarContextMenu: () => focusNode.requestFocus(),
+          exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
           leading: !collapsible ? icon : IconButton(
             icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
             onPressed: () {

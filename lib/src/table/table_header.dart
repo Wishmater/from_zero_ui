@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 import 'package:from_zero_ui/src/table/table_from_zero.dart';
 import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
+import 'package:from_zero_ui/src/ui_components/context_menu.dart';
 
 
 class TableHeaderFromZero extends StatelessWidget {
@@ -13,6 +16,7 @@ class TableHeaderFromZero extends StatelessWidget {
   final Widget? leading;
   final VoidCallback? onShowAppbarContextMenu;
   final bool showElementCount;
+  final FutureOr<String>? exportPathForExcel;
 
   const TableHeaderFromZero({
     required this.controller,
@@ -21,12 +25,21 @@ class TableHeaderFromZero extends StatelessWidget {
     this.leading,
     this.onShowAppbarContextMenu,
     this.showElementCount = true,
+    this.exportPathForExcel,
     Key? key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
+    List<Widget>? actions = this.actions;
+    if (exportPathForExcel!=null) {
+      actions = TableFromZeroState.addExportExcelAction(context,
+        actions: actions ?? [],
+        tableController: controller,
+        exportPathForExcel: exportPathForExcel!,
+      );
+    }
+    Widget result = AnimatedBuilder(
       animation: controller,
       builder: (context, child) {
         List<RowModel>? filtered;
@@ -109,6 +122,7 @@ class TableHeaderFromZero extends StatelessWidget {
         );
       },
     );
+    return result;
   }
 
 }

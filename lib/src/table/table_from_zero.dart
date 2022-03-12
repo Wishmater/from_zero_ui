@@ -20,6 +20,7 @@ import 'package:from_zero_ui/util/no_ensure_visible_traversal_policy.dart';
 import 'package:from_zero_ui/util/small_splash_popup_menu_button.dart' as small_popup;
 import 'dart:async';
 import 'package:dartx/dartx.dart';
+import 'package:intl/intl.dart';
 
 import 'package:implicitly_animated_reorderable_list/implicitly_animated_reorderable_list.dart';
 import 'package:implicitly_animated_reorderable_list/transitions.dart';
@@ -67,7 +68,8 @@ class TableFromZero<T> extends StatefulWidget {
   final TableController? tableController;
   final bool? enableSkipFrameWidgetForRows;
   /// if null, excel export option disabled
-  final FutureOr<String>? exportPathForExcel; // TODO 1 implement excel export in all tables
+  final FutureOr<String>? exportPathForExcel;
+  final bool? computeFiltersInIsolate;
 
   TableFromZero({
     Key? key,
@@ -103,6 +105,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.tableController,
     this.exportPathForExcel,
     this.enableSkipFrameWidgetForRows,
+    this.computeFiltersInIsolate,
   }) :  super(key: key,);
 
   @override
@@ -150,8 +153,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       widget.tableController!.valueFilters = value;
     }
   }
+  late Map<dynamic, bool> valueFiltersApplied;
   late Map<dynamic, bool> filtersApplied;
-  Map<dynamic, List<dynamic>> availableFilters = {};
+  ValueNotifier<Map<dynamic, List<dynamic>>?> availableFilters = ValueNotifier(null);
   late Map<dynamic, GlobalKey> filterGlobalKeys = {};
 
   dynamic _sortedColumn;
@@ -226,74 +230,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     isStateInvalidated = false;
     currentColumnKeys = widget.columns?.keys.toList();
     sorted = List.from(widget.rows);
-    if (widget.columns==null) {
-      headerRowModel = widget.headerRowModel;
-    } else {
-      if (widget.headerRowModel!=null) {
-        if (widget.headerRowModel is SimpleRowModel) {
-          headerRowModel = (widget.headerRowModel as SimpleRowModel).copyWith(
-            onCheckBoxSelected: widget.headerRowModel!.onCheckBoxSelected
-                ?? (widget.onAllSelected!=null||widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null),
-            values: widget.columns!.length==widget.headerRowModel!.values.length
-                ? widget.headerRowModel!.values
-                : widget.columns!.map((key, value) => MapEntry(key, value.name)),
-            rowAddonIsAboveRow: widget.headerRowModel?.rowAddonIsAboveRow ?? true,
-            rowAddonIsCoveredByBackground: widget.headerRowModel?.rowAddonIsCoveredByBackground ?? true,
-            rowAddonIsCoveredByScrollable: widget.headerRowModel?.rowAddonIsCoveredByScrollable ?? true,
-            rowAddonIsSticky: widget.headerRowModel?.rowAddonIsSticky ?? false,
-          );
-        } else {
-          headerRowModel = widget.headerRowModel;
-        }
-      } else {
-        headerRowModel = SimpleRowModel(
-          id: "header_row",
-          values: widget.columns!.map((key, value) => MapEntry(key, value.name)),
-          onCheckBoxSelected: widget.onAllSelected!=null||widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null,
-          selected: true,
-          height: widget.rows.isEmpty ? 36 : widget.rows.first.height,
-        );
-      }
-      availableFilters = {};
-      widget.columns!.forEach((key, col) {
-        List<dynamic> available = [];
-        if (col.filterEnabled ?? true) {
-          widget.rows.forEach((row) {
-            final element = row.values[key];
-            if (element is List) {
-              for (final e in element) {
-                if (!available.contains(e)) {
-                  available.add(e);
-                }
-              }
-            } else {
-              if (!available.contains(element)) {
-                available.add(element);
-              }
-            }
-          });
-        }
-        bool sortAscending = col.defaultSortAscending ?? true;
-        available.sort((a, b) {
-          int result;
-          if (a==null || b==null) {
-            if (a==null && b==null) {
-              return 0;
-            } else if (a==null) {
-              return -1;
-            } else {
-              return 1;
-            }
-          } else if (a is Comparable) {
-            result = a.compareTo(b);
-          } else {
-            result = a.toString().compareTo(b.toString());
-          }
-          return sortAscending ? result : result * -1;
-        });
-        availableFilters[key] = available;
-      });
-    }
     if (widget.tableController!=null) {
       widget.tableController!.currentState = this;
       widget.tableController!._filter = () {
@@ -331,33 +267,120 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             e: {},
         };
       } else{
-        if (widget.tableController!.initialValueFiltersExcludeAllElse) {
-          valueFilters = {};
-          availableFilters.forEach((key, value) {
-            valueFilters[key] = {};
-            if (widget.tableController!.initialValueFilters![key]!=null) {
-              value.forEach((e) {
-                valueFilters[key]![e] = false;
-              });
-              widget.tableController!.initialValueFilters![key]!.forEach((filterKey, filterValue) {
-                valueFilters[key]![filterKey] = filterValue;
-              });
-            }
-          });
-        } else {
-          valueFilters = {
-            for (final e in widget.columns?.keys ?? [])
-              e: widget.tableController!.initialValueFilters![e] ?? {},
-          };
-        }
+        valueFilters = {
+          for (final e in widget.columns?.keys ?? [])
+            e: widget.tableController!.initialValueFilters![e] ?? {},
+        };
       }
     }
-    valueFilters.forEach((col, filters) {
-      filters.removeWhere((key, value) => !availableFilters[col]!.contains(key));
-    });
+    if (widget.columns==null) {
+      headerRowModel = widget.headerRowModel;
+    } else {
+      if (widget.headerRowModel!=null) {
+        if (widget.headerRowModel is SimpleRowModel) {
+          headerRowModel = (widget.headerRowModel as SimpleRowModel).copyWith(
+            onCheckBoxSelected: widget.headerRowModel!.onCheckBoxSelected
+                ?? (widget.onAllSelected!=null||widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null),
+            values: widget.columns!.length==widget.headerRowModel!.values.length
+                ? widget.headerRowModel!.values
+                : widget.columns!.map((key, value) => MapEntry(key, value.name)),
+            rowAddonIsAboveRow: widget.headerRowModel?.rowAddonIsAboveRow ?? true,
+            rowAddonIsCoveredByBackground: widget.headerRowModel?.rowAddonIsCoveredByBackground ?? true,
+            rowAddonIsCoveredByScrollable: widget.headerRowModel?.rowAddonIsCoveredByScrollable ?? true,
+            rowAddonIsSticky: widget.headerRowModel?.rowAddonIsSticky ?? false,
+          );
+        } else {
+          headerRowModel = widget.headerRowModel;
+        }
+      } else {
+        headerRowModel = SimpleRowModel(
+          id: "header_row",
+          values: widget.columns!.map((key, value) => MapEntry(key, value.name)),
+          onCheckBoxSelected: widget.onAllSelected!=null||widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null,
+          selected: true,
+          height: widget.rows.isEmpty ? 36 : widget.rows.first.height,
+        );
+      }
+      availableFilters.value = null;
+      initFilters();
+    }
     _updateFiltersApplied();
     sort(notifyListeners: notifyListeners);
   }
+
+  void initFilters() async { // TODO 3 maybe make initFilters sync in small tables
+    final computedAvailableFilters = await compute(_getAvailableFilters,
+        [
+          widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
+          widget.rows.map((e) => e.values).toList(),
+        ]);
+    final computedValidInitialFilters = await compute(_getValidInitialFilters,
+        [valueFilters, computedAvailableFilters]);
+    availableFilters.value = computedAvailableFilters;
+    if (computedValidInitialFilters != null) {
+      valueFilters = computedValidInitialFilters;
+      _updateFiltersApplied();
+      filter();
+    }
+  }
+  static Map<dynamic, List<dynamic>> _getAvailableFilters(List<dynamic> params) {
+    final Map<dynamic, List<bool?>> columnOptions = params[0];
+    final List<Map<dynamic, dynamic>> rowValues = params[1];
+    Map<dynamic, List<dynamic>> availableFilters = {};
+    columnOptions.forEach((key, options) {
+      List<dynamic> available = [];
+      if (options[0] ?? true) { // filterEnabled
+        rowValues.forEach((row) {
+          final element = row[key];
+          if (element is List) {
+            for (final e in element) {
+              if (!available.contains(e)) {
+                available.add(e);
+              }
+            }
+          } else {
+            if (!available.contains(element)) {
+              available.add(element);
+            }
+          }
+        });
+      }
+      bool sortAscending = options[1] ?? true; // defaultSortAscending
+      available.sort((a, b) {
+        int result;
+        if (a==null || b==null) {
+          if (a==null && b==null) {
+            return 0;
+          } else if (a==null) {
+            return -1;
+          } else {
+            return 1;
+          }
+        } else if (a is Comparable) {
+          result = a.compareTo(b);
+        } else {
+          result = a.toString().compareTo(b.toString());
+        }
+        return sortAscending ? result : result * -1;
+      });
+      availableFilters[key] = available;
+    });
+    return availableFilters;
+  }
+  static Map<dynamic, Map<Object, bool>>? _getValidInitialFilters(List<dynamic> params) {
+    Map<dynamic, Map<Object, bool>> initialFilters = params[0];
+    Map<dynamic, List<dynamic>> availableFilters = params[1];
+    bool removed = false;
+    initialFilters.forEach((col, filters) {
+      filters.removeWhere((key, value) {
+        bool remove = !availableFilters[col]!.contains(key);
+        removed = remove;
+        return remove;
+      });
+    });
+    return removed ? initialFilters : null;
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -552,7 +575,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     int cols = (((currentColumnKeys??row.values.keys).length) + (_showCheckboxes ? 1 : 0))
         * (widget.verticalDivider==null ? 1 : 2)
         + (widget.verticalDivider==null ? 0 : 1);
-    final rowActions = row==headerRowModel
+    List<Widget> rowActions = row==headerRowModel
         ? widget.rowActions.map((e) => e.copyWith(
             iconBuilder: ({
               required BuildContext context,
@@ -584,6 +607,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         : widget.rowActions.map((e) => e.copyWith(onTap: (context) {
             e.onRowTap?.call(context, row as RowModel<T>);
           },)).toList();
+    if (widget.exportPathForExcel != null) {
+      rowActions = addExportExcelAction(context,
+        actions: rowActions,
+        exportPathForExcel: widget.exportPathForExcel!,
+        tableController: widget.tableController ?? (TableController()..currentState=this),
+      );
+    }
 
     final builder = (BuildContext context, BoxConstraints? constraints) {
       final decorationBuilder = (BuildContext context, int j) {
@@ -928,166 +958,189 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   Widget defaultHeaderCellBuilder(BuildContext context, RowModel row, dynamic colKey, {
     int autoSizeTextMaxLines = 1,
   }) {
-    final col = widget.columns?[colKey];
-    final name = col?.name ?? (row.values[colKey]!=null ? row.values[colKey].toString() : "");
-    bool export = context.findAncestorWidgetOfExactType<Export>()!=null;
-    if (!filterGlobalKeys.containsKey(colKey)) {
-      filterGlobalKeys[colKey] = GlobalKey();
-    }
-    Widget result = Align(
-      alignment: _getAlignment(colKey)==TextAlign.center ? Alignment.center
-          : _getAlignment(colKey)==TextAlign.left||_getAlignment(colKey)==TextAlign.start ? Alignment.centerLeft
-          : Alignment.centerRight,
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          AnimatedPadding(
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-            padding: EdgeInsets.only(
-              left: widget.cellPadding.left + (!export && sortedColumn==colKey ? 15 : 4),
-              right: widget.cellPadding.right + (!export && (col?.filterEnabled??true) ? 10 : 4),
-              top: widget.cellPadding.top,
-              bottom: widget.cellPadding.bottom,
-            ),
-            child: AutoSizeText(
-              name,
-              style: Theme.of(context).textTheme.subtitle2,
-              textAlign: _getAlignment(colKey),
-              maxLines: autoSizeTextMaxLines,
-              minFontSize: 14,
-              overflowReplacement: TooltipFromZero(
-                message: name,
-                waitDuration: Duration(milliseconds: 0),
-                verticalOffset: -16,
+    return ValueListenableBuilder(
+      valueListenable: availableFilters,
+      builder: (context, availableFilters, child) {
+        final col = widget.columns?[colKey];
+        final name = col?.name ?? (row.values[colKey]!=null ? row.values[colKey].toString() : "");
+        bool export = context.findAncestorWidgetOfExactType<Export>()!=null;
+        if (!filterGlobalKeys.containsKey(colKey)) {
+          filterGlobalKeys[colKey] = GlobalKey();
+        }
+        Widget result = Align(
+          alignment: _getAlignment(colKey)==TextAlign.center ? Alignment.center
+              : _getAlignment(colKey)==TextAlign.left||_getAlignment(colKey)==TextAlign.start ? Alignment.centerLeft
+              : Alignment.centerRight,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              AnimatedPadding(
+                duration: Duration(milliseconds: 300),
+                curve: Curves.easeOut,
+                padding: EdgeInsets.only(
+                  left: widget.cellPadding.left + (!export && sortedColumn==colKey ? 15 : 4),
+                  right: widget.cellPadding.right + (!export && (col?.filterEnabled??true) ? 10 : 4),
+                  top: widget.cellPadding.top,
+                  bottom: widget.cellPadding.bottom,
+                ),
                 child: AutoSizeText(
                   name,
                   style: Theme.of(context).textTheme.subtitle2,
                   textAlign: _getAlignment(colKey),
                   maxLines: autoSizeTextMaxLines,
-                  softWrap: autoSizeTextMaxLines>1,
-                  overflow: autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,
-                ),
-              ),
-            ),
-          ),
-          Positioned(
-            left: -4, width: 32, top: 0, bottom: 0,
-            child: OverflowBox(
-              maxHeight: row.height, maxWidth: 32,
-              alignment: Alignment.center,
-              child: AnimatedSwitcher(
-                duration: Duration(milliseconds: 300),
-                switchInCurve: Curves.easeOut,
-                child: (widget.enabled && !export && sortedColumn==colKey) ? Icon(
-                  sortedAscending ? MaterialCommunityIcons.sort_ascending : MaterialCommunityIcons.sort_descending,
-                  key: ValueKey(sortedAscending),
-//                                color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
-                  color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
-                ) : SizedBox(height: 24,),
-                transitionBuilder: (child, animation) => ScaleTransition(
-                  scale: animation,
-                  child: FadeTransition(opacity: animation, child: child,),
-                ),
-              ),
-            ),
-          ),
-          if (widget.enabled && !export && (col?.filterEnabled??true))
-            Positioned(
-                right: -16, width: 48, top: 0, bottom: 0,
-                child: OverflowBox(
-                  maxHeight: row.height, maxWidth: 48,
-                  alignment: Alignment.center,
-                  child: IconButton(
-                    key: filterGlobalKeys[colKey],
-                    icon: Icon((filtersApplied[colKey]??false) ? MaterialCommunityIcons.filter : MaterialCommunityIcons.filter_outline,
-                      color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                  minFontSize: 14,
+                  overflowReplacement: TooltipFromZero(
+                    message: name,
+                    waitDuration: Duration(milliseconds: 0),
+                    verticalOffset: -16,
+                    child: AutoSizeText(
+                      name,
+                      style: Theme.of(context).textTheme.subtitle2,
+                      textAlign: _getAlignment(colKey),
+                      maxLines: autoSizeTextMaxLines,
+                      softWrap: autoSizeTextMaxLines>1,
+                      overflow: autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,
                     ),
-                    splashRadius: 20,
-                    tooltip: FromZeroLocalizations.of(context).translate('filters'),
-                    onPressed: () => showFilterDialog(colKey),
                   ),
-                )
+                ),
+              ),
+              Positioned(
+                left: -4, width: 32, top: 0, bottom: 0,
+                child: OverflowBox(
+                  maxHeight: row.height, maxWidth: 32,
+                  alignment: Alignment.center,
+                  child: AnimatedSwitcher(
+                    duration: Duration(milliseconds: 300),
+                    switchInCurve: Curves.easeOut,
+                    child: (widget.enabled && !export && sortedColumn==colKey) ? Icon(
+                      sortedAscending ? MaterialCommunityIcons.sort_ascending : MaterialCommunityIcons.sort_descending,
+                      key: ValueKey(sortedAscending),
+//                                color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
+                      color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                    ) : SizedBox(height: 24,),
+                    transitionBuilder: (child, animation) => ScaleTransition(
+                      scale: animation,
+                      child: FadeTransition(opacity: animation, child: child,),
+                    ),
+                  ),
+                ),
+              ),
+              if (widget.enabled && !export && (col?.filterEnabled??true))
+                Positioned(
+                  right: availableFilters==null ? -20 : -16, width: 48, top: 0, bottom: 0,
+                  child: OverflowBox(
+                    maxHeight: row.height, maxWidth: 48,
+                    alignment: Alignment.center,
+                    child: availableFilters==null
+                        ? Center(
+                            child: SizedBox(
+                              width: 16, height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                              ),
+                            ),
+                          )
+                        : IconButton(
+                            key: filterGlobalKeys[colKey],
+                            icon: Icon((filtersApplied[colKey]??false) ? MaterialCommunityIcons.filter : MaterialCommunityIcons.filter_outline,
+                              color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                            ),
+                            splashRadius: 20,
+                            tooltip: FromZeroLocalizations.of(context).translate('filters'),
+                            onPressed: () => showFilterDialog(colKey),
+                          ),
+                  ),
+                ),
+            ],
+          ),
+        );
+        headerFocusNodes[colKey] ??= FocusNode();
+        result = Material(
+          type: MaterialType.transparency,
+          child: EnsureVisibleWhenFocused(
+            focusNode: headerFocusNodes[colKey]!,
+            child: InkWell(
+              focusNode: headerFocusNodes[colKey],
+              onTap: col?.onHeaderTap!=null
+                  || col?.sortEnabled==true ? () {
+                headerFocusNodes[colKey]!.requestFocus();
+                if (col?.sortEnabled==true){
+                  if (sortedColumn==colKey) {
+                    setState(() {
+                      sortedAscending = !sortedAscending;
+                      sort();
+                    });
+                  } else {
+                    setState(() {
+                      sortedColumn = colKey;
+                      sortedAscending = col?.defaultSortAscending ?? true;
+                      sort();
+                    });
+                  }
+                }
+                if (col?.onHeaderTap!=null){
+                  col?.onHeaderTap!(colKey);
+                }
+              } : null,
+              child: result,
             ),
-        ],
-      ),
-    );
-    headerFocusNodes[colKey] ??= FocusNode();
-    result = Material(
-      type: MaterialType.transparency,
-      child: EnsureVisibleWhenFocused(
-        focusNode: headerFocusNodes[colKey]!,
-        child: InkWell(
-          focusNode: headerFocusNodes[colKey],
-          onTap: col?.onHeaderTap!=null
-              || col?.sortEnabled==true ? () {
-            headerFocusNodes[colKey]!.requestFocus();
-            if (col?.sortEnabled==true){
-              if (sortedColumn==colKey) {
-                setState(() {
-                  sortedAscending = !sortedAscending;
-                  sort();
-                });
-              } else {
-                setState(() {
-                  sortedColumn = colKey;
-                  sortedAscending = col?.defaultSortAscending ?? true;
-                  sort();
-                });
-              }
-            }
-            if (col?.onHeaderTap!=null){
-              col?.onHeaderTap!(colKey);
-            }
-          } : null,
+          ),
+        );
+        List<Widget> colActions = [
+          if (col?.sortEnabled ?? true)
+            ActionFromZero(
+              title: 'Ordenar Ascendente', // TODO 1 internationalize
+              icon: Icon(MaterialCommunityIcons.sort_ascending),
+              onTap: (context) {
+                if (sortedColumn!=colKey || !sortedAscending) {
+                  setState(() {
+                    sortedColumn = colKey;
+                    sortedAscending = true;
+                    sort();
+                  });
+                }
+              },
+            ),
+          if (col?.sortEnabled ?? true)
+            ActionFromZero(
+              title: 'Ordenar Descendente', // TODO 1 internationalize
+              icon: Icon(MaterialCommunityIcons.sort_descending),
+              onTap: (context) {
+                if (sortedColumn!=colKey || sortedAscending) {
+                  setState(() {
+                    sortedColumn = colKey;
+                    sortedAscending = false;
+                    sort();
+                  });
+                }
+              },
+            ),
+          if (availableFilters!=null && (col?.filterEnabled ?? true))
+            ActionFromZero(
+              title: 'Filtros...', // TODO 1 internationalize
+              icon: Icon(MaterialCommunityIcons.filter),
+              onTap: (context) => showFilterDialog(colKey),
+            ),
+        ];
+        if (widget.exportPathForExcel != null) {
+          colActions = addExportExcelAction(context,
+            actions: colActions,
+            exportPathForExcel: widget.exportPathForExcel!,
+            tableController: widget.tableController ?? (TableController()..currentState=this),
+          );
+        }
+        result = ContextMenuFromZero(
           child: result,
-        ),
-      ),
+          onShowMenu: () => headerFocusNodes[colKey]!.requestFocus(),
+          actions: colActions.cast<ActionFromZero>(),
+        );
+        return result;
+      },
     );
-    result = ContextMenuFromZero(
-      child: result,
-      onShowMenu: () => headerFocusNodes[colKey]!.requestFocus(),
-      actions: [
-        if (col?.sortEnabled ?? true)
-          ActionFromZero(
-            title: 'Ordenar Ascendente', // TODO 1 internationalize
-            icon: Icon(MaterialCommunityIcons.sort_ascending),
-            onTap: (context) {
-              if (sortedColumn!=colKey || !sortedAscending) {
-                setState(() {
-                  sortedColumn = colKey;
-                  sortedAscending = true;
-                  sort();
-                });
-              }
-            },
-          ),
-        if (col?.sortEnabled ?? true)
-          ActionFromZero(
-            title: 'Ordenar Descendente', // TODO 1 internationalize
-            icon: Icon(MaterialCommunityIcons.sort_descending),
-            onTap: (context) {
-              if (sortedColumn!=colKey || sortedAscending) {
-                setState(() {
-                  sortedColumn = colKey;
-                  sortedAscending = false;
-                  sort();
-                });
-              }
-            },
-          ),
-        if (col?.filterEnabled ?? true)
-          ActionFromZero(
-            title: 'Filtros...', // TODO 1 internationalize
-            icon: Icon(MaterialCommunityIcons.filter),
-            onTap: (context) => showFilterDialog(colKey),
-          ),
-      ],
-    );
-    return result;
   }
 
   void showFilterDialog(dynamic j) async{
+    if (availableFilters.value==null) return;
     final col = widget.columns?[j];
     ScrollController filtersScrollController = ScrollController();
     TableController filterTableController = TableController();
@@ -1120,6 +1173,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         FilterDateAfter(),
         FilterDateBefore(),
       ]);
+    }
+    final filterSearchFocusNode = FocusNode();
+    if (PlatformExtended.isDesktop) {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        filterSearchFocusNode.requestFocus();
+      });
     }
     await showPopupFromZero(
       context: context,
@@ -1229,13 +1288,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                       SliverToBoxAdapter(child: Divider(height: 32,)),
                       TableFromZero(
                         tableController: filterTableController,
-                        columns: {
-                          0: SimpleColModel(
-                            name: '',
-                            sortEnabled: false,
-                          ),
-                        },
-                        rows: availableFilters[j]!.map((e) {
+                        rows: (availableFilters.value?[j] ?? []).map((e) {
                           return SimpleRowModel(
                             id: e,
                             values: {0: e},
@@ -1249,8 +1302,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                           );
                         }).toList(),
                         emptyWidget: SizedBox.shrink(),
-                        headerRowBuilder: (context, row) {
-                          return Container(
+                        headerRowModel: SimpleRowModel(
+                          id: 'header', values: {},
+                          rowAddon: Container(
                             padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
                             color: Theme.of(context).cardColor,
                             child: Column(
@@ -1259,6 +1313,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                                 SizedBox(
                                   height: 32,
                                   child: TextFormField(
+                                    focusNode: filterSearchFocusNode,
                                     onChanged: (v) {
                                       filterTableController.conditionFilters![0] = [];
                                       filterTableController.conditionFilters![0]!.add(
@@ -1311,8 +1366,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                                 ),
                               ],
                             ),
-                          );
-                        },
+                          ),
+                        ),
                       ),
                       SliverToBoxAdapter(child: SizedBox(height: 16+42,),),
                     ],
@@ -1474,6 +1529,43 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     return widget.columns?[j]?.flex ?? 1;
   }
 
+  static List<Widget> addExportExcelAction(BuildContext context, {
+    required List<Widget> actions,
+    required TableController tableController,
+    required FutureOr<String> exportPathForExcel,
+  }) {
+    return [
+      ...actions,
+      if (actions.isNotEmpty)
+        ActionFromZero.divider(
+          breakpoints: {0: ActionState.popup},
+        ),
+      ActionFromZero(
+        title: 'Exportar Excel',
+        icon: Icon(MaterialCommunityIcons.file_excel),
+        breakpoints: {0: ActionState.popup},
+        onTap: (appbarContext) {
+          String routeTitle = 'Excel';
+          try {
+            final route = GoRouteFromZero.of(context);
+            routeTitle = route.title ?? route.path;
+          } catch (_) {}
+          showModal(
+            context: appbarContext,
+            builder: (context) => Export.excelOnly(
+              scaffoldContext: appbarContext,
+              title: DateFormat("yyyy-MM-dd hh.mm.ss aaa").format(DateTime.now()) + " - $routeTitle",
+              path: exportPathForExcel,
+              excelSheets: () => {
+                routeTitle: tableController,
+              },
+            ),
+          );
+        },
+      ),
+    ];
+  }
+
   int get disabledColumnCount => widget.columns==null ? 0
       : widget.columns!.values.where((element) => element.flex==0).length;
   List<RowModel<T>> sort({bool notifyListeners=true, bool filterAfter=true}) {
@@ -1511,7 +1603,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     filtered = sorted.where((element) {
       bool pass = true;
       for (final key in valueFilters.keys) {
-        if (filtersApplied[key]!) {
+        if (valueFiltersApplied[key]!) {
           final value = element.values[key];
           if (value is List) {
             pass = false;
@@ -1553,19 +1645,20 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   }
   bool _showCheckboxes = false;
   void _updateFiltersApplied(){
+    valueFiltersApplied = {
+      for (final key in widget.columns?.keys ?? [])
+        key: _isValueFilterApplied(key),
+    };
     filtersApplied = {
       for (final key in widget.columns?.keys ?? [])
-        key: _isFilterApplied(key),
-
+        key: (valueFiltersApplied[key]??false)
+            || (conditionFilters[key] ?? []).isNotEmpty,
     };
   }
-  bool _isFilterApplied(key) {
-    if ((conditionFilters[key] ?? []).isNotEmpty) {
-      return true;
-    }
+  bool _isValueFilterApplied(key) {
     bool? previous;
-    for (var i = 0; i < availableFilters[key]!.length; ++i) {
-      final availableFilter = availableFilters[key]![i];
+    for (var i = 0; i < (availableFilters.value?[key]?.length ?? 0); ++i) {
+      final availableFilter = availableFilters.value![key]![i];
       final value = valueFilters[key]![availableFilter] ?? false;
       if (i==0) {
         previous = value;

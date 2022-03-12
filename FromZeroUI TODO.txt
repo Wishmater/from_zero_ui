@@ -1,9 +1,6 @@
 
 
 
-
-
-
 **********************************************************************
 P0
 **********************************************************************
@@ -13,19 +10,8 @@ Export
 	export should autommatically open the saved file, default true
 		add option to open autommatically to FileSaverFromZero, default false
 
-Table Feature -- Export to excel with right-click (directly on the table)
-
-Table -- Initial checking for filter values should be async (and also maybe other parts of initialization)
-			??? also filtering, maybe
-		filters will show loading until this finishes
-		probably needs to be in an isolate
-		??? only if rowCount > 100 ??? (also allow to force sync or async)
-		
 Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
 	https://www.youtube.com/watch?v=ceCo8U0XHqw
-
-Bug with condition filters on table
-	when all value filters are disabled (new way) and a condition filter is added, no values return true
 
 ??? force windows app to be executed as admin by default
 
@@ -71,6 +57,10 @@ Table Feature -- Sticky columns
 Table Feature -- Reorder columns
 
 Table Feature -- Resize columns (hard)
+
+Table Feature -- Column types (String, num, DateTime)
+	show sum/avg on num columns
+	custom filters for each column type
 	
 Implement UIScaling + Scaling picker widget (with slider)
 	take initial system textScale as UI scaling
