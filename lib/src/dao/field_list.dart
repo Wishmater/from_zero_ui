@@ -1310,6 +1310,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                   collapsed: collapsed,
                   collapsible: collapsible,
                   actions: actions,
+                  asSliver: asSliver,
                 ),
                 InitiallyAnimatedWidget(
                   duration: Duration(milliseconds: 300),
@@ -1503,6 +1504,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
               focusNode: focusNode!,
               collapsed: collapsed,
               collapsible: collapsible,
+              asSliver: asSliver,
             ),
           ),
         );
@@ -1666,14 +1668,13 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     required FocusNode focusNode,
     required bool? collapsible,
     required bool? collapsed,
+    required bool asSliver,
     required List<ActionFromZero> actions,
   }) {
     collapsible ??= this.collapsible;
     collapsed ??= this.collapsed;
     return EnsureVisibleWhenFocused(
       focusNode: focusNode,
-      // alignmentStart: 0,
-      // alignmentEnd: 0,
       child: Focus(
         focusNode: focusNode,
         key: headerGlobalKey,

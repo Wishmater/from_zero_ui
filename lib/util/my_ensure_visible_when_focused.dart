@@ -179,10 +179,15 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
     final position = scrollableState.position;
 
     late double alignment;
-    if (position.pixels > viewport.getOffsetToReveal(object, alignmentStart).offset + 5) {
+    final offsetToRevealStart = viewport.getOffsetToReveal(object, alignmentStart).offset + 5;
+    final offsetToRevealEnd = viewport.getOffsetToReveal(object, alignmentEnd).offset - 5;
+    if (offsetToRevealEnd > offsetToRevealStart) {
+      // widget is larger than viewport, do nothing
+      return;
+    } else if (position.pixels > offsetToRevealStart) {
       // Move down to the top of the viewport
       alignment = alignmentStart;
-    } else if (position.pixels < viewport.getOffsetToReveal(object, alignmentEnd).offset - 5) {
+    } else if (position.pixels < offsetToRevealEnd) {
       // Move up to the bottom of the viewport
       alignment = alignmentEnd;
     } else {
@@ -195,6 +200,11 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
       duration: widget.duration,
       curve: widget.curve,
     );
+    // viewport.showOnScreen(
+    //   descendant: object,
+    //   duration: widget.duration,
+    //   curve: widget.curve,
+    // );
 
   }
 

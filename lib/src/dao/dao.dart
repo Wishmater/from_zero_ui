@@ -725,6 +725,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             List<Widget> primaryFormWidgets = [];
             Map<String, Widget> secondaryFormWidgets = {};
             int i = 1;
+            bool firstIteration = true;
             for (final e in fieldGroups) {
               if (e.props.values.where((e) => !e.hiddenInForm).isNotEmpty) {
                 bool asPrimary = !widescreen || e.primary;
@@ -737,12 +738,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   showCancelActionToPop: true,
                   expandToFillContainer: expandToFillContainer,
                   asSlivers: false,
-                  focusNode: focusNode,
+                  focusNode: firstIteration ? focusNode : null,
                   showDefaultSnackBars: showDefaultSnackBars,
                   showRevertChanges: showRevertChanges,
                   askForSaveConfirmation: askForSaveConfirmation,
                   showActionButtons: false,
                 );
+                firstIteration = false;
                 if (asPrimary) {
                   primaryFormWidgets.add(groupWidget);
                 } else {
