@@ -397,15 +397,16 @@ class StringField extends Field<String> {
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
           final actions = this.actions?.call(context, this, dao) ?? [];
-          result = ContextMenuFromZero( // TODO 1 this is blocked by default TextField toolbar
+          final defaultActions = buildDefaultActions(context);
+          result = ContextMenuFromZero(
             enabled: enabled,
             addGestureDetector: !dense,
             onShowMenu: () => focusNode.requestFocus(),
             actions: [
               ...actions,
-              if (actions.isNotEmpty)
+              if (actions.isNotEmpty && defaultActions.isNotEmpty)
                 ActionFromZero.divider(),
-              ...buildDefaultActions(context),
+              ...defaultActions,
             ],
             child: result,
           );

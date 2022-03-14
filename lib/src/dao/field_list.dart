@@ -1212,15 +1212,16 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
         final actions = this.actions?.call(context, this, dao) ?? [];
+        final defaultActions = buildDefaultActions(context);
         result = ContextMenuFromZero(
           enabled: enabled,
           addGestureDetector: !dense,
           onShowMenu: () => focusNode.requestFocus(),
           actions: [
             ...actions,
-            if (actions.isNotEmpty)
+            if (actions.isNotEmpty && defaultActions.isNotEmpty)
               ActionFromZero.divider(),
-            ...buildDefaultActions(context, focusNode: focusNode),
+            ...defaultActions,
           ],
           child: result,
         );
@@ -1285,10 +1286,11 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       return [result];
     }
     final actions = this.actions?.call(context, this, dao) ?? [];
-    if (actions.isNotEmpty) {
+    final defaultActions = buildDefaultActions(context, focusNode: focusNode);
+    if (actions.isNotEmpty && defaultActions.isNotEmpty) {
       actions.add(ActionFromZero.divider());
     }
-    actions.addAll(buildDefaultActions(context, focusNode: focusNode));
+    actions.addAll(defaultActions);
     Map<String, Field> propsShownOnTable = Map.from(objectTemplate.props)..removeWhere((k, v) => v.hiddenInTable);
     double width = 0;
     propsShownOnTable.forEach((key, value) {
@@ -1768,31 +1770,34 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
             maybeAddRow(context);
           },
         ),
-      ActionFromZero.divider(breakpoints: {0: ActionState.popup,},),
-      ActionFromZero(
-        title: 'Deshacer', // TODO 1 internationalize
-        icon: Icon(MaterialCommunityIcons.undo_variant),
-        onTap: (context) {
-          focusNode?.requestFocus();
-          undo(removeEntryFromDAO: true);
-        },
-        enabled: undoValues.isNotEmpty,
-        breakpoints: {
-          0: ActionState.popup,
-        },
-      ),
-      ActionFromZero(
-        title: 'Rehacer', // TODO 1 internationalize
-        icon: Icon(MaterialCommunityIcons.redo_variant),
-        onTap: (context) {
-          focusNode?.requestFocus();
-          redo(removeEntryFromDAO: true);
-        },
-        enabled: redoValues.isNotEmpty,
-        breakpoints: {
-          0: ActionState.popup,
-        },
-      ),
+      if (dao.enableUndoRedoMechanism)
+        ActionFromZero.divider(breakpoints: {0: ActionState.popup,},),
+      if (dao.enableUndoRedoMechanism)
+        ActionFromZero(
+          title: 'Deshacer', // TODO 1 internationalize
+          icon: Icon(MaterialCommunityIcons.undo_variant),
+          onTap: (context) {
+            focusNode?.requestFocus();
+            undo(removeEntryFromDAO: true);
+          },
+          enabled: undoValues.isNotEmpty,
+          breakpoints: {
+            0: ActionState.popup,
+          },
+        ),
+      if (dao.enableUndoRedoMechanism)
+        ActionFromZero(
+          title: 'Rehacer', // TODO 1 internationalize
+          icon: Icon(MaterialCommunityIcons.redo_variant),
+          onTap: (context) {
+            focusNode?.requestFocus();
+            redo(removeEntryFromDAO: true);
+          },
+          enabled: redoValues.isNotEmpty,
+          breakpoints: {
+            0: ActionState.popup,
+          },
+        ),
       // ActionFromZero( // maybe add a 'delete-all'
       //   title: 'Limpiar', // TODO 1 internationalize
       //   icon: Icon(Icons.clear),

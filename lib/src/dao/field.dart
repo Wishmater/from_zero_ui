@@ -402,24 +402,27 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
 
   List<ActionFromZero> buildDefaultActions(BuildContext context, {FocusNode? focusNode}) {
     return [
-      ActionFromZero(
-        title: 'Deshacer', // TODO 1 internationalize
-        icon: Icon(MaterialCommunityIcons.undo_variant),
-        onTap: (context) => undo(removeEntryFromDAO: true),
-        enabled: undoValues.isNotEmpty,
-      ),
-      ActionFromZero(
-        title: 'Rehacer', // TODO 1 internationalize
-        icon: Icon(MaterialCommunityIcons.redo_variant),
-        onTap: (context) => redo(removeEntryFromDAO: true),
-        enabled: redoValues.isNotEmpty,
-      ),
-      ActionFromZero(
-        title: 'Limpiar', // TODO 1 internationalize
-        icon: Icon(Icons.clear),
-        onTap: (context) => value = defaultValue,
-        enabled: clearable && value!=defaultValue,
-      ),
+      if (dao.enableUndoRedoMechanism)
+        ActionFromZero(
+          title: 'Deshacer', // TODO 1 internationalize
+          icon: Icon(MaterialCommunityIcons.undo_variant),
+          onTap: (context) => undo(removeEntryFromDAO: true),
+          enabled: undoValues.isNotEmpty,
+        ),
+      if (dao.enableUndoRedoMechanism)
+        ActionFromZero(
+          title: 'Rehacer', // TODO 1 internationalize
+          icon: Icon(MaterialCommunityIcons.redo_variant),
+          onTap: (context) => redo(removeEntryFromDAO: true),
+          enabled: redoValues.isNotEmpty,
+        ),
+      if (clearable)
+        ActionFromZero(
+          title: 'Limpiar', // TODO 1 internationalize
+          icon: Icon(Icons.clear),
+          onTap: (context) => value = defaultValue,
+          enabled: clearable && value!=defaultValue,
+        ),
     ];
   }
 

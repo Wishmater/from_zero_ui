@@ -56,6 +56,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   bool viewDialogLinksToInnerDAOs;
   bool viewDialogShowsViewButtons;
   bool? viewDialogShowsEditButton;
+  bool enableUndoRedoMechanism;
   DAO? parentDAO; /// if not null, undo/redo calls will be relayed to the parent
 
   DAO({
@@ -79,6 +80,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.viewDialogShowsEditButton,
     List<List<Field>>? undoRecord,
     List<List<Field>>? redoRecord,
+    this.enableUndoRedoMechanism = true,
     this.parentDAO,
   }) :  this._undoRecord = undoRecord ?? [],
         this._redoRecord = redoRecord ?? [],
@@ -781,15 +783,15 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                           ),
                         ),
                       ),
-                      if (showUndoRedo)
+                      if (enableUndoRedoMechanism && showUndoRedo)
                         IconButton(
                           tooltip: FromZeroLocalizations.of(context).translate("undo"),
                           icon: Icon(MaterialCommunityIcons.undo_variant,),
                           onPressed: _undoRecord.isEmpty ? null : () {
-                            undo(); // TODO 3 add shortcut support (ctrl+z, ctrl+shift+z)
+                            undo();
                           },
                         ),
-                      if (showUndoRedo)
+                      if (enableUndoRedoMechanism && showUndoRedo)
                         IconButton(
                           tooltip: FromZeroLocalizations.of(context).translate("redo"),
                           icon: Icon(MaterialCommunityIcons.redo_variant,),
@@ -1121,27 +1123,29 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             return result;
           },
         );
-        result = Actions(
-          actions: {
-            UndoIntent: CallbackAction(
-              onInvoke: (intent) {
-                if (_undoRecord.isNotEmpty) {
-                  undo();
-                }
-                return false;
-              },
-            ),
-            RedoIntent: CallbackAction(
-              onInvoke: (intent) {
-                if (_redoRecord.isNotEmpty) {
-                  redo();
-                }
-                return false;
-              },
-            ),
-          },
-          child: result,
-        );
+        if (enableUndoRedoMechanism) {
+          result = Actions(
+            actions: {
+              UndoIntent: CallbackAction(
+                onInvoke: (intent) {
+                  if (_undoRecord.isNotEmpty) {
+                    undo();
+                  }
+                  return false;
+                },
+              ),
+              RedoIntent: CallbackAction(
+                onInvoke: (intent) {
+                  if (_redoRecord.isNotEmpty) {
+                    redo();
+                  }
+                  return false;
+                },
+              ),
+            },
+            child: result,
+          );
+        }
         return result;
       },
     );
