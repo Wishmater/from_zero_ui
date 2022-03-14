@@ -273,7 +273,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         };
       }
     }
-    if (widget.columns==null) {
+    if (widget.columns==null && widget.showHeaders) {
       headerRowModel = widget.headerRowModel;
     } else {
       if (widget.headerRowModel!=null) {
@@ -308,14 +308,32 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     sort(notifyListeners: notifyListeners);
   }
 
-  void initFilters() async { // TODO 3 maybe make initFilters sync in small tables
-    final computedAvailableFilters = await compute(_getAvailableFilters,
-        [
-          widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
-          widget.rows.map((e) => e.values).toList(),
-        ]);
-    final computedValidInitialFilters = await compute(_getValidInitialFilters,
-        [valueFilters, computedAvailableFilters]);
+  void initFilters([bool? computeFiltersInIsolate]) async {
+    final Map<dynamic, List<dynamic>> computedAvailableFilters;
+    final Map<dynamic, Map<Object, bool>>? computedValidInitialFilters;
+    if (computeFiltersInIsolate ?? widget.computeFiltersInIsolate ?? widget.rows.length>50) {
+      try {
+        computedAvailableFilters = await compute(_getAvailableFilters,
+            [
+              widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
+              widget.rows.map((e) => e.values).toList(),
+            ]);
+        computedValidInitialFilters = await compute(_getValidInitialFilters,
+            [valueFilters, computedAvailableFilters]);
+      } catch (_) {
+        print('Isolate creation for computing table filters failed. Computing synchronously...');
+        initFilters(false);
+        return;
+      }
+    } else {
+      computedAvailableFilters = _getAvailableFilters(
+          [
+            widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
+            widget.rows.map((e) => e.values).toList(),
+          ]);
+      computedValidInitialFilters = _getValidInitialFilters(
+          [valueFilters, computedAvailableFilters]);
+    }
     availableFilters.value = computedAvailableFilters;
     if (computedValidInitialFilters != null) {
       valueFilters = computedValidInitialFilters;
@@ -824,6 +842,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             elevation: 0,
             paddingRight: 0,
             titleSpacing: 0,
+            transitionsDuration: 0.milliseconds,
           ),
         );
       }

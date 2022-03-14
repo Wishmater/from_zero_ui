@@ -158,44 +158,56 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
 
   void _computeTotal() {
     double? result = selfTotalNotifier.value;
-    if (_ref != null) {
-      _watching.forEach((e) {
-        final partial = _ref!.read(e.notifier).wholeTotalNotifier.value;
+    if (result!=null && _ref!=null) {
+      for (final e in _watching) {
+        final partial = _ref!.read(e.notifier).wholeTotalNotifier.value
+            ?? _ref!.read(e).maybeWhen<double?>(data:(_)=>0, orElse: ()=>null,);
         if (partial!=null) {
           result = (result??0) + partial;
+        } else {
+          result = null;
+          break;
         }
-      });
+      }
     }
     wholeTotalNotifier.value = result;
   }
   void _computeProgress() {
     double? result = selfProgressNotifier.value;
-    if (_ref != null) {
-      _watching.forEach((e) {
-        final partial = _ref!.read(e.notifier).wholeProgressNotifier.value;
+    if (result!=null && _ref!=null) {
+      for (final e in _watching) {
+        final partial = _ref!.read(e.notifier).wholeProgressNotifier.value
+            ?? _ref!.read(e).maybeWhen<double?>(data:(_)=>0, orElse: ()=>null,);
         if (partial!=null) {
           result = (result??0) + partial;
+        } else {
+          result = null;
+          break;
         }
-      });
+      }
     }
     wholeProgressNotifier.value = result;
   }
   void _computePercentage() {
-    // TODO 3 there could be some improvement here, right now wholeNotifiers are ignored
-    //    Instead percentage of all dependencies are used, asuming their totals are equal
+    double? total = wholeTotalNotifier.value;
+    double? progress = wholeProgressNotifier.value;
+    wholePercentageNotifier.value = total==null ? null
+        : total==0 ? 0
+        : (progress??0) / total;
+    //    Percentage of all dependencies are used, asuming their totals are equal
     //    Percentage could be calculated only from wholeNotifiers,
-    //    but this has problems when not all dependencies teport their total/progress
-    final total = selfTotalNotifier.value;
-    final progress = selfProgressNotifier.value;
-    double? result = total==null||progress==null||total==0 ? null : progress/total;
-    if (_ref != null) {
-      _watching.forEach((e) {
-        final partial = _ref!.read(e.notifier).wholePercentageNotifier.value
-            ?? _ref!.read(e).maybeWhen<double>(data:(_)=>1, orElse: ()=>0,);
-        result = (result??0) + partial;
-      });
-    }
-    wholePercentageNotifier.value = result==null ? null : (result!/(_watching.length+1));
+    //    but this has problems when not all dependencies report their total/progress
+    // final total = selfTotalNotifier.value;
+    // final progress = selfProgressNotifier.value;
+    // double? result = total==null||progress==null||total==0 ? null : progress/total;
+    // if (_ref != null) {
+    //   _watching.forEach((e) {
+    //     final partial = _ref!.read(e.notifier).wholePercentageNotifier.value
+    //         ?? _ref!.read(e).maybeWhen<double>(data:(_)=>1, orElse: ()=>0,);
+    //     result = (result??0) + partial;
+    //   });
+    // }
+    // wholePercentageNotifier.value = result==null ? null : (result!/(_watching.length+1));
   }
 
 }

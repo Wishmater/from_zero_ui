@@ -57,6 +57,8 @@ class ComparableList<T extends Comparable> with Comparable {
 
   bool remove(T value) => list.remove(value);
 
+  T removeAt(int index) => list.removeAt(index);
+
   void clear() => list.clear();
 
   bool contains(Object? element) => list.contains(element);

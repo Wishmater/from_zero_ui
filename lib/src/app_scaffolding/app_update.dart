@@ -19,7 +19,7 @@ class UpdateFromZero{
   String versionJsonUrl;
   String appDownloadUrl;
   Dio dio;
-  late Map<String, dynamic> versionInfo;
+  Map<String, dynamic>? versionInfo;
   late bool updateAvailable;
 
   UpdateFromZero(this.currentVersion, this.versionJsonUrl, this.appDownloadUrl, {
@@ -41,28 +41,31 @@ class UpdateFromZero{
       _checkUpdate = _checkUpdateInternal();
       File file = File(await getDownloadPath());
       if (file.existsSync()) {
-        final bytes = file.readAsBytesSync();
-        final archive = ZipDecoder().decodeBytes(bytes);
-        String tempDirectory = (await getTemporaryDirectory()).absolute.path;
-        File extracted = File(p.join(tempDirectory, archive.first.name.substring(0, archive.first.name.length-1)));
-        try{ extracted.deleteSync(recursive: true); } catch(_){}
+        if (file.path.endsWith('.zip')) {
+          final bytes = file.readAsBytesSync();
+          final archive = ZipDecoder().decodeBytes(bytes);
+          String tempDirectory = (await getTemporaryDirectory()).absolute.path;
+          File extracted = File(p.join(tempDirectory, archive.first.name.substring(0, archive.first.name.length-1)));
+          try{ extracted.deleteSync(recursive: true); } catch(_){}
+        }
         file.delete(recursive: true);
       }
     }
     return _checkUpdate!;
   }
   Future<UpdateFromZero> _checkUpdateInternal() async{
-    final response = await dio.get(versionJsonUrl);
-    versionInfo = response.data;
-    int ver = versionInfo['ver'];
+    if (versionInfo==null) {
+      final response = await dio.get(versionJsonUrl);
+      versionInfo = response.data;
+    }
+    int ver = versionInfo!['windows'];
     updateAvailable = ver > currentVersion;
     return this;
   }
 
-  void promptUpdate(BuildContext context){
-
+  Future<void> promptUpdate(BuildContext context) async {
     if (updateAvailable==true){
-      showModal(
+      return showModal(
         context: context,
         builder: (context) => _UpdateWidget(this),
         configuration: FadeScaleTransitionConfiguration(
@@ -86,35 +89,49 @@ class UpdateFromZero{
         deleteOnError: true,
       );
       download.then((value) async{
-        appWindow.title = FromZeroLocalizations.of(context).translate('processing_update');
-        final file = File(downloadPath);
-        final bytes = file.readAsBytesSync();
-        final archive = ZipDecoder().decodeBytes(bytes);
-        for (final file in archive) {
-          final filename = file.name;
-          if (file.isFile) {
-            final data = file.content as List<int>;
-            File('$tempDirectory/' + filename)
-              ..createSync(recursive: true)
-              ..writeAsBytesSync(data);
-          } else {
-            Directory('$tempDirectory/' + filename)
-              ..create(recursive: true);
+        if (appDownloadUrl.endsWith('.exe')
+            || appDownloadUrl.endsWith('.msi')
+            || appDownloadUrl.endsWith('.msix')) {
+
+          // Update is a windows native installer, just run it and let it do its magic
+          Process.start(downloadPath.replaceAll('/', '\\'), [],);
+          await Future.delayed(Duration(seconds: 1));
+          exit(0);
+
+        } else {
+
+          // Assume update is a zip file and manually extract it
+          appWindow.title = FromZeroLocalizations.of(context).translate('processing_update');
+          final file = File(downloadPath);
+          final bytes = file.readAsBytesSync();
+          final archive = ZipDecoder().decodeBytes(bytes);
+          for (final file in archive) {
+            final filename = file.name;
+            if (file.isFile) {
+              final data = file.content as List<int>;
+              File('$tempDirectory/' + filename)
+                ..createSync(recursive: true)
+                ..writeAsBytesSync(data);
+            } else {
+              Directory('$tempDirectory/' + filename)
+                ..create(recursive: true);
+            }
           }
+          File argumentsFile = File("update_temp_args.txt");
+          String newAppDirectory = p.join(tempDirectory, archive.first.name);
+          String scriptPath = Platform.script.path.substring(1, Platform.script.path.indexOf(Platform.script.pathSegments.last))
+              .replaceAll('%20', ' ');
+          var executableFile = Directory(newAppDirectory).listSync()
+              .firstWhere((element) => element.path.endsWith('.exe'));
+          argumentsFile.writeAsStringSync(newAppDirectory + "\n" + scriptPath);
+          print(executableFile.absolute.path.replaceAll('/', '\\'));
+          Process.start(executableFile.absolute.path.replaceAll('/', '\\'), [],
+            workingDirectory: scriptPath.replaceAll('/', '\\'),
+          );
+          await Future.delayed(Duration(seconds: 1));
+          exit(0);
+
         }
-        File argumentsFile = File("update_temp_args.txt");
-        String newAppDirectory = p.join(tempDirectory, archive.first.name);
-        String scriptPath = Platform.script.path.substring(1, Platform.script.path.indexOf(Platform.script.pathSegments.last))
-            .replaceAll('%20', ' ');
-        var executableFile = Directory(newAppDirectory).listSync()
-            .firstWhere((element) => element.path.endsWith('.exe'));
-        argumentsFile.writeAsStringSync(newAppDirectory + "\n" + scriptPath);
-        print(executableFile.absolute.path.replaceAll('/', '\\'));
-        Process.start(executableFile.absolute.path.replaceAll('/', '\\'), [],
-          workingDirectory: scriptPath.replaceAll('/', '\\'),
-        );
-        await Future.delayed(Duration(seconds: 1));
-        exit(0);
       });
       return download;
     }

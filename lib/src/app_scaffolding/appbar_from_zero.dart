@@ -45,6 +45,7 @@ class AppbarFromZero extends StatefulWidget {
   /// Used in Table row actions.
   final bool useFlutterAppbar;
   final bool skipTraversalForActions;
+  final Duration transitionsDuration;
 
   AppbarFromZero({
     Key? key,
@@ -77,6 +78,7 @@ class AppbarFromZero extends StatefulWidget {
     this.addContextMenu = true,
     this.onShowContextMenu,
     this.skipTraversalForActions = false,
+    this.transitionsDuration = const Duration(milliseconds: 300),
   }) :
         this.actions = actions ?? [],
         super(key: key);
@@ -196,7 +198,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
             }
           }
           final titleContent = AnimatedSwitcher(
-            duration: 300.milliseconds,
+            duration: widget.transitionsDuration,
             switchInCurve: Curves.easeOutCubic,
             switchOutCurve: Curves.easeInCubic,
             transitionBuilder: (child, animation) => FadeTransition(
@@ -218,7 +220,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
                 Padding(
                   padding: EdgeInsets.only(top: showWindowButtons ? titleBarHeight*0.7 : 0),
                   child: AnimatedSwitcher(
-                    duration: 300.milliseconds,
+                    duration: widget.transitionsDuration,
                     switchInCurve: Curves.easeOutCubic,
                     switchOutCurve: Curves.easeInCubic,
                     transitionBuilder: (child, animation) => FadeTransition(
@@ -261,7 +263,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
             titleSpacing: 8,
             toolbarHeight: toolbarHeight,
             title: AnimatedSwitcher(
-              duration: 300.milliseconds,
+              duration: widget.transitionsDuration,
               switchInCurve: Curves.easeOutCubic,
               switchOutCurve: Curves.easeInCubic,
               transitionBuilder: (child, animation) => FadeTransition(

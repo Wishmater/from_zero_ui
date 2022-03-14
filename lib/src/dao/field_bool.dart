@@ -365,7 +365,7 @@ class BoolField extends Field<BoolComparable> {
               value: value!.value,
               dense: true,
               controlAffinity: listTileControlAffinity,
-              contentPadding: EdgeInsets.symmetric(horizontal: dense ? 0 : 8),
+              contentPadding: EdgeInsets.only(left: dense ? 0 : 8, right: dense ? 0 : 8, bottom: dense ? 16 : 0),
               tileColor: dense && validationErrors.isNotEmpty
                   ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
                   : backgroundColor?.call(context, this, dao),

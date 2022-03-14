@@ -303,9 +303,15 @@ class NumField extends Field<num> {
                     controller: controller,
                     enabled: enabled,
                     focusNode: focusNode,
+                    toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
+                      copy: false, cut: false, paste: false, selectAll: false,
+                    ),
+                    onEditingComplete: () {
+                      focusNode.nextFocus();
+                    },
                     onChanged: (v) {
                       final textVal = _getTextVal(v);
-                      if (v.isEmpty || v.characters.last=='.' || v.characters.last==',') {
+                      if (v.isEmpty || v.characters.last=='.' || v.characters.last==',' || !isEdited) {
                         value = textVal;
                       } else if (value!=textVal) {
                         addUndoEntry(value);

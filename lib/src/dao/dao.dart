@@ -16,10 +16,10 @@ import 'field_list.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 
-typedef Future<ModelType?> OnSaveCallback<ModelType>(BuildContext context, DAO<ModelType> e);
+typedef FutureOr<ModelType?> OnSaveCallback<ModelType>(BuildContext context, DAO<ModelType> e);
 typedef ApiState<ModelType?> OnSaveAPICallback<ModelType>(BuildContext context, DAO<ModelType> e);
 typedef void OnDidSaveCallback<ModelType>(BuildContext context, ModelType? model, DAO<ModelType> dao);
-typedef Future<String?> OnDeleteCallback<ModelType>(BuildContext context, DAO<ModelType> e);
+typedef FutureOr<String?> OnDeleteCallback<ModelType>(BuildContext context, DAO<ModelType> e);
 typedef ApiState OnDeleteAPICallback<ModelType>(BuildContext context, DAO<ModelType> e);
 typedef void OnDidDeleteCallback<ModelType>(BuildContext context, DAO<ModelType> dao);
 typedef Widget DAOWidgetBuilder<ModelType>(BuildContext context, DAO<ModelType> dao);
@@ -164,10 +164,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   bool operator == (dynamic other) => (other is DAO)
       && (id==null
           ? hashCode==other.hashCode
-          : (this.classUiName==other.classUiName && this.id==other.id));
+          : (this.runtimeType==other.runtimeType && this.id==other.id));
 
   @override
-  int get hashCode => id==null ? super.hashCode : (classUiName+id.toString()).hashCode;
+  int get hashCode => id==null ? super.hashCode : (runtimeType.hashCode+id.hashCode).hashCode;
 
 
   bool blockNotifyListeners = false;
@@ -1686,7 +1686,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                           showDefaultSnackBars: showDefaultSnackBars,
                           askForSaveConfirmation: askForSaveConfirmation,
                         );
-                        if (result != null) {
+                        if (result!=null) {
                           if (popAfterSuccessfulSave) {
                             Navigator.of(context).pop(result);
                           }

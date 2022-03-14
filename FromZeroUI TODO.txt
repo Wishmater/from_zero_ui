@@ -39,6 +39,7 @@ fix part of the screen not being draggable on really big screens
 	
 popupFromZero doesn't reposition child in response to window resize
 
+DAO -- Async validation should stop previous validation if a new one is called
 
 
 
@@ -86,6 +87,9 @@ Windows Increase mouse wheel scroll speed and add animation
 	only when the mouse wheel is click (not smooth)
 	
 popupFromZero improvement: on dektop, popup should not block content behind it by default (use Overlay)
+
+Make FromZeroAppbar expanded widget close only on back button, not on WillPop 
+	https://pub.dev/packages/back_button_interceptor
 
 Organize dependencies
 	remove all dependency overrides

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +13,7 @@ import 'package:from_zero_ui/src/ui_utility/util.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
 
-typedef ValidationError? FieldValidator<T extends Comparable>(BuildContext context, DAO dao, Field<T> field);
+typedef FutureOr<ValidationError?> FieldValidator<T extends Comparable>(BuildContext context, DAO dao, Field<T> field);
 typedef T FieldValueGetter<T, R extends Field>(R field, DAO dao);
 typedef T ContextFulFieldValueGetter<T, R extends Field>(BuildContext context, R field, DAO dao);
 typedef Widget ViewWidgetBuilder<T extends Comparable>(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons,});
@@ -267,12 +268,16 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     if (validateIfNotEdited) {
       passedFirstEdit = true;
     }
-    validators.forEach((e) {
-      final error = e(context, dao, this);
+    final List<FutureOr<ValidationError?>> futureErrors = [];
+    for (final e in validators) {
+      futureErrors.add(e(context, dao, this));
+    }
+    for (final e in futureErrors) {
+      final error = await e; // TODO 2 this probably needs a try/catch in case the future throws
       if (error!=null && (error.isBeforeEditing || passedFirstEdit || validateIfNotEdited)) {
         validationErrors.add(error);
       }
-    });
+    }
     validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
     return validationErrors.where((e) => e.isBlocking).isEmpty;
   }

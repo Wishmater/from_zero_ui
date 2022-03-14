@@ -376,12 +376,15 @@ class SaveConfirmationValidationMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     List<ValidationError> warnings = [];
+    List<ValidationError> redWarnings = [];
     List<ValidationError> errors = [];
     List<ValidationError> unfinished = [];
     for (final e in allErrors) {
       if (e.isVisibleAsSaveConfirmation) {
         if (e.severity==ValidationErrorSeverity.unfinished) {
           unfinished.add(e);
+        } else if (e.severity==ValidationErrorSeverity.nonBlockingError) {
+          redWarnings.add(e);
         } else if (e.isBlocking) {
           errors.add(e);
         } else {
@@ -396,6 +399,11 @@ class SaveConfirmationValidationMessage extends StatelessWidget {
           name: FromZeroLocalizations.of(context).translate("errors") + ':',
           severity: ValidationErrorSeverity.error,
           errors: errors,
+        ),
+        SaveConfirmationValidationMessageGroup(
+          name: FromZeroLocalizations.of(context).translate("warnings") + ':',
+          severity: ValidationErrorSeverity.error,
+          errors: redWarnings,
         ),
         SaveConfirmationValidationMessageGroup(
           name: FromZeroLocalizations.of(context).translate("warnings") + ':',

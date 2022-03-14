@@ -15,6 +15,7 @@ import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
 import 'package:sliver_tools/sliver_tools.dart';
+import 'package:dartx/dartx.dart';
 
 
 typedef List<RowAction<T>> RowActionsBuilder<T>(BuildContext context);
@@ -68,6 +69,33 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   set value(ComparableList<T>? value) {
     assert(value!=null, 'ListField is non-nullable by design.');
     super.value = value;
+    tableController.reInit();
+  }
+  @override
+  void commitUndo(ComparableList<T>? currentValue, {
+    bool removeEntryFromDAO = false,
+    bool requestFocus = true,
+  }) {
+    super.commitUndo(currentValue,
+      removeEntryFromDAO: removeEntryFromDAO,
+      requestFocus: requestFocus,
+    );
+    tableController.reInit();
+  }
+  @override
+  void commitRedo(ComparableList<T>? currentValue, {
+    bool removeEntryFromDAO = false,
+    bool requestFocus = true,
+  }) {
+    super.commitRedo(currentValue,
+      removeEntryFromDAO: removeEntryFromDAO,
+      requestFocus: requestFocus,
+    );
+    tableController.reInit();
+  }
+  @override
+  void revertChanges() {
+    super.revertChanges();
     tableController.reInit();
   }
 
@@ -183,7 +211,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         this.actionDeleteBreakpoints = actionDeleteBreakpoints ?? {0: ActionState.icon},
         this.actionViewBreakpoints = actionViewBreakpoints ?? (viewOnRowTap ?? (onRowTap==null && !tableCellsEditable) ? {0: ActionState.popup} : {0: ActionState.icon}),
         this.tableController = tableController ?? TableController(),
-        this.allowAddNew = objectTemplate.canSave,
+        this.allowAddNew = allowAddNew ?? objectTemplate.canSave,
         super(
           uiNameGetter: uiNameGetter,
           value: ComparableList(list: objects),
@@ -425,6 +453,29 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     focusObject(elements.first);
   }
 
+  bool replaceRow(T oldRow, T newRow) => replaceRows({oldRow: newRow});
+  bool replaceRows(Map<T, T> elements) {
+    bool result = true;
+    final newValue = value!.copyWith();
+    elements.forEach((key, value) {
+      value.parentDAO = dao;
+      int index = newValue.indexOf(key);
+      if (index>=0) {
+        newValue.removeAt(index);
+      } else {
+        result = false;
+      }
+      if (index>=0) {
+        newValue.insert(index, value);
+      } else {
+        newValue.add(value);
+      }
+    });
+    value = newValue;
+    focusObject(elements.values.first);
+    return result;
+  }
+
   void duplicateRow(T element) => duplicateRows([element]);
   void duplicateRows(List<T> elements) {
     final newValue = value!.copyWith();
@@ -441,8 +492,8 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     focusObject(elements.first);
   }
 
-  Future<bool> removeRow(T element) => removeRows([element]);
-  Future<bool> removeRows(List<T> elements) async {
+  bool removeRow(T element) => removeRows([element]);
+  bool removeRows(List<T> elements) {
     bool result = false;
     final newValue = value!.copyWith();
     elements.forEach((e) {
@@ -661,8 +712,10 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       dynamic result;
       if (showEditDialogOnAdd) {
         result = await emptyDAO.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
-      }
-      if (result!=null) {
+        if (result!=null) {
+          addRow(emptyDAO, insertIndex);
+        }
+      } else {
         addRow(emptyDAO, insertIndex);
       }
     }
@@ -1304,7 +1357,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         }
         final extraRowActions = extraRowActionsBuilder?.call(context) ?? [];
         Widget result = TableFromZero<T>(
-          // key: ValueKey(objects.length),
+          // key: ValueKey(value.hashCode),
           scrollController: mainScrollController,
           minWidth: width,
           initialSortedColumn: initialSortedColumn,
@@ -1312,6 +1365,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           alternateRowBackgroundSmartly: false,
           onFilter: onFilter,
           exportPathForExcel: exportPathForExcel,
+          computeFiltersInIsolate: false, // TODO 1 how to allow DAO to be passed to isolate
           columns: propsShownOnTable.map((key, value) {
             final SimpleColModel result = value.getColModel();
             if (tableFilterable!=null) {
@@ -1374,12 +1428,12 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
               title: FromZeroLocalizations.of(context).translate('edit'),
               breakpoints: actionEditBreakpoints,
               onRowTap: (context, row) async {
-                row.id.parentDAO = null;
-                row.id.contextForValidation = dao.contextForValidation;
-                final result = await row.id.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
-                row.id.parentDAO = dao;
+                final copy = row.id.copyWith() as T;
+                copy.parentDAO = null;
+                copy.contextForValidation = dao.contextForValidation;
+                final result = await copy.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
                 if (result!=null) {
-                  passedFirstEdit = true;
+                  replaceRow(row.id, copy);
                   notifyListeners();
                 }
               },
@@ -1618,6 +1672,8 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     collapsed ??= this.collapsed;
     return EnsureVisibleWhenFocused(
       focusNode: focusNode,
+      // alignmentStart: 0,
+      // alignmentEnd: 0,
       child: Focus(
         focusNode: focusNode,
         key: headerGlobalKey,

@@ -312,6 +312,12 @@ class StringField extends Field<String> {
                   controller: controller,
                   enabled: enabled,
                   focusNode: focusNode,
+                  toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
+                    copy: false, cut: false, paste: false, selectAll: false,
+                  ),
+                  onEditingComplete: () {
+                    focusNode.nextFocus();
+                  },
                   minLines: minLines,
                   maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
                   obscureText: obfuscate,
