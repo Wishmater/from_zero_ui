@@ -441,7 +441,7 @@ class NumField extends Field<num> {
     return SimpleColModel(
       name: field.uiName,
       filterEnabled: true,
-      flex: field.tableColumnWidth?.round(),
+      flex: field.tableColumnWidth?.round() ?? 192,
       alignment: TextAlign.right,
       defaultSortAscending: false,
     );

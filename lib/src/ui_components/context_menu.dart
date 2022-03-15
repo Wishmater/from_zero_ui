@@ -14,6 +14,7 @@ class ContextMenuFromZero extends StatefulWidget {
   final double contextMenuWidth;
   final Alignment anchorAlignment;
   final Alignment popupAlignment;
+  final Offset offsetCorrection;
   final Color? barrierColor;
   final bool useCursorLocation;
   /// Default true. Set to false so menu will only be shown manually. Useful when stacking with a button.
@@ -29,6 +30,7 @@ class ContextMenuFromZero extends StatefulWidget {
     this.contextMenuWidth = 192,
     this.anchorAlignment = Alignment.bottomRight,
     this.popupAlignment = Alignment.bottomRight,
+    this.offsetCorrection = Offset.zero,
     this.barrierColor,
     this.useCursorLocation = true,
     this.addGestureDetector = true,
@@ -58,6 +60,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
         width: widget.contextMenuWidth,
         popupAlignment: widget.popupAlignment,
         anchorAlignment: widget.anchorAlignment,
+        offsetCorrection: widget.offsetCorrection,
         barrierColor: widget.barrierColor,
         builder: (context) {
           return widget.contextMenuWidget ?? ListView.builder(

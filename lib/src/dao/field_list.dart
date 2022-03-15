@@ -37,7 +37,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   bool collapsible;
   bool viewOnRowTap;
   bool asPopup;
-  String Function(ListField field) toStringGetter;
+  String Function(ListField<T> field) toStringGetter;
   Map<double, ActionState> actionViewBreakpoints;
   Map<double, ActionState> actionEditBreakpoints;
   Map<double, ActionState> actionDuplicateBreakpoints;

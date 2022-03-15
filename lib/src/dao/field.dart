@@ -298,7 +298,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     return SimpleColModel(
       name: field.uiName,
       filterEnabled: true,
-      flex: field.tableColumnWidth?.round(),
+      flex: field.tableColumnWidth?.round() ?? 192,
     );
   }
 

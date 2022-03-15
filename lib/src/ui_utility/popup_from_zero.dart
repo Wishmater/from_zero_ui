@@ -14,6 +14,7 @@ Future<T?> showPopupFromZero<T>({
   double? width,
   Alignment anchorAlignment = Alignment.topCenter,
   Alignment popupAlignment = Alignment.bottomCenter,
+  Offset offsetCorrection = Offset.zero,
   Color? barrierColor,
   bool barrierDismissible = true,
   // TODO 2 add an option to highlight the anchor (don't paint barrier over it), default true in ContextMenuFromZero
@@ -31,6 +32,7 @@ Future<T?> showPopupFromZero<T>({
         width: width,
         anchorAlignment: anchorAlignment,
         popupAlignment: popupAlignment,
+        offsetCorrection: offsetCorrection,
       );
     },
   );
@@ -45,6 +47,7 @@ class PopupFromZero extends StatefulWidget {
   final double? width;
   final Alignment anchorAlignment;
   final Alignment popupAlignment;
+  final Offset offsetCorrection;
 
   PopupFromZero({
     Key? key,
@@ -54,6 +57,7 @@ class PopupFromZero extends StatefulWidget {
     this.width,
     this.anchorAlignment = Alignment.topCenter,
     this.popupAlignment = Alignment.bottomCenter,
+    this.offsetCorrection = Offset.zero,
     required this.builder,
   }) :  assert(anchorKey!=null || (referencePosition!=null && referenceSize!=null)),
         super(key: key);
@@ -185,7 +189,8 @@ class _PopupFromZeroState extends State<PopupFromZero> {
                       ? Duration(milliseconds: 250)
                       : Duration.zero,
                   curve: Curves.easeOutCubic,
-                  left: x, top: y,
+                  left: x + widget.offsetCorrection.dx,
+                  top: y + widget.offsetCorrection.dy,
                   width: currentChildWidth,
                   height: currentChildHeight,
                   child: Card(

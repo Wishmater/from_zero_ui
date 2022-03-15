@@ -211,6 +211,7 @@ class DateField extends Field<DateTime> {
           onSelected: (v) {value=v;},
           popupWidth: maxWidth,
           buttonPadding: dense ? EdgeInsets.zero : null,
+          formatter: formatter,
           buttonChildBuilder: (context, title, hint, value, formatter, enabled, clearable) {
             return _buttonContentBuilder(context, title, hint, value, formatter, enabled, clearable,
               dense: dense,
@@ -300,7 +301,7 @@ class DateField extends Field<DateTime> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 dense
-                    ? Text(value==null ? (hint ?? title ?? '') : value.toString(), style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                    ? Text(value==null ? (hint ?? title ?? '') : formatter.format(value), style: Theme.of(context).textTheme.subtitle1!.copyWith(
                         height: 0.8,
                         color: value==null ? Theme.of(context).textTheme.caption!.color!
                             : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
@@ -340,7 +341,7 @@ class DateField extends Field<DateTime> {
       name: field.uiName,
       filterEnabled: true,
       defaultSortAscending: false,
-      flex: field.tableColumnWidth?.round(),
+      flex: field.tableColumnWidth?.round() ?? 192,
     );
   }
 

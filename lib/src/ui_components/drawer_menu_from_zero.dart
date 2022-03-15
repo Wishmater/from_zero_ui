@@ -621,6 +621,10 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
           if (!_menuButtonKeys.containsKey(i)) _menuButtonKeys[i] = GlobalKey();
           final scaffoldChangeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
+          GoRouteFromZero? route;
+          try {
+            route = GoRouteFromZero.of(context);
+          } catch(_) {}
           final title = getTreeOverlay(
             DrawerMenuButtonFromZero(
               key: tabs[i].itemKey,
@@ -724,6 +728,9 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             popupAlignment: Alignment.bottomRight,
             useCursorLocation: false,
             contextMenuWidth: 304,
+            offsetCorrection: Offset(
+                route==null ? 0 : scaffoldChangeNotifier.getCurrentDrawerWidth(route.pageScaffoldId),
+                6),
             contextMenuWidget: DrawerMenuFromZero(
               popup: true,
               tabs: tabs[i].children!,
