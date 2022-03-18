@@ -58,7 +58,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   bool? tableSortable;
   bool? tableFilterable;
   bool expandHorizontally;
-  List<ValidationError> listValidationErrors = [];
+  List<ValidationError> listFieldValidationErrors = [];
   Widget? icon; /// only used if !collapsible
   List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   FutureOr<String>? exportPathForExcel;
@@ -276,7 +276,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     bool validateIfNotEdited=false,
   }) async {
     final superResult = super.validate(context, dao, validateIfNotEdited: validateIfNotEdited);
-    listValidationErrors = List.from(validationErrors);
     List<Future<bool>> results = [];
     final templateProps = objectTemplate.props;
     for (final e in objects) {
@@ -291,6 +290,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       }
     }
     bool success = await superResult;
+    listFieldValidationErrors = List.from(validationErrors);
     for (final e in results) {
       success = success && await e;
     }
@@ -1199,14 +1199,14 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         );
         result = AnimatedContainer(
           duration: Duration(milliseconds: 300),
-          color: dense && validationErrors.isNotEmpty
-              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+          color: dense && listFieldValidationErrors.isNotEmpty
+              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![listFieldValidationErrors.first.severity]!.withOpacity(0.2)
               : backgroundColor?.call(context, this, dao),
           curve: Curves.easeOut,
           child: result,
         );
         result = TooltipFromZero(
-          message: validationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+          message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
             return a.toString().trim().isEmpty ? b.toString()
                 : b.toString().trim().isEmpty ? a.toString()
                 : '$a\n$b';
@@ -1255,7 +1255,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                 child: result,
               ),
               if (!dense)
-                ValidationMessage(errors: validationErrors),
+                ValidationMessage(errors: listFieldValidationErrors),
             ],
           ),
         ),
@@ -1340,7 +1340,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         builtRows = {};
         for (final e in objects) {
           final onRowTap = this.onRowTap ?? (viewOnRowTap ? (row) {
-            e.pushViewDialog(context);
+            e.pushViewDialog(dao.contextForValidation ?? context);
           } : null);
           builtRows[e] = SimpleRowModel(
             id: e,
@@ -1427,7 +1427,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
               breakpoints: actionViewBreakpoints,
               onRowTap: (context, row) async {
                 row.focusNode.requestFocus();
-                row.id.pushViewDialog(context);
+                row.id.pushViewDialog(dao.contextForValidation ?? context);
               },
             ),
             RowAction<T>(
@@ -1549,7 +1549,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           collapsed: collapsed,
         ),
       if (!dense)
-        ValidationMessage(errors: listValidationErrors),
+        ValidationMessage(errors: listFieldValidationErrors),
     ];
     if (asSliver) {
       resultList = resultList.map((e) => (e==result) ? e : SliverToBoxAdapter(child: e,)).toList();

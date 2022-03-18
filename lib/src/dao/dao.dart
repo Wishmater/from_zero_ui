@@ -694,6 +694,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool showUndoRedo = true,
   }) async {
     final props = this.props;
+    parentDAO = null;
     props.values.forEach((e) {
       e.passedFirstEdit = false;
       e.undoValues.clear();
@@ -1164,7 +1165,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
 
 
-  Future<dynamic> pushViewDialog(BuildContext context, {
+  Future<dynamic> pushViewDialog(BuildContext mainContext, {
     bool? showEditButton,
     bool? useIntrinsicWidth,
     bool? useIntrinsicHeight,
@@ -1203,8 +1204,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   ),
                   if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
                     TextButton(
-                      onPressed: () {
-                        maybeEdit(context);
+                      onPressed: () async {
+                        maybeEdit(mainContext);
                       },
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
@@ -1277,7 +1278,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     if (useIntrinsicHeight ?? useIntrinsicHeightForViewDialog) {
       content = IntrinsicHeight(child: content,);
     }
-    return showModal(context: context,
+    return showModal(context: mainContext,
       builder: (context) {
         return Center(
           child: Dialog(
@@ -1315,77 +1316,78 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         if (fields.isEmpty) {
           result = SizedBox.shrink();
         } else {
-          result = Column(
-            mainAxisSize: MainAxisSize.min,
-            children: fields.map((e) {
-              clear = !clear;
-              if (e is ListField && e.buildViewWidgetAsTable) {
-                clear = false;
-                final newField = e.copyWith(
-                  tableCellsEditable: false,
-                  allowAddNew: false,
-                  actionViewBreakpoints: {0: ActionState.icon},
-                  actionDeleteBreakpoints: {0: ActionState.none},
-                  actionDuplicateBreakpoints: {0: ActionState.none},
-                  actionEditBreakpoints: {0: ActionState.none},
-                );
-                newField.dao = e.dao;
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 16,),
-                    ...newField.buildFieldEditorWidgets(context,
-                      dense: false,
-                      addCard: false,
-                      asSliver: false,
-                      expandToFillContainer: false,
-                      mainScrollController: mainScrollController,
-                    ),
-                    SizedBox(height: 16,),
-                  ],
-                );
-              } else {
-                return Material(
-                  color: clear ? Theme.of(context).cardColor
-                      : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
-                  child: IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          flex: 1000000,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-                            child: SelectableText(e.uiName,
-                              style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                                color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
-                                wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
-                              ),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
-                        ),
-                        Container(
-                          height: 24,
-                          child: VerticalDivider(width: 0,),
-                        ),
-                        Expanded(
-                          flex: 1618034,
-                          child: Container(
-                            alignment: Alignment.centerLeft,
-                            child: e.buildViewWidget(context,
-                              linkToInnerDAOs: this.viewDialogLinksToInnerDAOs,
-                              showViewButtons: this.viewDialogShowsViewButtons,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-            }).toList(),
-          );
+          result = SizedBox.shrink();
+          // result = Column(
+          //   mainAxisSize: MainAxisSize.min,
+          //   children: fields.map((e) {
+          //     clear = !clear;
+          //     if (e is ListField && e.buildViewWidgetAsTable) {
+          //       clear = false;
+          //       final newField = e.copyWith(
+          //         tableCellsEditable: false,
+          //         allowAddNew: false,
+          //         actionViewBreakpoints: {0: ActionState.icon},
+          //         actionDeleteBreakpoints: {0: ActionState.none},
+          //         actionDuplicateBreakpoints: {0: ActionState.none},
+          //         actionEditBreakpoints: {0: ActionState.none},
+          //       );
+          //       newField.dao = e.dao;
+          //       return Column(
+          //         mainAxisSize: MainAxisSize.min,
+          //         children: [
+          //           SizedBox(height: 16,),
+          //           ...newField.buildFieldEditorWidgets(context,
+          //             dense: false,
+          //             addCard: false,
+          //             asSliver: false,
+          //             expandToFillContainer: false,
+          //             mainScrollController: mainScrollController,
+          //           ),
+          //           SizedBox(height: 16,),
+          //         ],
+          //       );
+          //     } else {
+          //       return Material(
+          //         color: clear ? Theme.of(context).cardColor
+          //             : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
+          //         child: IntrinsicHeight(
+          //           child: Row(
+          //             crossAxisAlignment: CrossAxisAlignment.stretch,
+          //             children: [
+          //               Expanded(
+          //                 flex: 1000000,
+          //                 child: Padding(
+          //                   padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+          //                   child: SelectableText(e.uiName,
+          //                     style: Theme.of(context).textTheme.bodyText1!.copyWith(
+          //                       color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+          //                       wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
+          //                     ),
+          //                     textAlign: TextAlign.right,
+          //                   ),
+          //                 ),
+          //               ),
+          //               Container(
+          //                 height: 24,
+          //                 child: VerticalDivider(width: 0,),
+          //               ),
+          //               Expanded(
+          //                 flex: 1618034,
+          //                 child: Container(
+          //                   alignment: Alignment.centerLeft,
+          //                   child: e.buildViewWidget(context,
+          //                     linkToInnerDAOs: this.viewDialogLinksToInnerDAOs,
+          //                     showViewButtons: this.viewDialogShowsViewButtons,
+          //                   ),
+          //                 ),
+          //               ),
+          //             ],
+          //           ),
+          //         ),
+          //       );
+          //     }
+          //   }).toList(),
+          // );
         }
         if (!first || group.name!=null) {
           result = Column(
