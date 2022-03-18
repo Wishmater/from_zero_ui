@@ -373,10 +373,12 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
             children: [
               Expanded(
                 child: SelectableText(field.toString(),
-                  style: Theme.of(context).textTheme.subtitle1,
+                  style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                    wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
+                  ),
                 ),
               ),
-              if (showViewButtons && (field.value is DAO))
+              if (linkToInnerDAOs && showViewButtons && (field.value is DAO))
                 Padding(
                   padding: EdgeInsets.only(left: 12),
                   child: IconButton(

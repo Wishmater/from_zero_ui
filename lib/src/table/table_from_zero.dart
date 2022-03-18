@@ -13,6 +13,7 @@ import 'package:from_zero_ui/src/ui_utility/notification_relayer.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:from_zero_ui/src/table/table_from_zero_filters.dart';
 import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
+import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:from_zero_ui/util/my_sticky_header.dart';
 import 'package:from_zero_ui/util/my_sliver_sticky_header.dart';
@@ -309,19 +310,46 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   }
 
   void initFilters([bool? computeFiltersInIsolate]) async {
-    final Map<dynamic, List<dynamic>> computedAvailableFilters;
-    final Map<dynamic, Map<Object, bool>>? computedValidInitialFilters;
+    Map<dynamic, List<dynamic>> computedAvailableFilters;
+    Map<dynamic, Map<Object, bool>>? computedValidInitialFilters;
     if (computeFiltersInIsolate ?? widget.computeFiltersInIsolate ?? widget.rows.length>50) {
       try {
+        final Map<dynamic, Map<dynamic, Field>> fieldAliases = {
+          for (final key in widget.columns!.keys) key: {},
+        };
+        final Map<dynamic, Map<dynamic, DAO>> daoAliases = {
+          for (final key in widget.columns!.keys) key: {},
+        };
+        // TODO 2 cancel isolate computations if widget is disposed or initFilters is called again
         computedAvailableFilters = await compute(_getAvailableFilters,
             [
               widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
-              widget.rows.map((e) => e.values).toList(),
+              widget.rows.map((e) {
+                return e.values.map((key, value) {
+                  return MapEntry(key, _sanitizeValueForIsolate(key, value, // TODO 2 performance, maybe allow to manually disable sanitization
+                    fieldAliases: fieldAliases[key]!,
+                    daoAliases: daoAliases[key]!,
+                  ));
+                });
+              }).toList(),
             ]);
-        computedValidInitialFilters = await compute(_getValidInitialFilters,
-            [valueFilters, computedAvailableFilters]);
-      } catch (_) {
+        computedAvailableFilters = computedAvailableFilters.map((key, value) {
+          if (fieldAliases.isEmpty && daoAliases.isEmpty) {
+            return MapEntry(key, value);
+          } else {
+            final result = value.map((e) => fieldAliases[key]![e] ?? daoAliases[key]![e] ?? e).toList();
+            result.sort((a, b) => defaultComparator(a, b, sortedAscending));
+            return MapEntry(key, result);
+          }
+        });
+        if (valueFiltersApplied.values.where((e) => e==true).isNotEmpty) {
+          computedValidInitialFilters = await compute(_getValidInitialFilters,
+              [valueFilters, computedAvailableFilters]);
+        }
+      } catch (e, st) {
         print('Isolate creation for computing table filters failed. Computing synchronously...');
+        print(e);
+        print(st);
         initFilters(false);
         return;
       }
@@ -341,6 +369,40 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       filter();
     }
   }
+  static dynamic _sanitizeValueForIsolate(dynamic key, dynamic value, {
+    required Map<dynamic, Field> fieldAliases,
+    required Map<dynamic, DAO> daoAliases,
+  }) {
+    if (value is List) {
+      return value.map((e) => _sanitizeValueForIsolate(key, e,
+        fieldAliases: fieldAliases,
+        daoAliases: daoAliases,
+      )).toList();
+    } else if (value is ComparableList) {
+      return value.list.map((e) => _sanitizeValueForIsolate(key, e,
+        fieldAliases: fieldAliases,
+        daoAliases: daoAliases,
+      )).toList();
+    } else if (value is Field) {
+      final newValue = _sanitizeValueForIsolate(key, value.value,
+        fieldAliases: fieldAliases,
+        daoAliases: daoAliases,
+      );
+      if (value is! ListField) {
+        fieldAliases[newValue] = value;
+      }
+      return newValue;
+    } else if (value is DAO) {
+      final newValue = _sanitizeValueForIsolate(key, value.id ?? value.hashCode,
+        fieldAliases: fieldAliases,
+        daoAliases: daoAliases,
+      );
+      daoAliases[newValue] = value;
+      return newValue;
+    } else {
+      return value;
+    }
+  }
   static Map<dynamic, List<dynamic>> _getAvailableFilters(List<dynamic> params) {
     final Map<dynamic, List<bool?>> columnOptions = params[0];
     final List<Map<dynamic, dynamic>> rowValues = params[1];
@@ -350,8 +412,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       if (options[0] ?? true) { // filterEnabled
         rowValues.forEach((row) {
           final element = row[key];
-          if (element is List) {
-            for (final e in element) {
+          if (element is List || element is ComparableList || element is ListField) {
+            final List list = element is List ? element
+                : element is ComparableList ? element.list
+                : element is ListField ? element.objects : [];
+            for (final e in list) {
               if (!available.contains(e)) {
                 available.add(e);
               }
@@ -364,23 +429,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         });
       }
       bool sortAscending = options[1] ?? true; // defaultSortAscending
-      available.sort((a, b) {
-        int result;
-        if (a==null || b==null) {
-          if (a==null && b==null) {
-            return 0;
-          } else if (a==null) {
-            return -1;
-          } else {
-            return 1;
-          }
-        } else if (a is Comparable) {
-          result = a.compareTo(b);
-        } else {
-          result = a.toString().compareTo(b.toString());
-        }
-        return sortAscending ? result : result * -1;
-      });
+      available.sort((a, b) => defaultComparator(a, b, sortAscending));
       availableFilters[key] = available;
     });
     return availableFilters;
@@ -1451,8 +1500,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     // final col = widget.columns?[colKey];
     final value = row.values[colKey];
     String message;
-    if (value is List) {
-      message = ListField.listToStringAll(value);
+    if (value is List || value is ComparableList) {
+      final List list = value is List ? value
+          : value is ComparableList ? value.list : [];
+      message = ListField.listToStringAll(list);
     } else {
       message = value!=null ? value.toString() : "";
     }
@@ -1624,9 +1675,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       for (final key in valueFilters.keys) {
         if (valueFiltersApplied[key]!) {
           final value = element.values[key];
-          if (value is List) {
+          if (value is List || value is ComparableList || value is ListField) {
+            final List list = value is List ? value
+                : value is ComparableList ? value.list
+                : value is ListField ? value.objects : [];
             pass = false;
-            for (final e in value) {
+            for (final e in list) {
               pass = valueFilters[key]![e] ?? false;
               if (pass) {
                 break; // make it pass true if at least 1 element is accepted
@@ -1686,6 +1740,24 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       }
     }
     return false;
+  }
+
+  static int defaultComparator(a, b, bool sortAscending) {
+    int result;
+    if (a==null || b==null) {
+      if (a==null && b==null) {
+        return 0;
+      } else if (a==null) {
+        return -1;
+      } else {
+        return 1;
+      }
+    } else if (a is Comparable) {
+      result = a.compareTo(b);
+    } else {
+      result = a.toString().compareTo(b.toString());
+    }
+    return sortAscending ? result : result * -1;
   }
 
 }

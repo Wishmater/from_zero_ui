@@ -1166,93 +1166,115 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
   Future<dynamic> pushViewDialog(BuildContext context, {
     bool? showEditButton,
+    bool? useIntrinsicWidth,
+    bool? useIntrinsicHeight,
   }) {
     ScrollController scrollController = ScrollController();
+    if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
+        && props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty) {
+      useIntrinsicHeight = false;
+      useIntrinsicWidth = false;
+    }
     Widget content = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
-        return IntrinsicWidth(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 24, left: 32, right: 8, bottom: 8,),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SelectableText(uiName,
-                            style: Theme.of(context).textTheme.headline6,
+        Widget result = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 24, left: 32, right: 8, bottom: 8,),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SelectableText(uiName,
+                          style: Theme.of(context).textTheme.headline6,
+                        ),
+                        if (uiName.isNotEmpty)
+                          SelectableText(classUiName,
+                            style: Theme.of(context).textTheme.subtitle2,
                           ),
-                          if (uiName.isNotEmpty)
-                            SelectableText(classUiName,
-                              style: Theme.of(context).textTheme.subtitle2,
-                            ),
-                        ],
-                      ),
+                      ],
                     ),
-                    if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
-                      TextButton(
-                        onPressed: () {
-                          maybeEdit(context);
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(8.0),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(width: 2,),
-                              Icon(Icons.edit_outlined),
-                              SizedBox(width: 6,),
-                              Text('${FromZeroLocalizations.of(context).translate('edit')}', style: TextStyle(fontSize: 16),),
-                              SizedBox(width: 4,),
-                            ],
-                          ),
+                  ),
+                  if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
+                    TextButton(
+                      onPressed: () {
+                        maybeEdit(context);
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(width: 2,),
+                            Icon(Icons.edit_outlined),
+                            SizedBox(width: 6,),
+                            Text('${FromZeroLocalizations.of(context).translate('edit')}', style: TextStyle(fontSize: 16),),
+                            SizedBox(width: 4,),
+                          ],
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
-              Expanded(
-                child: ScrollbarFromZero(
+            ),
+            Expanded(
+              child: ScrollbarFromZero(
+                controller: scrollController,
+                child: SingleChildScrollView(
                   controller: scrollController,
-                  child: SingleChildScrollView(
-                    controller: scrollController,
-                    child: buildViewWidget(context),
+                  child: buildViewWidget(context,
+                    mainScrollController: scrollController
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    FlatButton(
-                      child: Padding(
-                        padding: const EdgeInsets.all(6.0),
-                        child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  FlatButton(
+                    child: Padding(
+                      padding: const EdgeInsets.all(6.0),
+                      child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                       ),
-                      textColor: Theme.of(context).textTheme.caption!.color,
-                      onPressed: () {
-                        Navigator.of(context).pop(); // Dismiss alert dialog
-                      },
                     ),
-                  ],
-                ),
+                    textColor: Theme.of(context).textTheme.caption!.color,
+                    onPressed: () {
+                      Navigator.of(context).pop(); // Dismiss alert dialog
+                    },
+                  ),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         );
+        if (useIntrinsicWidth ?? true) {
+          result = ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: viewDialogWidth*0.5,
+              maxWidth: viewDialogWidth*1.5,
+            ),
+            child: IntrinsicWidth(child: result,),
+          );
+        } else {
+          result = SizedBox(
+            width: viewDialogWidth,
+            child: result,
+          );
+        }
+        return result;
       },
     );
-    if (useIntrinsicHeightForViewDialog) {
+    if (useIntrinsicHeight ?? useIntrinsicHeightForViewDialog) {
       content = IntrinsicHeight(child: content,);
     }
     return showModal(context: context,
@@ -1269,26 +1291,60 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
   Widget buildViewWidget(BuildContext context, {
     List<FieldGroup>? fieldGroups,
+    ScrollController? mainScrollController,
+    bool? useIntrinsicWidth,
+    bool? useIntrinsicHeight,
   }) {
+    if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
+        && props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty) {
+      useIntrinsicHeight = false;
+      useIntrinsicWidth = false;
+    }
     fieldGroups ??= this.fieldGroups;
     if (viewWidgetBuilder!=null) {
       return viewWidgetBuilder!(context, this);
     }
     bool clear = false;
     bool first = true;
-    return IntrinsicWidth(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: fieldGroups.map((group) {
-          final fields = group.props.values.where((e) => !e.hiddenInView);
-          Widget result;
-          if (fields.isEmpty) {
-            result = SizedBox.shrink();
-          } else {
-            result = Column(
-              children: fields.map((e) {
-                clear = !clear;
+    Widget result = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: fieldGroups.map((group) {
+        final fields = group.props.values.where((e) => !e.hiddenInView);
+        Widget result;
+        if (fields.isEmpty) {
+          result = SizedBox.shrink();
+        } else {
+          result = Column(
+            mainAxisSize: MainAxisSize.min,
+            children: fields.map((e) {
+              clear = !clear;
+              if (e is ListField && e.buildViewWidgetAsTable) {
+                clear = false;
+                final newField = e.copyWith(
+                  tableCellsEditable: false,
+                  allowAddNew: false,
+                  actionViewBreakpoints: {0: ActionState.icon},
+                  actionDeleteBreakpoints: {0: ActionState.none},
+                  actionDuplicateBreakpoints: {0: ActionState.none},
+                  actionEditBreakpoints: {0: ActionState.none},
+                );
+                newField.dao = e.dao;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 16,),
+                    ...newField.buildFieldEditorWidgets(context,
+                      dense: false,
+                      addCard: false,
+                      asSliver: false,
+                      expandToFillContainer: false,
+                      mainScrollController: mainScrollController,
+                    ),
+                    SizedBox(height: 16,),
+                  ],
+                );
+              } else {
                 return Material(
                   color: clear ? Theme.of(context).cardColor
                       : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
@@ -1327,37 +1383,41 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     ),
                   ),
                 );
-              }).toList(),
-            );
-          }
-          if (!first || group.name!=null) {
-            result = Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (!first)
-                  Container(
-                    height: 8,
-                    color: Theme.of(context).dividerColor,
-                  ),
-                if (group.name!=null)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 12),
-                    child: Text(group.name!,
-                      style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+              }
+            }).toList(),
+          );
+        }
+        if (!first || group.name!=null) {
+          result = Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (!first)
+                Container(
+                  height: 8,
+                  color: Theme.of(context).dividerColor,
+                ),
+              if (group.name!=null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 12),
+                  child: Text(group.name!,
+                    style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                result,
-              ],
-            );
-          }
-          first = false;
-          return result;
-        }).toList(),
-      ),
+                ),
+              result,
+            ],
+          );
+        }
+        first = false;
+        return result;
+      }).toList(),
     );
+    if (useIntrinsicWidth ?? true) {
+      result = IntrinsicWidth(child: result,);
+    }
+    return result;
   }
 
   Widget buildGroupWidget({

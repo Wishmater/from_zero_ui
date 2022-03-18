@@ -175,6 +175,7 @@ class BoolField extends Field<BoolComparable> {
     ContextFulFieldValueGetter<Color?, Field>? selectedColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<BoolComparable>? viewWidgetBuilder,
+    bool? showBothNeutralAndSpecificUiName,
   }) {
     return BoolField(
       displayType: displayType??this.displayType,
@@ -204,7 +205,13 @@ class BoolField extends Field<BoolComparable> {
       selectedColor: selectedColor ?? this.selectedColor,
       actions: actions ?? this.actions,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
+      showBothNeutralAndSpecificUiName: showBothNeutralAndSpecificUiName ?? this.showBothNeutralAndSpecificUiName,
     );
+  }
+
+  @override
+  String toString() {
+    return showBothNeutralAndSpecificUiName ? '$uiName: $uiNameValue' : '$uiNameValue';
   }
 
 

@@ -62,6 +62,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   Widget? icon; /// only used if !collapsible
   List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   FutureOr<String>? exportPathForExcel;
+  bool buildViewWidgetAsTable;
 
   List<T> get objects => value!.list;
   List<T> get dbObjects => dbValue!.list;
@@ -200,6 +201,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     this.icon,
     this.onFilter,
     this.exportPathForExcel,
+    this.buildViewWidgetAsTable = false,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
@@ -367,6 +369,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     Widget? icon,
     List<RowModel<T>> Function(List<RowModel<T>>)? onFilter,
     FutureOr<String>? exportPathForExcel,
+    bool? buildViewWidgetAsTable,
   }) {
     return ListField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -425,6 +428,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       icon: icon ?? this.icon,
       onFilter: onFilter ?? this.onFilter,
       exportPathForExcel: exportPathForExcel ?? this.exportPathForExcel,
+      buildViewWidgetAsTable: buildViewWidgetAsTable ?? this.buildViewWidgetAsTable,
     );
   }
 
@@ -1368,7 +1372,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           alternateRowBackgroundSmartly: false,
           onFilter: onFilter,
           exportPathForExcel: exportPathForExcel,
-          computeFiltersInIsolate: false, // TODO 1 how to allow DAO to be passed to isolate
+          // computeFiltersInIsolate: false, // TODO 1 how to allow DAO to be passed to isolate
           columns: propsShownOnTable.map((key, value) {
             final SimpleColModel result = value.getColModel();
             if (tableFilterable!=null) {
@@ -1480,18 +1484,17 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                 child: Focus(
                   focusNode: errorWidgetFocusNode,
                   skipTraversal: true,
-                  child: SizedBox(
-                    width: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
-                    child: Material(
-                      color: Theme.of(context).cardColor,
-                      child: InkWell(
-                        onTap: () {
-                          maybeAddRow(context);
-                        },
-                        child: ErrorSign(
-                          title: FromZeroLocalizations.of(context).translate('no_data'),
-                          subtitle: FromZeroLocalizations.of(context).translate('no_data_add'),
-                        ),
+                  child: Material(
+                    color: Theme.of(context).cardColor,
+                    child: InkWell(
+                      onTap: objects.isEmpty ? () {
+                        maybeAddRow(context);
+                      } : null,
+                      child: ErrorSign(
+                        title: FromZeroLocalizations.of(context).translate('no_data'),
+                        subtitle: objects.isEmpty
+                            ? FromZeroLocalizations.of(context).translate('no_data_add')
+                            : FromZeroLocalizations.of(context).translate('no_data_filters'),
                       ),
                     ),
                   ),
@@ -1618,14 +1621,19 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       return SizedBox.shrink();
     }
     final field = fieldParam as ListField;
-    final uiNames = field.objects.map((e) => e.toString()).toList()..sort();
+    final uiNames = {
+      for (final e in field.objects)
+        e: e.toString(),
+    };
+    final List<DAO> sortedObjects = List.from(field.objects);
+    sortedObjects.sort();
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: uiNames.mapIndexed((i, e) {
+        children: sortedObjects.map((e) {
           final onTap = linkToInnerDAOs
-              ? () => field.objects[i].pushViewDialog(context)
+              ? () => e.pushViewDialog(context)
               : null;
           return Stack(
             children: [
@@ -1635,7 +1643,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: SelectableText(e,
+                      child: SelectableText(uiNames[e]!,
                         style: Theme.of(context).textTheme.subtitle1,
                       ),
                     ),
