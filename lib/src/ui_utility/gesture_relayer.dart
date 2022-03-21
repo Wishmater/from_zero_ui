@@ -71,9 +71,20 @@ class _GestureRelayerState extends State<GestureRelayer> {
   }
 
   @override
+  void didUpdateWidget(covariant GestureRelayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeOnPointerDown(_relayOnPointerDown);
+      oldWidget.controller.removeOnPointerSignal(_relayOnPointerSignal);
+      widget.controller.addOnPointerDown(_relayOnPointerDown);
+      widget.controller.addOnPointerSignal(_relayOnPointerSignal);
+    }
+  }
+
+  @override
   void dispose() {
     widget.controller.removeOnPointerDown(_relayOnPointerDown);
-    widget.controller.addOnPointerSignal(_relayOnPointerSignal);
+    widget.controller.removeOnPointerSignal(_relayOnPointerSignal);
     super.dispose();
   }
 
@@ -94,7 +105,6 @@ class _GestureRelayerState extends State<GestureRelayer> {
   void _relayOnPointerSignal(PointerSignalEvent event) {
     if (mounted) {
       context.visitAncestorElements((element) {
-        print(element.runtimeType);
         if (element.widget is Listener) {
           final callback = (element.widget as Listener).onPointerSignal;
           if (callback!=null) {
