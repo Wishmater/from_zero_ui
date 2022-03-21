@@ -169,6 +169,8 @@ class MaterialKeyValuePair extends StatelessWidget {
   final TextStyle? valueStyle;
   final bool frame;
   final double padding;
+  final int? titleMaxLines;
+  final int? valueMaxLines;
 
   MaterialKeyValuePair({
     required this.title,
@@ -177,6 +179,8 @@ class MaterialKeyValuePair extends StatelessWidget {
     this.titleStyle,
     this.valueStyle,
     this.padding = 0,
+    this.titleMaxLines,
+    this.valueMaxLines,
   });
 
   @override
@@ -190,14 +194,20 @@ class MaterialKeyValuePair extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (title!=null)
-                Text(title!, style: titleStyle ?? Theme.of(context).textTheme.caption,),
+                Text(title!,
+                  maxLines: titleMaxLines,
+                  style: titleStyle ?? Theme.of(context).textTheme.caption,
+                ),
               Stack(
                 fit: StackFit.passthrough,
                 children: [
                   if (value!=null)
                     Padding(
                       padding: const EdgeInsets.only(left: 3, bottom: 1),
-                      child: Text(value!, style: valueStyle,),
+                      child: Text(value!,
+                        maxLines: valueMaxLines,
+                        style: valueStyle,
+                      ),
                     ),
                   Positioned.fill(
                     child: Align(
@@ -232,12 +242,14 @@ class MaterialKeyValuePair extends StatelessWidget {
         if (title!=null)
           Text(
             title!,
+            maxLines: titleMaxLines,
             style: titleStyle ?? Theme.of(context).textTheme.caption,
           ),
         SizedBox(height: padding,),
         if (value!=null)
           Text(
             value!,
+            maxLines: valueMaxLines,
             style: valueStyle,
           ),
       ],

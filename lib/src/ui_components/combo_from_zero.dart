@@ -210,6 +210,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
             child: OverflowScroll(
               child: result,
               scrollDirection: Axis.vertical,
+              autoscrollSpeed: null,
             ),
           ),
           focusNode: buttonFocusNode,

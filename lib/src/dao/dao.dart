@@ -394,6 +394,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
     bool? confirm = true;
     if (askForSaveConfirmation) {
+      final scrollController = ScrollController();
       confirm = await showModal(
         context: context,
         builder: (context) {
@@ -401,13 +402,19 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             width: formDialogWidth-32,
             child: AlertDialog(
               title: Text(FromZeroLocalizations.of(context).translate("confirm_save_title")),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(FromZeroLocalizations.of(context).translate("confirm_save_desc")),
-                  SaveConfirmationValidationMessage(allErrors: validationErrors),
-                ],
+              content: ScrollbarFromZero(
+                controller: scrollController,
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(FromZeroLocalizations.of(context).translate("confirm_save_desc")),
+                      SaveConfirmationValidationMessage(allErrors: validationErrors),
+                    ],
+                  ),
+                ),
               ),
               actions: [
                 FlatButton(

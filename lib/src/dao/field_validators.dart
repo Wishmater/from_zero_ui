@@ -461,10 +461,14 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
           return Padding(
             padding: const EdgeInsets.only(left: 15,),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.circle,
-                  size: 10,
-                  color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
+                Padding(
+                  padding: const EdgeInsets.only(top: 6),
+                  child: Icon(Icons.circle,
+                    size: 10,
+                    color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
+                  ),
                 ),
                 SizedBox(width: 8,),
                 Expanded(
