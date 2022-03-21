@@ -614,24 +614,12 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
             );
           },
         );
-        selected = await showModal(
+        selected = await showPopupFromZero(
           context: context,
+          anchorKey: headerGlobalKey,
+          width: emptyDAO.viewDialogWidth,
           builder: (modalContext) {
-            return Center(
-              child: SizedBox(
-                width: 512+128,
-                child: Padding(
-                  padding: EdgeInsets.all(8),
-                  child: Dialog(
-                    clipBehavior: Clip.hardEdge,
-                    child: Container(
-                      color: Theme.of(context).canvasColor,
-                      child: content,
-                    ),
-                  ),
-                ),
-              ),
-            );
+            return content;
           },
         );
       } else {
@@ -725,15 +713,21 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     }
   }
   Widget _availablePoolErrorBuilder(BuildContext context, Object? error, StackTrace? stackTrace, [VoidCallback? onRetry]) {
-    return IntrinsicHeight(
-      child: ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, onRetry),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 42),
+      child: IntrinsicHeight(
+        child: ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, onRetry),
+      ),
     );
   }
 
   Widget _availablePoolLoadingBuilder(BuildContext context, [double? progress]) {
-    return SizedBox(
-      height: 128,
-      child: ApiProviderBuilder.defaultLoadingBuilder(context, progress),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 42),
+      child: SizedBox(
+        height: 128,
+        child: ApiProviderBuilder.defaultLoadingBuilder(context, progress),
+      ),
     );
   }
   Widget _availablePoolTableDataBuilder(BuildContext context, List<T> data, T emptyDAO) {
@@ -741,45 +735,41 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     if (!allowDuplicateObjectsFromAvailablePool) {
       data = data.where((e) => !objects.contains(e)).toList();
     }
+    final listField = ListField(
+      uiNameGetter: (field, dao) => emptyDAO.classUiNamePlural,
+      objectTemplate: emptyDAO,
+      tableCellsEditable: false,
+      collapsible: false,
+      actionDeleteBreakpoints: {0: ActionState.none},
+      actionViewBreakpoints: actionViewBreakpoints,
+      actionEditBreakpoints: actionEditBreakpoints,
+      objects: data,
+      allowAddNew: allowAddNew && emptyDAO.canSave,
+      onRowTap: (value) {
+        Navigator.of(context).pop(value.id);
+      },
+    );
+    listField.dao = dao;
     return ScrollbarFromZero(
       controller: scrollController,
-      child: ScrollOpacityGradient(
-        scrollController: scrollController,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: SingleChildScrollView(
-            controller: scrollController,
+      child: CustomScrollView(
+        controller: scrollController,
+        shrinkWrap: true,
+        slivers: [
+          SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.only(top: 16, bottom: 32),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
-                    child: Text('${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
-                      style: Theme.of(context).textTheme.headline6,
-                    ),
-                  ),
-                  ...ListField(
-                    uiNameGetter: (field, dao) => emptyDAO.classUiNamePluralGetter(dao),
-                    objectTemplate: emptyDAO,
-                    tableCellsEditable: false,
-                    collapsible: false,
-                    actionDeleteBreakpoints: {0: ActionState.none},
-                    objects: data,
-                    allowAddNew: allowAddNew && emptyDAO.canSave,
-                    onRowTap: (value) {
-                      Navigator.of(context).pop(value.id);
-                    },
-                  ).buildFieldEditorWidgets(context,
-                    expandToFillContainer: true,
-                    asSliver: false,
-                  ),
-                  SizedBox(height: 16+42,),
-                ],
+              padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
+              child: Text('${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
+                style: Theme.of(context).textTheme.headline6,
               ),
             ),
           ),
-        ),
+          ...listField.buildFieldEditorWidgets(context,
+            asSliver: true,
+            addCard: false,
+          ),
+          SliverToBoxAdapter(child: SizedBox(height: 32+16+42,)),
+        ],
       ),
     );
   }
@@ -823,7 +813,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
   Future<bool> maybeDelete(BuildContext context, List<T> elements,) async {
     if (elements.isEmpty) return false;
-    bool? delete = skipDeleteConfirmation || (await showDialog(
+    bool? delete = skipDeleteConfirmation || hasAvailableObjectsPool || (await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -1626,7 +1616,9 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         e: e.toString(),
     };
     final List<DAO> sortedObjects = List.from(field.objects);
-    sortedObjects.sort();
+    if (field.initialSortedColumn!=null) {
+      sortedObjects.sort();
+    }
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 3),
       child: Column(
