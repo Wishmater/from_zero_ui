@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 import 'package:from_zero_ui/src/table/table_from_zero.dart';
@@ -8,15 +9,17 @@ import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
 import 'package:from_zero_ui/src/ui_components/context_menu.dart';
 
 
-class TableHeaderFromZero extends StatelessWidget {
+class TableHeaderFromZero<T> extends StatefulWidget {
 
-  final TableController controller;
+  final TableController<T> controller;
   final Widget? title;
   final List<Widget>? actions;
   final Widget? leading;
   final VoidCallback? onShowAppbarContextMenu;
   final bool showElementCount;
   final FutureOr<String>? exportPathForExcel;
+  final bool addSearchAction;
+  final bool searchActionExpandedByDefault;
 
   const TableHeaderFromZero({
     required this.controller,
@@ -26,31 +29,64 @@ class TableHeaderFromZero extends StatelessWidget {
     this.onShowAppbarContextMenu,
     this.showElementCount = true,
     this.exportPathForExcel,
+    this.addSearchAction = false,
+    this.searchActionExpandedByDefault = true,
     Key? key,
   }) : super(key: key);
 
   @override
+  _TableHeaderFromZeroState<T> createState() => _TableHeaderFromZeroState();
+
+}
+
+class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
+
+  bool autofocusSearchOnNextBuild = false;
+  String? searchQuery;
+  late final FocusNode searchTextfieldFocusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    if (PlatformExtended.isDesktop) {
+      autofocusSearchOnNextBuild = true;
+    }
+    if (!widget.controller.extraFilters.contains(defaultOnFilter)) {
+      widget.controller.extraFilters.add(defaultOnFilter);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.extraFilters.remove(defaultOnFilter);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    List<Widget>? actions = this.actions;
-    if (exportPathForExcel!=null) {
+    List<Widget> actions = this.widget.actions ?? [];
+    if (widget.exportPathForExcel!=null) {
       actions = TableFromZeroState.addExportExcelAction(context,
-        actions: actions ?? [],
-        tableController: controller,
-        exportPathForExcel: exportPathForExcel!,
+        actions: actions,
+        tableController: widget.controller,
+        exportPathForExcel: widget.exportPathForExcel!,
       );
     }
+    if (widget.addSearchAction) {
+      actions.insert(0, buildSearchAction());
+    }
     Widget result = AnimatedBuilder(
-      animation: controller,
+      animation: widget.controller,
       builder: (context, child) {
         List<RowModel>? filtered;
         try {
-          filtered = controller.filtered;
+          filtered = widget.controller.filtered;
         } catch (_) {}
         int selectedCount = filtered==null ? 0
             : filtered.where((e) => e.selected==true).length;
         Widget subtitle;
         if (selectedCount==0) {
-          if (filtered!=null && showElementCount) {
+          if (filtered!=null && widget.showElementCount) {
             subtitle = Text(filtered.length==0 ? FromZeroLocalizations.of(context).translate('no_elements')
                 : '${filtered.length} ${filtered.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
                 : FromZeroLocalizations.of(context).translate('element_sing')}',
@@ -90,25 +126,25 @@ class TableHeaderFromZero extends StatelessWidget {
           ),
           child: AppbarFromZero(
             titleSpacing: 0,
-            onShowContextMenu: onShowAppbarContextMenu,
+            onShowContextMenu: widget.onShowAppbarContextMenu,
             title: Row(
               children: [
-                if (leading==null)
+                if (widget.leading==null)
                   SizedBox(width: 24,),
-                if (leading!=null)
+                if (widget.leading!=null)
                   ... [
                     SizedBox(width: 20,),
-                    leading!,
+                    widget.leading!,
                     SizedBox(width: 9,),
                   ],
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (title!=null)
+                    if (widget.title!=null)
                       DefaultTextStyle(
                         style: Theme.of(context).textTheme.headline6!,
-                        child: title!,
+                        child: widget.title!,
                       ),
                     if (filtered!=null)
                       subtitle,
@@ -118,11 +154,101 @@ class TableHeaderFromZero extends StatelessWidget {
             ),
             elevation: 0,
             actions: actions,
+            initialExpandedAction: widget.addSearchAction && widget.searchActionExpandedByDefault
+                ? (actions.first as ActionFromZero) : null,
+            onExpanded: (_) {
+              autofocusSearchOnNextBuild = true;
+            },
           ),
         );
       },
     );
     return result;
+  }
+
+  ActionFromZero buildSearchAction() {
+    return ActionFromZero(
+      title: 'Buscar...',
+      icon: Icon(Icons.search),
+      breakpoints: {0: ActionState.expanded},
+      expandedBuilder: ({required context, enabled=true, icon, onTap, title=''}) {
+        if (autofocusSearchOnNextBuild) {
+          autofocusSearchOnNextBuild = false;
+          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+            searchTextfieldFocusNode.requestFocus();
+          });
+        }
+        return Container(
+          width: 394,
+          child: Stack(
+            children: [
+              TextFormField(
+                initialValue: searchQuery,
+                focusNode: searchTextfieldFocusNode,
+                decoration: InputDecoration(
+                  contentPadding: EdgeInsets.only(left: 12, right: 12+28, bottom: 12,),
+                  labelText: "Buscar...",
+                ),
+                textAlignVertical: TextAlignVertical.center,
+                textInputAction: TextInputAction.search,
+                onChanged: (value) {
+                  searchQuery = value;
+                  widget.controller.filter();
+                },
+                onFieldSubmitted: (value) {
+                  final filtered = widget.controller.filtered;
+                  if (filtered.isNotEmpty){
+                    submitSearch();
+                  }
+                },
+              ),
+              Positioned.fill(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 1, right: 12),
+                    child: IconButton(
+                      icon: Icon(Icons.search),
+                      color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Colors.white,
+                      onPressed: submitSearch,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+  void submitSearch() {
+    final filtered = widget.controller.filtered;
+    searchTextfieldFocusNode.unfocus();
+    if (filtered.length==1) {
+      filtered.first.onRowTap?.call(filtered.first);
+    }
+  }
+
+  List<RowModel<T>> defaultOnFilter(List<RowModel<T>> rows) {
+    final searchQuery = this.searchQuery?.trim().toUpperCase();
+    if (searchQuery==null || searchQuery.isEmpty) {
+      return rows;
+    } else {
+      return rows.where((e) {
+        if (e.id is DAO) {
+          return e.id.toString().toUpperCase().contains(searchQuery);
+        } else {
+          bool pass = false;
+          for (final v in e.values.values) {
+            if (v.toString().toUpperCase().contains(searchQuery)) {
+              pass = true;
+              break;
+            }
+          }
+          return pass;
+        }
+      }).toList();
+    }
   }
 
 }

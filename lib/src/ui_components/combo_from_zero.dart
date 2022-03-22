@@ -365,7 +365,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
 
   final ScrollController popupScrollController = ScrollController();
   String? searchQuery;
-  TableController tableController = TableController();
+  TableController<T> tableController = TableController();
 
   @override
   void initState() {

@@ -66,7 +66,7 @@ class TableFromZero<T> extends StatefulWidget {
   final Widget? Function(BuildContext context, RowModel<T> row)? rowBuilder;
   final Widget? Function(BuildContext context, RowModel row)? headerRowBuilder;
   final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
-  final TableController? tableController;
+  final TableController<T>? tableController;
   final bool? enableSkipFrameWidgetForRows;
   /// if null, excel export option disabled
   final FutureOr<String>? exportPathForExcel;
@@ -548,7 +548,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
     if (widget.minWidth!=null) {
       result = SliverStickyHeader(
-        sliver: result,
+        sliver: SliverPadding(
+          padding: EdgeInsets.only(bottom: 8),
+          sliver: result,
+        ),
         scrollController: widget.scrollController,
         sticky: true,
         footer: true,
@@ -1704,6 +1707,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     if (widget.onFilter!=null) {
       filtered = widget.onFilter!(filtered);
     }
+    for (final e in (widget.tableController?.extraFilters ?? [])) {
+      filtered = e(filtered);
+    }
     _showCheckboxes = false;
     for (int i=0; i<filtered.length; i++) {
       if (filtered[i].onCheckBoxSelected!=null) {
@@ -1768,6 +1774,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
 class TableController<T> extends ChangeNotifier {
 
+  List<List<RowModel<T>> Function(List<RowModel<T>>)> extraFilters;
   TableFromZeroState<T>? currentState;
   Map<dynamic, List<ConditionFilter>>? initialConditionFilters;
   Map<dynamic, List<ConditionFilter>>? conditionFilters;
@@ -1779,15 +1786,18 @@ class TableController<T> extends ChangeNotifier {
   dynamic sortedColumn;
 
   TableController({
+    List<List<RowModel<T>> Function(List<RowModel<T>>)>? extraFilters,
     this.initialConditionFilters,
     this.initialValueFilters,
     this.sortedAscending = true,
     this.sortedColumn,
     this.initialValueFiltersExcludeAllElse = false,
     Map<int, bool>? columnVisibilities,
-  })  : this.columnVisibilities = columnVisibilities ?? {};
+  })  : this.extraFilters = extraFilters ?? [],
+        this.columnVisibilities = columnVisibilities ?? {};
 
-  TableController copyWith({
+  TableController<T> copyWith({
+    List<List<RowModel<T>> Function(List<RowModel<T>>)>? extraFilters,
     Map<dynamic, List<ConditionFilter>>? initialConditionFilters,
     Map<dynamic, List<ConditionFilter>>? conditionFilters,
     Map<dynamic, Map<Object, bool>>? initialValueFilters,
@@ -1796,8 +1806,10 @@ class TableController<T> extends ChangeNotifier {
     Map<dynamic, bool>? columnVisibilities,
     bool? sortedAscending,
     int? sortedColumnIndex,
+    TableFromZeroState<T>? currentState,
   }) {
-    return TableController()
+    return TableController<T>()
+      ..extraFilters = extraFilters ?? this.extraFilters
       ..initialConditionFilters = initialConditionFilters ?? this.initialConditionFilters
       ..conditionFilters = conditionFilters ?? this.conditionFilters
       ..initialValueFilters = initialValueFilters ?? this.initialValueFilters
@@ -1806,7 +1818,8 @@ class TableController<T> extends ChangeNotifier {
       ..columnVisibilities = columnVisibilities ?? this.columnVisibilities
       ..sortedAscending = sortedAscending ?? this.sortedAscending
       ..sortedColumn = sortedColumnIndex ?? this.sortedColumn
-      .._filter = this._filter;
+      .._filter = this._filter
+      ..currentState = currentState ?? this.currentState;
   }
 
   List<RowModel<T>> Function()? _filter;

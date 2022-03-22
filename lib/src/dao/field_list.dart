@@ -63,6 +63,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   FutureOr<String>? exportPathForExcel;
   bool buildViewWidgetAsTable;
+  bool addSearchAction;
 
   List<T> get objects => value!.list;
   List<T> get dbObjects => dbValue!.list;
@@ -202,6 +203,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     this.onFilter,
     this.exportPathForExcel,
     this.buildViewWidgetAsTable = false,
+    this.addSearchAction = false,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
@@ -212,7 +214,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         this.actionDuplicateBreakpoints = actionDuplicateBreakpoints ?? {0: ActionState.none},
         this.actionDeleteBreakpoints = actionDeleteBreakpoints ?? {0: ActionState.icon},
         this.actionViewBreakpoints = actionViewBreakpoints ?? (viewOnRowTap ?? (onRowTap==null && !tableCellsEditable) ? {0: ActionState.popup} : {0: ActionState.icon}),
-        this.tableController = tableController ?? TableController(),
+        this.tableController = tableController ?? TableController<T>(),
         this.allowAddNew = allowAddNew ?? objectTemplate.canSave,
         super(
           uiNameGetter: uiNameGetter,
@@ -370,6 +372,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     List<RowModel<T>> Function(List<RowModel<T>>)? onFilter,
     FutureOr<String>? exportPathForExcel,
     bool? buildViewWidgetAsTable,
+    bool? addSearchAction,
   }) {
     return ListField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -429,6 +432,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       onFilter: onFilter ?? this.onFilter,
       exportPathForExcel: exportPathForExcel ?? this.exportPathForExcel,
       buildViewWidgetAsTable: buildViewWidgetAsTable ?? this.buildViewWidgetAsTable,
+      addSearchAction: addSearchAction ?? this.addSearchAction,
     );
   }
 
@@ -736,7 +740,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       data = data.where((e) => !objects.contains(e)).toList();
     }
     final listField = ListField(
-      uiNameGetter: (field, dao) => emptyDAO.classUiNamePlural,
+      uiNameGetter: (field, dao) => uiName,
       objectTemplate: emptyDAO,
       tableCellsEditable: false,
       collapsible: false,
@@ -745,6 +749,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       actionEditBreakpoints: actionEditBreakpoints,
       objects: data,
       allowAddNew: allowAddNew && emptyDAO.canSave,
+      addSearchAction: true,
       onRowTap: (value) {
         Navigator.of(context).pop(value.id);
       },
@@ -756,6 +761,14 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         controller: scrollController,
         shrinkWrap: true,
         slivers: [
+          // SliverToBoxAdapter(
+          //   child: Padding(
+          //     padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
+          //     child: Text('${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
+          //       style: Theme.of(context).textTheme.headline6,
+          //     ),
+          //   ),
+          // ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
@@ -1682,12 +1695,13 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         key: headerGlobalKey,
         skipTraversal: true,
         canRequestFocus: true,
-        child: TableHeaderFromZero(
+        child: TableHeaderFromZero<T>(
           controller: tableController,
           title: Text(uiName),
           actions: actions,
           onShowAppbarContextMenu: () => focusNode.requestFocus(),
           exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
+          addSearchAction: addSearchAction,
           leading: !collapsible ? icon : IconButton(
             icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
             onPressed: () {
