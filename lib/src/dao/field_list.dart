@@ -1388,9 +1388,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           showHeaders: showTableHeaders,
           footerStickyOffset: 12,
           rows: builtRows.values.toList(),
-          // cellPadding: tableCellsEditable
-          //     ? const EdgeInsets.symmetric(horizontal: 6, vertical: 4)
-          //     : const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
           cellBuilder: tableCellsEditable ? (context, row, colKey) {
             final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
               expandToFillContainer: false,

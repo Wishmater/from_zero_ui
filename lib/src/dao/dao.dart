@@ -1364,7 +1364,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                         Expanded(
                           flex: 1000000,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+                            padding: const EdgeInsets.only(bottom: 6, top: 8, left: 12, right: 12,),
                             child: SelectableText(e.uiName,
                               style: Theme.of(context).textTheme.bodyText1!.copyWith(
                                 color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
@@ -1596,8 +1596,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         );
         first = false;
         result = result.mapIndexed((i, w) {
+          final hidden = e.hiddenInForm;
           if (asSlivers) {
-            return e.hiddenInForm
+            return hidden
                 ? SliverToBoxAdapter(child: SizedBox.shrink(),)
                 : SliverPadding(
                   padding: EdgeInsets.only(
@@ -1608,10 +1609,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 );
           } else {
             return FlexibleLayoutItemFromZero(
-              maxSize: e.maxWidth,
-              minSize: e.minWidth,
-              flex: e.flex,
-              child: AnimatedSwitcher(
+              maxSize: hidden ? 0 : e.maxWidth,
+              minSize: hidden ? 0 : e.minWidth,
+              flex: hidden ? 0 : e.flex,
+              child: hidden ? SizedBox.shrink() : AnimatedSwitcher(
                 duration: 300.milliseconds,
                 switchInCurve: Curves.easeOutCubic,
                 switchOutCurve: Curves.easeInCubic,
