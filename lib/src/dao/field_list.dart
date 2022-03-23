@@ -37,6 +37,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   bool collapsible;
   bool viewOnRowTap;
   bool asPopup;
+  bool validateChildren;
   String Function(ListField<T> field) toStringGetter;
   Map<double, ActionState> actionViewBreakpoints;
   Map<double, ActionState> actionEditBreakpoints;
@@ -204,6 +205,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     this.exportPathForExcel,
     this.buildViewWidgetAsTable = false,
     this.addSearchAction = false,
+    this.validateChildren = true,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
@@ -278,6 +280,11 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     bool validateIfNotEdited=false,
   }) async {
     final superResult = super.validate(context, dao, validateIfNotEdited: validateIfNotEdited);
+    if (!validateChildren) {
+      bool success = await superResult;
+      listFieldValidationErrors = List.from(validationErrors);
+      return success;
+    }
     List<Future<bool>> results = [];
     final templateProps = objectTemplate.props;
     for (final e in objects) {

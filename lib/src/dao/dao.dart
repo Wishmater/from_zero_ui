@@ -368,6 +368,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       final validationErrors = this.validationErrors;
       validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
       ValidationError error = validationErrors.first;
+      print ('VALIDATION ERRORS ENCOUNTERED:');
+      print (validationErrors.where((e) => e.isBlocking));
+      print ('FOCUSING ERROR:');
+      print ('${error.field} -- ${error.error}');
       error.field.requestFocus();
       try {
         WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
