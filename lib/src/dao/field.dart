@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_icons/flutter_icons.dart';
@@ -16,7 +17,7 @@ import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as transl
 typedef FutureOr<ValidationError?> FieldValidator<T extends Comparable>(BuildContext context, DAO dao, Field<T> field);
 typedef T FieldValueGetter<T, R extends Field>(R field, DAO dao);
 typedef T ContextFulFieldValueGetter<T, R extends Field>(BuildContext context, R field, DAO dao);
-typedef Widget ViewWidgetBuilder<T extends Comparable>(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons,});
+typedef Widget ViewWidgetBuilder<T extends Comparable>(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons, bool dense});
 bool trueFieldGetter(_, __) => true;
 bool falseFieldGetter(_, __) => false;
 List defaultValidatorsGetter(_, __) => [];
@@ -347,16 +348,19 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   Widget buildViewWidget(BuildContext context, {
     bool linkToInnerDAOs=true,
     bool showViewButtons=true,
+    bool dense = false,
   }) {
     return viewWidgetBuilder(context, this,
       linkToInnerDAOs: linkToInnerDAOs,
       showViewButtons: showViewButtons,
+      dense: dense,
     );
   }
   static Widget defaultViewWidgetBuilder<T extends Comparable>
   (BuildContext context, Field field, {
     bool linkToInnerDAOs=true,
     bool showViewButtons=true,
+    bool dense = false,
   }) {
     if (field.hiddenInView) {
       return SizedBox.shrink();
@@ -364,19 +368,40 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     final onTap = linkToInnerDAOs && (field.value is DAO)
         ? ()=>(field.value as DAO).pushViewDialog(context)
         : null;
+    final message = field.toString();
     return Stack(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+          padding: dense
+              ? EdgeInsets.zero
+              : const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
-                child: SelectableText(field.toString(),
-                  style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                    wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
-                  ),
-                ),
+                child: dense
+                    ? AutoSizeText(message,
+                      style: Theme.of(context).textTheme.subtitle1,
+                      textAlign: field.getColModel().alignment,
+                      maxLines: 1,
+                      minFontSize: 14,
+                      overflowReplacement: TooltipFromZero(
+                        message: message,
+                        waitDuration: Duration(milliseconds: 0),
+                        verticalOffset: -16,
+                        child: AutoSizeText(message,
+                          style: Theme.of(context).textTheme.subtitle1,
+                          textAlign: field.getColModel().alignment,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.fade,
+                        ),
+                      ),
+                    ) : SelectableText(message,
+                      style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                        wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
+                      ),
+                    ),
               ),
               if (linkToInnerDAOs && showViewButtons && (field.value is DAO))
                 Padding(
@@ -406,21 +431,21 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     return [
       if (dao.enableUndoRedoMechanism)
         ActionFromZero(
-          title: 'Deshacer', // TODO 1 internationalize
+          title: 'Deshacer', // TODO 2 internationalize
           icon: Icon(MaterialCommunityIcons.undo_variant),
           onTap: (context) => undo(removeEntryFromDAO: true),
           enabled: undoValues.isNotEmpty,
         ),
       if (dao.enableUndoRedoMechanism)
         ActionFromZero(
-          title: 'Rehacer', // TODO 1 internationalize
+          title: 'Rehacer', // TODO 2 internationalize
           icon: Icon(MaterialCommunityIcons.redo_variant),
           onTap: (context) => redo(removeEntryFromDAO: true),
           enabled: redoValues.isNotEmpty,
         ),
       if (clearable)
         ActionFromZero(
-          title: 'Limpiar', // TODO 1 internationalize
+          title: 'Limpiar', // TODO 2 internationalize
           icon: Icon(Icons.clear),
           onTap: (context) => value = defaultValue,
           enabled: clearable && value!=defaultValue,

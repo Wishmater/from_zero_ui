@@ -219,6 +219,7 @@ class BoolField extends Field<BoolComparable> {
   (BuildContext context, Field<BoolComparable> fieldParam, {
     bool linkToInnerDAOs=true,
     bool showViewButtons=true,
+    bool dense = false,
   }) {
     if (fieldParam.hiddenInView) {
       return SizedBox.shrink();
@@ -249,7 +250,9 @@ class BoolField extends Field<BoolComparable> {
           );
     }
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+      padding: dense
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
       child: Row(
         children: [
           if (icon!=null)
@@ -257,8 +260,28 @@ class BoolField extends Field<BoolComparable> {
           if (icon!=null)
             SizedBox(width: 2,),
           if (valueName!=null)
-            SelectableText(valueName,
-              style: Theme.of(context).textTheme.subtitle1,
+            Expanded(
+              child: dense
+                  ? AutoSizeText(valueName,
+                style: Theme.of(context).textTheme.subtitle1,
+                textAlign: field.getColModel().alignment,
+                maxLines: 1,
+                minFontSize: 14,
+                overflowReplacement: TooltipFromZero(
+                  message: valueName,
+                  waitDuration: Duration(milliseconds: 0),
+                  verticalOffset: -16,
+                  child: AutoSizeText(valueName,
+                    style: Theme.of(context).textTheme.subtitle1,
+                    textAlign: field.getColModel().alignment,
+                    maxLines: 1,
+                    softWrap: false,
+                    overflow: TextOverflow.fade,
+                  ),
+                ),
+              ) : SelectableText(valueName,
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
             ),
         ],
       ),

@@ -522,8 +522,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                         navigator.popUntil(ModalRoute.withName(widget.homeRoute!));
                       }
                     } else {
-                      // TODO 1 make this a maybe pop
-                      goRouter.popUntil((match) => match.route.name==widget.homeRoute);
+                      goRouter.maybePopUntil(context, (match) => match.route.name==widget.homeRoute);
                     }
                   } else{
                     if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
@@ -535,7 +534,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                         );
                       } else {
                         navigator.popUntil(ModalRoute.withName(widget.homeRoute!));
-                        // TODO 3 can I make this a maybe pop
+                        // TODO 2 make this a maybe pop (This causes routes to first be popped, and then new one pushed, which might bring some visual issues)
                         goRouter.pushNamedAndRemoveUntil(
                           tabs[i].route!,
                           (match) => match.route.name==widget.homeRoute,

@@ -1375,7 +1375,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           alternateRowBackgroundSmartly: false,
           onFilter: onFilter,
           exportPathForExcel: exportPathForExcel,
-          // computeFiltersInIsolate: false, // TODO 1 how to allow DAO to be passed to isolate
           columns: propsShownOnTable.map((key, value) {
             final SimpleColModel result = value.getColModel();
             if (tableFilterable!=null) {
@@ -1389,6 +1388,9 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           showHeaders: showTableHeaders,
           footerStickyOffset: 12,
           rows: builtRows.values.toList(),
+          // cellPadding: tableCellsEditable
+          //     ? const EdgeInsets.symmetric(horizontal: 6, vertical: 4)
+          //     : const EdgeInsets.symmetric(horizontal: 0, vertical: 0),
           cellBuilder: tableCellsEditable ? (context, row, colKey) {
             final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
               expandToFillContainer: false,
@@ -1407,7 +1409,13 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                 ),
               ),
             );
-          } : null,
+          } : (context, row, colKey) {
+            return (row.values[colKey] as Field).buildViewWidget(context,
+              linkToInnerDAOs: false,
+              showViewButtons: false,
+              dense: true,
+            );
+          },
           rowActions: [
             ...extraRowActions,
             if (extraRowActions.isNotEmpty)
@@ -1619,7 +1627,15 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   (BuildContext context, Field<ComparableList<DAO>> fieldParam, {
     bool linkToInnerDAOs=true,
     bool showViewButtons=true,
+    bool dense = false,
   }) {
+    if (dense) {
+      return Field.defaultViewWidgetBuilder(context, fieldParam,
+        showViewButtons: showViewButtons,
+        linkToInnerDAOs: linkToInnerDAOs,
+        dense: dense,
+      );
+    }
     if (fieldParam.hiddenInView) {
       return SizedBox.shrink();
     }
@@ -1633,7 +1649,9 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       sortedObjects.sort();
     }
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
+      padding: dense
+          ? EdgeInsets.zero
+          : const EdgeInsets.symmetric(vertical: 3),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: sortedObjects.map((e) {
@@ -1643,14 +1661,19 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           return Stack(
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
+                padding: dense
+                    ? EdgeInsets.zero
+                    : const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Expanded(
-                      child: SelectableText(uiNames[e]!,
-                        style: Theme.of(context).textTheme.subtitle1,
-                      ),
+                      child: dense
+                          ? Text(uiNames[e]!,
+                            style: Theme.of(context).textTheme.subtitle1,
+                          ) : SelectableText(uiNames[e]!,
+                            style: Theme.of(context).textTheme.subtitle1,
+                          ),
                     ),
                     if (showViewButtons && onTap!=null)
                       Padding(
@@ -1788,7 +1811,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         ActionFromZero.divider(breakpoints: {0: ActionState.popup,},),
       if (dao.enableUndoRedoMechanism)
         ActionFromZero(
-          title: 'Deshacer', // TODO 1 internationalize
+          title: 'Deshacer', // TODO 2 internationalize
           icon: Icon(MaterialCommunityIcons.undo_variant),
           onTap: (context) {
             focusNode?.requestFocus();
@@ -1801,7 +1824,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         ),
       if (dao.enableUndoRedoMechanism)
         ActionFromZero(
-          title: 'Rehacer', // TODO 1 internationalize
+          title: 'Rehacer', // TODO 2 internationalize
           icon: Icon(MaterialCommunityIcons.redo_variant),
           onTap: (context) {
             focusNode?.requestFocus();
@@ -1813,7 +1836,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           },
         ),
       // ActionFromZero( // maybe add a 'delete-all'
-      //   title: 'Limpiar', // TODO 1 internationalize
+      //   title: 'Limpiar', // TODO 2 internationalize
       //   icon: Icon(Icons.clear),
       //   onTap: (context) => value = defaultValue,
       //   enabled: clearable && value!=defaultValue,

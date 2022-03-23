@@ -120,8 +120,13 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
             appBarTheme: AppBarTheme(
               color: Material.of(context)!.color ?? Theme.of(context).cardColor, // Colors.transparent
               iconTheme: Theme.of(context).iconTheme,
+              actionsIconTheme: Theme.of(context).iconTheme.copyWith(
+                color: Theme.of(context).splashColor.withOpacity(1),
+              ),
               titleTextStyle: Theme.of(context).textTheme.subtitle1,
-              toolbarTextStyle: Theme.of(context).textTheme.bodyText1,
+              toolbarTextStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
+                color: Theme.of(context).splashColor.withOpacity(1),
+              ),
             ),
           ),
           child: AppbarFromZero(
@@ -180,6 +185,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
         }
         return Container(
           width: 394,
+          padding: EdgeInsets.symmetric(vertical: 4),
           child: Stack(
             children: [
               TextFormField(

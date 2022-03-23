@@ -40,7 +40,7 @@ class TableFromZero<T> extends StatefulWidget {
   final List<RowModel<T>> rows;
   final Map<dynamic, ColModel>? columns;
   final bool enabled;
-  final double? minWidth; // TODO 1 maybe be more smart about this, like autommatically sum rows
+  final double? minWidth; // TODO 3 maybe be more smart about this, like autommatically sum rows
   final bool enableFixedHeightForListRows;
   final bool showHeaders;
   final RowModel? headerRowModel;
@@ -1160,7 +1160,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         List<Widget> colActions = [
           if (col?.sortEnabled ?? true)
             ActionFromZero(
-              title: 'Ordenar Ascendente', // TODO 1 internationalize
+              title: 'Ordenar Ascendente', // TODO 2 internationalize
               icon: Icon(MaterialCommunityIcons.sort_ascending),
               onTap: (context) {
                 if (sortedColumn!=colKey || !sortedAscending) {
@@ -1174,7 +1174,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             ),
           if (col?.sortEnabled ?? true)
             ActionFromZero(
-              title: 'Ordenar Descendente', // TODO 1 internationalize
+              title: 'Ordenar Descendente', // TODO 2 internationalize
               icon: Icon(MaterialCommunityIcons.sort_descending),
               onTap: (context) {
                 if (sortedColumn!=colKey || sortedAscending) {
@@ -1188,7 +1188,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             ),
           if (availableFilters!=null && (col?.filterEnabled ?? true))
             ActionFromZero(
-              title: 'Filtros...', // TODO 1 internationalize
+              title: 'Filtros...', // TODO 2 internationalize
               icon: Icon(MaterialCommunityIcons.filter),
               onTap: (context) => showFilterDialog(colKey),
             ),

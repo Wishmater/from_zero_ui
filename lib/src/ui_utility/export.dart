@@ -288,7 +288,7 @@ class ExportState extends State<Export> {
     currentPageNotifier.addListener(() {
 
     });
-    if (widget.autoExport) {
+    if (widget.autoExport && widget.dummyChild==null) {
       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
         _onExportButtonPressed();
       });
