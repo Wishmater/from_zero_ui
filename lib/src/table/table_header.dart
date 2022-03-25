@@ -184,7 +184,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
           });
         }
         return Container(
-          width: 394,
+          width: 256,
           padding: EdgeInsets.symmetric(vertical: 4),
           child: Stack(
             children: [
@@ -192,7 +192,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
                 initialValue: searchQuery,
                 focusNode: searchTextfieldFocusNode,
                 decoration: InputDecoration(
-                  contentPadding: EdgeInsets.only(left: 12, right: 12+28, bottom: 12,),
+                  contentPadding: EdgeInsets.only(left: 8, right: 8+28, bottom: 12,),
                   labelText: "Buscar...",
                 ),
                 textAlignVertical: TextAlignVertical.center,
@@ -212,7 +212,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
                 child: Align(
                   alignment: Alignment.centerRight,
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 1, right: 12),
+                    padding: const EdgeInsets.only(top: 1, right: 4),
                     child: IconButton(
                       icon: Icon(Icons.search),
                       color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Colors.white,
