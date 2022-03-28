@@ -37,6 +37,7 @@ class ResponsiveDrawerMenuItem{
   final bool dense;
   final double titleHorizontalOffset;
   final Key? itemKey;
+  final List<ActionFromZero> contextMenuActions;
 
   ResponsiveDrawerMenuItem({
     required this.title,
@@ -57,6 +58,7 @@ class ResponsiveDrawerMenuItem{
     this.titleHorizontalOffset = 0,
     this.subtitleRight,
     this.itemKey,
+    this.contextMenuActions = const [],
   });
 
   static List<ResponsiveDrawerMenuItem> fromGoRoutes({
@@ -146,6 +148,7 @@ class ResponsiveDrawerMenuItem{
     bool? dense,
     double? titleHorizontalOffset,
     Key? itemKey,
+    List<ActionFromZero>? contextMenuActions,
   }){
     return ResponsiveDrawerMenuItem(
       title: title ?? this.title,
@@ -166,6 +169,7 @@ class ResponsiveDrawerMenuItem{
       dense: dense ?? this.dense,
       titleHorizontalOffset: titleHorizontalOffset ?? this.titleHorizontalOffset,
       itemKey: itemKey ?? this.itemKey,
+      contextMenuActions: contextMenuActions ?? this.contextMenuActions,
     );
   }
 
@@ -624,7 +628,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
           try {
             route = GoRouteFromZero.of(context);
           } catch(_) {}
-          final title = getTreeOverlay(
+          Widget title = getTreeOverlay(
             DrawerMenuButtonFromZero(
               key: tabs[i].itemKey,
               title: tabs[i].title,
@@ -641,6 +645,12 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               ),
             ), tabs, i,
           );
+          if (tabs[i].contextMenuActions.isNotEmpty) {
+            title = ContextMenuFromZero(
+              child: title,
+              actions: tabs[i].contextMenuActions,
+            );
+          }
           result = ContextMenuFromZero(
             child: ExpansionTileFromZero(
               initiallyExpanded: selected==i || tabs[i].selectedChild>=0,
@@ -767,6 +777,12 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               ),
             ), tabs, i,
           );
+          if (tabs[i].contextMenuActions.isNotEmpty) {
+            result = ContextMenuFromZero(
+              child: result,
+              actions: tabs[i].contextMenuActions,
+            );
+          }
 
         }
 
