@@ -280,6 +280,8 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
     bool showRetry = true;
     Widget? icon;
     String? title, message;
+    // print (error);
+    // print (stackTrace);
     if (error==null) {
       showRetry = false;
       title = widget.successTitle;

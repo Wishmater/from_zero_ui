@@ -118,16 +118,6 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
         } : null,
         child: result,
       );
-      // result = GestureDetector(
-      //   behavior: HitTestBehavior.translucent,
-      //   onTapDown: (details) => tapDownDetails = details,
-      //   onSecondaryTapDown: (details) => tapDownDetails = details,
-      //   onSecondaryTap: () => showContextMenu(context),
-      //   onLongPress: PlatformExtended.isMobile ? () {
-      //     showContextMenu(context);
-      //   } : null,
-      //   child: result,
-      // );
     }
     return result;
   }

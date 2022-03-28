@@ -2,6 +2,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
 import 'package:from_zero_ui/src/future_handling/future_handling.dart';
 import 'package:from_zero_ui/src/ui_components/drawer_menu_from_zero.dart';
 import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
@@ -50,6 +52,7 @@ class ExpansionTileFromZero extends StatefulWidget {
     this.onPostExpansionChanged,
     this.style,
     this.actionPadding = EdgeInsets.zero,
+    this.contextMenuActions = const [],
   }) :  assert(
         expandedCrossAxisAlignment != CrossAxisAlignment.baseline,
         'CrossAxisAlignment.baseline is not supported since the expanded children '
@@ -64,6 +67,7 @@ class ExpansionTileFromZero extends StatefulWidget {
   final int? style;
   final EdgeInsets actionPadding;
   final Widget? titleExpanded;
+  final List<ActionFromZero> contextMenuActions;
 
   /// A widget to display before the title.
   ///
@@ -248,6 +252,64 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
   Widget _buildChildren(BuildContext context, Widget? child) {
     // final Color borderSideColor = _borderColor.value;
 
+    Widget title = InkWell(
+      onTap: _handleTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          AnimatedContainerFromChildSize(
+            duration: Duration(milliseconds: 200),
+            curve: Curves.easeOutCubic,
+            child: Container(
+                key: ValueKey(_isExpanded),
+                child: _isExpanded ? (widget.titleExpanded??widget.title) : widget.title
+            ),
+          ),
+          if (!(widget.trailing is SizedBox))
+            Positioned(
+              top: 0, bottom: 0,
+              right: widget.style==DrawerMenuFromZero.styleDrawerMenu ? 4 : null,
+              left: widget.style==DrawerMenuFromZero.styleTree ? 0 : null,
+              child: Padding(
+                padding: widget.actionPadding,
+                child: IconButton(
+                  icon: widget.trailing ?? RotationTransition(
+                    turns: _iconTurns,
+                    child: Icon(Icons.expand_more, color: _iconColor.value, size: 26,),
+                  ),
+                  iconSize: 26,
+                  onPressed: () {
+                    setExpanded(!_isExpanded);
+                  },
+                  splashRadius: 28,
+                ),
+              ),
+            ),
+          if (widget.trailing==null && widget.style==DrawerMenuFromZero.styleTree && _isExpanded)
+            Positioned(
+              left: 10, right: 0, bottom: -1, top: -1,
+              child: FractionallySizedBox(
+                heightFactor: 0.5,
+                alignment: Alignment.bottomLeft,
+                child: Container(
+                  padding: EdgeInsets.only(top: 8, left: widget.actionPadding.left+10),
+                  alignment: Alignment.bottomLeft,
+                  child: VerticalDivider(
+                    thickness: 2, width: 2,
+                    color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Material.of(context)!.color!),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (widget.contextMenuActions.isNotEmpty) {
+      title = ContextMenuFromZero(
+        child: title,
+        actions: widget.contextMenuActions,
+      );
+    }
     return Container(
       decoration: BoxDecoration(
         color: _backgroundColor.value,
@@ -275,58 +337,7 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
 //              ),
 //            ),
 //          ),
-          InkWell(
-            onTap: _handleTap,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                AnimatedContainerFromChildSize(
-                  duration: Duration(milliseconds: 200),
-                  curve: Curves.easeOutCubic,
-                  child: Container(
-                    key: ValueKey(_isExpanded),
-                    child: _isExpanded ? (widget.titleExpanded??widget.title) : widget.title
-                  ),
-                ),
-                if (!(widget.trailing is SizedBox))
-                  Positioned(
-                    top: 0, bottom: 0,
-                    right: widget.style==DrawerMenuFromZero.styleDrawerMenu ? 4 : null,
-                    left: widget.style==DrawerMenuFromZero.styleTree ? 0 : null,
-                    child: Padding(
-                      padding: widget.actionPadding,
-                      child: IconButton(
-                        icon: widget.trailing ?? RotationTransition(
-                          turns: _iconTurns,
-                          child: Icon(Icons.expand_more, color: _iconColor.value, size: 26,),
-                        ),
-                        iconSize: 26,
-                        onPressed: () {
-                          setExpanded(!_isExpanded);
-                        },
-                        splashRadius: 28,
-                      ),
-                    ),
-                  ),
-                if (widget.trailing==null && widget.style==DrawerMenuFromZero.styleTree && _isExpanded)
-                  Positioned(
-                    left: 10, right: 0, bottom: -1, top: -1,
-                    child: FractionallySizedBox(
-                      heightFactor: 0.5,
-                      alignment: Alignment.bottomLeft,
-                      child: Container(
-                        padding: EdgeInsets.only(top: 8, left: widget.actionPadding.left+10),
-                        alignment: Alignment.bottomLeft,
-                        child: VerticalDivider(
-                          thickness: 2, width: 2,
-                          color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Material.of(context)!.color!),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+          title,
           ClipPath(
             clipper: BottomClipper(),
             child: Align(

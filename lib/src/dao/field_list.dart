@@ -205,7 +205,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     this.exportPathForExcel,
     this.buildViewWidgetAsTable = false,
     this.addSearchAction = false,
-    this.validateChildren = true,
+    bool? validateChildren,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
@@ -218,6 +218,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         this.actionViewBreakpoints = actionViewBreakpoints ?? (viewOnRowTap ?? (onRowTap==null && !tableCellsEditable) ? {0: ActionState.popup} : {0: ActionState.icon}),
         this.tableController = tableController ?? TableController<T>(),
         this.allowAddNew = allowAddNew ?? objectTemplate.canSave,
+        this.validateChildren = tableCellsEditable && (validateChildren ?? true),
         super(
           uiNameGetter: uiNameGetter,
           value: ComparableList(list: objects),

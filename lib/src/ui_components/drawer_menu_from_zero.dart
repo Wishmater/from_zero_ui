@@ -645,18 +645,13 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               ),
             ), tabs, i,
           );
-          if (tabs[i].contextMenuActions.isNotEmpty) {
-            title = ContextMenuFromZero(
-              child: title,
-              actions: tabs[i].contextMenuActions,
-            );
-          }
           result = ContextMenuFromZero(
             child: ExpansionTileFromZero(
               initiallyExpanded: selected==i || tabs[i].selectedChild>=0,
               expanded: widget.compact||tabs[i].forcePopup ? false
                   : scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] ?? tabs[i].defaultExpanded,
               expandedAlignment: Alignment.topCenter,
+              contextMenuActions: tabs[i].contextMenuActions,
               style: widget.style,
               actionPadding: EdgeInsets.only(
                 left: widget.style==DrawerMenuFromZero.styleTree ? widget.depth*20.0 : 0,
@@ -731,7 +726,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] = value;
               },
             ),
-            enabled: widget.compact,
+            addGestureDetector: false,
             key: _menuButtonKeys[i],
             anchorAlignment: Alignment.topLeft,
             popupAlignment: Alignment.bottomRight,
