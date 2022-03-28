@@ -71,37 +71,47 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     return _ref!.watch(watchProvider.future);
   }
 
-  // a new ref needs to be passed to read the watching notifiers. watch() won'y be called on it.
-  bool retry(WidgetRef? widgetRef) {
+  // a new ref needs to be passed to read the watching notifiers. watch() won't be called on it.
+  bool retry(WidgetRef? widgetRef, [ProviderBase? providerForInvalidationInsteadOfRefresh]) {
     bool refreshed = false;
     if ((widgetRef??_ref) != null) {
       try {
-        final watchingNotifiers = _watching.map((e) => widgetRef==null
-            ? _ref!.read(e.notifier)
-            : widgetRef.read(e.notifier));
-        for (final e in watchingNotifiers) {
-          refreshed = refreshed || e.retry(widgetRef);
+        final watchingNotifiers = {
+          for (final e in _watching)
+            e: widgetRef==null
+                ? _ref!.read(e.notifier)
+                : widgetRef.read(e.notifier)
+        };
+        for (final e in watchingNotifiers.keys) {
+          refreshed = refreshed || watchingNotifiers[e]!.retry(widgetRef, e);
         }
       } catch (e, st) {
         // print (e); print (st);
       }
     }
     if (!refreshed && state is AsyncError) {
-      _runFuture();
+      if (widgetRef!=null && providerForInvalidationInsteadOfRefresh!=null) {
+        widgetRef.invalidate(providerForInvalidationInsteadOfRefresh);
+      } else {
+        _runFuture();
+      }
       return true;
     }
     return refreshed;
   }
 
-  void refresh(WidgetRef? widgetRef) {
+  void refresh(WidgetRef? widgetRef, [ProviderBase? providerForInvalidationInsteadOfRefresh]) {
     bool refreshed = false;
     if ((widgetRef??_ref) != null) {
-      final watchingNotifiers = _watching.map((e) => widgetRef==null
-          ? _ref!.read(e.notifier)
-          : widgetRef.read(e.notifier));
-      for (final e in watchingNotifiers) {
+      final watchingNotifiers = {
+        for (final e in _watching)
+          e: widgetRef==null
+              ? _ref!.read(e.notifier)
+              : widgetRef.read(e.notifier)
+      };
+      for (final e in watchingNotifiers.keys) {
         try {
-          e.refresh(widgetRef);
+          watchingNotifiers[e]!.refresh(widgetRef, e);
           refreshed = true;
         } catch (e, st) {
           // print (e); print (st);
@@ -109,7 +119,11 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
       }
     }
     if (!refreshed) {
-      _runFuture();
+      if (widgetRef!=null && providerForInvalidationInsteadOfRefresh!=null) {
+        widgetRef.invalidate(providerForInvalidationInsteadOfRefresh);
+      } else {
+        _runFuture();
+      }
     }
   }
 
@@ -249,6 +263,14 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // final routeBase = context.findAncestorStateOfType<OnlyOnActiveBuilderState>();
+    // print (routeBase);
+    // if (routeBase!=null) {
+    //   print (routeBase.isActiveRoute(context)); // should be isActive && !ref.isCalled(provider)
+    //   if (!routeBase.isActiveRoute(context)) {
+    //     return SizedBox.shrink();
+    //   }
+    // }
     ApiState<T> stateNotifier = ref.watch(provider.notifier);
     AsyncValue<T> value = ref.watch(provider);
     return AsyncValueBuilder<T>(

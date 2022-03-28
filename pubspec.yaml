@@ -20,7 +20,7 @@ dependencies:
 
   # * State Management
   go_router: ^2.5.2
-  flutter_riverpod: ^1.0.3
+  flutter_riverpod: ^2.0.0-dev.5
   hive: ^2.0.0
   hive_flutter: ^1.0.0
   freezed_annotation: ^1.0.0

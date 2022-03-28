@@ -378,7 +378,7 @@ packages:
       name: flutter_riverpod
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.3"
+    version: "2.0.0-dev.5"
   flutter_sticky_header:
     dependency: "direct main"
     description:
@@ -766,7 +766,7 @@ packages:
       name: riverpod
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.0.3"
+    version: "2.0.0-dev.5"
   scroll_to_index:
     dependency: "direct main"
     description:

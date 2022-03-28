@@ -63,6 +63,7 @@ class ComboField<T extends DAO> extends Field<T> {
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<T> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
+    OnFieldValueChanged<T?>? onValueChanged,
   }) :  assert(possibleValuesGetter!=null
               || possibleValuesFutureGetter!=null
               || possibleValuesProviderGetter!=null),
@@ -93,6 +94,7 @@ class ComboField<T extends DAO> extends Field<T> {
           backgroundColor: backgroundColor,
           actions: actions,
           viewWidgetBuilder: viewWidgetBuilder,
+          onValueChanged: onValueChanged,
         );
 
   @override
@@ -132,6 +134,7 @@ class ComboField<T extends DAO> extends Field<T> {
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<T>? viewWidgetBuilder,
+    OnFieldValueChanged<T?>? onValueChanged,
   }) {
     return ComboField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -167,14 +170,16 @@ class ComboField<T extends DAO> extends Field<T> {
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
+      onValueChanged: onValueChanged ?? this.onValueChanged,
     );
   }
 
   @override
-  Future<bool> validate(BuildContext context, DAO dao, {
+  Future<bool> validate(BuildContext context, DAO dao, int currentValidationId, {
     bool validateIfNotEdited=false,
   }) async {
-    super.validate(context, dao, validateIfNotEdited: validateIfNotEdited);
+    super.validate(context, dao, currentValidationId, validateIfNotEdited: validateIfNotEdited);
+    if (currentValidationId!=dao.validationCallCount) return false;
     final List<T> possibleValues;
     final provider = possibleValuesProviderGetter?.call(context, this, dao);
     if (provider!=null) {

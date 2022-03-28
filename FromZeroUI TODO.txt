@@ -39,7 +39,6 @@ fix part of the screen not being draggable on really big screens
 	
 popupFromZero doesn't reposition child in response to window resize
 
-DAO -- Async validation should stop previous validation if a new one is called
 
 
 

@@ -106,6 +106,7 @@ class StringField extends Field<String> {
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<String> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
+    OnFieldValueChanged<String?>? onValueChanged,
   }) :  this.minLines = minLines ?? (type==StringFieldType.short ? null : 3),
         this.maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
         this.showObfuscationToggleButton = showObfuscationToggleButton ?? obfuscate,
@@ -137,6 +138,7 @@ class StringField extends Field<String> {
           backgroundColor: backgroundColor,
           actions: actions,
           viewWidgetBuilder: viewWidgetBuilder,
+          onValueChanged: onValueChanged,
         );
 
 
@@ -170,6 +172,7 @@ class StringField extends Field<String> {
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<String>? viewWidgetBuilder,
+    OnFieldValueChanged<String?>? onValueChanged,
   }) {
     return StringField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -199,6 +202,7 @@ class StringField extends Field<String> {
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
+      onValueChanged: onValueChanged ?? this.onValueChanged,
     );
   }
 
@@ -270,7 +274,7 @@ class StringField extends Field<String> {
         if (!passedFirstEdit) {
           if (dao.contextForValidation!=null) {
             passedFirstEdit = true;
-            validate(dao.contextForValidation!, dao);
+            validate(dao.contextForValidation!, dao, dao.validationCallCount);
             notifyListeners();
           }
         }

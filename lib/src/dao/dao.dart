@@ -340,10 +340,18 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
 
 
+  int _validationCallCount = 0;
+  int get validationCallCount => parentDAO==null
+      ? _validationCallCount : parentDAO!.validationCallCount;
+  set validationCallCount(int value) {
+    _validationCallCount = value;
+  }
   Future<bool> validate(context, {
     bool validateNonEditedFields = true,
     bool focusBlockingField = false,
   }) async {
+    validationCallCount++;
+    final currentValidationId = validationCallCount;
     if (blockNotifyListeners) {
       return false;
     }
@@ -356,10 +364,14 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool success = true;
     List<Future<bool>> results = [];
     for (final e in props.values) {
-      results.add(e.validate(contextForValidation!, this, validateIfNotEdited: validateNonEditedFields)..then((v) => notifyListeners()));
+      if (currentValidationId!=validationCallCount) return false;
+      results.add(e.validate(contextForValidation!, this, currentValidationId,
+          validateIfNotEdited: validateNonEditedFields)..then((v) => notifyListeners()));
     }
+    if (currentValidationId!=validationCallCount) return false;
     for (final e in results) {
       success = await e;
+      if (currentValidationId!=validationCallCount) return false;
       if (!success) {
         break;
       }

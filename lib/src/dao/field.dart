@@ -17,6 +17,7 @@ import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as transl
 typedef FutureOr<ValidationError?> FieldValidator<T extends Comparable>(BuildContext context, DAO dao, Field<T> field);
 typedef T FieldValueGetter<T, R extends Field>(R field, DAO dao);
 typedef T ContextFulFieldValueGetter<T, R extends Field>(BuildContext context, R field, DAO dao);
+typedef void OnFieldValueChanged<T>(DAO dao, Field field, T value);
 typedef Widget ViewWidgetBuilder<T extends Comparable>(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons, bool dense});
 bool trueFieldGetter(_, __) => true;
 bool falseFieldGetter(_, __) => false;
@@ -59,6 +60,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   ContextFulFieldValueGetter<Color?, Field>? backgroundColor;
   ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions;
   ViewWidgetBuilder<T> viewWidgetBuilder;
+  OnFieldValueChanged<T?>? onValueChanged;
 
   T? _value;
   T? get value => _value;
@@ -73,6 +75,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
           validateNonEditedFields: false,
         );
       }
+      onValueChanged?.call(dao, this, _value);
       notifyListeners();
     }
   }
@@ -113,6 +116,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     this.backgroundColor,
     this.actions,
     this.viewWidgetBuilder = Field.defaultViewWidgetBuilder,
+    this.onValueChanged,
   }) :  this._value = value,
         this.dbValue = dbValue ?? value,
         this.undoValues = undoValues ?? [],
@@ -148,6 +152,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<T>? viewWidgetBuilder,
+    OnFieldValueChanged<T?>? onValueChanged,
   }) {
     return Field<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -173,6 +178,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
+      onValueChanged: onValueChanged ?? this.onValueChanged,
     );
   }
 
@@ -251,7 +257,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     notifyListeners();
   }
 
-  Future<bool> validate(BuildContext context, DAO dao, {
+  Future<bool> validate(BuildContext context, DAO dao, int currentValidationId, {
     bool validateIfNotEdited=false,
   }) async {
     validationErrors = [];
@@ -271,9 +277,11 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     }
     final List<FutureOr<ValidationError?>> futureErrors = [];
     for (final e in validators) {
+      if (currentValidationId!=dao.validationCallCount) return false;
       futureErrors.add(e(context, dao, this));
     }
     for (final e in futureErrors) {
+      if (currentValidationId!=dao.validationCallCount) return false;
       final error = await e; // TODO 2 this probably needs a try/catch in case the future throws
       if (error!=null && (error.isBeforeEditing || passedFirstEdit || validateIfNotEdited)) {
         validationErrors.add(error);
@@ -517,7 +525,7 @@ class HiddenValueField<T> extends Field<BoolComparable> {
     hiddenGetter: (field, dao) => true,
   );
   @override
-  Field<BoolComparable> copyWith({FieldValueGetter<String, Field<Comparable>>? uiNameGetter, BoolComparable? value, BoolComparable? dbValue, FieldValueGetter<bool, Field<Comparable>>? clearableGetter, double? maxWidth, double? minWidth, double? flex, FieldValueGetter<String?, Field<Comparable>>? hintGetter, FieldValueGetter<String?, Field<Comparable>>? tooltipGetter, double? tableColumnWidth, FieldValueGetter<bool, Field<Comparable>>? hiddenGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInTableGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInViewGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInFormGetter, FieldValueGetter<List<FieldValidator<BoolComparable>>, Field<Comparable>>? validatorsGetter, bool? validateOnlyOnConfirm, FieldValueGetter<SimpleColModel, Field<Comparable>>? colModelBuilder, List<BoolComparable?>? undoValues, List<BoolComparable?>? redoValues, bool? invalidateNonEmptyValuesIfHiddenInForm, BoolComparable? defaultValue, ContextFulFieldValueGetter<Color?, Field<Comparable>>? backgroundColor, ContextFulFieldValueGetter<List<ActionFromZero<Function>>, Field<Comparable>>? actions, ViewWidgetBuilder<BoolComparable>? viewWidgetBuilder}) {
+  Field<BoolComparable> copyWith({FieldValueGetter<String, Field<Comparable>>? uiNameGetter, BoolComparable? value, BoolComparable? dbValue, FieldValueGetter<bool, Field<Comparable>>? clearableGetter, double? maxWidth, double? minWidth, double? flex, FieldValueGetter<String?, Field<Comparable>>? hintGetter, FieldValueGetter<String?, Field<Comparable>>? tooltipGetter, double? tableColumnWidth, FieldValueGetter<bool, Field<Comparable>>? hiddenGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInTableGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInViewGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInFormGetter, FieldValueGetter<List<FieldValidator<BoolComparable>>, Field<Comparable>>? validatorsGetter, bool? validateOnlyOnConfirm, FieldValueGetter<SimpleColModel, Field<Comparable>>? colModelBuilder, List<BoolComparable?>? undoValues, List<BoolComparable?>? redoValues, bool? invalidateNonEmptyValuesIfHiddenInForm, BoolComparable? defaultValue, ContextFulFieldValueGetter<Color?, Field<Comparable>>? backgroundColor, ContextFulFieldValueGetter<List<ActionFromZero<Function>>, Field<Comparable>>? actions, ViewWidgetBuilder<BoolComparable>? viewWidgetBuilder, OnFieldValueChanged<BoolComparable>? onValueChanged}) {
     return HiddenValueField(hiddenValue);
   }
 }

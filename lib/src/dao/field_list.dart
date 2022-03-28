@@ -206,6 +206,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     this.buildViewWidgetAsTable = false,
     this.addSearchAction = false,
     bool? validateChildren,
+    OnFieldValueChanged<ComparableList<T>?>? onValueChanged,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
@@ -245,6 +246,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           backgroundColor: backgroundColor,
           actions: actions,
           viewWidgetBuilder: viewWidgetBuilder,
+          onValueChanged: onValueChanged,
         ) {
     addListeners();
   }
@@ -277,10 +279,12 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       => availableObjectsPoolGetter!=null || availableObjectsPoolProvider!=null;
 
   @override
-  Future<bool> validate(BuildContext context, DAO dao, {
+  Future<bool> validate(BuildContext context, DAO dao, int currentValidationId, {
     bool validateIfNotEdited=false,
   }) async {
-    final superResult = super.validate(context, dao, validateIfNotEdited: validateIfNotEdited);
+    final superResult = super.validate(context, dao, currentValidationId,
+        validateIfNotEdited: validateIfNotEdited);
+    if (currentValidationId!=dao.validationCallCount) return false;
     if (!validateChildren) {
       bool success = await superResult;
       listFieldValidationErrors = List.from(validationErrors);
@@ -293,7 +297,8 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       for (final key in templateProps.keys) {
         final field = objectProps[key];
         if (field!=null) {
-          results.add(field.validate(context, e,
+          if (currentValidationId!=dao.validationCallCount) return false;
+          results.add(field.validate(context, e, currentValidationId,
             validateIfNotEdited: validateIfNotEdited,
           ));
         }
@@ -302,6 +307,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     bool success = await superResult;
     listFieldValidationErrors = List.from(validationErrors);
     for (final e in results) {
+      if (currentValidationId!=dao.validationCallCount) return false;
       success = success && await e;
     }
     for (final e in objects) {
@@ -309,7 +315,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       for (final key in templateProps.keys) {
         final field = objectProps[key];
         if (field!=null) {
-          validationErrors.addAll(e.validationErrors);
+          validationErrors.addAll(field.validationErrors);
         }
       }
     }
@@ -381,6 +387,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     FutureOr<String>? exportPathForExcel,
     bool? buildViewWidgetAsTable,
     bool? addSearchAction,
+    OnFieldValueChanged<ComparableList<T>?>? onValueChanged,
   }) {
     return ListField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -441,6 +448,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       exportPathForExcel: exportPathForExcel ?? this.exportPathForExcel,
       buildViewWidgetAsTable: buildViewWidgetAsTable ?? this.buildViewWidgetAsTable,
       addSearchAction: addSearchAction ?? this.addSearchAction,
+      onValueChanged: onValueChanged ?? this.onValueChanged,
     );
   }
 

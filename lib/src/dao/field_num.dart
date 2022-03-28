@@ -88,6 +88,7 @@ class NumField extends Field<num> {
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<num> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
+    OnFieldValueChanged<num?>? onValueChanged,
   }) :  controller = TextEditingController(text: toStringStatic(value, formatter)),
         super(
           uiNameGetter: uiNameGetter,
@@ -116,6 +117,7 @@ class NumField extends Field<num> {
           backgroundColor: backgroundColor,
           actions: actions,
           viewWidgetBuilder: viewWidgetBuilder,
+          onValueChanged: onValueChanged,
         );
 
   @override
@@ -154,6 +156,7 @@ class NumField extends Field<num> {
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<num>? viewWidgetBuilder,
+    OnFieldValueChanged<num?>? onValueChanged,
   }) {
     return NumField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -181,6 +184,7 @@ class NumField extends Field<num> {
       backgroundColor: backgroundColor ?? this.backgroundColor,
       actions: actions ?? this.actions,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
+      onValueChanged: onValueChanged ?? this.onValueChanged,
     );
   }
 
@@ -261,7 +265,7 @@ class NumField extends Field<num> {
         }
         if (!passedFirstEdit) {
           passedFirstEdit = true;
-          validate(dao.contextForValidation!, dao);
+          validate(dao.contextForValidation!, dao, dao.validationCallCount);
           notifyListeners();
         }
       }
