@@ -837,7 +837,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                           children: [
                             Expanded(
                               child: Container(
-                                alignment: secondaryFormWidgets.keys.isNotEmpty ? Alignment.centerLeft : null,
+                                alignment: secondaryFormWidgets.keys.isNotEmpty ? Alignment.topLeft : null,
                                 width: secondaryFormWidgets.keys.isNotEmpty ? formDialogWidth : null,
                                 padding: EdgeInsets.only(left: secondaryFormWidgets.keys.isNotEmpty ? 12 : 0),
                                 child: ScrollbarFromZero(

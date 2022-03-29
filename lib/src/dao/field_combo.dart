@@ -193,8 +193,6 @@ class ComboField<T extends DAO> extends Field<T> {
       }
     }
     if (invalidateValuesNotInPossibleValues && value!=null && !possibleValues.contains(value)) {
-      print(value);
-      print(possibleValues);
       validationErrors.add(InvalidatingError<T>(
         field: this,
         error: FromZeroLocalizations.of(context).translate("validation_combo_not_possible"),

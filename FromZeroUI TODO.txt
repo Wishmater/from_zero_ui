@@ -1,14 +1,8 @@
 
 
-
 **********************************************************************
 P0
 **********************************************************************
-
-Export
-	make Export use new FileSaverFromZero
-	export should autommatically open the saved file, default true
-		add option to open autommatically to FileSaverFromZero, default false
 
 Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
 	https://www.youtube.com/watch?v=ceCo8U0XHqw
@@ -20,7 +14,7 @@ Problems with excel export
 	Export breaks when exporting large amounts of data (embarques 3 years)
 	!!! test with new version
 
-??? Fix goRouter.go() ignoring willPop commands, this is MAJOR ISSUE
+??? Fix goRouter.go() ignoring willPop commands, this is a MAJOR ISSUE
 	go() methods should check the willPop methods of all routes that will be removed
 	also make the pushNamedAndMaybeRemoveUntil() method work as expected
 
