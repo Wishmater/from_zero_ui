@@ -280,9 +280,10 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       if (currentValidationId!=dao.validationCallCount) return false;
       futureErrors.add(e(context, dao, this));
     }
+    if (currentValidationId!=dao.validationCallCount) return false;
     for (final e in futureErrors) {
-      if (currentValidationId!=dao.validationCallCount) return false;
       final error = await e; // TODO 2 this probably needs a try/catch in case the future throws
+      if (currentValidationId!=dao.validationCallCount) return false;
       if (error!=null && (error.isBeforeEditing || passedFirstEdit || validateIfNotEdited)) {
         validationErrors.add(error);
       }

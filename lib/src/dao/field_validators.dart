@@ -145,10 +145,12 @@ class FieldDiffMessage<T extends Comparable> extends StatelessWidget {
     required this.newValue,
   }) : super(key: key) {
     final dummyDao = DAO(uiNameGetter: (dao) => 'Dummy', classUiNameGetter: (dao) => 'Dummy',);
-    oldValueField = field.copyWith();
+    oldValueField = field.copyWith()
+      ..onValueChanged = null;
     oldValueField.dao = dummyDao;
     oldValueField.value = oldValue;
-    newdValueField = field.copyWith();
+    newdValueField = field.copyWith()
+      ..onValueChanged = null;
     newdValueField.dao = dummyDao;
     newdValueField.value = newValue;
   }

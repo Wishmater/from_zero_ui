@@ -350,8 +350,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool validateNonEditedFields = true,
     bool focusBlockingField = false,
   }) async {
-    validationCallCount++;
-    final currentValidationId = validationCallCount;
+    final currentValidationId = ++validationCallCount;
     if (blockNotifyListeners) {
       return false;
     }

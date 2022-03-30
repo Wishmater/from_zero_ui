@@ -26,8 +26,8 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
   T objectTemplate;
   TableController<T> tableController;
-  Future<List<T>> Function(BuildContext context)? availableObjectsPoolGetter;
-  ApiProvider<List<T>> Function(BuildContext context)? availableObjectsPoolProvider;
+  ContextFulFieldValueGetter<Future<List<T>>, ListField<T>>? availableObjectsPoolGetter;
+  ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T>>? availableObjectsPoolProvider;
   bool allowDuplicateObjectsFromAvailablePool;
   bool showObjectsFromAvailablePoolAsTable;
   bool allowAddNew;
@@ -101,6 +101,8 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     super.revertChanges();
     tableController.reInit();
   }
+
+  bool get enabled => listFieldValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).isEmpty;
 
   ValueNotifier<Map<T, bool>> selectedObjects = ValueNotifier({});
 
@@ -304,11 +306,12 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         }
       }
     }
+    if (currentValidationId!=dao.validationCallCount) return false;
     bool success = await superResult;
     listFieldValidationErrors = List.from(validationErrors);
     for (final e in results) {
-      if (currentValidationId!=dao.validationCallCount) return false;
       success = success && await e;
+      if (currentValidationId!=dao.validationCallCount) return false;
     }
     for (final e in objects) {
       final objectProps = e.props;
@@ -352,8 +355,8 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     bool? showTableHeaders,
     bool? showElementCount,
     double? rowHeight,
-    Future<List<T>> Function(BuildContext contex)? availableObjectsPoolGetter,
-    ApiProvider<List<T>> Function(BuildContext context)? availableObjectsPoolProvider,
+    ContextFulFieldValueGetter<Future<List<T>>, ListField<T>>? availableObjectsPoolGetter,
+    ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T>>? availableObjectsPoolProvider,
     bool? allowDuplicateObjectsFromAvailablePool,
     bool? showObjectsFromAvailablePoolAsTable,
     bool? allowAddNew,
@@ -540,7 +543,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     });
   }
 
-  void maybeAddRow(context, [int? insertIndex]) async { // TODO 3 implement disabled logic in ListField (color + tooltip + mouseRegion)
+  void maybeAddRow(context, [int? insertIndex]) async {
     T emptyDAO = (objectTemplate.copyWith() as T)..id=null;
     emptyDAO.contextForValidation = dao.contextForValidation;
     if (hasAvailableObjectsPool) {
@@ -572,7 +575,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
               children: [
                 availableObjectsPoolProvider==null
                     ? FutureBuilderFromZero<List<T>>(
-                        future: availableObjectsPoolGetter!(context),
+                        future: availableObjectsPoolGetter!(context, this, dao),
                         loadingBuilder: _availablePoolLoadingBuilder,
                         errorBuilder: (context, error, stackTrace) => _availablePoolErrorBuilder(context, error, stackTrace is StackTrace ? stackTrace : null),
                         successBuilder: (context, data) {
@@ -580,7 +583,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                         },
                       )
                     : ApiProviderBuilder<List<T>>(
-                        provider: availableObjectsPoolProvider!(context),
+                        provider: availableObjectsPoolProvider!(context, this, dao),
                         loadingBuilder: _availablePoolLoadingBuilder,
                         errorBuilder: _availablePoolErrorBuilder,
                         dataBuilder: (context, data) {
@@ -653,7 +656,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                   padding: const EdgeInsets.only(bottom: 16+42,),
                   child: availableObjectsPoolProvider==null
                       ? FutureBuilderFromZero<List<T>>(
-                          future: availableObjectsPoolGetter!(context),
+                          future: availableObjectsPoolGetter!(context, this, dao),
                           loadingBuilder: _availablePoolLoadingBuilder,
                           errorBuilder: (context, error, stackTrace) => _availablePoolErrorBuilder(context, error, stackTrace is StackTrace ? stackTrace : null),
                           successBuilder: (context, data) {
@@ -661,7 +664,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                           },
                         )
                       : ApiProviderBuilder<List<T>>(
-                          provider: availableObjectsPoolProvider!(context),
+                          provider: availableObjectsPoolProvider!(context, this, dao),
                           loadingBuilder: _availablePoolLoadingBuilder,
                           errorBuilder: _availablePoolErrorBuilder,
                           dataBuilder: (context, data) {
@@ -1511,12 +1514,12 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                   child: Material(
                     color: Theme.of(context).cardColor,
                     child: InkWell(
-                      onTap: objects.isEmpty ? () {
+                      onTap: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty ? () {
                         maybeAddRow(context);
                       } : null,
                       child: ErrorSign(
                         title: FromZeroLocalizations.of(context).translate('no_data'),
-                        subtitle: objects.isEmpty
+                        subtitle: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
                             ? FromZeroLocalizations.of(context).translate('no_data_add')
                             : FromZeroLocalizations.of(context).translate('no_data_filters'),
                       ),
@@ -1558,15 +1561,35 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         return result;
       }
     );
-    if (!asSliver && addCard) { // TODO 3 implement addCard in table slivers, VERY HARD IPMLEMENTATION FOR LOW REWARD
-      result = Card(
-        clipBehavior: Clip.hardEdge,
+    if (!asSliver && addCard) {
+      if (!enabled) { // TODO 2 implement proper disabled logic in each sliver (color + tooltip + mouseRegion)
+        result = MouseRegion(
+          cursor: SystemMouseCursors.forbidden,
+          child: IgnorePointer(
+            child: result,
+          ),
+        );
+      }
+      result = TooltipFromZero(
+        message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+          return a.toString().trim().isEmpty ? b.toString()
+              : b.toString().trim().isEmpty ? a.toString()
+              : '$a\n$b';
+        }),
         child: result,
+        triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
+        waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
       );
+      if (addCard) {  // TODO 3 implement addCard in table slivers, VERY HARD IPMLEMENTATION FOR LOW REWARD
+        result = Card(
+          clipBehavior: Clip.hardEdge,
+          child: result,
+        );
+      }
     }
     List<Widget> resultList = [
       result,
-      if ((allowAddNew||hasAvailableObjectsPool) && showAddButtonAtEndOfTable && !collapsed && !dense)
+      if (enabled && (allowAddNew||hasAvailableObjectsPool) && showAddButtonAtEndOfTable && !collapsed && !dense)
         buildAddAddon(
           context: context,
           width: width,
@@ -1780,7 +1803,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           ),
           title: '${FromZeroLocalizations.of(context).translate('duplicate')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
           onTap: (context) {
-            focusNode?.requestFocus();
             duplicateRows(currentSelected);
           },
           breakpoints: actionDuplicateBreakpoints[0]==ActionState.none ? actionDuplicateBreakpoints : null,
@@ -1792,9 +1814,10 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
             child: Icon(allowAddNew ? Icons.delete_forever_outlined : Icons.clear),
           ),
           title: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
-          onTap: (context) {
-            focusNode?.requestFocus();
-            maybeDelete(context, currentSelected);
+          onTap: (context) async {
+            if (await maybeDelete(context, currentSelected)) {
+              focusNode?.requestFocus();
+            }
           },
           breakpoints: actionDeleteBreakpoints[0]==ActionState.none ? actionDeleteBreakpoints : null,
         ),
