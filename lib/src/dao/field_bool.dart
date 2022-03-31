@@ -222,7 +222,7 @@ class BoolField extends Field<BoolComparable> {
   static Widget defaultViewWidgetBuilder
   (BuildContext context, Field<BoolComparable> fieldParam, {
     bool linkToInnerDAOs=true,
-    bool showViewButtons=true,
+    bool showViewButtons=false,
     bool dense = false,
   }) {
     if (fieldParam.hiddenInView) {

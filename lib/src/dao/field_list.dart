@@ -1662,7 +1662,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   static Widget defaultViewWidgetBuilder<T extends DAO>
   (BuildContext context, Field<ComparableList<DAO>> fieldParam, {
     bool linkToInnerDAOs=true,
-    bool showViewButtons=true,
+    bool showViewButtons=false,
     bool dense = false,
   }) {
     if (dense) {
@@ -1691,7 +1691,8 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: sortedObjects.map((e) {
-          final onTap = linkToInnerDAOs
+          final objectLinkToInnerDAOs = linkToInnerDAOs && e.wantsLinkToSelfFromOtherDAOs;
+          final onTap = objectLinkToInnerDAOs
               ? () => e.pushViewDialog(context)
               : null;
           return Stack(

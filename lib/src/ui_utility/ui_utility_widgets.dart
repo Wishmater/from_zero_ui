@@ -1031,11 +1031,13 @@ class FlexibleLayoutFromZero extends StatelessWidget {
   final double? relevantAxisMaxSize;
   final List<FlexibleLayoutItemFromZero> children;
   final CrossAxisAlignment crossAxisAlignment;
+  final bool applyIntrinsicCrossAxis;
 
   const FlexibleLayoutFromZero({
     this.axis = Axis.horizontal,
     this.relevantAxisMaxSize,
     this.crossAxisAlignment = CrossAxisAlignment.center,
+    this.applyIntrinsicCrossAxis = false,
     required this.children,
     Key? key,
   }) : super(key: key);
@@ -1068,7 +1070,7 @@ class FlexibleLayoutFromZero extends StatelessWidget {
     }
     double extraSize = (relevantAxisSize-minTotalSize).clamp(0, double.infinity);
     while (extraSize!=0 && expandableItems.isNotEmpty) {
-      double totalFlex = children.sumBy((e) => e.flex);
+      double totalFlex = expandableItems.values.sumBy((e) => e.flex);
       for (final key in expandableItems.keys) {
         final percentage = totalFlex==0
             ? 1 / expandableItems.length
@@ -1078,9 +1080,9 @@ class FlexibleLayoutFromZero extends StatelessWidget {
       extraSize = 0;
       List<int> keysToRemove = [];
       for (final key in expandableItems.keys) {
-        final difference = itemSizes[key]! - expandableItems[key]!.maxSize;
-        if (difference >= 0) {
-          itemSizes[key] = itemSizes[key]! - difference;
+        if (expandableItems[key]!.maxSize < itemSizes[key]!) {
+          final difference = itemSizes[key]! - expandableItems[key]!.maxSize;
+          itemSizes[key] = expandableItems[key]!.maxSize;
           extraSize += difference;
           keysToRemove.add(key);
         }
@@ -1103,12 +1105,18 @@ class FlexibleLayoutFromZero extends StatelessWidget {
         crossAxisAlignment: crossAxisAlignment,
         children: sizedChildren,
       );
+      if (applyIntrinsicCrossAxis) {
+        result = IntrinsicHeight(child: result,);
+      }
     } else {
       result = Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: crossAxisAlignment,
         children: sizedChildren,
       );
+      if (applyIntrinsicCrossAxis) {
+        result = IntrinsicWidth(child: result,);
+      }
     }
     final scrollController = ScrollController();
     return ScrollbarFromZero(
@@ -1135,7 +1143,7 @@ class FlexibleLayoutItemFromZero extends StatelessWidget {
 
   const FlexibleLayoutItemFromZero({
     required this.child,
-    required this.maxSize,
+    this.maxSize = double.infinity,
     this.minSize = 0,
     this.flex = 0,
     Key? key,

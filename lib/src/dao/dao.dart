@@ -50,12 +50,14 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   OnDidDeleteCallback<ModelType>? onDidDelete;
   List<ValueChanged<DAO<ModelType>>> _selfUpdateListeners = [];
   DAOWidgetBuilder<ModelType>? viewWidgetBuilder;
+  List<Widget> Function(BuildContext context, DAO dao)? viewDialogExtraActions;
   bool useIntrinsicHeightForViewDialog;
   double viewDialogWidth;
   double formDialogWidth;
   bool viewDialogLinksToInnerDAOs;
   bool viewDialogShowsViewButtons;
   bool? viewDialogShowsEditButton;
+  bool wantsLinkToSelfFromOtherDAOs;
   bool enableUndoRedoMechanism;
   DAO? parentDAO; /// if not null, undo/redo calls will be relayed to the parent
 
@@ -72,12 +74,14 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.onDeleteAPI,
     this.onDidDelete,
     this.viewWidgetBuilder,
+    this.viewDialogExtraActions,
     this.useIntrinsicHeightForViewDialog = true,
     this.viewDialogWidth = 512,
     this.formDialogWidth = 512,
     this.viewDialogLinksToInnerDAOs = true,
-    this.viewDialogShowsViewButtons = true,
+    this.viewDialogShowsViewButtons = false,
     this.viewDialogShowsEditButton,
+    this.wantsLinkToSelfFromOtherDAOs = true,
     List<List<Field>>? undoRecord,
     List<List<Field>>? redoRecord,
     this.enableUndoRedoMechanism = true,
@@ -113,7 +117,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     OnDeleteAPICallback<ModelType>? onDeleteAPI,
     OnDidDeleteCallback<ModelType>? onDidDelete,
     DAOWidgetBuilder<ModelType>? viewWidgetBuilder,
+    List<Widget> Function(BuildContext context, DAO dao)? viewDialogExtraActions,
     bool? useIntrinsicHeightForViewDialog,
+    bool? wantsLinkToSelfFromOtherDAOs,
     double? viewDialogWidth,
     double? formDialogWidth,
     bool? viewDialogLinksToInnerDAOs,
@@ -136,12 +142,14 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       onDeleteAPI: onDeleteAPI??this.onDeleteAPI,
       onDidDelete: onDidDelete??this.onDidDelete,
       viewWidgetBuilder: viewWidgetBuilder??this.viewWidgetBuilder,
+      viewDialogExtraActions: viewDialogExtraActions??this.viewDialogExtraActions,
       useIntrinsicHeightForViewDialog: useIntrinsicHeightForViewDialog??this.useIntrinsicHeightForViewDialog,
       viewDialogWidth: viewDialogWidth??this.viewDialogWidth,
       formDialogWidth: formDialogWidth??this.formDialogWidth,
       viewDialogLinksToInnerDAOs: viewDialogLinksToInnerDAOs??this.viewDialogLinksToInnerDAOs,
       viewDialogShowsViewButtons: viewDialogShowsViewButtons??this.viewDialogShowsViewButtons,
       viewDialogShowsEditButton: viewDialogShowsEditButton??this.viewDialogShowsEditButton,
+      wantsLinkToSelfFromOtherDAOs: wantsLinkToSelfFromOtherDAOs??this.wantsLinkToSelfFromOtherDAOs,
       undoRecord: undoRecord??this._undoRecord,
       redoRecord: redoRecord??this._redoRecord,
       parentDAO: parentDAO??this.parentDAO,
@@ -1224,26 +1232,35 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       ],
                     ),
                   ),
-                  if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
-                    TextButton(
-                      onPressed: () async {
-                        maybeEdit(mainContext);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(width: 2,),
-                            Icon(Icons.edit_outlined),
-                            SizedBox(width: 6,),
-                            Text('${FromZeroLocalizations.of(context).translate('edit')}', style: TextStyle(fontSize: 16),),
-                            SizedBox(width: 4,),
-                          ],
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
+                        TextButton(
+                          onPressed: () async {
+                            maybeEdit(mainContext);
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                SizedBox(width: 2,),
+                                Icon(Icons.edit_outlined),
+                                SizedBox(width: 6,),
+                                Text('${FromZeroLocalizations.of(context).translate('edit')}'.toUpperCase(),
+                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                ),
+                                SizedBox(width: 4,),
+                              ],
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
+                      ...(viewDialogExtraActions?.call(context, this) ?? []),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -1317,16 +1334,20 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     ScrollController? mainScrollController,
     bool? useIntrinsicWidth,
     bool? useIntrinsicHeight,
+    int titleFlex = 1000000,
+    int valueFlex = 1618034,
+    double? titleMaxWidth,
   }) {
-    if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
-        && props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty) {
-      useIntrinsicHeight = false;
-      useIntrinsicWidth = false;
-    }
-    fieldGroups ??= this.fieldGroups;
     if (viewWidgetBuilder!=null) {
       return viewWidgetBuilder!(context, this);
     }
+    if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
+        && (titleMaxWidth!=null
+            || props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty)) {
+      useIntrinsicHeight ??= false;
+      useIntrinsicWidth ??= false;
+    }
+    fieldGroups ??= this.fieldGroups;
     bool clear = false;
     bool first = true;
     Widget result = Column(
@@ -1338,7 +1359,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         if (fields.isEmpty) {
           result = SizedBox.shrink();
         } else {
-          result = SizedBox.shrink();
           result = Column(
             mainAxisSize: MainAxisSize.min,
             children: fields.map((e) {
@@ -1369,43 +1389,72 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   ],
                 );
               } else {
-                return Material(
-                  color: clear ? Theme.of(context).cardColor
-                      : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
-                  child: IntrinsicHeight(
+                final title = Padding(
+                  padding: const EdgeInsets.only(bottom: 6, top: 8, left: 12, right: 12,),
+                  child: SelectableText(e.uiName,
+                    style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                      color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+                      wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                );
+                final value = Container(
+                  alignment: Alignment.centerLeft,
+                  child: e.buildViewWidget(context,
+                    linkToInnerDAOs: this.viewDialogLinksToInnerDAOs,
+                    showViewButtons: this.viewDialogShowsViewButtons,
+                  ),
+                );
+                Widget layout;
+                if (titleMaxWidth==null) {
+                  layout = IntrinsicHeight(
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
-                          flex: 1000000,
-                          child: Padding(
-                            padding: const EdgeInsets.only(bottom: 6, top: 8, left: 12, right: 12,),
-                            child: SelectableText(e.uiName,
-                              style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                                color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
-                                wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
-                              ),
-                              textAlign: TextAlign.right,
-                            ),
-                          ),
+                          flex: titleFlex,
+                          child: title,
                         ),
                         Container(
                           height: 24,
                           child: VerticalDivider(width: 0,),
                         ),
                         Expanded(
-                          flex: 1618034,
-                          child: Container(
-                            alignment: Alignment.centerLeft,
-                            child: e.buildViewWidget(context,
-                              linkToInnerDAOs: this.viewDialogLinksToInnerDAOs,
-                              showViewButtons: this.viewDialogShowsViewButtons,
-                            ),
-                          ),
+                          flex: valueFlex,
+                          child: value,
                         ),
                       ],
                     ),
-                  ),
+                  );
+                } else {
+                  layout = FlexibleLayoutFromZero(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    applyIntrinsicCrossAxis: true,
+                    children: [
+                      FlexibleLayoutItemFromZero(
+                        flex: titleFlex.toDouble(),
+                        maxSize: titleMaxWidth,
+                        child: title,
+                      ),
+                      FlexibleLayoutItemFromZero(
+                        minSize: 1, maxSize: 1,
+                        child: Container(
+                          height: 24,
+                          child: VerticalDivider(width: 0,),
+                        ),
+                      ),
+                      FlexibleLayoutItemFromZero(
+                        flex: valueFlex.toDouble(),
+                        child: value,
+                      ),
+                    ],
+                  );
+                }
+                return Material(
+                  color: clear ? Theme.of(context).cardColor
+                      : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
+                  child: layout,
                 );
               }
             }).toList(),
@@ -1438,7 +1487,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         return result;
       }).toList(),
     );
-    if (useIntrinsicWidth ?? true) {
+    if (useIntrinsicWidth??true) {
       result = IntrinsicWidth(child: result,);
     }
     return result;

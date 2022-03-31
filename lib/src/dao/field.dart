@@ -356,7 +356,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
 
   Widget buildViewWidget(BuildContext context, {
     bool linkToInnerDAOs=true,
-    bool showViewButtons=true,
+    bool showViewButtons=false,
     bool dense = false,
   }) {
     return viewWidgetBuilder(context, this,
@@ -368,13 +368,15 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   static Widget defaultViewWidgetBuilder<T extends Comparable>
   (BuildContext context, Field field, {
     bool linkToInnerDAOs=true,
-    bool showViewButtons=true,
+    bool showViewButtons=false,
     bool dense = false,
   }) {
     if (field.hiddenInView) {
       return SizedBox.shrink();
     }
-    final onTap = linkToInnerDAOs && (field.value is DAO)
+    linkToInnerDAOs = linkToInnerDAOs && (field.value is DAO)
+        && (field.value as DAO).wantsLinkToSelfFromOtherDAOs;
+    final onTap = linkToInnerDAOs
         ? ()=>(field.value as DAO).pushViewDialog(context)
         : null;
     final message = field.toString();
@@ -412,7 +414,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                       ),
                     ),
               ),
-              if (linkToInnerDAOs && showViewButtons && (field.value is DAO))
+              if (linkToInnerDAOs && showViewButtons)
                 Padding(
                   padding: EdgeInsets.only(left: 12),
                   child: IconButton(
