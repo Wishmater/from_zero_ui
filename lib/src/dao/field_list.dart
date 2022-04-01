@@ -538,7 +538,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       if (tableCellsEditable) {
         object.props.values.firstOrNullWhere((e) => !e.hiddenInForm)?.focusNode.requestFocus();
       } else {
-        builtRows[object]!.focusNode.requestFocus();
+        builtRows[object]?.focusNode.requestFocus();
       }
     });
   }

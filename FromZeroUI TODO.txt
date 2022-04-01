@@ -56,6 +56,8 @@ Table Feature -- Column types (String, num, DateTime)
 	show sum/avg on num columns
 	custom filters for each column type
 	
+Table Performance -- cancel async/isolate filters computation if disposed
+	
 Implement UIScaling + Scaling picker widget (with slider)
 	take initial system textScale as UI scaling
 

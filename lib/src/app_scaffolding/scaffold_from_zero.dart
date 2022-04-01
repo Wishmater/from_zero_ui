@@ -78,7 +78,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
   final bool centerDrawerTitle;
   final double drawerElevation;
   final double drawerAppbarElevation;
-  final Color? drawerBackgroundColor;
+  final TransitionBuilder? drawerBackground;
   final bool useCompactDrawerInsteadOfClose;
   final bool constraintBodyOnXLargeScreens;
   final bool centerTitle;
@@ -114,7 +114,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
     double? drawerWidth,
     this.drawerElevation = 2,
     this.appbarElevation = 3,
-    this.drawerBackgroundColor,
+    this.drawerBackground,
     this.drawerAppbarElevation = 3,
     this.centerTitle = false,
     this.drawerPaddingTop = 6,
@@ -872,56 +872,64 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                   alignment: Alignment.bottomLeft,
                   child: Stack(
                     children: [
-                      Material(
-                        color: widget.drawerBackgroundColor ?? Theme.of(context).cardColor,
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: ScrollbarFromZero(
-                                controller: drawerContentScrollController,
-                                applyOpacityGradientToChildren: false,
-                                child: SingleChildScrollView(
-                                  clipBehavior: Clip.none,
-                                  controller: drawerContentScrollController,
-                                  child: Padding(
-                                    padding: EdgeInsets.only(top: widget.drawerPaddingTop),
-                                    child:  Consumer(
-                                      builder: (context, ref, child) {
-                                        final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-                                        Widget result = _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)==widget.compactDrawerWidth);
-                                        result = widget.drawerContentTransitionBuilder(
-                                          child: result,
-                                          animation: animation,
-                                          secondaryAnimation: secondaryAnimation,
-                                          scaffoldChangeNotifier: changeNotifierNotListen,
-                                        );
-                                        return result;
-                                      },
+                      Builder(
+                        builder: (context) {
+                          Widget result = Material(
+                            type: widget.drawerBackground==null ? MaterialType.card : MaterialType.transparency,
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: ScrollbarFromZero(
+                                    controller: drawerContentScrollController,
+                                    applyOpacityGradientToChildren: false,
+                                    child: SingleChildScrollView(
+                                      clipBehavior: Clip.none,
+                                      controller: drawerContentScrollController,
+                                      child: Padding(
+                                        padding: EdgeInsets.only(top: widget.drawerPaddingTop),
+                                        child:  Consumer(
+                                          builder: (context, ref, child) {
+                                            final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
+                                            Widget result = _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)==widget.compactDrawerWidth);
+                                            result = widget.drawerContentTransitionBuilder(
+                                              child: result,
+                                              animation: animation,
+                                              secondaryAnimation: secondaryAnimation,
+                                              scaffoldChangeNotifier: changeNotifierNotListen,
+                                            );
+                                            return result;
+                                          },
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
+                                widget.drawerFooterBuilder != null
+                                    ? Consumer(
+                                      builder: (context, ref, child) {
+                                        final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
+                                        return widget.addFooterDivisions ?
+                                            Material(
+                                              color: Theme.of(context).cardColor,
+                                              child: Column(
+                                                children: <Widget>[
+                                                  Divider(height: 3, thickness: 3, color: Theme.of(context).brightness==Brightness.light ? Colors.grey : Colors.grey.shade900,),
+                                                  SizedBox(height: 8,),
+                                                  _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)==widget.compactDrawerWidth),
+                                                  SizedBox(height: 12,),
+                                                ],
+                                              ),
+                                            ) : _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)==widget.compactDrawerWidth);
+                                      },
+                                    ) : SizedBox.shrink(),
+                              ],
                             ),
-                            widget.drawerFooterBuilder != null
-                                ? Consumer(
-                                  builder: (context, ref, child) {
-                                    final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-                                    return widget.addFooterDivisions ?
-                                        Material(
-                                          color: Theme.of(context).cardColor,
-                                          child: Column(
-                                            children: <Widget>[
-                                              Divider(height: 3, thickness: 3, color: Theme.of(context).brightness==Brightness.light ? Colors.grey : Colors.grey.shade900,),
-                                              SizedBox(height: 8,),
-                                              _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)==widget.compactDrawerWidth),
-                                              SizedBox(height: 12,),
-                                            ],
-                                          ),
-                                        ) : _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(route.pageScaffoldId)==widget.compactDrawerWidth);
-                                  },
-                                ) : SizedBox.shrink(),
-                          ],
-                        ),
+                          );
+                          if (widget.drawerBackground!=null) {
+                            result = widget.drawerBackground!(context, result);
+                          }
+                          return result;
+                        }
                       ),
 
                       //CUSTOM SHADOWS (drawer appbar)

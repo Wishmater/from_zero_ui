@@ -811,7 +811,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                       width: 20, height: double.infinity,
                       child: VerticalDivider(
                         thickness: 2, width: 2,
-                        color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Material.of(context)!.color!),
+                        color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Material.of(context)?.color??Theme.of(context).cardColor),
                       ),
                     ),
                   );
@@ -827,7 +827,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   width: (tabs[i].children==null || tabs[i].children!.isEmpty) ? 24: 12,
                   child: Divider(
                     thickness: 2, height: 2,
-                    color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Material.of(context)!.color!),
+                    color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Material.of(context)?.color??Theme.of(context).cardColor),
                   ),
                 ),
               ),

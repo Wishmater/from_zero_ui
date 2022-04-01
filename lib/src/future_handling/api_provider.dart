@@ -127,7 +127,6 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     }
   }
 
-
   @override
   void dispose() {
     _running = false;
@@ -274,7 +273,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     ApiState<T> stateNotifier = ref.watch(provider.notifier);
     AsyncValue<T> value = ref.watch(provider);
     return AsyncValueBuilder<T>(
-      asyncValue: value,
+      asyncValue: stateNotifier.state, // using stateNotifier.state instead of value because value is kept when realoading, so loading state is never shown
       dataBuilder: dataBuilder,
       loadingBuilder: (context) {
         return ValueListenableBuilder<double?>(
