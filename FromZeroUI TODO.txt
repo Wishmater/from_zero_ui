@@ -58,6 +58,8 @@ Table Feature -- Column types (String, num, DateTime)
 	
 Table Performance -- cancel async/isolate filters computation if disposed
 	
+DAO Form -- make errorSign inside textField flicker on highlight like others
+	
 Implement UIScaling + Scaling picker widget (with slider)
 	take initial system textScale as UI scaling
 
