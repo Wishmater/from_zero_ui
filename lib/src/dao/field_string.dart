@@ -280,7 +280,6 @@ class StringField extends Field<String> {
         }
       }
     });
-    bool labelAlwaysFloating = !(enabled&&hint==null);
     Widget result = NotificationListener(
       onNotification: (notification) => true,
       child: AnimatedBuilder(
@@ -312,43 +311,58 @@ class StringField extends Field<String> {
                   bottom: largeVertically ? 16 : 0,
                   top: dense ? 0 : largeVertically ? 12 : 2,
                 ),
-                child: TextFormField(
-                  controller: controller,
-                  enabled: enabled,
-                  focusNode: focusNode,
-                  toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
-                    copy: false, cut: false, paste: false, selectAll: false,
-                  ),
-                  onEditingComplete: () {
-                    focusNode.nextFocus();
+                child: KeyboardListener(
+                  includeSemantics: false,
+                  focusNode: FocusNode(),
+                  onKeyEvent: (value) {
+                    if (value is KeyDownEvent && type==StringFieldType.short) {
+                      print (value);
+                      if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
+                        focusNode.focusInDirection(TraversalDirection.down);
+                      } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
+                        focusNode.focusInDirection(TraversalDirection.up);
+                      }
+                    }
                   },
-                  minLines: minLines,
-                  maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
-                  obscureText: obfuscate,
-                  onChanged: (v) {
-                    value = v;
-                  },
-                  inputFormatters: inputFormatters,
-                  decoration: inputDecoration??InputDecoration(
-                    border: InputBorder.none,
-                    alignLabelWithHint: dense,
-                    label: Padding(
-                      padding: EdgeInsets.only(top: !dense&&labelAlwaysFloating ? 12 : 0),
-                      child: Text(uiName,
-                        softWrap: false,
-                        overflow: TextOverflow.fade,
+                  child: TextFormField(
+                    controller: controller,
+                    enabled: enabled,
+                    focusNode: focusNode,
+                    toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
+                      copy: false, cut: false, paste: false, selectAll: false,
+                    ),
+                    onEditingComplete: () {
+                      focusNode.nextFocus();
+                    },
+                    minLines: minLines,
+                    maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
+                    obscureText: obfuscate,
+                    onChanged: (v) {
+                      value = v;
+                    },
+                    inputFormatters: inputFormatters,
+                    decoration: inputDecoration??InputDecoration(
+                      border: InputBorder.none,
+                      alignLabelWithHint: dense,
+                      label: Padding(
+                        padding: EdgeInsets.only(top: !dense&&hint!=null ? 12 : 0),
+                        child: Text(uiName,
+                          softWrap: false,
+                          overflow: TextOverflow.fade,
+                        ),
                       ),
-                    ),
-                    hintText: hint,
-                    floatingLabelBehavior: !labelAlwaysFloating ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
-                    labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : labelAlwaysFloating ? 1 : 1.85,
-                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                    ),
-                    hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
-                    contentPadding: EdgeInsets.only(
-                      left: dense ? 0 : 16,
-                      right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
-                      bottom: dense ? 10 : 0,
+                      hintText: hint,
+                      floatingLabelBehavior: !enabled ? FloatingLabelBehavior.never
+                          : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
+                      labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : hint!=null ? 1 : 1.85,
+                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                      ),
+                      hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
+                      contentPadding: EdgeInsets.only(
+                        left: dense ? 0 : 16,
+                        right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
+                        bottom: dense ? 10 : 0,
+                      ),
                     ),
                   ),
                 ),

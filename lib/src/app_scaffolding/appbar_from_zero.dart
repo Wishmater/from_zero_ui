@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -116,7 +119,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
 
   @override
   Widget build(BuildContext context) {
-    bool showWindowButtons = widget.mainAppbar && PlatformExtended.isWindows;
+    bool showWindowButtons = widget.mainAppbar && !kIsWeb && Platform.isWindows && windowsDesktopBitsdojoWorking;
     final double titleBarHeight = !showWindowButtons ? 0
         : appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight;
     double toolbarHeight = widget.toolbarHeight ?? (48 + (showWindowButtons ? titleBarHeight : 0));
@@ -357,7 +360,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
         },
       ),
     );
-    if (showWindowButtons) {
+    if (widget.mainAppbar && !kIsWeb && Platform.isWindows) {
       result = MouseRegion(
         opaque: false,
         onEnter: (event) {

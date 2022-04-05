@@ -1,6 +1,7 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
@@ -390,11 +391,24 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
             cellBuilder: widget.popupWidgetBuilder==null ? null
                 : (context, row, colKey) => widget.popupWidgetBuilder!(row.id),
             onFilter: (filtered) {
-              if (searchQuery!=null && searchQuery!.isNotEmpty) {
-                return filtered.where((e) => e.id.toString().toUpperCase()
-                    .contains(searchQuery!.toUpperCase())).toList();
+              List<RowModel<T>> starts = [];
+              List<RowModel<T>> contains = [];
+              if (searchQuery==null || searchQuery!.isEmpty) {
+                return filtered;
+              } else {
+                final q = searchQuery!.trim().toUpperCase();
+                for (final e in filtered) {
+                  final value = e.id.toString().toUpperCase();
+                  if (value.contains(q)) {
+                    if (value.startsWith(q)) {
+                      starts.add(e);
+                    } else {
+                      contains.add(e);
+                    }
+                  }
+                }
               }
-              return filtered;
+              return [...starts, ...contains];
             },
             rows: widget.possibleValues.map((e) {
               return SimpleRowModel(
@@ -441,25 +455,38 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                       widget.extraWidget!(context, widget.onSelected,),
                     Padding(
                       padding: const EdgeInsets.only(bottom: 8.0, left: 12, right: 12,),
-                      child: TextFormField(
-                        initialValue: searchQuery,
-                        autofocus: PlatformExtended.isDesktop,
-                        decoration: InputDecoration(
-                          contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
-                          labelText: FromZeroLocalizations.of(context).translate('search...'),
-                          labelStyle: TextStyle(height: 1.5),
-                          suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
-                        ),
-                        onChanged: (value) {
-                          searchQuery = value;
-                          tableController.filter();
-                        },
-                        onFieldSubmitted: (value) {
-                          final filtered = tableController.filtered;
-                          if (filtered.length==1) {
-                            _select(filtered.first.id);
+                      child: KeyboardListener(
+                        includeSemantics: false,
+                        focusNode: FocusNode(),
+                        onKeyEvent: (value) {
+                          if (value is KeyDownEvent) {
+                            if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
+                              FocusScope.of(context).focusInDirection(TraversalDirection.down);
+                            } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
+                              FocusScope.of(context).focusInDirection(TraversalDirection.up);
+                            }
                           }
                         },
+                        child: TextFormField(
+                          initialValue: searchQuery,
+                          autofocus: PlatformExtended.isDesktop,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
+                            labelText: FromZeroLocalizations.of(context).translate('search...'),
+                            labelStyle: TextStyle(height: 1.5),
+                            suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
+                          ),
+                          onChanged: (value) {
+                            searchQuery = value;
+                            tableController.filter();
+                          },
+                          onFieldSubmitted: (value) {
+                            final filtered = tableController.filtered;
+                            if (filtered.length==1) {
+                              _select(filtered.first.id);
+                            }
+                          },
+                        ),
                       ),
                     ),
                   ],

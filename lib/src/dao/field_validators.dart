@@ -54,7 +54,7 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
     required Field<T> field,
     required String error,
     this.defaultValue,
-    this.showVisualConfirmation = !kReleaseMode,
+    this.showVisualConfirmation = false, // !kReleaseMode
     this.allowUndoInvalidatingChange = true,
     this.allowSetThisFieldToDefaultValue = true,
   })  : assert(showVisualConfirmation || allowUndoInvalidatingChange),

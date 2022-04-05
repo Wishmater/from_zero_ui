@@ -162,7 +162,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     TableController<T>? tableController,
     this.collapsed = false,
     this.allowMultipleSelection = false,
-    this.collapsible = true,
+    this.collapsible = false,
     this.asPopup = false,
     this.toStringGetter = defaultToString,
     bool? viewOnRowTap,

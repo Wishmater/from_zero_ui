@@ -303,43 +303,57 @@ class NumField extends Field<num> {
                 ),
                 child: Directionality(
                   textDirection: dense ? material.TextDirection.rtl : material.TextDirection.ltr,
-                  child: TextFormField(
-                    controller: controller,
-                    enabled: enabled,
-                    focusNode: focusNode,
-                    toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
-                      copy: false, cut: false, paste: false, selectAll: false,
-                    ),
-                    onEditingComplete: () {
-                      focusNode.nextFocus();
-                    },
-                    onChanged: (v) {
-                      final textVal = _getTextVal(v);
-                      if (v.isEmpty || v.characters.last=='.' || v.characters.last==',' || !isEdited) {
-                        value = textVal;
-                      } else if (value!=textVal) {
-                        addUndoEntry(value);
+                  child: KeyboardListener(
+                    includeSemantics: false,
+                    focusNode: FocusNode(),
+                    onKeyEvent: (value) {
+                      if (value is KeyDownEvent) {
+                        if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
+                          focusNode.focusInDirection(TraversalDirection.down);
+                        } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
+                          focusNode.focusInDirection(TraversalDirection.up);
+                        }
                       }
                     },
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp(digitsAfterComma==0 ? (r'[0-9]') : (r'[0-9.]'))),],
-                    decoration: inputDecoration??InputDecoration(
-                      border: InputBorder.none,
-                      alignLabelWithHint: dense,
-                      label: Text(uiName,
-                        softWrap: false,
-                        overflow: TextOverflow.fade,
+                    child: TextFormField(
+                      controller: controller,
+                      enabled: enabled,
+                      focusNode: focusNode,
+                      toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
+                        copy: false, cut: false, paste: false, selectAll: false,
                       ),
-                      hintText: hint,
-                      floatingLabelBehavior: enabled&&hint==null ? FloatingLabelBehavior.auto : FloatingLabelBehavior.always,
-                      labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
-                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                      ),
-                      hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
-                      contentPadding: EdgeInsets.only(
-                        left: dense ? 0 : 16,
-                        right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
-                        bottom: dense ? 10 : 0,
+                      onEditingComplete: () {
+                        focusNode.nextFocus();
+                      },
+                      onChanged: (v) {
+                        final textVal = _getTextVal(v);
+                        if (v.isEmpty || v.characters.last=='.' || v.characters.last==',' || !isEdited) {
+                          value = textVal;
+                        } else if (value!=textVal) {
+                          addUndoEntry(value);
+                        }
+                      },
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(digitsAfterComma==0 ? (r'[0-9]') : (r'[0-9.]'))),],
+                      decoration: inputDecoration??InputDecoration(
+                        border: InputBorder.none,
+                        alignLabelWithHint: dense,
+                        label: Text(uiName,
+                          softWrap: false,
+                          overflow: TextOverflow.fade,
+                        ),
+                        hintText: hint,
+                        floatingLabelBehavior: !enabled ? FloatingLabelBehavior.never
+                            : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
+                        labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
+                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                        ),
+                        hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
+                        contentPadding: EdgeInsets.only(
+                          left: dense ? 0 : 16,
+                          right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
+                          bottom: dense ? 10 : 0,
+                        ),
                       ),
                     ),
                   ),

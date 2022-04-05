@@ -1,5 +1,6 @@
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:animations/animations.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
@@ -134,7 +135,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
         this.scrollbarType = scrollbarType ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? scrollbarTypeBellowAppbar : scrollbarTypeOverAppbar),
         this.bodyFloatsBelowAppbar = bodyFloatsBelowAppbar ?? appbarType==ScaffoldFromZero.appbarTypeQuickReturn,
         this.compactDrawerWidth = drawerContentBuilder==null||!useCompactDrawerInsteadOfClose ? 0 : 56,
-        this.appbarHeight = appbarHeight ?? (appbarType==ScaffoldFromZero.appbarTypeNone ? 0 : (48 + (PlatformExtended.isWindows ? appWindow.titleBarHeight : 0))), //useCompactDrawerInsteadOfClose ? 56 : 0
+        this.appbarHeight = appbarHeight ?? (appbarType==ScaffoldFromZero.appbarTypeNone ? 0 : (48 + (!kIsWeb && Platform.isWindows && windowsDesktopBitsdojoWorking ? appWindow.titleBarHeight : 8))), //useCompactDrawerInsteadOfClose ? 56 : 0
         this.titleTransitionBuilder = titleTransitionBuilder ?? defaultTitleTransitionBuilder,
         this.drawerContentTransitionBuilder = drawerContentTransitionBuilder ?? defaultDrawerContentTransitionBuilder,
         this.bodyTransitionBuilder = bodyTransitionBuilder ?? defaultBodyTransitionBuilder;
@@ -572,7 +573,7 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         child: body,
       );
     }
-    if (widget.appbarType==ScaffoldFromZero.appbarTypeNone) {
+    if (widget.appbarType==ScaffoldFromZero.appbarTypeNone && !kIsWeb && Platform.isWindows && windowsDesktopBitsdojoWorking) {
       body = Column(
         children: [
           WindowBar(backgroundColor: Theme.of(context).cardColor,),

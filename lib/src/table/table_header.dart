@@ -236,25 +236,39 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
   }
 
   List<RowModel<T>> defaultOnFilter(List<RowModel<T>> rows) {
-    final searchQuery = this.searchQuery?.trim().toUpperCase();
-    if (searchQuery==null || searchQuery.isEmpty) {
+    List<RowModel<T>> starts = [];
+    List<RowModel<T>> contains = [];
+    if (searchQuery==null || searchQuery!.isEmpty) {
       return rows;
     } else {
-      return rows.where((e) {
+      final q = this.searchQuery!.trim().toUpperCase();
+      for (final e in rows) {
         if (e.id is DAO) {
-          return e.id.toString().toUpperCase().contains(searchQuery);
+          final value = e.id.toString().toUpperCase();
+          if (value.contains(q)) {
+            if (value.startsWith(q)) {
+              starts.add(e);
+            } else {
+              contains.add(e);
+            }
+          }
         } else {
-          bool pass = false;
           for (final v in e.values.values) {
-            if (v.toString().toUpperCase().contains(searchQuery)) {
-              pass = true;
+            final value = v.toString().toUpperCase();
+            if (value.contains(q)) {
+              if (value.startsWith(q)) {
+                starts.add(e);
+              } else {
+                contains.add(e);
+              }
               break;
             }
           }
-          return pass;
         }
-      }).toList();
+      }
+      return [...starts, ...contains];
     }
+
   }
 
 }

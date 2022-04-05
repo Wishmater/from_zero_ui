@@ -57,6 +57,8 @@ Table Feature -- Column types (String, num, DateTime)
 	custom filters for each column type
 	
 Table Performance -- cancel async/isolate filters computation if disposed
+
+Table bug with arrow key traversal
 	
 DAO Form -- make errorSign inside textField flicker on highlight like others
 	

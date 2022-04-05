@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -17,6 +18,9 @@ import 'package:from_zero_ui/src/app_scaffolding/snackbar_host_from_zero.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path/path.dart' as p;
 
+
+
+bool windowsDesktopBitsdojoWorking = true;
 
 
 
@@ -72,6 +76,7 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
   @override
   Widget build(BuildContext context) {
     //TODO 3 add restrictions to fontSize, uiScale logic, etc. here
+    bool showWindowButtons = !kIsWeb && Platform.isWindows && windowsDesktopBitsdojoWorking;
     final screen = ref.read(fromZeroScreenProvider);
     final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
     ScrollBehavior scrollConfiguration = ScrollConfiguration.of(context).copyWith(
@@ -138,26 +143,27 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
                   SnackBarHostFromZero(
                     child: widget.child,
                   ),
-                  Positioned(
-                    top: 0, left: 0, right: 0,
-                    child: ValueListenableBuilder<bool>(
-                      valueListenable: isMouseOverWindowBar,
-                      builder: (context, value, child) {
-                        return AppearOnMouseOver(
-                          appear: !value,
-                          child: WindowBar(
-                            backgroundColor: Theme.of(context).cardColor,
-                            iconTheme: Theme.of(context).iconTheme,
-                            goRouter: widget.goRouter,
-                            onMaximizeOrRestore: (context) {
-                              // hack so the windowBar doesn't get stuck after maximize
-                              context.findAncestorStateOfType<_AppearOnMouseOverState>()!.pressed = false;
-                            },
-                          ),
-                        );
-                      },
+                  if (showWindowButtons)
+                    Positioned(
+                      top: 0, left: 0, right: 0,
+                      child: ValueListenableBuilder<bool>(
+                        valueListenable: isMouseOverWindowBar,
+                        builder: (context, value, child) {
+                          return AppearOnMouseOver(
+                            appear: !value,
+                            child: WindowBar(
+                              backgroundColor: Theme.of(context).cardColor,
+                              iconTheme: Theme.of(context).iconTheme,
+                              goRouter: widget.goRouter,
+                              onMaximizeOrRestore: (context) {
+                                // hack so the windowBar doesn't get stuck after maximize
+                                context.findAncestorStateOfType<_AppearOnMouseOverState>()!.pressed = false;
+                              },
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -349,8 +355,8 @@ class WindowBar extends StatelessWidget {
       } else {
         // if successfully popped last route, exit app (maybePop only false when popDisposition==bubble)
         print ('  Successfully popped last route, exiting app...');
+        debugger();
         exit(0);
-        return;
       }
       print ('  Popped successfully, continuing popping iteration...');
 
@@ -536,6 +542,9 @@ class WindowEventListener{
             case 'WM_CLOSE':
               final goRouter = routerGetter();
               WindowBar.smartMultiPop(goRouter);
+              break;
+            case 'WINDOW_INIT_ERROR':
+              windowsDesktopBitsdojoWorking = false;
               break;
           }
         }
