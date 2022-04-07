@@ -59,6 +59,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   bool? viewDialogShowsEditButton;
   bool wantsLinkToSelfFromOtherDAOs;
   bool enableUndoRedoMechanism;
+  bool showConfirmDialogWithBlockingErrors;
   DAO? parentDAO; /// if not null, undo/redo calls will be relayed to the parent
 
   DAO({
@@ -85,6 +86,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     List<List<Field>>? undoRecord,
     List<List<Field>>? redoRecord,
     this.enableUndoRedoMechanism = true,
+    this.showConfirmDialogWithBlockingErrors = true,
     this.parentDAO,
   }) :  this._undoRecord = undoRecord ?? [],
         this._redoRecord = redoRecord ?? [],
@@ -127,6 +129,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? viewDialogShowsEditButton,
     List<List<Field>>? undoRecord,
     List<List<Field>>? redoRecord,
+    bool? showConfirmDialogWithBlockingErrors,
     DAO? parentDAO,
   }) {
     final result = DAO<ModelType>(
@@ -152,6 +155,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       wantsLinkToSelfFromOtherDAOs: wantsLinkToSelfFromOtherDAOs??this.wantsLinkToSelfFromOtherDAOs,
       undoRecord: undoRecord??this._undoRecord,
       redoRecord: redoRecord??this._redoRecord,
+      showConfirmDialogWithBlockingErrors: showConfirmDialogWithBlockingErrors??this.showConfirmDialogWithBlockingErrors,
       parentDAO: parentDAO??this.parentDAO,
     );
     result._selfUpdateListeners = _selfUpdateListeners;
@@ -356,7 +360,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
   Future<bool> validate(context, {
     bool validateNonEditedFields = true,
-    bool focusBlockingField = false,
   }) async {
     final currentValidationId = ++validationCallCount;
     if (blockNotifyListeners) {
@@ -365,7 +368,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     if (parentDAO!=null) {
       return parentDAO!.validate(parentDAO!.contextForValidation,
         validateNonEditedFields: validateNonEditedFields,
-        focusBlockingField: focusBlockingField,
       );
     }
     bool success = true;
@@ -383,23 +385,26 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         break;
       }
     }
-    if (focusBlockingField && !success) {
-      final validationErrors = this.validationErrors;
-      validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
-      ValidationError error = validationErrors.first;
-      // print ('VALIDATION ERRORS ENCOUNTERED:');
-      // print (validationErrors.where((e) => e.isBlocking));
-      // print ('FOCUSING ERROR:');
-      // print ('${error.field} -- ${error.error}');
-      error.field.requestFocus();
-      try {
-        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-          error.animationController?.forward(from: 0);
-        });
-      } catch(_) {}
-    }
     notifyListeners();
     return success;
+  }
+  void focusFirstBlockingError() {
+    final validationErrors = this.validationErrors;
+    validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
+    ValidationError error = validationErrors.first;
+    // print ('VALIDATION ERRORS ENCOUNTERED:');
+    // print (validationErrors.where((e) => e.isBlocking));
+    // print ('FOCUSING ERROR:');
+    // print ('${error.field} -- ${error.error}');
+    focusError(error);
+  }
+  void focusError(ValidationError error) {
+    error.field.requestFocus();
+    try {
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        error.animationController?.forward(from: 0);
+      });
+    } catch(_) {}
   }
 
 
@@ -410,13 +415,12 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }) async {
     bool validation = await validate(context,
       validateNonEditedFields: true,
-      focusBlockingField: true,
     );
-    if (!validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
+    if (!showConfirmDialogWithBlockingErrors && !validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
       return null;
     }
     bool? confirm = true;
-    if (askForSaveConfirmation) {
+    if (askForSaveConfirmation || !validation) {
       final scrollController = ScrollController();
       confirm = await showModal(
         context: context,
@@ -424,7 +428,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           return SizedBox(
             width: formDialogWidth-32,
             child: AlertDialog(
-              title: Text(FromZeroLocalizations.of(context).translate("confirm_save_title")),
+              title: Text(validation
+                  ? FromZeroLocalizations.of(context).translate("confirm_save_title")
+                  : 'Error de Validación'), // TODO 3 internationaliza
               content: ScrollbarFromZero(
                 controller: scrollController,
                 child: SingleChildScrollView(
@@ -433,7 +439,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(FromZeroLocalizations.of(context).translate("confirm_save_desc")),
+                      Text(validation
+                          ? FromZeroLocalizations.of(context).translate("confirm_save_desc")
+                          : 'Debe resolver los siguientes errores de validación antes de guardar:'),
                       SaveConfirmationValidationMessage(allErrors: validationErrors),
                     ],
                   ),
@@ -452,17 +460,20 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     Navigator.of(context).pop(false); // Dismiss alert dialog
                   },
                 ),
-                FlatButton(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                TooltipFromZero(
+                  message: validation ? null : 'No se puede guardar hasta resolver los errores de validación', // TODO 3 internationalize
+                  child: FlatButton(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
                     ),
+                    textColor: Colors.blue,
+                    onPressed: !validation ? null : () {
+                      Navigator.of(context).pop(true); // Dismiss alert dialog
+                    },
                   ),
-                  textColor: Colors.blue,
-                  onPressed: () {
-                    Navigator.of(context).pop(true); // Dismiss alert dialog
-                  },
                 ),
                 SizedBox(width: 2,),
               ],
@@ -490,9 +501,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     if (!skipValidation) {
       bool validation = await validate(context,
         validateNonEditedFields: true,
-        focusBlockingField: true,
       );
       if (!validation) {
+        focusFirstBlockingError();
         return null;
       }
     }
@@ -736,7 +747,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     _contextForValidation = _contextForValidation ?? context;
     validate(context,
       validateNonEditedFields: false,
-      focusBlockingField: false,
     );
     final focusNode = FocusNode();
     Widget content = LayoutBuilder(

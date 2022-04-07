@@ -157,6 +157,7 @@ class StringField extends Field<String> {
     int? minLines,
     int? maxLines,
     InputDecoration? inputDecoration,
+    List<TextInputFormatter>? inputFormatters,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -186,6 +187,7 @@ class StringField extends Field<String> {
       minLines: minLines??this.minLines,
       maxLines: maxLines??this.maxLines,
       inputDecoration: inputDecoration??this.inputDecoration,
+      inputFormatters: inputFormatters??this.inputFormatters,
       hintGetter: hintGetter??this.hintGetter,
       tooltipGetter: tooltipGetter??this.tooltipGetter,
       tableColumnWidth: tableColumnWidth??this.tableColumnWidth,
@@ -316,7 +318,6 @@ class StringField extends Field<String> {
                   focusNode: FocusNode(),
                   onKeyEvent: (value) {
                     if (value is KeyDownEvent && type==StringFieldType.short) {
-                      print (value);
                       if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
                         focusNode.focusInDirection(TraversalDirection.down);
                       } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
@@ -462,4 +463,15 @@ class StringField extends Field<String> {
     );
   }
 
+}
+
+
+class UpperCaseTextFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    return TextEditingValue(
+      text: newValue.text.toUpperCase(),
+      selection: newValue.selection,
+    );
+  }
 }

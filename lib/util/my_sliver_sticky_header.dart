@@ -615,10 +615,11 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
               (overlapsContent ? _headerExtent! : 0.0))
           : -constraints.scrollOffset;
 
+      externalStuckOffset = sticky ? determineStuckOffsetFromExternalController() : 0;
+
       _isPinned = sticky &&
           ((constraints.scrollOffset + constraints.overlap) > 0.0 ||
-              constraints.remainingPaintExtent ==
-                  constraints.viewportMainAxisExtent);
+              externalStuckOffset > 0 ); // || constraints.remainingPaintExtent==constraints.viewportMainAxisExtent
 
       final double headerScrollRatio =
       ((headerPosition - constraints.overlap).abs() / _headerExtent!);
@@ -626,11 +627,12 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
         controller?.stickyHeaderScrollOffset =
             constraints.precedingScrollExtent;
       }
+
       // second layout if scroll percentage changed and header is a
       // RenderStickyHeaderLayoutBuilder.
       if (header is RenderConstrainedLayoutBuilder<
           BoxValueConstraints<SliverStickyHeaderState>, RenderBox>) {
-        // TODO 2 the state won't be correctly updated if the pin is due to external scrollController
+        // TODO 2 the state headerScrollRatioClamped won't be correctly updated if the pin is due to external scrollController
         // TODO 2 the state won't be correctly if footer==true
         double headerScrollRatioClamped = headerScrollRatio.clamp(0.0, 1.0);
 
@@ -654,7 +656,6 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
           stickAddedOffset = (constraints.scrollOffset + constraints.overlap).clamp(0, stickOffset);
         }
       }
-      externalStuckOffset = sticky ? determineStuckOffsetFromExternalController() : 0;
       if (footer) {
         switch (axisDirection) {
           case AxisDirection.up:

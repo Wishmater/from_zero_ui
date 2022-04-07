@@ -535,15 +535,18 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
   void focusObject(T object) {
     WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-      if (tableCellsEditable) {
-        object.props.values.firstOrNullWhere((e) => !e.hiddenInForm)?.focusNode.requestFocus();
-      } else {
-        builtRows[object]?.focusNode.requestFocus();
-      }
+      try {
+        if (tableCellsEditable) {
+          object.props.values.firstOrNullWhere((e) => !e.hiddenInForm)?.focusNode.requestFocus();
+        } else {
+          builtRows[object]?.focusNode.requestFocus();
+        }
+      } catch (_) {}
     });
   }
 
-  void maybeAddRow(context, [int? insertIndex]) async {
+  Future<T?> maybeAddRow(context, [int? insertIndex]) async {
+    focusNode.requestFocus();
     T emptyDAO = (objectTemplate.copyWith() as T)..id=null;
     emptyDAO.contextForValidation = dao.contextForValidation;
     if (hasAvailableObjectsPool) {
@@ -722,6 +725,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       }
       if (selected!=null) {
         addRow(selected, insertIndex);
+        return selected;
       }
     } else {
       dynamic result;
@@ -729,9 +733,11 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         result = await emptyDAO.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
         if (result!=null) {
           addRow(emptyDAO, insertIndex);
+          return emptyDAO;
         }
       } else {
         addRow(emptyDAO, insertIndex);
+        return emptyDAO;
       }
     }
   }
@@ -1098,7 +1104,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     }
   }
 
-  final headerGlobalKey = GlobalKey();
+  GlobalKey headerGlobalKey = GlobalKey();
   @override
   List<Widget> buildFieldEditorWidgets(BuildContext context, {
     bool addCard=true,
@@ -1489,6 +1495,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                 onRowTap: (context, row) async {
                   row.focusNode.requestFocus();
                   if (await maybeDelete(context, [row.id])) {
+                    focusNode!.requestFocus();
                     passedFirstEdit = true;
                     notifyListeners();
                   }
@@ -1512,18 +1519,20 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                   focusNode: errorWidgetFocusNode,
                   skipTraversal: true,
                   child: Material(
-                    color: Theme.of(context).cardColor,
-                    child: InkWell(
-                      onTap: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty ? () {
-                        maybeAddRow(context);
-                      } : null,
-                      child: ErrorSign(
-                        title: FromZeroLocalizations.of(context).translate('no_data'),
-                        subtitle: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
-                            ? FromZeroLocalizations.of(context).translate('no_data_add')
-                            : FromZeroLocalizations.of(context).translate('no_data_filters'),
-                      ),
-                    ),
+                    color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
+                    child: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
+                        ? buildAddAddon(context: context, width: width, collapsed: collapsed)
+                        : InkWell(
+                          onTap: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty ? () {
+                            maybeAddRow(context);
+                          } : null,
+                          child: ErrorSign(
+                            title: FromZeroLocalizations.of(context).translate('no_data'),
+                            subtitle: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
+                                ? FromZeroLocalizations.of(context).translate('no_data_add')
+                                : FromZeroLocalizations.of(context).translate('no_data_filters'),
+                          ),
+                        ),
                   ),
                 ),
               ),
@@ -1548,7 +1557,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         }
         if (!asSliver) {
           result = Material(
-            color: Theme.of(context).cardColor,
+            color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
             child: Container(
               color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
               child: CustomScrollView(
@@ -1583,6 +1592,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       if (addCard) {  // TODO 3 implement addCard in table slivers, VERY HARD IPMLEMENTATION FOR LOW REWARD
         result = Card(
           clipBehavior: Clip.hardEdge,
+          color: enabled ? null : Theme.of(context).canvasColor,
           child: result,
         );
       }
@@ -1617,40 +1627,33 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           return SizedBox.shrink();
         }
         return Transform.translate(
-          offset: Offset(0, -12),
+          offset: Offset(0, 0),
           child: Container(
             width: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
             color: Material.of(context)!.color ?? Theme.of(context).cardColor,
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 12,
-                ),
-                TextButton(
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 10, bottom: 10,),
-                    child: Center(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.add),
-                          SizedBox(width: 8,),
-                          Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}', style: TextStyle(fontSize: 16),),
-                          SizedBox(width: 8,),
-                        ],
+            child: TextButton(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 10, bottom: 10,),
+                child: Center(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add),
+                      SizedBox(width: 8,),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}', style: TextStyle(fontSize: 16),),
                       ),
-                    ),
+                      SizedBox(width: 8,),
+                    ],
                   ),
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.blue.withOpacity(0.2),
-                  ),
-                  onPressed: () => maybeAddRow(context),
                 ),
-                SizedBox(
-                  height: 12,
-                ),
-              ],
+              ),
+              style: TextButton.styleFrom(
+                backgroundColor: Colors.blue.withOpacity(0.2),
+              ),
+              onPressed: () => maybeAddRow(context),
             ),
           ),
         );

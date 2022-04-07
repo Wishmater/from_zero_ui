@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:from_zero_ui/src/app_scaffolding/api_snackbar.dart';
 import 'package:from_zero_ui/src/app_scaffolding/snackbar_from_zero.dart';
 
 
@@ -94,6 +95,9 @@ class SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
         ? null : controller._snackBarQueue.first;
     bool isSameSnackBar = currentSnackBar?.key!=null && lastShownSnackBar?.key!=null
         && currentSnackBar?.key==lastShownSnackBar?.key;
+    if (currentSnackBar!=null && !isSameSnackBar && currentSnackBar is APISnackBar) {
+      currentSnackBar.updateBlockUI(currentSnackBar.stateNotifier.state);
+    }
     Widget result = Stack(
       children: [
         widget.child,

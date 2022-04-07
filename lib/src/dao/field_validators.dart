@@ -451,7 +451,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
               size: 38,
               color: ValidationMessage.severityColors[Theme.of(context).brightness]![severity]!,
             ),
-            SizedBox(width: 6,),
+            SizedBox(width: 4,),
             Expanded(
               child: Text(name,
                 style: Theme.of(context).textTheme.headline6,
@@ -460,25 +460,33 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
           ],
         ),
         ...errors.map((e) {
-          return Padding(
-            padding: const EdgeInsets.only(left: 15,),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: Icon(Icons.circle,
-                    size: 10,
-                    color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
+          return InkWell(
+            onTap: () {
+              Navigator.of(context).pop();
+              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                e.field.dao.focusError(e);
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.only(left: 15, top: 1, bottom: 2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 7),
+                    child: Icon(Icons.circle,
+                      size: 10,
+                      color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
+                    ),
                   ),
-                ),
-                SizedBox(width: 8,),
-                Expanded(
-                  child: Text(e.error,
-                    // style: Theme.of(context).textTheme.bodyText1!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
+                  SizedBox(width: 6,),
+                  Expanded(
+                    child: Text(e.error,
+                      // style: Theme.of(context).textTheme.bodyText1!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         }),

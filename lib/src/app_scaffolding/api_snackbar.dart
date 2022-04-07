@@ -48,6 +48,32 @@ class APISnackBar<T> extends SnackBarFromZero {
   @override
   APISnackBarState<T> createState() => APISnackBarState<T>();
 
+  void updateBlockUI(AsyncValue<T> state) {
+    state.whenOrNull(
+      error: (error, stackTrace) {
+        bool blockUI = this.blockUIType==APISnackBarBlockUIType.always
+            || this.blockUIType==APISnackBarBlockUIType.whileLoadingOrError;
+        if (blockUI != this.blockUI.value) {
+          this.blockUI.value = blockUI;
+        }
+      },
+      data: (data) {
+        bool blockUI = this.blockUIType==APISnackBarBlockUIType.always;
+        if (blockUI != this.blockUI.value) {
+          this.blockUI.value = blockUI;
+        }
+      },
+      loading: () {
+        bool blockUI = this.blockUIType==APISnackBarBlockUIType.always
+            || this.blockUIType==APISnackBarBlockUIType.whileLoading
+            || this.blockUIType==APISnackBarBlockUIType.whileLoadingOrError;
+        if (blockUI != this.blockUI.value) {
+          this.blockUI.value = blockUI;
+        }
+      },
+    );
+  }
+
 }
 
 
@@ -60,20 +86,10 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
     super.initState();
     widget.stateNotifier.addListener((state) {
       if (mounted) {
+        widget.updateBlockUI(state);
         state.whenOrNull(
-          error: (error, stackTrace) {
-            bool blockUI = widget.blockUIType==APISnackBarBlockUIType.always
-                || widget.blockUIType==APISnackBarBlockUIType.whileLoadingOrError;
-            if (blockUI != widget.blockUI.value) {
-              widget.blockUI.value = blockUI;
-            }
-          },
           data: (data) {
-            bool blockUI = widget.blockUIType==APISnackBarBlockUIType.always;
-            if (blockUI != widget.blockUI.value) {
-              widget.blockUI.value = blockUI;
-            }
-            if (!blockUI) {
+            if (!widget.blockUI.value) {
               initAnimationController();
             } else {
               try { animationController?.dispose(); } catch(_) {}
@@ -81,13 +97,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
             }
           },
           loading: () {
-            bool blockUI = widget.blockUIType==APISnackBarBlockUIType.always
-                || widget.blockUIType==APISnackBarBlockUIType.whileLoading
-                || widget.blockUIType==APISnackBarBlockUIType.whileLoadingOrError;
-            if (blockUI != widget.blockUI.value) {
-              widget.blockUI.value = blockUI;
-            }
-            if (!blockUI) {
+            if (!widget.blockUI.value) {
               initAnimationController();
             } else {
               try { animationController?.dispose(); } catch(_) {}

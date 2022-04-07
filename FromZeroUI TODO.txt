@@ -33,6 +33,10 @@ fix part of the screen not being draggable on really big screens
 	
 popupFromZero doesn't reposition child in response to window resize
 
+Implement SafeAnimatedSwitcher
+	this widget will take an image of the widgets switching out and remove them from the widget tree immediatly
+	this will fix duplicate GlobalKey errors caused by AnimatedSwitcher and [hopefully] improove performance
+
 
 
 
@@ -93,6 +97,8 @@ popupFromZero improvement: on dektop, popup should not block content behind it b
 
 Make FromZeroAppbar expanded widget close only on back button, not on WillPop 
 	https://pub.dev/packages/back_button_interceptor
+	
+Sticky footer bugs when there are more slivers below itself
 
 Organize dependencies
 	remove all dependency overrides

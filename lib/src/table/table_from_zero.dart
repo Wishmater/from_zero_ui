@@ -83,7 +83,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.headerRowModel,
     this.enableStickyHeaders = true,
     this.stickyOffset = 0,
-    this.footerStickyOffset = 0,
+    this.footerStickyOffset = 12,
     this.alternateRowBackgroundBrightness = true,
     this.alternateRowBackgroundSmartly,
     this.rowStyleTakesPriorityOverColumn = true,
@@ -282,7 +282,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           headerRowModel = (widget.headerRowModel as SimpleRowModel).copyWith(
             onCheckBoxSelected: widget.headerRowModel!.onCheckBoxSelected
                 ?? (widget.onAllSelected!=null||widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null),
-            values: widget.columns!.length==widget.headerRowModel!.values.length
+            values: widget.columns==null || widget.columns!.length==widget.headerRowModel!.values.length
                 ? widget.headerRowModel!.values
                 : widget.columns!.map((key, value) => MapEntry(key, value.name)),
             rowAddonIsAboveRow: widget.headerRowModel?.rowAddonIsAboveRow ?? true,
@@ -303,6 +303,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         );
       }
       availableFilters.value = null;
+    }
+    if (widget.columns!=null) {
       initFilters();
     }
     _updateFiltersApplied();
@@ -556,7 +558,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         sticky: true,
         footer: true,
         overlapsContent: true,
-        stickOffset: 12,
+        stickOffset: widget.footerStickyOffset,
         header: LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth < widget.minWidth!) {
