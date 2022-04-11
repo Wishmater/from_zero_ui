@@ -1629,7 +1629,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         return Transform.translate(
           offset: Offset(0, 0),
           child: Container(
-            width: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
             color: Material.of(context)!.color ?? Theme.of(context).cardColor,
             child: TextButton(
               child: Padding(

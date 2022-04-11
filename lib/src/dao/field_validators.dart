@@ -65,6 +65,24 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
         );
 }
 
+class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
+  ForcedValueError({
+    required Field<T> field,
+    required T? defaultValue,
+    required String error,
+  })  : super(
+          field: field,
+          error: error,
+          defaultValue: defaultValue,
+          showVisualConfirmation: false,
+          allowSetThisFieldToDefaultValue: true,
+          allowUndoInvalidatingChange: true,
+        ) {
+    severity = field.value==defaultValue
+        ? ValidationErrorSeverity.disabling
+        : ValidationErrorSeverity.invalidating;
+  }
+}
 
 
 
