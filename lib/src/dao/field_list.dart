@@ -509,10 +509,11 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     elements.forEach((e) {
       e.parentDAO = dao;
       int index = newValue.indexOf(e);
+      final newItem = (e.copyWith()..id = null) as T;
       if (index<0) {
-        newValue.add(e.copyWith() as T);
+        newValue.add(newItem);
       } else {
-        newValue.insert(index+1, e.copyWith() as T);
+        newValue.insert(index+1, newItem);
       }
     });
     value = newValue;

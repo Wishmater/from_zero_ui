@@ -201,6 +201,8 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
   final int style;
   final List<bool> paintPreviousTreeLines;
   final bool inferSelected;
+  final bool allowCollapseRoot;
+  final Map<int, GlobalKey<ExpansionTileFromZeroState>>? expansionTileKeys;
 
   DrawerMenuFromZero({
     required this.tabs,
@@ -216,7 +218,9 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
     this.style = styleDrawerMenu,
     this.paintPreviousTreeLines = const[],
     this.inferSelected = true,
+    this.allowCollapseRoot = true,
     String? homeRoute,
+    this.expansionTileKeys,
   }) : this.homeRoute = homeRoute ?? tabs[0].route;
 
   @override
@@ -620,9 +624,16 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
         Widget result;
 
-        if (tabs[i].children!=null && (tabs[i].children?.isNotEmpty??false)){
+        if (tabs[i].children?.isNotEmpty??false){
 
           if (!_menuButtonKeys.containsKey(i)) _menuButtonKeys[i] = GlobalKey();
+          final Map<int, GlobalKey<ExpansionTileFromZeroState>> childKeys = {};
+          for (int j=0; j<tabs[i].children!.length; j++) {
+            final e = tabs[i].children![j];
+            if (e.children?.isNotEmpty ?? false) {
+              childKeys[j] = GlobalKey();
+            }
+          }
           final scaffoldChangeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
           GoRouteFromZero? route;
           try {
@@ -647,12 +658,16 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
           );
           result = ContextMenuFromZero(
             child: ExpansionTileFromZero(
+              key: widget.expansionTileKeys?[i],
               initiallyExpanded: selected==i || tabs[i].selectedChild>=0,
               expanded: widget.compact||tabs[i].forcePopup ? false
                   : scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] ?? tabs[i].defaultExpanded,
               expandedAlignment: Alignment.topCenter,
               contextMenuActions: tabs[i].contextMenuActions,
+              addExpandCollapseContextMenuAction: !widget.compact,
+              childrenKeysForExpandCollapse: childKeys.values.toList(),
               style: widget.style,
+              enabled: widget.depth!=0 || widget.allowCollapseRoot,
               actionPadding: EdgeInsets.only(
                 left: widget.style==DrawerMenuFromZero.styleTree ? widget.depth*20.0 : 0,
               ),
@@ -673,6 +688,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                       padding: const EdgeInsets.only(bottom: 6),
                       child: DrawerMenuFromZero(
                         tabs: tabs[i].children!,
+                        expansionTileKeys: childKeys,
                         compact: widget.compact,
                         selected: tabs[i].selectedChild,
                         inferSelected: false,

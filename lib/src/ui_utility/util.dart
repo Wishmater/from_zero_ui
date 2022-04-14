@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:intl/intl.dart';
@@ -185,4 +186,19 @@ class NumGroupComparingByAverage extends NumGroupComparingBySum {
     value = value! / values.length;
   }
 
+}
+
+
+
+
+bool isVisibleInScrollable(BuildContext currentContext, double currentScrollPixels){
+  var renderObject = currentContext.findRenderObject()!;
+  RenderAbstractViewport viewport = RenderAbstractViewport.of(renderObject)!;
+  var offsetToRevealBottom = viewport.getOffsetToReveal(renderObject, 1.0);
+  var offsetToRevealTop = viewport.getOffsetToReveal(renderObject, 0.0);
+  if (offsetToRevealBottom.offset > currentScrollPixels ||
+      currentScrollPixels > offsetToRevealTop.offset) {
+    return false;
+  }
+  return true;
 }

@@ -2,6 +2,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
 import 'package:from_zero_ui/src/future_handling/future_handling.dart';
@@ -53,6 +54,9 @@ class ExpansionTileFromZero extends StatefulWidget {
     this.style,
     this.actionPadding = EdgeInsets.zero,
     this.contextMenuActions = const [],
+    this.addExpandCollapseContextMenuAction = true,
+    this.childrenKeysForExpandCollapse = const [],
+    this.enabled = true,
   }) :  assert(
         expandedCrossAxisAlignment != CrossAxisAlignment.baseline,
         'CrossAxisAlignment.baseline is not supported since the expanded children '
@@ -67,7 +71,10 @@ class ExpansionTileFromZero extends StatefulWidget {
   final int? style;
   final EdgeInsets actionPadding;
   final Widget? titleExpanded;
+  final bool addExpandCollapseContextMenuAction;
   final List<ActionFromZero> contextMenuActions;
+  final List<GlobalKey<ExpansionTileFromZeroState>> childrenKeysForExpandCollapse;
+  final bool enabled;
 
   /// A widget to display before the title.
   ///
@@ -160,10 +167,10 @@ class ExpansionTileFromZero extends StatefulWidget {
   final EdgeInsetsGeometry? childrenPadding;
 
   @override
-  _ExpansionTileFromZeroState createState() => _ExpansionTileFromZeroState();
+  ExpansionTileFromZeroState createState() => ExpansionTileFromZeroState();
 }
 
-class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with SingleTickerProviderStateMixin {
+class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with SingleTickerProviderStateMixin {
   static final Animatable<double> _easeOutTween = CurveTween(curve: Curves.easeOut);
   static final Animatable<double> _easeInTween = CurveTween(curve: Curves.easeIn);
   late Animatable<double> _halfTween;
@@ -182,7 +189,7 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
   late Animation<Color> _backgroundColor;
 
   bool _isExpanded = false;
-
+  bool get isExpanded => _isExpanded;
 
   @override
   void initState() {
@@ -229,7 +236,7 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
   }
   void setExpanded(bool expanded, [force=false]) {
 //    if (widget.expanded!=null) expanded=widget.expanded;
-    if (_isExpanded != expanded){
+    if (widget.enabled && _isExpanded != expanded){
       setState(() {
         _isExpanded = expanded;
         if (_isExpanded) {
@@ -273,10 +280,10 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
               child: Padding(
                 padding: widget.actionPadding,
                 child: IconButton(
-                  icon: widget.trailing ?? RotationTransition(
+                  icon: widget.trailing ?? (widget.enabled ? RotationTransition(
                     turns: _iconTurns,
                     child: Icon(Icons.expand_more, color: _iconColor.value, size: 26,),
-                  ),
+                  ) : SizedBox.shrink()),
                   iconSize: 26,
                   onPressed: () {
                     setExpanded(!_isExpanded);
@@ -304,10 +311,49 @@ class _ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Sing
         ],
       ),
     );
-    if (widget.contextMenuActions.isNotEmpty) {
-      title = ContextMenuFromZero(
-        child: title,
-        actions: widget.contextMenuActions,
+    if (widget.contextMenuActions.isNotEmpty || widget.addExpandCollapseContextMenuAction) {
+      final prevTitle = title;
+      VoidCallback onNextFrame = (){};
+      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        if (mounted) {
+          onNextFrame();
+        }
+      });
+      title = StatefulBuilder(
+        builder: (context, setState) {
+          onNextFrame = () {setState((){});};
+          bool expandChildren = widget.childrenKeysForExpandCollapse.where((e) => !(e.currentState?.isExpanded ?? false)).isNotEmpty;
+          return ContextMenuFromZero(
+            child: prevTitle,
+            actions: [
+              ...widget.contextMenuActions,
+              if (((widget.enabled && widget.addExpandCollapseContextMenuAction)
+                  || (_isExpanded && widget.childrenKeysForExpandCollapse.isNotEmpty))
+                  && widget.contextMenuActions.isNotEmpty)
+                ActionFromZero.divider(),
+              if (widget.enabled && widget.addExpandCollapseContextMenuAction)
+                ActionFromZero(
+                  icon: Icon(_isExpanded ? MaterialCommunityIcons.arrow_collapse_up : MaterialCommunityIcons.arrow_expand_down,),
+                  title: _isExpanded ? 'Colapsar' : 'Expandir',
+                  onTap: (context) {
+                    setExpanded(!_isExpanded);
+                  },
+                ),
+              if (_isExpanded && widget.childrenKeysForExpandCollapse.isNotEmpty)
+                ActionFromZero(
+                  icon: Icon(expandChildren ? MaterialCommunityIcons.arrow_expand_down : MaterialCommunityIcons.arrow_collapse_up),
+                  title: expandChildren ? 'Expandir Descendientes' : 'Colapsar Descendientes',
+                  onTap: (context) {
+                    bool expand = widget.childrenKeysForExpandCollapse.where((e) => !(e.currentState?.isExpanded ?? false)).isNotEmpty;
+                    widget.childrenKeysForExpandCollapse.forEach((e) {
+                      e.currentState!.setExpanded(expand);
+                    });
+                    setState((){});
+                  },
+                ),
+            ],
+          );
+        },
       );
     }
     return Container(

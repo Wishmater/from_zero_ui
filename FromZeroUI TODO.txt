@@ -37,7 +37,10 @@ Implement SafeAnimatedSwitcher
 	this widget will take an image of the widgets switching out and remove them from the widget tree immediatly
 	this will fix duplicate GlobalKey errors caused by AnimatedSwitcher and [hopefully] improove performance
 
-
+DAO Form Performance -- wait for first validation before painting a frame
+	this was the behaviour before, but since the validation is async, now the form paints once before validation, then paints again
+	this causes unnecessary paints of even hidden fields
+	since awaiting the validation calls could cause other problems (potential long wait), maybe just waiting 1/2 frames before building would be enough
 
 
 

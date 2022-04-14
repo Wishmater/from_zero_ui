@@ -11,13 +11,13 @@ import 'package:from_zero_ui/src/future_handling/future_handling.dart';
 import 'package:riverpod/riverpod.dart';
 
 
-typedef ApiProvider<T> = StateNotifierProvider<ApiState<T>, AsyncValue<T>>;
-typedef ApiProviderFamily<T, P> = StateNotifierProviderFamily<ApiState<T>, AsyncValue<T>, P>;
+typedef ApiProvider<T> = AutoDisposeStateNotifierProvider<ApiState<T>, AsyncValue<T>>;
+typedef ApiProviderFamily<T, P> = AutoDisposeStateNotifierProviderFamily<ApiState<T>, AsyncValue<T>, P>;
 
 class ApiState<State> extends StateNotifier<AsyncValue<State>> {
 
   // StateNotifierProviderRef<ApiState<State>, AsyncValue<State>> _ref;
-  Ref? _ref;
+  AutoDisposeRef? _ref;
   FutureOr<State> Function(ApiState<State>) _create;
   late FutureOr<State> future;
   bool _running = true;
@@ -32,7 +32,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     _cancelTokens.add(ct);
   }
 
-  ApiState(Ref ref, this._create,)
+  ApiState(AutoDisposeRef ref, this._create,)
       : this._ref = ref,
         super(AsyncValue.loading()) {
     init();
@@ -496,8 +496,10 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
     List<ApiState<T>> stateNotifiers = [];
     List<AsyncValue<T>> values = [];
     for (final e in providers) {
-      stateNotifiers.add(ref.watch(e.notifier));
-      values.add(ref.watch(e));
+      final stateNotifier = ref.watch(e.notifier);
+      ref.watch(e);
+      stateNotifiers.add(stateNotifier);
+      values.add(stateNotifier.state); // using stateNotifier.state instead of value because value is kept when realoading, so loading state is never shown
     }
     return AsyncValueMultiBuilder<T>(
       asyncValues: values,

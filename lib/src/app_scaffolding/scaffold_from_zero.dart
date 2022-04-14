@@ -86,10 +86,12 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
   final double drawerPaddingTop;
   final bool addFooterDivisions;
   final bool applyHeroToDrawerTitle;
+  final bool rememberDrawerScrollOffset;
   final bool alwaysShowHamburgerButtonOnMobile;
   final ScaffoldFromZeroTransitionBuilder titleTransitionBuilder;
   final ScaffoldFromZeroTransitionBuilder drawerContentTransitionBuilder;
   final ScaffoldFromZeroTransitionBuilder bodyTransitionBuilder;
+
 
   ScaffoldFromZero({
     this.title,
@@ -123,6 +125,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
     this.titleSpacing = 8,
     this.addFooterDivisions = true,
     this.applyHeroToDrawerTitle = true,
+    this.rememberDrawerScrollOffset = true,
     this.alwaysShowHamburgerButtonOnMobile = false,
     this.centerDrawerTitle = false,
     ScaffoldFromZeroTransitionBuilder? titleTransitionBuilder,
@@ -141,7 +144,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
         this.bodyTransitionBuilder = bodyTransitionBuilder ?? defaultBodyTransitionBuilder;
 
   @override
-  _ScaffoldFromZeroState createState() => _ScaffoldFromZeroState();
+  ScaffoldFromZeroState createState() => ScaffoldFromZeroState();
 
   static Widget defaultTitleTransitionBuilder({
     required Widget child,
@@ -291,7 +294,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
 
 }
 
-class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
+class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
 
 
   AppbarChangeNotifier? _appbarChangeNotifier;
@@ -300,9 +303,6 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
   late Animation<double> animation;
   late Animation<double> secondaryAnimation;
   final GlobalKey bodyGlobalKey = GlobalKey();
-
-
-  _ScaffoldFromZeroState();
 
 
   late ScaffoldFromZeroChangeNotifier _changeNotifier;
@@ -316,15 +316,17 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
     _changeNotifier.expandedDrawerWidths[route.pageScaffoldId] = widget.drawerWidth;
     _changeNotifier.collapsedDrawerWidths[route.pageScaffoldId] = widget.compactDrawerWidth;
     widget.mainScrollController?.addListener(_handleScroll);
-    if (_changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]==null){
-      _changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId] = ValueNotifier(0);
-    }
-    _changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]?.addListener(() {
-      if (!lockListenToDrawerScroll && mounted && drawerContentScrollController.hasClients){
-        drawerContentScrollController.jumpTo(_changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]?.value ?? 0);
-        lockListenToDrawerScroll = false;
+    if (widget.rememberDrawerScrollOffset) {
+      if (_changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]==null){
+        _changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId] = ValueNotifier(0);
       }
-    });
+      _changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]?.addListener(() {
+        if (!lockListenToDrawerScroll && mounted && drawerContentScrollController.hasClients){
+          drawerContentScrollController.jumpTo(_changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]?.value ?? 0);
+          lockListenToDrawerScroll = false;
+        }
+      });
+    }
   }
 
   void _onDrawerScroll() {
@@ -760,7 +762,9 @@ class _ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         final appbarChangeNotifier = ref.read(fromZeroAppbarChangeNotifierProvider);
         final changeNotifierNotListen = ref.read(fromZeroScaffoldChangeNotifierProvider); // ! this used to be watch, might bring problems with drawer
         drawerContentScrollController = ScrollController(
-          initialScrollOffset: _changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]?.value ?? 0,
+          initialScrollOffset: widget.rememberDrawerScrollOffset
+              ? _changeNotifier.drawerContentScrollOffsets[route.pageScaffoldId]?.value ?? 0
+              : 0,
         );
         drawerContentScrollController.addListener(_onDrawerScroll);
         Widget result = Column(

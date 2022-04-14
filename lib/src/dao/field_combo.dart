@@ -418,7 +418,7 @@ class ComboField<T extends DAO> extends Field<T> {
     dense = false,
   }) {
     return Padding(
-      padding: EdgeInsets.only(right: enabled&&clearable ? 40 : 0),
+      padding: EdgeInsets.only(right: enabled&&clearable ? 40 : 0, bottom: dense ? 4 : 0),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,
@@ -433,7 +433,7 @@ class ComboField<T extends DAO> extends Field<T> {
                     ? Text(value==null||value.toString().isEmpty ? (hint ?? title ?? '') : value.toString(),
                         maxLines: 2,
                         style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                          height: 0.8,
+                          height: 1,
                           color: value==null||value.toString().isEmpty ? Theme.of(context).textTheme.caption!.color!
                               : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
                         ),
