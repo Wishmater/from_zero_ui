@@ -51,6 +51,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   List<ValueChanged<DAO<ModelType>>> _selfUpdateListeners = [];
   DAOWidgetBuilder<ModelType>? viewWidgetBuilder;
   List<Widget> Function(BuildContext context, DAO dao)? viewDialogExtraActions;
+  List<Widget> Function(BuildContext context, DAO dao)? formDialogExtraActions;
   bool useIntrinsicHeightForViewDialog;
   double viewDialogWidth;
   double formDialogWidth;
@@ -76,6 +77,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.onDidDelete,
     this.viewWidgetBuilder,
     this.viewDialogExtraActions,
+    this.formDialogExtraActions,
     this.useIntrinsicHeightForViewDialog = true,
     this.viewDialogWidth = 512,
     this.formDialogWidth = 512,
@@ -120,6 +122,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     OnDidDeleteCallback<ModelType>? onDidDelete,
     DAOWidgetBuilder<ModelType>? viewWidgetBuilder,
     List<Widget> Function(BuildContext context, DAO dao)? viewDialogExtraActions,
+    List<Widget> Function(BuildContext context, DAO dao)? formDialogExtraActions,
     bool? useIntrinsicHeightForViewDialog,
     bool? wantsLinkToSelfFromOtherDAOs,
     double? viewDialogWidth,
@@ -146,6 +149,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       onDidDelete: onDidDelete??this.onDidDelete,
       viewWidgetBuilder: viewWidgetBuilder??this.viewWidgetBuilder,
       viewDialogExtraActions: viewDialogExtraActions??this.viewDialogExtraActions,
+      formDialogExtraActions: formDialogExtraActions??this.formDialogExtraActions,
       useIntrinsicHeightForViewDialog: useIntrinsicHeightForViewDialog??this.useIntrinsicHeightForViewDialog,
       viewDialogWidth: viewDialogWidth??this.viewDialogWidth,
       formDialogWidth: formDialogWidth??this.formDialogWidth,
@@ -674,13 +678,18 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     return success;
   }
 
-  applyDefaultValues(List<InvalidatingError> invalidatingErrors) {
+  void applyDefaultValues(List<InvalidatingError> invalidatingErrors) {
+    bool keepUndo = _undoRecord.isNotEmpty; // don't keep undo record if the invalidation error is thrown when opening dialog
     beginUndoTransaction();
     for (final e in invalidatingErrors) {
       e.field.value = e.defaultValue;
     }
+    if (!keepUndo) beginUndoTransaction(); // discard undo transaction
     commitUndoTransaction();
-    if (_undoRecord.length>2) {
+    if (keepUndo) fuseLastTwoUndoRecords();
+  }
+  void fuseLastTwoUndoRecords() {
+    if (_undoRecord.length>1) {
       final previousRecord = _undoRecord[_undoRecord.length-2];
       previousRecord.addAll(_undoRecord.removeLast());
     }
@@ -812,34 +821,43 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Padding(
-                  padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
-                  child: Row(
-                    key: ValueKey(widescreen),
-                    children: [
-                      Expanded(
-                        child: OverflowScroll(
-                          child: Text('${id==null ? FromZeroLocalizations.of(context).translate("add")
-                              : FromZeroLocalizations.of(context).translate("edit")} $classUiName',
-                            style: Theme.of(context).textTheme.headline6,
-                          ),
-                        ),
+                  padding: const EdgeInsets.only(top: 6, left: 16, right: 0, bottom: 0,),
+                  child: AppbarFromZero(
+                    constraints: constraints,
+                    backgroundColor: Theme.of(context).canvasColor,
+                    elevation: 0,
+                    toolbarHeight: 56 + 12,
+                    paddingRight: 18,
+                    title: OverflowScroll(
+                      child: Text('${id==null ? FromZeroLocalizations.of(context).translate("add")
+                          : FromZeroLocalizations.of(context).translate("edit")} $classUiName',
+                        style: Theme.of(context).textTheme.headline6,
                       ),
-                      if (enableUndoRedoMechanism && showUndoRedo)
-                        IconButton(
-                          tooltip: FromZeroLocalizations.of(context).translate("undo"),
-                          icon: Icon(MaterialCommunityIcons.undo_variant,),
-                          onPressed: _undoRecord.isEmpty ? null : () {
-                            undo();
-                          },
-                        ),
-                      if (enableUndoRedoMechanism && showUndoRedo)
-                        IconButton(
-                          tooltip: FromZeroLocalizations.of(context).translate("redo"),
-                          icon: Icon(MaterialCommunityIcons.redo_variant,),
-                          onPressed: _redoRecord.isEmpty ? null : () {
-                            redo();
-                          },
-                        ),
+                    ),
+                    actions: [
+                      ...(formDialogExtraActions?.call(context, this) ?? []),
+                      ActionFromZero(
+                        title: FromZeroLocalizations.of(context).translate("undo"),
+                        icon: Icon(MaterialCommunityIcons.undo_variant,),
+                        breakpoints: {
+                          ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
+                          ScaffoldFromZero.screenSizeMedium: ActionState.icon,
+                        },
+                        onTap: _undoRecord.isEmpty ? null : (context) {
+                          undo();
+                        },
+                      ),
+                      ActionFromZero(
+                        title: FromZeroLocalizations.of(context).translate("redo"),
+                        icon: Icon(MaterialCommunityIcons.redo_variant,),
+                        breakpoints: {
+                          ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
+                          ScaffoldFromZero.screenSizeMedium: ActionState.icon,
+                        },
+                        onTap: _redoRecord.isEmpty ? null : (context) {
+                          redo();
+                        },
+                      ),
                     ],
                   ),
                 ),

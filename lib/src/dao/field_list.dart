@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:animations/animations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/src/table/table_header.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
@@ -1884,6 +1885,22 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       //     0: ActionState.popup,
       //   },
       // ),
+      if (availableObjectsPoolProvider!=null)
+        ActionFromZero.divider(
+          breakpoints: {0: ActionState.popup},
+        ),
+      if (availableObjectsPoolProvider!=null)
+        ActionFromZero(
+          title: 'Refrescar Datos', // TODO 3 internationalize
+          icon: Icon(Icons.refresh,),
+          breakpoints: {0: ActionState.popup},
+          onTap: (context) {
+            final ref = dao.contextForValidation! as WidgetRef;
+            final provider = availableObjectsPoolProvider!(context, this, dao);
+            final stateNotifier = ref.read(provider.notifier);
+            stateNotifier.refresh(ref);
+          },
+        ),
     ];
   }
 

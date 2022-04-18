@@ -473,4 +473,25 @@ class ComboField<T extends DAO> extends Field<T> {
     );
   }
 
+
+  @override
+  List<ActionFromZero<Function>> buildDefaultActions(BuildContext context, {FocusNode? focusNode}) {
+    return [
+      ...super.buildDefaultActions(context, focusNode: focusNode,),
+      if (possibleValuesProviderGetter!=null)
+        ActionFromZero.divider(),
+      if (possibleValuesProviderGetter!=null)
+        ActionFromZero(
+          title: 'Refrescar Datos', // TODO 3 internationalize
+          icon: Icon(Icons.refresh,),
+          onTap: (context) {
+            final ref = dao.contextForValidation! as WidgetRef;
+            final provider = possibleValuesProviderGetter!(context, this, dao);
+            final stateNotifier = ref.read(provider!.notifier);
+            stateNotifier.refresh(ref);
+          },
+        ),
+    ];
+  }
+
 }

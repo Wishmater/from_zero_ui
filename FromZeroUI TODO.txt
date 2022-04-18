@@ -86,7 +86,11 @@ ListField -- implement proper disabled logic
 	take into consideration all possible states: table, collapsed, dense
 	implement in each sliver (color + tooltip + mouseRegion)
 
-
+ComboField improvement
+	add a small loading spinner to comboField and listField so you know when possibleValues is refreshing
+	this would require checking if a provider is already build, because we dont want to call all providers on start
+	
+	
 
 
 **********************************************************************

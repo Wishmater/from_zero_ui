@@ -151,8 +151,8 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
         message: title,
         child: IconButton(
           icon: icon ?? SizedBox.shrink(),
-          onPressed: !enabled ? null : (){
-            onTap?.call(context);
+          onPressed: (!enabled || onTap==null) ? null : (){
+            onTap.call(context);
           },
         ),
       ),
@@ -167,13 +167,13 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
     bool enabled = true,
   }) {
     return GestureDetector(
-      onDoubleTap: () => !enabled ? null : onTap?.call(context),
+      onDoubleTap: () => (!enabled || onTap==null) ? null : onTap.call(context),
       child: TextButton(
         style: TextButton.styleFrom(
           padding: EdgeInsets.zero,
         ),
-        onPressed: !enabled ? null : (){
-          onTap?.call(context);
+        onPressed: (!enabled || onTap==null) ? null : (){
+          onTap.call(context);
         },
         // onLongPress: () => null,
         child: IconTheme(
@@ -213,7 +213,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
     bool forceIconSpace = false,
   }) {
     return TextButton(
-      onPressed: !enabled ? null : () => onTap?.call(context),
+      onPressed: (!enabled || onTap==null) ? null : () => onTap.call(context),
       style: TextButton.styleFrom(
         padding: EdgeInsets.zero,
       ),

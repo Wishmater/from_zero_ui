@@ -231,7 +231,7 @@ class ValidationMessage extends StatefulWidget {
       ValidationErrorSeverity.disabling: Colors.grey.shade800,
       ValidationErrorSeverity.unfinished: Colors.grey.shade800,
       ValidationErrorSeverity.warning: Colors.yellow.shade900,
-      ValidationErrorSeverity.nonBlockingError: Colors.red.shade900,
+      ValidationErrorSeverity.nonBlockingError: Colors.orange.shade900,
       ValidationErrorSeverity.error: Colors.red.shade900,
       ValidationErrorSeverity.invalidating: Colors.red.shade900,
     },
@@ -239,7 +239,7 @@ class ValidationMessage extends StatefulWidget {
       ValidationErrorSeverity.disabling: Colors.grey.shade400,
       ValidationErrorSeverity.unfinished: Colors.grey.shade400,
       ValidationErrorSeverity.warning: Colors.yellow.shade400,
-      ValidationErrorSeverity.nonBlockingError: Colors.red.shade400,
+      ValidationErrorSeverity.nonBlockingError: Colors.orange.shade400,
       ValidationErrorSeverity.error: Colors.red.shade400,
       ValidationErrorSeverity.invalidating: Colors.red.shade400,
     },
@@ -421,8 +421,8 @@ class SaveConfirmationValidationMessage extends StatelessWidget {
           errors: errors,
         ),
         SaveConfirmationValidationMessageGroup(
-          name: FromZeroLocalizations.of(context).translate("warnings") + ':',
-          severity: ValidationErrorSeverity.error,
+          name: 'Advertencias Severas' + ':',
+          severity: ValidationErrorSeverity.nonBlockingError,
           errors: redWarnings,
         ),
         SaveConfirmationValidationMessageGroup(
@@ -459,56 +459,69 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
     if (errors.isEmpty) {
       return SizedBox.shrink();
     }
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(height: 18,),
-        Row(
-          children: [
-            Icon(Icons.warning,
-              size: 38,
-              color: ValidationMessage.severityColors[Theme.of(context).brightness]![severity]!,
-            ),
-            SizedBox(width: 4,),
-            Expanded(
-              child: Text(name,
-                style: Theme.of(context).textTheme.headline6,
+    bool isBlocking = severity==ValidationErrorSeverity.error || severity==ValidationErrorSeverity.invalidating;
+    return InkWell(
+      onTap: () {
+        Navigator.of(context).pop();
+        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+          errors.first.field.dao.focusError(errors.first);
+        });
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(height: 18),
+          Row(
+            children: [
+              Icon(Icons.warning,
+                size: isBlocking ? 38 : 27,
+                color: ValidationMessage.severityColors[Theme.of(context).brightness]![severity]!,
               ),
-            ),
-          ],
-        ),
-        ...errors.map((e) {
-          return InkWell(
-            onTap: () {
-              Navigator.of(context).pop();
-              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-                e.field.dao.focusError(e);
-              });
-            },
-            child: Padding(
-              padding: const EdgeInsets.only(left: 15, top: 1, bottom: 2),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 7),
-                    child: Icon(Icons.circle,
-                      size: 10,
-                      color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
-                    ),
-                  ),
-                  SizedBox(width: 6,),
-                  Expanded(
-                    child: Text(e.error,
-                      // style: Theme.of(context).textTheme.bodyText1!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
-                    ),
-                  ),
-                ],
+              SizedBox(width: 4,),
+              Expanded(
+                child: Text(name,
+                  style: isBlocking
+                      ? Theme.of(context).textTheme.headline6
+                      : Theme.of(context).textTheme.subtitle1,
+                ),
               ),
-            ),
-          );
-        }),
-      ],
+            ],
+          ),
+          ...errors.map((e) {
+            return InkWell(
+              onTap: () {
+                Navigator.of(context).pop();
+                WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                  e.field.dao.focusError(e);
+                });
+              },
+              child: Padding(
+                padding: const EdgeInsets.only(left: 15, top: 1, bottom: 2),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 7),
+                      child: Icon(Icons.circle,
+                        size: 10,
+                        color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
+                      ),
+                    ),
+                    SizedBox(width: 6,),
+                    Expanded(
+                      child: Text(e.error,
+                        // style: Theme.of(context).textTheme.bodyText1!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+          if (isBlocking)
+            SizedBox(height: 12),
+        ],
+      ),
     );
   }
 

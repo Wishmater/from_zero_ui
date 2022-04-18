@@ -49,6 +49,7 @@ class AppbarFromZero extends StatefulWidget {
   final bool useFlutterAppbar;
   final bool skipTraversalForActions;
   final Duration transitionsDuration;
+  final BoxConstraints? constraints;
 
   AppbarFromZero({
     Key? key,
@@ -82,6 +83,7 @@ class AppbarFromZero extends StatefulWidget {
     this.onShowContextMenu,
     this.skipTraversalForActions = false,
     this.transitionsDuration = const Duration(milliseconds: 300),
+    this.constraints,
   }) :
         this.actions = actions ?? [],
         super(key: key);
@@ -119,10 +121,6 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
 
   @override
   Widget build(BuildContext context) {
-    bool showWindowButtons = widget.mainAppbar && !kIsWeb && Platform.isWindows && windowsDesktopBitsdojoWorking;
-    final double titleBarHeight = !showWindowButtons ? 0
-        : appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight;
-    double toolbarHeight = widget.toolbarHeight ?? (48 + (showWindowButtons ? titleBarHeight : 0));
     Widget result = WillPopScope(
       onWillPop: () async {
         if (forceExpanded==null){
@@ -135,230 +133,11 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
           return false;
         }
       },
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          List<Widget> actions = [];
-          List<ActionFromZero> overflows = [];
-          List<ActionFromZero> contextMenuActions = [];
-          List<Widget> expanded = [];
-          List<int> removeIndices = [];
-          if (forceExpanded!=null){
-            ActionState state = forceExpanded!.getStateForMaxWidth(constraints.maxWidth);
-            if (state==ActionState.expanded)
-              forceExpanded = null;
-          }
-          if (forceExpanded==null){
-            actions = List.from(widget.actions);
-            for (int i=0; i<actions.length; i++){
-              if (actions[i] is ActionFromZero){
-                ActionFromZero action = (actions[i] as ActionFromZero);
-                action = action.copyWith(
-                  onTap: _getOnTap(action),
-                );
-                ActionState state = action.getStateForMaxWidth(constraints.maxWidth);
-                switch (state){
-                  case ActionState.none:
-                    removeIndices.add(i);
-                    break;
-                  case ActionState.popup:
-                    contextMenuActions.add(action);
-                    removeIndices.add(i);
-                    break;
-                  case ActionState.overflow:
-                    overflows.add(action);
-                    contextMenuActions.add(action);
-                    removeIndices.add(i);
-                    break;
-                  case ActionState.icon:
-                    actions[i] = action.buildIcon(context);
-                    contextMenuActions.add(action);
-                    break;
-                  case ActionState.button:
-                    actions[i] = action.buildButton(context);
-                    contextMenuActions.add(action);
-                    break;
-                  case ActionState.expanded:
-                    if (action.centerExpanded){
-                      expanded.add(action.buildExpanded(context));
-                      removeIndices.add(i);
-                    } else{
-                      actions[i] = action.buildExpanded(context);
-                    }
-                    break;
-                }
-              }
-            }
-            removeIndices.reversed.forEach((element) {actions.removeAt(element);});
-            if (overflows.isNotEmpty) {
-              actions.add(
-                ContextMenuIconButton(
-                  icon: Icon(Icons.more_vert),
-                  anchorAlignment: Alignment.bottomCenter,
-                  popupAlignment: Alignment.bottomCenter,
-                  actions: overflows,
-                ),
-              );
-            }
-          }
-          final titleContent = AnimatedSwitcher(
-            duration: widget.transitionsDuration,
-            switchInCurve: Curves.easeOutCubic,
-            switchOutCurve: Curves.easeInCubic,
-            transitionBuilder: (child, animation) => FadeTransition(
-              opacity: Tween<double>(begin: -0.5, end: 1).animate(animation),
-              child: SlideTransition(
-                position: Tween<Offset>(begin: Offset(-1, 0), end: Offset.zero).animate(animation),
-                child: child,
-              ),
-            ),
-            child: forceExpanded!=null ? SizedBox.shrink() : widget.title,
-          );
-          Widget actionsContent = Padding(
-            padding: EdgeInsets.only(
-              right: widget.paddingRight,
-            ),
-            child: Stack(
-              alignment: Alignment.centerRight,
-              children: [
-                Padding(
-                  padding: EdgeInsets.only(top: showWindowButtons ? titleBarHeight*0.7 : 0),
-                  child: AnimatedSwitcher(
-                    duration: widget.transitionsDuration,
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) => FadeTransition(
-                      opacity: animation,
-                      child: SlideTransition(
-                        position: Tween<Offset>(begin: Offset(1, 0), end: Offset.zero).animate(animation),
-                        child: child,
-                      ),
-                    ),
-                    child: Row(
-                      key: ValueKey(forceExpanded),
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        ...actions,
-                        SizedBox(width: showWindowButtons ? 8 : 0,),
-                      ],
-                    ),
-                  ),
-                ),
-                if (showWindowButtons)
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: WindowBar(height: titleBarHeight,),
-                  ),
-              ],
-            ),
-          );
-          if (widget.skipTraversalForActions) {
-            actionsContent = FocusScope(
-              canRequestFocus: false,
-              child: actionsContent,
-            );
-          }
-          final expandedContent = AppBar(
-            excludeHeaderSemantics: true,
-            automaticallyImplyLeading: false,
-            centerTitle: true,
-            elevation: widget.elevation,
-            backgroundColor: Colors.transparent,
-            titleSpacing: 8,
-            toolbarHeight: toolbarHeight,
-            title: AnimatedSwitcher(
-              duration: widget.transitionsDuration,
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: ScaleTransition(
-                  scale: animation,
-                  child: child,
-                  alignment: Alignment.bottomCenter,
-                ),
-              ),
-              child: SizedBox(
-                key: ValueKey(forceExpanded!=null ? forceExpanded : expanded.isEmpty),
-                height: toolbarHeight,
-                child: Padding(
-                  padding: EdgeInsets.only(top: showWindowButtons ? titleBarHeight*0.7 : 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: forceExpanded==null ? expanded : [
-                      Expanded(
-                        child: forceExpanded!.buildExpanded(context),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close),
-                        onPressed: () {
-                          setState(() {
-                            forceExpanded = null;
-                            widget.onUnexpanded?.call();
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-          Widget result;
-          if (widget.useFlutterAppbar) {
-            result = AppBar(
-              title: titleContent,
-              actions: [actionsContent],
-              flexibleSpace: expandedContent,
-              automaticallyImplyLeading: false,
-              bottom: widget.bottom,
-              elevation: widget.elevation,
-              shadowColor: widget.shadowColor,
-              shape: widget.shape,
-              backgroundColor: widget.backgroundColor,
-              brightness: widget.brightness,
-              iconTheme: widget.iconTheme,
-              actionsIconTheme: widget.actionsIconTheme,
-              textTheme: widget.textTheme,
-              primary: widget.primary,
-              centerTitle: widget.centerTitle,
-              excludeHeaderSemantics: widget.excludeHeaderSemantics,
-              titleSpacing: widget.titleSpacing,
-              toolbarOpacity: widget.toolbarOpacity,
-              bottomOpacity: widget.bottomOpacity,
-              toolbarHeight: toolbarHeight,
-            );
-          } else {
-            result = SizedBox(
-              height: toolbarHeight,
-              child: Stack(
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: titleContent,),
-                      actionsContent,
-                    ],
-                  ),
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      ignoring: forceExpanded==null,
-                      child: expandedContent,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-          if (widget.addContextMenu) {
-            result = ContextMenuFromZero(
-              onShowMenu: widget.onShowContextMenu,
-              actions: contextMenuActions,
-              child: result,
-            );
-          }
-          return result;
-        },
-      ),
+      child: widget.constraints!=null
+          ? _buildWithConstraints(context, widget.constraints)
+          : LayoutBuilder(
+            builder: _buildWithConstraints,
+          ),
     );
     if (widget.mainAppbar && !kIsWeb && Platform.isWindows) {
       result = MouseRegion(
@@ -372,6 +151,233 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
         child: MoveWindow(
           child: result,
         ),
+      );
+    }
+    return result;
+  }
+
+  Widget _buildWithConstraints(context, constraints) {
+    bool showWindowButtons = widget.mainAppbar && !kIsWeb && Platform.isWindows && windowsDesktopBitsdojoWorking;
+    final double titleBarHeight = !showWindowButtons ? 0
+        : appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight;
+    double toolbarHeight = widget.toolbarHeight ?? (48 + (showWindowButtons ? titleBarHeight : 0));
+    List<Widget> actions = [];
+    List<ActionFromZero> overflows = [];
+    List<ActionFromZero> contextMenuActions = [];
+    List<Widget> expanded = [];
+    List<int> removeIndices = [];
+    if (forceExpanded!=null){
+      ActionState state = forceExpanded!.getStateForMaxWidth(constraints.maxWidth);
+      if (state==ActionState.expanded)
+        forceExpanded = null;
+    }
+    if (forceExpanded==null){
+      actions = List.from(widget.actions);
+      for (int i=0; i<actions.length; i++){
+        if (actions[i] is ActionFromZero){
+          ActionFromZero action = (actions[i] as ActionFromZero);
+          action = action.copyWith(
+            onTap: _getOnTap(action),
+          );
+          ActionState state = action.getStateForMaxWidth(constraints.maxWidth);
+          switch (state){
+            case ActionState.none:
+              removeIndices.add(i);
+              break;
+            case ActionState.popup:
+              contextMenuActions.add(action);
+              removeIndices.add(i);
+              break;
+            case ActionState.overflow:
+              overflows.add(action);
+              contextMenuActions.add(action);
+              removeIndices.add(i);
+              break;
+            case ActionState.icon:
+              actions[i] = action.buildIcon(context);
+              contextMenuActions.add(action);
+              break;
+            case ActionState.button:
+              actions[i] = action.buildButton(context);
+              contextMenuActions.add(action);
+              break;
+            case ActionState.expanded:
+              if (action.centerExpanded){
+                expanded.add(action.buildExpanded(context));
+                removeIndices.add(i);
+              } else{
+                actions[i] = action.buildExpanded(context);
+              }
+              break;
+          }
+        }
+      }
+      removeIndices.reversed.forEach((element) {actions.removeAt(element);});
+      if (overflows.isNotEmpty) {
+        actions.add(
+          ContextMenuIconButton(
+            icon: Icon(Icons.more_vert),
+            anchorAlignment: Alignment.bottomCenter,
+            popupAlignment: Alignment.bottomCenter,
+            actions: overflows,
+          ),
+        );
+      }
+    }
+    final titleContent = AnimatedSwitcher(
+      duration: widget.transitionsDuration,
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: Tween<double>(begin: -0.5, end: 1).animate(animation),
+        child: SlideTransition(
+          position: Tween<Offset>(begin: Offset(-1, 0), end: Offset.zero).animate(animation),
+          child: child,
+        ),
+      ),
+      child: forceExpanded!=null ? SizedBox.shrink() : widget.title,
+    );
+    Widget actionsContent = Padding(
+      padding: EdgeInsets.only(
+        right: widget.paddingRight,
+      ),
+      child: Stack(
+        alignment: Alignment.centerRight,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: showWindowButtons ? titleBarHeight*0.7 : 0),
+            child: AnimatedSwitcher(
+              duration: widget.transitionsDuration,
+              switchInCurve: Curves.easeOutCubic,
+              switchOutCurve: Curves.easeInCubic,
+              transitionBuilder: (child, animation) => FadeTransition(
+                opacity: animation,
+                child: SlideTransition(
+                  position: Tween<Offset>(begin: Offset(1, 0), end: Offset.zero).animate(animation),
+                  child: child,
+                ),
+              ),
+              child: Row(
+                key: ValueKey(forceExpanded),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ...actions,
+                  SizedBox(width: showWindowButtons ? 8 : 0,),
+                ],
+              ),
+            ),
+          ),
+          if (showWindowButtons)
+            Align(
+              alignment: Alignment.topRight,
+              child: WindowBar(height: titleBarHeight,),
+            ),
+        ],
+      ),
+    );
+    if (widget.skipTraversalForActions) {
+      actionsContent = FocusScope(
+        canRequestFocus: false,
+        child: actionsContent,
+      );
+    }
+    final expandedContent = AppBar(
+      excludeHeaderSemantics: true,
+      automaticallyImplyLeading: false,
+      centerTitle: true,
+      elevation: widget.elevation,
+      backgroundColor: Colors.transparent,
+      titleSpacing: 8,
+      toolbarHeight: toolbarHeight,
+      title: AnimatedSwitcher(
+        duration: widget.transitionsDuration,
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            scale: animation,
+            child: child,
+            alignment: Alignment.bottomCenter,
+          ),
+        ),
+        child: SizedBox(
+          key: ValueKey(forceExpanded!=null ? forceExpanded : expanded.isEmpty),
+          height: toolbarHeight,
+          child: Padding(
+            padding: EdgeInsets.only(top: showWindowButtons ? titleBarHeight*0.7 : 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: forceExpanded==null ? expanded : [
+                Expanded(
+                  child: forceExpanded!.buildExpanded(context),
+                ),
+                IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () {
+                    setState(() {
+                      forceExpanded = null;
+                      widget.onUnexpanded?.call();
+                    });
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    Widget result;
+    if (widget.useFlutterAppbar) {
+      result = AppBar(
+        title: titleContent,
+        actions: [actionsContent],
+        flexibleSpace: expandedContent,
+        automaticallyImplyLeading: false,
+        bottom: widget.bottom,
+        elevation: widget.elevation,
+        shadowColor: widget.shadowColor,
+        shape: widget.shape,
+        backgroundColor: widget.backgroundColor,
+        brightness: widget.brightness,
+        iconTheme: widget.iconTheme,
+        actionsIconTheme: widget.actionsIconTheme,
+        textTheme: widget.textTheme,
+        primary: widget.primary,
+        centerTitle: widget.centerTitle,
+        excludeHeaderSemantics: widget.excludeHeaderSemantics,
+        titleSpacing: widget.titleSpacing,
+        toolbarOpacity: widget.toolbarOpacity,
+        bottomOpacity: widget.bottomOpacity,
+        toolbarHeight: toolbarHeight,
+      );
+    } else {
+      result = SizedBox(
+        height: toolbarHeight,
+        child: Stack(
+          children: [
+            Row(
+              children: [
+                Expanded(child: titleContent,),
+                actionsContent,
+              ],
+            ),
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: forceExpanded==null,
+                child: expandedContent,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (widget.addContextMenu) {
+      result = ContextMenuFromZero(
+        onShowMenu: widget.onShowContextMenu,
+        actions: contextMenuActions,
+        child: result,
       );
     }
     return result;
