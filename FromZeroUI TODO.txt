@@ -7,8 +7,6 @@ P0
 Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
 	https://www.youtube.com/watch?v=ceCo8U0XHqw
 
-??? force windows app to be executed as admin by default
-
 Problems with excel export
 	Excel breaks sometimes when copy/paste ????
 	Export breaks when exporting large amounts of data (embarques 3 years)
