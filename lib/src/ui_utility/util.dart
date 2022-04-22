@@ -18,36 +18,6 @@ class RedoIntent extends Intent {}
 
 
 
-@deprecated
-class FormattedNum with Comparable implements ContainsValue{
-
-  num value;
-  NumberFormat formatter;
-  bool? alwaysBigger;
-
-  FormattedNum(this.value, this.formatter, {this.alwaysBigger});
-
-  @override
-  String toString() {
-    return formatter.format(value);
-  }
-  @override
-  bool operator == (dynamic other) => other is FormattedNum && this.value==other.value || value==other;
-  @override
-  int get hashCode => value.hashCode;
-  @override
-  int compareTo(other) =>
-      alwaysBigger==true ? 1 : alwaysBigger==false ? -1
-          : other is FormattedNum
-          ? other.alwaysBigger==true ? -1
-          : other.alwaysBigger==false ? 1
-          : value.compareTo(other.value)
-          : other is num ? value.compareTo(other) : 1;
-
-  bool get isEmpty => false;
-  bool get isNotEmpty => true;
-
-}
 
 
 abstract class ContainsValue {

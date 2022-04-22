@@ -503,8 +503,8 @@ class ExportState extends State<Export> {
             }
             cellStyle.fontSize = 12;
             final cellValue;
-            if (row.values[key] is FormattedNum){
-              cellValue = (row.values[key] as FormattedNum).value;
+            if (row.values[key] is ValueStringNum){
+              cellValue = (row.values[key] as ValueStringNum).value;
             } else if (row.values[key] is ValueString){
               cellValue = (row.values[key] as ValueString).value==null ? null
                   : (row.values[key] as ValueString).value is num

@@ -339,12 +339,16 @@ class ScrollOpacityGradient extends StatefulWidget {
   final Widget child;
   final double maxSize;
   final int direction;
+  final bool applyAtStart;
+  final bool applyAtEnd;
 
   ScrollOpacityGradient({
     required this.scrollController,
     required this.child,
     this.maxSize = 16,
     this.direction = OpacityGradient.vertical,
+    this.applyAtEnd = true,
+    this.applyAtStart = true,
   });
 
   @override
@@ -397,10 +401,10 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
       size2 = (widget.scrollController.position.maxScrollExtent-widget.scrollController.position.pixels).clamp(0, widget.maxSize);
     } catch(e){ }
     return OpacityGradient(
-      size: size1,
+      size: widget.applyAtStart ? size1 : 0,
       direction: widget.direction==OpacityGradient.horizontal ? OpacityGradient.left : OpacityGradient.top,
       child: OpacityGradient(
-        size: size2,
+        size: widget.applyAtEnd ? size2 : 0,
         direction: widget.direction==OpacityGradient.horizontal ? OpacityGradient.right : OpacityGradient.bottom,
         child: widget.child,
       ),

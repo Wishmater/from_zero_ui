@@ -40,6 +40,9 @@ DAO Form Performance -- wait for first validation before painting a frame
 	this causes unnecessary paints of even hidden fields
 	since awaiting the validation calls could cause other problems (potential long wait), maybe just waiting 1/2 frames before building would be enough
 
+FilePickerFromZero enhancement => implement drag'n'drop on windows
+
+
 
 
 **********************************************************************

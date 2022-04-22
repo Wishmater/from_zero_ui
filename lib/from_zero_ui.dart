@@ -26,6 +26,7 @@ export 'package:from_zero_ui/src/dao/field_num.dart';
 export 'package:from_zero_ui/src/dao/field_date.dart';
 export 'package:from_zero_ui/src/dao/field_list.dart';
 export 'package:from_zero_ui/src/dao/field_bool.dart';
+export 'package:from_zero_ui/src/dao/field_file.dart';
 export 'package:from_zero_ui/src/dao/field_validators.dart';
 
 export 'package:from_zero_ui/src/ui_utility/file_saver_from_zero.dart';
