@@ -836,29 +836,31 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     ),
                     actions: [
                       ...(formDialogExtraActions?.call(context, this) ?? []),
-                      ActionFromZero(
-                        title: FromZeroLocalizations.of(context).translate("undo"),
-                        icon: Icon(MaterialCommunityIcons.undo_variant,),
-                        breakpoints: {
-                          ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
-                          ScaffoldFromZero.screenSizeMedium: ActionState.icon,
-                        },
-                        onTap: _undoRecord.isEmpty ? null : (context) {
-                          undo();
-                        },
-                      ),
-                      ActionFromZero(
-                        title: FromZeroLocalizations.of(context).translate("redo"),
-                        icon: Icon(MaterialCommunityIcons.redo_variant,),
-                        breakpoints: {
-                          ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
-                          ScaffoldFromZero.screenSizeMedium: ActionState.icon,
-                        },
-                        onTap: _redoRecord.isEmpty ? null : (context) {
-                          redo();
-                        },
-                      ),
-                    ],
+                      if (enableUndoRedoMechanism && showUndoRedo)
+                        ActionFromZero(
+                          title: FromZeroLocalizations.of(context).translate("undo"),
+                          icon: Icon(MaterialCommunityIcons.undo_variant,),
+                          breakpoints: {
+                            ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
+                            ScaffoldFromZero.screenSizeMedium: ActionState.icon,
+                          },
+                          onTap: _undoRecord.isEmpty ? null : (context) {
+                            undo();
+                          },
+                        ),
+                      if (enableUndoRedoMechanism && showUndoRedo)
+                        ActionFromZero(
+                          title: FromZeroLocalizations.of(context).translate("redo"),
+                          icon: Icon(MaterialCommunityIcons.redo_variant,),
+                          breakpoints: {
+                            ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
+                            ScaffoldFromZero.screenSizeMedium: ActionState.icon,
+                          },
+                          onTap: _redoRecord.isEmpty ? null : (context) {
+                            redo();
+                          },
+                        ),
+                      ],
                   ),
                 ),
                 Expanded(

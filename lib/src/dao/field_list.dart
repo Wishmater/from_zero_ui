@@ -1322,7 +1322,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     final actions = this.actions?.call(context, this, dao) ?? [];
     final defaultActions = buildDefaultActions(context, focusNode: focusNode);
     if (actions.isNotEmpty && defaultActions.isNotEmpty) {
-      actions.add(ActionFromZero.divider());
+      actions.add(ActionFromZero.divider(breakpoints: actions.first.breakpoints,));
     }
     actions.addAll(defaultActions);
     Map<String, Field> propsShownOnTable = Map.from(objectTemplate.props)..removeWhere((k, v) => v.hiddenInTable);
