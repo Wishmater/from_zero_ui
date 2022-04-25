@@ -27,7 +27,7 @@ class ContextMenuFromZero extends StatefulWidget {
     this.enabled = true,
     this.contextMenuWidget,
     this.actions = const [],
-    this.contextMenuWidth = 192,
+    this.contextMenuWidth = 256,
     this.anchorAlignment = Alignment.bottomRight,
     this.popupAlignment = Alignment.bottomRight,
     this.offsetCorrection = Offset.zero,

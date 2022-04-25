@@ -1269,7 +1269,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
                         TextButton(
                           onPressed: () async {
-                            maybeEdit(mainContext);
+                            final result = await copyWith().maybeEdit(mainContext);
+                            if (result != null) {
+                              Navigator.of(context).pop();
+                            }
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
@@ -1398,7 +1401,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 final newField = e.copyWith(
                   tableCellsEditable: false,
                   allowAddNew: false,
-                  actionViewBreakpoints: {0: ActionState.icon},
+                  actionViewBreakpoints: this.viewDialogLinksToInnerDAOs&&this.viewDialogShowsViewButtons
+                      ? {0: ActionState.icon} : {0: ActionState.none},
                   actionDeleteBreakpoints: {0: ActionState.none},
                   actionDuplicateBreakpoints: {0: ActionState.none},
                   actionEditBreakpoints: {0: ActionState.none},
