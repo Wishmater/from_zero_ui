@@ -390,7 +390,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       }
     }
     notifyListeners();
-    return success;
+    return success && validationErrors.where((e) => e.isBlocking).isEmpty;
   }
   void focusFirstBlockingError() {
     final validationErrors = this.validationErrors;
