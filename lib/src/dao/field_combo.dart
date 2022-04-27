@@ -192,6 +192,7 @@ class ComboField<T extends DAO> extends Field<T> {
         possibleValues = possibleValuesGetter!.call(context, this, dao)!;
       }
     }
+    if (currentValidationId!=dao.validationCallCount) return false;
     if (invalidateValuesNotInPossibleValues && value!=null && !possibleValues.contains(value)) {
       validationErrors.add(InvalidatingError<T>(
         field: this,
@@ -262,22 +263,9 @@ class ComboField<T extends DAO> extends Field<T> {
   }) {
     ExtraWidgetBuilder<T>? extraWidget;
     final newObjectTemplate = this.newObjectTemplate;
-    if (newObjectTemplate?.onSave!=null) {
+    if (newObjectTemplate?.canSave ?? false) {
       extraWidget = (context, onSelected) {
-        final oldOnSave = newObjectTemplate!.onSave!;
-        final newOnSave = (context, e) async {
-          DAO? newDAO = await oldOnSave(context, e);
-          if (newDAO!=null) {
-            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-              onSelected?.call(newDAO as T);
-              Navigator.of(context).pop(true);
-            });
-          }
-          return newDAO;
-        };
-        final emptyDAO = newObjectTemplate.copyWith(
-          onSave: newOnSave,
-        );
+        final emptyDAO = newObjectTemplate!.copyWith();
         return Column (
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -289,7 +277,13 @@ class ComboField<T extends DAO> extends Field<T> {
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2,),
                 child: TextButton(
                   onPressed: () async {
-                     emptyDAO.maybeEdit(context);
+                     final res = await emptyDAO.maybeEdit(dao.contextForValidation ?? context);
+                     if (res!=null) {
+                       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                         onSelected?.call(emptyDAO as T);
+                         Navigator.of(context).pop(emptyDAO as T);
+                       });
+                     }
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 6,),
@@ -300,7 +294,9 @@ class ComboField<T extends DAO> extends Field<T> {
                         SizedBox(width: 6),
                         Icon(Icons.add),
                         SizedBox(width: 6,),
-                        Text('New ${emptyDAO.classUiName}', style: TextStyle(fontSize: 16),),
+                        Text('${FromZeroLocalizations.of(context).translate("add")} ${emptyDAO.classUiName}',
+                          style: TextStyle(fontSize: 16),
+                        ),
                         SizedBox(width: 6),
                       ],
                     ),

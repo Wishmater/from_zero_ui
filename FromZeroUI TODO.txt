@@ -91,6 +91,8 @@ ComboField improvement
 	add a small loading spinner to comboField and listField so you know when possibleValues is refreshing
 	this would require checking if a provider is already build, because we dont want to call all providers on start
 	
+DAO Form -- In comboField and listField with availablePool (combo and table), allow right click to edit a possible dao
+
 	
 
 

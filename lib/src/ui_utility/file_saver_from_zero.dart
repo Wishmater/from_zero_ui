@@ -199,9 +199,11 @@ Future<bool> saveFileFromZero ({
   bool retry = false;
   if (success && autoOpenOnFinish) {
     if (Platform.isAndroid){
-      OpenFile.open(file!.parent.absolute.path);
+      OpenFile.open(file!.absolute.path);
+      // OpenFile.open(file!.parent.absolute.path);
     } else{
-      await launch(file!.parent.absolute.path);
+      await launch(file!.absolute.path);
+      // await launch(file!.parent.absolute.path);
     }
   } if (showSnackBars && showResultSnackBar) {
     if (success && uiPath!=null) {

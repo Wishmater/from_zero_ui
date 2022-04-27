@@ -16,6 +16,8 @@ class FileField extends Field<String> {
 
   final FileType fileType;
   final List<String>? allowedExtensions;
+  final bool enableDragAndDrop;
+  final bool allowDragAndDropInWholeScreen;
 
 
   File? get file => value==null ? null : File(value!);
@@ -53,6 +55,8 @@ class FileField extends Field<String> {
     OnFieldValueChanged<String?>? onValueChanged,
     this.fileType = FileType.any,
     this.allowedExtensions,
+    this.enableDragAndDrop = true,
+    this.allowDragAndDropInWholeScreen = false,
   }) :  super(
           uiNameGetter: uiNameGetter,
           value: value,
@@ -114,6 +118,8 @@ class FileField extends Field<String> {
     OnFieldValueChanged<String?>? onValueChanged,
     FileType? fileType,
     List<String>? allowedExtensions,
+    bool? enableDragAndDrop,
+    bool? allowDragAndDropInWholeScreen,
   }) {
     return FileField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -142,6 +148,8 @@ class FileField extends Field<String> {
       onValueChanged: onValueChanged ?? this.onValueChanged,
       fileType: fileType ?? this.fileType,
       allowedExtensions: allowedExtensions ?? this.allowedExtensions,
+      enableDragAndDrop: enableDragAndDrop ?? this.enableDragAndDrop,
+      allowDragAndDropInWholeScreen: allowDragAndDropInWholeScreen ?? this.allowDragAndDropInWholeScreen,
     );
   }
 
@@ -216,6 +224,8 @@ class FileField extends Field<String> {
                   dialogTitle: hint ?? uiName,
                   fileType: fileType,
                   allowedExtensions: allowedExtensions,
+                  enableDragAndDrop: enableDragAndDrop,
+                  allowDragAndDropInWholeScreen: allowDragAndDropInWholeScreen,
                   focusNode: focusNode,
                   onSelected: (value) {
                     this.value = value.first.absolute.path;
