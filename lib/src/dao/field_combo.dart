@@ -16,7 +16,7 @@ class ComboField<T extends DAO> extends Field<T> {
           AsyncValue<List<T>>
       >?,
       ComboField<T>>? possibleValuesProviderGetter;
-  final bool showSearchBox;
+  final bool? showSearchBox;
   final ExtraWidgetBuilder<T>? extraWidget;
   final FieldValueGetter<DAO?, ComboField<T>>? newObjectTemplateGetter;
   DAO? get newObjectTemplate => newObjectTemplateGetter?.call(this, dao);
@@ -40,7 +40,7 @@ class ComboField<T extends DAO> extends Field<T> {
     this.possibleValuesFutureGetter,
     this.possibleValuesProviderGetter,
     this.sort = true,
-    this.showSearchBox = true,
+    this.showSearchBox,
     this.showViewActionOnDAOs = true,
     this.showDropdownIcon = false,
     this.extraWidget,

@@ -464,7 +464,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
   void addRow (T element, [int? insertIndex]) => addRows([element], insertIndex);
   void addRows (List<T> elements, [int? insertIndex]) {
-    print ('add ${elements.map((e) => e.id)}');
     for (final e in elements) {
       e.addListener(notifyListeners);
       e.parentDAO = dao;

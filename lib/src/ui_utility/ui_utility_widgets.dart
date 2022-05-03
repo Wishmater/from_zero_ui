@@ -1072,7 +1072,9 @@ class FlexibleLayoutFromZero extends StatelessWidget {
         expandableItems[i] = children[i];
       }
     }
-    double extraSize = (relevantAxisSize-minTotalSize).clamp(0, double.infinity);
+    double extraSize = relevantAxisSize-minTotalSize;
+    bool addScroll = extraSize < 0;
+    extraSize = extraSize.clamp(0, double.infinity);
     while (extraSize!=0 && expandableItems.isNotEmpty) {
       double totalFlex = expandableItems.values.sumBy((e) => e.flex);
       for (final key in expandableItems.keys) {
@@ -1105,7 +1107,7 @@ class FlexibleLayoutFromZero extends StatelessWidget {
     Widget result;
     if (axis==Axis.horizontal) {
       result = Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: crossAxisAlignment,
         children: sizedChildren,
       );
@@ -1122,17 +1124,20 @@ class FlexibleLayoutFromZero extends StatelessWidget {
         result = IntrinsicWidth(child: result,);
       }
     }
-    final scrollController = ScrollController();
-    return ScrollbarFromZero(
-      controller: scrollController,
-      opacityGradientDirection: axis==Axis.horizontal ? OpacityGradient.horizontal
-                                                      : OpacityGradient.vertical,
-      child: SingleChildScrollView(
+    if (addScroll) {
+      final scrollController = ScrollController();
+      result = ScrollbarFromZero(
         controller: scrollController,
-        scrollDirection: axis,
-        child: result,
-      ),
-    );
+        opacityGradientDirection: axis==Axis.horizontal ? OpacityGradient.horizontal
+            : OpacityGradient.vertical,
+        child: SingleChildScrollView(
+          controller: scrollController,
+          scrollDirection: axis,
+          child: result,
+        ),
+      );
+    }
+    return result;
   }
 
 }

@@ -63,20 +63,29 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
         offsetCorrection: widget.offsetCorrection,
         barrierColor: widget.barrierColor,
         builder: (context) {
-          return widget.contextMenuWidget ?? ListView.builder(
-            shrinkWrap: true,
-            itemCount: actions.length,
-            padding: EdgeInsets.symmetric(vertical: 8),
-            itemBuilder: (context, index) {
-              final action = actions[index];
-              return action.copyWith(
-                onTap: (context) {
-                  Navigator.of(context).pop();
-                  action.onTap?.call(context);
+          final scrollController = ScrollController();
+          if (widget.contextMenuWidget!=null) {
+            return widget.contextMenuWidget!;
+          } else {
+            return ScrollbarFromZero(
+              controller: scrollController,
+              child: ListView.builder(
+                controller: scrollController,
+                shrinkWrap: true,
+                itemCount: actions.length,
+                padding: EdgeInsets.symmetric(vertical: 8),
+                itemBuilder: (context, index) {
+                  final action = actions[index];
+                  return action.copyWith(
+                    onTap: (context) {
+                      Navigator.of(context).pop();
+                      action.onTap?.call(context);
+                    },
+                  ).buildOverflow(context, forceIconSpace: actions.where((e) => e.icon!=null).isNotEmpty);
                 },
-              ).buildOverflow(context, forceIconSpace: actions.where((e) => e.icon!=null).isNotEmpty);
-            },
-          );
+              ),
+            );
+          }
         },
       );
     }

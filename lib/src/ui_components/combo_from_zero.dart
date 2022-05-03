@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
+import 'package:dartx/dartx.dart';
 
 typedef Widget ButtonChildBuilder<T>(BuildContext context, String? title, String? hint, T? value, bool enabled, bool clearable, {bool showDropdownIcon});
 /// returns true if navigator should pop after (default true)
@@ -20,7 +21,7 @@ class ComboFromZero<T> extends StatefulWidget {
   final StateNotifierProviderOverrideMixin<ApiState<List<T>>, AsyncValue<List<T>>>? possibleValuesProvider;
   final VoidCallback? onCanceled;
   final OnPopupItemSelected<T>? onSelected;
-  final bool showSearchBox;
+  final bool? showSearchBox;
   final String? title;
   final String? hint;
   final bool enabled;
@@ -46,7 +47,7 @@ class ComboFromZero<T> extends StatefulWidget {
     this.possibleValuesProvider,
     this.onSelected,
     this.onCanceled,
-    this.showSearchBox=true,
+    this.showSearchBox,
     this.title,
     this.hint,
     this.buttonChildBuilder,
@@ -333,7 +334,7 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
   final List<T> possibleValues;
   final VoidCallback? onCanceled;
   final OnPopupItemSelected<T>? onSelected;
-  final bool showSearchBox;
+  final bool? showSearchBox;
   final bool showViewActionOnDAOs;
   final bool sort;
   final String? title;
@@ -347,7 +348,7 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
     this.value,
     this.onSelected,
     this.onCanceled,
-    this.showSearchBox = true,
+    this.showSearchBox,
     this.showViewActionOnDAOs = true,
     this.sort = true,
     this.title,
@@ -367,10 +368,20 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
   final ScrollController popupScrollController = ScrollController();
   String? searchQuery;
   TableController<T> tableController = TableController();
+  FocusNode initialFocus = FocusNode();
+
+  bool get showSearchBox => widget.showSearchBox ?? widget.possibleValues.length > 3;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      if (showSearchBox) {
+        initialFocus.requestFocus();
+      } else {
+        FocusScope.of(context).nextFocus();
+      }
+    });
   }
 
   @override
@@ -381,7 +392,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
         controller: popupScrollController,
         shrinkWrap: true,
         slivers: [
-          if (!widget.showSearchBox)
+          if (!showSearchBox)
             SliverToBoxAdapter(child: SizedBox(height: 12,),),
           TableFromZero<T>(
             tableController: tableController,
@@ -415,7 +426,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                 id: e,
                 values: {0: e.toString()},
                 height: widget.rowHeight,
-                backgroundColor: widget.value==e ? Theme.of(context).splashColor.withOpacity(0.2) : null,
+                // backgroundColor: widget.value==e ? Theme.of(context).splashColor.withOpacity(0.2) : null,
                 onRowTap: (value) {
                   _select(e);
                 },
@@ -434,7 +445,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                 : [],
             headerRowModel: SimpleRowModel(
               id: 'header', values: {},
-              rowAddon: widget.showSearchBox ? Container(
+              rowAddon: showSearchBox ? Container(
                 color: Theme.of(context).cardColor,
                 child: Column(
                   children: [
@@ -469,7 +480,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                         },
                         child: TextFormField(
                           initialValue: searchQuery,
-                          autofocus: PlatformExtended.isDesktop,
+                          focusNode: initialFocus,
                           decoration: InputDecoration(
                             contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
                             labelText: FromZeroLocalizations.of(context).translate('search...'),

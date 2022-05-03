@@ -1544,13 +1544,17 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     FocusNode? focusNode,
     int groupBorderNestingCount = 0,
   }) {
-    if (group.props.values.where((e) => !e.hiddenInForm).isEmpty) {
+    final childGroups = group.visibleChildGroups;
+    final fields = group.visibleFields;
+    if (childGroups.isEmpty && fields.isEmpty) {
       return SizedBox.shrink();
     }
     bool verticalLayout = firstIteration || group.primary;
+    bool addBorder = group.name!=null && (fields.length+childGroups.length > 1);
+    groupBorderNestingCount += (addBorder ? 1 : 0);
     List<Widget> Function({bool useLayoutFromZero}) getChildren = ({bool useLayoutFromZero = false}) => [
       ...buildFormWidgets(context,
-        group: group,
+        props: fields,
         showCancelActionToPop: true,
         mainScrollController: mainScrollController,
         expandToFillContainer: verticalLayout && expandToFillContainer,
@@ -1562,7 +1566,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         showActionButtons: false,
         wrapInLayoutFromZeroItem: useLayoutFromZero,
       ),
-      ...group.childGroups.map((e) {
+      ...childGroups.map((e) {
         return buildGroupWidget(
           context: context,
           group: e,
@@ -1578,7 +1582,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           popAfterSuccessfulSave: popAfterSuccessfulSave,
           firstIteration: false,
           wrapInLayoutFromZeroItem: useLayoutFromZero,
-          groupBorderNestingCount: groupBorderNestingCount + (group.name!=null ? 1 : 0),
+          groupBorderNestingCount: 0,
         );
       }),
     ];
@@ -1592,9 +1596,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     } else {
       if (group.useLayoutFromZero) {
         result = FlexibleLayoutFromZero(
-          children: getChildren(useLayoutFromZero: true).map((e) => e as FlexibleLayoutItemFromZero).toList(),
+          children: getChildren(useLayoutFromZero: true)
+              .cast<FlexibleLayoutItemFromZero>(),
           relevantAxisMaxSize: min(formDialogWidth,
-              MediaQuery.of(context).size.width - 56 - (groupBorderNestingCount*16)),
+              MediaQuery.of(context).size.width - 56)  - (groupBorderNestingCount*16),
           crossAxisAlignment: CrossAxisAlignment.start,
         );
       } else {
@@ -1620,9 +1625,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         child: result,
       );
     }
-    if (group.name!=null) {
+    if (addBorder) {
       result = Padding(
-        padding: const EdgeInsets.only(bottom: 12,),
+        padding: EdgeInsets.only(top: group.name!.isNotEmpty ? 4 : 0),
         child: Stack(
           children: [
             Positioned(
@@ -1657,8 +1662,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
     if (wrapInLayoutFromZeroItem) {
       result = FlexibleLayoutItemFromZero(
-        maxSize: group.maxWidth + (group.name!=null ? 16 : 0),
-        minSize: group.minWidth + (group.name!=null ? 16 : 0),
+        maxSize: group.maxWidth + (addBorder ? 16 : 0),
+        minSize: group.minWidth + (addBorder ? 16 : 0),
         child: result,
       );
     }
@@ -1666,7 +1671,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
 
   List<Widget> buildFormWidgets(BuildContext context, {
-    FieldGroup? group,
+    Map<String, Field>? props,
     ScrollController? mainScrollController,
     bool asSlivers=true,
     bool showActionButtons=true,
@@ -1680,7 +1685,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     FocusNode? focusNode,
   }) {
     assert(!asSlivers || !wrapInLayoutFromZeroItem, 'FlexibleLayoutFromZero does not support slivers.');
-    final props = group?.fields ?? this.props;
+    props ??= this.props;
     bool first = true;
     List<Widget> result = [
       ...props.values.map((e) {

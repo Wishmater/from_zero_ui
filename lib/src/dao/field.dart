@@ -517,6 +517,11 @@ class FieldGroup {
     return result;
   }
 
+  bool get isVisible => visibleFields.isNotEmpty || visibleChildGroups.isNotEmpty;
+  Map<String, Field> get visibleFields => Map<String, Field>.from(fields)
+    ..removeWhere((key, value) => value.hiddenInForm);
+  List<FieldGroup> get visibleChildGroups => childGroups.where((e) => e.isVisible).toList();
+
 }
 
 
