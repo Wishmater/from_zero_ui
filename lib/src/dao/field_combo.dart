@@ -183,7 +183,7 @@ class ComboField<T extends DAO> extends Field<T> {
     final List<T> possibleValues;
     final provider = possibleValuesProviderGetter?.call(context, this, dao);
     if (provider!=null) {
-      possibleValues = await (context as WidgetRef).read(provider.notifier).future;
+      possibleValues = await (context as WidgetRef).watch(provider.notifier).future;
     } else {
       final future = possibleValuesFutureGetter?.call(context, this, dao);
       if (future!=null) {
