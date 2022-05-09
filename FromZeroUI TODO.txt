@@ -17,6 +17,8 @@ Problems with excel export
 	also make the pushNamedAndMaybeRemoveUntil() method work as expected
 
 
+TableFromZero: cancel isolate computations if widget is disposed or initFilters is called again
+
 
 
 
