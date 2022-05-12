@@ -202,25 +202,41 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     wholeProgressNotifier.value = result;
   }
   void _computePercentage() {
+    // Percentage calculated only from wholeNotifiers
     double? total = wholeTotalNotifier.value;
     double? progress = wholeProgressNotifier.value;
-    wholePercentageNotifier.value = total==null ? null
-        : total==0 ? 0
+    double? result = total==null||total==0 ? null
         : (progress??0) / total;
-    //    Percentage of all dependencies are used, asuming their totals are equal
-    //    Percentage could be calculated only from wholeNotifiers,
-    //    but this has problems when not all dependencies report their total/progress
-    // final total = selfTotalNotifier.value;
-    // final progress = selfProgressNotifier.value;
-    // double? result = total==null||progress==null||total==0 ? null : progress/total;
-    // if (_ref != null) {
-    //   _watching.forEach((e) {
-    //     final partial = _ref!.read(e.notifier).wholePercentageNotifier.value
-    //         ?? _ref!.read(e).maybeWhen<double>(data:(_)=>1, orElse: ()=>0,);
-    //     result = (result??0) + partial;
-    //   });
-    // }
-    // wholePercentageNotifier.value = result==null ? null : (result!/(_watching.length+1));
+    if (result==null && _ref!=null) {
+      // Percentage of all dependencies are used, asuming their totals are equal
+      total = selfTotalNotifier.value;
+      progress = selfProgressNotifier.value;
+      result = total==null ? null
+          : progress==null||total==0 ? 0
+          : progress/total;
+      final allWatching = List<ApiProvider>.from(_watching);
+      for (int i=0; i<allWatching.length; i++) {
+        for (final e in _ref!.read(allWatching[i].notifier)._watching) {
+          if (!allWatching.contains(e)) {
+            allWatching.add(e);
+          }
+        }
+      }
+      bool allNull = result==null;
+      allWatching.forEach((e) {
+        final notifier = _ref!.read(e.notifier);
+        double? partialProgress = notifier.selfProgressNotifier.value;
+        double? partialTotal = notifier.selfTotalNotifier.value;
+        double? partial = partialTotal==null ? null
+            : partialTotal==0||partialProgress==null ? 0
+            : partialProgress/partialTotal;
+        allNull = allNull && partial==null;
+        partial ??= _ref!.read(e).maybeWhen<double>(data:(_)=>1, orElse: ()=>0,);
+        result = (result??0) + partial;
+      });
+      result = result==null||allNull ? null : (result!/(allWatching.length+1));
+    }
+    wholePercentageNotifier.value = result;
   }
 
 }
@@ -412,7 +428,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
       ),
       onPressed: () => showErrorDetailsDialog(context, error, stackTrace),
     );
-    if (!kReleaseMode) {
+    if (!kReleaseMode && onRetry!=null) {
       result = Column(
         mainAxisSize: MainAxisSize.min,
         children: [

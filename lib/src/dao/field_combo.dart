@@ -308,6 +308,7 @@ class ComboField<T extends DAO> extends Field<T> {
         );
       };
     }
+    final provider = possibleValuesProviderGetter?.call(context, this, dao);
     Widget result = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
@@ -320,7 +321,7 @@ class ComboField<T extends DAO> extends Field<T> {
           value: value,
           possibleValues: possibleValuesGetter?.call(context, this, dao),
           possibleValuesFuture: possibleValuesFutureGetter?.call(context, this, dao),
-          possibleValuesProvider: possibleValuesProviderGetter?.call(context, this, dao),
+          possibleValuesProvider: provider,
           sort: sort,
           showSearchBox: showSearchBox,
           onSelected: _onSelected,
@@ -337,6 +338,42 @@ class ComboField<T extends DAO> extends Field<T> {
           extraWidget: extraWidget ?? this.extraWidget,
           showViewActionOnDAOs: showViewActionOnDAOs,
           showDropdownIcon: showDropdownIcon,
+        );
+        if (provider!=null)
+        result = Stack(
+          children: [
+            result,
+            Positioned(
+              left: 3, top: 3,
+              child: ApiProviderBuilder(
+                provider: provider,
+                dataBuilder: (context, data) {
+                  return SizedBox.shrink();
+                },
+                loadingBuilder: (context, progress) {
+                  return SizedBox(
+                    height: 10, width: 10,
+                    child: LoadingSign(
+                      value: null,
+                      padding: EdgeInsets.zero,
+                      size: 12,
+                      color: Theme.of(context).splashColor.withOpacity(1),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace, onRetry) {
+                  return SizedBox(
+                    height: 10, width: 10,
+                    child: Icon(
+                      Icons.error_outlined,
+                      color: Colors.red,
+                      size: 12,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         );
         result = AnimatedContainer(
           duration: Duration(milliseconds: 300),

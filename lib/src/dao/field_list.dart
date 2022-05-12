@@ -1759,21 +1759,56 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         key: headerGlobalKey,
         skipTraversal: true,
         canRequestFocus: true,
-        child: TableHeaderFromZero<T>(
-          controller: tableController,
-          title: Text(uiName),
-          actions: actions,
-          onShowAppbarContextMenu: () => focusNode.requestFocus(),
-          exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
-          addSearchAction: addSearchAction,
-          leading: !collapsible ? icon : IconButton(
-            icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
-            onPressed: () {
-              focusNode.requestFocus();
-              this.collapsed = !this.collapsed;
-              notifyListeners();
-            },
-          ),
+        child: Stack(
+          children: [
+            TableHeaderFromZero<T>(
+              controller: tableController,
+              title: Text(uiName),
+              actions: actions,
+              onShowAppbarContextMenu: () => focusNode.requestFocus(),
+              exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
+              addSearchAction: addSearchAction,
+              leading: !collapsible ? icon : IconButton(
+                icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
+                onPressed: () {
+                  focusNode.requestFocus();
+                  this.collapsed = !this.collapsed;
+                  notifyListeners();
+                },
+              ),
+            ),
+            if (availableObjectsPoolProvider!=null)
+              Positioned(
+                left: 3, top: 3,
+                child: ApiProviderBuilder(
+                  provider: availableObjectsPoolProvider!.call(context, this, dao),
+                  dataBuilder: (context, data) {
+                    return SizedBox.shrink();
+                  },
+                  loadingBuilder: (context, progress) {
+                    return SizedBox(
+                      height: 10, width: 10,
+                      child: LoadingSign(
+                        value: null,
+                        padding: EdgeInsets.zero,
+                        size: 12,
+                        color: Theme.of(context).splashColor.withOpacity(1),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace, onRetry) {
+                    return SizedBox(
+                      height: 10, width: 10,
+                      child: Icon(
+                        Icons.error_outlined,
+                        color: Colors.red,
+                        size: 12,
+                      ),
+                    );
+                  },
+                ),
+              ),
+          ],
         ),
       ),
     );

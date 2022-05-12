@@ -44,6 +44,8 @@ DAO Form Performance -- wait for first validation before painting a frame
 
 FilePickerFromZero enhancement => implement drag'n'drop on windows
 
+File drag and drop broken in release
+
 
 
 

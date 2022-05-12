@@ -90,7 +90,7 @@ ValidationError? fieldValidatorRequired<T extends Comparable>(BuildContext conte
   String? errorMessage,
   ValidationErrorSeverity severity = ValidationErrorSeverity.error,
 }) {
-  return field.value==null||field.value!.toString().isEmpty
+  return field.value==null||field.value!.toString().trim().isEmpty
       ? ValidationError(
         field: field,
         error: errorMessage ?? (field.uiName + ' ' + FromZeroLocalizations.of(context).translate("validation_error_required")),
@@ -462,7 +462,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
     bool isBlocking = severity==ValidationErrorSeverity.error || severity==ValidationErrorSeverity.invalidating;
     return InkWell(
       onTap: () {
-        Navigator.of(context).pop();
+        Navigator.of(context).pop(false);
         WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
           errors.first.field.dao.focusError(errors.first);
         });
@@ -490,7 +490,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
           ...errors.map((e) {
             return InkWell(
               onTap: () {
-                Navigator.of(context).pop();
+                Navigator.of(context).pop(false);
                 WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
                   e.field.dao.focusError(e);
                 });

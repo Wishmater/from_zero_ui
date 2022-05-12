@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart' as material;
@@ -89,7 +91,8 @@ class NumField extends Field<num> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<num> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<num?>? onValueChanged,
-  }) :  controller = TextEditingController(text: toStringStatic(value, formatter)),
+  }) :  assert(digitsAfterComma>=0),
+        controller = TextEditingController(text: toStringStatic(value, formatter)),
         super(
           uiNameGetter: uiNameGetter,
           value: value,
@@ -326,6 +329,34 @@ class NumField extends Field<num> {
                         focusNode.nextFocus();
                       },
                       onChanged: (v) {
+                        if (digitsAfterComma>0) {
+                          bool update = false;
+                          int commaIndex = v.indexOf('.');
+                          if (commaIndex==0) {
+                            v = '0' + v;
+                            commaIndex++;
+                            update = true;
+                          }
+                          int lastCommaIndex = v.lastIndexOf('.');
+                          if (commaIndex>0) {
+                            if (commaIndex!=lastCommaIndex) {
+                              v = v.replaceAll('.', '');
+                              v = v.substring(0, commaIndex) + '.' + v.substring(commaIndex);
+                              update = true;
+                            }
+                            if (v.length+1 - commaIndex > digitsAfterComma) {
+                              v = v.substring(0, min(commaIndex+digitsAfterComma+1, v.length));
+                              update = true;
+                            }
+                          }
+                          if (update) {
+                            controller.text = v;
+                            controller.selection = TextSelection(
+                              baseOffset: v.length,
+                              extentOffset: v.length,
+                            );
+                          }
+                        }
                         final textVal = _getTextVal(v);
                         if (v.isEmpty || v.characters.last=='.' || v.characters.last==',' || !isEdited) {
                           value = textVal;

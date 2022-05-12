@@ -417,84 +417,171 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool showDefaultSnackBars=true,
     bool askForSaveConfirmation=true,
   }) async {
-    bool validation = await validate(context,
+    final validationFuture = validate(context,
       validateNonEditedFields: true,
     );
-    if (!showConfirmDialogWithBlockingErrors && !validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
-      return null;
-    }
-    bool? confirm = true;
-    if (askForSaveConfirmation || !validation) {
-      final scrollController = ScrollController();
-      confirm = await showModal(
-        context: context,
-        builder: (context) {
-          return SizedBox(
-            width: formDialogWidth-32,
-            child: AlertDialog(
-              title: Text(validation
-                  ? FromZeroLocalizations.of(context).translate("confirm_save_title")
-                  : 'Error de Validación'), // TODO 3 internationaliza
-              content: ScrollbarFromZero(
-                controller: scrollController,
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(validation
-                          ? FromZeroLocalizations.of(context).translate("confirm_save_desc")
-                          : 'Debe resolver los siguientes errores de validación antes de guardar:'),
-                      SaveConfirmationValidationMessage(allErrors: validationErrors),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                FlatButton(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  textColor: Theme.of(context).textTheme.caption!.color,
-                  onPressed: () {
-                    Navigator.of(context).pop(false); // Dismiss alert dialog
-                  },
-                ),
-                TooltipFromZero(
-                  message: validation ? null : 'No se puede guardar hasta resolver los errores de validación', // TODO 3 internationalize
-                  child: FlatButton(
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                    textColor: Colors.blue,
-                    onPressed: !validation ? null : () {
-                      Navigator.of(context).pop(true); // Dismiss alert dialog
+    final scrollController = ScrollController();
+    bool? confirm = await showModal(
+      context: context,
+      builder: (context) {
+        return IntrinsicWidth(
+          child: IntrinsicHeight(
+            child: Center(
+              child: SizedBox(
+                width: formDialogWidth-32,
+                child: Dialog(
+                  child: FutureBuilderFromZero<bool>(
+                    future: validationFuture,
+                    applyAnimatedContainerFromChildSize: true,
+                    loadingBuilder: (context) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 18,),
+                            Text('Validando Datos...',
+                              style: Theme.of(context).textTheme.headline6,
+                            ), // TODO 3 internationaliza
+                            Container(
+                              height: 200,
+                              child: ApiProviderBuilder.defaultLoadingBuilder(context, null),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace) {
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 18,),
+                            ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace as StackTrace?, null),
+                            SizedBox(height: 12,),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                FlatButton(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
+                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                  textColor: Theme.of(context).textTheme.caption!.color,
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false); // Dismiss alert dialog
+                                  },
+                                ),
+                                SizedBox(width: 2,),
+                              ],
+                            ),
+                            SizedBox(height: 12,),
+                          ],
+                        ),
+                      );
+                    },
+                    successBuilder: (context, validation) {
+                      if (!showConfirmDialogWithBlockingErrors && !validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
+                        Navigator.of(context).pop(null);
+                      }
+                      if (!askForSaveConfirmation && validation) {
+                        Navigator.of(context).pop(true);
+                      }
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(height: 18,),
+                            Text(validation
+                                ? FromZeroLocalizations.of(context).translate("confirm_save_title")
+                                : 'Error de Validación',
+                              style: Theme.of(context).textTheme.headline6,
+                            ), // TODO 3 internationaliza
+                            SizedBox(height: 12,),
+                            ScrollbarFromZero(
+                              controller: scrollController,
+                              child: SingleChildScrollView(
+                                controller: scrollController,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(validation
+                                        ? FromZeroLocalizations.of(context).translate("confirm_save_desc")
+                                        : 'Debe resolver los siguientes errores de validación antes de guardar:'),
+                                    SaveConfirmationValidationMessage(allErrors: validationErrors),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: 12,),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                FlatButton(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
+                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                  textColor: Theme.of(context).textTheme.caption!.color,
+                                  onPressed: () {
+                                    Navigator.of(context).pop(null); // Dismiss alert dialog
+                                  },
+                                ),
+                                TooltipFromZero(
+                                  message: validation ? null : 'No se puede guardar hasta resolver los errores de validación', // TODO 3 internationalize
+                                  child: FlatButton(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    textColor: Colors.blue,
+                                    onPressed: !validation ? null : () {
+                                      Navigator.of(context).pop(true); // Dismiss alert dialog
+                                    },
+                                  ),
+                                ),
+                                SizedBox(width: 2,),
+                              ],
+                            ),
+                            SizedBox(height: 12,),
+                          ],
+                        ),
+                      );
                     },
                   ),
                 ),
-                SizedBox(width: 2,),
-              ],
+              ),
             ),
-          );
-        },
-      );
-    }
+          ),
+        );
+      },
+    );
     if (confirm??false) {
       return save(context,
         skipValidation: true,
         updateDbValuesAfterSuccessfulSave: updateDbValuesAfterSuccessfulSave,
         showDefaultSnackBar: showDefaultSnackBars,
       );
-    } else {
-      return null;
+    } else if (confirm==null) {
+      final errors = validationErrors.where((e) => e.severity!=ValidationErrorSeverity.unfinished).toList();
+      if (errors.isNotEmpty) {
+        errors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
+        focusError(errors.first);
+      }
     }
+    return null;
   }
 
   Future<ModelType?> save(context, {
