@@ -891,7 +891,8 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
     final theme = Theme.of(context);
     final selectedColor = widget.selectedColor
         ?? Color.lerp(theme.textTheme.bodyText1!.color, theme.indicatorColor, 0.7)!;
-    return Container(
+    return Material(
+      type: MaterialType.transparency,
       color: widget.selected
           ? theme.splashColor
           : Colors.transparent,

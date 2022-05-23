@@ -139,7 +139,8 @@ ValidationError? fieldValidatorStringIsEmail(BuildContext context, DAO dao, Fiel
           ? null
           : ValidationError(
             field: field,
-            error: errorMessage ?? FromZeroLocalizations.of(context).translate("validation_error_email"),
+            error: errorMessage ??
+                '${field.uiName} ${FromZeroLocalizations.of(context).translate("validation_error_email")}',
             severity: severity,
           );
 }
@@ -460,67 +461,70 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
       return SizedBox.shrink();
     }
     bool isBlocking = severity==ValidationErrorSeverity.error || severity==ValidationErrorSeverity.invalidating;
-    return InkWell(
-      onTap: () {
-        Navigator.of(context).pop(false);
-        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-          errors.first.field.dao.focusError(errors.first);
-        });
-      },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(height: 18),
-          Row(
-            children: [
-              Icon(Icons.warning,
-                size: isBlocking ? 38 : 27,
-                color: ValidationMessage.severityColors[Theme.of(context).brightness]![severity]!,
-              ),
-              SizedBox(width: 4,),
-              Expanded(
-                child: Text(name,
-                  style: isBlocking
-                      ? Theme.of(context).textTheme.headline6
-                      : Theme.of(context).textTheme.subtitle1,
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).pop(false);
+          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+            errors.first.field.dao.focusError(errors.first);
+          });
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(height: 18),
+            Row(
+              children: [
+                Icon(Icons.warning,
+                  size: isBlocking ? 38 : 27,
+                  color: ValidationMessage.severityColors[Theme.of(context).brightness]![severity]!,
                 ),
-              ),
-            ],
-          ),
-          ...errors.map((e) {
-            return InkWell(
-              onTap: () {
-                Navigator.of(context).pop(false);
-                WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-                  e.field.dao.focusError(e);
-                });
-              },
-              child: Padding(
-                padding: const EdgeInsets.only(left: 15, top: 1, bottom: 2),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 7),
-                      child: Icon(Icons.circle,
-                        size: 10,
-                        color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
-                      ),
-                    ),
-                    SizedBox(width: 6,),
-                    Expanded(
-                      child: Text(e.error,
-                        // style: Theme.of(context).textTheme.bodyText1!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
-                      ),
-                    ),
-                  ],
+                SizedBox(width: 4,),
+                Expanded(
+                  child: Text(name,
+                    style: isBlocking
+                        ? Theme.of(context).textTheme.headline6
+                        : Theme.of(context).textTheme.subtitle1,
+                  ),
                 ),
-              ),
-            );
-          }),
-          if (isBlocking)
-            SizedBox(height: 12),
-        ],
+              ],
+            ),
+            ...errors.map((e) {
+              return InkWell(
+                onTap: () {
+                  Navigator.of(context).pop(false);
+                  WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                    e.field.dao.focusError(e);
+                  });
+                },
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 15, top: 1, bottom: 2),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 7),
+                        child: Icon(Icons.circle,
+                          size: 10,
+                          color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
+                        ),
+                      ),
+                      SizedBox(width: 6,),
+                      Expanded(
+                        child: Text(e.error,
+                          // style: Theme.of(context).textTheme.bodyText1!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+            if (isBlocking)
+              SizedBox(height: 12),
+          ],
+        ),
       ),
     );
   }

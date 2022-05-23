@@ -184,7 +184,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
           });
         }
         return Container(
-          width: 256,
+          width: 224,
           padding: EdgeInsets.symmetric(vertical: 4),
           child: Stack(
             children: [

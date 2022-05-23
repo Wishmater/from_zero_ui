@@ -11,9 +11,9 @@ import 'package:dartx/dartx.dart';
 
 class DateField extends Field<DateTime> {
 
-  DateFormat formatter;
-  DateTime firstDate;
-  DateTime lastDate;
+  final DateFormat formatter;
+  final DateTime firstDate;
+  final DateTime lastDate;
 
 
   DateField({
@@ -331,9 +331,9 @@ class DateField extends Field<DateTime> {
               ],
             ),
           ),
-          SizedBox(width: dense ? 0 : 4,),
-          if (!dense && enabled && !clearable)
-            Icon(Icons.arrow_drop_down),
+          // SizedBox(width: dense ? 0 : 4,),
+          // if (!dense && enabled && !clearable)
+          //   Icon(Icons.arrow_drop_down),
           SizedBox(width: dense ? 0 : 4,),
         ],
       ),

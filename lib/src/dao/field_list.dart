@@ -257,6 +257,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   @override
   set dao(DAO dao) {
     super.dao = dao;
+    objectTemplate.parentDAO = dao;
     objects.forEach((element) {
       element.parentDAO = dao;
     });
@@ -554,25 +555,14 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     if (hasAvailableObjectsPool) {
       T? selected;
       if (showObjectsFromAvailablePoolAsTable) {
-        final onDidSave = (context, model, dao) {
-          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-            Navigator.of(context).pop(dao);
-          });
-        };
-        final previousOnDidSave = emptyDAO.onDidSave;
-        if (previousOnDidSave!=null) {
-          final newOnDidSave = (context, model, dao) async {
-            previousOnDidSave(context, model, dao);
-            onDidSave(context, model, dao);
-          };
-          emptyDAO = emptyDAO.copyWith(
-            onDidSave: newOnDidSave,
-          ) as T;
-        } else {
-          emptyDAO = emptyDAO.copyWith(
-            onDidSave: onDidSave,
-          ) as T;
-        }
+        emptyDAO = emptyDAO.copyWith(
+          onDidSave: (context, model, dao) {
+            objectTemplate.onDidSave?.call(context, model, dao);
+            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+              Navigator.of(context).pop(dao);
+            });
+          },
+        ) as T;
         Widget content = AnimatedBuilder(
           animation:  this,
           builder: (context, child) {
@@ -1325,7 +1315,12 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       actions.add(ActionFromZero.divider(breakpoints: actions.first.breakpoints,));
     }
     actions.addAll(defaultActions);
-    Map<String, Field> propsShownOnTable = Map.from(objectTemplate.props)..removeWhere((k, v) => v.hiddenInTable);
+    Map<String, Field> propsShownOnTable = {};
+    objectTemplate.props.forEach((key, value) {
+      if (!value.hiddenInTable) {
+        propsShownOnTable[key] = value;
+      }
+    });
     double width = 0;
     propsShownOnTable.forEach((key, value) {
       width += value.tableColumnWidth ?? 192;

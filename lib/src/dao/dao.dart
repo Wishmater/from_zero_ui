@@ -61,6 +61,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   bool wantsLinkToSelfFromOtherDAOs;
   bool enableUndoRedoMechanism;
   bool showConfirmDialogWithBlockingErrors;
+  DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout;
   DAO? parentDAO; /// if not null, undo/redo calls will be relayed to the parent
 
   DAO({
@@ -90,6 +91,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.enableUndoRedoMechanism = true,
     this.showConfirmDialogWithBlockingErrors = true,
     this.parentDAO,
+    this.enableDoubleColumnLayout,
   }) :  this._undoRecord = undoRecord ?? [],
         this._redoRecord = redoRecord ?? [],
         this.classUiNamePluralGetter = classUiNamePluralGetter ?? classUiNameGetter
@@ -134,6 +136,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     List<List<Field>>? redoRecord,
     bool? showConfirmDialogWithBlockingErrors,
     DAO? parentDAO,
+    DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout,
   }) {
     final result = DAO<ModelType>(
       id: id??this.id,
@@ -161,6 +164,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       redoRecord: redoRecord??this._redoRecord,
       showConfirmDialogWithBlockingErrors: showConfirmDialogWithBlockingErrors??this.showConfirmDialogWithBlockingErrors,
       parentDAO: parentDAO??this.parentDAO,
+      enableDoubleColumnLayout: enableDoubleColumnLayout??this.enableDoubleColumnLayout,
     );
     result._selfUpdateListeners = _selfUpdateListeners;
     return result;
@@ -430,6 +434,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               child: SizedBox(
                 width: formDialogWidth-32,
                 child: Dialog(
+                  clipBehavior: Clip.hardEdge,
                   child: FutureBuilderFromZero<bool>(
                     future: validationFuture,
                     applyAnimatedContainerFromChildSize: true,
@@ -494,69 +499,73 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       }
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 18),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 18,),
-                            Text(validation
-                                ? FromZeroLocalizations.of(context).translate("confirm_save_title")
-                                : 'Error de Validación',
-                              style: Theme.of(context).textTheme.headline6,
-                            ), // TODO 3 internationaliza
-                            SizedBox(height: 12,),
-                            ScrollbarFromZero(
-                              controller: scrollController,
-                              child: SingleChildScrollView(
-                                controller: scrollController,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(validation
-                                        ? FromZeroLocalizations.of(context).translate("confirm_save_desc")
-                                        : 'Debe resolver los siguientes errores de validación antes de guardar:'),
-                                    SaveConfirmationValidationMessage(allErrors: validationErrors),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 12,),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                FlatButton(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                        child: IntrinsicHeight(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 18,),
+                              Text(validation
+                                  ? FromZeroLocalizations.of(context).translate("confirm_save_title")
+                                  : 'Error de Validación',
+                                style: Theme.of(context).textTheme.headline6,
+                              ), // TODO 3 internationaliza
+                              SizedBox(height: 12,),
+                              Expanded(
+                                child: ScrollbarFromZero(
+                                  controller: scrollController,
+                                  child: SingleChildScrollView(
+                                    controller: scrollController,
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(validation
+                                            ? FromZeroLocalizations.of(context).translate("confirm_save_desc")
+                                            : 'Debe resolver los siguientes errores de validación antes de guardar:'),
+                                        SaveConfirmationValidationMessage(allErrors: validationErrors),
+                                      ],
                                     ),
                                   ),
-                                  textColor: Theme.of(context).textTheme.caption!.color,
-                                  onPressed: () {
-                                    Navigator.of(context).pop(null); // Dismiss alert dialog
-                                  },
                                 ),
-                                TooltipFromZero(
-                                  message: validation ? null : 'No se puede guardar hasta resolver los errores de validación', // TODO 3 internationalize
-                                  child: FlatButton(
+                              ),
+                              SizedBox(height: 12,),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  FlatButton(
                                     child: Padding(
                                       padding: const EdgeInsets.all(8.0),
-                                      child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
+                                      child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
                                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                       ),
                                     ),
-                                    textColor: Colors.blue,
-                                    onPressed: !validation ? null : () {
-                                      Navigator.of(context).pop(true); // Dismiss alert dialog
+                                    textColor: Theme.of(context).textTheme.caption!.color,
+                                    onPressed: () {
+                                      Navigator.of(context).pop(null); // Dismiss alert dialog
                                     },
                                   ),
-                                ),
-                                SizedBox(width: 2,),
-                              ],
-                            ),
-                            SizedBox(height: 12,),
-                          ],
+                                  TooltipFromZero(
+                                    message: validation ? null : 'No se puede guardar hasta resolver los errores de validación', // TODO 3 internationalize
+                                    child: FlatButton(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
+                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                      textColor: Colors.blue,
+                                      onPressed: !validation ? null : () {
+                                        Navigator.of(context).pop(true); // Dismiss alert dialog
+                                      },
+                                    ),
+                                  ),
+                                  SizedBox(width: 2,),
+                                ],
+                              ),
+                              SizedBox(height: 12,),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -847,11 +856,12 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     final focusNode = FocusNode();
     Widget content = LayoutBuilder(
       builder: (context, constraints) {
-        double widescreenDialogWidth = formDialogWidth*2+32+24+16+32+16+38;
-        bool widescreen = constraints.maxWidth>=widescreenDialogWidth;
         Widget result = AnimatedBuilder(
           animation: this,
           builder: (context, child) {
+            double widescreenDialogWidth = formDialogWidth*2+32+24+16+32+16+38;
+            bool widescreen = (enableDoubleColumnLayout?.call(this)??true)
+                && constraints.maxWidth>=widescreenDialogWidth;
             bool expandToFillContainer = false;
             if (props.values.where((e) => !e.hiddenInForm && (e is ListField)).isNotEmpty) {
               expandToFillContainer = true;
