@@ -25,13 +25,14 @@ typedef List<RowAction<T>> RowActionsBuilder<T>(BuildContext context);
 
 class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
-  T objectTemplate;
+  FieldValueGetter<T, ListField<T>> objectTemplateGetter;
   TableController<T> tableController;
   ContextFulFieldValueGetter<Future<List<T>>, ListField<T>>? availableObjectsPoolGetter;
   ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T>>? availableObjectsPoolProvider;
   bool allowDuplicateObjectsFromAvailablePool;
   bool showObjectsFromAvailablePoolAsTable;
-  bool allowAddNew;
+  bool? _allowAddNew;
+  bool get allowAddNew => _allowAddNew ?? objectTemplate.canSave;
   bool collapsed;
   bool allowMultipleSelection;
   bool tableCellsEditable;
@@ -46,11 +47,13 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   Map<double, ActionState> actionDeleteBreakpoints;
   /// this means that save() will be called on the object when adding a row
   /// and delete() will be called when removing a row, default false
-  bool skipDeleteConfirmation;
+  bool? _skipDeleteConfirmation;
+  bool get skipDeleteConfirmation => _skipDeleteConfirmation ?? !objectTemplate.canDelete;
   bool showTableHeaders;
   bool showElementCount;
   double? rowHeight;
-  bool showDefaultSnackBars;
+  bool? _showDefaultSnackBars;
+  bool get showDefaultSnackBars => _showDefaultSnackBars ?? objectTemplate.canSave;
   RowActionsBuilder<T>? extraRowActionsBuilder; //TODO 3 also allow global action builders
   bool showEditDialogOnAdd;
   bool showAddButtonAtEndOfTable;
@@ -67,6 +70,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   bool buildViewWidgetAsTable;
   bool addSearchAction;
 
+  T get objectTemplate => objectTemplateGetter(this, dao);
   List<T> get objects => value!.list;
   List<T> get dbObjects => dbValue!.list;
   @override
@@ -147,7 +151,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
   ListField({
     required FieldValueGetter<String, Field> uiNameGetter,
-    required this.objectTemplate,
+    required this.objectTemplateGetter,
     required List<T> objects,
     List<T>? dbObjects,
     this.availableObjectsPoolGetter,
@@ -213,15 +217,15 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
-        this.showDefaultSnackBars = showDefaultSnackBars ?? objectTemplate.canSave,
-        this.skipDeleteConfirmation = skipDeleteConfirmation ?? !objectTemplate.canDelete,
+        this._showDefaultSnackBars = showDefaultSnackBars,
+        this._skipDeleteConfirmation = skipDeleteConfirmation,
         this.viewOnRowTap = viewOnRowTap ?? (onRowTap==null && !tableCellsEditable),
         this.actionEditBreakpoints = actionEditBreakpoints ?? {0: ActionState.popup},
         this.actionDuplicateBreakpoints = actionDuplicateBreakpoints ?? {0: ActionState.none},
         this.actionDeleteBreakpoints = actionDeleteBreakpoints ?? {0: ActionState.icon},
         this.actionViewBreakpoints = actionViewBreakpoints ?? (viewOnRowTap ?? (onRowTap==null && !tableCellsEditable) ? {0: ActionState.popup} : {0: ActionState.icon}),
         this.tableController = tableController ?? TableController<T>(),
-        this.allowAddNew = allowAddNew ?? objectTemplate.canSave,
+        this._allowAddNew = allowAddNew,
         this.validateChildren = tableCellsEditable && (validateChildren ?? true),
         super(
           uiNameGetter: uiNameGetter,
@@ -339,7 +343,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     double? maxWidth,
     double? minWidth,
     double? flex,
-    T? objectTemplate,
+    FieldValueGetter<T, ListField<T>>? objectTemplateGetter,
     Future<List<T>>? futureObjects,
     List<T>? objects,
     List<T>? dbObjects,
@@ -400,7 +404,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       maxWidth: maxWidth??this.maxWidth,
       minWidth: minWidth??this.minWidth,
       flex: flex??this.flex,
-      objectTemplate: objectTemplate??this.objectTemplate,
+      objectTemplateGetter: objectTemplateGetter??this.objectTemplateGetter,
       objects: objects??this.objects.map((e) => e.copyWith() as T).toList(),
       dbObjects: dbObjects??objects??this.dbObjects.map((e) => e.copyWith() as T).toList(),
       hintGetter: hintGetter??this.hintGetter,
@@ -417,11 +421,11 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       availableObjectsPoolGetter: availableObjectsPoolGetter ?? this.availableObjectsPoolGetter,
       availableObjectsPoolProvider: availableObjectsPoolProvider ?? this.availableObjectsPoolProvider,
       allowDuplicateObjectsFromAvailablePool: allowDuplicateObjectsFromAvailablePool ?? this.allowDuplicateObjectsFromAvailablePool,
-      allowAddNew: allowAddNew ?? this.allowAddNew,
+      allowAddNew: allowAddNew ?? this._allowAddNew,
       asPopup: asPopup ?? this.asPopup,
       toStringGetter: toStringGetter ?? this.toStringGetter,
       extraRowActionsBuilder: extraRowActionBuilders ?? this.extraRowActionsBuilder,
-      skipDeleteConfirmation: skipDeleteConfirmation ?? this.skipDeleteConfirmation,
+      skipDeleteConfirmation: skipDeleteConfirmation ?? this._skipDeleteConfirmation,
       showTableHeaders: showTableHeaders ?? this.showTableHeaders,
       showElementCount: showElementCount ?? this.showElementCount,
       rowHeight: rowHeight ?? this.rowHeight,
@@ -432,7 +436,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       showAddButtonAtEndOfTable: showAddButtonAtEndOfTable ?? this.showAddButtonAtEndOfTable,
       showEditDialogOnAdd: showEditDialogOnAdd ?? this.showEditDialogOnAdd,
       tableErrorWidget: tableErrorWidget ?? this.tableErrorWidget,
-      showDefaultSnackBars: showDefaultSnackBars ?? this.showDefaultSnackBars,
+      showDefaultSnackBars: showDefaultSnackBars ?? this._showDefaultSnackBars,
       validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
       showObjectsFromAvailablePoolAsTable: showObjectsFromAvailablePoolAsTable ?? this.showObjectsFromAvailablePoolAsTable,
@@ -550,19 +554,18 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
   Future<T?> maybeAddRow(context, [int? insertIndex]) async {
     focusNode.requestFocus();
+    final objectTemplate = this.objectTemplate;
     T emptyDAO = (objectTemplate.copyWith() as T)..id=null;
     emptyDAO.contextForValidation = dao.contextForValidation;
     if (hasAvailableObjectsPool) {
       T? selected;
       if (showObjectsFromAvailablePoolAsTable) {
-        emptyDAO = emptyDAO.copyWith(
-          onDidSave: (context, model, dao) {
-            objectTemplate.onDidSave?.call(context, model, dao);
-            WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
-              Navigator.of(context).pop(dao);
-            });
-          },
-        ) as T;
+        emptyDAO.onDidSave = (context, model, dao) {
+          objectTemplate.onDidSave?.call(context, model, dao);
+          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+            Navigator.of(context).pop(dao);
+          });
+        };
         Widget content = AnimatedBuilder(
           animation:  this,
           builder: (context, child) {
@@ -758,7 +761,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     }
     final listField = ListField(
       uiNameGetter: (field, dao) => uiName,
-      objectTemplate: emptyDAO,
+      objectTemplateGetter: (field, dao) => emptyDAO,
       tableCellsEditable: false,
       collapsible: false,
       actionDeleteBreakpoints: {0: ActionState.none},
@@ -1301,6 +1304,8 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     collapsed ??= this.collapsed;
     fieldGlobalKey ??= this.fieldGlobalKey;
     focusNode ??= this.focusNode;
+    final objectTemplate = this.objectTemplate;
+    final allowAddNew = this.allowAddNew;
     Widget result;
     if (hiddenInForm) {
       result = SizedBox.shrink();
@@ -1618,9 +1623,9 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   }) {
     collapsed ??= this.collapsed;
     return AnimatedBuilder(
-      animation:  this,
+      animation: this,
       builder: (context, child) {
-        if (collapsed!) {
+        if (collapsed! || !enabled) {
           return SizedBox.shrink();
         }
         return Transform.translate(
@@ -1812,6 +1817,8 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   @override
   List<ActionFromZero> buildDefaultActions(BuildContext context, {FocusNode? focusNode}) {
     focusNode ??= this.focusNode;
+    final objectTemplate = this.objectTemplate;
+    final allowAddNew = this.allowAddNew;
     List<T> currentSelected = [];
     try {
       currentSelected = tableController.filtered.where((element) => selectedObjects.value[element]==true).map((e) => e.id).toList();
