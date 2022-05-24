@@ -70,7 +70,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   bool buildViewWidgetAsTable;
   bool addSearchAction;
 
-  T get objectTemplate => objectTemplateGetter(this, dao);
+  T get objectTemplate => objectTemplateGetter(this, dao)..parentDAO = dao;
   List<T> get objects => value!.list;
   List<T> get dbObjects => dbValue!.list;
   @override
@@ -261,7 +261,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   @override
   set dao(DAO dao) {
     super.dao = dao;
-    objectTemplate.parentDAO = dao;
     objects.forEach((element) {
       element.parentDAO = dao;
     });
