@@ -1086,7 +1086,7 @@ class FlexibleLayoutFromZero extends StatelessWidget {
       extraSize = 0;
       List<int> keysToRemove = [];
       for (final key in expandableItems.keys) {
-        if (expandableItems[key]!.maxSize < itemSizes[key]!) {
+        if (expandableItems[key]!.maxSize <= itemSizes[key]!) {
           final difference = itemSizes[key]! - expandableItems[key]!.maxSize;
           itemSizes[key] = expandableItems[key]!.maxSize;
           extraSize += difference;

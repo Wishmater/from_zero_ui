@@ -1697,7 +1697,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               .cast<FlexibleLayoutItemFromZero>(),
           relevantAxisMaxSize: min(formDialogWidth,
               MediaQuery.of(context).size.width - 56)  - (groupBorderNestingCount*16),
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
         );
       } else {
         ScrollController scrollController = ScrollController();
@@ -1795,48 +1795,60 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           mainScrollController: mainScrollController,
         );
         first = false;
-        result = result.mapIndexed((i, w) {
-          final hidden = e.hiddenInForm;
-          if (asSlivers) {
+        final hidden = e.hiddenInForm;
+        if (asSlivers) {
+          result = result.mapIndexed((i, w) {
             return hidden
                 ? SliverToBoxAdapter(child: SizedBox.shrink(),)
                 : SliverPadding(
                   padding: EdgeInsets.only(
-                    top: i==0 ? 6 : 0,
-                    bottom: i==result.lastIndex ? 6 : 0,
+                    top: i == 0 ? 6 : 0,
+                    bottom: i == result.lastIndex ? 6 : 0,
                   ),
                   sliver: w,
                 );
-          } else {
-            return FlexibleLayoutItemFromZero(
-              maxSize: hidden ? 0 : e.maxWidth,
-              minSize: hidden ? 0 : e.minWidth,
-              flex: hidden ? 0 : e.flex,
-              child: hidden ? SizedBox.shrink() : AnimatedSwitcher(
-                duration: 300.milliseconds,
-                switchInCurve: Curves.easeOutCubic,
-                switchOutCurve: Curves.easeInCubic,
-                child: e.hiddenInForm
-                    ? SizedBox.shrink()
-                    : Padding(
-                      padding: EdgeInsets.only(
-                        top: i==0 ? 6 : 0,
-                        bottom: i==result.lastIndex ? 6 : 0,
-                      ),
-                      child: w,
-                    ),
-                transitionBuilder: (child, animation) {
-                  return SizeTransition(
-                    sizeFactor: animation,
-                    axis: Axis.vertical,
-                    axisAlignment: -1,
-                    child: Center(child: child),
-                  );
-                },
+          }).toList();
+        } else {
+          result = result.mapIndexed((i, w) {
+            return hidden
+                ? SizedBox.shrink()
+                : Padding(
+                  padding: EdgeInsets.only(
+                    top: i==0 ? 6 : 0,
+                    bottom: i==result.lastIndex ? 6 : 0,
+                  ),
+                  child: w,
+                );
+              }).toList();
+          if (wrapInLayoutFromZeroItem) {
+            result = [
+              FlexibleLayoutItemFromZero(
+                maxSize: hidden ? 0 : e.maxWidth,
+                minSize: hidden ? 0 : e.minWidth,
+                flex: hidden ? 0 : e.flex,
+                child: hidden ? SizedBox.shrink() : AnimatedSwitcher(
+                  duration: 300.milliseconds,
+                  switchInCurve: Curves.easeOutCubic,
+                  switchOutCurve: Curves.easeInCubic,
+                  child: e.hiddenInForm
+                      ? SizedBox.shrink()
+                      : Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: result,
+                  ),
+                  transitionBuilder: (child, animation) {
+                    return SizeTransition(
+                      sizeFactor: animation,
+                      axis: Axis.vertical,
+                      axisAlignment: -1,
+                      child: Center(child: child),
+                    );
+                  },
+                ),
               ),
-            );
+            ];
           }
-        }).toList();
+        }
         return result;
       }).flatten().toList(),
       if (showActionButtons)
