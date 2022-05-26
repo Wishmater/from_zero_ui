@@ -396,6 +396,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     bool? buildViewWidgetAsTable,
     bool? addSearchAction,
     OnFieldValueChanged<ComparableList<T>?>? onValueChanged,
+    bool? viewOnRowTap,
   }) {
     return ListField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -457,6 +458,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       buildViewWidgetAsTable: buildViewWidgetAsTable ?? this.buildViewWidgetAsTable,
       addSearchAction: addSearchAction ?? this.addSearchAction,
       onValueChanged: onValueChanged ?? this.onValueChanged,
+      viewOnRowTap: viewOnRowTap ?? this.viewOnRowTap,
     );
   }
 
@@ -1552,7 +1554,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
         );
         if (!expandHorizontally) {
           result = SliverCrossAxisConstrained(
-            maxCrossAxisExtent: maxWidth==double.infinity ? width*1.6 : maxWidth,
+            maxCrossAxisExtent: maxWidth==double.infinity ? width*1.4 : maxWidth,
             child: result,
           );
         }
