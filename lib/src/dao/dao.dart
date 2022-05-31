@@ -1487,7 +1487,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         final fields = group.props.values.where((e) => !e.hiddenInView);
         Widget result;
         if (fields.isEmpty) {
-          result = SizedBox.shrink();
+          return SizedBox.shrink();
         } else {
           result = Column(
             mainAxisSize: MainAxisSize.min,
@@ -1499,7 +1499,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   tableCellsEditable: false,
                   allowAddNew: false,
                   actionViewBreakpoints: this.viewDialogLinksToInnerDAOs&&this.viewDialogShowsViewButtons
-                      ? {0: ActionState.icon} : {0: ActionState.none},
+                      ? {0: ActionState.icon}
+                      : this.viewDialogLinksToInnerDAOs
+                          ? {0: ActionState.popup}
+                          : {0: ActionState.none},
                   actionDeleteBreakpoints: {0: ActionState.none},
                   actionDuplicateBreakpoints: {0: ActionState.none},
                   actionEditBreakpoints: {0: ActionState.none},

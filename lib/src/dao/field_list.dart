@@ -45,6 +45,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   Map<double, ActionState> actionEditBreakpoints;
   Map<double, ActionState> actionDuplicateBreakpoints;
   Map<double, ActionState> actionDeleteBreakpoints;
+  Map<String, ColModel> Function(DAO dao, ListField<T> listField, T objectTemplate)? tableColumnsBuilder;
   /// this means that save() will be called on the object when adding a row
   /// and delete() will be called when removing a row, default false
   bool? _skipDeleteConfirmation;
@@ -175,6 +176,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     Map<double, ActionState>? actionEditBreakpoints,
     Map<double, ActionState>? actionDuplicateBreakpoints,
     Map<double, ActionState>? actionDeleteBreakpoints,
+    this.tableColumnsBuilder,
     this.showTableHeaders = true,
     this.showElementCount = true,
     this.rowHeight,
@@ -356,6 +358,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     Map<double, ActionState>? actionEditBreakpoints,
     Map<double, ActionState>? actionDuplicateBreakpoints,
     Map<double, ActionState>? actionDeleteBreakpoints,
+    Map<String, ColModel> Function(DAO dao, ListField<T> listField, T objectTemplate)? tableColumnsBuilder,
     bool? skipDeleteConfirmation,
     bool? showTableHeaders,
     bool? showElementCount,
@@ -459,6 +462,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       addSearchAction: addSearchAction ?? this.addSearchAction,
       onValueChanged: onValueChanged ?? this.onValueChanged,
       viewOnRowTap: viewOnRowTap ?? this.viewOnRowTap,
+      tableColumnsBuilder: tableColumnsBuilder ?? this.tableColumnsBuilder,
     );
   }
 
@@ -1321,21 +1325,43 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       actions.add(ActionFromZero.divider(breakpoints: actions.first.breakpoints,));
     }
     actions.addAll(defaultActions);
-    Map<String, Field> propsShownOnTable = {};
-    objectTemplate.props.forEach((key, value) {
-      if (!value.hiddenInTable) {
-        propsShownOnTable[key] = value;
-      }
-    });
-    double width = 0;
-    propsShownOnTable.forEach((key, value) {
-      width += value.tableColumnWidth ?? 192;
-    });
     double rowHeight = this.rowHeight ?? (tableCellsEditable ? 48 : 36);
     result = AnimatedBuilder(
       key: fieldGlobalKey,
       animation:  this,
       builder: (context, child) {
+        builtRows = {};
+        final Map<String, ColModel> columns = tableColumnsBuilder!=null
+            ? tableColumnsBuilder!(dao, this, objectTemplate)
+            : defaultTableColumnsBuilder(dao, this, objectTemplate);
+        for (final e in objects) {
+          final onRowTap = this.onRowTap ?? (viewOnRowTap ? (row) {
+            e.pushViewDialog(dao.contextForValidation ?? context);
+          } : null);
+          builtRows[e] = SimpleRowModel(
+            id: e,
+            values: columns.map((key, value) => MapEntry(key, e.props[key])),
+            height: rowHeight,
+            onRowTap: onRowTap==null ? null : (value) {
+              value.focusNode.requestFocus();
+              onRowTap(value);
+            },
+            selected: allowMultipleSelection ? (selectedObjects.value[e]??false) : null,
+            backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
+            onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
+              selectedObjects.value[row.id] = focused??false;
+              (row as SimpleRowModel).selected = focused??false;
+              selectedObjects.notifyListeners();
+              tableController.notifyListeners();
+              notifyListeners();
+              return true;
+            } : null,
+          );
+        }
+        double width = 0;
+        columns.forEach((key, value) {
+          width += value.flex ?? 192;
+        });
         if (collapsed!) {
           Widget result = SizedBox(
             width: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
@@ -1368,31 +1394,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           }
           return result;
         }
-        builtRows = {};
-        for (final e in objects) {
-          final onRowTap = this.onRowTap ?? (viewOnRowTap ? (row) {
-            e.pushViewDialog(dao.contextForValidation ?? context);
-          } : null);
-          builtRows[e] = SimpleRowModel(
-            id: e,
-            values: propsShownOnTable.map((key, value) => MapEntry(key, e.props[key])),
-            height: rowHeight,
-            onRowTap: onRowTap==null ? null : (value) {
-              value.focusNode.requestFocus();
-              onRowTap(value);
-            },
-            selected: allowMultipleSelection ? (selectedObjects.value[e]??false) : null,
-            backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
-            onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
-              selectedObjects.value[row.id] = focused??false;
-              (row as SimpleRowModel).selected = focused??false;
-              selectedObjects.notifyListeners();
-              tableController.notifyListeners();
-              notifyListeners();
-              return true;
-            } : null,
-          );
-        }
         final extraRowActions = extraRowActionsBuilder?.call(context) ?? [];
         Widget result = TableFromZero<T>(
           // key: ValueKey(value.hashCode),
@@ -1403,16 +1404,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           alternateRowBackgroundSmartly: false,
           onFilter: onFilter,
           exportPathForExcel: exportPathForExcel,
-          columns: propsShownOnTable.map((key, value) {
-            final SimpleColModel result = value.getColModel();
-            if (tableFilterable!=null) {
-              result.filterEnabled = tableFilterable;
-            }
-            if (tableSortable!=null) {
-              result.sortEnabled = tableSortable;
-            }
-            return MapEntry(key, result);
-          }),
+          columns: columns,
           showHeaders: showTableHeaders,
           footerStickyOffset: 12,
           rows: builtRows.values.toList(),
@@ -1524,7 +1516,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
                   child: Material(
                     color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
                     child: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
-                        ? buildAddAddon(context: context, width: width, collapsed: collapsed)
+                        ? buildAddAddon(context: context, collapsed: collapsed)
                         : InkWell(
                           onTap: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty ? () {
                             maybeAddRow(context);
@@ -1605,7 +1597,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       if (enabled && (allowAddNew||hasAvailableObjectsPool) && showAddButtonAtEndOfTable && !collapsed && !dense)
         buildAddAddon(
           context: context,
-          width: width,
           collapsed: collapsed,
         ),
       if (!dense)
@@ -1619,7 +1610,6 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
   Widget buildAddAddon({
     required BuildContext context,
-    required double width,
     required bool? collapsed,
   }) {
     collapsed ??= this.collapsed;
@@ -1940,6 +1930,27 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           },
         ),
     ];
+  }
+
+  static Map<String, ColModel> defaultTableColumnsBuilder<T extends DAO>
+      (DAO dao, ListField<T> listField, T objectTemplate) {
+    Map<String, Field> propsShownOnTable = {};
+    objectTemplate.props.forEach((key, value) {
+      if (!value.hiddenInTable) {
+        propsShownOnTable[key] = value;
+      }
+    });
+    final columns = propsShownOnTable.map((key, value) {
+      final SimpleColModel result = value.getColModel();
+      if (listField.tableFilterable!=null) {
+        result.filterEnabled = listField.tableFilterable;
+      }
+      if (listField.tableSortable!=null) {
+        result.sortEnabled = listField.tableSortable;
+      }
+      return MapEntry(key, result);
+    });
+    return columns;
   }
 
 }
