@@ -19,10 +19,6 @@ import 'package:sliver_tools/sliver_tools.dart';
 import 'package:dartx/dartx.dart';
 
 
-typedef List<RowAction<T>> RowActionsBuilder<T>(BuildContext context);
-
-
-
 class ListField<T extends DAO> extends Field<ComparableList<T>> {
 
   FieldValueGetter<T, ListField<T>> objectTemplateGetter;
@@ -55,7 +51,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   double? rowHeight;
   bool? _showDefaultSnackBars;
   bool get showDefaultSnackBars => _showDefaultSnackBars ?? objectTemplate.canSave;
-  RowActionsBuilder<T>? extraRowActionsBuilder; //TODO 3 also allow global action builders
+  ContextFulFieldValueGetter<List<RowAction<T>>, ListField<T>>? extraRowActionsBuilder; //TODO 3 also allow global action builders
   bool showEditDialogOnAdd;
   bool showAddButtonAtEndOfTable;
   Widget? tableErrorWidget;
@@ -370,7 +366,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     bool? allowAddNew,
     bool? asPopup,
     String Function(ListField field)? toStringGetter,
-    RowActionsBuilder<T>? extraRowActionBuilders,
+    ContextFulFieldValueGetter<List<RowAction<T>>, ListField<T>>? extraRowActionBuilders,
     int? initialSortColumn,
     bool? tableCellsEditable,
     bool? allowMultipleSelection,
@@ -1243,7 +1239,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
-        final actions = this.actions?.call(context, this, dao) ?? [];
+        final actions = this.actions?.call(dao.contextForValidation ?? context, this, dao) ?? [];
         final defaultActions = buildDefaultActions(context);
         result = ContextMenuFromZero(
           enabled: enabled,
@@ -1319,7 +1315,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       }
       return [result];
     }
-    final actions = this.actions?.call(context, this, dao) ?? [];
+    final actions = this.actions?.call(dao.contextForValidation ?? context, this, dao) ?? [];
     final defaultActions = buildDefaultActions(context, focusNode: focusNode);
     if (actions.isNotEmpty && defaultActions.isNotEmpty) {
       actions.add(ActionFromZero.divider(breakpoints: actions.first.breakpoints,));
@@ -1394,7 +1390,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           }
           return result;
         }
-        final extraRowActions = extraRowActionsBuilder?.call(context) ?? [];
+        final extraRowActions = extraRowActionsBuilder?.call(dao.contextForValidation ?? context, this, dao) ?? [];
         Widget result = TableFromZero<T>(
           // key: ValueKey(value.hashCode),
           scrollController: mainScrollController,
