@@ -142,18 +142,23 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
                     widget.leading!,
                     SizedBox(width: 9,),
                   ],
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (widget.title!=null)
-                      DefaultTextStyle(
-                        style: Theme.of(context).textTheme.headline6!,
-                        child: widget.title!,
-                      ),
-                    if (filtered!=null)
-                      subtitle,
-                  ],
+                Expanded(
+                  child: OverflowScroll(
+                    autoscrollSpeed: null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (widget.title!=null)
+                          DefaultTextStyle(
+                            style: Theme.of(context).textTheme.headline6!,
+                            child: widget.title!,
+                          ),
+                        if (filtered!=null)
+                          subtitle,
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -176,6 +181,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
       title: 'Buscar...',
       icon: Icon(Icons.search),
       breakpoints: {0: ActionState.expanded},
+      centerExpanded: false,
       expandedBuilder: ({required context, enabled=true, icon, onTap, title=''}) {
         if (autofocusSearchOnNextBuild) {
           autofocusSearchOnNextBuild = false;

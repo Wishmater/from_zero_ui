@@ -19,12 +19,12 @@ import 'package:sliver_tools/sliver_tools.dart';
 import 'package:dartx/dartx.dart';
 
 
-class ListField<T extends DAO> extends Field<ComparableList<T>> {
+class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
-  FieldValueGetter<T, ListField<T>> objectTemplateGetter;
+  FieldValueGetter<T, ListField<T, U>> objectTemplateGetter;
   TableController<T> tableController;
-  ContextFulFieldValueGetter<Future<List<T>>, ListField<T>>? availableObjectsPoolGetter;
-  ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T>>? availableObjectsPoolProvider;
+  ContextFulFieldValueGetter<Future<List<T>>, ListField<T, U>>? availableObjectsPoolGetter;
+  ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T, U>>? availableObjectsPoolProvider;
   bool allowDuplicateObjectsFromAvailablePool;
   bool showObjectsFromAvailablePoolAsTable;
   bool? _allowAddNew;
@@ -36,12 +36,12 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   bool viewOnRowTap;
   bool asPopup;
   bool validateChildren;
-  String Function(ListField<T> field) toStringGetter;
+  String Function(ListField<T, U> field) toStringGetter;
   Map<double, ActionState> actionViewBreakpoints;
   Map<double, ActionState> actionEditBreakpoints;
   Map<double, ActionState> actionDuplicateBreakpoints;
   Map<double, ActionState> actionDeleteBreakpoints;
-  Map<String, ColModel> Function(DAO dao, ListField<T> listField, T objectTemplate)? tableColumnsBuilder;
+  Map<String, ColModel> Function(DAO dao, ListField<T, U> listField, T objectTemplate)? tableColumnsBuilder;
   /// this means that save() will be called on the object when adding a row
   /// and delete() will be called when removing a row, default false
   bool? _skipDeleteConfirmation;
@@ -51,7 +51,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   double? rowHeight;
   bool? _showDefaultSnackBars;
   bool get showDefaultSnackBars => _showDefaultSnackBars ?? objectTemplate.canSave;
-  ContextFulFieldValueGetter<List<RowAction<T>>, ListField<T>>? extraRowActionsBuilder; //TODO 3 also allow global action builders
+  ContextFulFieldValueGetter<List<RowAction<T>>, ListField<T, U>>? extraRowActionsBuilder; //TODO 3 also allow global action builders
   bool showEditDialogOnAdd;
   bool showAddButtonAtEndOfTable;
   Widget? tableErrorWidget;
@@ -66,6 +66,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   FutureOr<String>? exportPathForExcel;
   bool buildViewWidgetAsTable;
   bool addSearchAction;
+  double tableFooterStickyOffset;
 
   T get objectTemplate => objectTemplateGetter(this, dao)..parentDAO = dao;
   List<T> get objects => value!.list;
@@ -212,6 +213,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     this.addSearchAction = false,
     bool? validateChildren,
     OnFieldValueChanged<ComparableList<T>?>? onValueChanged,
+    this.tableFooterStickyOffset = 12,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
@@ -330,7 +332,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
   }
 
   @override
-  ListField<T> copyWith({
+  ListField<T, U> copyWith({
     FieldValueGetter<String, Field>? uiNameGetter,
     ComparableList<T>? value,
     ComparableList<T>? dbValue,
@@ -340,7 +342,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     double? maxWidth,
     double? minWidth,
     double? flex,
-    FieldValueGetter<T, ListField<T>>? objectTemplateGetter,
+    FieldValueGetter<T, ListField<T, U>>? objectTemplateGetter,
     Future<List<T>>? futureObjects,
     List<T>? objects,
     List<T>? dbObjects,
@@ -354,19 +356,19 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     Map<double, ActionState>? actionEditBreakpoints,
     Map<double, ActionState>? actionDuplicateBreakpoints,
     Map<double, ActionState>? actionDeleteBreakpoints,
-    Map<String, ColModel> Function(DAO dao, ListField<T> listField, T objectTemplate)? tableColumnsBuilder,
+    Map<String, ColModel> Function(DAO dao, ListField<T, U> listField, T objectTemplate)? tableColumnsBuilder,
     bool? skipDeleteConfirmation,
     bool? showTableHeaders,
     bool? showElementCount,
     double? rowHeight,
-    ContextFulFieldValueGetter<Future<List<T>>, ListField<T>>? availableObjectsPoolGetter,
-    ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T>>? availableObjectsPoolProvider,
+    ContextFulFieldValueGetter<Future<List<T>>, ListField<T, U>>? availableObjectsPoolGetter,
+    ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T, U>>? availableObjectsPoolProvider,
     bool? allowDuplicateObjectsFromAvailablePool,
     bool? showObjectsFromAvailablePoolAsTable,
     bool? allowAddNew,
     bool? asPopup,
     String Function(ListField field)? toStringGetter,
-    ContextFulFieldValueGetter<List<RowAction<T>>, ListField<T>>? extraRowActionBuilders,
+    ContextFulFieldValueGetter<List<RowAction<T>>, ListField<T, U>>? extraRowActionBuilders,
     int? initialSortColumn,
     bool? tableCellsEditable,
     bool? allowMultipleSelection,
@@ -396,8 +398,9 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     bool? addSearchAction,
     OnFieldValueChanged<ComparableList<T>?>? onValueChanged,
     bool? viewOnRowTap,
+    double? tableFooterStickyOffset,
   }) {
-    return ListField<T>(
+    return ListField<T, U>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
@@ -459,6 +462,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       onValueChanged: onValueChanged ?? this.onValueChanged,
       viewOnRowTap: viewOnRowTap ?? this.viewOnRowTap,
       tableColumnsBuilder: tableColumnsBuilder ?? this.tableColumnsBuilder,
+      tableFooterStickyOffset: tableFooterStickyOffset ?? this.tableFooterStickyOffset,
     );
   }
 
@@ -561,8 +565,15 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     if (hasAvailableObjectsPool) {
       T? selected;
       if (showObjectsFromAvailablePoolAsTable) {
-        emptyDAO.onDidSave = (context, model, dao) {
+        emptyDAO.onDidSave = (BuildContext context, U? model, DAO<U> dao) {
           objectTemplate.onDidSave?.call(context, model, dao);
+          try {
+            dao.id = (model as dynamic).id;
+          } catch (_) {
+            try {
+              dao.id = model;
+            } catch(_) {}
+          }
           WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
             Navigator.of(context).pop(dao);
           });
@@ -760,7 +771,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     if (!allowDuplicateObjectsFromAvailablePool) {
       data = data.where((e) => !objects.contains(e)).toList();
     }
-    final listField = ListField(
+    final listField = ListField<T, U>(
       uiNameGetter: (field, dao) => uiName,
       objectTemplateGetter: (field, dao) => emptyDAO,
       tableCellsEditable: false,
@@ -770,6 +781,8 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
       actionEditBreakpoints: actionEditBreakpoints,
       objects: data,
       allowAddNew: allowAddNew && emptyDAO.canSave,
+      initialSortedColumn: initialSortedColumn,
+      tableFooterStickyOffset: 56,
       addSearchAction: true,
       onRowTap: (value) {
         Navigator.of(context).pop(value.id);
@@ -1402,7 +1415,7 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
           exportPathForExcel: exportPathForExcel,
           columns: columns,
           showHeaders: showTableHeaders,
-          footerStickyOffset: 12,
+          footerStickyOffset: tableFooterStickyOffset,
           rows: builtRows.values.toList(),
           cellBuilder: tableCellsEditable ? (context, row, colKey) {
             final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
@@ -1928,8 +1941,8 @@ class ListField<T extends DAO> extends Field<ComparableList<T>> {
     ];
   }
 
-  static Map<String, ColModel> defaultTableColumnsBuilder<T extends DAO>
-      (DAO dao, ListField<T> listField, T objectTemplate) {
+  static Map<String, ColModel> defaultTableColumnsBuilder<T extends DAO<U>, U>
+      (DAO dao, ListField<T, U> listField, T objectTemplate) {
     Map<String, Field> propsShownOnTable = {};
     objectTemplate.props.forEach((key, value) {
       if (!value.hiddenInTable) {
