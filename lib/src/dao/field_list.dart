@@ -19,6 +19,12 @@ import 'package:sliver_tools/sliver_tools.dart';
 import 'package:dartx/dartx.dart';
 
 
+enum RowTapType {
+  view,
+  edit,
+  none
+}
+
 class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   FieldValueGetter<T, ListField<T, U>> objectTemplateGetter;
@@ -33,7 +39,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool allowMultipleSelection;
   bool tableCellsEditable;
   bool collapsible;
-  bool viewOnRowTap;
+  RowTapType rowTapType;
   bool asPopup;
   bool validateChildren;
   String Function(ListField<T, U> field) toStringGetter;
@@ -168,7 +174,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.collapsible = false,
     this.asPopup = false,
     this.toStringGetter = defaultToString,
-    bool? viewOnRowTap,
+    RowTapType? rowTapType,
     Map<double, ActionState>? actionViewBreakpoints,
     Map<double, ActionState>? actionEditBreakpoints,
     Map<double, ActionState>? actionDuplicateBreakpoints,
@@ -219,11 +225,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
         this._showDefaultSnackBars = showDefaultSnackBars,
         this._skipDeleteConfirmation = skipDeleteConfirmation,
-        this.viewOnRowTap = viewOnRowTap ?? (onRowTap==null && !tableCellsEditable),
+        this.rowTapType = rowTapType ?? (onRowTap==null && !tableCellsEditable ? RowTapType.view : RowTapType.none),
         this.actionEditBreakpoints = actionEditBreakpoints ?? {0: ActionState.popup},
         this.actionDuplicateBreakpoints = actionDuplicateBreakpoints ?? {0: ActionState.none},
         this.actionDeleteBreakpoints = actionDeleteBreakpoints ?? {0: ActionState.icon},
-        this.actionViewBreakpoints = actionViewBreakpoints ?? (viewOnRowTap ?? (onRowTap==null && !tableCellsEditable) ? {0: ActionState.popup} : {0: ActionState.icon}),
+        this.actionViewBreakpoints = {0: ActionState.popup},
         this.tableController = tableController ?? TableController<T>(),
         this._allowAddNew = allowAddNew,
         this.validateChildren = tableCellsEditable && (validateChildren ?? true),
@@ -397,7 +403,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool? buildViewWidgetAsTable,
     bool? addSearchAction,
     OnFieldValueChanged<ComparableList<T>?>? onValueChanged,
-    bool? viewOnRowTap,
+    RowTapType? rowTapType,
     double? tableFooterStickyOffset,
   }) {
     return ListField<T, U>(
@@ -460,7 +466,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       buildViewWidgetAsTable: buildViewWidgetAsTable ?? this.buildViewWidgetAsTable,
       addSearchAction: addSearchAction ?? this.addSearchAction,
       onValueChanged: onValueChanged ?? this.onValueChanged,
-      viewOnRowTap: viewOnRowTap ?? this.viewOnRowTap,
+      rowTapType: rowTapType ?? this.rowTapType,
       tableColumnsBuilder: tableColumnsBuilder ?? this.tableColumnsBuilder,
       tableFooterStickyOffset: tableFooterStickyOffset ?? this.tableFooterStickyOffset,
     );
@@ -568,10 +574,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         emptyDAO.onDidSave = (BuildContext context, U? model, DAO<U> dao) {
           objectTemplate.onDidSave?.call(context, model, dao);
           try {
-            dao.id = (model as dynamic).id;
+            if ((model as dynamic).id!=-1) dao.id = (model as dynamic).id;
           } catch (_) {
             try {
-              dao.id = model;
+              if (dao.id!=-1) dao.id = model;
             } catch(_) {}
           }
           WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
@@ -835,7 +841,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2,),
             child: TextButton(
               onPressed: () async {
-                emptyDAO.maybeEdit(context);
+                emptyDAO.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6,),
@@ -1344,9 +1350,30 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             ? tableColumnsBuilder!(dao, this, objectTemplate)
             : defaultTableColumnsBuilder(dao, this, objectTemplate);
         for (final e in objects) {
-          final onRowTap = this.onRowTap ?? (viewOnRowTap ? (row) {
-            e.pushViewDialog(dao.contextForValidation ?? context);
-          } : null);
+          final onRowTap;
+          if (this.onRowTap!=null) {
+            onRowTap = this.onRowTap;
+          } else {
+            switch(this.rowTapType) {
+              case RowTapType.view:
+                onRowTap = (row) {
+                  e.pushViewDialog(dao.contextForValidation ?? context,
+                    showDefaultSnackBars: showDefaultSnackBars,
+                  );
+                };
+                break;
+              case RowTapType.edit:
+                onRowTap = (row) {
+                  e.maybeEdit(dao.contextForValidation ?? context,
+                    showDefaultSnackBars: showDefaultSnackBars,
+                  );
+                };
+                break;
+              case RowTapType.none:
+                onRowTap = null;
+                break;
+            }
+          }
           builtRows[e] = SimpleRowModel(
             id: e,
             values: columns.map((key, value) => MapEntry(key, e.props[key])),

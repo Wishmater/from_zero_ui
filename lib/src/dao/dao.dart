@@ -494,7 +494,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       if (!showConfirmDialogWithBlockingErrors && !validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
                         Navigator.of(context).pop(null);
                       }
-                      if (!askForSaveConfirmation && validation) {
+                      if (!askForSaveConfirmation && validationErrors.isEmpty) {
                         Navigator.of(context).pop(true);
                       }
                       return Padding(
@@ -836,9 +836,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   Future<ModelType?> maybeEdit(BuildContext context, {
     bool showDefaultSnackBars = true,
     bool showRevertChanges = false,
-    bool askForSaveConfirmation = true,
+    bool? askForSaveConfirmation,
     bool showUndoRedo = true,
   }) async {
+    askForSaveConfirmation ??= showDefaultSnackBars;
     final props = this.props;
     parentDAO = null;
     props.values.forEach((e) {
@@ -890,7 +891,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   focusNode: firstIteration ? focusNode : null,
                   showDefaultSnackBars: showDefaultSnackBars,
                   showRevertChanges: showRevertChanges,
-                  askForSaveConfirmation: askForSaveConfirmation,
+                  askForSaveConfirmation: askForSaveConfirmation!,
                   showActionButtons: false,
                 );
                 firstIteration = false;
@@ -910,7 +911,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               showCancelActionToPop: true,
               showDefaultSnackBars: showDefaultSnackBars,
               showRevertChanges: showRevertChanges,
-              askForSaveConfirmation: askForSaveConfirmation,
+              askForSaveConfirmation: askForSaveConfirmation!,
             );
             final pageController = PreloadPageController();
             Widget result = Column(
@@ -1326,6 +1327,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? showEditButton,
     bool? useIntrinsicWidth,
     bool? useIntrinsicHeight,
+    bool showDefaultSnackBars = true,
   }) {
     ScrollController scrollController = ScrollController();
     if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
@@ -1366,8 +1368,17 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
                         TextButton(
                           onPressed: () async {
-                            final result = await copyWith().maybeEdit(mainContext);
+                            final tempDao = copyWith();
+                            final result = await tempDao.maybeEdit(mainContext,
+                              showDefaultSnackBars: showDefaultSnackBars,
+                            );
                             if (result != null) {
+                              final tempProps = tempDao.props;
+                              props.forEach((key, value) {
+                                if (value.value != tempProps[key]!.value) {
+                                  value.value = tempProps[key]!.value;
+                                }
+                              });
                               Navigator.of(context).pop();
                             }
                           },
@@ -1388,7 +1399,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                             ),
                           ),
                         ),
-                      ...(viewDialogExtraActions?.call(context, this) ?? []),
+                      ...(viewDialogExtraActions?.call(mainContext, this) ?? []),
                     ],
                   ),
                 ],
@@ -1399,7 +1410,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 controller: scrollController,
                 child: SingleChildScrollView(
                   controller: scrollController,
-                  child: buildViewWidget(context,
+                  child: buildViewWidget(mainContext,
                     mainScrollController: scrollController
                   ),
                 ),

@@ -374,7 +374,7 @@ class NumField extends Field<num> {
                           overflow: TextOverflow.fade,
                         ),
                         hintText: hint,
-                        floatingLabelBehavior: !enabled ? FloatingLabelBehavior.never
+                        floatingLabelBehavior: !enabled ? (value==null) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
                             : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
                         labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
                           color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),

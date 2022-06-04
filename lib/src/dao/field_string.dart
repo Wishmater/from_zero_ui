@@ -353,7 +353,7 @@ class StringField extends Field<String> {
                         ),
                       ),
                       hintText: hint,
-                      floatingLabelBehavior: !enabled ? FloatingLabelBehavior.never
+                      floatingLabelBehavior: !enabled ?  (value==null||value!.isEmpty) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
                           : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
                       labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : hint!=null ? 1 : 1.85,
                         color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
