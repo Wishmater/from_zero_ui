@@ -1711,7 +1711,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               .cast<FlexibleLayoutItemFromZero>(),
           relevantAxisMaxSize: min(formDialogWidth,
               MediaQuery.of(context).size.width - 56)  - (groupBorderNestingCount*16),
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: group.primary ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         );
       } else {
         ScrollController scrollController = ScrollController();
