@@ -1561,7 +1561,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                             title: FromZeroLocalizations.of(context).translate('no_data'),
                             subtitle: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
                                 ? FromZeroLocalizations.of(context).translate('no_data_add')
-                                : FromZeroLocalizations.of(context).translate('no_data_filters'),
+                                : objects.isEmpty
+                                    ? FromZeroLocalizations.of(context).translate('no_data_desc')
+                                    : FromZeroLocalizations.of(context).translate('no_data_filters'),
                           ),
                         ),
                   ),

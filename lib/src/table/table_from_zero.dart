@@ -605,7 +605,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           child: widget.emptyWidget ?? ErrorSign(
             icon: Icon(MaterialCommunityIcons.clipboard_alert_outline, size: 64, color: Theme.of(context).disabledColor,),
             title: FromZeroLocalizations.of(context).translate('no_data'),
-            subtitle: filtersApplied.values.firstOrNullWhere((e) => e)!=null
+            subtitle: filtersApplied.values.firstOrNullWhere((e) => e==true)!=null
                 ? FromZeroLocalizations.of(context).translate('no_data_filters')
                 : FromZeroLocalizations.of(context).translate('no_data_desc'),
           ),
