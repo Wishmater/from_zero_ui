@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:animations/animations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -357,7 +358,9 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
         if (error.response.statusCode==404) {
           return 'Recurso no Encontrado';
         } else if (error.response.statusCode==400) {
-          return error.response.data.toString();
+          return error.response.data is String
+              ? error.response.data.toString()
+              : utf8.decode(error.response.data);
         } else if (error.response.statusCode==403) {
           return 'Error de Autorización';
         } else {

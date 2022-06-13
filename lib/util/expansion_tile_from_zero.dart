@@ -209,6 +209,11 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     _isExpanded = widget.expanded ?? (PageStorage.of(context)?.readState(context) ?? widget.initiallyExpanded);
     if (_isExpanded)
       _controller.value = 1.0;
+    _controller.addListener(() {
+      if (mounted) {
+        Scrollable.ensureVisible(context);
+      }
+    });
   }
 
   @override
