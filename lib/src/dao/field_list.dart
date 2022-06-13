@@ -73,6 +73,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool buildViewWidgetAsTable;
   bool addSearchAction;
   double tableFooterStickyOffset;
+  double tableHorizontalPadding;
+  String? rowAddonField;
 
   T get objectTemplate => objectTemplateGetter(this, dao)..parentDAO = dao;
   List<T> get objects => value!.list;
@@ -220,6 +222,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool? validateChildren,
     OnFieldValueChanged<ComparableList<T>?>? onValueChanged,
     this.tableFooterStickyOffset = 12,
+    this.tableHorizontalPadding = 8,
+    this.rowAddonField,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
@@ -405,6 +409,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     OnFieldValueChanged<ComparableList<T>?>? onValueChanged,
     RowTapType? rowTapType,
     double? tableFooterStickyOffset,
+    double? tableHorizontalPadding,
+    String? rowAddonField,
   }) {
     return ListField<T, U>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -469,6 +475,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       rowTapType: rowTapType ?? this.rowTapType,
       tableColumnsBuilder: tableColumnsBuilder ?? this.tableColumnsBuilder,
       tableFooterStickyOffset: tableFooterStickyOffset ?? this.tableFooterStickyOffset,
+      tableHorizontalPadding: tableHorizontalPadding ?? this.tableHorizontalPadding,
+      rowAddonField: rowAddonField ?? this.rowAddonField,
     );
   }
 
@@ -1392,6 +1400,36 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               notifyListeners();
               return true;
             } : null,
+            rowAddon: rowAddonField==null ? null : Theme(
+              data: Theme.of(context).copyWith(
+                textTheme: Theme.of(context).textTheme.copyWith(
+                  subtitle1: Theme.of(context).textTheme.bodyText1,
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: (tableHorizontalPadding-6).coerceAtLeast(0),
+                  right: (tableHorizontalPadding-6).coerceAtLeast(0),
+                  bottom: 12,
+                ),
+                child: IgnorePointer(
+                  ignoring: onRowTap!=null,
+                  child: Builder(
+                    builder: (context) {
+                      return e.props[rowAddonField!]!.buildViewWidget(context,
+                        showViewButtons: false,
+                        linkToInnerDAOs: false,
+                        dense: false,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            rowAddonIsSticky: false,
+            rowAddonIsCoveredByGestureDetector: true,
+            rowAddonIsCoveredByScrollable: false,
+            rowAddonIsCoveredByBackground: true,
           );
         }
         double width = 0;
@@ -1443,7 +1481,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           columns: columns,
           showHeaders: showTableHeaders,
           footerStickyOffset: tableFooterStickyOffset,
+          tableHorizontalPadding: tableHorizontalPadding,
           rows: builtRows.values.toList(),
+          enableFixedHeightForListRows: rowAddonField==null,
           cellBuilder: tableCellsEditable ? (context, row, colKey) {
             final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
               expandToFillContainer: false,
@@ -1788,56 +1828,59 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         key: headerGlobalKey,
         skipTraversal: true,
         canRequestFocus: true,
-        child: Stack(
-          children: [
-            TableHeaderFromZero<T>(
-              controller: tableController,
-              title: Text(uiName),
-              actions: actions,
-              onShowAppbarContextMenu: () => focusNode.requestFocus(),
-              exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
-              addSearchAction: addSearchAction,
-              leading: !collapsible ? icon : IconButton(
-                icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
-                onPressed: () {
-                  focusNode.requestFocus();
-                  this.collapsed = !this.collapsed;
-                  notifyListeners();
-                },
-              ),
-            ),
-            if (availableObjectsPoolProvider!=null)
-              Positioned(
-                left: 3, top: 3,
-                child: ApiProviderBuilder(
-                  provider: availableObjectsPoolProvider!.call(context, this, dao),
-                  dataBuilder: (context, data) {
-                    return SizedBox.shrink();
-                  },
-                  loadingBuilder: (context, progress) {
-                    return SizedBox(
-                      height: 10, width: 10,
-                      child: LoadingSign(
-                        value: null,
-                        padding: EdgeInsets.zero,
-                        size: 12,
-                        color: Theme.of(context).splashColor.withOpacity(1),
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace, onRetry) {
-                    return SizedBox(
-                      height: 10, width: 10,
-                      child: Icon(
-                        Icons.error_outlined,
-                        color: Colors.red,
-                        size: 12,
-                      ),
-                    );
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: (tableHorizontalPadding-8).coerceAtLeast(0)),
+          child: Stack(
+            children: [
+              TableHeaderFromZero<T>(
+                controller: tableController,
+                title: Text(uiName),
+                actions: actions,
+                onShowAppbarContextMenu: () => focusNode.requestFocus(),
+                exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
+                addSearchAction: addSearchAction,
+                leading: !collapsible ? icon : IconButton(
+                  icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
+                  onPressed: () {
+                    focusNode.requestFocus();
+                    this.collapsed = !this.collapsed;
+                    notifyListeners();
                   },
                 ),
               ),
-          ],
+              if (availableObjectsPoolProvider!=null)
+                Positioned(
+                  left: 3, top: 3,
+                  child: ApiProviderBuilder(
+                    provider: availableObjectsPoolProvider!.call(context, this, dao),
+                    dataBuilder: (context, data) {
+                      return SizedBox.shrink();
+                    },
+                    loadingBuilder: (context, progress) {
+                      return SizedBox(
+                        height: 10, width: 10,
+                        child: LoadingSign(
+                          value: null,
+                          padding: EdgeInsets.zero,
+                          size: 12,
+                          color: Theme.of(context).splashColor.withOpacity(1),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace, onRetry) {
+                      return SizedBox(
+                        height: 10, width: 10,
+                        child: Icon(
+                          Icons.error_outlined,
+                          color: Colors.red,
+                          size: 12,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -1974,7 +2017,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       (DAO dao, ListField<T, U> listField, T objectTemplate) {
     Map<String, Field> propsShownOnTable = {};
     objectTemplate.props.forEach((key, value) {
-      if (!value.hiddenInTable) {
+      if (!value.hiddenInTable && key!=listField.rowAddonField) {
         propsShownOnTable[key] = value;
       }
     });

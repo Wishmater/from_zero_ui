@@ -22,7 +22,6 @@ import 'package:from_zero_ui/util/small_splash_popup_menu_button.dart' as small_
 import 'dart:async';
 import 'package:dartx/dartx.dart';
 import 'package:intl/intl.dart';
-
 import 'package:implicitly_animated_reorderable_list/implicitly_animated_reorderable_list.dart';
 import 'package:implicitly_animated_reorderable_list/transitions.dart';
 import 'package:keframe/frame_separate_widget.dart';
@@ -889,8 +888,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             actions: rowActions,
             useFlutterAppbar: false,
             toolbarHeight: row.height,
-            addContextMenu: row!=headerRowModel,
-            onShowContextMenu: () => row.focusNode.requestFocus(),
+            addContextMenu: false,
             skipTraversalForActions: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -927,7 +925,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           result = StickyHeader( // TODO 2 this is probably broken, use SliverStickyHeader instead
             controller: widget.scrollController,
             header: top,
-            content: result,
+            content: bottom,
             stickOffset: row is! RowModel<T> ? 0
                 : filtered.indexOf(row)==0 ? 0
                 : widget.stickyOffset + row.height,
@@ -948,6 +946,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           context: context,
           row: row as RowModel<T>,
           child: result,
+        );
+      }
+      if (row!=headerRowModel) {
+        result = ContextMenuFromZero(
+          child: result,
+          onShowMenu: () => row.focusNode.requestFocus(),
+          actions: rowActions.where((e) => e is ActionFromZero
+              && e.getStateForMaxWidth(constraints?.maxWidth??double.infinity)!=ActionState.none).toList().cast(),
         );
       }
       if ((row.rowAddonIsCoveredByBackground??false) && rowActions.isEmpty) {

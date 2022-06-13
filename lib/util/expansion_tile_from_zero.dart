@@ -8,6 +8,7 @@ import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
 import 'package:from_zero_ui/src/future_handling/future_handling.dart';
 import 'package:from_zero_ui/src/ui_components/drawer_menu_from_zero.dart';
 import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
+import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 
 
 
@@ -211,7 +212,12 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
       _controller.value = 1.0;
     _controller.addListener(() {
       if (mounted) {
-        Scrollable.ensureVisible(context);
+        EnsureVisibleWhenFocusedState.ensureVisibleForContext(
+          context: context,
+          duration: Duration.zero,
+          alignmentEnd: 1,
+          alignmentStart: 0,
+        );
       }
     });
   }

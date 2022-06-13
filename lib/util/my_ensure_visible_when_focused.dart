@@ -58,14 +58,14 @@ class EnsureVisibleWhenFocused extends StatefulWidget {
   final Duration duration;
 
   @override
-  _EnsureVisibleWhenFocusedState createState() =>
-      _EnsureVisibleWhenFocusedState();
+  EnsureVisibleWhenFocusedState createState() =>
+      EnsureVisibleWhenFocusedState();
 }
 
 ///
 /// We implement the WidgetsBindingObserver to be notified of any change to the window metrics
 ///
-class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
+class EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
     with WidgetsBindingObserver {
   @override
   void initState() {
@@ -124,18 +124,22 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
       return;
     }
 
-    await _ensureVisibleForContext(
+    await ensureVisibleForContext(
       context: context,
       alignmentStart: widget.alignmentStart,
       alignmentEnd: widget.alignmentEnd,
+      curve: widget.curve,
+      duration: widget.duration,
     );
 
   }
 
-  _ensureVisibleForContext({
+  static Future<void> ensureVisibleForContext({
     required BuildContext context,
     double alignmentStart = 0.0,
     double alignmentEnd = 1.0,
+    Curve curve = Curves.easeOut,
+    Duration duration = const Duration(milliseconds: 100),
   }) async {
 
     // Find the object which has the focus
@@ -150,15 +154,19 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
     // Get the Scrollable state (in order to retrieve its offset)
     final scrollableState = Scrollable.of(context)!;
 
-    _executeEnsureVisible(
+    await _executeEnsureVisible(
       object: object,
       viewport: viewport,
       scrollableState: scrollableState,
       alignmentStart: alignmentStart,
       alignmentEnd: alignmentEnd,
+      curve: curve,
+      duration: duration,
     );
-    _ensureVisibleForContext(
+    return ensureVisibleForContext(
       context: scrollableState.context,
+      curve: curve,
+      duration: duration,
       alignmentStart: alignmentStart,
       alignmentEnd: alignmentEnd,
       // alignmentStart: 0.0,
@@ -167,12 +175,14 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
 
   }
 
-  _executeEnsureVisible({
+  static _executeEnsureVisible({
     required RenderObject object,
     required RenderAbstractViewport viewport,
     required ScrollableState scrollableState,
     double alignmentStart = 0.0,
     double alignmentEnd = 1.0,
+    Curve curve = Curves.easeOut,
+    Duration duration = const Duration(milliseconds: 100),
   }) async {
 
     // Get its offset
@@ -194,11 +204,11 @@ class _EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
       // No scrolling is necessary to reveal the child
       return;
     }
-    position.ensureVisible(
+    return position.ensureVisible(
       object,
       alignment: alignment,
-      duration: widget.duration,
-      curve: widget.curve,
+      duration: duration,
+      curve: curve,
     );
     // viewport.showOnScreen(
     //   descendant: object,

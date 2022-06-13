@@ -1478,6 +1478,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     int titleFlex = 1000000,
     int valueFlex = 1618034,
     double? titleMaxWidth,
+    bool applyAlternateBackground = true,
   }) {
     if (viewWidgetBuilder!=null) {
       return viewWidgetBuilder!(context, this);
@@ -1597,8 +1598,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   );
                 }
                 return Material(
-                  color: clear ? Theme.of(context).cardColor
-                      : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
+                  color: !applyAlternateBackground ? Colors.transparent
+                      : clear ? Theme.of(context).cardColor
+                              : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
                   child: layout,
                 );
               }
