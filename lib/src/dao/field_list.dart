@@ -233,7 +233,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         this.actionEditBreakpoints = actionEditBreakpoints ?? {0: ActionState.popup},
         this.actionDuplicateBreakpoints = actionDuplicateBreakpoints ?? {0: ActionState.none},
         this.actionDeleteBreakpoints = actionDeleteBreakpoints ?? {0: ActionState.icon},
-        this.actionViewBreakpoints = {0: ActionState.popup},
+        this.actionViewBreakpoints = actionViewBreakpoints ?? {0: ActionState.popup},
         this.tableController = tableController ?? TableController<T>(),
         this._allowAddNew = allowAddNew,
         this.validateChildren = tableCellsEditable && (validateChildren ?? true),
