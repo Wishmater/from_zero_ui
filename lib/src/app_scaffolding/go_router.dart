@@ -119,6 +119,8 @@ class GoRouteFromZero extends GoRoute {
     this.icon = const SizedBox.shrink(),
     GoRouterWidgetBuilder builder = emptyBuilder,
     GoRouterRedirect redirect = emptyRedirect,
+    Widget Function(BuildContext context, Animation<double> animation,
+        Animation<double> secondaryAnimation, Widget child)? transitionBuilder,
     List<GoRouteFromZero> routes = const [],
     this.pageScaffoldId = 'main',
     this.pageScaffoldDepth = 0,
@@ -133,7 +135,8 @@ class GoRouteFromZero extends GoRoute {
       return CustomTransitionPage<void>(
         key: state.pageKey,
         child: OnlyOnActiveBuilder(builder: builder, state: state,),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
+        transitionsBuilder: transitionBuilder
+            ?? (context, animation, secondaryAnimation, child) => child,
       );
     },
   );
