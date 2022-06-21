@@ -87,7 +87,7 @@ Future<bool> saveFileFromZero ({
         valueListenable: downloadedAmount,
         builder: (context, count, child) {
           if (fileSize==null) {
-            return Text(count.bytes().humanize());
+            return Text(count.bytes().toString());
           } else {
             return ValueListenableBuilder<int?>(
               valueListenable: fileSize,
@@ -95,7 +95,7 @@ Future<bool> saveFileFromZero ({
                 if (size==null || size==0) {
                   return Text('');
                 } else {
-                  return Text('${_percentFormatter.format(count/size)}   ( ${count.bytes().humanize()} / ${size.bytes().humanize()} )');
+                  return Text('${_percentFormatter.format(count/size)}   ( ${count.bytes().toString()} / ${size.bytes().toString()} )');
                 }
               },
             );

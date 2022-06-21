@@ -107,7 +107,7 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
               scaffoldChangeNotifier._previousWidth = constraints.maxWidth;
               scaffoldChangeNotifier._previousHeight = constraints.maxHeight;
             } else {
-              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+              WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                 screen._isMobileLayout = constraints.maxWidth < ScaffoldFromZero.screenSizeMedium;
                 if (constraints.maxWidth>=ScaffoldFromZero.screenSizeXLarge){
                   screen.breakpoint = ScaffoldFromZero.screenSizeXLarge;
@@ -262,7 +262,11 @@ class WindowBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final iconTheme = this.iconTheme ?? theme.appBarTheme.iconTheme ?? theme.primaryIconTheme;
+    final Color iconColor = this.iconTheme?.color
+        ?? theme.appBarTheme.iconTheme?.color 
+        ?? theme.primaryIconTheme.color 
+        ?? theme.iconTheme.color
+        ?? (theme.brightness==Brightness.light ? Colors.black : Colors.white);
     return Container(
       height: height ?? (appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight),
       color: backgroundColor,
@@ -278,11 +282,11 @@ class WindowBar extends StatelessWidget {
                 }
               },
               colors: WindowButtonColors(
-                mouseOver: iconTheme.color!.withOpacity(0.1),
-                mouseDown: iconTheme.color!.withOpacity(0.2),
-                iconNormal: iconTheme.color!.withOpacity(0.8),
-                iconMouseOver: iconTheme.color!,
-                iconMouseDown: iconTheme.color!,
+                mouseOver: iconColor.withOpacity(0.1),
+                mouseDown: iconColor.withOpacity(0.2),
+                iconNormal: iconColor.withOpacity(0.8),
+                iconMouseOver: iconColor,
+                iconMouseDown: iconColor,
               ),
             ),
             WindowButton(
@@ -297,11 +301,11 @@ class WindowBar extends StatelessWidget {
                 }
               },
               colors: WindowButtonColors(
-                mouseOver: iconTheme.color!.withOpacity(0.1),
-                mouseDown: iconTheme.color!.withOpacity(0.2),
-                iconNormal: iconTheme.color!.withOpacity(0.8),
-                iconMouseOver: iconTheme.color!,
-                iconMouseDown: iconTheme.color!,
+                mouseOver: iconColor.withOpacity(0.1),
+                mouseDown: iconColor.withOpacity(0.2),
+                iconNormal: iconColor.withOpacity(0.8),
+                iconMouseOver: iconColor,
+                iconMouseDown: iconColor,
               ),
             ),
             CloseWindowButton(
@@ -315,7 +319,7 @@ class WindowBar extends StatelessWidget {
               colors: WindowButtonColors(
                 mouseOver: Color(0xFFD32F2F),
                 mouseDown: Color(0xFFB71C1C),
-                iconNormal: iconTheme.color!.withOpacity(0.8),
+                iconNormal: iconColor.withOpacity(0.8),
                 iconMouseOver: Colors.white,
                 iconMouseDown: Colors.white,
               ),

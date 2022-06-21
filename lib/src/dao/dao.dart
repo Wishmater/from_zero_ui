@@ -409,7 +409,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   void focusError(ValidationError error) {
     error.field.requestFocus();
     try {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         error.animationController?.forward(from: 0);
       });
     } catch(_) {}
@@ -1126,7 +1126,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               });
             }
             if (autoResolveInvalidatingErrors.isNotEmpty) {
-              WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+              WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                 applyDefaultValues(autoResolveInvalidatingErrors);
               });
             }
@@ -1309,7 +1309,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       },
     );
     // Future.delayed(Duration(milliseconds: 200)).then((value) => focusNode.requestFocus());
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       focusNode.requestFocus();
     });
     ModelType? confirm = await showModal(

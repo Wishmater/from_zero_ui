@@ -405,7 +405,7 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
           }
         } else{
           if (skipFrame && (snapshot.hasData || snapshot.hasError)){
-            WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
               try{setState(() {
                 skipFrame = false;
               });}catch(_){}
@@ -518,7 +518,7 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
 
   void _addCallback(AnimatedContainerFromChildSize? oldWidget){
     if (widget.child != oldWidget?.child){
-      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         try {
           RenderBox renderBox = globalKey.currentContext!.findRenderObject() as RenderBox;
           previousSize = size;

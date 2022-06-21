@@ -1,7 +1,6 @@
 name: from_zero_ui
 description: UI generalizations and utility classes for working with flutter.
 version: 0.0.7
-author: David Alcalde
 #homepage:
 
 environment:
@@ -14,85 +13,75 @@ dependencies:
     sdk: flutter
 
   # * Language Extensions
-  dartx: ^0.7.0
-  collection: ^1.15.0
+  dartx: ^1.1.0
+  collection: ^1.16.0
   email_validator: ^2.0.1
 
   # * State Management
-  go_router: ^2.5.2
-  flutter_riverpod: ^2.0.0-dev.5
-  hive: ^2.0.0
-  hive_flutter: ^1.0.0
+  go_router: ^4.0.0
+  flutter_riverpod: ^2.0.0-dev.9
+  hive: ^2.2.2
+  hive_flutter: ^1.1.0
   freezed_annotation: ^1.0.0
 
   # * Widgets / UI
-  flushbar: ^1.10.4
-  auto_size_text: ^2.1.0
+  auto_size_text: ^3.0.0
   page_view_indicators: ^2.0.0
-  implicitly_animated_reorderable_list: ^0.3.2
+  implicitly_animated_reorderable_list: ^0.4.2
   flutter_icons: ^1.1.0
-  animations: ^2.0.0
-  extended_image: ^3.0.0
-  google_fonts: ^2.0.0
-  sliver_tools: ^0.2.5
-  flutter_sticky_header: ^0.6.0
-  scroll_to_index: ^2.0.0
-  humanizer: ^0.0.2
-  keframe: ^2.0.2
-  ensure_visible_when_focused: ^1.0.0
+  animations: ^2.0.3
+  extended_image: ^6.2.1
+  google_fonts: ^3.0.1
+  sliver_tools: ^0.2.7
+  flutter_sticky_header: ^0.6.3
+  humanizer: ^2.0.0
+#  keframe: ^3.0.0
   preload_page_view: ^0.1.6
   sliding_number: ^0.0.4
 
   # * Plugins
-  url_launcher: ^6.0.2
-  path_provider: ^2.0.1
+  url_launcher: ^6.1.3
+  path_provider: ^2.0.11
   downloads_path_provider: ^0.1.0
-  platform_detect: ^2.0.3
-  permission_handler: ^8.1.4+2
+  platform_detect: ^2.0.7
+  permission_handler: ^8.1.4+2   # ^10.0.0 throws error on windows
   open_file: ^3.2.1
-  file_picker: ^4.1.1
-  pdf: ^3.6.5
+  file_picker: ^4.6.1
+  pdf: ^3.8.1
   excel: ^2.0.0-null-safety-3
   desktop_drop: ^0.3.3
   universal_html: ^2.0.8
-  enough_convert: ^1.4.0 # ! replace with native converters if ever available on windows and web
-  bitsdojo_window:     # ^0.1.1+1
-    git:
-      url: https://github.com/bitsdojo/bitsdojo_window.git
-      ref: 095455f92a432a2262abeddc07bf4f628b0afe52
-      path: bitsdojo_window
-  bitsdojo_window_windows:
-    git:
-      url: https://github.com/bitsdojo/bitsdojo_window.git
-      ref: b823ae5b9f2f82635067add7eadfc32d9054bc2b
-      path: bitsdojo_window_windows
+  enough_convert: ^1.6.0 # ! replace with native converters if ever available on windows and web
+  bitsdojo_window: ^0.1.2
+#  bitsdojo_window:     # ^0.1.1+1
+#    git:
+#      url: https://github.com/bitsdojo/bitsdojo_window.git
+#      ref: 095455f92a432a2262abeddc07bf4f628b0afe52
+#      path: bitsdojo_window
+#  bitsdojo_window_windows:
+#    git:
+#      url: https://github.com/bitsdojo/bitsdojo_window.git
+#      ref: b823ae5b9f2f82635067add7eadfc32d9054bc2b
+#      path: bitsdojo_window_windows
 
   # * Update
-  archive: ^3.1.2
+  archive: ^3.3.0
 
   # * Specific Utility
-  dio: ^3.0.10
-  dio_retry: ^0.1.9-beta
+  dio: ^4.0.6
+  dio_smart_retry: ^1.2.0
 
 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  build_runner: ^2.1.5
+  build_runner: ^2.1.11
   freezed: ^1.0.0
 
 dependency_overrides:
-  http_parser: ^4.0.0
-  crypto: ^3.0.0
-  archive: ^3.1.2
   logging: ^1.0.0
-  convert: ^3.0.0
-  bitsdojo_window_windows:
-    git:
-      url: https://github.com/bitsdojo/bitsdojo_window.git
-      ref: b823ae5b9f2f82635067add7eadfc32d9054bc2b
-      path: bitsdojo_window_windows
+  platform: ^3.1.0  # fixes fatal error from path_provider dependency
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

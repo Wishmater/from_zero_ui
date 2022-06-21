@@ -247,10 +247,14 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
   late List<ResponsiveDrawerMenuItem> _tabs;
   late int _selected;
   bool pendingUpdate = false;
+  GoRouteFromZero? route;
 
   @override
   void initState() {
     super.initState();
+    try {
+      route = GoRouteFromZero.of(context);
+    } catch(_) {}
     pendingUpdate = true;
   }
 
@@ -635,10 +639,6 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             }
           }
           final scaffoldChangeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-          GoRouteFromZero? route;
-          try {
-            route = GoRouteFromZero.of(context);
-          } catch(_) {}
           Widget title = getTreeOverlay(
             DrawerMenuButtonFromZero(
               key: tabs[i].itemKey,
@@ -752,8 +752,9 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             useCursorLocation: false,
             contextMenuWidth: 304,
             offsetCorrection: Offset(
-                route==null ? 0 : scaffoldChangeNotifier.getCurrentDrawerWidth(route.pageScaffoldId),
-                6),
+              route==null ? 0 : scaffoldChangeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId),
+              6,
+            ),
             contextMenuWidget: DrawerMenuFromZero(
               popup: true,
               tabs: tabs[i].children!,
@@ -810,7 +811,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
   Widget getTreeOverlay(Widget child, List<ResponsiveDrawerMenuItem> tabs, int i,){
     if (widget.style==DrawerMenuFromZero.styleTree){
       return Stack(
-        overflow: Overflow.visible,
+        clipBehavior: Clip.none,
         children: [
           child,
           if (widget.depth>0)

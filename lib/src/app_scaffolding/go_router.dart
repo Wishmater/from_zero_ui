@@ -8,6 +8,7 @@ import 'package:go_router/src/go_router_delegate.dart';
 import 'package:go_router/src/typedefs.dart';
 import 'package:go_router/src/inherited_go_router.dart';
 import 'package:go_router/src/go_route_match.dart';
+import 'package:go_router/src/go_route_information_parser.dart';
 
 
 
@@ -316,7 +317,7 @@ class GoRouterStateFromZero extends GoRouterState {
   int pageScaffoldDepth;
   String get pageScaffoldId => route.pageScaffoldId;
 
-  GoRouterStateFromZero(GoRouterDelegate delegate, {
+  GoRouterStateFromZero(GoRouteInformationParser delegate, {
     required this.route,
     required this.pageScaffoldDepth,
     required String location,
@@ -366,7 +367,7 @@ class OnlyOnActiveBuilder extends ConsumerStatefulWidget {
 class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
 
   bool built = false;
-  late GoRouterStateFromZero state;
+  GoRouterStateFromZero? state;
 
   @override
   void initState() {
@@ -392,7 +393,7 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
         currentDepth = accumulatedDepth;
       }
     }
-    state = GoRouterStateFromZero(router.routerDelegate,
+    state = GoRouterStateFromZero(router.routeInformationParser,
       route: currentRoute,
       pageScaffoldDepth: currentDepth,
       subloc: widget.state.subloc,
@@ -409,25 +410,32 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
   }
 
   @override
+  void dispose() {
+    print ('dispose OnlyOnActiveBuilder');
+    super.dispose();
+    state = null;
+  }
+
+  @override
   Widget build(BuildContext context) {
 
     if (built || isActiveRoute(context)) {
 
       final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
-      if (isActiveRoute(context) && scaffoldChangeNotifier.currentRouteState!=state) {
-        scaffoldChangeNotifier.setCurrentRouteState(state);
+      if (isActiveRoute(context) && scaffoldChangeNotifier.currentRouteState!=state!) {
+        scaffoldChangeNotifier.setCurrentRouteState(state!);
       }
 
       // if (built || !skipFirstRenderWhenPushing) { // disabled because it breaks heroes
       if (true) {
 
         built = true;
-        return widget.builder(context, widget.state);
+        return widget.builder(context, state!);
 
       } else {
 
         built = true;
-        WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
           setState(() {});
         });
         return Container(color: Theme.of(context).canvasColor,);

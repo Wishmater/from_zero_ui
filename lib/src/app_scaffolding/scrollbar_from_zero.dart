@@ -65,6 +65,12 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   }
 
   @override
+  void dispose() {
+    super.dispose();
+    widget.controller?.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
 
     if (widget.controller==null) {
@@ -251,15 +257,24 @@ class DummyScrollPosition extends ScrollPositionWithSingleContext {
 
 class AlwaysAttachedScrollController implements ScrollController {
 
-  ScrollController? parent;
   BuildContext context;
   DummyScrollPosition dummyScrollPosition;
 
-
   AlwaysAttachedScrollController({
-    required this.parent,
+    required ScrollController? parent,
     required this.context,
-  })  : dummyScrollPosition = DummyScrollPosition(context);
+  })  : _parent = parent,
+        dummyScrollPosition = DummyScrollPosition(context);
+
+
+  ScrollController? _parent;
+  ScrollController? get parent => _parent;
+  set parent(ScrollController? value) {
+    if (value!=_parent) {
+      _parent?.dispose();
+    }
+    _parent = value;
+  }
 
   @override
   bool get hasClients => true;

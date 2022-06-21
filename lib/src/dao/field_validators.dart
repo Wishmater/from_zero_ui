@@ -467,7 +467,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
       child: InkWell(
         onTap: () {
           Navigator.of(context).pop(false);
-          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
             errors.first.field.dao.focusError(errors.first);
           });
         },
@@ -495,7 +495,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
               return InkWell(
                 onTap: () {
                   Navigator.of(context).pop(false);
-                  WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                  WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                     e.field.dao.focusError(e);
                   });
                 },

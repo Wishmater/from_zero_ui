@@ -560,7 +560,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
 
   void focusObject(T object) {
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       try {
         if (tableCellsEditable) {
           object.props.values.firstOrNullWhere((e) => !e.hiddenInForm)?.focusNode.requestFocus();
@@ -588,7 +588,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               if (dao.id!=-1) dao.id = model;
             } catch(_) {}
           }
-          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
             Navigator.of(context).pop(dao);
           });
         };

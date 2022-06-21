@@ -360,7 +360,7 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
   @override
   void initState() {
     _addListener(widget.scrollController);
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateScroll();
     });
   }
@@ -839,7 +839,7 @@ class _SkipFrameWidgetState extends State<SkipFrameWidget> {
   }
 
   void skipNextFrame() {
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       if (mounted) {
         skipFramesLeft--;
         if (skipFramesLeft > 0) {
@@ -984,7 +984,7 @@ class _KeepAliveMixinWidgetState extends State<KeepAliveMixinWidget> with
 //
 //   @override
 //   Widget build(BuildContext context) {
-//     WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+//     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
 //       final position = scrollableGlobalKey.currentState!.position;
 //       final controllerPositions = (controller.positions as List<ScrollPosition>);
 //       // controllerPositions.remove(position);

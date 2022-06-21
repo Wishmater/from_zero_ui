@@ -5,7 +5,7 @@ import 'dart:io';
 import 'package:animations/animations.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:dio/dio.dart';
-import 'package:dio_retry/dio_retry.dart';
+import 'package:dio_smart_retry/dio_smart_retry.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -25,16 +25,19 @@ class UpdateFromZero{
 
   UpdateFromZero(this.currentVersion, this.versionJsonUrl, this.appDownloadUrl, {
     Dio? dio,
-  }) : this.dio = dio ?? Dio()..interceptors.add(
-    RetryInterceptor(
-      dio: dio,
-      options: RetryOptions(
-        retries: 2,
-        retryInterval: const Duration(seconds: 5),
-        retryEvaluator: (error) => error.type != DioErrorType.CANCEL && error.type != DioErrorType.RESPONSE,
+  }) : this.dio = dio ?? Dio() {
+    this.dio.interceptors.add(
+      RetryInterceptor(
+        dio: this.dio,
+        retries: 3,
+        retryDelays: const [
+          Duration(seconds: 1),
+          Duration(seconds: 2),
+          Duration(seconds: 3),
+        ],
       ),
-    ),
-  );
+    );
+  }
 
   Future<UpdateFromZero>? _checkUpdate;
   Future<UpdateFromZero> checkUpdate() async{

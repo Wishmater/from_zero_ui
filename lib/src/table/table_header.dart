@@ -185,7 +185,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
       expandedBuilder: ({required context, enabled=true, icon, onTap, title=''}) {
         if (autofocusSearchOnNextBuild) {
           autofocusSearchOnNextBuild = false;
-          WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
             searchTextfieldFocusNode.requestFocus();
           });
         }

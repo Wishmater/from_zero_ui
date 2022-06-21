@@ -334,12 +334,12 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   }
   static Widget getErrorIcon(BuildContext context, Object? error, StackTrace? stackTrace) {
     if (error is DioError) {
-      if (error.type==DioErrorType.RESPONSE) {
-        if (error.response.statusCode==404) {
+      if (error.type==DioErrorType.response) {
+        if (error.response!.statusCode==404) {
           return const Icon(Icons.error_outline);
-        } else if (error.response.statusCode==400) {
+        } else if (error.response!.statusCode==400) {
           return const Icon(Icons.do_disturb_on_outlined);
-        } else if (error.response.statusCode==403) {
+        } else if (error.response!.statusCode==403) {
           return const Icon(Icons.do_disturb_on_outlined);
         } else {
           return const Icon(Icons.report_problem_outlined);
@@ -354,14 +354,14 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   static String getErrorTitle(BuildContext context, Object? error, StackTrace? stackTrace) {
     // TODO 3 internationalize
     if (error is DioError) {
-      if (error.type==DioErrorType.RESPONSE) {
-        if (error.response.statusCode==404) {
+      if (error.type==DioErrorType.response) {
+        if (error.response!.statusCode==404) {
           return 'Recurso no Encontrado';
-        } else if (error.response.statusCode==400) {
-          return error.response.data is String
-              ? error.response.data.toString()
-              : utf8.decode(error.response.data);
-        } else if (error.response.statusCode==403) {
+        } else if (error.response!.statusCode==400) {
+          return error.response!.data is String
+              ? error.response!.data.toString()
+              : utf8.decode(error.response!.data);
+        } else if (error.response!.statusCode==403) {
           return 'Error de Autorización';
         } else {
           return 'Error Interno del Servidor';
@@ -376,12 +376,12 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   static String? getErrorSubtitle(BuildContext context, Object? error, StackTrace? stackTrace) {
     // TODO 3 internationalize
     if (error is DioError) {
-      if (error.type==DioErrorType.RESPONSE) {
-        if (error.response.statusCode==404) {
+      if (error.type==DioErrorType.response) {
+        if (error.response!.statusCode==404) {
           return 'Por favor, notifique a su administrador de sistema';
-        } else if (error.response.statusCode==400) {
+        } else if (error.response!.statusCode==400) {
           return null;
-        } else if (error.response.statusCode==403) {
+        } else if (error.response!.statusCode==403) {
           return 'Usted no tiene permiso para acceder al recurso solicitado';
         } else {
           return 'Por favor, notifique a su administrador de sistema';
@@ -395,12 +395,12 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   }
   static bool isErrorRetryable(BuildContext context, Object? error, StackTrace? stackTrace) {
     if (error is DioError) {
-      if (error.type==DioErrorType.RESPONSE) {
-        if (error.response.statusCode==404) {
+      if (error.type==DioErrorType.response) {
+        if (error.response!.statusCode==404) {
           return false;
-        } else if (error.response.statusCode==400) {
+        } else if (error.response!.statusCode==400) {
           return false;
-        } else if (error.response.statusCode==403) {
+        } else if (error.response!.statusCode==403) {
           return false;
         } else {
           return false;

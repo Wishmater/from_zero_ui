@@ -85,7 +85,7 @@ class _PageHeroesState extends State<PageHeroes> {
                       setState(() {
                         shuttleBuilder = null;
                       });
-                      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
+                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                         Navigator.pushNamed(context, "/heroes/normal");
                       });
                     },
@@ -100,7 +100,7 @@ class _PageHeroesState extends State<PageHeroes> {
                       setState(() {
                         shuttleBuilder = HeroesFromZero.fadeThroughFlightShuttleBuilder;
                       });
-                      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
+                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                         Navigator.pushNamed(context, "/heroes/fade");
                       });
                     },
@@ -115,7 +115,7 @@ class _PageHeroesState extends State<PageHeroes> {
                       setState(() {
                         shuttleBuilder = null;
                       });
-                      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
+                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                         Navigator.pushNamed(context, "/heroes/custom");
                       });
                     },
@@ -130,7 +130,7 @@ class _PageHeroesState extends State<PageHeroes> {
                       setState(() {
                         shuttleBuilder = HeroesFromZero.fadeThroughFlightShuttleBuilder;
                       });
-                      WidgetsBinding.instance?.addPostFrameCallback((timeStamp) {
+                      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                         Navigator.pushNamed(context, "/heroes/inner");
                       });
                     },

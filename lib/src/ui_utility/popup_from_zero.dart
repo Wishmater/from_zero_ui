@@ -76,7 +76,7 @@ class _PopupFromZeroState extends State<PopupFromZero> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance!.addPostFrameCallback(_checkChildSize);
+    WidgetsBinding.instance.addPostFrameCallback(_checkChildSize);
   }
   void _checkChildSize(timeStamp) { // hack to know when child changes size, since notifications don't work for some reason
     if (!mounted) {
@@ -88,7 +88,7 @@ class _PopupFromZeroState extends State<PopupFromZero> {
         setState(() {});
       }
     } catch(_) {}
-    WidgetsBinding.instance!.addPostFrameCallback(_checkChildSize);
+    WidgetsBinding.instance.addPostFrameCallback(_checkChildSize);
   }
 
   @override
@@ -121,7 +121,7 @@ class _PopupFromZeroState extends State<PopupFromZero> {
           );
           lastChildSize = childSize;
         } catch(_) {
-          // WidgetsBinding.instance!.addPostFrameCallback((timeStamp) { // not needed because of hack done every frame, ideally use this + NotificationListener<ScrollMetricsNotification> and remove hack
+          // WidgetsBinding.instance.addPostFrameCallback((timeStamp) { // not needed because of hack done every frame, ideally use this + NotificationListener<ScrollMetricsNotification> and remove hack
           //   setState(() {});
           // });
         }

@@ -103,7 +103,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
       key: anchorKey,
       child: widget.child,
     );
-    // bool mouseIsConnected = RendererBinding.instance!.mouseTracker.mouseIsConnected; // doesnt work on windows
+    // bool mouseIsConnected = RendererBinding.instance.mouseTracker.mouseIsConnected; // doesnt work on windows
     if (widget.addGestureDetector) {
       final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
       gestures[_TransparentTapGestureRecognizer] = GestureRecognizerFactoryWithHandlers<_TransparentTapGestureRecognizer>(

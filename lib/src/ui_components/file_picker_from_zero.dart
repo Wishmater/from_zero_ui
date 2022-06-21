@@ -43,7 +43,7 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
   void initState() {
     super.initState();
     if (widget.allowDragAndDropInWholeScreen) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         if (mounted) {
           overlayEntry = OverlayEntry(
             builder: (context) => Positioned.fill(

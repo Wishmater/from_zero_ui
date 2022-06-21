@@ -279,7 +279,7 @@ class ComboField<T extends DAO> extends Field<T> {
                   onPressed: () async {
                      final res = await emptyDAO.maybeEdit(dao.contextForValidation ?? context);
                      if (res!=null) {
-                       WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                          onSelected?.call(emptyDAO as T);
                          Navigator.of(context).pop(emptyDAO as T);
                        });

@@ -290,7 +290,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _mouseIsConnected = RendererBinding.instance!.mouseTracker.mouseIsConnected;
+    _mouseIsConnected = RendererBinding.instance.mouseTracker.mouseIsConnected;
     _controller = AnimationController(
       duration: _fadeInDuration,
       reverseDuration: _fadeOutDuration,
@@ -298,10 +298,10 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     )
       ..addStatusListener(_handleStatusChanged);
     // Listen to see when a mouse is added.
-    RendererBinding.instance!.mouseTracker.addListener(_handleMouseTrackerChange);
+    RendererBinding.instance.mouseTracker.addListener(_handleMouseTrackerChange);
     // Listen to global pointer events so that we can hide a tooltip immediately
     // if some other control is clicked on.
-    GestureBinding.instance!.pointerRouter.addGlobalRoute(_handlePointerEvent);
+    GestureBinding.instance.pointerRouter.addGlobalRoute(_handlePointerEvent);
   }
 
   // https://material.io/components/tooltips#specs
@@ -346,7 +346,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     if (!mounted) {
       return;
     }
-    final bool mouseIsConnected = RendererBinding.instance!.mouseTracker.mouseIsConnected;
+    final bool mouseIsConnected = RendererBinding.instance.mouseTracker.mouseIsConnected;
     if (mouseIsConnected != _mouseIsConnected) {
       setState(() {
         _mouseIsConnected = mouseIsConnected;
@@ -506,8 +506,8 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
 
   @override
   void dispose() {
-    GestureBinding.instance!.pointerRouter.removeGlobalRoute(_handlePointerEvent);
-    RendererBinding.instance!.mouseTracker.removeListener(_handleMouseTrackerChange);
+    GestureBinding.instance.pointerRouter.removeGlobalRoute(_handlePointerEvent);
+    RendererBinding.instance.mouseTracker.removeListener(_handleMouseTrackerChange);
     _removeEntry();
     _controller.dispose();
     super.dispose();

@@ -155,7 +155,7 @@ class _PageSplashState extends State<PageSplash> {
 
   @override
   void initState() {
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       initChangeNotifier.initialized = true;
     });
     super.initState();

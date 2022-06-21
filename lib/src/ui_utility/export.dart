@@ -231,7 +231,7 @@ class ExportState extends State<Export> {
       widget.childrenCount = ((currentSize, bool portrait, double scale, String format){
         if (first){
           first = false;
-          WidgetsBinding.instance?.addPostFrameCallback((timeStamp) async{
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) async{
             await Future.delayed(500.milliseconds);
             if (mounted) {
               setState(() {});
@@ -289,7 +289,7 @@ class ExportState extends State<Export> {
 
     });
     if (widget.autoExport && widget.dummyChild==null) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         _onExportButtonPressed();
       });
     }
@@ -367,7 +367,7 @@ class ExportState extends State<Export> {
         title: widget.title,
       );
     }
-    WidgetsBinding.instance!.addPostFrameCallback((timeStamp) async{
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async{
       await Future.delayed(100.milliseconds);
       if (!mounted) return;
       setState(() {});
@@ -377,7 +377,7 @@ class ExportState extends State<Export> {
       i++;
       doneExports++;
       if (i<widget.childrenCount!(currentSize, portrait, scale, format,)) {
-        WidgetsBinding.instance?.addPostFrameCallback((timeStamp) async{
+        WidgetsBinding.instance.addPostFrameCallback((timeStamp) async{
           if (!mounted) return;
           await _export(size, i, pdf);
         });
@@ -756,7 +756,7 @@ class ExportState extends State<Export> {
                         },
                       ),
                     ),
-                    OutlineButton(
+                    OutlinedButton(
                       onPressed: (){},
                       child: DropdownButton(
                         value: formatIndex,
@@ -778,7 +778,7 @@ class ExportState extends State<Export> {
                         },
                       ),
                     ),
-                    OutlineButton( //TODO 3 streamline this DropdownFromZero (with maybe some other options to control width and such)
+                    OutlinedButton(
                       onPressed: format=='Excel' ? null : (){},
                       child: DropdownButton(
                         value: portrait,
@@ -805,7 +805,7 @@ class ExportState extends State<Export> {
                         },
                       ),
                     ),
-                    OutlineButton(
+                    OutlinedButton(
                       onPressed: format=='Excel' ? null : (){},
                       child: DropdownButton(
                         value: currentSize,

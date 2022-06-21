@@ -24,7 +24,6 @@ import 'package:dartx/dartx.dart';
 import 'package:intl/intl.dart';
 import 'package:implicitly_animated_reorderable_list/implicitly_animated_reorderable_list.dart';
 import 'package:implicitly_animated_reorderable_list/transitions.dart';
-import 'package:keframe/frame_separate_widget.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 typedef OnRowHoverCallback = void Function(RowModel row, bool selected);
@@ -134,6 +133,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   late Map<dynamic, FocusNode> headerFocusNodes = {};
   List<dynamic>? currentColumnKeys;
   bool isStateInvalidated = false;
+  void _invalidateState() {
+    isStateInvalidated = true;
+  }
 
   late Map<dynamic, List<ConditionFilter>> _conditionFilters;
   Map<dynamic, List<ConditionFilter>> get conditionFilters => widget.tableController?.conditionFilters ?? _conditionFilters;
@@ -182,6 +184,28 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   RowModel? headerRowModel;
 
   TableFromZeroState();
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (widget.tableController!=null) { // prevent memory leak
+      if (widget.tableController!.currentState==this) {
+        widget.tableController!.currentState = null;
+      }
+      if (widget.tableController!._filter==_controllerFilter) {
+        widget.tableController!._filter = null;
+      }
+      if (widget.tableController!._getFiltered==_getFiltered) {
+        widget.tableController!.currentState = null;
+      }
+      if (widget.tableController!._sort==_controllerSort) {
+        widget.tableController!.currentState = null;
+      }
+      if (widget.tableController!._reInit==_invalidateState) {
+        widget.tableController!.currentState = null;
+      }
+    }
+  }
 
   double lastPosition = 0;
   bool lockScrollUpdates = false;
@@ -232,26 +256,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     sorted = List.from(widget.rows);
     if (widget.tableController!=null) {
       widget.tableController!.currentState = this;
-      widget.tableController!._filter = () {
-        List<RowModel<T>> result = [];
-        if (mounted){
-          result = filter();
-          setState(() {});
-        }
-        return result;
-      };
-      widget.tableController!._sort = ({bool filterAfter=true}) {
-        List<RowModel<T>> result = [];
-        if (mounted){
-          result = sort(filterAfter: filterAfter);
-          setState(() {});
-        }
-        return result;
-      };
-      widget.tableController!._reInit = () {
-        isStateInvalidated = true;
-      };
-      widget.tableController!._getFiltered = ()=>filtered;
+      widget.tableController!._filter = _controllerFilter;
+      widget.tableController!._sort = _controllerSort;
+      widget.tableController!._reInit = _invalidateState;
+      widget.tableController!._getFiltered = _getFiltered;
     }
     if (widget.tableController?.conditionFilters==null) {
       if (widget.tableController?.initialConditionFilters==null){
@@ -482,8 +490,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       // TODO 2 fix fatal error in animated list, seems to be a problem with row id equality
     } else {
 
-      result = SliverImplicitlyAnimatedList<RowModel<T>?>(
-        items: filtered.isEmpty ? [null] : filtered,
+      result = SliverImplicitlyAnimatedList<RowModel<T>>(
+        items: filtered.isEmpty ? [] : filtered,
         areItemsTheSame: (a, b) => a==b,
         insertDuration: Duration(milliseconds: 400),
         updateDuration: Duration(milliseconds: 400),
@@ -1255,7 +1263,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     }
     final filterSearchFocusNode = FocusNode();
     if (PlatformExtended.isDesktop) {
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         filterSearchFocusNode.requestFocus();
       });
     }
@@ -1326,7 +1334,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                                     }
                                     conditionFilters[j]!.add(value);
                                   });
-                                  WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+                                  WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                                     value.focusNode.requestFocus();
                                   });
                                 },
@@ -1649,6 +1657,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
   int get disabledColumnCount => widget.columns==null ? 0
       : widget.columns!.values.where((element) => element.flex==0).length;
+  List<RowModel<T>> _controllerSort ({bool filterAfter=true}) {
+    List<RowModel<T>> result = [];
+    if (mounted){
+      result = sort(filterAfter: filterAfter);
+      setState(() {});
+    }
+    return result;
+  }
   List<RowModel<T>> sort({bool notifyListeners=true, bool filterAfter=true}) {
     if (filterAfter) {
       _sort(sorted);
@@ -1679,6 +1695,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           ? aVal==null ? 1 : bVal==null ? -1 : aVal.compareTo(bVal)
           : aVal==null ? -1 : bVal==null ? 1 : bVal.compareTo(aVal);
     }));
+  }
+  List<RowModel<T>> _getFiltered() => filtered;
+  List<RowModel<T>> _controllerFilter() {
+    List<RowModel<T>> result = [];
+    if (mounted){
+      result = filter();
+      setState(() {});
+    }
+    return result;
   }
   List<RowModel<T>> filter({bool notifyListeners=true}){
     filtered = sorted.where((element) {

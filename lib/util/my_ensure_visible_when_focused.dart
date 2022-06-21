@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:ensure_visible_when_focused/ensure_visible_when_focused.dart';
 
 ///
 /// Helper class that ensures a Widget is visible when it has the focus
@@ -71,12 +70,12 @@ class EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
   void initState() {
     super.initState();
     widget.focusNode.addListener(_ensureVisible);
-    WidgetsBinding.instance!.addObserver(this);
+    WidgetsBinding.instance.addObserver(this);
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance!.removeObserver(this);
+    WidgetsBinding.instance.removeObserver(this);
     widget.focusNode.removeListener(_ensureVisible);
     super.dispose();
   }

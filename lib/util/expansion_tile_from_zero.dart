@@ -325,7 +325,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     if (widget.contextMenuActions.isNotEmpty || widget.addExpandCollapseContextMenuAction) {
       final prevTitle = title;
       VoidCallback onNextFrame = (){};
-      WidgetsBinding.instance!.addPostFrameCallback((timeStamp) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         if (mounted) {
           onNextFrame();
         }
