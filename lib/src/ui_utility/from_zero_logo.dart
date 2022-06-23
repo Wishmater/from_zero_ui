@@ -105,6 +105,9 @@ class FromZeroLogo extends StatelessWidget {
               children: [
                 SizedBox(height: size/12,),
                 Text("From",
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.visible,
                   style: GoogleFonts.libreCaslonDisplay(
                     fontSize: fontSize,
                     color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.6),
@@ -113,6 +116,9 @@ class FromZeroLogo extends StatelessWidget {
                   ),
                 ),
                 Text("Zero",
+                  maxLines: 1,
+                  softWrap: false,
+                  overflow: TextOverflow.visible,
                   style: GoogleFonts.libreCaslonDisplay(
                     fontSize: fontSize,
                     color: Theme.of(context).textTheme.bodyText1!.color,

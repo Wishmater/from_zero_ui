@@ -21,7 +21,7 @@ extension Replace on GoRouter {
     Map<String, String> params = const {},
     Map<String, String> queryParams = const {},
     Object? extra,
-  }) {
+  }) async {
     routerDelegate.matches.removeLast();
     pushNamed(name,
       params: params,
@@ -126,21 +126,23 @@ class GoRouteFromZero extends GoRoute {
     this.pageScaffoldId = 'main',
     this.pageScaffoldDepth = 0,
     this.childrenAsDropdownInDrawerNavigation = true,
-  }) : super(
-    path: path,
-    name: name ?? path,
-    builder: builder,
-    redirect: redirect,
-    routes: routes,
-    pageBuilder: (context, state) {
-      return CustomTransitionPage<void>(
-        key: state.pageKey,
-        child: OnlyOnActiveBuilder(builder: builder, state: state,),
-        transitionsBuilder: transitionBuilder
-            ?? (context, animation, secondaryAnimation, child) => child,
-      );
-    },
-  );
+    GoRouterPageBuilder? pageBuilder,
+  }) :  assert((builder==emptyBuilder && transitionBuilder==null) || pageBuilder==null),
+        super(
+          path: path,
+          name: name ?? path,
+          builder: emptyBuilder,
+          redirect: redirect,
+          routes: routes,
+          pageBuilder: pageBuilder ?? (context, state) {
+            return CustomTransitionPage<void>(
+              key: ValueKey(state.location),
+              child: OnlyOnActiveBuilder(builder: builder, state: state,),
+              transitionsBuilder: transitionBuilder
+                  ?? (context, animation, secondaryAnimation, child) => child,
+            );
+          },
+        );
 
   GoRouteFromZero copyWith({
     String? path,
@@ -148,12 +150,13 @@ class GoRouteFromZero extends GoRoute {
     String? title,
     String? subtitle,
     Widget? icon,
-    GoRouterWidgetBuilder? builder,
     GoRouterRedirect? redirect,
     List<GoRouteFromZero>? routes,
     String? pageScaffoldId,
     int? pageScaffoldDepth,
     bool? childrenAsDropdownInDrawerNavigation,
+    GoRouterWidgetBuilder? builder,
+    GoRouterPageBuilder? pageBuilder,
   }) {
     return GoRouteFromZero(
       path: path ?? this.path,
@@ -161,12 +164,13 @@ class GoRouteFromZero extends GoRoute {
       title: title ?? this.title,
       subtitle: subtitle,
       icon: icon ?? this.icon,
-      builder: builder ?? this.builder,
       redirect: redirect ?? this.redirect,
       routes: routes ?? this.routes,
       pageScaffoldId: pageScaffoldId ?? this.pageScaffoldId,
       pageScaffoldDepth: pageScaffoldDepth ?? this.pageScaffoldDepth,
       childrenAsDropdownInDrawerNavigation: childrenAsDropdownInDrawerNavigation ?? this.childrenAsDropdownInDrawerNavigation,
+      builder: builder ?? this.builder,
+      pageBuilder: pageBuilder ?? this.pageBuilder,
     );
   }
 
@@ -292,6 +296,7 @@ class GoRouteFromZero extends GoRoute {
 
 class GoRouteGroupFromZero extends GoRouteFromZero {
 
+  bool showInDrawerNavigation;
   bool showAsDropdown;
 
   GoRouteGroupFromZero({
@@ -299,7 +304,7 @@ class GoRouteGroupFromZero extends GoRouteFromZero {
     String? subtitle,
     Widget? icon,
     required List<GoRouteFromZero> routes,
-    bool showInDrawerNavigation = true,
+    this.showInDrawerNavigation = true,
     this.showAsDropdown = true,
   }) : super(
     path: 'null',
@@ -308,6 +313,31 @@ class GoRouteGroupFromZero extends GoRouteFromZero {
     icon: icon ?? const SizedBox.shrink(),
     routes: routes,
   );
+
+  @override
+  GoRouteFromZero copyWith({
+    String? path,
+    String? name,
+    String? title,
+    String? subtitle,
+    Widget? icon,
+    GoRouterRedirect? redirect,
+    List<GoRouteFromZero>? routes,
+    String? pageScaffoldId,
+    int? pageScaffoldDepth,
+    bool? childrenAsDropdownInDrawerNavigation,
+    GoRouterWidgetBuilder? builder,
+    GoRouterPageBuilder? pageBuilder,
+  }) {
+    return GoRouteGroupFromZero(
+      title: title ?? this.title,
+      subtitle: subtitle,
+      icon: icon ?? this.icon,
+      routes: routes ?? this.routes,
+      showInDrawerNavigation: showInDrawerNavigation,
+      showAsDropdown: showAsDropdown,
+    );
+  }
 
 }
 
@@ -411,9 +441,7 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
 
   @override
   void dispose() {
-    print ('dispose OnlyOnActiveBuilder');
     super.dispose();
-    state = null;
   }
 
   @override

@@ -67,7 +67,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   @override
   void dispose() {
     super.dispose();
-    widget.controller?.dispose();
+    // try { widget.controller?.dispose(); } catch(_) {}
   }
 
   @override
@@ -270,9 +270,9 @@ class AlwaysAttachedScrollController implements ScrollController {
   ScrollController? _parent;
   ScrollController? get parent => _parent;
   set parent(ScrollController? value) {
-    if (value!=_parent) {
-      _parent?.dispose();
-    }
+    // if (value!=_parent) {
+    //   try { _parent?.dispose(); } catch(_) {}
+    // }
     _parent = value;
   }
 

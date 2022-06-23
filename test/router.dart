@@ -19,6 +19,7 @@ import 'pages/settings/page_settings.dart';
 
 final mainRoutes = [
   GoRouteGroupFromZero(
+    showAsDropdown: false,
     routes: [
       GoRouteFromZero(
         path: '/',
@@ -35,22 +36,27 @@ final mainRoutes = [
             icon: Icon(Icons.subtitles),
             builder: (context, state) => PageScaffold(),
             routes: [
-              GoRouteFromZero(
-                path: 'same',
-                name: 'scaffold_same',
-                builder: (context, state) => PageScaffoldSame(),
-              ),
-              GoRouteFromZero(
-                path: 'inner',
-                name: 'scaffold_inner',
-                builder: (context, state) => PageScaffoldInner(),
-                pageScaffoldDepth: 1,
-              ),
-              GoRouteFromZero(
-                path: 'other',
-                name: 'scaffold_other',
-                builder: (context, state) => PageScaffoldOther(),
-                pageScaffoldId: 'other',
+              GoRouteGroupFromZero(
+                showInDrawerNavigation: false,
+                routes: [
+                  GoRouteFromZero(
+                    path: 'same',
+                    name: 'scaffold_same',
+                    builder: (context, state) => PageScaffoldSame(),
+                  ),
+                  GoRouteFromZero(
+                    path: 'inner',
+                    name: 'scaffold_inner',
+                    builder: (context, state) => PageScaffoldInner(),
+                    pageScaffoldDepth: 1,
+                  ),
+                  GoRouteFromZero(
+                    path: 'other',
+                    name: 'scaffold_other',
+                    builder: (context, state) => PageScaffoldOther(),
+                    pageScaffoldId: 'other',
+                  ),
+                ],
               ),
             ],
           ),
@@ -63,6 +69,7 @@ final mainRoutes = [
           ),
           GoRouteGroupFromZero(
             title: 'Heroes',
+            showAsDropdown: false,
             routes: [
               GoRouteFromZero(
                 path: 'heroes',
@@ -81,7 +88,10 @@ final mainRoutes = [
             icon: Icon(Icons.refresh),
             builder: (context, state) => PageFutureHandling(),
           ),
-          ...settingsRoutes,
+          GoRouteGroupFromZero(
+            showInDrawerNavigation: false,
+            routes: settingsRoutes,
+          ),
         ],
       ),
     ],

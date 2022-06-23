@@ -300,8 +300,6 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
   AppbarChangeNotifier? _appbarChangeNotifier;
   late ScrollController drawerContentScrollController;
   late bool canPop;
-  late Animation<double> animation;
-  late Animation<double> secondaryAnimation;
   final GlobalKey bodyGlobalKey = GlobalKey();
 
 
@@ -320,12 +318,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
       if (_changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]==null){
         _changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId] = ValueNotifier(0);
       }
-      _changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.addListener(() {
-        if (!lockListenToDrawerScroll && mounted && drawerContentScrollController.hasClients){
-          drawerContentScrollController.jumpTo(_changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.value ?? 0);
-          lockListenToDrawerScroll = false;
-        }
-      });
+      _changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.addListener(_onDrawerScrollOffsetChanged);
     }
   }
 
@@ -334,6 +327,12 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
       lockListenToDrawerScroll = true;
       _changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.value
           = drawerContentScrollController.position.pixels;
+    }
+  }
+  void _onDrawerScrollOffsetChanged() {
+    if (!lockListenToDrawerScroll && mounted && drawerContentScrollController.hasClients){
+      drawerContentScrollController.jumpTo(_changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.value ?? 0);
+      lockListenToDrawerScroll = false;
     }
   }
 
@@ -353,10 +352,9 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
 
   @override
   void dispose() {
-    print ('dispose ScaffoldFromZero');
     super.dispose();
     _appbarChangeNotifier!.dispose();
-    route = null;
+    _changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.removeListener(_onDrawerScrollOffsetChanged);
     widget.mainScrollController?.removeListener(_handleScroll);
   }
 
@@ -376,8 +374,6 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         null,
       );
       canPop = ModalRoute.of(context)?.canPop ?? Navigator.of(context).canPop();
-      animation = ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation;
-      secondaryAnimation = ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation;
     }
     var drawerContent = _getResponsiveDrawerContent(context);
     var body = _getMainLayout(context);
@@ -386,9 +382,11 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         fromZeroAppbarChangeNotifierProvider.overrideWithValue(_appbarChangeNotifier!),
       ],
       child: FadeUpwardsFadeTransition(
-        routeAnimation: animation,
+        routeAnimation: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
         child: FadeUpwardsSlideTransition(
-          routeAnimation: ref.read(fromZeroScaffoldChangeNotifierProvider).animationType==ScaffoldFromZero.animationTypeOther ? animation : kAlwaysCompleteAnimation,
+          routeAnimation: ref.read(fromZeroScaffoldChangeNotifierProvider).animationType==ScaffoldFromZero.animationTypeOther
+              ? (ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation)
+              : kAlwaysCompleteAnimation,
           child: Consumer(
               builder: (context, ref, child) {
                 final isMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
@@ -562,8 +560,8 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
               return false;
             },
           ),
-          animation: animation,
-          secondaryAnimation: secondaryAnimation,
+          animation: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
+          secondaryAnimation: ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation,
           scaffoldChangeNotifier: changeNotifierNotListen,
         ),
       ),
@@ -671,13 +669,14 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                               );
                             } else{
                               result = AnimatedBuilder(
-                                animation: secondaryAnimation,
+                                animation: ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation,
                                 builder: (context, child) => GestureDetector(
                                   onDoubleTap: () => _toggleDrawer(context, changeNotifierNotListen),
                                   child: IconButton(
                                     icon: AnimatedIcon(
-                                      progress: widget.alwaysShowHamburgerButtonOnMobile ? kAlwaysDismissedAnimation
-                                          : secondaryAnimation,
+                                      progress: widget.alwaysShowHamburgerButtonOnMobile
+                                          ? kAlwaysDismissedAnimation
+                                          : (ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation),
                                       icon: AnimatedIcons.menu_arrow,
                                       color: (Theme.of(context).appBarTheme.brightness ?? Theme.of(context).primaryColorBrightness)
                                           == Brightness.light ? Colors.black : Colors.white,
@@ -730,8 +729,8 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                           alignment: Alignment.centerLeft,
                           child: widget.titleTransitionBuilder(
                             child: widget.title!,
-                            animation: animation,
-                            secondaryAnimation: secondaryAnimation,
+                            animation: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
+                            secondaryAnimation: ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation,
                             scaffoldChangeNotifier: changeNotifierNotListen,
                           ),
                         ),
@@ -899,8 +898,8 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                             Widget result = _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId)==widget.compactDrawerWidth);
                                             result = widget.drawerContentTransitionBuilder(
                                               child: result,
-                                              animation: animation,
-                                              secondaryAnimation: secondaryAnimation,
+                                              animation: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
+                                              secondaryAnimation: ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation,
                                               scaffoldChangeNotifier: changeNotifierNotListen,
                                             );
                                             return result;

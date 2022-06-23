@@ -4,6 +4,8 @@
 P0
 **********************************************************************
 
+APISnackbar -- Implement showError (and maybe retry)
+
 Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
 	https://www.youtube.com/watch?v=ceCo8U0XHqw
 
@@ -17,25 +19,19 @@ Problems with excel export
 	also make the pushNamedAndMaybeRemoveUntil() method work as expected
 
 
-TableFromZero: cancel isolate computations if widget is disposed or initFilters is called again
-
-
-
 
 **********************************************************************
 P1
 **********************************************************************
 
+Implement UIScaling + Scaling picker widget (with slider)
+	take initial system textScale as UI scaling
 
-fix part of the screen not being draggable on really big screens
+??? fix part of the screen not being draggable on really big screens
 	maybe just deprecate limitWidthOnBigScreens
 	??? maybe we can apply GestureRelayer, but it seems hard
 	
 popupFromZero doesn't reposition child in response to window resize
-
-Implement SafeAnimatedSwitcher
-	this widget will take an image of the widgets switching out and remove them from the widget tree immediatly
-	this will fix duplicate GlobalKey errors caused by AnimatedSwitcher and [hopefully] improove performance
 
 DAO Form Performance -- wait for first validation before painting a frame
 	this was the behaviour before, but since the validation is async, now the form paints once before validation, then paints again
@@ -43,9 +39,7 @@ DAO Form Performance -- wait for first validation before painting a frame
 	since awaiting the validation calls could cause other problems (potential long wait), maybe just waiting 1/2 frames before building would be enough
 
 FilePickerFromZero enhancement => implement drag'n'drop on windows
-
-File drag and drop broken in release
-
+	broken in release
 
 
 
@@ -53,57 +47,47 @@ File drag and drop broken in release
 P2
 **********************************************************************
 
+Implement SafeAnimatedSwitcher
+	this widget will take an image of the widgets switching out and remove them from the widget tree immediatly
+	this will fix duplicate GlobalKey errors caused by AnimatedSwitcher and [hopefully] improve performance
+
 StringField should mark as edited as soon as you start typing
 	this is noticeable because save button doesn't light up when typing
 	
 Table -- fix implicitlyAnimatedTable, make it default for <10 items
 
+Table Feature -- Column types (String, num, DateTime)
+	show sum/avg on num columns
+	custom filters for each column type
+	
 Table Feature -- Sticky columns 
 
 Table Feature -- Reorder columns
 
 Table Feature -- Resize columns (hard)
-
-Table Feature -- Column types (String, num, DateTime)
-	show sum/avg on num columns
-	custom filters for each column type
 	
-Table Performance -- cancel async/isolate filters computation if disposed
-
 Table bug with arrow key traversal
 	
 DAO Form -- make errorSign inside textField flicker on highlight like others
-	
-Implement UIScaling + Scaling picker widget (with slider)
-	take initial system textScale as UI scaling
+
+DAO Form -- In comboField and listField with availablePool (combo and table), allow right click to edit a possible dao
 
 Appbar on top of fromZeroUI should be above header (appbar will span full window width)
 	in mobile mode, headerTitle still needs to be painted on the header itself
 	this will fix some visual bugs and some bugs with new windowBar
 
-expanded state for actions in mobile view is broken
-
-add icon/title to WindowBar on desktop when aproppriate
-
-APISnackbar -- Implement showError (and maybe retry)
-
-ListField -- implement proper disabled logic 
-	take into consideration all possible states: table, collapsed, dense
-	implement in each sliver (color + tooltip + mouseRegion)
-
-ComboField improvement
-	add a small loading spinner to comboField and listField so you know when possibleValues is refreshing
-	this would require checking if a provider is already build, because we dont want to call all providers on start
-	
-DAO Form -- In comboField and listField with availablePool (combo and table), allow right click to edit a possible dao
-
-	
 
 
 **********************************************************************
 P3
 **********************************************************************
 	
+Check for potential memory leaks in: 
+	DrawerMenuFromZero
+	AnimatedFromChildSize
+
+add icon/title to WindowBar on desktop when aproppriate
+
 Windows Increase mouse wheel scroll speed and add animation
 	only when the mouse wheel is click (not smooth)
 	
@@ -119,6 +103,10 @@ Organize dependencies
 	update all to latest
 	test for any bugs
 
+ListField -- implement proper disabled logic (currently only when !sliver && card)
+	take into consideration all possible states: table, collapsed, dense
+	implement in each sliver (color + tooltip + mouseRegion)
+	
 Considerations for a new model/dataClass solution
 	support normal dart class inheritnce
 	easy way to declare states

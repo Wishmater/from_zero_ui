@@ -25,6 +25,7 @@ import 'package:intl/intl.dart';
 import 'package:implicitly_animated_reorderable_list/implicitly_animated_reorderable_list.dart';
 import 'package:implicitly_animated_reorderable_list/transitions.dart';
 import 'package:sliver_tools/sliver_tools.dart';
+import 'package:cancelable_compute/cancelable_compute.dart' as cancelable_compute;
 
 typedef OnRowHoverCallback = void Function(RowModel row, bool selected);
 typedef OnCheckBoxSelectedCallback = bool? Function(RowModel row, bool? selected);
@@ -188,7 +189,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   @override
   void dispose() {
     super.dispose();
-    if (widget.tableController!=null) { // prevent memory leak
+    availableFiltersIsolateController?.cancel();
+    validInitialFiltersIsolateController?.cancel();
+    if (widget.tableController!=null) {
       if (widget.tableController!.currentState==this) {
         widget.tableController!.currentState = null;
       }
@@ -318,10 +321,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     sort(notifyListeners: notifyListeners);
   }
 
+  cancelable_compute.ComputeOperation<Map<dynamic, List<dynamic>>>? availableFiltersIsolateController;
+  cancelable_compute.ComputeOperation<Map<dynamic, Map<Object, bool>>?>? validInitialFiltersIsolateController;
   void initFilters([bool? computeFiltersInIsolate]) async {
+    availableFiltersIsolateController?.cancel();
+    validInitialFiltersIsolateController?.cancel();
     Map<dynamic, List<dynamic>> computedAvailableFilters;
     Map<dynamic, Map<Object, bool>>? computedValidInitialFilters;
-    if (false && (computeFiltersInIsolate ?? widget.computeFiltersInIsolate ?? widget.rows.length>50)) {
+    if (computeFiltersInIsolate ?? widget.computeFiltersInIsolate ?? widget.rows.length>50) {
       try {
         final Map<dynamic, Map<dynamic, Field>> fieldAliases = {
           for (final key in widget.columns!.keys) key: {},
@@ -330,7 +337,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           for (final key in widget.columns!.keys) key: {},
         };
         // TODO 2 cancel isolate computations if widget is disposed or initFilters is called again
-        computedAvailableFilters = await compute(_getAvailableFilters,
+        availableFiltersIsolateController = cancelable_compute.compute(_getAvailableFilters,
             [
               widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
               widget.rows.map((e) {
@@ -342,6 +349,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                 });
               }).toList(),
             ]);
+        final computationResult = await availableFiltersIsolateController!.value;
+        if (computationResult==null) return; // cancelled
+        computedAvailableFilters = computationResult;
         computedAvailableFilters = computedAvailableFilters.map((key, value) {
           if (fieldAliases.isEmpty && daoAliases.isEmpty) {
             return MapEntry(key, value);
@@ -352,8 +362,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           }
         });
         if (valueFiltersApplied.values.where((e) => e==true).isNotEmpty) {
-          computedValidInitialFilters = await compute(_getValidInitialFilters,
+          validInitialFiltersIsolateController = cancelable_compute.compute(_getValidInitialFilters,
               [valueFilters, computedAvailableFilters]);
+          computedValidInitialFilters = await validInitialFiltersIsolateController!.value;
         }
       } catch (e, st) {
         print('Isolate creation for computing table filters failed. Computing synchronously...');
@@ -371,11 +382,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       computedValidInitialFilters = _getValidInitialFilters(
           [valueFilters, computedAvailableFilters]);
     }
-    availableFilters.value = computedAvailableFilters;
-    if (computedValidInitialFilters != null) {
-      valueFilters = computedValidInitialFilters;
-      _updateFiltersApplied();
-      filter();
+    if (mounted) {
+      availableFilters.value = computedAvailableFilters;
+      if (computedValidInitialFilters != null) {
+        valueFilters = computedValidInitialFilters;
+        _updateFiltersApplied();
+        filter();
+      }
     }
   }
   static dynamic _sanitizeValueForIsolate(dynamic key, dynamic value, {

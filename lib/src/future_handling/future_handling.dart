@@ -516,7 +516,7 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
     super.didUpdateWidget(oldWidget);
   }
 
-  void _addCallback(AnimatedContainerFromChildSize? oldWidget){
+  void _addCallback(AnimatedContainerFromChildSize? oldWidget) {
     if (widget.child != oldWidget?.child){
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         try {

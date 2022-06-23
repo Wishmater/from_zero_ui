@@ -83,7 +83,9 @@ class ResponsiveDrawerMenuItem{
         excludeRoutesThatDontWantToShow: true,
       );
       if (e is GoRouteGroupFromZero) {
-        if (e.showAsDropdown) {
+        if (!e.showInDrawerNavigation) {
+          return <ResponsiveDrawerMenuItem>[];
+        } else if (e.showAsDropdown) {
           return [
             if (i>0 && routes[i-1] is! GoRouteGroupFromZero)
               ResponsiveDrawerMenuDivider(
