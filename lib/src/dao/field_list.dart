@@ -53,6 +53,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool? _skipDeleteConfirmation;
   bool get skipDeleteConfirmation => _skipDeleteConfirmation ?? !objectTemplate.canDelete;
   bool showTableHeaders;
+  bool showTableHeaderAddon;
   bool showElementCount;
   double? rowHeight;
   bool? _showDefaultSnackBars;
@@ -183,6 +184,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     Map<double, ActionState>? actionDeleteBreakpoints,
     this.tableColumnsBuilder,
     this.showTableHeaders = true,
+    this.showTableHeaderAddon = true,
     this.showElementCount = true,
     this.rowHeight,
     bool? showDefaultSnackBars,
@@ -333,7 +335,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       for (final key in templateProps.keys) {
         final field = objectProps[key];
         if (field!=null) {
-          validationErrors.addAll(field.validationErrors);
+          validationErrors.addAll(field.validationErrors
+              .map((err) => err..error='${e.classUiName} - ${err.error}'));
         }
       }
     }
@@ -369,6 +372,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     Map<String, ColModel> Function(DAO dao, ListField<T, U> listField, T objectTemplate)? tableColumnsBuilder,
     bool? skipDeleteConfirmation,
     bool? showTableHeaders,
+    bool? showTableHeaderAddon,
     bool? showElementCount,
     double? rowHeight,
     ContextFulFieldValueGetter<Future<List<T>>, ListField<T, U>>? availableObjectsPoolGetter,
@@ -441,6 +445,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       extraRowActionsBuilder: extraRowActionBuilders ?? this.extraRowActionsBuilder,
       skipDeleteConfirmation: skipDeleteConfirmation ?? this._skipDeleteConfirmation,
       showTableHeaders: showTableHeaders ?? this.showTableHeaders,
+      showTableHeaderAddon: showTableHeaderAddon ?? this.showTableHeaderAddon,
       showElementCount: showElementCount ?? this.showElementCount,
       rowHeight: rowHeight ?? this.rowHeight,
       initialSortedColumn: initialSortColumn ?? this.initialSortedColumn,
@@ -664,7 +669,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         selected = await showPopupFromZero(
           context: context,
           anchorKey: headerGlobalKey,
-          width: emptyDAO.viewDialogWidth,
           builder: (modalContext) {
             return content;
           },
@@ -844,12 +848,15 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       title: '${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
       extraWidget: allowAddNew ? (context, onSelected) {
         return Align(
-          alignment: Alignment.centerLeft,
+          alignment: Alignment.centerRight,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2,),
             child: TextButton(
               onPressed: () async {
-                emptyDAO.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+                final model = await emptyDAO.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+                if (model!=null) {
+                  Navigator.of(context).pop(emptyDAO);
+                }
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6,),
@@ -860,7 +867,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                     SizedBox(width: 6),
                     Icon(Icons.add),
                     SizedBox(width: 6,),
-                    Text('New ${emptyDAO.classUiName}', style: TextStyle(fontSize: 16),),
+                    Text('${FromZeroLocalizations.of(context).translate("add")} ${emptyDAO.classUiName}', style: TextStyle(fontSize: 16),),
                     SizedBox(width: 6),
                   ],
                 ),
@@ -1403,7 +1410,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             rowAddon: rowAddonField==null ? null : Theme(
               data: Theme.of(context).copyWith(
                 textTheme: Theme.of(context).textTheme.copyWith(
-                  subtitle1: Theme.of(context).textTheme.bodyText1,
+                  subtitle1: Theme.of(context).textTheme.bodyText1!.copyWith(fontWeight: FontWeight.w400),
                 ),
               ),
               child: Padding(
@@ -1442,13 +1449,14 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _buildTableHeader(context,
-                  focusNode: focusNode!,
-                  collapsed: collapsed,
-                  collapsible: collapsible,
-                  actions: actions,
-                  asSliver: asSliver,
-                ),
+                if (showTableHeaderAddon)
+                  _buildTableHeader(context,
+                    focusNode: focusNode!,
+                    collapsed: collapsed,
+                    collapsible: collapsible,
+                    actions: actions,
+                    asSliver: asSliver,
+                  ),
                 InitiallyAnimatedWidget(
                   duration: Duration(milliseconds: 300),
                   builder: (animationController, child) {
@@ -1613,13 +1621,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             id: 'header', values: {},
             rowAddonIsCoveredByScrollable: false,
             rowAddonIsCoveredByBackground: false,
-            rowAddon: _buildTableHeader(context,
+            rowAddon: showTableHeaderAddon ? _buildTableHeader(context,
               actions: actions,
               focusNode: focusNode!,
               collapsed: collapsed,
               collapsible: collapsible,
               asSliver: asSliver,
-            ),
+            ) : null,
           ),
         );
         if (!expandHorizontally) {

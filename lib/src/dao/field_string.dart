@@ -315,7 +315,7 @@ class StringField extends Field<String> {
                 ),
                 child: KeyboardListener(
                   includeSemantics: false,
-                  focusNode: FocusNode(),
+                  focusNode: FocusNode(skipTraversal: true),
                   onKeyEvent: (value) {
                     if (value is KeyDownEvent && type==StringFieldType.short) {
                       if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
@@ -353,7 +353,8 @@ class StringField extends Field<String> {
                         ),
                       ),
                       hintText: hint,
-                      floatingLabelBehavior: !enabled ?  (value==null||value!.isEmpty) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
+                      floatingLabelBehavior: dense ? FloatingLabelBehavior.never
+                          : !enabled ? (value==null||value!.isEmpty) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
                           : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
                       labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : hint!=null ? 1 : 1.85,
                         color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
@@ -391,6 +392,7 @@ class StringField extends Field<String> {
                           splashRadius: 20,
                           onPressed: () {
                             value = '';
+                            focusNode.requestFocus();
                           },
                         ) : SizedBox.shrink(),
                       ),

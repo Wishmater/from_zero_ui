@@ -427,7 +427,6 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
             ],
           ),
         ),
-        InkWell(),
         if (onTap!=null)
           Positioned.fill(
             child: translucent.InkWell(

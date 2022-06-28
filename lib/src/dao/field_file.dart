@@ -262,6 +262,7 @@ class FileField extends Field<String> {
                           splashRadius: 20,
                           onPressed: () {
                             value = null;
+                            focusNode.requestFocus();
                           },
                         ) : SizedBox.shrink(),
                       ),

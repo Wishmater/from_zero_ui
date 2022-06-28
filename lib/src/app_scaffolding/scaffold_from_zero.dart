@@ -678,8 +678,6 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                           ? kAlwaysDismissedAnimation
                                           : (ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation),
                                       icon: AnimatedIcons.menu_arrow,
-                                      color: (Theme.of(context).appBarTheme.brightness ?? Theme.of(context).primaryColorBrightness)
-                                          == Brightness.light ? Colors.black : Colors.white,
                                     ),
                                     tooltip: FromZeroLocalizations.of(context).translate("menu_open"),
                                     onPressed: () => _toggleDrawer(context, changeNotifierNotListen),

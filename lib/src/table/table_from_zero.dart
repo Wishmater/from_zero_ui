@@ -1085,7 +1085,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                 ),
                 child: AutoSizeText(
                   name,
-                  style: Theme.of(context).textTheme.subtitle2,
+                  style: Theme.of(context).textTheme.subtitle2!.copyWith(
+                    color: Theme.of(context).textTheme.bodyText1!.color!
+                        .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
+                  ),
                   textAlign: _getAlignment(colKey),
                   maxLines: autoSizeTextMaxLines,
                   minFontSize: 14,
@@ -1095,7 +1098,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                     verticalOffset: -16,
                     child: AutoSizeText(
                       name,
-                      style: Theme.of(context).textTheme.subtitle2,
+                      style: Theme.of(context).textTheme.subtitle2!.copyWith(
+                        color: Theme.of(context).textTheme.bodyText1!.color!
+                            .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
+                      ),
                       textAlign: _getAlignment(colKey),
                       maxLines: autoSizeTextMaxLines,
                       softWrap: autoSizeTextMaxLines>1,

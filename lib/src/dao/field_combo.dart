@@ -272,7 +272,7 @@ class ComboField<T extends DAO> extends Field<T> {
             if (this.extraWidget!=null)
               this.extraWidget!(context, onSelected),
             Align(
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.centerRight,
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2,),
                 child: TextButton(
@@ -324,7 +324,7 @@ class ComboField<T extends DAO> extends Field<T> {
           possibleValuesProvider: provider,
           sort: sort,
           showSearchBox: showSearchBox,
-          onSelected: _onSelected,
+          onSelected: (v) => _onSelected(v, focusNode),
           // popupWidth: maxWidth,
           buttonStyle: TextButton.styleFrom(
             padding: dense ? EdgeInsets.zero : null,
@@ -442,8 +442,9 @@ class ComboField<T extends DAO> extends Field<T> {
     return result;
   }
 
-  bool? _onSelected(T? v) {
+  bool? _onSelected(T? v, FocusNode focusNode) {
     value = v;
+    focusNode.requestFocus();
   }
 
   static Widget buttonContentBuilder(BuildContext context, String? title, String? hint, dynamic value, bool enabled, bool clearable, {

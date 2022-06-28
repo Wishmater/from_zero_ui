@@ -11,9 +11,9 @@ import 'package:dartx/dartx.dart';
 
 class DateField extends Field<DateTime> {
 
-  final DateFormat formatter;
-  final DateTime firstDate;
-  final DateTime lastDate;
+  DateFormat formatter;
+  DateTime firstDate;
+  DateTime lastDate;
 
 
   DateField({
@@ -212,7 +212,10 @@ class DateField extends Field<DateTime> {
           lastDate: lastDate,
           hint: hint,
           value: value,
-          onSelected: (v) {value=v;},
+          onSelected: (v) {
+            value=v;
+            focusNode.requestFocus();
+          },
           popupWidth: maxWidth,
           buttonPadding: dense ? EdgeInsets.zero : null,
           formatter: formatter,

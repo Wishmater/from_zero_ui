@@ -269,30 +269,36 @@ class _ValidationMessageState extends State<ValidationMessage> with SingleTicker
 
   @override
   Widget build(BuildContext context) {
+    final children = <Widget>[];
+    final seenStrings = <String>[];
+    for (final e in widget.errors) {
+      if (e.isVisibleAsHintMessage && !seenStrings.contains(e.error)) {
+        seenStrings.add(e.error);
+        children.add(InitiallyAnimatedWidget(
+          duration: Duration(milliseconds: widget.animate ? 300 : 0),
+          curve: Curves.easeOutCubic,
+          builder: (animationController, child) {
+            return SizeTransition(
+              sizeFactor: animationController,
+              axis: Axis.vertical,
+              axisAlignment: -1,
+              child: child,
+            );
+          },
+          child: SingleValidationMessage(
+            error: e,
+            errorTextStyle: widget.errorTextStyle,
+            animate: widget.animate,
+          ),
+        ));
+      }
+    }
     return Padding(
       padding: EdgeInsets.only(left: 10, right: 10,),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: widget.errors.where((e) => e.isVisibleAsHintMessage).map((e) {
-          return InitiallyAnimatedWidget(
-            duration: Duration(milliseconds: widget.animate ? 300 : 0),
-            curve: Curves.easeOutCubic,
-            builder: (animationController, child) {
-              return SizeTransition(
-                sizeFactor: animationController,
-                axis: Axis.vertical,
-                axisAlignment: -1,
-                child: child,
-              );
-            },
-            child: SingleValidationMessage(
-              error: e,
-              errorTextStyle: widget.errorTextStyle,
-              animate: widget.animate,
-            ),
-          );
-        }).toList(),
+        children: children,
       ),
     );
   }
@@ -462,6 +468,42 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
       return SizedBox.shrink();
     }
     bool isBlocking = severity==ValidationErrorSeverity.error || severity==ValidationErrorSeverity.invalidating;
+    final children = <Widget>[];
+    final seenStrings = <String>[];
+    for (final e in errors) {
+      if (!seenStrings.contains(e.error)) {
+        seenStrings.add(e.error);
+        children.add(InkWell(
+          onTap: () {
+            Navigator.of(context).pop(false);
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+              e.field.dao.focusError(e);
+            });
+          },
+          child: Padding(
+            padding: const EdgeInsets.only(left: 15, top: 1, bottom: 2),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 7),
+                  child: Icon(Icons.circle,
+                    size: 10,
+                    color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
+                  ),
+                ),
+                SizedBox(width: 6,),
+                Expanded(
+                  child: Text(e.error,
+                    // style: Theme.of(context).textTheme.bodyText1!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ));
+      }
+    }
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
@@ -491,37 +533,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
                 ),
               ],
             ),
-            ...errors.map((e) {
-              return InkWell(
-                onTap: () {
-                  Navigator.of(context).pop(false);
-                  WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                    e.field.dao.focusError(e);
-                  });
-                },
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 15, top: 1, bottom: 2),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 7),
-                        child: Icon(Icons.circle,
-                          size: 10,
-                          color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
-                        ),
-                      ),
-                      SizedBox(width: 6,),
-                      Expanded(
-                        child: Text(e.error,
-                          // style: Theme.of(context).textTheme.bodyText1!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
+            ...children,
             if (isBlocking)
               SizedBox(height: 12),
           ],

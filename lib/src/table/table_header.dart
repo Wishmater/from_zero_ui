@@ -151,7 +151,9 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
                       children: [
                         if (widget.title!=null)
                           DefaultTextStyle(
-                            style: Theme.of(context).textTheme.headline6!,
+                            style: Theme.of(context).textTheme.headline6!.copyWith(
+                              fontSize: Theme.of(context).textTheme.headline6!.fontSize!*0.85
+                            ),
                             child: widget.title!,
                           ),
                         if (filtered!=null)
@@ -250,7 +252,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
       final q = this.searchQuery!.trim().toUpperCase();
       for (final e in rows) {
         if (e.id is DAO) {
-          final value = e.id.toString().toUpperCase();
+          final value = (e.id as DAO).searchName.toUpperCase();
           if (value.contains(q)) {
             if (value.startsWith(q)) {
               starts.add(e);

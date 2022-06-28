@@ -34,6 +34,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   String get classUiNamePlural => classUiNamePluralGetter(this);
   DAOValueGetter<String, ModelType> uiNameGetter;
   String get uiName => uiNameGetter(this);
+  DAOValueGetter<String, ModelType>? searchNameGetter;
+  String get searchName => searchNameGetter?.call(this) ?? uiName;
   /// props shouldn't be added or removed manually, only changes at construction and on load()
   List<FieldGroup> fieldGroups;
   Map<String, Field> get props {
@@ -92,6 +94,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.showConfirmDialogWithBlockingErrors = true,
     this.parentDAO,
     this.enableDoubleColumnLayout,
+    this.searchNameGetter,
   }) :  this._undoRecord = undoRecord ?? [],
         this._redoRecord = redoRecord ?? [],
         this.classUiNamePluralGetter = classUiNamePluralGetter ?? classUiNameGetter
@@ -137,6 +140,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? showConfirmDialogWithBlockingErrors,
     DAO? parentDAO,
     DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout,
+    DAOValueGetter<String, ModelType>? searchNameGetter,
   }) {
     final result = DAO<ModelType>(
       id: id??this.id,
@@ -165,6 +169,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       showConfirmDialogWithBlockingErrors: showConfirmDialogWithBlockingErrors??this.showConfirmDialogWithBlockingErrors,
       parentDAO: parentDAO??this.parentDAO,
       enableDoubleColumnLayout: enableDoubleColumnLayout??this.enableDoubleColumnLayout,
+      searchNameGetter: searchNameGetter ?? this.searchNameGetter,
     );
     result._selfUpdateListeners = _selfUpdateListeners;
     return result;
@@ -1535,11 +1540,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   ],
                 );
               } else {
-                final title = Padding(
+                final title = Container(
                   padding: const EdgeInsets.only(bottom: 6, top: 8, left: 12, right: 12,),
+                  // alignment: Alignment.centerRight,
                   child: SelectableText(e.uiName,
-                    style: Theme.of(context).textTheme.bodyText1!.copyWith(
-                      color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.8),
+                    style: Theme.of(context).textTheme.subtitle2!.copyWith(
+                      color: Theme.of(context).textTheme.bodyText1!.color!
+                          .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
                       wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
                     ),
                     textAlign: TextAlign.right,

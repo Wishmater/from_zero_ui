@@ -409,7 +409,9 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
               } else {
                 final q = searchQuery!.trim().toUpperCase();
                 for (final e in filtered) {
-                  final value = e.id.toString().toUpperCase();
+                  final value = (e.id is DAO)
+                      ? (e.id as DAO).searchName.toUpperCase()
+                      : e.id.toString().toUpperCase();
                   if (value.contains(q)) {
                     if (value.startsWith(q)) {
                       starts.add(e);

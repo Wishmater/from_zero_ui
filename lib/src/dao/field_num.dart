@@ -308,7 +308,7 @@ class NumField extends Field<num> {
                   textDirection: dense ? material.TextDirection.rtl : material.TextDirection.ltr,
                   child: KeyboardListener(
                     includeSemantics: false,
-                    focusNode: FocusNode(),
+                    focusNode: FocusNode(skipTraversal: true),
                     onKeyEvent: (value) {
                       if (value is KeyDownEvent) {
                         if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
@@ -374,7 +374,8 @@ class NumField extends Field<num> {
                           overflow: TextOverflow.fade,
                         ),
                         hintText: hint,
-                        floatingLabelBehavior: !enabled ? (value==null) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
+                        floatingLabelBehavior: dense ? FloatingLabelBehavior.never
+                            : !enabled ? (value==null) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
                             : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
                         labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
                           color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
@@ -414,6 +415,7 @@ class NumField extends Field<num> {
                           onPressed: () {
                             value = null;
                             controller.clear();
+                            focusNode.requestFocus();
                           },
                         ) : SizedBox.shrink(),
                       ),
