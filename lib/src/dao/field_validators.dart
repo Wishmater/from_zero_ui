@@ -36,6 +36,7 @@ class ValidationError {
     required this.error,
     this.severity=ValidationErrorSeverity.error,
   });
+
   @override
   String toString() => error;
   bool get isVisibleAsSaveConfirmation => severity!=ValidationErrorSeverity.disabling;
@@ -43,6 +44,16 @@ class ValidationError {
   bool get isVisibleAsTooltip => severity==ValidationErrorSeverity.disabling;
   bool get isBlocking => severity==ValidationErrorSeverity.error || severity==ValidationErrorSeverity.invalidating;
   bool get isBeforeEditing => severity==ValidationErrorSeverity.disabling || severity==ValidationErrorSeverity.invalidating;
+
+  ValidationError copyWith({
+    String? error,
+  }) {
+    return ValidationError(
+      field: this.field,
+      error: error ?? this.error,
+      severity: this.severity,
+    )..animationController=this.animationController;
+  }
 }
 
 class InvalidatingError<T extends Comparable> extends ValidationError {
@@ -63,6 +74,19 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
           error: error,
           severity: ValidationErrorSeverity.invalidating,
         );
+
+  InvalidatingError<T> copyWith({
+    String? error,
+  }) {
+    return InvalidatingError<T>(
+      field: this.field as Field<T>,
+      error: error ?? this.error,
+      defaultValue: this.defaultValue,
+      showVisualConfirmation: this.showVisualConfirmation,
+      allowSetThisFieldToDefaultValue: this.allowSetThisFieldToDefaultValue,
+      allowUndoInvalidatingChange: this.allowUndoInvalidatingChange,
+    )..animationController=this.animationController;
+  }
 }
 
 class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
@@ -82,6 +106,17 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
     severity = field.value==defaultValue
         ? ValidationErrorSeverity.disabling
         : ValidationErrorSeverity.invalidating;
+  }
+
+  ForcedValueError<T> copyWith({
+    String? error,
+  }) {
+    return ForcedValueError<T>(
+      field: this.field as Field<T>,
+      error: error ?? this.error,
+      defaultValue: this.defaultValue,
+      showVisualConfirmation: this.showVisualConfirmation,
+    )..animationController=this.animationController;
   }
 }
 

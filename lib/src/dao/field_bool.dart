@@ -462,7 +462,7 @@ class BoolField extends Field<BoolComparable> {
                       child: Center(
                         child: AutoSizeText(uiNameValue,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                          style: TextStyle(
                             height: 1,
                             color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
                           ),
@@ -501,7 +501,7 @@ class BoolField extends Field<BoolComparable> {
                       child: Center(
                         child: AutoSizeText(uiNameValue,
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyText1!.copyWith(
+                          style: TextStyle(
                             height: 1,
                             color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
                           ),

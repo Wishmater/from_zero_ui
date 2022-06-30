@@ -9,21 +9,21 @@ import 'package:from_zero_ui/src/dao/field_validators.dart';
 
 class ComboField<T extends DAO> extends Field<T> {
 
-  final ContextFulFieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter;
-  final ContextFulFieldValueGetter<Future<List<T>>?, ComboField<T>>? possibleValuesFutureGetter;
-  final ContextFulFieldValueGetter<
+  ContextFulFieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter;
+  ContextFulFieldValueGetter<Future<List<T>>?, ComboField<T>>? possibleValuesFutureGetter;
+  ContextFulFieldValueGetter<
           StateNotifierProviderOverrideMixin<ApiState<List<T>>,
           AsyncValue<List<T>>
       >?,
       ComboField<T>>? possibleValuesProviderGetter;
-  final bool? showSearchBox;
-  final ExtraWidgetBuilder<T>? extraWidget;
-  final FieldValueGetter<DAO?, ComboField<T>>? newObjectTemplateGetter;
+  bool? showSearchBox;
+  ExtraWidgetBuilder<T>? extraWidget;
+  FieldValueGetter<DAO?, ComboField<T>>? newObjectTemplateGetter;
   DAO? get newObjectTemplate => newObjectTemplateGetter?.call(this, dao);
-  final bool sort;
-  final bool showViewActionOnDAOs;
-  final bool showDropdownIcon;
-  final bool invalidateValuesNotInPossibleValues;
+  bool sort;
+  bool showViewActionOnDAOs;
+  bool showDropdownIcon;
+  bool invalidateValuesNotInPossibleValues;
 
 
   ComboField({

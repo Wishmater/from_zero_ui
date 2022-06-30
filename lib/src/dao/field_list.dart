@@ -336,7 +336,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         final field = objectProps[key];
         if (field!=null) {
           validationErrors.addAll(field.validationErrors
-              .map((err) => err..error='${e.classUiName} - ${err.error}'));
+              .map((err) => err.copyWith(
+                error: err.error.isNullOrBlank
+                    ? '' : '${e.classUiName} - ${err.error}',
+              )));
         }
       }
     }
@@ -669,6 +672,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         selected = await showPopupFromZero(
           context: context,
           anchorKey: headerGlobalKey,
+          width: maxWidth==double.infinity ? null : maxWidth,
           builder: (modalContext) {
             return content;
           },

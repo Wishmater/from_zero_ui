@@ -496,6 +496,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       );
                     },
                     successBuilder: (context, validation) {
+                      validation = validation && validationErrors.firstOrNullWhere((e) => e.isBlocking)==null;
                       if (!showConfirmDialogWithBlockingErrors && !validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
                         Navigator.of(context).pop(null);
                       }
@@ -527,7 +528,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                       children: [
                                         Text(validation
                                             ? FromZeroLocalizations.of(context).translate("confirm_save_desc")
-                                            : 'Debe resolver los siguientes errores de validación antes de guardar:'),
+                                            : 'Debe resolver los siguientes errores de validación antes de guardar:'), // TODO 3 internationalize
                                         SaveConfirmationValidationMessage(allErrors: validationErrors),
                                       ],
                                     ),
