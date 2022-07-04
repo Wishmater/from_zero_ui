@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui' as ui;
 
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,8 @@ import 'package:from_zero_ui/src/dao/dao.dart';
 import 'package:from_zero_ui/src/dao/field_validators.dart';
 import 'package:intl/intl.dart';
 import 'package:from_zero_ui/src/dao/field.dart';
+import 'package:dartx/dartx.dart';
+
 
 
 class NumField extends Field<num> {
@@ -17,6 +20,7 @@ class NumField extends Field<num> {
   NumberFormat? formatter;
   InputDecoration? inputDecoration;
   int digitsAfterComma;
+  bool allowNegative;
 
   set value(num? v) {
     super.value = v;
@@ -91,6 +95,7 @@ class NumField extends Field<num> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<num> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<num?>? onValueChanged,
+    this.allowNegative = false,
   }) :  assert(digitsAfterComma>=0),
         controller = TextEditingController(text: toStringStatic(value, formatter)),
         super(
@@ -160,6 +165,7 @@ class NumField extends Field<num> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<num>? viewWidgetBuilder,
     OnFieldValueChanged<num?>? onValueChanged,
+    bool? allowNegative,
   }) {
     return NumField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -188,6 +194,7 @@ class NumField extends Field<num> {
       actions: actions ?? this.actions,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       onValueChanged: onValueChanged ?? this.onValueChanged,
+      allowNegative: allowNegative ?? this.allowNegative,
     );
   }
 
@@ -304,88 +311,100 @@ class NumField extends Field<num> {
                   bottom: largeVertically ? 16 : 0,
                   top: dense ? 0 : largeVertically ? 12 : 2,
                 ),
-                child: Directionality(
-                  textDirection: dense ? material.TextDirection.rtl : material.TextDirection.ltr,
-                  child: KeyboardListener(
-                    includeSemantics: false,
-                    focusNode: FocusNode(skipTraversal: true),
-                    onKeyEvent: (value) {
-                      if (value is KeyDownEvent) {
-                        if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
-                          focusNode.focusInDirection(TraversalDirection.down);
-                        } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
-                          focusNode.focusInDirection(TraversalDirection.up);
-                        }
+                child: KeyboardListener(
+                  includeSemantics: false,
+                  focusNode: FocusNode(skipTraversal: true),
+                  onKeyEvent: (value) {
+                    if (value is KeyDownEvent) {
+                      if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
+                        focusNode.focusInDirection(TraversalDirection.down);
+                      } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
+                        focusNode.focusInDirection(TraversalDirection.up);
                       }
+                    }
+                  },
+                  child: TextFormField(
+                    controller: controller,
+                    enabled: enabled,
+                    focusNode: focusNode,
+                    textAlign: dense ? TextAlign.right : TextAlign.left,
+                    toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
+                      copy: false, cut: false, paste: false, selectAll: false,
+                    ),
+                    onEditingComplete: () {
+                      focusNode.nextFocus();
                     },
-                    child: TextFormField(
-                      controller: controller,
-                      enabled: enabled,
-                      focusNode: focusNode,
-                      toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
-                        copy: false, cut: false, paste: false, selectAll: false,
-                      ),
-                      onEditingComplete: () {
-                        focusNode.nextFocus();
-                      },
-                      onChanged: (v) {
-                        if (digitsAfterComma>0) {
-                          bool update = false;
-                          int commaIndex = v.indexOf('.');
-                          if (commaIndex==0) {
-                            v = '0' + v;
-                            commaIndex++;
+                    onChanged: (v) {
+                      int? lastMinusIndex;
+                      do {
+                        lastMinusIndex = v.contains('-') ? v.lastIndexOf('-') : null;
+                        if (lastMinusIndex!=null && lastMinusIndex>0) {
+                          v = v.substring(0, lastMinusIndex) + v.substring(lastMinusIndex+1);
+                        }
+                      } while(lastMinusIndex!=null && lastMinusIndex>0);
+                      if (digitsAfterComma>0) {
+                        bool update = false;
+                        int commaIndex = v.indexOf('.');
+                        if (commaIndex==0 || (commaIndex==1 && v[0]=='-')) {
+                          v = v.substring(0, commaIndex) + '0' + v.substring(commaIndex);
+                          commaIndex++;
+                          update = true;
+                        }
+                        int lastCommaIndex = v.lastIndexOf('.');
+                        if (commaIndex>0) {
+                          if (commaIndex!=lastCommaIndex) {
+                            v = v.replaceAll('.', '');
+                            v = v.substring(0, commaIndex) + '.' + v.substring(commaIndex);
                             update = true;
                           }
-                          int lastCommaIndex = v.lastIndexOf('.');
-                          if (commaIndex>0) {
-                            if (commaIndex!=lastCommaIndex) {
-                              v = v.replaceAll('.', '');
-                              v = v.substring(0, commaIndex) + '.' + v.substring(commaIndex);
-                              update = true;
-                            }
-                            if (v.length+1 - commaIndex > digitsAfterComma) {
-                              v = v.substring(0, min(commaIndex+digitsAfterComma+1, v.length));
-                              update = true;
-                            }
-                          }
-                          if (update) {
-                            controller.text = v;
-                            controller.selection = TextSelection(
-                              baseOffset: v.length,
-                              extentOffset: v.length,
-                            );
+                          if (v.length+1 - commaIndex > digitsAfterComma) {
+                            v = v.substring(0, min(commaIndex+digitsAfterComma+1, v.length));
+                            update = true;
                           }
                         }
-                        final textVal = _getTextVal(v);
-                        if (v.isEmpty || v.characters.last=='.' || v.characters.last==',' || !isEdited) {
-                          value = textVal;
-                        } else if (value!=textVal) {
-                          addUndoEntry(value);
+                        if (update) {
+                          controller.text = v;
+                          controller.selection = TextSelection(
+                            baseOffset: v.length,
+                            extentOffset: v.length,
+                          );
                         }
-                      },
-                      keyboardType: TextInputType.number,
-                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(digitsAfterComma==0 ? (r'[0-9]') : (r'[0-9.]'))),],
-                      decoration: inputDecoration??InputDecoration(
-                        border: InputBorder.none,
-                        alignLabelWithHint: dense,
-                        label: Text(uiName,
-                          softWrap: false,
-                          overflow: TextOverflow.fade,
-                        ),
-                        hintText: hint,
-                        floatingLabelBehavior: dense ? FloatingLabelBehavior.never
-                            : !enabled ? (value==null) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
-                            : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
-                        labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
-                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                        ),
-                        hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
-                        contentPadding: EdgeInsets.only(
-                          left: dense ? 0 : 16,
-                          right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
-                          bottom: dense ? 10 : 0,
-                        ),
+                      }
+                      final textVal = _getTextVal(v);
+                      if (v.isEmpty || v.characters.last=='.' || v.characters.last==',' || !isEdited) {
+                        value = textVal;
+                      } else if (value!=textVal) {
+                        addUndoEntry(value);
+                      }
+                    },
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9${digitsAfterComma==0 ? '' : '.'}${allowNegative ? '-' : ''}]')),],
+                    decoration: inputDecoration??InputDecoration(
+                      border: InputBorder.none,
+                      alignLabelWithHint: dense,
+                      label: dense
+                          ? Align(
+                            alignment: Alignment.centerRight,
+                            child: Text(uiName,
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
+                            ),
+                          ) : Text(uiName,
+                        softWrap: false,
+                        overflow: TextOverflow.fade,
+                      ),
+                      hintText: hint,
+                      floatingLabelBehavior: dense ? FloatingLabelBehavior.never
+                          : !enabled ? (value==null) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
+                          : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
+                      labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
+                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                      ),
+                      hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
+                      contentPadding: EdgeInsets.only(
+                        left: dense ? 0 : 16,
+                        right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
+                        bottom: dense ? 10 : 0,
                       ),
                     ),
                   ),
