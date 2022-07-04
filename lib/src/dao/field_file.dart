@@ -256,14 +256,16 @@ class FileField extends Field<String> {
                             ),
                           );
                         },
-                        child: value!=null ? IconButton(
-                          icon: Icon(Icons.close),
-                          tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                          splashRadius: 20,
-                          onPressed: () {
-                            value = null;
-                            focusNode.requestFocus();
-                          },
+                        child: value!=null ? TooltipFromZero(
+                          message: FromZeroLocalizations.of(context).translate('clear'),
+                          child: IconButton(
+                            icon: Icon(Icons.close),
+                            splashRadius: 20,
+                            onPressed: () {
+                              value = null;
+                              focusNode.requestFocus();
+                            },
+                          ),
                         ) : SizedBox.shrink(),
                       ),
                     ),

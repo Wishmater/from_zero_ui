@@ -115,13 +115,15 @@ class ImageFromZero extends StatefulWidget {
                   retryable: retryable,
                   heroTag: heroTag,
                   actions: [
-                    IconButtonBackground(
-                      child: IconButton(
-                        icon: Icon(Icons.close),
-                        tooltip: FromZeroLocalizations.of(context).translate('close'),
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
+                    TooltipFromZero(
+                      message: FromZeroLocalizations.of(context).translate('close'),
+                      child: IconButtonBackground(
+                        child: IconButton(
+                          icon: Icon(Icons.close),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
                       ),
                     ),
                     ...actions
@@ -239,7 +241,9 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
           animate = true;
           _controller.reset();
         }
-        return Center(child: CircularProgressIndicator());
+        final progress = state.loadingProgress?.expectedTotalBytes==null ? null
+            :  state.loadingProgress!.cumulativeBytesLoaded / state.loadingProgress!.expectedTotalBytes!;
+        return ApiProviderBuilder.defaultLoadingBuilder(context, progress);
 
     ///if you don't want override completed widget
     ///please return null or state.completedWidget
@@ -288,13 +292,15 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
                                     || widget.fullscreenType==FullscreenType.onClickAndAsAction
                             ? [
                               buildFullScreenLink(
-                                IconButtonBackground(
-                                  child: IconButton(
-                                    icon: Icon(Icons.fullscreen),
-                                    tooltip: FromZeroLocalizations.of(context).translate('fullscreen'),
-                                    onPressed: () {
-                                      _pushFullscreen(context);
-                                    },
+                                TooltipFromZero(
+                                  message: FromZeroLocalizations.of(context).translate('fullscreen'),
+                                  child: IconButtonBackground(
+                                    child: IconButton(
+                                      icon: Icon(Icons.fullscreen),
+                                      onPressed: () {
+                                        _pushFullscreen(context);
+                                      },
+                                    ),
                                   ),
                                 ),
                               ),

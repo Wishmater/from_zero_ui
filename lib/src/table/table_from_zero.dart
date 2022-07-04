@@ -1146,15 +1146,17 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                               ),
                             ),
                           )
-                        : IconButton(
+                        : TooltipFromZero(
+                          message: FromZeroLocalizations.of(context).translate('filters'),
+                          child: IconButton(
                             key: filterGlobalKeys[colKey],
                             icon: Icon((filtersApplied[colKey]??false) ? MaterialCommunityIcons.filter : MaterialCommunityIcons.filter_outline,
                               color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
                             ),
                             splashRadius: 20,
-                            tooltip: FromZeroLocalizations.of(context).translate('filters'),
                             onPressed: () => showFilterDialog(colKey),
                           ),
+                        ),
                   ),
                 ),
             ],
@@ -1322,41 +1324,43 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                                   style: Theme.of(context).textTheme.subtitle1,
                                 ),
                               ),
-                              PopupMenuButton<ConditionFilter>(
-                                tooltip: FromZeroLocalizations.of(context).translate('add_condition_filter'),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(Icons.add, color: Colors.blue,),
-                                      SizedBox(width: 6,),
-                                      Text(FromZeroLocalizations.of(context).translate('add'),
-                                        style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.blue,),
-                                      ),
-                                    ],
+                              TooltipFromZero(
+                                message: FromZeroLocalizations.of(context).translate('add_condition_filter'),
+                                child: PopupMenuButton<ConditionFilter>(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.add, color: Colors.blue,),
+                                        SizedBox(width: 6,),
+                                        Text(FromZeroLocalizations.of(context).translate('add'),
+                                          style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.blue,),
+                                        ),
+                                      ],
+                                    ),
                                   ),
+                                  itemBuilder: (context) {
+                                    return possibleConditionFilters.map((e) {
+                                      return PopupMenuItem(
+                                        value: e,
+                                        child: Text(e.getUiName(context)+'...'),
+                                      );
+                                    }).toList();
+                                  },
+                                  onSelected: (value) {
+                                    filterPopupSetState((){
+                                      modified = true;
+                                      if (conditionFilters[j]==null) {
+                                        conditionFilters[j] = [];
+                                      }
+                                      conditionFilters[j]!.add(value);
+                                    });
+                                    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                                      value.focusNode.requestFocus();
+                                    });
+                                  },
                                 ),
-                                itemBuilder: (context) {
-                                  return possibleConditionFilters.map((e) {
-                                    return PopupMenuItem(
-                                      value: e,
-                                      child: Text(e.getUiName(context)+'...'),
-                                    );
-                                  }).toList();
-                                },
-                                onSelected: (value) {
-                                  filterPopupSetState((){
-                                    modified = true;
-                                    if (conditionFilters[j]==null) {
-                                      conditionFilters[j] = [];
-                                    }
-                                    conditionFilters[j]!.add(value);
-                                  });
-                                  WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                                    value.focusNode.requestFocus();
-                                  });
-                                },
                               ),
                             ],
                           ),

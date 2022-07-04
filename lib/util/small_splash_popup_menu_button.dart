@@ -195,12 +195,14 @@ class PopupMenuButtonState<T> extends State<PopupMenuButton<T>> {
         ),
       );
 
-    return IconButton(
-      icon: widget.icon ?? _getIcon(Theme.of(context).platform),
-      padding: widget.padding,
-      tooltip: widget.tooltip ?? MaterialLocalizations.of(context).showMenuTooltip,
-      onPressed: widget.enabled ? showButtonMenu : null,
-      splashRadius: 18,
+    return TooltipFromZero(
+      message: widget.tooltip ?? MaterialLocalizations.of(context).showMenuTooltip,
+      child: IconButton(
+        icon: widget.icon ?? _getIcon(Theme.of(context).platform),
+        padding: widget.padding,
+        onPressed: widget.enabled ? showButtonMenu : null,
+        splashRadius: 18,
+      ),
     );
   }
 }

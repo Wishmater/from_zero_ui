@@ -32,6 +32,7 @@ class AppbarFromZero extends StatefulWidget {
   final double toolbarOpacity;
   final double bottomOpacity;
   final double? toolbarHeight;
+  final double topSafePadding;
   final ActionFromZero? initialExpandedAction;
   final AppbarFromZeroController? controller;
   final void Function(ActionFromZero)? onExpanded;
@@ -73,6 +74,7 @@ class AppbarFromZero extends StatefulWidget {
     this.toolbarOpacity = 1.0,
     this.bottomOpacity = 1.0,
     this.toolbarHeight,
+    this.topSafePadding = 0,
     this.initialExpandedAction,
     this.controller,
     this.onExpanded,
@@ -139,7 +141,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
             builder: _buildWithConstraints,
           ),
     );
-    if (widget.mainAppbar && !kIsWeb && Platform.isWindows) {
+    if (widget.mainAppbar && PlatformExtended.appWindow!=null) {
       result = MouseRegion(
         opaque: false,
         onEnter: (event) {
@@ -157,7 +159,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
   }
 
   Widget _buildWithConstraints(context, constraints) {
-    bool showWindowButtons = widget.mainAppbar && !kIsWeb && Platform.isWindows && windowsDesktopBitsdojoWorking;
+    bool showWindowButtons = widget.mainAppbar && PlatformExtended.appWindow!=null;
     final double titleBarHeight = !showWindowButtons ? 0
         : appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight;
     double toolbarHeight = widget.toolbarHeight ?? (48 + (showWindowButtons ? titleBarHeight : 0));
@@ -331,9 +333,12 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
     Widget result;
     if (widget.useFlutterAppbar) {
       result = AppBar(
-        title: titleContent,
-        actions: [actionsContent],
-        flexibleSpace: expandedContent,
+        // title: titleContent,
+        // actions: [actionsContent],
+        // flexibleSpace: expandedContent,
+        title: Padding(padding: EdgeInsets.only(top: widget.topSafePadding), child: titleContent),
+        actions: [Padding(padding: EdgeInsets.only(top: widget.topSafePadding), child: actionsContent)],
+        flexibleSpace: Padding(padding: EdgeInsets.only(top: widget.topSafePadding), child: expandedContent),
         automaticallyImplyLeading: false,
         bottom: widget.bottom,
         elevation: widget.elevation,
@@ -350,27 +355,32 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
         titleSpacing: widget.titleSpacing,
         toolbarOpacity: widget.toolbarOpacity,
         bottomOpacity: widget.bottomOpacity,
-        toolbarHeight: toolbarHeight,
+        toolbarHeight: toolbarHeight+widget.topSafePadding,
       );
     } else {
-      result = SizedBox(
-        height: toolbarHeight,
-        child: Stack(
-          children: [
-            Row(
+      result = Column(
+        children: [
+          SizedBox(height: widget.topSafePadding,),
+          SizedBox(
+            height: toolbarHeight,
+            child: Stack(
               children: [
-                Expanded(child: titleContent,),
-                actionsContent,
+                Row(
+                  children: [
+                    Expanded(child: titleContent,),
+                    actionsContent,
+                  ],
+                ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    ignoring: forceExpanded==null,
+                    child: expandedContent,
+                  ),
+                ),
               ],
             ),
-            Positioned.fill(
-              child: IgnorePointer(
-                ignoring: forceExpanded==null,
-                child: expandedContent,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       );
     }
     if (widget.addContextMenu) {

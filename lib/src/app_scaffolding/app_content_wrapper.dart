@@ -71,7 +71,7 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
   @override
   Widget build(BuildContext context) {
     //TODO 3 add restrictions to fontSize, uiScale logic, etc. here
-    bool showWindowButtons = !kIsWeb && Platform.isWindows && windowsDesktopBitsdojoWorking;
+    bool showWindowButtons = PlatformExtended.appWindow!=null;
     final screen = ref.read(fromZeroScreenProvider);
     final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
     ScrollBehavior scrollConfiguration = ScrollConfiguration.of(context).copyWith(

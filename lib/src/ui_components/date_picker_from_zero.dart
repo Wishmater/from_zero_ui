@@ -145,13 +145,15 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
                         ),
                       );
                     },
-                    child: widget.value!=null ? IconButton(
-                      icon: Icon(Icons.close),
-                      tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                      splashRadius: 20,
-                      onPressed: () {
-                        widget.onSelected?.call(null);
-                      },
+                    child: widget.value!=null ? TooltipFromZero(
+                      message: FromZeroLocalizations.of(context).translate('clear'),
+                      child: IconButton(
+                        icon: Icon(Icons.close),
+                        splashRadius: 20,
+                        onPressed: () {
+                          widget.onSelected?.call(null);
+                        },
+                      ),
                     ) : SizedBox.shrink(),
                   )
               ),

@@ -171,6 +171,8 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
       child: TextButton(
         style: TextButton.styleFrom(
           padding: EdgeInsets.zero,
+          primary: Theme.of(context).appBarTheme.toolbarTextStyle?.color
+            ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
         ),
         onPressed: (!enabled || onTap==null) ? null : (){
           onTap.call(context);

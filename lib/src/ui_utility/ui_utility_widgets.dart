@@ -12,6 +12,7 @@ import 'package:from_zero_ui/src/animations/exposed_transitions.dart';
 import 'package:from_zero_ui/src/app_scaffolding/scaffold_from_zero.dart';
 import 'package:flutter/foundation.dart';
 import 'package:from_zero_ui/util/platform_web_impl.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart' as bitsdojo;
 
 import 'package:dartx/dartx.dart';
 
@@ -259,21 +260,34 @@ class MaterialKeyValuePair extends StatelessWidget {
 }
 
 
-class AppbarFiller extends StatelessWidget {
+class AppbarFiller extends ConsumerWidget {
 
   final child;
+  final bool useCurrentHeight;
+  final bool keepSafeSpace;
 
-  AppbarFiller({this.child});
+  AppbarFiller({
+    this.child,
+    this.useCurrentHeight = false,
+    this.keepSafeSpace = true,
+  });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     double height = 0;
-    ScaffoldFromZero? scaffold = context.findAncestorWidgetOfExactType<ScaffoldFromZero>();
-    if (scaffold!=null && scaffold.bodyFloatsBelowAppbar){
-      height = scaffold.appbarHeight + MediaQuery.of(context).padding.top;
+    // final scaffoldState = context.findAncestorStateOfType<ScaffoldFromZeroState>();
+    final scaffold = context.findAncestorWidgetOfExactType<ScaffoldFromZero>();
+    if (scaffold!=null && scaffold.bodyFloatsBelowAppbar) {
+      final appbarNotifier = ref.watch(fromZeroAppbarChangeNotifierProvider);
+      height = useCurrentHeight
+          ? appbarNotifier.currentAppbarHeight
+          : appbarNotifier.appbarHeight + appbarNotifier.safeAreaOffset;
+      height = height.clamp(appbarNotifier.safeAreaOffset, double.infinity);
     }
-    return Padding(
+    return AnimatedPadding(
       padding: EdgeInsets.only(top: height),
+      duration: scaffold?.appbarAnimationDuration??Duration(milliseconds: 300),
+      curve: scaffold?.appbarAnimationCurve??Curves.easeOutCubic,
       child: child ?? SizedBox.shrink(),
     );
   }
@@ -644,20 +658,22 @@ class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
               position: Tween(begin: Offset(0, 1), end: Offset.zero,).animate(animation),
               child: ZoomedFadeInTransition(animation: animation, child: child,),
             ),
-            child: !show ? SizedBox.shrink() : FloatingActionButton(
-              child: widget.icon ?? Icon(Icons.arrow_upward,
-                color: Theme.of(context).appBarTheme.iconTheme?.color
-                    ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+            child: !show ? SizedBox.shrink() : TooltipFromZero(
+              message: FromZeroLocalizations.of(context).translate('return_to_top'),
+              child: FloatingActionButton(
+                child: widget.icon ?? Icon(Icons.arrow_upward,
+                  color: Theme.of(context).appBarTheme.iconTheme?.color
+                      ?? Theme.of(context).textTheme.bodyText1!.color!,
+                ),
+                backgroundColor: Theme.of(context).cardColor,
+                onPressed: widget.onTap ?? () {
+                  if (widget.duration==null){
+                    widget.scrollController.jumpTo(0);
+                  } else{
+                    widget.scrollController.animateTo(0, duration: widget.duration!, curve: Curves.easeOutCubic);
+                  }
+                },
               ),
-              tooltip: FromZeroLocalizations.of(context).translate('return_to_top'),
-              backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-              onPressed: widget.onTap ?? () {
-                if (widget.duration==null){
-                  widget.scrollController.jumpTo(0);
-                } else{
-                  widget.scrollController.animateTo(0, duration: widget.duration!, curve: Curves.easeOutCubic);
-                }
-              },
             ),
           ),
         )
@@ -1188,6 +1204,9 @@ class BottomClipper extends CustomClipper<Path> {
 
 
 class PlatformExtended {
+
+  static late final appWindow = kIsWeb || isMobile || !windowsDesktopBitsdojoWorking
+      ? null : bitsdojo.appWindow;
 
   static bool get isWindows{
     if (kIsWeb){

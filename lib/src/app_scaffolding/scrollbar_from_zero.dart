@@ -56,7 +56,6 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
   late AlwaysAttachedScrollController alwaysAttachedScrollController;
   /// only used on mainWindowScrollbar
-  GlobalKey? childGlobalKey;
 
   @override
   void initState() {
@@ -126,15 +125,12 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     Widget result;
     if (widget.mainScrollbar) {
 
-      if (childGlobalKey==null) {
-        childGlobalKey = GlobalKey();
-      }
       final theme = Theme.of(context);
       result = Theme(
-        key: ValueKey(appWindow.isMaximized),
+        key: ValueKey(PlatformExtended.appWindow?.isMaximized ?? true),
         data: theme.copyWith(
           scrollbarTheme: theme.scrollbarTheme.copyWith(
-            crossAxisMargin: appWindow.isMaximized
+            crossAxisMargin: PlatformExtended.appWindow?.isMaximized ?? true
                 ? theme.scrollbarTheme.crossAxisMargin
                 : theme.scrollbarTheme.crossAxisMargin?.clamp(6, double.infinity),
           ),
@@ -144,7 +140,6 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
           wantsAlwaysShown: wantsAlwaysShown,
           supportsAlwaysShown: supportsAlwaysShown,
           child: Theme(
-            key: childGlobalKey,
             data: theme,
             child: child,
           ),

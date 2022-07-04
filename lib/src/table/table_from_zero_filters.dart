@@ -110,11 +110,13 @@ abstract class FilterText extends ConditionFilter {
           Positioned(
             right: 2, top: 0, bottom: 0,
             child: Center(
-              child: IconButton(
-                icon: Icon(Icons.close),
-                splashRadius: 20,
-                tooltip: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('filter')}',
-                onPressed: onDelete,
+              child: TooltipFromZero(
+                message: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('filter')}',
+                child: IconButton(
+                  icon: Icon(Icons.close),
+                  splashRadius: 20,
+                  onPressed: onDelete,
+                ),
               ),
             ),
           ),
@@ -284,11 +286,13 @@ abstract class FilterNumber extends ConditionFilter {
           Positioned(
             right: 2, top: 0, bottom: 0,
             child: Center(
-              child: IconButton(
-                icon: Icon(Icons.close),
-                splashRadius: 20,
-                tooltip: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('filter')}',
-                onPressed: onDelete,
+              child: TooltipFromZero(
+                message: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('filter')}',
+                child: IconButton(
+                  icon: Icon(Icons.close),
+                  splashRadius: 20,
+                  onPressed: onDelete,
+                ),
               ),
             ),
           ),
@@ -457,11 +461,13 @@ abstract class FilterDate extends ConditionFilter {
           Positioned(
             right: 2, top: 0, bottom: 0,
             child: Center(
-              child: IconButton(
-                icon: Icon(Icons.close),
-                splashRadius: 20,
-                tooltip: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('filter')}',
-                onPressed: onDelete,
+              child: TooltipFromZero(
+                message: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('filter')}',
+                child: IconButton(
+                  icon: Icon(Icons.close),
+                  splashRadius: 20,
+                  onPressed: onDelete,
+                ),
               ),
             ),
           ),

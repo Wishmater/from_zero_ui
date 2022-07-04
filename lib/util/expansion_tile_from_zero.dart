@@ -340,20 +340,20 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
               ...widget.contextMenuActions,
               if (((widget.enabled && widget.addExpandCollapseContextMenuAction)
                   || (_isExpanded && widget.childrenKeysForExpandCollapse.isNotEmpty))
-                  && widget.contextMenuActions.isNotEmpty)
+                  && widget.contextMenuActions.isNotEmpty && !(widget.trailing is SizedBox))
                 ActionFromZero.divider(),
-              if (widget.enabled && widget.addExpandCollapseContextMenuAction)
+              if (widget.enabled && widget.addExpandCollapseContextMenuAction && !(widget.trailing is SizedBox))
                 ActionFromZero(
                   icon: Icon(_isExpanded ? MaterialCommunityIcons.arrow_collapse_up : MaterialCommunityIcons.arrow_expand_down,),
-                  title: _isExpanded ? 'Colapsar' : 'Expandir',
+                  title: _isExpanded ? 'Colapsar' : 'Expandir', // TODO 1 internationalize
                   onTap: (context) {
                     setExpanded(!_isExpanded);
                   },
                 ),
-              if (_isExpanded && widget.childrenKeysForExpandCollapse.isNotEmpty)
+              if (_isExpanded && widget.childrenKeysForExpandCollapse.isNotEmpty && !(widget.trailing is SizedBox))
                 ActionFromZero(
                   icon: Icon(expandChildren ? MaterialCommunityIcons.arrow_expand_down : MaterialCommunityIcons.arrow_collapse_up),
-                  title: expandChildren ? 'Expandir Descendientes' : 'Colapsar Descendientes',
+                  title: expandChildren ? 'Expandir Descendientes' : 'Colapsar Descendientes', // TODO 1 internationalize
                   onTap: (context) {
                     bool expand = widget.childrenKeysForExpandCollapse.where((e) => !(e.currentState?.isExpanded ?? false)).isNotEmpty;
                     widget.childrenKeysForExpandCollapse.forEach((e) {

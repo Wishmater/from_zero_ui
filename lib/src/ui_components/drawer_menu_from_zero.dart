@@ -207,6 +207,7 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
   final Map<int, GlobalKey<ExpansionTileFromZeroState>>? expansionTileKeys;
 
   DrawerMenuFromZero({
+    Key? key,
     required this.tabs,
     this.parentTabs,
     @deprecated
@@ -223,7 +224,8 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
     this.allowCollapseRoot = true,
     String? homeRoute,
     this.expansionTileKeys,
-  }) : this.homeRoute = homeRoute ?? tabs[0].route;
+  })  : this.homeRoute = homeRoute ?? tabs[0].route,
+        super(key: key);
 
   @override
   _DrawerMenuFromZeroState createState() => _DrawerMenuFromZeroState();

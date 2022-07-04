@@ -308,7 +308,7 @@ typedef FutureErrorBuilder = Widget Function(BuildContext context, Object? error
 typedef FutureLoadingBuilder = Widget Function(BuildContext context);
 @deprecated
 Widget _defaultLoadingBuilder(context){
-  return LoadingSign();
+  return ApiProviderBuilder.defaultLoadingBuilder(context, null);
 }
 
 @deprecated

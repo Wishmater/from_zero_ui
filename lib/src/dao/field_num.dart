@@ -408,15 +408,17 @@ class NumField extends Field<num> {
                             ),
                           );
                         },
-                        child: value!=null ? IconButton(
-                          icon: Icon(Icons.close),
-                          tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                          splashRadius: 20,
-                          onPressed: () {
-                            value = null;
-                            controller.clear();
-                            focusNode.requestFocus();
-                          },
+                        child: value!=null ? TooltipFromZero(
+                          message: FromZeroLocalizations.of(context).translate('clear'),
+                          child: IconButton(
+                            icon: Icon(Icons.close),
+                            splashRadius: 20,
+                            onPressed: () {
+                              value = null;
+                              controller.clear();
+                              focusNode.requestFocus();
+                            },
+                          ),
                         ) : SizedBox.shrink(),
                       ),
                     ),

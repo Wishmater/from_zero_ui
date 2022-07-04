@@ -386,14 +386,16 @@ class StringField extends Field<String> {
                             ),
                           );
                         },
-                        child: value!=null && value!.trim().isNotEmpty ? IconButton(
-                          icon: Icon(Icons.close),
-                          tooltip: FromZeroLocalizations.of(context).translate('clear'),
-                          splashRadius: 20,
-                          onPressed: () {
-                            value = '';
-                            focusNode.requestFocus();
-                          },
+                        child: value!=null && value!.trim().isNotEmpty ? TooltipFromZero(
+                          message: FromZeroLocalizations.of(context).translate('clear'),
+                          child: IconButton(
+                            icon: Icon(Icons.close),
+                            splashRadius: 20,
+                            onPressed: () {
+                              value = '';
+                              focusNode.requestFocus();
+                            },
+                          ),
                         ) : SizedBox.shrink(),
                       ),
                     ),
