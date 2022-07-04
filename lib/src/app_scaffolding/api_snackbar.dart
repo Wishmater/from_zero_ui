@@ -290,7 +290,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
     bool showRetry = true;
     Widget? icon;
     String? title, message;
-    print (error); // TODO 3 remove this after implementing details button
+    print (error); // TODO 2 remove this after implementing details button
     print (stackTrace);
     if (error==null) {
       showRetry = false;
