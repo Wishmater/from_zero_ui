@@ -649,7 +649,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               title: tabs[i].title,
               subtitle: tabs[i].subtitle,
               subtitleRight: tabs[i].subtitleRight,
-              selected: selected==i,
+              // selected: selected==i,
               compact: widget.compact,
               dense: tabs[i].dense,
               titleHorizontalOffset: tabs[i].titleHorizontalOffset,
@@ -908,10 +908,13 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
         selected: widget.selected,
         title: Transform.translate(
           offset: Offset(widget.titleHorizontalOffset, 0),
-          child: Text(widget.title, style: TextStyle(
-              fontSize: 16,
-              color: widget.selected ? selectedColor : theme.textTheme.bodyText1!.color
-          ),),
+          child: Text(widget.title,
+            style: TextStyle(
+              fontSize: widget.selected ? 17 : 16,
+              color: widget.selected ? selectedColor : theme.textTheme.bodyText1!.color,
+              fontWeight: widget.selected ? FontWeight.w700 : null,
+            ),
+          ),
         ),
         subtitle: widget.subtitle==null||widget.compact ? null
             : Transform.translate(
@@ -919,17 +922,22 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(widget.subtitle!, style: TextStyle(
+                    child: Text(widget.subtitle!,
+                      style: TextStyle(
                         color: widget.selected ? selectedColor.withOpacity(0.75)
-                            : theme.textTheme.caption!.color
-                    ),),
+                            : theme.textTheme.caption!.color,
+                        fontWeight: widget.selected ? FontWeight.w600 : null,
+                      ),
+                    ),
                   ),
                   if (widget.subtitleRight!=null)
-                    Text(widget.subtitleRight!, style: TextStyle(
-                        color: widget.selected ? selectedColor.withOpacity(0.75)
-                            : theme.textTheme.caption!.color
-                      ),
+                    Text(widget.subtitleRight!,
                       textAlign: TextAlign.right,
+                      style: TextStyle(
+                        color: widget.selected ? selectedColor.withOpacity(0.75)
+                            : theme.textTheme.caption!.color,
+                        fontWeight: widget.selected ? FontWeight.w600 : null,
+                      ),
                     ),
                 ],
               ),
@@ -937,35 +945,61 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
         contentPadding: widget.contentPadding,
         dense: widget.dense,
         mouseCursor: SystemMouseCursors.click,
-        leading: Padding(
-          padding: EdgeInsets.only(left: widget.dense ? 4 : 0),
-          child: AspectRatio(
-            aspectRatio: 1,
-            child: Builder(
-              builder: (context) {
-                Widget result = SizedBox.expand(
-                  child: widget.compact ? TooltipFromZero(
-                    message: widget.title,
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: widget.icon,
+        leading: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            if (widget.selected)
+              InitiallyAnimatedWidget(
+                duration: Duration(milliseconds: 600),
+                curve: Curves.easeOut,
+                builder: (animation, child) {
+                  return Positioned(
+                    top: 0, bottom: 0,
+                    right: -4 - 128*(1 - animation.value),
+                    left: -widget.contentPadding.left,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: selectedColor.withOpacity(0.1),
+                        borderRadius: BorderRadius.only(
+                          topRight: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                        ),
+                      ),
                     ),
-                  ) : Padding(
-                    padding: const EdgeInsets.only(left: 6),
-                    child: widget.icon,
-                  ),
-                );
-                result = IconTheme(
-                  data: theme.iconTheme.copyWith(
-                    color: widget.selected ? selectedColor
-                        : theme.brightness==Brightness.light? Colors.black45 : null,
-                  ),
-                  child: result,
-                );
-                return result;
-              }
+                  );
+                },
+              ),
+            Padding(
+              padding: EdgeInsets.only(left: widget.dense ? 4 : 0),
+              child: AspectRatio(
+                aspectRatio: 1,
+                child: Builder(
+                  builder: (context) {
+                    Widget result = SizedBox.expand(
+                      child: widget.compact ? TooltipFromZero(
+                        message: widget.title,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 6),
+                          child: widget.icon,
+                        ),
+                      ) : Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: widget.icon,
+                      ),
+                    );
+                    result = IconTheme(
+                      data: theme.iconTheme.copyWith(
+                        color: widget.selected ? selectedColor
+                            : theme.brightness==Brightness.light? Colors.black45 : null,
+                      ),
+                      child: result,
+                    );
+                    return result;
+                  }
+                ),
+              ),
             ),
-          ),
+          ],
         ),
 //      leading: SizedBox(width: 1, height: 1,),
         onTap: widget.onTap,
