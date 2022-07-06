@@ -62,7 +62,8 @@ class TableFromZero<T> extends StatefulWidget {
   final bool showFirstHorizontalDivider;
   final List<RowAction<T>> rowActions;
   final Widget? Function(BuildContext context, RowModel<T> row, dynamic colKey)? cellBuilder;
-  final Widget? Function(BuildContext context, RowModel<T> row)? rowBuilder;
+  final Widget? Function(BuildContext context, RowModel<T> row,
+      Widget Function(BuildContext context, RowModel<T> row) defaultRowBuilder)? rowBuilder;
   final Widget? Function(BuildContext context, RowModel row)? headerRowBuilder;
   final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   final TableController<T>? tableController;
@@ -646,12 +647,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
               );
             },
             childBuilder: (context) {
-              return widget.rowBuilder?.call(context, row as RowModel<T>)
+              return widget.rowBuilder?.call(context, row as RowModel<T>, _defaultGetRow)
                   ?? _defaultGetRow.call(context, row as RowModel<T>);
             },
           );
         } else {
-          return widget.rowBuilder?.call(context, row as RowModel<T>)
+          return widget.rowBuilder?.call(context, row as RowModel<T>, _defaultGetRow)
               ?? _defaultGetRow.call(context, row as RowModel<T>);
         }
       }
