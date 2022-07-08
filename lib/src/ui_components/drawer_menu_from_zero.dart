@@ -649,7 +649,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               title: tabs[i].title,
               subtitle: tabs[i].subtitle,
               subtitleRight: tabs[i].subtitleRight,
-              // selected: selected==i,
+              selected: selected==i && tabs[i].selectedChild<0,
               compact: widget.compact,
               dense: tabs[i].dense,
               titleHorizontalOffset: tabs[i].titleHorizontalOffset,
@@ -955,7 +955,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 builder: (animation, child) {
                   return Positioned(
                     top: 0, bottom: 0,
-                    right: -4 - 128*(1 - animation.value),
+                    right: -4 - 128*(1 - animation.value) - widget.titleHorizontalOffset,
                     left: -widget.contentPadding.left,
                     child: Container(
                       decoration: BoxDecoration(
