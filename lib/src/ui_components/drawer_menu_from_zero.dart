@@ -955,7 +955,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 builder: (animation, child) {
                   return Positioned(
                     top: 0, bottom: 0,
-                    right: -4 - 128*(1 - animation.value) - widget.titleHorizontalOffset,
+                    right: -2 - 128*(1 - animation.value) - (widget.titleHorizontalOffset/2),
                     left: -widget.contentPadding.left,
                     child: Container(
                       decoration: BoxDecoration(
