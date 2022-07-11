@@ -954,7 +954,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 curve: Curves.easeOut,
                 builder: (animation, child) {
                   return Positioned(
-                    top: 0, bottom: 0,
+                    top: 4, bottom: 4,
                     right: -2 - 128*(1 - animation.value) - (widget.titleHorizontalOffset/2),
                     left: -widget.contentPadding.left,
                     child: Container(
