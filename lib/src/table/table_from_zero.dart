@@ -157,8 +157,24 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       widget.tableController!.valueFilters = value;
     }
   }
-  late Map<dynamic, bool> valueFiltersApplied;
-  late Map<dynamic, bool> filtersApplied;
+  late Map<dynamic, bool> _valueFiltersApplied;
+  Map<dynamic, bool> get valueFiltersApplied => widget.tableController?.valueFiltersApplied ?? _valueFiltersApplied;
+  set valueFiltersApplied(Map<dynamic, bool> value) {
+    if (widget.tableController==null) {
+      _valueFiltersApplied = value;
+    } else {
+      widget.tableController!.valueFiltersApplied = value;
+    }
+  }
+  late Map<dynamic, bool> _filtersApplied;
+  Map<dynamic, bool> get filtersApplied => widget.tableController?.filtersApplied ?? _filtersApplied;
+  set filtersApplied(Map<dynamic, bool> value) {
+    if (widget.tableController==null) {
+      _filtersApplied = value;
+    } else {
+      widget.tableController!.filtersApplied = value;
+    }
+  }
   ValueNotifier<Map<dynamic, List<dynamic>>?> availableFilters = ValueNotifier(null);
   late Map<dynamic, GlobalKey> filterGlobalKeys = {};
 
@@ -1838,6 +1854,8 @@ class TableController<T> extends ChangeNotifier {
   Map<dynamic, Map<Object, bool>>? initialValueFilters;
   bool initialValueFiltersExcludeAllElse;
   Map<dynamic, Map<Object, bool>>? valueFilters;
+  Map<dynamic, bool>? valueFiltersApplied;
+  Map<dynamic, bool>? filtersApplied;
   Map<dynamic, bool> columnVisibilities;
   bool sortedAscending;
   dynamic sortedColumn;
