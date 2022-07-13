@@ -74,7 +74,7 @@ class ExpansionTileFromZero extends StatefulWidget {
   final Widget? titleExpanded;
   final bool addExpandCollapseContextMenuAction;
   final List<ActionFromZero> contextMenuActions;
-  final List<GlobalKey<ExpansionTileFromZeroState>> childrenKeysForExpandCollapse;
+  final List<GlobalKey<ExpansionTileFromZeroState>>? childrenKeysForExpandCollapse;
   final bool enabled;
 
   /// A widget to display before the title.
@@ -333,13 +333,14 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
       title = StatefulBuilder(
         builder: (context, setState) {
           onNextFrame = () {setState((){});};
-          bool expandChildren = widget.childrenKeysForExpandCollapse.where((e) => !(e.currentState?.isExpanded ?? false)).isNotEmpty;
+          bool expandChildren = widget.childrenKeysForExpandCollapse!=null
+              &&  widget.childrenKeysForExpandCollapse!.where((e) => !(e.currentState?.isExpanded ?? false)).isNotEmpty;
           return ContextMenuFromZero(
             child: prevTitle,
             actions: [
               ...widget.contextMenuActions,
               if (((widget.enabled && widget.addExpandCollapseContextMenuAction)
-                  || (_isExpanded && widget.childrenKeysForExpandCollapse.isNotEmpty))
+                  || (_isExpanded && widget.childrenKeysForExpandCollapse!=null && widget.childrenKeysForExpandCollapse!.isNotEmpty))
                   && widget.contextMenuActions.isNotEmpty && !(widget.trailing is SizedBox))
                 ActionFromZero.divider(),
               if (widget.enabled && widget.addExpandCollapseContextMenuAction && !(widget.trailing is SizedBox))
@@ -350,13 +351,16 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
                     setExpanded(!_isExpanded);
                   },
                 ),
-              if (_isExpanded && widget.childrenKeysForExpandCollapse.isNotEmpty && !(widget.trailing is SizedBox))
+              if (_isExpanded && widget.childrenKeysForExpandCollapse!=null
+                  && widget.childrenKeysForExpandCollapse!.isNotEmpty
+                  && !(widget.trailing is SizedBox))
                 ActionFromZero(
                   icon: Icon(expandChildren ? MaterialCommunityIcons.arrow_expand_down : MaterialCommunityIcons.arrow_collapse_up),
                   title: expandChildren ? 'Expandir Descendientes' : 'Colapsar Descendientes', // TODO 1 internationalize
                   onTap: (context) {
-                    bool expand = widget.childrenKeysForExpandCollapse.where((e) => !(e.currentState?.isExpanded ?? false)).isNotEmpty;
-                    widget.childrenKeysForExpandCollapse.forEach((e) {
+                    bool expand = widget.childrenKeysForExpandCollapse!
+                        .where((e) => !(e.currentState?.isExpanded ?? false)).isNotEmpty;
+                    widget.childrenKeysForExpandCollapse!.forEach((e) {
                       e.currentState!.setExpanded(expand);
                     });
                     setState((){});

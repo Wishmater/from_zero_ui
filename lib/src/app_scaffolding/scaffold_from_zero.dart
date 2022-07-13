@@ -303,6 +303,8 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
   late ScrollController drawerContentScrollController;
   late bool canPop;
   final GlobalKey bodyGlobalKey = GlobalKey();
+  final GlobalKey drawerGlobalKey = GlobalKey();
+  final GlobalKey appbarGlobalKey = GlobalKey();
 
 
   late ScaffoldFromZeroChangeNotifier _changeNotifier;
@@ -505,24 +507,23 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
 
             //DESKTOP DRAWER
             Container(
-              child: screen.isMobileLayout || widget.drawerContentBuilder==null
-                  ? Container()
+              child: screen.isMobileLayout || widget.drawerContentBuilder==null ? Container()
                   : widget.useCompactDrawerInsteadOfClose
-                  ? AnimatedContainer(
-                    duration: widget.drawerAnimationDuration,
-                    curve: widget.drawerAnimationCurve,
-                    width: changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId),
-                    child: _getResponsiveDrawerContent(context),
-                  )
-                      : AnimatedPositioned(
-                    duration: widget.drawerAnimationDuration,
-                    curve: widget.drawerAnimationCurve,
-                    left: changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId)-widget.drawerWidth,
-                    width: widget.drawerWidth,
-                    top: 0, bottom: 0,
-                    child: _getResponsiveDrawerContent(context),
-                  ),
-                ),
+                    ? AnimatedContainer(
+                      duration: widget.drawerAnimationDuration,
+                      curve: widget.drawerAnimationCurve,
+                      width: changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId),
+                      child: _getResponsiveDrawerContent(context),
+                    )
+                    : AnimatedPositioned(
+                      duration: widget.drawerAnimationDuration,
+                      curve: widget.drawerAnimationCurve,
+                      left: changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId)-widget.drawerWidth,
+                      width: widget.drawerWidth,
+                      top: 0, bottom: 0,
+                      child: _getResponsiveDrawerContent(context),
+                    ),
+            ),
 
             //DESKTOP DRAWER OPEN GESTURE DETECTOR
             screen.isMobileLayout || widget.drawerContentBuilder==null || PlatformExtended.isDesktop // this should be if no mouse, instead of platform based
@@ -629,6 +630,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                   children: [
                     Positioned.fill(child: AbsorbPointer()),
                     AppbarFromZero(
+                      key: appbarGlobalKey,
                       mainAppbar: true,
                       controller: widget.appbarController,
                       onExpanded: widget.onAppbarActionExpanded,
@@ -990,7 +992,12 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
     );
   }
 
-  _getUserDrawerContent(BuildContext context, bool compact) => widget.drawerContentBuilder!(context, compact);
+  _getUserDrawerContent(BuildContext context, bool compact) {
+    return Container(
+      key: drawerGlobalKey,
+      child: widget.drawerContentBuilder!(context, compact),
+    );
+  }
 
   _getUserDrawerFooter(BuildContext context, bool compact) => widget.drawerFooterBuilder!(context, compact);
 

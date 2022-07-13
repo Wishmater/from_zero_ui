@@ -252,6 +252,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
   late int _selected;
   bool pendingUpdate = false;
   GoRouteFromZero? route;
+  final Map<int, Map<int, GlobalKey<ExpansionTileFromZeroState>>> childKeys = {};
 
   @override
   void initState() {
@@ -635,11 +636,11 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
         if (tabs[i].children?.isNotEmpty??false){
 
           if (!_menuButtonKeys.containsKey(i)) _menuButtonKeys[i] = GlobalKey();
-          final Map<int, GlobalKey<ExpansionTileFromZeroState>> childKeys = {};
           for (int j=0; j<tabs[i].children!.length; j++) {
             final e = tabs[i].children![j];
             if (e.children?.isNotEmpty ?? false) {
-              childKeys[j] = GlobalKey();
+              childKeys[i] ??= {};
+              childKeys[i]![j] ??= GlobalKey();
             }
           }
           final scaffoldChangeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
@@ -671,7 +672,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 expandedAlignment: Alignment.topCenter,
                 contextMenuActions: tabs[i].contextMenuActions,
                 addExpandCollapseContextMenuAction: !widget.compact,
-                childrenKeysForExpandCollapse: childKeys.values.toList(),
+                childrenKeysForExpandCollapse: childKeys[i]?.values.toList(),
                 style: widget.style,
                 enabled: widget.depth!=0 || widget.allowCollapseRoot,
                 actionPadding: EdgeInsets.only(
@@ -694,7 +695,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                         padding: const EdgeInsets.only(bottom: 6),
                         child: DrawerMenuFromZero(
                           tabs: tabs[i].children!,
-                          expansionTileKeys: childKeys,
+                          expansionTileKeys: childKeys[i],
                           compact: widget.compact,
                           selected: tabs[i].selectedChild,
                           inferSelected: false,
