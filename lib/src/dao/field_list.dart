@@ -28,7 +28,11 @@ enum RowTapType {
 class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   FieldValueGetter<T, ListField<T, U>> objectTemplateGetter;
-  TableController<T> tableController;
+  TableController<T>? _tableController;
+  TableController<T> get tableController {
+    _tableController ??= TableController<T>();
+    return _tableController!;
+  }
   ContextFulFieldValueGetter<Future<List<T>>, ListField<T, U>>? availableObjectsPoolGetter;
   ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T, U>>? availableObjectsPoolProvider;
   bool allowDuplicateObjectsFromAvailablePool;
@@ -236,7 +240,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         this.actionDuplicateBreakpoints = actionDuplicateBreakpoints ?? {0: ActionState.none},
         this.actionDeleteBreakpoints = actionDeleteBreakpoints ?? {0: ActionState.icon},
         this.actionViewBreakpoints = actionViewBreakpoints ?? {0: ActionState.popup},
-        this.tableController = tableController ?? TableController<T>(),
+        this._tableController = tableController,
         this._allowAddNew = allowAddNew,
         this.validateChildren = tableCellsEditable && (validateChildren ?? true),
         super(
@@ -259,7 +263,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           colModelBuilder: colModelBuilder,
           undoValues: undoValues,
           redoValues: redoValues,
-          fieldGlobalKey: fieldGlobalKey ?? GlobalKey(),
+          fieldGlobalKey: fieldGlobalKey,
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue ?? ComparableList<T>(),
           backgroundColor: backgroundColor,

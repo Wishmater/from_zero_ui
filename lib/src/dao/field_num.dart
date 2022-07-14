@@ -16,7 +16,7 @@ import 'package:dartx/dartx.dart';
 
 class NumField extends Field<num> {
 
-  TextEditingController controller;
+  late final TextEditingController controller = TextEditingController(text: toStringStatic(value, formatter));
   NumberFormat? formatter;
   InputDecoration? inputDecoration;
   int digitsAfterComma;
@@ -97,7 +97,6 @@ class NumField extends Field<num> {
     OnFieldValueChanged<num?>? onValueChanged,
     this.allowNegative = false,
   }) :  assert(digitsAfterComma>=0),
-        controller = TextEditingController(text: toStringStatic(value, formatter)),
         super(
           uiNameGetter: uiNameGetter,
           value: value,
@@ -118,8 +117,8 @@ class NumField extends Field<num> {
           colModelBuilder: colModelBuilder,
           undoValues: undoValues,
           redoValues: redoValues,
-          fieldGlobalKey: fieldGlobalKey ?? GlobalKey(),
-          focusNode: focusNode ?? FocusNode(),
+          fieldGlobalKey: fieldGlobalKey,
+          focusNode: focusNode,
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,

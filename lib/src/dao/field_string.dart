@@ -14,7 +14,7 @@ enum StringFieldType {
 
 class StringField extends Field<String> {
 
-  TextEditingController controller;
+  late final TextEditingController controller = TextEditingController(text: value);
   StringFieldType type;
   int? minLines;
   int? maxLines;
@@ -110,7 +110,6 @@ class StringField extends Field<String> {
   }) :  this.minLines = minLines ?? (type==StringFieldType.short ? null : 3),
         this.maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
         this.showObfuscationToggleButton = showObfuscationToggleButton ?? obfuscate,
-        this.controller = TextEditingController(text: value),
         super(
           uiNameGetter: uiNameGetter,
           value: value ?? '',
@@ -131,8 +130,8 @@ class StringField extends Field<String> {
           colModelBuilder: colModelBuilder,
           undoValues: undoValues,
           redoValues: redoValues,
-          fieldGlobalKey: fieldGlobalKey ?? GlobalKey(),
-          focusNode: focusNode ?? FocusNode(),
+          fieldGlobalKey: fieldGlobalKey,
+          focusNode: focusNode,
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,

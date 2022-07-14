@@ -26,7 +26,6 @@ List defaultValidatorsGetter(_, __) => [];
 class Field<T extends Comparable> extends ChangeNotifier implements Comparable, ContainsValue {
 
   late DAO dao;
-  GlobalKey fieldGlobalKey;
   FieldValueGetter<String, Field> uiNameGetter;
   String get uiName => uiNameGetter(this, dao);
   FieldValueGetter<String?, Field>? hintGetter;
@@ -48,7 +47,6 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   double minWidth;
   /// only used when using FlexibleLayoutFromZero for FieldGroup
   double flex;
-  FocusNode focusNode;
   double? tableColumnWidth;
   FieldValueGetter<List<FieldValidator<T>>, Field>? validatorsGetter;
   List<FieldValidator<T>> get validators => validatorsGetter?.call(this, dao) ?? [];
@@ -61,6 +59,16 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions;
   ViewWidgetBuilder<T> viewWidgetBuilder;
   OnFieldValueChanged<T?>? onValueChanged;
+  FocusNode? _focusNode;
+  FocusNode get focusNode {
+    _focusNode ??= FocusNode();
+    return _focusNode!;
+  }
+  GlobalKey? _fieldGlobalKey;
+  GlobalKey get fieldGlobalKey {
+    _fieldGlobalKey ??= GlobalKey();
+    return _fieldGlobalKey!;
+  }
 
   T? _value;
   T? get value => _value;
@@ -121,8 +129,8 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
         this.dbValue = dbValue ?? value,
         this.undoValues = undoValues ?? [],
         this.redoValues = redoValues ?? [],
-        this.fieldGlobalKey = fieldGlobalKey ?? GlobalKey(),
-        this.focusNode = focusNode ?? FocusNode(),
+        this._fieldGlobalKey = fieldGlobalKey,
+        this._focusNode = focusNode,
         this.hiddenInTableGetter = hiddenInTableGetter ?? hiddenGetter ?? falseFieldGetter,
         this.hiddenInViewGetter = hiddenInViewGetter ?? hiddenGetter ?? falseFieldGetter,
         this.hiddenInFormGetter = hiddenInFormGetter ?? hiddenGetter ?? falseFieldGetter;

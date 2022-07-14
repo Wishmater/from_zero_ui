@@ -15,6 +15,9 @@ class DateField extends Field<DateTime> {
   DateTime firstDate;
   DateTime lastDate;
 
+  static late final defaultFormatter = DateFormat(DateFormat.YEAR_MONTH_DAY);
+  static late final defaultFirstDate = DateTime(1900);
+  static late final defaultLastDate = DateTime(2200);
 
   DateField({
     required FieldValueGetter<String, Field> uiNameGetter,
@@ -47,9 +50,9 @@ class DateField extends Field<DateTime> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<DateTime> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<DateTime?>? onValueChanged,
-  }) :  this.firstDate = firstDate ?? DateTime(1900),
-        this.lastDate = lastDate ?? DateTime(2200),
-        this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY),
+  }) :  this.firstDate = firstDate ?? defaultFirstDate,
+        this.lastDate = lastDate ?? defaultLastDate,
+        this.formatter = formatter ?? defaultFormatter,
         super(
           uiNameGetter: uiNameGetter,
           value: value,
@@ -70,8 +73,8 @@ class DateField extends Field<DateTime> {
           colModelBuilder: colModelBuilder,
           undoValues: undoValues,
           redoValues: redoValues,
-          fieldGlobalKey: fieldGlobalKey ?? GlobalKey(),
-          focusNode: focusNode ?? FocusNode(),
+          fieldGlobalKey: fieldGlobalKey,
+          focusNode: focusNode,
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,
