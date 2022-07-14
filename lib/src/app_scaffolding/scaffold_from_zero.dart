@@ -878,7 +878,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
           ),
         );
         if (PlatformExtended.appWindow!=null) {
-          drawerAppbar = MoveWindow(
+          drawerAppbar = MoveWindowFromZero(
             child: drawerAppbar,
           );
         }

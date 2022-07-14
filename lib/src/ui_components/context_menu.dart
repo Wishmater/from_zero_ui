@@ -106,8 +106,8 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
     // bool mouseIsConnected = RendererBinding.instance.mouseTracker.mouseIsConnected; // doesnt work on windows
     if (widget.addGestureDetector) {
       final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
-      gestures[_TransparentTapGestureRecognizer] = GestureRecognizerFactoryWithHandlers<_TransparentTapGestureRecognizer>(
-        () => _TransparentTapGestureRecognizer(debugOwner: this),
+      gestures[TransparentTapGestureRecognizer] = GestureRecognizerFactoryWithHandlers<TransparentTapGestureRecognizer>(
+        () => TransparentTapGestureRecognizer(debugOwner: this),
         (TapGestureRecognizer instance) {
           instance
             ..onTapDown = onTapDown
@@ -221,8 +221,8 @@ class ContextMenuIconButton extends StatelessWidget {
 
 
 
-class _TransparentTapGestureRecognizer extends TapGestureRecognizer {
-  _TransparentTapGestureRecognizer({
+class TransparentTapGestureRecognizer extends TapGestureRecognizer {
+  TransparentTapGestureRecognizer({
     Object? debugOwner,
   }) : super(debugOwner: debugOwner);
 

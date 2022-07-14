@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:dartx/dartx.dart';
 import 'package:enough_convert/enough_convert.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
@@ -270,7 +272,7 @@ class WindowBar extends StatelessWidget {
     return Container(
       height: height ?? (appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight),
       color: backgroundColor,
-      child: MoveWindow(
+      child: MoveWindowFromZero(
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -363,6 +365,58 @@ class WindowBar extends StatelessWidget {
   }
 }
 
+class MoveWindowFromZero extends StatefulWidget {
+
+  final Widget? child;
+  final VoidCallback? onDoubleTap;
+
+  MoveWindowFromZero({Key? key, this.child, this.onDoubleTap}) : super(key: key);
+
+  @override
+  State<MoveWindowFromZero> createState() => _MoveWindowFromZeroState();
+
+}
+class _MoveWindowFromZeroState extends State<MoveWindowFromZero> {
+
+  TapDownDetails? lastTapDownDetails;
+  Timer? timer;
+  void onTapDown(TapDownDetails details) {
+    timer?.cancel();
+    if (lastTapDownDetails?.globalPosition==details.globalPosition) {
+      (this.widget.onDoubleTap ?? appWindow.maximizeOrRestore).call();
+      lastTapDownDetails = null;
+    } else {
+      lastTapDownDetails = details;
+      timer = Timer(500.milliseconds, () {
+        lastTapDownDetails = null;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<Type, GestureRecognizerFactory> gestures = <Type, GestureRecognizerFactory>{};
+    gestures[TransparentTapGestureRecognizer] = GestureRecognizerFactoryWithHandlers<TransparentTapGestureRecognizer>(
+          () => TransparentTapGestureRecognizer(debugOwner: this),
+          (TapGestureRecognizer instance) {
+        instance
+          ..onTapDown = onTapDown;
+      },
+    );
+    return RawGestureDetector(
+      behavior: HitTestBehavior.translucent,
+      gestures: gestures,
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onPanStart: (details) {
+          appWindow.startDragging();
+        },
+        child: this.widget.child ?? Container(),
+      ),
+    );
+  }
+
+}
 
 
 

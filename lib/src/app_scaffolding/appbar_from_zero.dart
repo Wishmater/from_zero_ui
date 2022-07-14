@@ -150,7 +150,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
         onExit: (event) {
           isMouseOverWindowBar.value = false;
         },
-        child: MoveWindow(
+        child: MoveWindowFromZero(
           child: result,
         ),
       );
