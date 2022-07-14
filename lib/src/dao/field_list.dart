@@ -1278,7 +1278,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 : '$a\n$b';
           }),
           child: result,
-          triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
         final actions = this.actions?.call(dao.contextForValidation ?? context, this, dao) ?? [];
@@ -1675,7 +1674,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               : '$a\n$b';
         }),
         child: result,
-        triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
         waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
       );
       if (addCard) {  // TODO 3 implement addCard in table slivers, VERY HARD IPMLEMENTATION FOR LOW REWARD

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 
 
 /// A material design tooltip.
@@ -488,10 +489,12 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     if (_entry == null) {
       return;
     }
-    if (event is PointerUpEvent || event is PointerCancelEvent) {
-      _hideTooltipFromZero();
-    } else if (event is PointerDownEvent) {
-      _hideTooltipFromZero(immediately: true);
+    if (!_insideChildMouseRegion && !_insideTooltipMouseRegion) {
+      if (event is PointerUpEvent || event is PointerCancelEvent) {
+        _hideTooltipFromZero();
+      } else if (event is PointerDownEvent) {
+        _hideTooltipFromZero(immediately: true);
+      }
     }
   }
 
@@ -562,7 +565,10 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     waitDuration = widget.waitDuration ?? tooltipTheme.waitDuration ?? _defaultWaitDuration;
     showDuration = widget.showDuration ?? tooltipTheme.showDuration ?? _defaultShowDuration;
     hoverShowDuration = widget.showDuration ?? tooltipTheme.showDuration ?? _defaultHoverShowDuration;
-    triggerMode = widget.triggerMode ?? tooltipTheme.triggerMode ?? _defaultTriggerMode;
+    // triggerMode = widget.triggerMode ?? tooltipTheme.triggerMode ?? _defaultTriggerMode;
+    triggerMode = widget.triggerMode ?? (PlatformExtended.isMobile
+        ? (tooltipTheme.triggerMode ?? _defaultTriggerMode)
+        : TooltipTriggerMode.manual);
     enableFeedback = widget.enableFeedback ?? tooltipTheme.enableFeedback ?? _defaultEnableFeedback;
 
     Widget result = GestureDetector(
@@ -581,6 +587,10 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     if (_mouseIsConnected) {
       result = MouseRegion(
         onEnter: (PointerEnterEvent event) {
+          _insideChildMouseRegion = true;
+          _onEnteredMouseRegion();
+        },
+        onHover: (PointerHoverEvent event) {
           _insideChildMouseRegion = true;
           _onEnteredMouseRegion();
         },

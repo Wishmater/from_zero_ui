@@ -243,7 +243,6 @@ class DateField extends Field<DateTime> {
                 : '$a\n$b';
           }),
           child: result,
-          triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
         final actions = this.actions?.call(context, this, dao) ?? [];

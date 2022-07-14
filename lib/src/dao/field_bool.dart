@@ -559,7 +559,6 @@ class BoolField extends Field<BoolComparable> {
                 : '$a\n$b';
           }),
           child: result,
-          triggerMode: enabled ? TooltipTriggerMode.tap : TooltipTriggerMode.longPress,
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
         return result;
