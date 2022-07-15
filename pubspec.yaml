@@ -52,17 +52,17 @@ dependencies:
   desktop_drop: ^0.3.3
   universal_html: ^2.0.8
   enough_convert: ^1.6.0 # ! replace with native converters if ever available on windows and web
-  bitsdojo_window: ^0.1.2
-#  bitsdojo_window:     # ^0.1.1+1
-#    git:
-#      url: https://github.com/bitsdojo/bitsdojo_window.git
-#      ref: 095455f92a432a2262abeddc07bf4f628b0afe52
-#      path: bitsdojo_window
-#  bitsdojo_window_windows:
-#    git:
-#      url: https://github.com/bitsdojo/bitsdojo_window.git
-#      ref: b823ae5b9f2f82635067add7eadfc32d9054bc2b
-#      path: bitsdojo_window_windows
+#  bitsdojo_window: ^0.1.2
+  bitsdojo_window:
+    git:
+      url: https://github.com/Wishmater/bitsdojo_window_windows_7_support.git
+      ref: master
+      path: bitsdojo_window
+  bitsdojo_window_windows:
+    git:
+      url: https://github.com/Wishmater/bitsdojo_window_windows_7_support.git
+      ref: master
+      path: bitsdojo_window_windows
 
   # * Update
   archive: ^3.3.0
@@ -77,6 +77,16 @@ dependency_overrides:
   logging: ^1.0.0
   platform: ^3.1.0  # fixes fatal error from path_provider dependency
   meta: ^1.8.0
+  bitsdojo_window:
+    git:
+      url: https://github.com/Wishmater/bitsdojo_window_windows_7_support.git
+      ref: master
+      path: bitsdojo_window
+  bitsdojo_window_windows:
+    git:
+      url: https://github.com/Wishmater/bitsdojo_window_windows_7_support.git
+      ref: master
+      path: bitsdojo_window_windows
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -13,6 +13,8 @@ import 'package:from_zero_ui/src/app_scaffolding/scaffold_from_zero.dart';
 import 'package:flutter/foundation.dart';
 import 'package:from_zero_ui/util/platform_web_impl.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart' as bitsdojo;
+import 'package:bitsdojo_window_platform_interface/window.dart' as bitsdojo_window;
+
 
 import 'package:dartx/dartx.dart';
 
@@ -1205,8 +1207,8 @@ class BottomClipper extends CustomClipper<Path> {
 
 class PlatformExtended {
 
-  static late final appWindow = kIsWeb || isMobile || !windowsDesktopBitsdojoWorking
-      ? null : bitsdojo.appWindow;
+  static late final _appWindow = kIsWeb || isMobile ? null : bitsdojo.appWindow;
+  static bitsdojo_window.DesktopWindow? get appWindow => !windowsDesktopBitsdojoWorking ? null : _appWindow;
 
   static bool get isWindows{
     if (kIsWeb){

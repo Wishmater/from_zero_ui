@@ -39,9 +39,11 @@ packages:
   bitsdojo_window:
     dependency: "direct main"
     description:
-      name: bitsdojo_window
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: bitsdojo_window
+      ref: master
+      resolved-ref: "196763693345a2242c6af126ef95028a994ae095"
+      url: "https://github.com/Wishmater/bitsdojo_window_windows_7_support.git"
+    source: git
     version: "0.1.2"
   bitsdojo_window_linux:
     dependency: transitive
@@ -65,11 +67,13 @@ packages:
     source: hosted
     version: "0.1.2"
   bitsdojo_window_windows:
-    dependency: transitive
+    dependency: "direct main"
     description:
-      name: bitsdojo_window_windows
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: bitsdojo_window_windows
+      ref: master
+      resolved-ref: "196763693345a2242c6af126ef95028a994ae095"
+      url: "https://github.com/Wishmater/bitsdojo_window_windows_7_support.git"
+    source: git
     version: "0.1.2"
   cancelable_compute:
     dependency: "direct main"
