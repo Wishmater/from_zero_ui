@@ -215,14 +215,16 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       if (widget.tableController!._filter==_controllerFilter) {
         widget.tableController!._filter = null;
       }
-      if (widget.tableController!._getFiltered==_getFiltered) {
-        widget.tableController!.currentState = null;
-      }
+      try {
+        if (widget.tableController!._getFiltered==_getFiltered) {
+          widget.tableController!._getFiltered = ()=>[];
+        }
+      } catch (_) {}
       if (widget.tableController!._sort==_controllerSort) {
-        widget.tableController!.currentState = null;
+        widget.tableController!._sort = null;
       }
       if (widget.tableController!._reInit==_invalidateState) {
-        widget.tableController!.currentState = null;
+        widget.tableController!._reInit = null;
       }
     }
   }
