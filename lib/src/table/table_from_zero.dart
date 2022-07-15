@@ -1619,9 +1619,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       backgroundColor = row.backgroundColor ?? _getMaterialColor();
     } else{
       if (widget.rowStyleTakesPriorityOverColumn){
-        backgroundColor = row.backgroundColor ?? widget.columns?[colKey]?.backgroundColor;
+        backgroundColor = row.backgroundColor!=null
+            ? null
+            : widget.columns?[colKey]?.backgroundColor;
       } else{
-        backgroundColor = widget.columns?[colKey]?.backgroundColor ?? row.backgroundColor;
+        backgroundColor = widget.columns?[colKey]?.backgroundColor;
       }
     }
     return backgroundColor;
