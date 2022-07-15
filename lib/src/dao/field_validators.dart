@@ -287,12 +287,14 @@ class ValidationMessage extends StatefulWidget {
   final List<ValidationError> errors;
   final TextStyle? errorTextStyle;
   final bool animate;
+  final bool hideNotVisibleAsHintMessage;
 
   ValidationMessage({
     Key? key,
     required this.errors,
     this.animate = true,
     this.errorTextStyle,
+    this.hideNotVisibleAsHintMessage = true,
   }) : super(key: key);
 
   @override
@@ -307,7 +309,7 @@ class _ValidationMessageState extends State<ValidationMessage> with SingleTicker
     final children = <Widget>[];
     final seenStrings = <String>[];
     for (final e in widget.errors) {
-      if (e.isVisibleAsHintMessage && !seenStrings.contains(e.error)) {
+      if ((!widget.hideNotVisibleAsHintMessage || e.isVisibleAsHintMessage) && !seenStrings.contains(e.error)) {
         seenStrings.add(e.error);
         children.add(InitiallyAnimatedWidget(
           duration: Duration(milliseconds: widget.animate ? 300 : 0),
