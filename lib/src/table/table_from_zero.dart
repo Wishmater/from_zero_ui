@@ -904,20 +904,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           );
         }
       }
+      background = Container(
+        decoration: _getDecoration(row, null),
+        child: background,
+      );
       if (row!=headerRowModel && !(row.rowAddonIsCoveredByGestureDetector??false)){
         result = _buildRowGestureDetector(
           context: context,
           row: row as RowModel<T>,
           child: result,
-        );
-      }
-      if (!(row.rowAddonIsCoveredByBackground??false) || rowActions.isNotEmpty) {
-        result = Stack(
-          key: row.rowKey ?? ValueKey(row.id),
-          children: [
-            Positioned.fill(child: background,),
-            result,
-          ],
         );
       }
       if (rowActions.isNotEmpty) {
@@ -988,21 +983,31 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           child: result,
         );
       }
+      result = Stack(
+        key: row.rowKey ?? ValueKey(row.id),
+        children: [
+          Positioned.fill(
+            child: Align(
+              alignment: (row.rowAddonIsAboveRow??false)
+                  ? Alignment.bottomCenter
+                  : Alignment.topCenter,
+              child: SizedBox(
+                height: (row.rowAddonIsCoveredByBackground??true)
+                    ? double.infinity
+                    : row.height,
+                child: background,
+              ),
+            ),
+          ),
+          result,
+        ],
+      );
       if (row!=headerRowModel) {
         result = ContextMenuFromZero(
           child: result,
           onShowMenu: () => row.focusNode.requestFocus(),
           actions: rowActions.where((e) => e is ActionFromZero
               && e.getStateForMaxWidth(constraints?.maxWidth??double.infinity)!=ActionState.none).toList().cast(),
-        );
-      }
-      if ((row.rowAddonIsCoveredByBackground??false) && rowActions.isEmpty) {
-        result = Stack(
-          key: row.rowKey ?? ValueKey(row.id),
-          children: [
-            Positioned.fill(child: background,),
-            result,
-          ],
         );
       }
       if (widget.horizontalDivider!=null) {
@@ -1017,10 +1022,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       }
       result = FocusTraversalGroup(
         policy: NoEnsureVisibleWidgetTraversalPolicy(),
-        child: Container(
-          decoration: _getDecoration(row, null),
-          child: result,
-        ),
+        child: result,
       );
       return result;
     };
