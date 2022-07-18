@@ -98,6 +98,9 @@ Make FromZeroAppbar expanded widget close only on back button, not on WillPop
 	
 Sticky footer bugs when there are more slivers below itself
 
+Windows - try to get rid of the file for writing window events
+	https://pub.dev/packages/win32hooks
+
 Organize dependencies
 	remove all dependency overrides
 	update all to latest
