@@ -488,7 +488,7 @@ class SaveConfirmationValidationMessage extends StatelessWidget {
 
 class SaveConfirmationValidationMessageGroup extends StatelessWidget {
 
-  final String name;
+  final String? name;
   final ValidationErrorSeverity severity;
   final List<ValidationError> errors;
 
@@ -554,22 +554,23 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             SizedBox(height: 18),
-            Row(
-              children: [
-                Icon(Icons.warning,
-                  size: isBlocking ? 38 : 27,
-                  color: ValidationMessage.severityColors[Theme.of(context).brightness]![severity]!,
-                ),
-                SizedBox(width: 4,),
-                Expanded(
-                  child: Text(name,
-                    style: isBlocking
-                        ? Theme.of(context).textTheme.headline6
-                        : Theme.of(context).textTheme.subtitle1,
+            if (name!=null)
+              Row(
+                children: [
+                  Icon(Icons.warning,
+                    size: isBlocking ? 38 : 27,
+                    color: ValidationMessage.severityColors[Theme.of(context).brightness]![severity]!,
                   ),
-                ),
-              ],
-            ),
+                  SizedBox(width: 4,),
+                  Expanded(
+                    child: Text(name!,
+                      style: isBlocking
+                          ? Theme.of(context).textTheme.headline6
+                          : Theme.of(context).textTheme.subtitle1,
+                    ),
+                  ),
+                ],
+              ),
             ...children,
             if (isBlocking)
               SizedBox(height: 12),
