@@ -1817,7 +1817,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     bool? previous;
     for (var i = 0; i < (availableFilters.value?[key]?.length ?? 0); ++i) {
       final availableFilter = availableFilters.value![key]![i];
-      final value = valueFilters[key]![availableFilter] ?? false;
+      final value = valueFilters[key]?[availableFilter] ?? false;
       if (i==0) {
         previous = value;
       } else if (previous!=value){
