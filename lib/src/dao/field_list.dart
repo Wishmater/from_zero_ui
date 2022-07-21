@@ -36,6 +36,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   ContextFulFieldValueGetter<Future<List<T>>, ListField<T, U>>? availableObjectsPoolGetter;
   ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T, U>>? availableObjectsPoolProvider;
   bool allowDuplicateObjectsFromAvailablePool;
+  bool allowAddMultipleFromAvailablePool;
   bool showObjectsFromAvailablePoolAsTable;
   bool? _allowAddNew;
   bool get allowAddNew => _allowAddNew ?? objectTemplate.canSave;
@@ -120,7 +121,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   bool get enabled => listFieldValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).isEmpty;
 
-  ValueNotifier<Map<T, bool>> selectedObjects = ValueNotifier({});
+  late ValueNotifier<Map<T, bool>> selectedObjects;
 
   static String defaultToString(ListField field) {
     return listToStringSmart(field.objects,
@@ -230,6 +231,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.tableFooterStickyOffset = 12,
     this.tableHorizontalPadding = 8,
     this.rowAddonField,
+    this.allowAddMultipleFromAvailablePool = true,
+    ValueNotifier<Map<T, bool>>? selectedObjects,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
@@ -271,6 +274,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           viewWidgetBuilder: viewWidgetBuilder,
           onValueChanged: onValueChanged,
         ) {
+    this.selectedObjects = selectedObjects ?? ValueNotifier({});
     addListeners();
   }
 
@@ -422,6 +426,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     double? tableFooterStickyOffset,
     double? tableHorizontalPadding,
     String? rowAddonField,
+    bool? allowAddMultipleFromAvailablePool,
   }) {
     return ListField<T, U>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -489,6 +494,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       tableFooterStickyOffset: tableFooterStickyOffset ?? this.tableFooterStickyOffset,
       tableHorizontalPadding: tableHorizontalPadding ?? this.tableHorizontalPadding,
       rowAddonField: rowAddonField ?? this.rowAddonField,
+      allowAddMultipleFromAvailablePool: allowAddMultipleFromAvailablePool ?? this.allowAddMultipleFromAvailablePool,
     );
   }
 
@@ -583,13 +589,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     });
   }
 
-  Future<T?> maybeAddRow(context, [int? insertIndex]) async {
+  Future<dynamic> maybeAddRow(context, [int? insertIndex]) async {
     focusNode.requestFocus();
     final objectTemplate = this.objectTemplate;
     T emptyDAO = (objectTemplate.copyWith() as T)..id=null;
     emptyDAO.contextForValidation = dao.contextForValidation;
     if (hasAvailableObjectsPool) {
-      T? selected;
+      var selected;
       if (showObjectsFromAvailablePoolAsTable) {
         emptyDAO.onDidSave = (BuildContext context, U? model, DAO<U> dao) {
           objectTemplate.onDidSave?.call(context, model, dao);
@@ -607,6 +613,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         Widget content = AnimatedBuilder(
           animation:  this,
           builder: (context, child) {
+            final ValueNotifier<Map<T, bool>> selectedObjects = ValueNotifier({});
             return Stack(
               children: [
                 availableObjectsPoolProvider==null
@@ -615,7 +622,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                         loadingBuilder: _availablePoolLoadingBuilder,
                         errorBuilder: (context, error, stackTrace) => _availablePoolErrorBuilder(context, error, stackTrace is StackTrace ? stackTrace : null),
                         successBuilder: (context, data) {
-                          return _availablePoolTableDataBuilder(context, data, emptyDAO);
+                          return _availablePoolTableDataBuilder(context, data, emptyDAO,
+                            selectedObjects: selectedObjects,
+                          );
                         },
                       )
                     : ApiProviderBuilder<List<T>>(
@@ -623,7 +632,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                         loadingBuilder: _availablePoolLoadingBuilder,
                         errorBuilder: _availablePoolErrorBuilder,
                         dataBuilder: (context, data) {
-                          return _availablePoolTableDataBuilder(context, data, emptyDAO);
+                          return _availablePoolTableDataBuilder(context, data, emptyDAO,
+                            selectedObjects: selectedObjects,
+                          );
                         },
                       ),
                 Positioned(
@@ -663,6 +674,27 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                 Navigator.of(context).pop(); // Dismiss alert dialog
                               },
                             ),
+                            if (allowAddMultipleFromAvailablePool)
+                              ValueListenableBuilder(
+                                valueListenable: selectedObjects,
+                                builder: (context, value, child) {
+                                  final selected = selectedObjects.value.keys.where((e) {
+                                    return selectedObjects.value[e]==true;
+                                  }).toList();
+                                  return FlatButton(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    textColor: Colors.blue,
+                                    onPressed: selected.isEmpty ? null : () {
+                                      Navigator.of(context).pop(selected);
+                                    },
+                                  );
+                                },
+                              ),
                           ],
                         ),
                       ),
@@ -757,7 +789,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         );
       }
       if (selected!=null) {
-        addRow(selected, insertIndex);
+        if (selected is T) {
+          addRow(selected, insertIndex);
+        } else {
+          addRows(selected as List<T>, insertIndex);
+        }
         return selected;
       }
     } else {
@@ -792,7 +828,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       ),
     );
   }
-  Widget _availablePoolTableDataBuilder(BuildContext context, List<T> data, T emptyDAO) {
+  Widget _availablePoolTableDataBuilder(BuildContext context, List<T> data, T emptyDAO, {
+    ValueNotifier<Map<T, bool>>? selectedObjects,
+  }) {
     ScrollController scrollController = ScrollController();
     if (!allowDuplicateObjectsFromAvailablePool) {
       data = data.where((e) => !objects.contains(e)).toList();
@@ -810,7 +848,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       initialSortedColumn: initialSortedColumn,
       tableFooterStickyOffset: 56,
       addSearchAction: true,
-      onRowTap: (value) {
+      allowMultipleSelection: allowAddMultipleFromAvailablePool,
+      selectedObjects: selectedObjects,
+      rowTapType: RowTapType.none,
+      onRowTap: allowAddMultipleFromAvailablePool ? null : (value) {
         Navigator.of(context).pop(value.id);
       },
     );
