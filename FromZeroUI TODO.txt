@@ -14,6 +14,9 @@ Problems with excel export
 	Excel breaks sometimes when copy/paste ????
 	Export breaks when exporting large amounts of data (embarques 3 years)
 
+Implement autocomplete on TextField
+    https://www.youtube.com/watch?v=-Nny8kzW380
+
 ??? Fix goRouter.go() ignoring willPop commands, this is a MAJOR ISSUE
 	go() methods should check the willPop methods of all routes that will be removed
 	also make the pushNamedAndMaybeRemoveUntil() method work as expected
@@ -46,6 +49,9 @@ FilePickerFromZero enhancement => implement drag'n'drop on windows
 **********************************************************************
 P2
 **********************************************************************
+
+Refactor TableFromZero rowAddon to receive a builder function (a single one passed to Table, like with actions)
+    this will fix issues with addon not reacting to theme changes and improve performance
 
 Implement SafeAnimatedSwitcher
 	this widget will take an image of the widgets switching out and remove them from the widget tree immediatly
