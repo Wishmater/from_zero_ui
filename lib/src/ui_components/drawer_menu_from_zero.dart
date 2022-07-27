@@ -5,7 +5,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/expansion_tile_from_zero.dart';
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
-import 'package:go_router/src/go_route_match.dart';
+import 'package:go_router/src/match.dart';
 
 
 class ResponsiveDrawerMenuDivider extends ResponsiveDrawerMenuItem{
@@ -286,7 +286,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
           final matches = goRouter.routerDelegate.matches;
           final currentRouteName = matches.last.route.name?.replaceAll('_', '');
           final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
-          int Function(List<ResponsiveDrawerMenuItem>, GoRouteMatch)? getSelectedIndex;
+          int Function(List<ResponsiveDrawerMenuItem>, RouteMatch)? getSelectedIndex;
           getSelectedIndex = (tabs, match) {
             for (int i=0; i<tabs.length; i++) {
               final e = tabs[i];
@@ -319,8 +319,8 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             }
             return -1;
           };
-          for (int i=matches.lastIndex; i>=0 && _selected<0; i--) {
-            _selected = getSelectedIndex(_tabs, matches[i]);
+          for (int i=matches.matches.lastIndex; i>=0 && _selected<0; i--) {
+            _selected = getSelectedIndex(_tabs, matches.matches[i]);
           }
 
         } else {
@@ -335,7 +335,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
           final matches = goRouter.routerDelegate.matches;
           final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
           Map<ResponsiveDrawerMenuItem, String> computedNames = {};
-          int Function(List<ResponsiveDrawerMenuItem>, GoRouteMatch)? getSelectedIndex;
+          int Function(List<ResponsiveDrawerMenuItem>, RouteMatch)? getSelectedIndex;
           getSelectedIndex = (tabs, match) {
             for (int i=0; i<tabs.length; i++) {
               final e = tabs[i];
@@ -373,8 +373,8 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             }
             return -1;
           };
-          for (int i=matches.lastIndex; i>=0 && _selected<0; i--) {
-            _selected = getSelectedIndex(_tabs, matches[i]);
+          for (int i=matches.matches.lastIndex; i>=0 && _selected<0; i--) {
+            _selected = getSelectedIndex(_tabs, matches.matches[i]);
           }
 
         }

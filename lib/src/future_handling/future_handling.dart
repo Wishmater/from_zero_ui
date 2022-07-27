@@ -223,7 +223,7 @@ class ErrorSign extends StatelessWidget {
   final Widget? icon;
   final Widget? retryButton;
 
-  ErrorSign({
+  const ErrorSign({
     Key? key,
     required this.title,
     this.subtitle,

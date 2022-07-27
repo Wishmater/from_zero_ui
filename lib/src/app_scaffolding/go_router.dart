@@ -4,11 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:go_router/src/go_router_delegate.dart';
+import 'package:go_router/src/configuration.dart';
 import 'package:go_router/src/typedefs.dart';
-import 'package:go_router/src/inherited_go_router.dart';
-import 'package:go_router/src/go_route_match.dart';
-import 'package:go_router/src/go_route_information_parser.dart';
+import 'package:go_router/src/match.dart';
 
 
 
@@ -22,7 +20,7 @@ extension Replace on GoRouter {
     Map<String, String> queryParams = const {},
     Object? extra,
   }) async {
-    routerDelegate.matches.removeLast();
+    routerDelegate.matches.pop(); // removeLast()
     pushNamed(name,
       params: params,
       queryParams: queryParams,
@@ -31,7 +29,7 @@ extension Replace on GoRouter {
   }
 
   void pushNamedAndRemoveUntil(String name,
-      bool Function(GoRouteMatch match) stop, {
+      bool Function(RouteMatch match) stop, {
     Map<String, String> params = const {},
     Map<String, String> queryParams = const {},
     Object? extra,
@@ -48,7 +46,7 @@ extension Replace on GoRouter {
   void pushNamedAndMaybeRemoveUntil(
       BuildContext context,
       String name,
-      bool Function(GoRouteMatch match) stop, {
+      bool Function(RouteMatch match) stop, {
         Map<String, String> params = const {},
         Map<String, String> queryParams = const {},
         Object? extra,
@@ -61,25 +59,25 @@ extension Replace on GoRouter {
     );
   }
 
-  void popUntil(bool Function(GoRouteMatch match) stop) {
+  void popUntil(bool Function(RouteMatch match) stop) {
     bool remove = true;
     do {
       final last = routerDelegate.matches.last;
-      remove = routerDelegate.matches.length>1 && !stop(last);
+      remove = routerDelegate.matches.canPop() && !stop(last);
       if (remove) {
-        routerDelegate.matches.removeLast();
+        routerDelegate.matches.pop(); // removeLast()
       }
     } while (remove);
     _safeNotifyListeners();
   }
 
   /// returns true if successfully popped until wanted
-  Future<bool> maybePopUntil(context, bool Function(GoRouteMatch match) stop) async {
+  Future<bool> maybePopUntil(context, bool Function(RouteMatch match) stop) async {
     bool remove = true;
     bool blocked = false;
     do {
       final last = routerDelegate.matches.last;
-      remove = routerDelegate.matches.length>1 && !stop(last);
+      remove = routerDelegate.matches.canPop() && !stop(last);
       if (remove) {
         blocked = !(await Navigator.of(context).maybePop());
       }
@@ -347,7 +345,7 @@ class GoRouterStateFromZero extends GoRouterState {
   int pageScaffoldDepth;
   String get pageScaffoldId => route.pageScaffoldId;
 
-  GoRouterStateFromZero(GoRouteInformationParser delegate, {
+  GoRouterStateFromZero(RouteConfiguration configuration, {
     required this.route,
     required this.pageScaffoldDepth,
     required String location,
@@ -360,7 +358,7 @@ class GoRouterStateFromZero extends GoRouterState {
     Object? extra,
     Exception? error,
     ValueKey<String>? pageKey,
-  }) :  super(delegate,
+  }) :  super(configuration,
           location: location,
           subloc: subloc,
           name: name,
@@ -382,10 +380,12 @@ class OnlyOnActiveBuilder extends ConsumerStatefulWidget {
 
   final GoRouterState state;
   final GoRouterWidgetBuilder builder;
+  final GoRouteFromZero? route; /// used for forcing the route, useful for RouteNotFound
 
   const OnlyOnActiveBuilder({
     required this.state,
     required this.builder,
+    this.route,
     Key? key,
   }) : super(key: key);
 
@@ -410,20 +410,20 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
     // route = router.routerDelegate.matches.lastWhere((e) {
     //   return GoRouteFromZero.addQueryParams(e.subloc, e.queryParams) == location;
     // }).route as GoRouteFromZero;
-    final matches = router.routerDelegate.matches;
+    final matches = router.routerDelegate.matches.matches;
     late GoRouteFromZero currentRoute;
     int currentDepth = 0;
     int accumulatedDepth = 0;
     for (int i=0; i<matches.length; i++) {
       final match = matches[i];
-      final route = match.route as GoRouteFromZero;
+      final route = widget.route ?? (match.route as GoRouteFromZero);
       accumulatedDepth += route.pageScaffoldDepth;
       if (GoRouteFromZero.addQueryParams(match.subloc, match.queryParams) == location) {
         currentRoute = route;
         currentDepth = accumulatedDepth;
       }
     }
-    state = GoRouterStateFromZero(router.routeInformationParser,
+    state = GoRouterStateFromZero(router.routeConfiguration,
       route: currentRoute,
       pageScaffoldDepth: currentDepth,
       subloc: widget.state.subloc,
