@@ -703,10 +703,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           exportPathForExcel: widget.exportPathForExcel!,
           tableController: widget.tableController ?? (TableController()..currentState=this),
         );
-        for (final e in rowActions) {
-          if (!rowActionStates.containsKey(e)) {
-            rowActionStates[e] = ActionState.none;
-          }
+      }
+      for (final e in rowActions) {
+        if (!rowActionStates.containsKey(e)) {
+          rowActionStates[e] = e is ActionFromZero
+              ? e.getStateForMaxWidth(constraints?.maxWidth??double.infinity)
+              : ActionState.none;
         }
       }
       // This assumes standard icon size, custom action iconBuilders will probably break the table,

@@ -65,6 +65,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   bool showConfirmDialogWithBlockingErrors;
   DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout;
   DAO? parentDAO; /// if not null, undo/redo calls will be relayed to the parent
+  DAOValueGetter<String, ModelType>? editDialogTitle;
+  DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle;
+  DAOValueGetter<String, ModelType>? saveConfirmationDialogDescription;
 
   DAO({
     required this.classUiNameGetter,
@@ -95,6 +98,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.parentDAO,
     this.enableDoubleColumnLayout,
     this.searchNameGetter,
+    this.editDialogTitle,
+    this.saveConfirmationDialogTitle,
+    this.saveConfirmationDialogDescription,
   }) :  this._undoRecord = undoRecord ?? [],
         this._redoRecord = redoRecord ?? [],
         this.classUiNamePluralGetter = classUiNamePluralGetter ?? classUiNameGetter
@@ -141,6 +147,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     DAO? parentDAO,
     DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout,
     DAOValueGetter<String, ModelType>? searchNameGetter,
+    DAOValueGetter<String, ModelType>? editDialogTitle,
+    DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle,
+    DAOValueGetter<String, ModelType>? saveConfirmationDialogDescription,
   }) {
     final result = DAO<ModelType>(
       id: id??this.id,
@@ -170,6 +179,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       parentDAO: parentDAO??this.parentDAO,
       enableDoubleColumnLayout: enableDoubleColumnLayout??this.enableDoubleColumnLayout,
       searchNameGetter: searchNameGetter ?? this.searchNameGetter,
+      editDialogTitle: editDialogTitle ?? this.editDialogTitle,
+      saveConfirmationDialogTitle: saveConfirmationDialogTitle ?? this.saveConfirmationDialogTitle,
+      saveConfirmationDialogDescription: saveConfirmationDialogDescription ?? this.saveConfirmationDialogDescription,
     );
     result._selfUpdateListeners = _selfUpdateListeners;
     return result;
@@ -503,6 +515,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       if (!askForSaveConfirmation && validationErrors.isEmpty) {
                         Navigator.of(context).pop(true);
                       }
+                      String shownName = uiName;
+                      if (shownName.isNullOrEmpty) shownName = classUiName;
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 18),
                         child: IntrinsicHeight(
@@ -512,10 +526,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                             children: [
                               SizedBox(height: 18,),
                               Text(validation
-                                  ? FromZeroLocalizations.of(context).translate("confirm_save_title")
-                                  : 'Error de Validación',
+                                  ? (saveConfirmationDialogTitle?.call(this) ?? FromZeroLocalizations.of(context).translate("confirm_save_title"))
+                                  : 'Error de Validación', // TODO 3 internationaliza
                                 style: Theme.of(context).textTheme.headline6,
-                              ), // TODO 3 internationaliza
+                              ),
                               SizedBox(height: 12,),
                               Expanded(
                                 child: ScrollbarFromZero(
@@ -527,7 +541,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(validation
-                                            ? FromZeroLocalizations.of(context).translate("confirm_save_desc")
+                                            ? (saveConfirmationDialogDescription?.call(this) ?? (FromZeroLocalizations.of(context).translate("confirm_save_desc") + "\r\n" + shownName))
                                             : 'Debe resolver los siguientes errores de validación antes de guardar:'), // TODO 3 internationalize
                                         SaveConfirmationValidationMessage(allErrors: validationErrors),
                                       ],
@@ -920,6 +934,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               askForSaveConfirmation: askForSaveConfirmation!,
             );
             final pageController = PreloadPageController();
+            String shownName = uiName;
+            if (shownName.isNullOrEmpty) shownName = classUiName;
             Widget result = Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -933,8 +949,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     toolbarHeight: 56 + 12,
                     paddingRight: 18,
                     title: OverflowScroll(
-                      child: Text('${id==null ? FromZeroLocalizations.of(context).translate("add")
-                          : FromZeroLocalizations.of(context).translate("edit")} $classUiName',
+                      child: Text(editDialogTitle?.call(this) ?? '${id==null
+                          ? FromZeroLocalizations.of(context).translate("add")
+                          : FromZeroLocalizations.of(context).translate("edit")} $shownName',
                         style: Theme.of(context).textTheme.headline6,
                       ),
                     ),
