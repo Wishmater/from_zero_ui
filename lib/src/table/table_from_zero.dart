@@ -1753,7 +1753,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     filtered = sorted.where((element) {
       bool pass = true;
       for (final key in valueFilters.keys) {
-        if (valueFiltersApplied[key]!) {
+        if (valueFiltersApplied[key] ?? false) {
           final value = element.values[key];
           if (value is List || value is ComparableList || value is ListField) {
             final List list = value is List ? value
