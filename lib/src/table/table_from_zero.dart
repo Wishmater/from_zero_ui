@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:animations/animations.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -686,47 +687,31 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     int cols = (((currentColumnKeys??row.values.keys).length) + (_showCheckboxes ? 1 : 0))
         * (widget.verticalDivider==null ? 1 : 2)
         + (widget.verticalDivider==null ? 0 : 1);
-    List<Widget> rowActions = row==headerRowModel
-        ? widget.rowActions.map((e) => e.copyWith(
-            iconBuilder: ({
-              required BuildContext context,
-              required String title,
-              Widget? icon,
-              ContextCallback? onTap,
-              bool enabled = true,
-            }) {
-              return FocusScope( // TODO 2 huge performance: find a way to pre-measure the width of actions, so we don't have to paint them
-                canRequestFocus: false,
-                child: IgnorePointer(
-                  child: Container(
-                    decoration: _getDecoration(row, null),
-                    child: Opacity(
-                      opacity: 0,
-                      child: e.iconBuilder(
-                        context: context,
-                        title: title,
-                        icon: icon,
-                        onTap: onTap,
-                        enabled: enabled,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          )).toList()
-        : widget.rowActions.map((e) => e.copyWith(onTap: (context) {
-            e.onRowTap?.call(context, row as RowModel<T>);
-          },)).toList();
-    if (widget.exportPathForExcel != null) {
-      rowActions = addExportExcelAction(context,
-        actions: rowActions,
-        exportPathForExcel: widget.exportPathForExcel!,
-        tableController: widget.tableController ?? (TableController()..currentState=this),
-      );
-    }
 
     final builder = (BuildContext context, BoxConstraints? constraints) {
+      final Map<Widget, ActionState> rowActionStates = {
+        for (final e in widget.rowActions)
+          e: e.getStateForMaxWidth(constraints?.maxWidth??double.infinity)
+      };
+      List<Widget> rowActions = row==headerRowModel ? []
+          : widget.rowActions.map((e) => e.copyWith(onTap: (context) {
+            e.onRowTap?.call(context, row as RowModel<T>);
+          },)).toList();
+      if (widget.exportPathForExcel != null) {
+        rowActions = addExportExcelAction(context,
+          actions: rowActions,
+          exportPathForExcel: widget.exportPathForExcel!,
+          tableController: widget.tableController ?? (TableController()..currentState=this),
+        );
+        for (final e in rowActions) {
+          if (!rowActionStates.containsKey(e)) {
+            rowActionStates[e] = ActionState.none;
+          }
+        }
+      }
+      // This assumes standard icon size, custom action iconBuilders will probably break the table,
+      // this is very prone to breaking, but there is no other efficient way of doing it
+      final actionsWidth = widget.rowActions.where((e) => rowActionStates[e]! == ActionState.icon).length * 48.0;
       final decorationBuilder = (BuildContext context, int j) {
         Widget? result;
         bool addSizing = true;
@@ -904,10 +889,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           );
         }
       }
-      background = Container(
-        decoration: _getDecoration(row, null),
-        child: background,
-      );
       if (row!=headerRowModel && !(row.rowAddonIsCoveredByGestureDetector??false)){
         result = _buildRowGestureDetector(
           context: context,
@@ -916,22 +897,30 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         );
       }
       if (rowActions.isNotEmpty) {
-        result = Material(
-          type: MaterialType.transparency,
-          child: AppbarFromZero(
-            title: result,
-            actions: rowActions,
-            useFlutterAppbar: false,
-            toolbarHeight: row.height,
-            addContextMenu: false,
-            skipTraversalForActions: true,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            paddingRight: 0,
-            titleSpacing: 0,
-            transitionsDuration: 0.milliseconds,
-          ),
-        );
+        if (row==headerRowModel) {
+          result = Padding(
+            padding: EdgeInsets.only(right: actionsWidth),
+            child: result,
+          );
+        } else {
+          // TODO 1 consider removing appbarFromZero and manually rendering iconButtons
+          result = Material(
+            type: MaterialType.transparency,
+            child: AppbarFromZero(
+              title: result,
+              actions: rowActions,
+              useFlutterAppbar: false,
+              toolbarHeight: row.height,
+              addContextMenu: false,
+              skipTraversalForActions: true,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              paddingRight: 0,
+              titleSpacing: 0,
+              transitionsDuration: 0.milliseconds,
+            ),
+          );
+        }
       }
       if (row.rowAddon!=null) {
         Widget addon = row.rowAddon!;
@@ -995,7 +984,17 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                 height: (row.rowAddonIsCoveredByBackground??true)
                     ? double.infinity
                     : row.height,
-                child: background,
+                child: Stack(
+                  children: [
+                    Container(
+                      decoration: _getDecoration(row, null),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.only(right: actionsWidth),
+                      child: background,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1006,8 +1005,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         result = ContextMenuFromZero(
           child: result,
           onShowMenu: () => row.focusNode.requestFocus(),
-          actions: rowActions.where((e) => e is ActionFromZero
-              && e.getStateForMaxWidth(constraints?.maxWidth??double.infinity)!=ActionState.none).toList().cast(),
+          actions: rowActions.where((e) => rowActionStates[e]! != ActionState.none).toList().cast(),
         );
       }
       if (widget.horizontalDivider!=null) {
