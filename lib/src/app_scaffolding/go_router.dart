@@ -125,6 +125,7 @@ class GoRouteFromZero extends GoRoute {
     this.pageScaffoldDepth = 0,
     this.childrenAsDropdownInDrawerNavigation = true,
     GoRouterPageBuilder? pageBuilder,
+    LocalKey Function(BuildContext context, GoRouterState state,)? pageKeyGetter,
   }) :  assert((builder==emptyBuilder && transitionBuilder==null) || pageBuilder==null),
         super(
           path: path,
@@ -134,7 +135,7 @@ class GoRouteFromZero extends GoRoute {
           routes: routes,
           pageBuilder: pageBuilder ?? (context, state) {
             return CustomTransitionPage<void>(
-              key: ValueKey(state.location),
+              key: (pageKeyGetter?.call(context, state)) ?? ValueKey(state.location),
               child: OnlyOnActiveBuilder(builder: builder, state: state,),
               transitionsBuilder: transitionBuilder
                   ?? (context, animation, secondaryAnimation, child) => child,
