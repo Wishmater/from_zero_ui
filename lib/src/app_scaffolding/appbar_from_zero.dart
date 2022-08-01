@@ -135,7 +135,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
           return false;
         }
       },
-      child: widget.constraints!=null
+      child: widget.constraints!=null || widget.actions.isEmpty // assumes LayoutBuilder is needed only for actions
           ? _buildWithConstraints(context, widget.constraints)
           : LayoutBuilder(
             builder: _buildWithConstraints,
