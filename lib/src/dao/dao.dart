@@ -1840,7 +1840,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         if (asSlivers) {
           result = result.mapIndexed((i, w) {
             return hidden
-                ? SliverToBoxAdapter(child: SizedBox.shrink(),)
+                ? SizedBox.shrink()
                 : SliverPadding(
                   padding: EdgeInsets.only(
                     top: i == 0 ? 6 : 0,

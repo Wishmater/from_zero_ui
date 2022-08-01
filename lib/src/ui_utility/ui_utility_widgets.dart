@@ -53,6 +53,7 @@ class ResponsiveHorizontalInsets extends StatelessWidget {
   final double smallPadding;
   /// Screen width required to add padding
   final double breakpoint;
+  final bool asSliver;
 
   ResponsiveHorizontalInsets({
     Key? key,
@@ -60,14 +61,23 @@ class ResponsiveHorizontalInsets extends StatelessWidget {
     this.smallPadding = 0,
     this.bigPadding = 12,
     this.breakpoint = ScaffoldFromZero.screenSizeMedium,
+    this.asSliver = false,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < breakpoint ? smallPadding : bigPadding),
-      child: child,
-    );
+    final insets = EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < breakpoint ? smallPadding : bigPadding);
+    if (asSliver) {
+      return SliverPadding(
+        padding: insets,
+        sliver: child,
+      );
+    } else {
+      return Padding(
+        padding: insets,
+        child: child,
+      );
+    }
   }
 
 }
