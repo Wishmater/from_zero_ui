@@ -713,7 +713,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       }
       // This assumes standard icon size, custom action iconBuilders will probably break the table,
       // this is very prone to breaking, but there is no other efficient way of doing it
-      final actionsWidth = widget.rowActions.where((e) => rowActionStates[e]! == ActionState.icon).length * 48.0;
+      final actionsWidth = widget.rowActions.where((e) => rowActionStates[e]!.shownOnPrimaryToolbar).length * 48.0;
       final decorationBuilder = (BuildContext context, int j) {
         Widget? result;
         bool addSizing = true;
@@ -898,31 +898,29 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           child: result,
         );
       }
-      if (rowActions.isNotEmpty) {
-        if (row==headerRowModel) {
-          result = Padding(
-            padding: EdgeInsets.only(right: actionsWidth),
-            child: result,
-          );
-        } else {
-          // TODO 1 consider removing appbarFromZero and manually rendering iconButtons
-          result = Material(
-            type: MaterialType.transparency,
-            child: AppbarFromZero(
-              title: result,
-              actions: rowActions,
-              useFlutterAppbar: false,
-              toolbarHeight: row.height,
-              addContextMenu: false,
-              skipTraversalForActions: true,
-              backgroundColor: Colors.transparent,
-              elevation: 0,
-              paddingRight: 0,
-              titleSpacing: 0,
-              transitionsDuration: 0.milliseconds,
-            ),
-          );
-        }
+      if (row==headerRowModel) {
+        result = Padding(
+          padding: EdgeInsets.only(right: actionsWidth),
+          child: result,
+        );
+      } else if (rowActions.isNotEmpty) {
+        // TODO 1 consider removing appbarFromZero and manually rendering iconButtons
+        result = Material(
+          type: MaterialType.transparency,
+          child: AppbarFromZero(
+            title: result,
+            actions: rowActions,
+            useFlutterAppbar: false,
+            toolbarHeight: row.height,
+            addContextMenu: false,
+            skipTraversalForActions: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            paddingRight: 0,
+            titleSpacing: 0,
+            transitionsDuration: 0.milliseconds,
+          ),
+        );
       }
       if (row.rowAddon!=null) {
         Widget addon = row.rowAddon!;

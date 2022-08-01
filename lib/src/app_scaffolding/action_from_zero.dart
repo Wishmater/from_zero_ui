@@ -214,36 +214,56 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
     bool enabled = true,
     bool forceIconSpace = false,
   }) {
-    return TextButton(
-      onPressed: (!enabled || onTap==null) ? null : () => onTap.call(context),
-      style: TextButton.styleFrom(
-        padding: EdgeInsets.zero,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            if (icon!=null) SizedBox(width: 12,),
-            if (icon!=null) IconTheme(data: Theme.of(context).iconTheme.copyWith(color: Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white), child: icon,),
-            if (icon==null && forceIconSpace) SizedBox(width: 36,),
-            SizedBox(width: 12,),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(bottom: 2),
-                child: Text(title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(context).brightness==Brightness.light ? Colors.black : Colors.white,
-                  ),
+    Widget result = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          if (icon!=null) SizedBox(width: 12,),
+          if (icon!=null) IconTheme(
+            data: Theme.of(context).iconTheme.copyWith(
+              color: onTap==null
+                  ? Theme.of(context).textTheme.caption!.color
+                  : Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white,
+            ),
+            child: icon,
+          ),
+          if (icon==null && forceIconSpace) SizedBox(width: 36,),
+          SizedBox(width: 12,),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 2),
+              child: Text(title,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: onTap==null
+                      ? Theme.of(context).textTheme.caption!.color
+                      : Theme.of(context).textTheme.bodyText1!.color,
                 ),
               ),
             ),
-            SizedBox(width: 12,),
-          ],
-        ),
+          ),
+          SizedBox(width: 12,),
+        ],
       ),
     );
+    if (onTap==null) {
+      result = MouseRegion(
+        cursor: SystemMouseCursors.forbidden,
+        child: result,
+      );
+    }
+    result = TextButton(
+      onPressed: (!enabled || onTap==null) ? null : () => onTap.call(context),
+      style: TextButton.styleFrom(
+        padding: EdgeInsets.zero,
+        primary: onTap==null
+            ? Theme.of(context).textTheme.caption!.color
+            : Theme.of(context).textTheme.bodyText1!.color,
+      ),
+      child: result,
+    );
+    return result;
   }
 
   static Widget dividerIconBuilder({

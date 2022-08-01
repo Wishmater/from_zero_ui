@@ -77,7 +77,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
                 itemBuilder: (context, index) {
                   final action = actions[index];
                   return action.copyWith(
-                    onTap: (context) {
+                    onTap: action.onTap==null ? null : (context) {
                       Navigator.of(context).pop();
                       action.onTap?.call(context);
                     },
