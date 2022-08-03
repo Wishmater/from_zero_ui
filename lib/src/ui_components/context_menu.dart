@@ -135,6 +135,62 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
 
 
 
+class ContextMenuButton extends StatelessWidget {
+
+  final List<ActionFromZero> actions;
+  /// overrides everything else and is used as context menu widget
+  final Widget? contextMenuWidget;
+  final double contextMenuWidth;
+  final Alignment anchorAlignment;
+  final Alignment popupAlignment;
+  final Color? barrierColor;
+  final bool useCursorLocation;
+  final GlobalKey<ContextMenuFromZeroState> contextMenuKey = GlobalKey();
+  final Widget Function(BuildContext context, VoidCallback onTap) buttonBuilder;
+
+  ContextMenuButton({
+    Key? key,
+    required this.buttonBuilder,
+    this.actions = const [],
+    this.contextMenuWidget,
+    this.contextMenuWidth = 192,
+    this.anchorAlignment = Alignment.topLeft,
+    this.popupAlignment = Alignment.bottomRight,
+    this.barrierColor,
+    this.useCursorLocation = false,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Positioned.fill(
+          child: ContextMenuFromZero(
+            key: contextMenuKey,
+            addGestureDetector: false,
+            actions: actions,
+            contextMenuWidget: contextMenuWidget,
+            contextMenuWidth: contextMenuWidth,
+            anchorAlignment: anchorAlignment,
+            popupAlignment: popupAlignment,
+            barrierColor: barrierColor,
+            useCursorLocation: useCursorLocation,
+            child: Container(),
+          ),
+        ),
+        buttonBuilder(context, () {
+          contextMenuKey.currentState!.showContextMenu(context);
+        }),
+      ],
+    );
+  }
+
+}
+
+
+
+@deprecated
 class ContextMenuIconButton extends StatelessWidget {
 
   final List<ActionFromZero> actions;

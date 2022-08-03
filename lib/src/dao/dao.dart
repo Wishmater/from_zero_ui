@@ -913,6 +913,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   showRevertChanges: showRevertChanges,
                   askForSaveConfirmation: askForSaveConfirmation!,
                   showActionButtons: false,
+                  groupBorderNestingCount: asPrimary ? 0 : -1,
                 );
                 firstIteration = false;
                 if (asPrimary) {
@@ -1171,10 +1172,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       width: secondaryFormWidgets.keys.length==0
                           ? formDialogWidth+32+24+16
                           : widescreenDialogWidth,
-                      child: Dialog(
+                      child: ResponsiveInsetsDialog(
                         backgroundColor: Theme.of(context).canvasColor,
                         clipBehavior: Clip.hardEdge,
-                        insetPadding: EdgeInsets.all(16),
                         child: result,
                       ),
                     ),
@@ -1484,8 +1484,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     return showModal(context: mainContext,
       builder: (context) {
         return Center(
-          child: Dialog(
-            insetPadding: EdgeInsets.all(16),
+          child: ResponsiveInsetsDialog(
             backgroundColor: Theme.of(context).cardColor,
             child: content,
           ),
@@ -1720,7 +1719,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           popAfterSuccessfulSave: popAfterSuccessfulSave,
           firstIteration: false,
           wrapInLayoutFromZeroItem: useLayoutFromZero,
-          groupBorderNestingCount: 0,
+          groupBorderNestingCount: groupBorderNestingCount,
         );
       }),
     ];
@@ -1737,7 +1736,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           children: getChildren(useLayoutFromZero: true)
               .cast<FlexibleLayoutItemFromZero>(),
           relevantAxisMaxSize: min(formDialogWidth,
-              MediaQuery.of(context).size.width - 56)  - (groupBorderNestingCount*16),
+              MediaQuery.of(context).size.width - 24)  - (groupBorderNestingCount.coerceIn(0)*16),
           crossAxisAlignment: group.primary ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         );
       } else {

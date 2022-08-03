@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart';
 import 'package:from_zero_ui/util/platform_web_impl.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart' as bitsdojo;
 import 'package:bitsdojo_window_platform_interface/window.dart' as bitsdojo_window;
+import 'package:dartx/dartx.dart';
 
 
 import 'package:dartx/dartx.dart';
@@ -78,6 +79,69 @@ class ResponsiveHorizontalInsets extends StatelessWidget {
         child: child,
       );
     }
+  }
+
+}
+
+class ResponsiveInsetsDialog extends StatelessWidget {
+
+  final Widget child;
+  final EdgeInsets bigInsets;
+  final EdgeInsets smallInsets;
+  /// Screen width required to add padding
+  final double breakpoint;
+
+  final Color? backgroundColor;
+  final double? elevation;
+  final Duration insetAnimationDuration;
+  final Curve insetAnimationCurve;
+  final Clip clipBehavior;
+  final ShapeBorder? shape;
+  final AlignmentGeometry? alignment;
+
+
+  ResponsiveInsetsDialog({
+    Key? key,
+    this.bigInsets = const EdgeInsets.all(24),
+    this.smallInsets = const EdgeInsets.all(0),
+    this.breakpoint = ScaffoldFromZero.screenSizeMedium,
+    required this.child,
+    this.backgroundColor,
+    this.elevation,
+    this.insetAnimationDuration = const Duration(milliseconds: 100),
+    this.insetAnimationCurve = Curves.decelerate,
+    this.clipBehavior = Clip.none,
+    this.shape,
+    this.alignment,
+  })  : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    EdgeInsets insets = bigInsets;
+    if (size.width < breakpoint) {
+      insets = insets.copyWith(
+        left: smallInsets.left,
+        right: smallInsets.right,
+      );
+    }
+    if (size.height < breakpoint) {
+      insets = insets.copyWith(
+        top: smallInsets.top,
+        bottom: smallInsets.bottom,
+      );
+    }
+    return Dialog (
+      insetPadding: insets,
+      child: child,
+      backgroundColor: backgroundColor,
+      elevation: elevation,
+      insetAnimationDuration: insetAnimationDuration,
+      insetAnimationCurve: insetAnimationCurve,
+      clipBehavior: clipBehavior,
+      shape: shape,
+      alignment: alignment,
+    );
   }
 
 }
