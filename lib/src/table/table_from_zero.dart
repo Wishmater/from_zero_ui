@@ -149,9 +149,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       widget.tableController!.conditionFilters = value;
     }
   }
-  late Map<dynamic, Map<Object, bool>> _valueFilters;
-  Map<dynamic, Map<Object, bool>> get valueFilters => widget.tableController?.valueFilters ?? _valueFilters;
-  set valueFilters(Map<dynamic, Map<Object, bool>> value) {
+  late Map<dynamic, Map<Object?, bool>> _valueFilters;
+  Map<dynamic, Map<Object?, bool>> get valueFilters => widget.tableController?.valueFilters ?? _valueFilters;
+  set valueFilters(Map<dynamic, Map<Object?, bool>> value) {
     if (widget.tableController==null) {
       _valueFilters = value;
     } else {
@@ -274,6 +274,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   );
 
   void init({bool notifyListeners=true}) {
+    bool filtersAltered = false;
     isStateInvalidated = false;
     currentColumnKeys = widget.columns?.keys.toList();
     sorted = List.from(widget.rows);
@@ -297,11 +298,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           for (final e in widget.columns?.keys ?? [])
             e: {},
         };
-      } else{
+      } else {
         valueFilters = {
           for (final e in widget.columns?.keys ?? [])
             e: widget.tableController!.initialValueFilters![e] ?? {},
         };
+        filtersAltered = true;
       }
     }
     if (widget.columns==null && widget.showHeaders) {
@@ -335,19 +337,26 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       availableFilters.value = null;
     }
     if (widget.columns!=null) {
-      initFilters();
+      initFilters().then((value) {
+        if (mounted && filtersAltered) {
+          setState(() {
+            _updateFiltersApplied();
+            filter();
+          });
+        }
+      });
     }
     _updateFiltersApplied();
     sort(notifyListeners: notifyListeners);
   }
 
   cancelable_compute.ComputeOperation<Map<dynamic, List<dynamic>>>? availableFiltersIsolateController;
-  cancelable_compute.ComputeOperation<Map<dynamic, Map<Object, bool>>?>? validInitialFiltersIsolateController;
-  void initFilters([bool? computeFiltersInIsolate]) async {
+  cancelable_compute.ComputeOperation<Map<dynamic, Map<Object?, bool>>?>? validInitialFiltersIsolateController;
+  Future<void> initFilters([bool? computeFiltersInIsolate]) async {
     availableFiltersIsolateController?.cancel();
     validInitialFiltersIsolateController?.cancel();
     Map<dynamic, List<dynamic>> computedAvailableFilters;
-    Map<dynamic, Map<Object, bool>>? computedValidInitialFilters;
+    Map<dynamic, Map<Object?, bool>>? computedValidInitialFilters;
     if (computeFiltersInIsolate ?? widget.computeFiltersInIsolate ?? widget.rows.length>50) {
       try {
         final Map<dynamic, Map<dynamic, Field>> fieldAliases = {
@@ -476,8 +485,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     });
     return availableFilters;
   }
-  static Map<dynamic, Map<Object, bool>>? _getValidInitialFilters(List<dynamic> params) {
-    Map<dynamic, Map<Object, bool>> initialFilters = params[0];
+  static Map<dynamic, Map<Object?, bool>>? _getValidInitialFilters(List<dynamic> params) {
+    Map<dynamic, Map<Object?, bool>> initialFilters = params[0];
     Map<dynamic, List<dynamic>> availableFilters = params[1];
     bool removed = false;
     initialFilters.forEach((col, filters) {
@@ -1346,6 +1355,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                               TooltipFromZero(
                                 message: FromZeroLocalizations.of(context).translate('add_condition_filter'),
                                 child: PopupMenuButton<ConditionFilter>(
+                                  tooltip: '',
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
                                     child: Row(
@@ -1855,9 +1865,9 @@ class TableController<T> extends ChangeNotifier {
   TableFromZeroState<T>? currentState;
   Map<dynamic, List<ConditionFilter>>? initialConditionFilters;
   Map<dynamic, List<ConditionFilter>>? conditionFilters;
-  Map<dynamic, Map<Object, bool>>? initialValueFilters;
+  Map<dynamic, Map<Object?, bool>>? initialValueFilters;
   bool initialValueFiltersExcludeAllElse;
-  Map<dynamic, Map<Object, bool>>? valueFilters;
+  Map<dynamic, Map<Object?, bool>>? valueFilters;
   Map<dynamic, bool>? valueFiltersApplied;
   Map<dynamic, bool>? filtersApplied;
   Map<dynamic, bool> columnVisibilities;
@@ -1879,9 +1889,9 @@ class TableController<T> extends ChangeNotifier {
     List<List<RowModel<T>> Function(List<RowModel<T>>)>? extraFilters,
     Map<dynamic, List<ConditionFilter>>? initialConditionFilters,
     Map<dynamic, List<ConditionFilter>>? conditionFilters,
-    Map<dynamic, Map<Object, bool>>? initialValueFilters,
+    Map<dynamic, Map<Object?, bool>>? initialValueFilters,
     bool? initialValueFiltersExcludeAllElse,
-    Map<dynamic, Map<Object, bool>>? valueFilters,
+    Map<dynamic, Map<Object?, bool>>? valueFilters,
     Map<dynamic, bool>? columnVisibilities,
     bool? sortedAscending,
     int? sortedColumnIndex,
