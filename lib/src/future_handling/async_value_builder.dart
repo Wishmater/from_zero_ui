@@ -116,8 +116,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
   }
 
   static Widget defaultErrorBuilder(BuildContext context, Object error, StackTrace? stackTrace){
-    // print(error);
-    // print(stackTrace);
+    // log(error, stackTrace: stackTrace);
     return ErrorSign(
       icon: const Icon(Icons.error_outline), //size: 64, color: Theme.of(context).errorColor,
       title: FromZeroLocalizations.of(context).translate("error"),

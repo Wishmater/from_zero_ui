@@ -186,8 +186,8 @@ Future<bool> saveFileFromZero ({
     }
 
   } catch (e, st) {
-    print (e);
-    print (st);
+    log ('Error while saving file:', isError: true);
+    log (e, stackTrace: st);
     success = false;
   }
   if (cancelled) {

@@ -81,14 +81,14 @@ class UpdateFromZero{
 
   Future<Response?> executeUpdate(BuildContext context, {ProgressCallback? onReceiveProgress}) async{
     if (updateAvailable==true){
-      print ('Downloading Update...');
+      log ('Downloading Update...');
       String tempDirectory = (await getTemporaryDirectory()).absolute.path;
       String downloadPath = await getDownloadPath();
       final download = dio.download(
         appDownloadUrl,
         downloadPath,
         onReceiveProgress: onReceiveProgress ?? (rcv, total) {
-          print('received: ${rcv.toStringAsFixed(0)} out of total: ${total.toStringAsFixed(0)}');
+          log('received: ${rcv.toStringAsFixed(0)} out of total: ${total.toStringAsFixed(0)}');
         },
         deleteOnError: true,
       );
@@ -129,7 +129,7 @@ class UpdateFromZero{
           var executableFile = Directory(newAppDirectory).listSync()
               .firstWhere((element) => element.path.endsWith('.exe'));
           argumentsFile.writeAsStringSync(newAppDirectory + "\n" + scriptPath);
-          print(executableFile.absolute.path.replaceAll('/', '\\'));
+          log(executableFile.absolute.path.replaceAll('/', '\\'));
           Process.start(executableFile.absolute.path.replaceAll('/', '\\'), [],
             workingDirectory: scriptPath.replaceAll('/', '\\'),
           );

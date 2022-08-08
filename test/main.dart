@@ -13,7 +13,6 @@ import 'router.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
-  print(await getApplicationDocumentsDirectory());
   await initHive();
   fromZeroThemeParametersProvider = ChangeNotifierProvider((ref) {
     return ThemeParameters();

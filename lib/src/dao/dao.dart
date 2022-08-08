@@ -417,10 +417,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     final validationErrors = this.validationErrors;
     validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
     ValidationError error = validationErrors.first;
-    // print ('VALIDATION ERRORS ENCOUNTERED:');
-    // print (validationErrors.where((e) => e.isBlocking));
-    // print ('FOCUSING ERROR:');
-    // print ('${error.field} -- ${error.error}');
     focusError(error);
   }
   void focusError(ValidationError error) {
@@ -649,6 +645,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         successTitle: '$classUiName ${newInstance ? FromZeroLocalizations.of(context).translate("added")
             : FromZeroLocalizations.of(context).translate("edited")} ${FromZeroLocalizations.of(context).translate("successfully")}.',
       ).show();
+      try {
+        model = await onSave!.call(contextForValidation??context, this);
+        success = model!=null;
+      } catch (e, st) {
+        log('Error while saving $classUiName: $uiName', isError: true);
+        log(e, stackTrace: st, isError: true);
+      }
       await Future.any([controller.closed, completer.future]);
       success = model!=null;
       removeListener();
@@ -660,7 +663,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         success = model!=null;
       } catch (e, st) {
         success = false;
-        print(e); print(st);
+        log('Error while saving $classUiName: $uiName', isError: true);
+        log(e, stackTrace: st, isError: true);
       }
     }
     if (success) {
@@ -768,7 +772,12 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         stateNotifier: stateNotifier,
         successTitle: '$classUiName ${FromZeroLocalizations.of(context).translate("deleted")} ${FromZeroLocalizations.of(context).translate("successfully")}.',
       ).show();
-      await Future.any([controller.closed, completer.future]);
+      try {
+        await Future.any([controller.closed, completer.future]);
+      } catch (e, st) {
+        log('Error while deleting $classUiName: $uiName', isError: true);
+        log(e, stackTrace: st, isError: true);
+      }
       removeListener();
     } else {
       try {
@@ -776,7 +785,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         success = errorString==null;
       } catch (e, st) {
         success = false;
-        print(e); print(st);
+        log('Error while deleting $classUiName: $uiName', isError: true);
+        log(e, stackTrace: st, isError: true);
       }
       if (showDefaultSnackBar) {
         SnackBarFromZero(

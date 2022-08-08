@@ -396,9 +396,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           computedValidInitialFilters = await validInitialFiltersIsolateController!.value;
         }
       } catch (e, st) {
-        print('Isolate creation for computing table filters failed. Computing synchronously...');
-        print(e);
-        print(st);
+        log('Isolate creation for computing table filters failed. Computing synchronously...');
+        log(e, stackTrace: st, isError: false,);
         initFilters(false);
         return;
       }

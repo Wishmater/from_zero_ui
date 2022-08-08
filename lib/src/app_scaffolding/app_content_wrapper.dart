@@ -38,6 +38,19 @@ var fromZeroThemeParametersProvider = ChangeNotifierProvider<ThemeParametersFrom
 });
 
 
+/// Override this for custom logging, including logs from from_zero
+void Function(Object? message, {
+  Object? stackTrace,
+  bool? isError,
+}) log = (Object? message, {
+  Object? stackTrace,
+  bool? isError,
+}) {
+  isError ??= stackTrace!=null;
+  print(message);
+  print(stackTrace);
+};
+
 
 /// Put this widget in the builder method of your MaterialApp.
 /// Controls different app-wide providers and features needed by other FromZeroWidgets
@@ -338,28 +351,28 @@ class WindowBar extends StatelessWidget {
     while (true) {
 
       final goRoute = goRouter.routerDelegate.matches.last.route;
-      print ('Trying to pop ${goRouter.routerDelegate.matches.last.subloc}');
+      log ('Trying to pop ${goRouter.routerDelegate.matches.last.subloc}');
       if (await navigator.maybePop()) {
         final previousGoRouteFromZero = goRoute is GoRouteFromZero ? goRoute : null;
         final newGoRoute = goRouter.routerDelegate.matches.last.route;
         final newGoRouteFromZero = newGoRoute is GoRouteFromZero ? newGoRoute : null;
         if (newGoRoute==goRoute) {
           // if route refused to pop, or popped route was a modal, stop iteration
-          print('  Route refused to pop, or popped route was a modal, stopping iteration...');
+          log('  Route refused to pop, or popped route was a modal, stopping iteration...');
           return;
         }
         if (previousGoRouteFromZero?.pageScaffoldId!=newGoRouteFromZero?.pageScaffoldId) {
           // if new route is a different scaffold ID, stop iteration
-          print('  New route is a different scaffold ID, stopping iteration...');
+          log('  New route is a different scaffold ID, stopping iteration...');
           return;
         }
       } else {
         // if successfully popped last route, exit app (maybePop only false when popDisposition==bubble)
-        print ('  Successfully popped last route, exiting app...');
+        log ('  Successfully popped last route, exiting app...');
         debugger();
         exit(0);
       }
-      print ('  Popped successfully, continuing popping iteration...');
+      log ('  Popped successfully, continuing popping iteration...');
 
     }
   }
@@ -588,9 +601,9 @@ class WindowEventListener{
         // String wholeString = utf8.decode(bytes, allowMalformed: true);
         // String wholeString = String.fromCharCodes(bytes);
         List<String> events = wholeString.split("\r\n")..removeLast();
-        // print('String: $wholeString');print(events);
+        // log('String: $wholeString');log(events);
         for (int i = currentIndex; i<events.length; i++){
-          print ("Window event handled: ${events[i]}");
+          log ("Window event handled: ${events[i]}");
           switch(events[i]){
             case 'WM_CLOSE':
               final goRouter = routerGetter();

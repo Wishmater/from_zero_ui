@@ -86,9 +86,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
         for (final e in watchingNotifiers.keys) {
           refreshed = refreshed || watchingNotifiers[e]!.retry(widgetRef, e);
         }
-      } catch (e, st) {
-        // print (e); print (st);
-      }
+      } catch (_) { }
     }
     if (!refreshed && state is AsyncError) {
       if (widgetRef!=null && providerForInvalidationInsteadOfRefresh!=null) {
@@ -114,9 +112,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
         try {
           watchingNotifiers[e]!.refresh(widgetRef, e);
           refreshed = true;
-        } catch (e, st) {
-          // print (e); print (st);
-        }
+        } catch (_) { }
       }
     }
     if (!refreshed) {
@@ -280,9 +276,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // final routeBase = context.findAncestorStateOfType<OnlyOnActiveBuilderState>();
-    // print (routeBase);
     // if (routeBase!=null) {
-    //   print (routeBase.isActiveRoute(context)); // should be isActive && !ref.isCalled(provider)
+    //   log ('$routeBase -- ${routeBase.isActiveRoute(context)}'); // should be isActive && !ref.isCalled(provider)
     //   if (!routeBase.isActiveRoute(context)) {
     //     return SizedBox.shrink();
     //   }
@@ -319,8 +314,6 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   }
 
   static Widget defaultErrorBuilder(BuildContext context, Object? error, StackTrace? stackTrace, VoidCallback? onRetry) {
-    print (error);
-    print (stackTrace);
     return ErrorSign(
       key: ValueKey(error),
       icon: getErrorIcon(context, error, stackTrace),

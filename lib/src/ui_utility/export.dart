@@ -264,7 +264,7 @@ class ExportState extends State<Export> {
           scrollControllers = [];
           jumpsSeparatingPages = [0];
           pageBottomPaddings = [];
-//          print (significantWidgetVisibleAtStartOffsets);
+//          log (significantWidgetVisibleAtStartOffsets);
           for (var i = 1; i < significantWidgetVisibleAtStartOffsets.length; ++i) {
             if (significantWidgetVisibleAtStartOffsets[i]
                 > jumpsSeparatingPages.last+position.viewportDimension){
@@ -275,11 +275,11 @@ class ExportState extends State<Export> {
             }
           }
           pageBottomPaddings.add((position.viewportDimension - (totalHeight - jumpsSeparatingPages.last)).clamp(0.0, double.infinity));
-//          print (jumpsSeparatingPages);
-//          print (pageBottomPaddings);
+//          log (jumpsSeparatingPages);
+//          log (pageBottomPaddings);
           return jumpsSeparatingPages.length;
         } catch(e, st){
-          // print(e); print (st);
+          // log(e, stackTrace: st);
           lastSize = null;
           return 1;
         }

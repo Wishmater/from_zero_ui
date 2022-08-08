@@ -336,8 +336,8 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
       case LoadState.failed:
         animate = true;
         _controller.reset();
-        print(state.lastException);
-        print(state.lastStack);
+        log('Error while loading ImageFromZero:');
+        log(state.lastException, stackTrace: state.lastStack);
         return ErrorSign(
           title: FromZeroLocalizations.of(context).translate('error_image'),
           icon: Icon(Icons.broken_image, size: 64,),
@@ -384,7 +384,6 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
     }
 
     _doubleClickAnimationListener = () {
-      //print(_animation.value);
       state.handleDoubleTap(
           scale: _doubleClickAnimation!.value,
           doubleTapPosition: pointerDownPosition);

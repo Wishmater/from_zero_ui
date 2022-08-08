@@ -271,6 +271,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
     }
   }
 
+  static bool useNamesToUpdateTabsWithGoRouter = true;
   void _updateTabs() {
     pendingUpdate = false;
     _tabs = List.from(widget.tabs);
@@ -279,8 +280,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
       if (widget.useGoRouter) {
 
-        bool useNames = true;
-        if (useNames) {
+        if (useNamesToUpdateTabsWithGoRouter) {
 
           final goRouter = GoRouter.of(context);
           final matches = goRouter.routerDelegate.matches;
@@ -302,7 +302,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                     return i;
                   }
                 }
-                // print("$name -- $currentRouteName");
+                // log("$name -- $currentRouteName");
                 if (name == currentRouteName) {
                   return i;
                 }
@@ -356,7 +356,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                     return i;
                   }
                 }
-                // print("$location -- $computedName");
+                // log("$location -- $computedName");
                 if (computedName == location) {
                   return i;
                 }
@@ -417,10 +417,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               );
             }
           }
-        } catch (e, st) {
-          // print(e);
-          // print(st);
-        }
+        } catch (_) {}
 
       }
     }
