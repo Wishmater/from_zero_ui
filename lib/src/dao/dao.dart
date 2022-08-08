@@ -508,7 +508,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       if (!showConfirmDialogWithBlockingErrors && !validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
                         Navigator.of(context).pop(null);
                       }
-                      if (!askForSaveConfirmation && validationErrors.isEmpty) {
+                      if (!askForSaveConfirmation && validationErrors.where((e) => e.isBlocking).isEmpty) {
                         Navigator.of(context).pop(true);
                       }
                       String shownName = uiName;
