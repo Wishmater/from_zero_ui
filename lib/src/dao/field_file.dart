@@ -18,6 +18,8 @@ class FileField extends Field<String> {
   final List<String>? allowedExtensions;
   final bool enableDragAndDrop;
   final bool allowDragAndDropInWholeScreen;
+  final bool pickDirectory;
+  final String? initialDirectory;
 
 
   File? get file => value==null ? null : File(value!);
@@ -57,6 +59,8 @@ class FileField extends Field<String> {
     this.allowedExtensions,
     this.enableDragAndDrop = true,
     this.allowDragAndDropInWholeScreen = false,
+    this.pickDirectory = false,
+    this.initialDirectory,
   }) :  super(
           uiNameGetter: uiNameGetter,
           value: value,
@@ -120,6 +124,8 @@ class FileField extends Field<String> {
     List<String>? allowedExtensions,
     bool? enableDragAndDrop,
     bool? allowDragAndDropInWholeScreen,
+    bool? pickDirectory,
+    String? initialDirectory,
   }) {
     return FileField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -150,6 +156,8 @@ class FileField extends Field<String> {
       allowedExtensions: allowedExtensions ?? this.allowedExtensions,
       enableDragAndDrop: enableDragAndDrop ?? this.enableDragAndDrop,
       allowDragAndDropInWholeScreen: allowDragAndDropInWholeScreen ?? this.allowDragAndDropInWholeScreen,
+      pickDirectory: pickDirectory ?? this.pickDirectory,
+      initialDirectory: initialDirectory ?? this.initialDirectory,
     );
   }
 
@@ -210,6 +218,12 @@ class FileField extends Field<String> {
     bool dense = false,
     required FocusNode focusNode,
   }) {
+    String? initialDirectory;
+    if (this.initialDirectory!=null) {
+      initialDirectory = this.initialDirectory;
+    } else if (value!=null) {
+      try { initialDirectory = File(value!).parent.path; } catch (_) {}
+    }
     Widget result = NotificationListener(
       onNotification: (notification) => true,
       child: AnimatedBuilder(
@@ -226,7 +240,9 @@ class FileField extends Field<String> {
                   allowedExtensions: allowedExtensions,
                   enableDragAndDrop: enableDragAndDrop,
                   allowDragAndDropInWholeScreen: allowDragAndDropInWholeScreen,
+                  pickDirectory: pickDirectory,
                   focusNode: focusNode,
+                  initialDirectory: initialDirectory,
                   onSelected: (value) {
                     this.value = value.first.absolute.path;
                   },

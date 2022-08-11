@@ -15,17 +15,21 @@ class FilePickerFromZero extends StatefulWidget {
   final FocusNode? focusNode;
   final bool enableDragAndDrop;
   final bool allowDragAndDropInWholeScreen;
+  final bool pickDirectory;
+  final String? initialDirectory;
 
   const FilePickerFromZero({
     required this.onSelected,
     required this.child,
     this.dialogTitle,
     this.allowMultiple = true,
+    this.pickDirectory = false,
     this.fileType = FileType.any,
     this.allowedExtensions,
     this.focusNode,
     this.enableDragAndDrop = true,
     this.allowDragAndDropInWholeScreen = false,
+    this.initialDirectory,
     Key? key,
   }) : super(key: key);
 
@@ -68,14 +72,26 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
       child: widget.child,
       focusNode: widget.focusNode,
       onTap: () async {
-        FilePickerResult? result = await FilePicker.platform.pickFiles(
-          dialogTitle: widget.dialogTitle,
-          allowMultiple: true,
-          type: widget.fileType,
-          allowedExtensions: widget.allowedExtensions,
-        );
-        if (result != null) {
-          widget.onSelected(result.files.map((e) => File(e.path!)).toList());
+        if (!widget.pickDirectory) {
+          FilePickerResult? result = await FilePicker.platform.pickFiles(
+            dialogTitle: widget.dialogTitle,
+            allowMultiple: true,
+            type: widget.fileType,
+            allowedExtensions: widget.allowedExtensions,
+            initialDirectory: widget.initialDirectory,
+          );
+          if (result != null) {
+            widget.onSelected(result.files.map((e) => File(e.path!)).toList());
+          }
+        } else {
+
+          String? result = await FilePicker.platform.getDirectoryPath(
+            dialogTitle: widget.dialogTitle,
+            initialDirectory: widget.initialDirectory,
+          );
+          if (result != null) {
+            widget.onSelected([File(result)]);
+          }
         }
       },
     );
