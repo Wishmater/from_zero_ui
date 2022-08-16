@@ -554,7 +554,9 @@ class _OverflowScrollState extends State<OverflowScroll> {
   }
 
   void _scroll([bool forward=true, Duration? waitDuration]) async{
+    if (!mounted) return;
     await Future.delayed(waitDuration ?? widget.autoscrollWaitTime);
+    if (!mounted) return;
     try {
       Duration duration = (1000*scrollController.position.maxScrollExtent/widget.autoscrollSpeed!).milliseconds;
       if (forward){
