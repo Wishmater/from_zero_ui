@@ -287,7 +287,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
       excludeHeaderSemantics: true,
       automaticallyImplyLeading: false,
       centerTitle: true,
-      elevation: widget.elevation,
+      elevation: 0,
       backgroundColor: Colors.transparent,
       titleSpacing: 8,
       toolbarHeight: toolbarHeight,

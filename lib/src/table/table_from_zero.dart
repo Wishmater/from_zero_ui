@@ -584,7 +584,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                 duration: Duration(milliseconds: 300),
                 curve: Curves.easeOutCubic,
                 child: const CustomPaint(
-                  painter: const SimpleShadowPainter(
+                  painter: SimpleShadowPainter(
                     direction: SimpleShadowPainter.down,
                     shadowOpacity: 0.2,
                   ),

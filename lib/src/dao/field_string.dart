@@ -437,6 +437,7 @@ class StringField extends Field<String> {
     );
     if (addCard) {
       result = Card(
+        clipBehavior: Clip.hardEdge,
         color: enabled ? null : Theme.of(context).canvasColor,
         child: result,
       );

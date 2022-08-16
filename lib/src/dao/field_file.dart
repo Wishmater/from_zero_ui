@@ -10,6 +10,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao/dao.dart';
 import 'package:from_zero_ui/src/dao/field.dart';
 import 'package:from_zero_ui/src/dao/field_validators.dart';
+import 'package:path/path.dart' as path;
 
 
 class FileField extends Field<String> {
@@ -23,7 +24,11 @@ class FileField extends Field<String> {
 
 
   File? get file => value==null ? null : File(value!);
-  String? get filename => value?.split('/').last.split('\\').last;
+  String? get filename {
+    return pickDirectory
+        ? value==null ? null : '$value${path.separator}'
+        : value?.split('/').last.split('\\').last;
+  }
 
 
   FileField({
