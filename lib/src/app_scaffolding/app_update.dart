@@ -100,8 +100,7 @@ class UpdateFromZero{
           // Update is a windows native installer, just run it and let it do its magic
           Process.start(downloadPath.replaceAll('/', '\\'), [],);
           await Future.delayed(Duration(seconds: 1));
-          debugger();
-          exit(0);
+          FromZeroAppContentWrapper.exitApp(0);
 
         } else {
 
@@ -134,8 +133,7 @@ class UpdateFromZero{
             workingDirectory: scriptPath.replaceAll('/', '\\'),
           );
           await Future.delayed(Duration(seconds: 1));
-          debugger();
-          exit(0);
+          FromZeroAppContentWrapper.exitApp(0);
 
         }
       });
@@ -162,8 +160,7 @@ class UpdateFromZero{
         workingDirectory: oldAppPath.replaceAll('/', '\\'),
     );
     await Future.delayed(Duration(seconds: 1));
-    debugger();
-    exit(0);
+    FromZeroAppContentWrapper.exitApp(0);
   }
 
   static void copyDirectory(Directory source, Directory destination) =>
@@ -293,3 +290,4 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
   }
 
 }
+

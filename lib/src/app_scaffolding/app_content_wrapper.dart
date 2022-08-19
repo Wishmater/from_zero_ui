@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -68,6 +69,48 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
 
   @override
   _FromZeroAppContentWrapperState createState() => _FromZeroAppContentWrapperState();
+
+  static String? windowsProcessName;
+  static exitApp(int code) {
+    log('Exiting app with code: $code...');
+    if (!kIsWeb && Platform.isWindows) {
+      log('Detected platform windows, releaseMode=$kReleaseMode, processName=$windowsProcessName');
+      if (kReleaseMode && windowsProcessName!=null) {
+        log('Running process: taskkill /IM "$windowsProcessName" /F');
+        // this ensures the process is completely killed and doesn't hang in older Windows versions
+        final result = Process.runSync('cmd', ['/c', 'taskkill', '/IM', '$windowsProcessName', '/F']);
+        log('Finished taskkill process with code: ${result.exitCode}');
+        log('   stderr:');
+        log(result.stderr);
+        log('   stdout:');
+        log(result.stdout);
+      } else {
+        _exit(code);
+      }
+    } else {
+      _exit(code);
+    }
+  }
+  static _exit(int code) {
+    log('Exiting the normal dart way (debugger(); + exit(0);)...');
+    debugger(); exit(0);
+  }
+
+  static Future<Map<String, int>> getWindowsProcessess() async {
+    final tasklistProc = Process.runSync('tasklist', ['/NH', '/FO', 'csv']);
+    final lines = LineSplitter().convert(tasklistProc.stdout);
+    final pids = <String, int>{};
+    for (var line in lines) {
+      final elems = line.split(',').map((elem) => elem.replaceAll('"', '')).toList();
+      final name = elems[0];
+      final pid = int.parse(elems[1]);
+//     final session = elems[2];
+//     final sessionNumber = int.parse(elems[3]);
+//     final memUsage = elems[4];
+      pids[name] = pid;
+    }
+    return pids;
+  }
 
 }
 
@@ -369,8 +412,8 @@ class WindowBar extends StatelessWidget {
       } else {
         // if successfully popped last route, exit app (maybePop only false when popDisposition==bubble)
         log ('  Successfully popped last route, exiting app...');
-        debugger();
-        exit(0);
+        FromZeroAppContentWrapper.exitApp(0);
+        return;
       }
       log ('  Popped successfully, continuing popping iteration...');
 

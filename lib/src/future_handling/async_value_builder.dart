@@ -182,7 +182,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
       );
     } else if (data.length==asyncValues.length) {
       result = Container(
-        key: ValueKey(asyncValues.map((e) => e.hashCode).reduce((v, e) => v+e)),
+        key: ValueKey(asyncValues.isEmpty ? 'empty' : asyncValues.map((e) => e.hashCode).reduce((v, e) => v+e)),
         child: dataBuilder(context, data),
       );
     } else {
