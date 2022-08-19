@@ -216,9 +216,7 @@ class StringField extends Field<String> {
     FocusNode? focusNode,
     ScrollController? mainScrollController,
   }) {
-    if (focusNode==null) {
-      focusNode = this.focusNode;
-    }
+    focusNode ??= this.focusNode;
     Widget result;
     if (hiddenInForm) {
       result = SizedBox.shrink();
@@ -314,7 +312,7 @@ class StringField extends Field<String> {
                 ),
                 child: KeyboardListener(
                   includeSemantics: false,
-                  focusNode: FocusNode(skipTraversal: true),
+                  focusNode: focusNode..skipTraversal=true,
                   onKeyEvent: (value) {
                     if (value is KeyDownEvent && type==StringFieldType.short) {
                       if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
@@ -327,7 +325,7 @@ class StringField extends Field<String> {
                   child: TextFormField(
                     controller: controller,
                     enabled: enabled,
-                    focusNode: focusNode,
+                    // focusNode: focusNode,
                     toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
                       copy: false, cut: false, paste: false, selectAll: false,
                     ),

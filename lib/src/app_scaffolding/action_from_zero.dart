@@ -130,7 +130,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
     ActionState state = ActionState.overflow;
     double biggestKey=-1;
     breakpoints.forEach((key, value) {
-      if (key<width && key>biggestKey){
+      if (key<=width && key>biggestKey){
         state = value;
         biggestKey = key;
       }

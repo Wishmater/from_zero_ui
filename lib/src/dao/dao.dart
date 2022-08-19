@@ -646,14 +646,12 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             : FromZeroLocalizations.of(context).translate("edited")} ${FromZeroLocalizations.of(context).translate("successfully")}.',
       ).show();
       try {
-        model = await onSave!.call(contextForValidation??context, this);
+        await Future.any([controller.closed, completer.future]);
         success = model!=null;
       } catch (e, st) {
         log('Error while saving $classUiName: $uiName', isError: true);
         log(e, stackTrace: st, isError: true);
       }
-      await Future.any([controller.closed, completer.future]);
-      success = model!=null;
       removeListener();
     } else if (onSave==null) {
       success = true;
@@ -1697,7 +1695,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       return SizedBox.shrink();
     }
     bool verticalLayout = firstIteration || group.primary;
-    bool addBorder = group.name!=null && (fields.length+childGroups.length > 1);
+    bool addBorder = group.name!=null && group.props.length>1;
     groupBorderNestingCount += (addBorder ? 1 : 0);
     List<Widget> Function({bool useLayoutFromZero}) getChildren = ({bool useLayoutFromZero = false}) => [
       ...buildFormWidgets(context,
