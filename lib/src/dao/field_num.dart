@@ -312,7 +312,7 @@ class NumField extends Field<num> {
                 ),
                 child: KeyboardListener(
                   includeSemantics: false,
-                  focusNode: FocusNode(skipTraversal: true),
+                  focusNode: focusNode..skipTraversal=true,
                   onKeyEvent: (value) {
                     if (value is KeyDownEvent) {
                       if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
@@ -325,7 +325,7 @@ class NumField extends Field<num> {
                   child: TextFormField(
                     controller: controller,
                     enabled: enabled,
-                    focusNode: focusNode,
+                    // focusNode: focusNode,
                     textAlign: dense ? TextAlign.right : TextAlign.left,
                     toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
                       copy: false, cut: false, paste: false, selectAll: false,

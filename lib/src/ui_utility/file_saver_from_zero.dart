@@ -35,6 +35,8 @@ Future<bool> saveFileFromZero ({
   bool showSnackBars = true,
   bool showDownloadSnackBar = true,
   bool showResultSnackBar = true, // TODO 3 implement output pickers in not web (optional)
+  String? successTitle,
+  String? successMessage,
 }) async {
 
   if (!kIsWeb && Platform.isAndroid && !(await Permission.storage.request().isGranted)) {
@@ -212,8 +214,8 @@ Future<bool> saveFileFromZero ({
         context: context,
         type: SnackBarFromZero.success,
         duration: Duration(seconds: 8),
-        title: Text(FromZeroLocalizations.of(context).translate('download_success')),
-        message: Text("${FromZeroLocalizations.of(context).translate('downloaded_to')} $uiPath"),
+        title:  Text(successTitle ?? FromZeroLocalizations.of(context).translate('download_success')),
+        message: Text(successMessage ?? "${FromZeroLocalizations.of(context).translate('downloaded_to')} $uiPath"),
         actions: [
           SnackBarAction(
             label: FromZeroLocalizations.of(context).translate('open').toUpperCase(),

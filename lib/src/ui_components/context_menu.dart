@@ -20,6 +20,7 @@ class ContextMenuFromZero extends StatefulWidget {
   /// Default true. Set to false so menu will only be shown manually. Useful when stacking with a button.
   final bool addGestureDetector;
   final bool enabled;
+  final bool addOnTapDown; /// Default true. This blocks GestureDetectors behind it.
   final VoidCallback? onShowMenu;
 
   ContextMenuFromZero({
@@ -35,6 +36,7 @@ class ContextMenuFromZero extends StatefulWidget {
     this.useCursorLocation = true,
     this.addGestureDetector = true,
     this.onShowMenu,
+    this.addOnTapDown = true,
     Key? key,
   }) :  super(key: key);
 
@@ -109,8 +111,11 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
       gestures[TransparentTapGestureRecognizer] = GestureRecognizerFactoryWithHandlers<TransparentTapGestureRecognizer>(
         () => TransparentTapGestureRecognizer(debugOwner: this),
         (TapGestureRecognizer instance) {
+          if (widget.addOnTapDown) {
+            instance
+              ..onTapDown = onTapDown;
+          }
           instance
-            ..onTapDown = onTapDown
             ..onSecondaryTapDown = onTapDown
             ..onSecondaryTap = _showContextMenu;
         },

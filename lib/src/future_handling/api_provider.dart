@@ -524,7 +524,8 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
             double? percentage;
             try {
               final meaningfulValues = listenable.values.whereType<double>().toList();
-              percentage = meaningfulValues.reduce((v, e) => v+e) / meaningfulValues.length;
+              percentage = meaningfulValues.isEmpty ? 0
+                  : meaningfulValues.reduce((v, e) => v+e) / meaningfulValues.length;
             } catch (_) {}
             return loadingBuilder(context, percentage);
           },

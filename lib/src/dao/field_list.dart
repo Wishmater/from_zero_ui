@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:math';
+import 'dart:ui';
 
 import 'package:animations/animations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +17,7 @@ import 'package:from_zero_ui/src/dao/field.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
+import 'package:preload_page_view/preload_page_view.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:dartx/dartx.dart';
 
@@ -23,6 +26,12 @@ enum RowTapType {
   view,
   edit,
   none
+}
+
+enum ListFieldDisplayType {
+  table,
+  popupButton,
+  tabbedForm,
 }
 
 class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
@@ -45,7 +54,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool tableCellsEditable;
   bool collapsible;
   RowTapType rowTapType;
-  bool asPopup;
+  ListFieldDisplayType displayType;
   bool validateChildren;
   String Function(ListField<T, U> field) toStringGetter;
   Map<double, ActionState> actionViewBreakpoints;
@@ -180,7 +189,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.collapsed = false,
     this.allowMultipleSelection = false,
     this.collapsible = false,
-    this.asPopup = false,
+    this.displayType = ListFieldDisplayType.table,
     this.toStringGetter = defaultToString,
     RowTapType? rowTapType,
     Map<double, ActionState>? actionViewBreakpoints,
@@ -233,13 +242,14 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.rowAddonField,
     this.allowAddMultipleFromAvailablePool = true,
     ValueNotifier<Map<T, bool>>? selectedObjects,
+    this.pageNotifier,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
-        this.showEditDialogOnAdd = showEditDialogOnAdd ?? !tableCellsEditable,
+        this.showEditDialogOnAdd = showEditDialogOnAdd ?? (displayType==ListFieldDisplayType.table && !tableCellsEditable),
         this._showDefaultSnackBars = showDefaultSnackBars,
         this._skipDeleteConfirmation = skipDeleteConfirmation,
         this.rowTapType = rowTapType ?? (onRowTap==null && !tableCellsEditable ? RowTapType.view : RowTapType.none),
-        this.actionEditBreakpoints = actionEditBreakpoints ?? {0: ActionState.popup},
+        this.actionEditBreakpoints = actionEditBreakpoints ?? {0: displayType==ListFieldDisplayType.tabbedForm ? ActionState.none : ActionState.popup},
         this.actionDuplicateBreakpoints = actionDuplicateBreakpoints ?? {0: ActionState.none},
         this.actionDeleteBreakpoints = actionDeleteBreakpoints ?? {0: ActionState.icon},
         this.actionViewBreakpoints = actionViewBreakpoints ?? {0: ActionState.popup},
@@ -391,7 +401,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool? allowDuplicateObjectsFromAvailablePool,
     bool? showObjectsFromAvailablePoolAsTable,
     bool? allowAddNew,
-    bool? asPopup,
+    ListFieldDisplayType? displayType,
     String Function(ListField field)? toStringGetter,
     ContextFulFieldValueGetter<List<RowAction<T>>, ListField<T, U>>? extraRowActionBuilders,
     int? initialSortColumn,
@@ -427,6 +437,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     double? tableHorizontalPadding,
     String? rowAddonField,
     bool? allowAddMultipleFromAvailablePool,
+    ValueNotifier<int>? pageNotifier,
   }) {
     return ListField<T, U>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -452,7 +463,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       availableObjectsPoolProvider: availableObjectsPoolProvider ?? this.availableObjectsPoolProvider,
       allowDuplicateObjectsFromAvailablePool: allowDuplicateObjectsFromAvailablePool ?? this.allowDuplicateObjectsFromAvailablePool,
       allowAddNew: allowAddNew ?? this._allowAddNew,
-      asPopup: asPopup ?? this.asPopup,
+      displayType: displayType ?? this.displayType,
       toStringGetter: toStringGetter ?? this.toStringGetter,
       extraRowActionsBuilder: extraRowActionBuilders ?? this.extraRowActionsBuilder,
       skipDeleteConfirmation: skipDeleteConfirmation ?? this._skipDeleteConfirmation,
@@ -495,6 +506,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       tableHorizontalPadding: tableHorizontalPadding ?? this.tableHorizontalPadding,
       rowAddonField: rowAddonField ?? this.rowAddonField,
       allowAddMultipleFromAvailablePool: allowAddMultipleFromAvailablePool ?? this.allowAddMultipleFromAvailablePool,
+      pageNotifier: pageNotifier ?? this.pageNotifier,
     );
   }
 
@@ -1193,8 +1205,16 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     FocusNode? focusNode,
     ScrollController? mainScrollController,
   }) {
-    if (dense || asPopup) {
-      return buildDenseWidgets(context,
+    if (dense || displayType==ListFieldDisplayType.popupButton) {
+      return builWidgetsAsPopupButton(context,
+        addCard: addCard,
+        asSliver: asSliver,
+        expandToFillContainer: expandToFillContainer,
+        dense: dense,
+        focusNode: focusNode,
+      );
+    } else if (displayType==ListFieldDisplayType.tabbedForm) {
+      return builWidgetsAsTabbedForm(context,
         addCard: addCard,
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
@@ -1202,7 +1222,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         focusNode: focusNode,
       );
     } else {
-      return buildFullTableWidgets(context,
+      return buildWidgetsAsTable(context,
         addCard: addCard,
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
@@ -1213,7 +1233,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     }
   }
 
-  List<Widget> buildDenseWidgets(BuildContext context, {
+  List<Widget> builWidgetsAsPopupButton(BuildContext context, {
     bool addCard=true,
     bool asSliver = true,
     bool expandToFillContainer = true,
@@ -1232,7 +1252,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     if (expandToFillContainer) {
       result = LayoutBuilder(
         builder: (context, constraints) {
-          return _buildDenseWidget(context,
+          return _builWidgetsAsPopupButton(context,
             addCard: addCard,
             asSliver: asSliver,
             expandToFillContainer: expandToFillContainer,
@@ -1243,7 +1263,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         },
       );
     } else {
-      result = _buildDenseWidget(context,
+      result = _builWidgetsAsPopupButton(context,
         addCard: addCard,
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
@@ -1258,8 +1278,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     }
     return [result];
   }
-  late final popupGlobalKey = GlobalKey();
-  Widget _buildDenseWidget(BuildContext context, {
+  Widget _builWidgetsAsPopupButton(BuildContext context, {
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
@@ -1288,7 +1307,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    ...buildFullTableWidgets(context,
+                    ...buildWidgetsAsTable(context,
                       addCard: false,
                       asSliver: false, // TODO 3 try to do it as sliver for better performance
                       expandToFillContainer: false,
@@ -1370,9 +1389,320 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     return result;
   }
 
+  ValueNotifier<int>? pageNotifier;
+  int? lastPage;
+  List<Widget> builWidgetsAsTabbedForm(BuildContext context, {
+    bool addCard=true,
+    bool asSliver = true,
+    bool expandToFillContainer = true,
+    bool dense = false,
+    FocusNode? focusNode,
+  }) {
+    focusNode ??= this.focusNode;
+    Widget result;
+    if (hiddenInForm) {
+      result = SizedBox.shrink();
+      if (asSliver) {
+        result = SliverToBoxAdapter(child: result,);
+      }
+      return [result];
+    }
+    pageNotifier ??= ValueNotifier(0);
+    result = AnimatedBuilder(
+      animation: this,
+      builder: (context, child) {
+        final tabBarScrollController = ScrollController();
+        final userActions = this.actions?.call(dao.contextForValidation ?? context, this, dao) ?? [];
+        final defaultActions = buildDefaultActions(context);
+        final allActions = [
+          ...userActions,
+          if (userActions.isNotEmpty && defaultActions.isNotEmpty)
+            ActionFromZero.divider(),
+          ...defaultActions,
+        ];
+        Widget result = Column(
+          children: [
+            ExcludeFocus(
+              child: TooltipFromZero(
+                message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+                  return a.toString().trim().isEmpty ? b.toString()
+                      : b.toString().trim().isEmpty ? a.toString()
+                      : '$a\n$b';
+                }),
+                waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
+                child: Card(
+                  clipBehavior: Clip.hardEdge,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Theme(
+                        data: Theme.of(context).copyWith(
+                          appBarTheme: AppBarTheme(
+                            color: Material.of(context)!.color ?? Theme.of(context).cardColor, // Colors.transparent
+                            iconTheme: Theme.of(context).iconTheme,
+                            actionsIconTheme: Theme.of(context).iconTheme.copyWith(
+                              color: Theme.of(context).splashColor.withOpacity(1),
+                            ),
+                            titleTextStyle: Theme.of(context).textTheme.subtitle1,
+                            toolbarTextStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
+                              color: Theme.of(context).splashColor.withOpacity(1),
+                            ),
+                          ),
+                        ),
+                        child: AppbarFromZero(
+                          titleSpacing: 0,
+                          addContextMenu: enabled,
+                          onShowContextMenu: () => focusNode!.requestFocus(),
+                          title: Row(
+                            children: [
+                              SizedBox(width: 24,),
+                              Expanded(
+                                child: OverflowScroll(
+                                  autoscrollSpeed: null,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(uiName,
+                                        style: Theme.of(context).textTheme.headline6!.copyWith(
+                                          fontSize: Theme.of(context).textTheme.headline6!.fontSize!*0.85,
+                                        ),
+                                      ),
+                                      Text(objects.length==0 ? FromZeroLocalizations.of(context).translate('no_elements')
+                                          : '${objects.length} ${objects.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
+                                          : FromZeroLocalizations.of(context).translate('element_sing')}',
+                                        style: Theme.of(context).textTheme.caption,
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          elevation: 0,
+                          actions: allActions,
+                        ),
+                      ),
+                      ScrollbarFromZero(
+                        controller: tabBarScrollController,
+                        opacityGradientDirection: OpacityGradient.horizontal,
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          controller: tabBarScrollController,
+                          child: TabBar( // TODO 3 replace this with an actual widget: PageIndicatorFromzero. Allow to have an indicator + building children dinamically according to selected
+                            isScrollable: true,
+                            indicatorWeight: 4,
+                            tabs: objects.mapIndexed((i, e) {
+                              String name = e.toString();
+                              if (name.isBlank) {
+                                name = 'Pág. ${i+1}'; // TODO 3 internationalize
+                              }
+                              return ContextMenuFromZero(
+                                enabled: enabled,
+                                addOnTapDown: false,
+                                onShowMenu: () => focusNode!.requestFocus(),
+                                actions: [
+                                  if ((allowAddNew||hasAvailableObjectsPool))
+                                    ActionFromZero(
+                                      title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
+                                      icon: Icon(Icons.add),
+                                      breakpoints: {0: ActionState.popup,},
+                                      onTap: (context) {
+                                        maybeAddRow(context, i);
+                                        pageNotifier!.value = i+1;
+                                      },
+                                    ),
+                                  if ((allowAddNew||hasAvailableObjectsPool))
+                                    RowAction.divider(),
+                                  ActionFromZero(
+                                    icon: Icon(Icons.edit_outlined),
+                                    title: FromZeroLocalizations.of(context).translate('edit'),
+                                    breakpoints: actionEditBreakpoints,
+                                    onTap: (context) async {
+                                      final copy = e.copyWith() as T;
+                                      copy.parentDAO = null;
+                                      copy.contextForValidation = dao.contextForValidation;
+                                      final result = await copy.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+                                      if (result!=null) {
+                                        replaceRow(e, copy);
+                                        notifyListeners();
+                                      }
+                                    },
+                                  ),
+                                  ActionFromZero(
+                                    icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
+                                    title: FromZeroLocalizations.of(context).translate('duplicate'),
+                                    breakpoints: actionDuplicateBreakpoints,
+                                    onTap: (context) async {
+                                      duplicateRows([e]);
+                                    },
+                                  ),
+                                  if (objectTemplate.canDelete) // TODO 3 maybe add allowDelete param
+                                    ActionFromZero(
+                                      icon: Icon(allowAddNew ? Icons.delete_forever_outlined : Icons.clear),
+                                      title: FromZeroLocalizations.of(context).translate('delete'),
+                                      breakpoints: actionDeleteBreakpoints,
+                                      onTap: (context) async {
+                                        if (await maybeDelete(context, [e],)) {
+                                          focusNode!.requestFocus();
+                                          passedFirstEdit = true;
+                                          notifyListeners();
+                                        }
+                                      },
+                                    ),
+                                ],
+                                child: Container(
+                                  height: 38,
+                                  padding: EdgeInsets.only(bottom: 6),
+                                  alignment: Alignment.center,
+                                  child: Text(name, style: Theme.of(context).textTheme.subtitle1,),
+                                ),
+                              );
+                            }).toList(),
+                            onTap: (value) {
+                              pageNotifier!.value = value;
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 0,
+              child: TabBarView(
+                children: List.filled(objects.length, Container()),
+              ),
+            ),
+            ValueListenableBuilder<int>(
+              valueListenable: pageNotifier!,
+              builder: (context, page, child) {
+                final tabController = DefaultTabController.of(context);
+                if (page < 0 || page>objects.length-1) {
+                  if (objects.length > 0) {
+                    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                      if (page < 0 || page>objects.length-1) {
+                        pageNotifier!.value = objects.length-1;
+                      }
+                    });
+                  }
+                  return SizedBox.shrink();
+                }
+                if (page != tabController!.index) {
+                  WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                    if (page != tabController.index) {
+                      tabController.animateTo(page);
+                    }
+                  });
+                }
+                final e = objects[page];
+                String name = e.toString();
+                if (name.isBlank) {
+                  name = 'Pág. ${page+1}'; // TODO 3 internationalize
+                }
+                Widget result = PageTransitionSwitcher(
+                  duration: Duration(milliseconds: 300),
+                  reverse: lastPage!=null && lastPage!>page,
+                  layoutBuilder: (List<Widget> entries) {
+                    entries.sort((a, b) {
+                      return ((b as KeyedSubtree).key as ValueKey).value
+                          .compareTo(((a as KeyedSubtree).key as ValueKey).value);
+                    },);
+                    return Stack(
+                      children: entries.sublist(0, min(2, entries.length)),
+                      alignment: Alignment.topCenter,
+                    );
+                  },
+                  transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
+                    return SharedAxisTransition(
+                      animation: primaryAnimation,
+                      secondaryAnimation: secondaryAnimation,
+                      transitionType: SharedAxisTransitionType.horizontal,
+                      fillColor: Colors.transparent,
+                      child: child,
+                    );
+                  },
+                  child: Container(
+                    key: ValueKey(page),
+                    padding: const EdgeInsets.only(top: 2, bottom: 10, left: 8, right: 8,),
+                    child: Column(
+                      children: e.buildFormWidgets(context,
+                        asSlivers: false,
+                        showActionButtons: false,
+                      ),
+                    ),
+                  ),
+                );
+                lastPage = page;
+                return result;
+              },
+            ),
+          ],
+        );
+        result = Stack(
+          children: [
+            Positioned(
+              bottom: 8, top: 48,
+              left: 2, right: 2,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                  border: Border.all(
+                    width: 2,
+                    color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.3),
+                  ),
+                ),
+              ),
+            ),
+            result,
+          ],
+        );
+        result = DefaultTabController(
+          length: objects.length,
+          child: result,
+        );
+        result = AnimatedContainer(
+          duration: Duration(milliseconds: 300),
+          color: dense && listFieldValidationErrors.isNotEmpty
+              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![listFieldValidationErrors.first.severity]!.withOpacity(0.2)
+              : backgroundColor?.call(context, this, dao),
+          curve: Curves.easeOut,
+          child: result,
+        );
+        return result;
+      },
+    );
+    result = EnsureVisibleWhenFocused(
+      focusNode: focusNode,
+      key: fieldGlobalKey,
+      child: SizedBox(
+        width: maxWidth,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            result,
+            if (!dense)
+              ValidationMessage(errors: listFieldValidationErrors),
+          ],
+        ),
+      ),
+    );
+    if (asSliver) {
+      result = SliverToBoxAdapter(
+        child: result,
+      );
+    }
+    return [result];
+  }
+
+
   late final errorWidgetFocusNode = FocusNode();
   late Map<T, RowModel<T>> builtRows;
-  List<Widget> buildFullTableWidgets(BuildContext context, {
+  List<Widget> buildWidgetsAsTable(BuildContext context, {
     bool addCard=true,
     bool asSliver = true,
     bool expandToFillContainer = true,
@@ -2007,9 +2337,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         ActionFromZero(
           title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
           icon: Icon(Icons.add),
-          onTap: (context) {
+          onTap: (context) async {
             focusNode?.requestFocus();
-            maybeAddRow(context);
+            if (await maybeAddRow(context) != null) {
+              pageNotifier?.value = objects.length-1;
+            }
           },
         ),
       if (dao.enableUndoRedoMechanism)
