@@ -271,7 +271,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     // final Color borderSideColor = _borderColor.value;
 
     Widget title = InkWell(
-      onTap: _handleTap,
+      onTap: !widget.enabled ? null : _handleTap,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -283,7 +283,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
                 child: _isExpanded ? (widget.titleExpanded??widget.title) : widget.title
             ),
           ),
-          if (!(widget.trailing is SizedBox))
+          if (!(widget.trailing is SizedBox) && widget.children.isNotEmpty)
             Positioned(
               top: 0, bottom: 0,
               right: widget.style==DrawerMenuFromZero.styleDrawerMenu ? 4 : null,
@@ -296,7 +296,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
                     child: Icon(Icons.expand_more, color: _iconColor.value, size: 26,),
                   ) : SizedBox.shrink()),
                   iconSize: 26,
-                  onPressed: () {
+                  onPressed: !widget.enabled ? null : () {
                     setExpanded(!_isExpanded);
                   },
                   splashRadius: 28,

@@ -906,38 +906,37 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
         selected: widget.selected,
         title: Transform.translate(
           offset: Offset(widget.titleHorizontalOffset, 0),
-          child: Text(widget.title,
+          child: AnimatedDefaultTextStyle(
+            duration: Duration(milliseconds: 100),
             style: TextStyle(
               fontSize: widget.selected ? 17 : 16,
               color: widget.selected ? selectedColor : theme.textTheme.bodyText1!.color,
               fontWeight: widget.selected ? FontWeight.w700 : null,
             ),
+            child: Text(widget.title,),
           ),
         ),
         subtitle: widget.subtitle==null||widget.compact ? null
             : Transform.translate(
               offset: Offset(widget.titleHorizontalOffset, 0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(widget.subtitle!,
-                      style: TextStyle(
-                        color: widget.selected ? selectedColor.withOpacity(0.75)
-                            : theme.textTheme.caption!.color,
-                        fontWeight: widget.selected ? FontWeight.w600 : null,
-                      ),
+              child: AnimatedDefaultTextStyle(
+                duration: Duration(milliseconds: 100),
+                style: TextStyle(
+                  color: widget.selected ? selectedColor.withOpacity(0.75)
+                      : theme.textTheme.caption!.color,
+                  fontWeight: widget.selected ? FontWeight.w600 : null,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(widget.subtitle!,),
                     ),
-                  ),
-                  if (widget.subtitleRight!=null)
-                    Text(widget.subtitleRight!,
-                      textAlign: TextAlign.right,
-                      style: TextStyle(
-                        color: widget.selected ? selectedColor.withOpacity(0.75)
-                            : theme.textTheme.caption!.color,
-                        fontWeight: widget.selected ? FontWeight.w600 : null,
+                    if (widget.subtitleRight!=null)
+                      Text(widget.subtitleRight!,
+                        textAlign: TextAlign.right,
                       ),
-                    ),
-                ],
+                  ],
+                ),
               ),
             ),
         contentPadding: widget.contentPadding,
@@ -955,12 +954,15 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                     top: 4, bottom: 4,
                     right: -2 - 128*(1 - animation.value) - (widget.titleHorizontalOffset/2),
                     left: -widget.contentPadding.left,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: selectedColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(16),
-                          bottomRight: Radius.circular(16),
+                    child: Opacity(
+                      opacity: (animation.value*2).coerceIn(0, 1),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: selectedColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.only(
+                            topRight: Radius.circular(16),
+                            bottomRight: Radius.circular(16),
+                          ),
                         ),
                       ),
                     ),
