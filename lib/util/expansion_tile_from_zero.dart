@@ -290,7 +290,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
               left: widget.style==DrawerMenuFromZero.styleTree ? 0 : null,
               child: Padding(
                 padding: widget.actionPadding,
-                child: IconButton(
+                child: widget.leading ?? IconButton(
                   icon: widget.trailing ?? (widget.enabled ? RotationTransition(
                     turns: _iconTurns,
                     child: Icon(Icons.expand_more, color: _iconColor.value, size: 26,),

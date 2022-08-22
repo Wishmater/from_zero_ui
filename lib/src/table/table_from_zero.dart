@@ -805,7 +805,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           return SizedBox.shrink();
         }
         Widget result = Container(
-          height: row.height,
+          height: widget.enableFixedHeightForListRows ? row.height : null,
           alignment: Alignment.center,
           padding: row==headerRowModel ? null : widget.cellPadding,
           child: Container(

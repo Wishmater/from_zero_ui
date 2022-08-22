@@ -671,7 +671,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 addExpandCollapseContextMenuAction: !widget.compact,
                 childrenKeysForExpandCollapse: childKeys[i]?.values.toList(),
                 style: widget.style,
-                enabled: widget.depth!=0 || widget.allowCollapseRoot,
+                leading: widget.depth!=0 || widget.allowCollapseRoot ? null : SizedBox.shrink(),
                 actionPadding: EdgeInsets.only(
                   left: widget.style==DrawerMenuFromZero.styleTree ? widget.depth*20.0 : 0,
                 ),
