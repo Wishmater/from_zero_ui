@@ -210,6 +210,7 @@ class ComboField<T extends DAO> extends Field<T> {
     bool asSliver = true,
     expandToFillContainer: true,
     bool dense = false,
+    bool ignoreHidden = false,
     FocusNode? focusNode,
     ScrollController? mainScrollController,
   }) {
@@ -217,7 +218,7 @@ class ComboField<T extends DAO> extends Field<T> {
       focusNode = this.focusNode;
     }
     Widget result;
-    if (hiddenInForm) {
+    if (hiddenInForm && !ignoreHidden) {
       result = SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);

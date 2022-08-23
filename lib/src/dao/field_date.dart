@@ -153,13 +153,14 @@ class DateField extends Field<DateTime> {
     expandToFillContainer: true,
     bool dense = false,
     FocusNode? focusNode,
+    bool ignoreHidden = false,
     ScrollController? mainScrollController,
   }) {
     if (focusNode==null) {
       focusNode = this.focusNode;
     }
     Widget result;
-    if (hiddenInForm) {
+    if (hiddenInForm && !ignoreHidden) {
       result = SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);

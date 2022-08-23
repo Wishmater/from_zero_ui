@@ -212,6 +212,7 @@ class NumField extends Field<num> {
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool dense = false,
+    bool ignoreHidden = false,
     FocusNode? focusNode,
     ScrollController? mainScrollController,
   }) {
@@ -219,7 +220,7 @@ class NumField extends Field<num> {
       focusNode = this.focusNode;
     }
     Widget result;
-    if (hiddenInForm) {
+    if (hiddenInForm && !ignoreHidden) {
       result = SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);

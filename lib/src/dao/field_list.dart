@@ -1202,9 +1202,18 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool dense = false,
+    bool ignoreHidden = false,
     FocusNode? focusNode,
     ScrollController? mainScrollController,
   }) {
+    if (hiddenInForm && !ignoreHidden) {
+      Widget result;
+      result = SizedBox.shrink();
+      if (asSliver) {
+        result = SliverToBoxAdapter(child: result,);
+      }
+      return [result];
+    }
     if (dense || displayType==ListFieldDisplayType.popupButton) {
       return builWidgetsAsPopupButton(context,
         addCard: addCard,
@@ -1242,13 +1251,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }) {
     focusNode ??= this.focusNode;
     Widget result;
-    if (hiddenInForm) {
-      result = SizedBox.shrink();
-      if (asSliver) {
-        result = SliverToBoxAdapter(child: result,);
-      }
-      return [result];
-    }
     if (expandToFillContainer) {
       result = LayoutBuilder(
         builder: (context, constraints) {
@@ -1400,13 +1402,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }) {
     focusNode ??= this.focusNode;
     Widget result;
-    if (hiddenInForm) {
-      result = SizedBox.shrink();
-      if (asSliver) {
-        result = SliverToBoxAdapter(child: result,);
-      }
-      return [result];
-    }
     pageNotifier ??= ValueNotifier(0);
     result = AnimatedBuilder(
       animation: this,
@@ -1720,13 +1715,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     final objectTemplate = this.objectTemplate;
     final allowAddNew = this.allowAddNew;
     Widget result;
-    if (hiddenInForm) {
-      result = SizedBox.shrink();
-      if (asSliver) {
-        result = SliverToBoxAdapter(child: result,);
-      }
-      return [result];
-    }
     final actions = this.actions?.call(dao.contextForValidation ?? context, this, dao) ?? [];
     final defaultActions = buildDefaultActions(context, focusNode: focusNode);
     if (actions.isNotEmpty && defaultActions.isNotEmpty) {

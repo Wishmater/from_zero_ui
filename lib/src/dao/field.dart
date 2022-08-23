@@ -325,11 +325,12 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool dense = false,
+    bool ignoreHidden = false,
     FocusNode? focusNode,
     ScrollController? mainScrollController,
   }) {
     Widget result;
-    if (hiddenInForm) {
+    if (hiddenInForm && !ignoreHidden) {
       result = SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);

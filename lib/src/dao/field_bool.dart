@@ -299,12 +299,13 @@ class BoolField extends Field<BoolComparable> {
     bool asSliver = true,
     expandToFillContainer: true,
     bool dense = false,
+    bool ignoreHidden = false,
     FocusNode? focusNode,
     ScrollController? mainScrollController,
   }) {
     focusNode ??= this.focusNode;
     Widget result;
-    if (hiddenInForm) {
+    if (hiddenInForm && !ignoreHidden) {
       result = SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);
