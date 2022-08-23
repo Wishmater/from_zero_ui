@@ -236,6 +236,7 @@ class StringField extends Field<String> {
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
             focusNode: focusNode!,
             dense: dense,
+            constraints: constraints,
           );
         },
       );
@@ -264,6 +265,7 @@ class StringField extends Field<String> {
     bool largeHorizontally = false,
     bool dense = false,
     required FocusNode focusNode,
+    BoxConstraints? constraints,
   }) {
     focusNode.addListener(() {
       if (!focusNode.hasFocus) {
@@ -305,105 +307,76 @@ class StringField extends Field<String> {
                   },
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.only(
-                  bottom: largeVertically ? 16 : 0,
-                  top: dense ? 0 : largeVertically ? 12 : 2,
-                ),
-                child: KeyboardListener(
-                  includeSemantics: false,
-                  focusNode: focusNode..skipTraversal=true,
-                  onKeyEvent: (value) {
-                    if (value is KeyDownEvent && type==StringFieldType.short) {
-                      if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
-                        focusNode.focusInDirection(TraversalDirection.down);
-                      } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
-                        focusNode.focusInDirection(TraversalDirection.up);
-                      }
+              KeyboardListener(
+                includeSemantics: false,
+                focusNode: focusNode..skipTraversal=true,
+                onKeyEvent: (value) {
+                  if (value is KeyDownEvent && type==StringFieldType.short) {
+                    if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
+                      focusNode.focusInDirection(TraversalDirection.down);
+                    } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
+                      focusNode.focusInDirection(TraversalDirection.up);
                     }
-                  },
-                  child: TextFormField(
-                    controller: controller,
-                    enabled: enabled,
-                    // focusNode: focusNode,
-                    toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
-                      copy: false, cut: false, paste: false, selectAll: false,
-                    ),
-                    onEditingComplete: () {
-                      focusNode.nextFocus();
-                    },
-                    minLines: minLines,
-                    maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
-                    obscureText: obfuscate,
-                    onChanged: (v) {
-                      value = v;
-                    },
-                    inputFormatters: inputFormatters,
-                    decoration: inputDecoration??InputDecoration(
-                      border: InputBorder.none,
-                      alignLabelWithHint: dense,
-                      label: Padding(
-                        padding: EdgeInsets.only(top: !dense&&hint!=null ? 12 : 0),
-                        child: Text(uiName,
-                          softWrap: false,
-                          overflow: TextOverflow.fade,
+                  }
+                },
+                child: Builder(
+                  builder: (context) {
+                    return TextFormField(
+                      controller: controller,
+                      enabled: enabled,
+                      // focusNode: focusNode,
+                      toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
+                        copy: false, cut: false, paste: false, selectAll: false,
+                      ),
+                      onEditingComplete: () {
+                        focusNode.nextFocus();
+                      },
+                      minLines: minLines,
+                      maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
+                      obscureText: obfuscate,
+                      onChanged: (v) {
+                        value = v;
+                      },
+                      inputFormatters: inputFormatters,
+                      decoration: inputDecoration??InputDecoration(
+                        border: InputBorder.none,
+                        alignLabelWithHint: dense,
+                        label: Padding(
+                          padding: EdgeInsets.only(
+                            top: !dense&&hint!=null ? 12 : largeVertically ? 0 : 8,
+                            bottom: !dense&&hint!=null ? 12 : largeVertically ? 6 : 0,
+                          ),
+                          child: Text(uiName,
+                            softWrap: false,
+                            overflow: TextOverflow.fade,
+                          ),
+                        ),
+                        hintText: hint,
+                        floatingLabelBehavior: dense ? FloatingLabelBehavior.never
+                            : !enabled ? (value==null||value!.isEmpty) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
+                            : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
+                        labelStyle: TextStyle(
+                          height: dense ? 0 : largeVertically ? 0.5 : hint!=null ? 1 : 0.7,
+                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                        ),
+                        hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
+                        contentPadding: EdgeInsets.only(
+                          left: dense ? 0 : 16,
+                          right: dense ? 0 : (16 + (context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40)),
+                          bottom: largeVertically ? 16 : dense ? 10 : 0,
+                          top: largeVertically ? 16 : dense ? 0 : 6,
                         ),
                       ),
-                      hintText: hint,
-                      floatingLabelBehavior: dense ? FloatingLabelBehavior.never
-                          : !enabled ? (value==null||value!.isEmpty) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
-                          : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
-                      labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : hint!=null ? 1 : 1.85,
-                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                      ),
-                      hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
-                      contentPadding: EdgeInsets.only(
-                        left: dense ? 0 : 16,
-                        right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
-                        bottom: dense ? 10 : 0,
-                      ),
-                    ),
-                  ),
+                    );
+                  }
                 ),
               ),
-              if (enabled && clearable && !dense)
-                Positioned(
-                  right: 8, top: 0, bottom: 0,
-                  child: ExcludeFocus(
-                    child: Center(
-                      child: AnimatedSwitcher(
-                        duration: Duration(milliseconds: 300),
-                        switchInCurve: Curves.easeOutCubic,
-                        transitionBuilder: (child, animation) {
-                          return SizeTransition(
-                            sizeFactor: animation,
-                            child: FadeTransition(
-                              opacity: animation,
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: value!=null && value!.trim().isNotEmpty ? TooltipFromZero(
-                          message: FromZeroLocalizations.of(context).translate('clear'),
-                          child: IconButton(
-                            icon: Icon(Icons.close),
-                            splashRadius: 20,
-                            onPressed: () {
-                              value = '';
-                              focusNode.requestFocus();
-                            },
-                          ),
-                        ) : SizedBox.shrink(),
-                      ),
-                    ),
-                  ),
-                ),
-              if (!enabled)
-                Positioned.fill(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.forbidden,
-                  ),
-                ),
+              // if (!enabled)
+              //   Positioned.fill(
+              //     child: MouseRegion(
+              //       cursor: SystemMouseCursors.forbidden,
+              //     ),
+              //   ),
             ],
           );
           result = TooltipFromZero(
@@ -415,20 +388,32 @@ class StringField extends Field<String> {
             child: result,
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
-          final actions = this.actions?.call(context, this, dao) ?? [];
-          final defaultActions = buildDefaultActions(context);
-          result = ContextMenuFromZero(
-            enabled: enabled,
-            addGestureDetector: !dense,
-            onShowMenu: () => focusNode.requestFocus(),
-            actions: [
-              ...actions,
-              if (actions.isNotEmpty && defaultActions.isNotEmpty)
-                ActionFromZero.divider(),
-              ...defaultActions,
-            ],
-            child: result,
-          );
+          if (!dense) {
+            final actions = this.actions?.call(context, this, dao) ?? [];
+            final defaultActions = buildDefaultActions(context);
+            result = AppbarFromZero(
+              addContextMenu: enabled,
+              onShowContextMenu: () => focusNode.requestFocus(),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              useFlutterAppbar: false,
+              extendTitleBehindActions: true,
+              toolbarHeight: largeVertically ? null : 56,
+              paddingRight: 6,
+              actionPadding: 0,
+              skipTraversalForActions: true,
+              constraints: BoxConstraints(),
+              actions: [
+                ...actions,
+                if (actions.isNotEmpty && defaultActions.isNotEmpty)
+                  ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
+                ...defaultActions,
+              ].map((e) => e.copyWith(
+                enabled: enabled,
+              )).toList(),
+              title: SizedBox(height: largeVertically ? null : 56, child: result),
+            );
+          }
           return result;
         },
       ),

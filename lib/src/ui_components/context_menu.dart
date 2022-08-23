@@ -4,6 +4,7 @@ import 'package:flutter/rendering.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
+import 'package:dartx/dartx.dart';
 
 class ContextMenuFromZero extends StatefulWidget {
 
@@ -38,7 +39,14 @@ class ContextMenuFromZero extends StatefulWidget {
     this.onShowMenu,
     this.addOnTapDown = true,
     Key? key,
-  }) :  super(key: key);
+  }) :  super(key: key) {
+    for (int i=0; i<actions.length; i++) {
+      if (actions[i].overflowBuilder==ActionFromZero.dividerOverflowBuilder
+          && (i==0 || i==actions.lastIndex || actions[i+1].overflowBuilder==ActionFromZero.dividerOverflowBuilder)) {
+        actions.removeAt(i); i--;
+      }
+    }
+  }
 
   @override
   State<ContextMenuFromZero> createState() => ContextMenuFromZeroState();

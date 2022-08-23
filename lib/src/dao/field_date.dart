@@ -176,6 +176,7 @@ class DateField extends Field<DateTime> {
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
             dense: dense,
             focusNode: focusNode!,
+            constraints: constraints,
           );
         },
       );
@@ -201,6 +202,7 @@ class DateField extends Field<DateTime> {
     bool expandToFillContainer = true,
     bool largeHorizontally = false,
     bool dense = false,
+    BoxConstraints? constraints,
     required FocusNode focusNode,
   }) {
     Widget result = AnimatedBuilder(
@@ -209,7 +211,7 @@ class DateField extends Field<DateTime> {
         Widget result = DatePickerFromZero(
           focusNode: focusNode,
           enabled: enabled,
-          clearable: clearable,
+          clearable: false,
           title: uiName,
           firstDate: firstDate,
           lastDate: lastDate,
@@ -218,13 +220,17 @@ class DateField extends Field<DateTime> {
           onSelected: (v) {
             value=v;
             focusNode.requestFocus();
+            return true;
           },
           popupWidth: maxWidth,
           buttonPadding: dense ? EdgeInsets.zero : null,
           formatter: formatter,
           buttonChildBuilder: (context, title, hint, value, formatter, enabled, clearable) {
-            return _buttonContentBuilder(context, title, hint, value, formatter, enabled, clearable,
-              dense: dense,
+            return Padding(
+              padding: EdgeInsets.only(right: dense ? 0 : context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40),
+              child: _buttonContentBuilder(context, title, hint, value, formatter, enabled, false,
+                dense: dense,
+              ),
             );
           },
         );
@@ -245,20 +251,32 @@ class DateField extends Field<DateTime> {
           child: result,
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
-        final actions = this.actions?.call(context, this, dao) ?? [];
-        final defaultActions = buildDefaultActions(context);
-        result = ContextMenuFromZero(
-          enabled: enabled,
-          addGestureDetector: !dense,
-          onShowMenu: () => focusNode.requestFocus(),
-          actions: [
-            ...actions,
-            if (actions.isNotEmpty && defaultActions.isNotEmpty)
-              ActionFromZero.divider(),
-            ...defaultActions,
-          ],
-          child: result,
-        );
+        if (!dense) {
+          final actions = this.actions?.call(context, this, dao) ?? [];
+          final defaultActions = buildDefaultActions(context);
+          result = AppbarFromZero(
+            addContextMenu: enabled,
+            onShowContextMenu: () => focusNode.requestFocus(),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            useFlutterAppbar: false,
+            extendTitleBehindActions: true,
+            toolbarHeight: 56,
+            paddingRight: 6,
+            actionPadding: 0,
+            skipTraversalForActions: true,
+            constraints: BoxConstraints(),
+            actions: [
+              ...actions,
+              if (actions.isNotEmpty && defaultActions.isNotEmpty)
+                ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
+              ...defaultActions,
+            ].map((e) => e.copyWith(
+              enabled: enabled,
+            )).toList(),
+            title: SizedBox(height: 56, child: result),
+          );
+        }
         return result;
       },
     );

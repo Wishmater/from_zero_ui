@@ -123,13 +123,15 @@ class EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
       return;
     }
 
-    await ensureVisibleForContext(
-      context: context,
-      alignmentStart: widget.alignmentStart,
-      alignmentEnd: widget.alignmentEnd,
-      curve: widget.curve,
-      duration: widget.duration,
-    );
+    if (mounted) {
+      await ensureVisibleForContext(
+        context: context,
+        alignmentStart: widget.alignmentStart,
+        alignmentEnd: widget.alignmentEnd,
+        curve: widget.curve,
+        duration: widget.duration,
+      );
+    }
 
   }
 

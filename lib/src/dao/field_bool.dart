@@ -561,6 +561,7 @@ class BoolField extends Field<BoolComparable> {
           child: result,
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
+        // TODO 3 implement actions in FieldBool
         return result;
       },
     );
@@ -571,13 +572,13 @@ class BoolField extends Field<BoolComparable> {
         child: Stack(
           children: [
             result,
-            if (!enabled)
-              Positioned.fill(
-                child: MouseRegion(
-                  opaque: false,
-                  cursor: SystemMouseCursors.forbidden,
-                ),
-              ),
+            // if (!enabled)
+            //   Positioned.fill(
+            //     child: MouseRegion(
+            //       opaque: false,
+            //       cursor: SystemMouseCursors.forbidden,
+            //     ),
+            //   ),
           ],
         ),
       );

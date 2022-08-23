@@ -196,6 +196,7 @@ class FileField extends Field<String> {
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
             focusNode: focusNode!,
             dense: dense,
+            constraints: constraints,
           );
         },
       );
@@ -221,6 +222,7 @@ class FileField extends Field<String> {
     bool expandToFillContainer = true,
     bool largeHorizontally = false,
     bool dense = false,
+    BoxConstraints? constraints,
     required FocusNode focusNode,
   }) {
     String? initialDirectory;
@@ -253,51 +255,26 @@ class FileField extends Field<String> {
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: ComboField.buttonContentBuilder(context, uiName, hint, filename, enabled, clearable,
-                      dense: dense,
-                      showDropdownIcon: false,
+                    child: Builder(
+                      builder: (context) {
+                        return Padding(
+                          padding: EdgeInsets.only(right: dense ? 0 : context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40),
+                          child: ComboField.buttonContentBuilder(context, uiName, hint, filename, enabled, false,
+                            dense: dense,
+                            showDropdownIcon: false,
+                          ),
+                        );
+                      }
                     ),
                   ),
                 ),
               ),
-              if (enabled && clearable && !dense)
-                Positioned(
-                  right: 8, top: 0, bottom: 0,
-                  child: ExcludeFocus(
-                    child: Center(
-                      child: AnimatedSwitcher(
-                        duration: Duration(milliseconds: 300),
-                        switchInCurve: Curves.easeOutCubic,
-                        transitionBuilder: (child, animation) {
-                          return SizeTransition(
-                            sizeFactor: animation,
-                            child: FadeTransition(
-                              opacity: animation,
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: value!=null ? TooltipFromZero(
-                          message: FromZeroLocalizations.of(context).translate('clear'),
-                          child: IconButton(
-                            icon: Icon(Icons.close),
-                            splashRadius: 20,
-                            onPressed: () {
-                              value = null;
-                              focusNode.requestFocus();
-                            },
-                          ),
-                        ) : SizedBox.shrink(),
-                      ),
-                    ),
-                  ),
-                ),
-              if (!enabled)
-                Positioned.fill(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.forbidden,
-                  ),
-                ),
+              // if (!enabled)
+              //   Positioned.fill(
+              //     child: MouseRegion(
+              //       cursor: SystemMouseCursors.forbidden,
+              //     ),
+              //   ),
             ],
           );
           result = TooltipFromZero(
@@ -309,20 +286,32 @@ class FileField extends Field<String> {
             child: result,
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
-          final actions = this.actions?.call(context, this, dao) ?? [];
-          final defaultActions = buildDefaultActions(context);
-          result = ContextMenuFromZero(
-            enabled: enabled,
-            addGestureDetector: !dense,
-            onShowMenu: () => focusNode.requestFocus(),
-            actions: [
-              ...actions,
-              if (actions.isNotEmpty && defaultActions.isNotEmpty)
-                ActionFromZero.divider(),
-              ...defaultActions,
-            ],
-            child: result,
-          );
+          if (!dense) {
+            final actions = this.actions?.call(context, this, dao) ?? [];
+            final defaultActions = buildDefaultActions(context);
+            result = AppbarFromZero(
+              addContextMenu: enabled,
+              onShowContextMenu: () => focusNode.requestFocus(),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              useFlutterAppbar: false,
+              extendTitleBehindActions: true,
+              toolbarHeight: 56,
+              paddingRight: 6,
+              actionPadding: 0,
+              skipTraversalForActions: true,
+              constraints: BoxConstraints(),
+              actions: [
+                ...actions,
+                if (actions.isNotEmpty && defaultActions.isNotEmpty)
+                  ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
+                ...defaultActions,
+              ].map((e) => e.copyWith(
+                enabled: enabled,
+              )).toList(),
+              title: SizedBox(height: 56, child: result),
+            );
+          }
           return result;
         },
       ),

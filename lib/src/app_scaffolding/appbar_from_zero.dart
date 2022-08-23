@@ -48,9 +48,12 @@ class AppbarFromZero extends StatefulWidget {
   /// False does not support a lot of the appBar features.
   /// Used in Table row actions.
   final bool useFlutterAppbar;
+  /// only applied if useFlutterAppbar==true
+  final bool extendTitleBehindActions;
   final bool skipTraversalForActions;
   final Duration transitionsDuration;
   final BoxConstraints? constraints;
+  final double actionPadding;
 
   AppbarFromZero({
     Key? key,
@@ -84,14 +87,16 @@ class AppbarFromZero extends StatefulWidget {
     this.addContextMenu = true,
     this.onShowContextMenu,
     this.skipTraversalForActions = false,
+    this.extendTitleBehindActions = false,
     this.transitionsDuration = const Duration(milliseconds: 300),
     this.constraints,
+    this.actionPadding = 4,
   }) :
         this.actions = actions ?? [],
         super(key: key);
 
   @override
-  _AppbarFromZeroState createState() => _AppbarFromZeroState();
+  AppbarFromZeroState createState() => AppbarFromZeroState();
 
 }
 
@@ -101,14 +106,16 @@ class AppbarFromZeroController {
 
 }
 
-class _AppbarFromZeroState extends State<AppbarFromZero> {
+class AppbarFromZeroState extends State<AppbarFromZero> {
 
   ActionFromZero? forceExpanded;
+  late List<Widget> actions; // this is kept so children can check how many actions are currently showing, used in Field
 
   @override
   void initState() {
     super.initState();
     forceExpanded = widget.initialExpandedAction;
+    actions = widget.actions;
     widget.controller?.setExpanded = (newExpanded){
       setState(() {
         forceExpanded = newExpanded;
@@ -162,8 +169,10 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
     bool showWindowButtons = widget.mainAppbar && PlatformExtended.appWindow!=null;
     final double titleBarHeight = !showWindowButtons ? 0
         : appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight;
-    double toolbarHeight = widget.toolbarHeight ?? (48 + (showWindowButtons ? titleBarHeight : 0));
-    List<Widget> actions = [];
+    double? toolbarHeight = widget.toolbarHeight ?? (widget.useFlutterAppbar
+                                                      ? 48 + (showWindowButtons ? titleBarHeight : 0)
+                                                      : null);
+    actions = [];
     List<ActionFromZero> overflows = [];
     List<ActionFromZero> contextMenuActions = [];
     List<Widget> expanded = [];
@@ -197,6 +206,12 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
               break;
             case ActionState.icon:
               actions[i] = action.buildIcon(context);
+              if (actions[i] is! VerticalDivider && actions[i] is! Divider) {
+                actions[i] = Padding(
+                  padding: EdgeInsets.symmetric(horizontal: widget.actionPadding),
+                  child: actions[i],
+                );
+              }
               contextMenuActions.add(action);
               break;
             case ActionState.button:
@@ -215,6 +230,18 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
         }
       }
       removeIndices.reversed.forEach((element) {actions.removeAt(element);});
+      for (int i=0; i<actions.length; i++) {
+        if ((actions[i] is VerticalDivider || actions[i] is Divider)
+            && (i==0 || i==actions.lastIndex || actions[i+1] is VerticalDivider || actions[i+1] is Divider)) {
+          actions.removeAt(i); i--;
+        }
+      }
+      for (int i=0; i<overflows.length; i++) {
+        if (overflows[i].overflowBuilder==ActionFromZero.dividerOverflowBuilder
+            && (i==0 || i==actions.lastIndex || overflows[i+1].overflowBuilder==ActionFromZero.dividerOverflowBuilder)) {
+          overflows.removeAt(i); i--;
+        }
+      }
       if (overflows.isNotEmpty) {
         actions.add(
           ContextMenuIconButton(
@@ -261,7 +288,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
               ),
               child: Row(
                 key: ValueKey(forceExpanded),
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   ...actions,
                   SizedBox(width: showWindowButtons ? 8 : 0,),
@@ -310,7 +337,7 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
             padding: EdgeInsets.only(top: showWindowButtons ? titleBarHeight*0.7 : 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: forceExpanded==null ? expanded : [
                 Expanded(
                   child: forceExpanded!.buildExpanded(context),
@@ -355,22 +382,36 @@ class _AppbarFromZeroState extends State<AppbarFromZero> {
         titleSpacing: widget.titleSpacing,
         toolbarOpacity: widget.toolbarOpacity,
         bottomOpacity: widget.bottomOpacity,
-        toolbarHeight: toolbarHeight+widget.topSafePadding,
+        toolbarHeight: (toolbarHeight??56)+widget.topSafePadding,
       );
     } else {
+      Widget content;
+      if (widget.extendTitleBehindActions) {
+        content = Stack(
+          children: [
+            titleContent,
+            Positioned(
+              right: 0, top: 0, bottom: 0,
+              child: actionsContent,
+            ),
+          ],
+        );
+      } else {
+        content = Row(
+          children: [
+            Expanded(child: titleContent,),
+            actionsContent,
+          ],
+        );
+      }
       result = Column(
         children: [
           SizedBox(height: widget.topSafePadding,),
           SizedBox(
-            height: toolbarHeight,
+            height: null,
             child: Stack(
               children: [
-                Row(
-                  children: [
-                    Expanded(child: titleContent,),
-                    actionsContent,
-                  ],
-                ),
+                content,
                 Positioned.fill(
                   child: IgnorePointer(
                     ignoring: forceExpanded==null,

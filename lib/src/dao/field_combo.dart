@@ -234,6 +234,7 @@ class ComboField<T extends DAO> extends Field<T> {
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
             dense: dense,
             focusNode: focusNode!,
+            constraints: constraints,
           );
         },
       );
@@ -259,6 +260,7 @@ class ComboField<T extends DAO> extends Field<T> {
     bool expandToFillContainer = true,
     bool largeHorizontally = false,
     bool dense = false,
+    BoxConstraints? constraints,
     required FocusNode focusNode,
   }) {
     ExtraWidgetBuilder<T>? extraWidget;
@@ -315,7 +317,7 @@ class ComboField<T extends DAO> extends Field<T> {
         Widget result = ComboFromZero<T>(
           focusNode: focusNode,
           enabled: enabled,
-          clearable: clearable,
+          clearable: false,
           title: uiName,
           hint: hint,
           value: value,
@@ -330,9 +332,12 @@ class ComboField<T extends DAO> extends Field<T> {
             padding: dense ? EdgeInsets.zero : null,
           ),
           buttonChildBuilder: (context, title, hint, value, enabled, clearable, {showDropdownIcon=false}) {
-            return buttonContentBuilder(context, title, hint, value, enabled, clearable,
-              showDropdownIcon: showDropdownIcon,
-              dense: dense,
+            return Padding(
+              padding: EdgeInsets.only(right: dense ? 0 : context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40),
+              child: buttonContentBuilder(context, title, hint, value, enabled, false,
+                showDropdownIcon: showDropdownIcon,
+                dense: dense,
+              ),
             );
           },
           extraWidget: extraWidget ?? this.extraWidget,
@@ -392,20 +397,33 @@ class ComboField<T extends DAO> extends Field<T> {
           child: result,
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
-        final actions = this.actions?.call(context, this, dao) ?? [];
-        final defaultActions = buildDefaultActions(context);
-        result = ContextMenuFromZero(
-          enabled: enabled,
-          addGestureDetector: !dense,
-          onShowMenu: () => focusNode.requestFocus(),
-          actions: [
-            ...actions,
-            if (actions.isNotEmpty && defaultActions.isNotEmpty)
-              ActionFromZero.divider(),
-            ...defaultActions,
-          ],
-          child: result,
-        );
+        if (!dense) {
+          final actions = this.actions?.call(context, this, dao) ?? [];
+          final defaultActions = buildDefaultActions(context);
+          // TODO 2 implement rendering actions in an AppbarFromZero in other fields (StringField, NumField,)
+          result = AppbarFromZero(
+            addContextMenu: enabled,
+            onShowContextMenu: () => focusNode.requestFocus(),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            useFlutterAppbar: false,
+            extendTitleBehindActions: true,
+            toolbarHeight: 56,
+            paddingRight: 6,
+            actionPadding: 0,
+            skipTraversalForActions: true,
+            constraints: BoxConstraints(),
+            actions: [
+              ...actions,
+              if (actions.isNotEmpty && defaultActions.isNotEmpty)
+                ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
+              ...defaultActions,
+            ].map((e) => e.copyWith(
+              enabled: enabled,
+            )).toList(),
+            title: SizedBox(height: 56, child: result),
+          );
+        }
         return result;
       },
     );
@@ -512,11 +530,12 @@ class ComboField<T extends DAO> extends Field<T> {
     return [
       ...super.buildDefaultActions(context, focusNode: focusNode,),
       if (possibleValuesProviderGetter!=null)
-        ActionFromZero.divider(),
+        ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
       if (possibleValuesProviderGetter!=null)
         ActionFromZero(
           title: 'Refrescar Datos', // TODO 3 internationalize
           icon: Icon(Icons.refresh,),
+          breakpoints: {0: ActionState.popup},
           onTap: (context) {
             final ref = dao.contextForValidation! as WidgetRef;
             final provider = possibleValuesProviderGetter!(context, this, dao);

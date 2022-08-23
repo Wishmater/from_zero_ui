@@ -453,6 +453,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
           title: 'Deshacer', // TODO 2 internationalize
           icon: Icon(MaterialCommunityIcons.undo_variant),
           onTap: (context) => undo(removeEntryFromDAO: true),
+          breakpoints: {0: ActionState.popup},
           enabled: undoValues.isNotEmpty,
         ),
       if (dao.enableUndoRedoMechanism)
@@ -460,13 +461,20 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
           title: 'Rehacer', // TODO 2 internationalize
           icon: Icon(MaterialCommunityIcons.redo_variant),
           onTap: (context) => redo(removeEntryFromDAO: true),
+          breakpoints: {0: ActionState.popup},
           enabled: redoValues.isNotEmpty,
         ),
       if (clearable)
         ActionFromZero(
           title: 'Limpiar', // TODO 2 internationalize
           icon: Icon(Icons.clear),
-          onTap: (context) => value = defaultValue,
+          onTap: (context) {
+            value = defaultValue;
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+              (focusNode??_focusNode)?.requestFocus();
+            });
+          },
+          breakpoints: {0: enabled&&value!=defaultValue ? ActionState.icon : ActionState.popup},
           enabled: clearable && value!=defaultValue,
         ),
     ];

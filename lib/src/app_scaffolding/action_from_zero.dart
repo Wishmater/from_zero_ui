@@ -145,16 +145,13 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
     ContextCallback? onTap,
     bool enabled = true,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: TooltipFromZero(
-        message: title,
-        child: IconButton(
-          icon: icon ?? SizedBox.shrink(),
-          onPressed: (!enabled || onTap==null) ? null : (){
-            onTap.call(context);
-          },
-        ),
+    return TooltipFromZero(
+      message: title,
+      child: IconButton(
+        icon: icon ?? SizedBox.shrink(),
+        onPressed: (!enabled || onTap==null) ? null : (){
+          onTap.call(context);
+        },
       ),
     );
   }
@@ -166,40 +163,43 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
     ContextCallback? onTap,
     bool enabled = true,
   }) {
-    return GestureDetector(
-      onDoubleTap: () => (!enabled || onTap==null) ? null : onTap.call(context),
-      child: TextButton(
-        style: TextButton.styleFrom(
-          padding: EdgeInsets.zero,
-          primary: Theme.of(context).appBarTheme.toolbarTextStyle?.color
-            ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
-        ),
-        onPressed: (!enabled || onTap==null) ? null : (){
-          onTap.call(context);
-        },
-        // onLongPress: () => null,
-        child: IconTheme(
-          data: IconThemeData(
-            color: Theme.of(context).appBarTheme.toolbarTextStyle?.color
-                ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+    return SizedBox(
+      height: 64,
+      child: GestureDetector(
+        onDoubleTap: () => (!enabled || onTap==null) ? null : onTap.call(context),
+        child: TextButton(
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            primary: Theme.of(context).appBarTheme.toolbarTextStyle?.color
+              ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
           ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              SizedBox(width: 8),
-              if (icon!=null)
-                icon,
-              if (icon!=null)
-                SizedBox(width: 6,),
-              Text(title,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Theme.of(context).appBarTheme.toolbarTextStyle?.color
-                    ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+          onPressed: (!enabled || onTap==null) ? null : (){
+            onTap.call(context);
+          },
+          // onLongPress: () => null,
+          child: IconTheme(
+            data: IconThemeData(
+              color: Theme.of(context).appBarTheme.toolbarTextStyle?.color
+                  ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(width: 8),
+                if (icon!=null)
+                  icon,
+                if (icon!=null)
+                  SizedBox(width: 6,),
+                Text(title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Theme.of(context).appBarTheme.toolbarTextStyle?.color
+                      ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+                  ),
                 ),
-              ),
-              SizedBox(width: 8),
-            ],
+                SizedBox(width: 8),
+              ],
+            ),
           ),
         ),
       ),

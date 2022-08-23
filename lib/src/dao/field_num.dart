@@ -322,132 +322,111 @@ class NumField extends Field<num> {
                       }
                     }
                   },
-                  child: TextFormField(
-                    controller: controller,
-                    enabled: enabled,
-                    // focusNode: focusNode,
-                    textAlign: dense ? TextAlign.right : TextAlign.left,
-                    toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
-                      copy: false, cut: false, paste: false, selectAll: false,
-                    ),
-                    onEditingComplete: () {
-                      focusNode.nextFocus();
-                    },
-                    onChanged: (v) {
-                      int? lastMinusIndex;
-                      do {
-                        lastMinusIndex = v.contains('-') ? v.lastIndexOf('-') : null;
-                        if (lastMinusIndex!=null && lastMinusIndex>0) {
-                          v = v.substring(0, lastMinusIndex) + v.substring(lastMinusIndex+1);
-                        }
-                      } while(lastMinusIndex!=null && lastMinusIndex>0);
-                      if (digitsAfterComma>0) {
-                        bool update = false;
-                        int commaIndex = v.indexOf('.');
-                        if (commaIndex==0 || (commaIndex==1 && v[0]=='-')) {
-                          v = v.substring(0, commaIndex) + '0' + v.substring(commaIndex);
-                          commaIndex++;
-                          update = true;
-                        }
-                        int lastCommaIndex = v.lastIndexOf('.');
-                        if (commaIndex>0) {
-                          if (commaIndex!=lastCommaIndex) {
-                            v = v.replaceAll('.', '');
-                            v = v.substring(0, commaIndex) + '.' + v.substring(commaIndex);
-                            update = true;
+                  child: Builder(
+                    builder: (context) {
+                      return TextFormField(
+                        controller: controller,
+                        enabled: enabled,
+                        // focusNode: focusNode,
+                        textAlign: dense ? TextAlign.right : TextAlign.left,
+                        toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
+                          copy: false, cut: false, paste: false, selectAll: false,
+                        ),
+                        onEditingComplete: () {
+                          focusNode.nextFocus();
+                        },
+                        onChanged: (v) {
+                          int? lastMinusIndex;
+                          do {
+                            lastMinusIndex = v.contains('-') ? v.lastIndexOf('-') : null;
+                            if (lastMinusIndex!=null && lastMinusIndex>0) {
+                              v = v.substring(0, lastMinusIndex) + v.substring(lastMinusIndex+1);
+                            }
+                          } while(lastMinusIndex!=null && lastMinusIndex>0);
+                          if (digitsAfterComma>0) {
+                            bool update = false;
+                            int commaIndex = v.indexOf('.');
+                            if (commaIndex==0 || (commaIndex==1 && v[0]=='-')) {
+                              v = v.substring(0, commaIndex) + '0' + v.substring(commaIndex);
+                              commaIndex++;
+                              update = true;
+                            }
+                            int lastCommaIndex = v.lastIndexOf('.');
+                            if (commaIndex>0) {
+                              if (commaIndex!=lastCommaIndex) {
+                                v = v.replaceAll('.', '');
+                                v = v.substring(0, commaIndex) + '.' + v.substring(commaIndex);
+                                update = true;
+                              }
+                              if (v.length+1 - commaIndex > digitsAfterComma) {
+                                v = v.substring(0, min(commaIndex+digitsAfterComma+1, v.length));
+                                update = true;
+                              }
+                            }
+                            if (update) {
+                              controller.text = v;
+                              controller.selection = TextSelection(
+                                baseOffset: v.length,
+                                extentOffset: v.length,
+                              );
+                            }
                           }
-                          if (v.length+1 - commaIndex > digitsAfterComma) {
-                            v = v.substring(0, min(commaIndex+digitsAfterComma+1, v.length));
-                            update = true;
+                          final textVal = _getTextVal(v);
+                          if (v.isEmpty || v.characters.last=='.' || v.characters.last==',' || !isEdited) {
+                            value = textVal;
+                          } else if (value!=textVal) {
+                            addUndoEntry(value);
                           }
-                        }
-                        if (update) {
-                          controller.text = v;
-                          controller.selection = TextSelection(
-                            baseOffset: v.length,
-                            extentOffset: v.length,
-                          );
-                        }
-                      }
-                      final textVal = _getTextVal(v);
-                      if (v.isEmpty || v.characters.last=='.' || v.characters.last==',' || !isEdited) {
-                        value = textVal;
-                      } else if (value!=textVal) {
-                        addUndoEntry(value);
-                      }
-                    },
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9${digitsAfterComma==0 ? '' : '.'}${allowNegative ? '-' : ''}]')),],
-                    decoration: inputDecoration??InputDecoration(
-                      border: InputBorder.none,
-                      alignLabelWithHint: dense,
-                      label: dense
-                          ? Align(
-                            alignment: Alignment.centerRight,
-                            child: Text(uiName,
-                              softWrap: false,
-                              overflow: TextOverflow.fade,
+                        },
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9${digitsAfterComma==0 ? '' : '.'}${allowNegative ? '-' : ''}]')),],
+                        decoration: inputDecoration??InputDecoration(
+                          border: InputBorder.none,
+                          alignLabelWithHint: dense,
+                          label: Padding(
+                            padding: EdgeInsets.only(
+                              top: !dense&&hint!=null ? 12 : largeVertically ? 0 : 5,
+                              bottom: !dense&&hint!=null ? 12 : largeVertically ? 6 : 0,
                             ),
-                          ) : Text(uiName,
-                        softWrap: false,
-                        overflow: TextOverflow.fade,
-                      ),
-                      hintText: hint,
-                      floatingLabelBehavior: dense ? FloatingLabelBehavior.never
-                          : !enabled ? (value==null) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
-                          : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
-                      labelStyle: TextStyle(height: dense ? 0 : largeVertically ? 0.75 : 1.85,
-                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                      ),
-                      hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
-                      contentPadding: EdgeInsets.only(
-                        left: dense ? 0 : 16,
-                        right: (dense ? 0 : 16) + (enabled&&clearable ? 40 : 0),
-                        bottom: dense ? 10 : 0,
-                      ),
-                    ),
+                            child: dense
+                                ? Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Text(uiName,
+                                    softWrap: false,
+                                    overflow: TextOverflow.fade,
+                                  ),
+                                ) : Text(uiName,
+                                  softWrap: false,
+                                  overflow: TextOverflow.fade,
+                                ),
+                          ),
+                          hintText: hint,
+                          floatingLabelBehavior: dense ? FloatingLabelBehavior.never
+                              : !enabled ? (value==null) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
+                              : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
+                          labelStyle: TextStyle(
+                            height: dense ? 0 : largeVertically ? 0.5 : hint!=null ? 1 : 1,
+                            color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                          ),
+                          hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
+                          contentPadding: EdgeInsets.only(
+                            left: dense ? 0 : 16,
+                            right: dense ? 0 : (16 + (context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40)),
+                            bottom: largeVertically ? 16 : dense ? 10 : 0,
+                            top: largeVertically ? 16 : dense ? 0 : 3,
+                          ),
+                        ),
+                      );
+                    }
                   ),
                 ),
               ),
-              if (enabled && clearable && !dense)
-                Positioned(
-                  right: 8, top: 0, bottom: 0,
-                  child: ExcludeFocus(
-                    child: Center(
-                      child: AnimatedSwitcher(
-                        duration: Duration(milliseconds: 300),
-                        switchInCurve: Curves.easeOutCubic,
-                        transitionBuilder: (child, animation) {
-                          return SizeTransition(
-                            sizeFactor: animation,
-                            child: FadeTransition(
-                              opacity: animation,
-                              child: child,
-                            ),
-                          );
-                        },
-                        child: value!=null ? TooltipFromZero(
-                          message: FromZeroLocalizations.of(context).translate('clear'),
-                          child: IconButton(
-                            icon: Icon(Icons.close),
-                            splashRadius: 20,
-                            onPressed: () {
-                              value = null;
-                              controller.clear();
-                              focusNode.requestFocus();
-                            },
-                          ),
-                        ) : SizedBox.shrink(),
-                      ),
-                    ),
-                  ),
-                ),
-              if (!enabled)
-                Positioned.fill(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.forbidden,
-                  ),
-                ),
+              // if (!enabled)
+              //   Positioned.fill(
+              //     child: MouseRegion(
+              //       cursor: SystemMouseCursors.forbidden,
+              //     ),
+              //   ),
             ],
           );
           result = TooltipFromZero(
@@ -459,20 +438,32 @@ class NumField extends Field<num> {
             child: result,
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
-          final actions = this.actions?.call(context, this, dao) ?? [];
-          final defaultActions = buildDefaultActions(context);
-          result = ContextMenuFromZero(
-            enabled: enabled,
-            addGestureDetector: !dense,
-            onShowMenu: () => focusNode.requestFocus(),
-            actions: [
-              ...actions,
-              if (actions.isNotEmpty && defaultActions.isNotEmpty)
-                ActionFromZero.divider(),
-              ...defaultActions,
-            ],
-            child: result,
-          );
+          if (!dense) {
+            final actions = this.actions?.call(context, this, dao) ?? [];
+            final defaultActions = buildDefaultActions(context);
+            result = AppbarFromZero(
+              addContextMenu: enabled,
+              onShowContextMenu: () => focusNode.requestFocus(),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              useFlutterAppbar: false,
+              extendTitleBehindActions: true,
+              toolbarHeight: largeVertically ? null : 56,
+              paddingRight: 6,
+              actionPadding: 0,
+              skipTraversalForActions: true,
+              constraints: BoxConstraints(),
+              actions: [
+                ...actions,
+                if (actions.isNotEmpty && defaultActions.isNotEmpty)
+                  ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
+                ...defaultActions,
+              ].map((e) => e.copyWith(
+                enabled: enabled,
+              )).toList(),
+              title: SizedBox(height: largeVertically ? null : 56, child: result),
+            );
+          }
           return result;
         },
       ),
