@@ -20,6 +20,7 @@ class TableHeaderFromZero<T> extends StatefulWidget {
   final FutureOr<String>? exportPathForExcel;
   final bool addSearchAction;
   final bool searchActionExpandedByDefault;
+  final Color? defaultActionsColor;
 
   const TableHeaderFromZero({
     required this.controller,
@@ -31,6 +32,7 @@ class TableHeaderFromZero<T> extends StatefulWidget {
     this.exportPathForExcel,
     this.addSearchAction = false,
     this.searchActionExpandedByDefault = true,
+    this.defaultActionsColor,
     Key? key,
   }) : super(key: key);
 
@@ -120,13 +122,13 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
             appBarTheme: AppBarTheme(
               color: Material.of(context)!.color ?? Theme.of(context).cardColor, // Colors.transparent
               iconTheme: Theme.of(context).iconTheme,
-              actionsIconTheme: Theme.of(context).iconTheme.copyWith(
-                color: Theme.of(context).splashColor.withOpacity(1),
-              ),
+              actionsIconTheme: widget.defaultActionsColor==null
+                  ? Theme.of(context).iconTheme
+                  : Theme.of(context).iconTheme.copyWith(color: widget.defaultActionsColor),
               titleTextStyle: Theme.of(context).textTheme.subtitle1,
-              toolbarTextStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
-                color: Theme.of(context).splashColor.withOpacity(1),
-              ),
+              toolbarTextStyle: widget.defaultActionsColor==null
+                  ? Theme.of(context).textTheme.subtitle1
+                  : Theme.of(context).textTheme.subtitle1!.copyWith(color: widget.defaultActionsColor),
             ),
           ),
           child: AppbarFromZero(

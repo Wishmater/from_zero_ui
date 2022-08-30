@@ -222,7 +222,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
           if (icon!=null) SizedBox(width: 12,),
           if (icon!=null) IconTheme(
             data: Theme.of(context).iconTheme.copyWith(
-              color: onTap==null
+              color: !enabled || onTap==null
                   ? Theme.of(context).textTheme.caption!.color
                   : Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white,
             ),
@@ -236,7 +236,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
               child: Text(title,
                 style: TextStyle(
                   fontSize: 16,
-                  color: onTap==null
+                  color: !enabled || onTap==null
                       ? Theme.of(context).textTheme.caption!.color
                       : Theme.of(context).textTheme.bodyText1!.color,
                 ),
@@ -247,7 +247,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
         ],
       ),
     );
-    if (onTap==null) {
+    if (!enabled || onTap==null) {
       result = MouseRegion(
         cursor: SystemMouseCursors.forbidden,
         child: result,
@@ -257,7 +257,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 sepa
       onPressed: (!enabled || onTap==null) ? null : () => onTap.call(context),
       style: TextButton.styleFrom(
         padding: EdgeInsets.zero,
-        primary: onTap==null
+        primary: !enabled || onTap==null
             ? Theme.of(context).textTheme.caption!.color
             : Theme.of(context).textTheme.bodyText1!.color,
       ),

@@ -318,9 +318,12 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   @override
   Future<bool> validate(BuildContext context, DAO dao, int currentValidationId, {
     bool validateIfNotEdited=false,
+    bool validateIfHidden=false,
   }) async {
     final superResult = super.validate(context, dao, currentValidationId,
-        validateIfNotEdited: validateIfNotEdited);
+      validateIfNotEdited: validateIfNotEdited,
+      validateIfHidden: validateIfHidden,
+    );
     if (currentValidationId!=dao.validationCallCount) return false;
     if (!validateChildren) {
       bool success = await superResult;
@@ -926,7 +929,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SizedBox(width: 6),
-                    Icon(Icons.add),
+                    Icon(Icons.add, color: Colors.blue),
                     SizedBox(width: 6,),
                     Text('${FromZeroLocalizations.of(context).translate("add")} ${emptyDAO.classUiName}', style: TextStyle(fontSize: 16),),
                     SizedBox(width: 6),
@@ -1431,53 +1434,38 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Theme(
-                        data: Theme.of(context).copyWith(
-                          appBarTheme: AppBarTheme(
-                            color: Material.of(context)!.color ?? Theme.of(context).cardColor, // Colors.transparent
-                            iconTheme: Theme.of(context).iconTheme,
-                            actionsIconTheme: Theme.of(context).iconTheme.copyWith(
-                              color: Theme.of(context).splashColor.withOpacity(1),
-                            ),
-                            titleTextStyle: Theme.of(context).textTheme.subtitle1,
-                            toolbarTextStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
-                              color: Theme.of(context).splashColor.withOpacity(1),
-                            ),
-                          ),
-                        ),
-                        child: AppbarFromZero(
-                          titleSpacing: 0,
-                          addContextMenu: enabled,
-                          onShowContextMenu: () => focusNode!.requestFocus(),
-                          title: Row(
-                            children: [
-                              SizedBox(width: 24,),
-                              Expanded(
-                                child: OverflowScroll(
-                                  autoscrollSpeed: null,
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(uiName,
-                                        style: Theme.of(context).textTheme.headline6!.copyWith(
-                                          fontSize: Theme.of(context).textTheme.headline6!.fontSize!*0.85,
-                                        ),
+                      AppbarFromZero(
+                        titleSpacing: 0,
+                        addContextMenu: enabled,
+                        onShowContextMenu: () => focusNode!.requestFocus(),
+                        title: Row(
+                          children: [
+                            SizedBox(width: 24,),
+                            Expanded(
+                              child: OverflowScroll(
+                                autoscrollSpeed: null,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(uiName,
+                                      style: Theme.of(context).textTheme.headline6!.copyWith(
+                                        fontSize: Theme.of(context).textTheme.headline6!.fontSize!*0.85,
                                       ),
-                                      Text(objects.length==0 ? FromZeroLocalizations.of(context).translate('no_elements')
-                                          : '${objects.length} ${objects.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
-                                          : FromZeroLocalizations.of(context).translate('element_sing')}',
-                                        style: Theme.of(context).textTheme.caption,
-                                      )
-                                    ],
-                                  ),
+                                    ),
+                                    Text(objects.length==0 ? FromZeroLocalizations.of(context).translate('no_elements')
+                                        : '${objects.length} ${objects.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
+                                        : FromZeroLocalizations.of(context).translate('element_sing')}',
+                                      style: Theme.of(context).textTheme.caption,
+                                    )
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
-                          elevation: 0,
-                          actions: allActions,
+                            ),
+                          ],
                         ),
+                        elevation: 0,
+                        actions: allActions,
                       ),
                       ScrollbarFromZero(
                         controller: tabBarScrollController,
@@ -1501,7 +1489,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                   if ((allowAddNew||hasAvailableObjectsPool))
                                     ActionFromZero(
                                       title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
-                                      icon: Icon(Icons.add),
+                                      icon: Icon(Icons.add, color: Colors.blue),
                                       breakpoints: {0: ActionState.popup,},
                                       onTap: (context) {
                                         maybeAddRow(context, i);
@@ -1858,6 +1846,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           tableHorizontalPadding: tableHorizontalPadding,
           rows: builtRows.values.toList(),
           enableFixedHeightForListRows: rowAddonField==null,
+          cellPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
           cellBuilder: tableCellsEditable ? (context, row, colKey) {
             final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
               expandToFillContainer: false,
@@ -1866,7 +1855,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               dense: true,
             );
             return SizedBox(
-              height: rowHeight,
+              height: row.height,
               child: OverflowBox(
                 minHeight: rowHeight, maxHeight: double.infinity,
                 alignment: Alignment(0, -0.4),
@@ -1890,7 +1879,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             if ((allowAddNew||hasAvailableObjectsPool))
               RowAction<T>(
                 title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
-                icon: Icon(Icons.add),
+                icon: Icon(Icons.add, color: Colors.blue),
                 breakpoints: {0: ActionState.popup,},
                 onRowTap: (context, row) {
                   row.focusNode.requestFocus();
@@ -2082,7 +2071,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                     crossAxisAlignment: CrossAxisAlignment.center,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.add),
+                      Icon(Icons.add, color: Colors.blue),
                       SizedBox(width: 8,),
                       Padding(
                         padding: const EdgeInsets.only(bottom: 2),
@@ -2324,7 +2313,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       if ((allowAddNew||hasAvailableObjectsPool) && !collapsed && currentSelected.length==0)
         ActionFromZero(
           title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
-          icon: Icon(Icons.add),
+          icon: Icon(Icons.add, color: Colors.blue),
           onTap: (context) async {
             focusNode?.requestFocus();
             if (await maybeAddRow(context) != null) {

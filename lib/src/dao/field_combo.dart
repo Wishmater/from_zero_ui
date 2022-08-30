@@ -177,8 +177,12 @@ class ComboField<T extends DAO> extends Field<T> {
   @override
   Future<bool> validate(BuildContext context, DAO dao, int currentValidationId, {
     bool validateIfNotEdited=false,
+    bool validateIfHidden=false,
   }) async {
-    super.validate(context, dao, currentValidationId, validateIfNotEdited: validateIfNotEdited);
+    super.validate(context, dao, currentValidationId,
+      validateIfNotEdited: validateIfNotEdited,
+      validateIfHidden: validateIfHidden,
+    );
     if (currentValidationId!=dao.validationCallCount) return false;
     final List<T> possibleValues;
     final provider = possibleValuesProviderGetter?.call(context, this, dao);

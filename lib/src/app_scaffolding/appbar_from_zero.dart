@@ -407,19 +407,16 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
       result = Column(
         children: [
           SizedBox(height: widget.topSafePadding,),
-          SizedBox(
-            height: null,
-            child: Stack(
-              children: [
-                content,
-                Positioned.fill(
-                  child: IgnorePointer(
-                    ignoring: forceExpanded==null,
-                    child: expandedContent,
-                  ),
+          Stack(
+            children: [
+              content,
+              Positioned.fill(
+                child: IgnorePointer(
+                  ignoring: forceExpanded==null,
+                  child: expandedContent,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ],
       );

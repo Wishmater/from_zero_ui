@@ -1,3 +1,4 @@
+import 'package:flutter/gestures.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -310,7 +311,7 @@ class StringField extends Field<String> {
               ),
               KeyboardListener(
                 includeSemantics: false,
-                focusNode: focusNode..skipTraversal=true,
+                focusNode: FocusNode()..skipTraversal=true,
                 onKeyEvent: (value) {
                   if (value is KeyDownEvent && type==StringFieldType.short) {
                     if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
@@ -320,56 +321,68 @@ class StringField extends Field<String> {
                     }
                   }
                 },
-                child: Builder(
-                  builder: (context) {
-                    return TextFormField(
-                      controller: controller,
-                      enabled: enabled,
-                      // focusNode: focusNode,
-                      toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
-                        copy: false, cut: false, paste: false, selectAll: false,
-                      ),
-                      onEditingComplete: () {
-                        focusNode.nextFocus();
+                child: RawGestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  gestures: {
+                    TransparentTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<TransparentTapGestureRecognizer>(
+                          () => TransparentTapGestureRecognizer(debugOwner: this),
+                          (TapGestureRecognizer instance) {
+                        instance // hack to fix textField breaking when window loses focus on desktop
+                          ..onTapDown = (details) => controller.notifyListeners();
                       },
-                      minLines: minLines,
-                      maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
-                      obscureText: obfuscate,
-                      onChanged: (v) {
-                        value = v;
-                      },
-                      inputFormatters: inputFormatters,
-                      decoration: inputDecoration??InputDecoration(
-                        border: InputBorder.none,
-                        alignLabelWithHint: dense,
-                        label: Padding(
-                          padding: EdgeInsets.only(
-                            top: !dense&&hint!=null ? 12 : largeVertically ? 0 : 8,
-                            bottom: !dense&&hint!=null ? 12 : largeVertically ? 6 : 0,
+                    ),
+                  },
+                  child: Builder(
+                    builder: (context) {
+                      return TextFormField(
+                        controller: controller,
+                        enabled: enabled,
+                        focusNode: focusNode,
+                        toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
+                          copy: false, cut: false, paste: false, selectAll: false,
+                        ),
+                        onEditingComplete: () {
+                          focusNode.nextFocus();
+                        },
+                        minLines: minLines,
+                        maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
+                        obscureText: obfuscate,
+                        onChanged: (v) {
+                          value = v;
+                        },
+                        inputFormatters: inputFormatters,
+                        decoration: inputDecoration??InputDecoration(
+                          border: InputBorder.none,
+                          alignLabelWithHint: dense,
+                          label: Padding(
+                            padding: EdgeInsets.only(
+                              top: !dense&&hint!=null ? 12 : largeVertically ? 0 : 8,
+                              bottom: !dense&&hint!=null ? 12 : largeVertically ? 6 : 0,
+                            ),
+                            child: Text(uiName,
+                              softWrap: false,
+                              overflow: TextOverflow.fade,
+                            ),
                           ),
-                          child: Text(uiName,
-                            softWrap: false,
-                            overflow: TextOverflow.fade,
+                          hintText: hint,
+                          floatingLabelBehavior: dense ? FloatingLabelBehavior.never
+                              : !enabled ? (value==null||value!.isEmpty) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
+                              : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
+                          labelStyle: TextStyle(
+                            height: dense ? 0 : largeVertically ? 0.5 : hint!=null ? 1 : 0.7,
+                            color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                          ),
+                          hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
+                          contentPadding: EdgeInsets.only(
+                            left: dense ? 0 : 16,
+                            right: dense ? 0 : (16 + (context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40)),
+                            bottom: largeVertically ? 16 : dense ? 10 : 0,
+                            top: largeVertically ? 16 : dense ? 0 : 6,
                           ),
                         ),
-                        hintText: hint,
-                        floatingLabelBehavior: dense ? FloatingLabelBehavior.never
-                            : !enabled ? (value==null||value!.isEmpty) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
-                            : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
-                        labelStyle: TextStyle(
-                          height: dense ? 0 : largeVertically ? 0.5 : hint!=null ? 1 : 0.7,
-                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
-                        ),
-                        hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
-                        contentPadding: EdgeInsets.only(
-                          left: dense ? 0 : 16,
-                          right: dense ? 0 : (16 + (context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40)),
-                          bottom: largeVertically ? 16 : dense ? 10 : 0,
-                          top: largeVertically ? 16 : dense ? 0 : 6,
-                        ),
-                      ),
-                    );
-                  }
+                      );
+                    }
+                  ),
                 ),
               ),
               // if (!enabled)

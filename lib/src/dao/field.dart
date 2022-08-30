@@ -267,6 +267,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
 
   Future<bool> validate(BuildContext context, DAO dao, int currentValidationId, {
     bool validateIfNotEdited=false,
+    bool validateIfHidden=false,
   }) async {
     validationErrors = [];
     if (hiddenInForm) {
@@ -276,9 +277,10 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
           error: uiName + ' ' + FromZeroLocalizations.of(context).translate("validation_combo_hidden_with_value"),
           defaultValue: defaultValue,
         ));
-        return false;
       }
-      return true;
+      if (!validateIfHidden) {
+        return validationErrors.where((e) => e.isBlocking).isEmpty;
+      }
     }
     if (validateIfNotEdited) {
       passedFirstEdit = true;
@@ -302,7 +304,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
 
   void requestFocus() {
     focusNode.requestFocus();
-    // try { // no need to do the anymore, since EnsureVisibleWhenFocused will work automatically
+    // try { // no need to do this anymore, since EnsureVisibleWhenFocused will work automatically
     //   Scrollable.ensureVisible(fieldGlobalKey.currentContext!,
     //     duration: Duration(milliseconds: 500),
     //     curve: Curves.easeOutCubic,

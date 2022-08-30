@@ -912,21 +912,26 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           child: result,
         );
       } else if (rowActions.isNotEmpty) {
-        // TODO 1 consider removing appbarFromZero and manually rendering iconButtons
         result = Material(
           type: MaterialType.transparency,
-          child: AppbarFromZero(
-            title: result,
-            actions: rowActions,
-            useFlutterAppbar: false,
-            toolbarHeight: row.height,
-            addContextMenu: false,
-            skipTraversalForActions: true,
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            paddingRight: 0,
-            titleSpacing: 0,
-            transitionsDuration: 0.milliseconds,
+          child: SizedBox(
+            height: row.height,
+            child: OverflowBox( // hack to fix Appbar actions overflowing when rowHeight<40
+              maxHeight: max(40, row.height),
+              child: AppbarFromZero(
+                title: result,
+                actions: rowActions,
+                useFlutterAppbar: false,
+                toolbarHeight: row.height,
+                addContextMenu: false,
+                skipTraversalForActions: true,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                paddingRight: 0,
+                titleSpacing: 0,
+                transitionsDuration: 0.milliseconds,
+              ),
+            ),
           ),
         );
       }
