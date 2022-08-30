@@ -436,6 +436,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? confirm = await showModal(
       context: context,
       builder: (context) {
+        final GlobalKey timerGlobalKey = GlobalKey();
         return IntrinsicWidth(
           child: IntrinsicHeight(
             child: Center(
@@ -558,16 +559,24 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                   ),
                                   TooltipFromZero(
                                     message: validation ? null : 'No se puede guardar hasta resolver los errores de validación', // TODO 3 internationalize
-                                    child: FlatButton(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
-                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
-                                      textColor: Colors.blue,
-                                      onPressed: !validation ? null : () {
-                                        Navigator.of(context).pop(true); // Dismiss alert dialog
+                                    child: TimedOverlay(
+                                      key: timerGlobalKey,
+                                      duration: validationErrors.isEmpty || !validation
+                                          ? Duration.zero
+                                          : Duration(milliseconds: (1500 + 1200*validationErrors.where((e) => e.isVisibleAsSaveConfirmation).length).clamp(0, 10000)),
+                                      builder: (context, elapsed, remaining) {
+                                        return FlatButton(
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
+                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                            ),
+                                          ),
+                                          textColor: Colors.blue,
+                                          onPressed: remaining!=Duration.zero || !validation ? null : () {
+                                            Navigator.of(context).pop(true); // Dismiss alert dialog
+                                          },
+                                        );
                                       },
                                     ),
                                   ),

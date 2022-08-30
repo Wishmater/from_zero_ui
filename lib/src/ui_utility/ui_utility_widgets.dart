@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
@@ -1257,6 +1258,90 @@ class FlexibleLayoutItemFromZero extends StatelessWidget {
   }
 
 }
+
+
+
+typedef Widget TimedOverlayBuilder(BuildContext context, Duration elapsed, Duration remaining);
+class TimedOverlay extends StatefulWidget {
+
+  final Duration duration;
+  final Duration rebuildInterval;
+  final TimedOverlayBuilder builder;
+  final TimedOverlayBuilder overlayBuilder;
+
+  const TimedOverlay({
+    Key? key,
+    required this.duration,
+    required this.builder,
+    this.rebuildInterval = const Duration(seconds: 1),
+    this.overlayBuilder = defaultOverlayBuilder,
+  }) : super(key: key);
+
+  @override
+  State<TimedOverlay> createState() => _TimedOverlayState();
+
+  static Widget defaultOverlayBuilder(BuildContext context, Duration elapsed, Duration remaining) {
+    final remainingSeconds = (remaining.inMicroseconds / Duration.microsecondsPerSecond).ceil();
+    return Container(
+      color: Colors.black54,
+      alignment: Alignment.center,
+      child: AnimatedSwitcher(
+        duration: Duration(milliseconds: 250),
+        child: Text(remainingSeconds.toString(),
+          key: ValueKey(remainingSeconds),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+
+}
+
+class _TimedOverlayState extends State<TimedOverlay> {
+
+  Duration elapsed = Duration.zero;
+  late int lastRemainingCount;
+
+  @override
+  void initState() {
+    super.initState();
+    lastRemainingCount = (widget.duration.inMicroseconds/widget.rebuildInterval.inMicroseconds).ceil();
+    Timer.periodic(Duration(milliseconds: 10), (timer) {
+      if (mounted) {
+        elapsed += Duration(milliseconds: 10);
+        final remaining = widget.duration - elapsed;
+        final remainingCount = (remaining.inMicroseconds/widget.rebuildInterval.inMicroseconds).ceil();
+        if (remainingCount < lastRemainingCount || elapsed >= widget.duration) {
+          setState(() {
+            lastRemainingCount = remainingCount;
+            if (elapsed >= widget.duration) {
+              timer.cancel();
+            }
+          });
+        }
+      } else {
+        timer.cancel();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Duration remaining = widget.duration - elapsed;
+    if (remaining.isNegative) remaining = Duration.zero;
+    return Stack(
+      children: [
+        widget.builder(context, elapsed, remaining),
+        if (remaining > Duration.zero)
+          Positioned.fill(
+            child: widget.overlayBuilder(context, elapsed, remaining),
+          ),
+      ],
+    );
+  }
+
+}
+
 
 
 
