@@ -911,30 +911,43 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                             child: Column(
                               children: [
                                 Expanded(
-                                  child: ScrollbarFromZero(
-                                    controller: drawerContentScrollController,
-                                    applyOpacityGradientToChildren: false,
-                                    ignoreDevicePadding: false,
-                                    child: SingleChildScrollView(
-                                      clipBehavior: Clip.none,
-                                      controller: drawerContentScrollController,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(top: widget.drawerPaddingTop),
-                                        child:  Consumer(
-                                          builder: (context, ref, child) {
-                                            final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-                                            Widget result = _getUserDrawerContent(context, changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId)==widget.compactDrawerWidth);
-                                            result = widget.drawerContentTransitionBuilder(
-                                              child: result,
-                                              animation: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
-                                              secondaryAnimation: ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation,
-                                              scaffoldChangeNotifier: changeNotifierNotListen,
-                                            );
-                                            return result;
-                                          },
+                                  child: Consumer(
+                                    builder: (context, ref, child) {
+                                      final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
+                                      final currentDrawerWidth = changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId);
+                                      Widget result = _getUserDrawerContent(context, currentDrawerWidth==widget.compactDrawerWidth);
+                                      result = widget.drawerContentTransitionBuilder(
+                                        child: result,
+                                        animation: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
+                                        secondaryAnimation: ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation,
+                                        scaffoldChangeNotifier: changeNotifierNotListen,
+                                      );
+                                      return AnimatedTheme(
+                                        duration: widget.drawerAnimationDuration,
+                                        curve: widget.appbarAnimationCurve,
+                                        data: Theme.of(context).copyWith(
+                                          scrollbarTheme: Theme.of(context).scrollbarTheme.copyWith(
+                                            thickness: MaterialStateProperty.resolveWith((states) {
+                                              final baseThickness = states.contains(MaterialState.hovered) ? 12.0 : 8.0;
+                                              return baseThickness + (widget.drawerWidth - currentDrawerWidth - 4).coerceIn(0);
+                                            }),
+                                          ),
                                         ),
-                                      ),
-                                    ),
+                                        child: ScrollbarFromZero(
+                                          controller: drawerContentScrollController,
+                                          applyOpacityGradientToChildren: false,
+                                          ignoreDevicePadding: false,
+                                          child: SingleChildScrollView(
+                                            clipBehavior: Clip.none,
+                                            controller: drawerContentScrollController,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(top: widget.drawerPaddingTop),
+                                              child: result,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
                                   ),
                                 ),
                                 widget.drawerFooterBuilder != null
