@@ -8,6 +8,7 @@ APISnackbar -- Implement showError (and maybe retry)
 
 Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
 	https://www.youtube.com/watch?v=ceCo8U0XHqw
+    also -- popupFromZero doesn't reposition child in response to window resize
 
 Problems with excel export
 	implement width in excel columns (check git issue and update version)
@@ -33,8 +34,6 @@ Implement UIScaling + Scaling picker widget (with slider)
 ??? fix part of the screen not being draggable on really big screens
 	maybe just deprecate limitWidthOnBigScreens
 	??? maybe we can apply GestureRelayer, but it seems hard
-	
-popupFromZero doesn't reposition child in response to window resize
 
 DAO Form Performance -- wait for first validation before painting a frame
 	this was the behaviour before, but since the validation is async, now the form paints once before validation, then paints again
@@ -46,6 +45,10 @@ Table -- horizontal scrollbar should set its crossAxisPadding when stuck, instea
 FilePickerFromZero enhancement => implement drag'n'drop on windows
 	broken in release
 
+Make FromZeroAppbar expanded widget close only on back button, not on WillPop
+	https://pub.dev/packages/back_button_interceptor
+
+Desktop: add behaviour to drawerAppBar to cancel drawing overlay windowBar
 
 
 **********************************************************************
@@ -67,23 +70,18 @@ Table -- fix implicitlyAnimatedTable, make it default for <10 items
 Table Feature -- Column types (String, num, DateTime)
 	show sum/avg on num columns
 	custom filters for each column type
-	
+
+DAO Form -- make errorSign inside textField flicker on highlight like others
+
+DAO Form -- In comboField and listField with availablePool (combo and table), allow right click to edit a possible dao
+
 Table Feature -- Sticky columns 
 
 Table Feature -- Reorder columns
 
 Table Feature -- Resize columns (hard)
-	
+
 Table bug with arrow key traversal
-	
-DAO Form -- make errorSign inside textField flicker on highlight like others
-
-DAO Form -- In comboField and listField with availablePool (combo and table), allow right click to edit a possible dao
-
-Appbar on top of fromZeroUI should be above header (appbar will span full window width)
-	in mobile mode, headerTitle still needs to be painted on the header itself
-	this will fix some visual bugs and some bugs with new windowBar
-
 
 
 **********************************************************************
@@ -99,10 +97,7 @@ add icon/title to WindowBar on desktop when aproppriate
 Windows Increase mouse wheel scroll speed and add animation
 	only when the mouse wheel is click (not smooth)
 	
-popupFromZero improvement: on dektop, popup should not block content behind it by default (use Overlay)
-
-Make FromZeroAppbar expanded widget close only on back button, not on WillPop 
-	https://pub.dev/packages/back_button_interceptor
+popupFromZero improvement: on dektop, context menu should not block content behind it by default (use Overlay)
 	
 Sticky footer bugs when there are more slivers below itself
 
@@ -113,10 +108,6 @@ Organize dependencies
 	remove all dependency overrides
 	update all to latest
 	test for any bugs
-
-ListField -- implement proper disabled logic (currently only when !sliver && card)
-	take into consideration all possible states: table, collapsed, dense
-	implement in each sliver (color + tooltip + mouseRegion)
 	
 Considerations for a new model/dataClass solution
 	support normal dart class inheritnce
@@ -128,10 +119,6 @@ Considerations for a new model/dataClass solution
 	generate from/to Json
 	support immutability
 	easy way to declare computed properties
-
-Play around with Provider.autoDispose
-	it is impossible to call an autoDispose provider from a non-autoDispose provider
-	currently, the ApiProvider solution cannot use autoDispose, which could be a useful feature if enabled
 
 GoRouter -- there should be a way to "push" a subtree, 
 	this means the subtree will decide its normally with .go, but wont affect routes below it in the stack

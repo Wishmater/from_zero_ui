@@ -341,9 +341,10 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
               ...widget.contextMenuActions,
               if (((widget.enabled && widget.addExpandCollapseContextMenuAction)
                   || (_isExpanded && widget.childrenKeysForExpandCollapse!=null && widget.childrenKeysForExpandCollapse!.isNotEmpty))
-                  && widget.contextMenuActions.isNotEmpty && !(widget.trailing is SizedBox))
+                  && widget.contextMenuActions.isNotEmpty && !(widget.trailing is SizedBox)
+                  &&  widget.children.isNotEmpty)
                 ActionFromZero.divider(),
-              if (widget.enabled && widget.addExpandCollapseContextMenuAction && !(widget.trailing is SizedBox))
+              if (widget.enabled && widget.children.isNotEmpty && widget.addExpandCollapseContextMenuAction && !(widget.trailing is SizedBox))
                 ActionFromZero(
                   icon: Icon(_isExpanded ? MaterialCommunityIcons.arrow_collapse_up : MaterialCommunityIcons.arrow_expand_down,),
                   title: _isExpanded ? 'Colapsar' : 'Expandir', // TODO 1 internationalize
