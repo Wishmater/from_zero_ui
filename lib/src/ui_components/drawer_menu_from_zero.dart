@@ -869,6 +869,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
   final bool selected;
   final bool compact;
   final String title;
+  final Widget? titleWidget;
   final String? subtitle;
   final String? subtitleRight;
   final Widget? icon;
@@ -878,10 +879,21 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
   final bool dense;
   final double titleHorizontalOffset;
 
-  DrawerMenuButtonFromZero({Key? key, this.selected=false, this.compact=false, required this.title,
-      this.subtitle, this.icon, this.onTap, this.selectedColor, this.dense=false,
-      this.contentPadding = const EdgeInsets.only(left: 0), this.titleHorizontalOffset=0,
-      this.subtitleRight}) : super(key: key);
+  DrawerMenuButtonFromZero({
+    Key? key,
+    this.selected=false,
+    this.compact=false,
+    required this.title,
+    this.titleWidget,
+    this.subtitle,
+    this.icon,
+    this.onTap,
+    this.selectedColor,
+    this.dense=false,
+    this.contentPadding = const EdgeInsets.only(left: 0),
+    this.titleHorizontalOffset=0,
+    this.subtitleRight,
+  }) : super(key: key);
 
   @override
   _DrawerMenuButtonFromZeroState createState() => _DrawerMenuButtonFromZeroState();
@@ -913,7 +925,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
               color: widget.selected ? selectedColor : theme.textTheme.bodyText1!.color,
               fontWeight: widget.selected ? FontWeight.w700 : null,
             ),
-            child: Text(widget.title,),
+            child: widget.titleWidget ?? Text(widget.title,),
           ),
         ),
         subtitle: widget.subtitle==null||widget.compact ? null
