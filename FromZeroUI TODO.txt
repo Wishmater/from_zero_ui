@@ -55,6 +55,10 @@ Desktop: add behaviour to drawerAppBar to cancel drawing overlay windowBar
 P2
 **********************************************************************
 
+Implement better handling of windows close events
+    https://pub.dev/packages/window_manager   // also see what else can be useful in this package
+    https://pub.dev/packages/flutter_window_close
+
 Refactor TableFromZero rowAddon to receive a builder function (a single one passed to Table, like with actions)
     this will fix issues with addon not reacting to theme changes and improve performance
 

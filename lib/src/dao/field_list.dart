@@ -51,6 +51,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool get allowAddNew => _allowAddNew ?? objectTemplate.canSave;
   bool collapsed;
   bool allowMultipleSelection;
+  bool selectionDefault;
   bool tableCellsEditable;
   bool collapsible;
   RowTapType rowTapType;
@@ -188,6 +189,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     TableController<T>? tableController,
     this.collapsed = false,
     this.allowMultipleSelection = false,
+    this.selectionDefault = false,
     this.collapsible = false,
     this.displayType = ListFieldDisplayType.table,
     this.toStringGetter = defaultToString,
@@ -410,6 +412,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     int? initialSortColumn,
     bool? tableCellsEditable,
     bool? allowMultipleSelection,
+    bool? selectionDefault,
     ValueChanged<RowModel>? onRowTap,
     bool? showAddButtonAtEndOfTable,
     bool? showEditDialogOnAdd,
@@ -477,6 +480,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       initialSortedColumn: initialSortColumn ?? this.initialSortedColumn,
       tableCellsEditable: tableCellsEditable ?? this.tableCellsEditable,
       allowMultipleSelection: allowMultipleSelection ?? this.allowMultipleSelection,
+      selectionDefault: selectionDefault ?? this.selectionDefault,
       onRowTap: onRowTap ?? this.onRowTap,
       showAddButtonAtEndOfTable: showAddButtonAtEndOfTable ?? this.showAddButtonAtEndOfTable,
       showEditDialogOnAdd: showEditDialogOnAdd ?? this.showEditDialogOnAdd,
@@ -690,11 +694,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                               },
                             ),
                             if (allowAddMultipleFromAvailablePool)
-                              ValueListenableBuilder(
+                              ValueListenableBuilder<Map<T, bool>>(
                                 valueListenable: selectedObjects,
                                 builder: (context, value, child) {
-                                  final selected = selectedObjects.value.keys.where((e) {
-                                    return selectedObjects.value[e]==true;
+                                  final selected = objects.where((e) {
+                                    return value[e] ?? selectionDefault;
                                   }).toList();
                                   return FlatButton(
                                     child: Padding(
@@ -1751,8 +1755,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               value.focusNode.requestFocus();
               onRowTap(value);
             },
-            selected: allowMultipleSelection ? (selectedObjects.value[e]??false) : null,
-            backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
+            selected: allowMultipleSelection ? (selectedObjects.value[e] ?? selectionDefault) : null,
+            // backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
             onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
               selectedObjects.value[row.id] = focused??false;
               (row as SimpleRowModel).selected = focused??false;
@@ -2255,7 +2259,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     final allowAddNew = this.allowAddNew;
     List<T> currentSelected = [];
     try {
-      currentSelected = tableController.filtered.where((element) => selectedObjects.value[element]==true).map((e) => e.id).toList();
+      currentSelected = tableController.filtered.where((element) => selectedObjects.value[element]??selectionDefault).map((e) => e.id).toList();
     } catch (_) {}
     return [
       if (!collapsed && currentSelected.length>0)
