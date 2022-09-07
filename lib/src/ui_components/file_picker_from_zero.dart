@@ -79,6 +79,7 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
             type: widget.fileType,
             allowedExtensions: widget.allowedExtensions,
             initialDirectory: widget.initialDirectory,
+            lockParentWindow: true,
           );
           if (result != null) {
             widget.onSelected(result.files.map((e) => File(e.path!)).toList());
@@ -88,6 +89,7 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
           String? result = await FilePicker.platform.getDirectoryPath(
             dialogTitle: widget.dialogTitle,
             initialDirectory: widget.initialDirectory,
+            lockParentWindow: true,
           );
           if (result != null) {
             widget.onSelected([File(result)]);
