@@ -238,7 +238,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
       }
       for (int i=0; i<overflows.length; i++) {
         if (overflows[i].overflowBuilder==ActionFromZero.dividerOverflowBuilder
-            && (i==0 || i==actions.lastIndex || overflows[i+1].overflowBuilder==ActionFromZero.dividerOverflowBuilder)) {
+            && (i==0 || i==overflows.lastIndex || overflows[i+1].overflowBuilder==ActionFromZero.dividerOverflowBuilder)) {
           overflows.removeAt(i); i--;
         }
       }
