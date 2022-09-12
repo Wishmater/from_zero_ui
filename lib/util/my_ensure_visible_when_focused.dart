@@ -164,15 +164,18 @@ class EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
       curve: curve,
       duration: duration,
     );
-    return ensureVisibleForContext(
-      context: scrollableState.context,
-      curve: curve,
-      duration: duration,
-      alignmentStart: alignmentStart,
-      alignmentEnd: alignmentEnd,
-      // alignmentStart: 0.0,
-      // alignmentEnd: 1.0, // force hard edge alignment for nested scrollables
-    );
+
+    if (scrollableState.mounted) {
+      return ensureVisibleForContext(
+        context: scrollableState.context,
+        curve: curve,
+        duration: duration,
+        alignmentStart: alignmentStart,
+        alignmentEnd: alignmentEnd,
+        // alignmentStart: 0.0,
+        // alignmentEnd: 1.0, // force hard edge alignment for nested scrollables
+      );
+    }
 
   }
 
