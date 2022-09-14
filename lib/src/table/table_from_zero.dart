@@ -1736,7 +1736,16 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       return filtered;
     }
   }
-  _sort(List<RowModel<T>> list) {
+  void _sort(List<RowModel<T>> list) {
+    smartSort(list,
+      sortedColumn: sortedColumn,
+      sortedAscending: sortedAscending,
+    );
+  }
+  static void smartSort<T>(List<RowModel<T>> list, {
+    Object? sortedColumn,
+    bool sortedAscending = true,
+  }) {
     mergeSort(list, compare: ((RowModel<T> a, RowModel<T> b){
       if (a.alwaysOnTop!=null || b.alwaysOnTop!=null && a.alwaysOnTop!=b.alwaysOnTop) {
         if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
@@ -1745,8 +1754,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       if (sortedColumn==null) {
         return 0;
       }
-      var aVal = a.values[sortedColumn!];
-      var bVal = b.values[sortedColumn!];
+      var aVal = a.values[sortedColumn];
+      var bVal = b.values[sortedColumn];
       if (aVal!=null && aVal is! Comparable) aVal = aVal.toString();
       if (bVal!=null && bVal is! Comparable) bVal = bVal.toString();
       return sortedAscending

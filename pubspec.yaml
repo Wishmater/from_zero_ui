@@ -38,6 +38,7 @@ dependencies:
 #  keframe: ^3.0.0
   preload_page_view: ^0.1.6
   sliding_number: ^0.0.4
+  multi_value_listenable_builder: ^0.0.2
 
   # * Plugins
   url_launcher: ^6.1.3

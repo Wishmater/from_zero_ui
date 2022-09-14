@@ -20,6 +20,7 @@ import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as transl
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:dartx/dartx.dart';
+import 'package:multi_value_listenable_builder/multi_value_listenable_builder.dart';
 
 
 enum RowTapType {
@@ -47,6 +48,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool allowDuplicateObjectsFromAvailablePool;
   bool allowAddMultipleFromAvailablePool;
   bool showObjectsFromAvailablePoolAsTable;
+  ContextFulFieldValueGetter<List<ActionFromZero>, Field>? availablePoolTableActions;
   bool? _allowAddNew;
   bool get allowAddNew => _allowAddNew ?? objectTemplate.canSave;
   bool collapsed;
@@ -180,6 +182,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.availableObjectsPoolProvider,
     this.allowDuplicateObjectsFromAvailablePool = false,
     this.showObjectsFromAvailablePoolAsTable = false,
+    this.availablePoolTableActions,
     bool? allowAddNew,
     FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, /// Unused in table
     this.tableCellsEditable = false,
@@ -405,6 +408,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T, U>>? availableObjectsPoolProvider,
     bool? allowDuplicateObjectsFromAvailablePool,
     bool? showObjectsFromAvailablePoolAsTable,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? availablePoolTableActions,
     bool? allowAddNew,
     ListFieldDisplayType? displayType,
     String Function(ListField field)? toStringGetter,
@@ -468,6 +472,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       availableObjectsPoolGetter: availableObjectsPoolGetter ?? this.availableObjectsPoolGetter,
       availableObjectsPoolProvider: availableObjectsPoolProvider ?? this.availableObjectsPoolProvider,
       allowDuplicateObjectsFromAvailablePool: allowDuplicateObjectsFromAvailablePool ?? this.allowDuplicateObjectsFromAvailablePool,
+      availablePoolTableActions: availablePoolTableActions ?? this.availablePoolTableActions,
       allowAddNew: allowAddNew ?? this._allowAddNew,
       displayType: displayType ?? this.displayType,
       toStringGetter: toStringGetter ?? this.toStringGetter,
@@ -633,6 +638,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           animation:  this,
           builder: (context, child) {
             final ValueNotifier<Map<T, bool>> selectedObjects = ValueNotifier({});
+            ValueNotifier<List<T>?> availableData = ValueNotifier(null);
             return Stack(
               children: [
                 availableObjectsPoolProvider==null
@@ -641,6 +647,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                         loadingBuilder: _availablePoolLoadingBuilder,
                         errorBuilder: (context, error, stackTrace) => _availablePoolErrorBuilder(context, error, stackTrace is StackTrace ? stackTrace : null),
                         successBuilder: (context, data) {
+                          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                            availableData.value = data;
+                          });
                           return _availablePoolTableDataBuilder(context, data, emptyDAO,
                             selectedObjects: selectedObjects,
                           );
@@ -651,6 +660,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                         loadingBuilder: _availablePoolLoadingBuilder,
                         errorBuilder: _availablePoolErrorBuilder,
                         dataBuilder: (context, data) {
+                          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                            availableData.value = data;
+                          });
                           return _availablePoolTableDataBuilder(context, data, emptyDAO,
                             selectedObjects: selectedObjects,
                           );
@@ -694,11 +706,16 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                               },
                             ),
                             if (allowAddMultipleFromAvailablePool)
-                              ValueListenableBuilder<Map<T, bool>>(
-                                valueListenable: selectedObjects,
-                                builder: (context, value, child) {
-                                  final selected = objects.where((e) {
-                                    return value[e] ?? selectionDefault;
+                              MultiValueListenableBuilder(
+                                valueListenables: [
+                                  availableData,
+                                  selectedObjects,
+                                ],
+                                builder: (context, values, child) {
+                                  List<T>? availableData = values[0];
+                                  Map<T, bool> selectedObjects = values[1];
+                                  final selected = availableData==null ? [] : availableData.where((e) {
+                                    return selectedObjects[e] ?? selectionDefault;
                                   }).toList();
                                   return FlatButton(
                                     child: Padding(
@@ -863,12 +880,14 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       actionViewBreakpoints: actionViewBreakpoints,
       actionEditBreakpoints: actionEditBreakpoints,
       objects: data,
+      actions: availablePoolTableActions,
       allowAddNew: allowAddNew && emptyDAO.canSave,
       initialSortedColumn: initialSortedColumn,
       tableFooterStickyOffset: 56,
       addSearchAction: true,
       allowMultipleSelection: allowAddMultipleFromAvailablePool,
       selectedObjects: selectedObjects,
+      selectionDefault: selectionDefault,
       rowTapType: RowTapType.none,
       onRowTap: allowAddMultipleFromAvailablePool ? null : (value) {
         Navigator.of(context).pop(value.id);

@@ -404,10 +404,11 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
             cellBuilder: widget.popupWidgetBuilder==null ? null
                 : (context, row, colKey) => widget.popupWidgetBuilder!(row.id),
             onFilter: (filtered) {
+              List<RowModel<T>> startsWhole = [];
               List<RowModel<T>> starts = [];
               List<RowModel<T>> contains = [];
               if (searchQuery==null || searchQuery!.isEmpty) {
-                return filtered;
+                contains = filtered;
               } else {
                 final q = searchQuery!.trim().toUpperCase();
                 for (final e in filtered) {
@@ -423,6 +424,10 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                   }
                 }
               }
+              // if (widget.sort) {
+              //   TableFromZeroState.smartSort(starts);
+              //   TableFromZeroState.smartSort(contains);
+              // }
               return [...starts, ...contains];
             },
             rows: widget.possibleValues.map((e) {
