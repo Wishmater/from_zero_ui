@@ -84,6 +84,9 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
         log(result.stderr);
         log('   stdout:');
         log(result.stdout);
+        log("Seems like killing the process didn't work...");
+        log('Exiting the normal dart way (debugger(); + exit(0);)...');
+        debugger(); exit(0);
       } else {
         _exit(code);
       }

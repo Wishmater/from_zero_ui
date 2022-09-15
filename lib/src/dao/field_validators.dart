@@ -6,6 +6,7 @@ import 'package:from_zero_ui/src/dao/dao.dart';
 import 'package:from_zero_ui/src/dao/field.dart';
 import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
 
+
 enum ValidationErrorSeverity {
   warning,
   unfinished,
@@ -26,32 +27,47 @@ extension SeverityWeight on ValidationErrorSeverity {
   int get weight => validationErrorSeverityWeights[this]!;
 }
 
+
 class ValidationError {
   Field field;
   ValidationErrorSeverity severity;
   String error;
   AnimationController? animationController;
+  bool? _isVisibleAsSaveConfirmation;
+  bool get isVisibleAsSaveConfirmation => _isVisibleAsSaveConfirmation ?? severity!=ValidationErrorSeverity.disabling;
+  bool? _isVisibleAsHintMessage;
+  bool get isVisibleAsHintMessage => _isVisibleAsHintMessage ?? severity!=ValidationErrorSeverity.disabling && severity!=ValidationErrorSeverity.unfinished;
+  bool? _isVisibleAsTooltip;
+  bool get isVisibleAsTooltip => _isVisibleAsTooltip ?? severity==ValidationErrorSeverity.disabling;
   ValidationError({
     required this.field,
     required this.error,
     this.severity=ValidationErrorSeverity.error,
-  });
+    bool? isVisibleAsSaveConfirmation,
+    bool? isVisibleAsHintMessage,
+    bool? isVisibleAsTooltip,
+  })  : this._isVisibleAsSaveConfirmation = isVisibleAsSaveConfirmation,
+        this._isVisibleAsHintMessage = isVisibleAsHintMessage,
+        this._isVisibleAsTooltip = isVisibleAsTooltip;
 
   @override
   String toString() => error;
-  bool get isVisibleAsSaveConfirmation => severity!=ValidationErrorSeverity.disabling;
-  bool get isVisibleAsHintMessage => severity!=ValidationErrorSeverity.disabling && severity!=ValidationErrorSeverity.unfinished;
-  bool get isVisibleAsTooltip => severity==ValidationErrorSeverity.disabling;
   bool get isBlocking => severity==ValidationErrorSeverity.error || severity==ValidationErrorSeverity.invalidating;
   bool get isBeforeEditing => severity==ValidationErrorSeverity.disabling || severity==ValidationErrorSeverity.invalidating;
 
   ValidationError copyWith({
     String? error,
+    bool? isVisibleAsSaveConfirmation,
+    bool? isVisibleAsHintMessage,
+    bool? isVisibleAsTooltip,
   }) {
     return ValidationError(
       field: this.field,
-      error: error ?? this.error,
       severity: this.severity,
+      error: error ?? this.error,
+      isVisibleAsSaveConfirmation: isVisibleAsSaveConfirmation ?? this.isVisibleAsSaveConfirmation,
+      isVisibleAsHintMessage: isVisibleAsHintMessage ?? this.isVisibleAsHintMessage,
+      isVisibleAsTooltip: isVisibleAsTooltip ?? this.isVisibleAsTooltip,
     )..animationController=this.animationController;
   }
 }
@@ -68,15 +84,24 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
     this.showVisualConfirmation = false,
     this.allowUndoInvalidatingChange = true,
     this.allowSetThisFieldToDefaultValue = true,
+    bool? isVisibleAsSaveConfirmation,
+    bool? isVisibleAsHintMessage,
+    bool? isVisibleAsTooltip,
   })  : assert(showVisualConfirmation || allowUndoInvalidatingChange),
         super(
           field: field,
           error: error,
           severity: ValidationErrorSeverity.invalidating,
+          isVisibleAsSaveConfirmation: isVisibleAsSaveConfirmation,
+          isVisibleAsHintMessage: isVisibleAsHintMessage,
+          isVisibleAsTooltip: isVisibleAsTooltip,
         );
 
   InvalidatingError<T> copyWith({
     String? error,
+    bool? isVisibleAsSaveConfirmation,
+    bool? isVisibleAsHintMessage,
+    bool? isVisibleAsTooltip,
   }) {
     return InvalidatingError<T>(
       field: this.field as Field<T>,
@@ -85,6 +110,9 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
       showVisualConfirmation: this.showVisualConfirmation,
       allowSetThisFieldToDefaultValue: this.allowSetThisFieldToDefaultValue,
       allowUndoInvalidatingChange: this.allowUndoInvalidatingChange,
+      isVisibleAsSaveConfirmation: isVisibleAsSaveConfirmation ?? this.isVisibleAsSaveConfirmation,
+      isVisibleAsHintMessage: isVisibleAsHintMessage ?? this.isVisibleAsHintMessage,
+      isVisibleAsTooltip: isVisibleAsTooltip ?? this.isVisibleAsTooltip,
     )..animationController=this.animationController;
   }
 }
@@ -95,6 +123,9 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
     required T? defaultValue,
     required String error,
     bool showVisualConfirmation = false,
+    bool? isVisibleAsSaveConfirmation,
+    bool? isVisibleAsHintMessage,
+    bool? isVisibleAsTooltip,
   })  : super(
           field: field,
           error: error,
@@ -102,6 +133,9 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
           showVisualConfirmation: showVisualConfirmation,
           allowSetThisFieldToDefaultValue: true,
           allowUndoInvalidatingChange: true,
+          isVisibleAsSaveConfirmation: isVisibleAsSaveConfirmation,
+          isVisibleAsHintMessage: isVisibleAsHintMessage,
+          isVisibleAsTooltip: isVisibleAsTooltip,
         ) {
     severity = field.value==defaultValue
         ? ValidationErrorSeverity.disabling
@@ -110,12 +144,18 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
 
   ForcedValueError<T> copyWith({
     String? error,
+    bool? isVisibleAsSaveConfirmation,
+    bool? isVisibleAsHintMessage,
+    bool? isVisibleAsTooltip,
   }) {
     return ForcedValueError<T>(
       field: this.field as Field<T>,
       error: error ?? this.error,
       defaultValue: this.defaultValue,
       showVisualConfirmation: this.showVisualConfirmation,
+      isVisibleAsSaveConfirmation: isVisibleAsSaveConfirmation ?? this.isVisibleAsSaveConfirmation,
+      isVisibleAsHintMessage: isVisibleAsHintMessage ?? this.isVisibleAsHintMessage,
+      isVisibleAsTooltip: isVisibleAsTooltip ?? this.isVisibleAsTooltip,
     )..animationController=this.animationController;
   }
 }

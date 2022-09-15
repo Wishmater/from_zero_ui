@@ -32,7 +32,7 @@ class NumField extends Field<num> {
     bool removeEntryFromDAO = false,
     bool requestFocus = true,
   }) {
-    super.commitUndo(_getTextVal(controller.text),
+    super.commitUndo(getTextVal(controller.text),
       removeEntryFromDAO: removeEntryFromDAO,
       requestFocus: requestFocus,
     );
@@ -43,7 +43,7 @@ class NumField extends Field<num> {
     bool removeEntryFromDAO = false,
     bool requestFocus = true,
   }) {
-    super.commitRedo(_getTextVal(controller.text),
+    super.commitRedo(getTextVal(controller.text),
       removeEntryFromDAO: removeEntryFromDAO,
       requestFocus: requestFocus,
     );
@@ -56,7 +56,7 @@ class NumField extends Field<num> {
   }
 
   void syncTextEditingController() {
-    final textVal = _getTextVal(controller.text);
+    final textVal = getTextVal(controller.text);
     if (value != textVal) {
       final string = toString();
       controller.text = string;
@@ -197,7 +197,7 @@ class NumField extends Field<num> {
     );
   }
 
-  num? _getTextVal(String? text) {
+  num? getTextVal(String? text) {
     num? textVal;
     try {
       textVal = formatter==null ? num.parse(text!)
@@ -269,7 +269,7 @@ class NumField extends Field<num> {
   }) {
     focusNode.addListener(() {
       if (!focusNode.hasFocus) {
-        final textVal = _getTextVal(controller.text);
+        final textVal = getTextVal(controller.text);
         if (textVal != value) {
           super.value = textVal;
         }
@@ -372,7 +372,7 @@ class NumField extends Field<num> {
                               );
                             }
                           }
-                          final textVal = _getTextVal(v);
+                          final textVal = getTextVal(v);
                           if (v.isEmpty || v.characters.last=='.' || v.characters.last==',' || !isEdited) {
                             value = textVal;
                           } else if (value!=textVal) {

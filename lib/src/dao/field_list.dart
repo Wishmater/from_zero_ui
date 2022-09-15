@@ -1460,6 +1460,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                       AppbarFromZero(
                         titleSpacing: 0,
                         addContextMenu: enabled,
+                        backgroundColor: Theme.of(context).cardColor,
                         onShowContextMenu: () => focusNode!.requestFocus(),
                         title: Row(
                           children: [

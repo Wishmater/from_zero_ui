@@ -393,6 +393,17 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool success = true;
     List<Future<bool>> results = [];
     for (final e in props.values) {
+      if (validateNonEditedFields) { // await syncing text controllers when saving
+        if (e is StringField) {
+          while (e.controller.text != e.value) {
+            await Future.delayed(Duration(milliseconds: 100));
+          }
+        } else if (e is NumField) {
+          while (e.getTextVal(e.controller.text) != e.value) {
+            await Future.delayed(Duration(milliseconds: 100));
+          }
+        }
+      }
       if (currentValidationId!=validationCallCount) return false;
       results.add(e.validate(contextForValidation!, this, currentValidationId,
           validateIfNotEdited: validateNonEditedFields)..then((v) => notifyListeners()));

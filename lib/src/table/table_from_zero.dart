@@ -1817,7 +1817,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         break;
       }
     }
-    if (notifyListeners) {
+    if (mounted && notifyListeners) {
       widget.tableController?.notifyListeners();
     }
     return filtered;
