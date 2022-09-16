@@ -339,9 +339,9 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
             child: prevTitle,
             actions: [
               ...widget.contextMenuActions,
-              if (((widget.enabled && widget.addExpandCollapseContextMenuAction)
+              if (((widget.enabled && widget.addExpandCollapseContextMenuAction && !(widget.trailing is SizedBox))
                   || (_isExpanded && widget.childrenKeysForExpandCollapse!=null && widget.childrenKeysForExpandCollapse!.isNotEmpty))
-                  && widget.contextMenuActions.isNotEmpty && !(widget.trailing is SizedBox)
+                  && widget.contextMenuActions.isNotEmpty
                   &&  widget.children.isNotEmpty)
                 ActionFromZero.divider(),
               if (widget.enabled && widget.children.isNotEmpty && widget.addExpandCollapseContextMenuAction && !(widget.trailing is SizedBox))
@@ -353,8 +353,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
                   },
                 ),
               if (_isExpanded && widget.childrenKeysForExpandCollapse!=null
-                  && widget.childrenKeysForExpandCollapse!.isNotEmpty
-                  && !(widget.trailing is SizedBox))
+                  && widget.childrenKeysForExpandCollapse!.isNotEmpty)
                 ActionFromZero(
                   icon: Icon(expandChildren ? MaterialCommunityIcons.arrow_expand_down : MaterialCommunityIcons.arrow_collapse_up),
                   title: expandChildren ? 'Expandir Descendientes' : 'Colapsar Descendientes', // TODO 1 internationalize

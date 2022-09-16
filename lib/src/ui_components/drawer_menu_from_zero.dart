@@ -683,7 +683,9 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   padding: const EdgeInsets.only(top: 6),
                   child: title,
                 ),
-                trailing: tabs[i].customExpansionTileTrailing ?? (tabs[i].forcePopup ? SizedBox.shrink() : null),
+                trailing: widget.depth==0 && !widget.allowCollapseRoot
+                    ? SizedBox.shrink()
+                    : tabs[i].customExpansionTileTrailing ?? (tabs[i].forcePopup ? SizedBox.shrink() : null),
                 children: [
                   Stack(
                     clipBehavior: Clip.none,
@@ -735,7 +737,10 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                       _menuButtonKeys[i]!.currentState!.showContextMenu(context);
                     }
                     return false;
-                  } else{
+                  } else if (widget.depth==0 && !widget.allowCollapseRoot) {
+                    await onTap();
+                    return false;
+                  } else {
                     if ((await onTap()) && value){
                       return false;
                     }
