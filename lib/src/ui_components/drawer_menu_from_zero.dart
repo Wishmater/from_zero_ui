@@ -883,6 +883,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
   final EdgeInsets contentPadding;
   final bool dense;
   final double titleHorizontalOffset;
+  final MouseCursor? mouseCursor;
 
   DrawerMenuButtonFromZero({
     Key? key,
@@ -898,6 +899,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
     this.contentPadding = const EdgeInsets.only(left: 0),
     this.titleHorizontalOffset=0,
     this.subtitleRight,
+    this.mouseCursor,
   }) : super(key: key);
 
   @override
@@ -958,7 +960,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
             ),
         contentPadding: widget.contentPadding,
         dense: widget.dense,
-        mouseCursor: SystemMouseCursors.click,
+        mouseCursor: widget.mouseCursor ?? SystemMouseCursors.click,
         leading: Stack(
           clipBehavior: Clip.none,
           children: [
