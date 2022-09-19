@@ -657,6 +657,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       final controller = APISnackBar(
         context: context,
         stateNotifier: stateNotifier,
+        duration: showDefaultSnackBar ? null : Duration.zero,
         successTitle: '$classUiName ${newInstance ? FromZeroLocalizations.of(context).translate("added")
             : FromZeroLocalizations.of(context).translate("edited")} ${FromZeroLocalizations.of(context).translate("successfully")}.',
       ).show();
