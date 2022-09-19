@@ -7,6 +7,7 @@ import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/src/app_scaffolding/api_snackbar.dart';
+import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -657,7 +658,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       final controller = APISnackBar(
         context: context,
         stateNotifier: stateNotifier,
-        duration: showDefaultSnackBar ? null : Duration.zero,
+        duration: showDefaultSnackBar ? 3.seconds : Duration.zero,
         successTitle: '$classUiName ${newInstance ? FromZeroLocalizations.of(context).translate("added")
             : FromZeroLocalizations.of(context).translate("edited")} ${FromZeroLocalizations.of(context).translate("successfully")}.',
       ).show();
@@ -1527,14 +1528,36 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }) {
     if (viewWidgetBuilder!=null) {
       return viewWidgetBuilder!(context, this);
+    } else {
+      return defaultBuildViewWidget(context, this,
+        fieldGroups: fieldGroups,
+        mainScrollController: mainScrollController,
+        useIntrinsicWidth: useIntrinsicWidth,
+        useIntrinsicHeight: useIntrinsicHeight,
+        titleFlex: titleFlex,
+        valueFlex: valueFlex,
+        titleMaxWidth: titleMaxWidth,
+        applyAlternateBackground: applyAlternateBackground,
+      );
     }
+  }
+  static Widget defaultBuildViewWidget<T>(BuildContext context, DAO<T> dao, {
+    List<FieldGroup>? fieldGroups,
+    ScrollController? mainScrollController,
+    bool? useIntrinsicWidth,
+    bool? useIntrinsicHeight,
+    int titleFlex = 1000000,
+    int valueFlex = 1618034,
+    double? titleMaxWidth,
+    bool applyAlternateBackground = true,
+  }) {
     if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
         && (titleMaxWidth!=null
-            || props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty)) {
+            || dao.props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty)) {
       useIntrinsicHeight ??= false;
       useIntrinsicWidth ??= false;
     }
-    fieldGroups ??= this.fieldGroups;
+    fieldGroups ??= dao.fieldGroups;
     bool clear = false;
     bool first = true;
     Widget result = Column(
@@ -1552,14 +1575,21 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               clear = !clear;
               if (e is ListField && e.buildViewWidgetAsTable) {
                 clear = false;
+                final ViewWidgetBuilder<ComparableList<DAO<dynamic>>> temp = ListField.defaultViewWidgetBuilder; // hack to allow correct equality with static function
+                if (e.viewWidgetBuilder != temp) {
+                  return e.buildViewWidget(context,
+                    linkToInnerDAOs: dao.viewDialogLinksToInnerDAOs,
+                    showViewButtons: dao.viewDialogShowsViewButtons,
+                  );
+                }
                 final newField = e.copyWith(
                   tableCellsEditable: false,
                   allowAddNew: false,
-                  actionViewBreakpoints: this.viewDialogLinksToInnerDAOs&&this.viewDialogShowsViewButtons
+                  actionViewBreakpoints: dao.viewDialogLinksToInnerDAOs&&dao.viewDialogShowsViewButtons
                       ? {0: ActionState.icon}
-                      : this.viewDialogLinksToInnerDAOs
-                          ? {0: ActionState.popup}
-                          : {0: ActionState.none},
+                      : dao.viewDialogLinksToInnerDAOs
+                      ? {0: ActionState.popup}
+                      : {0: ActionState.none},
                   actionDeleteBreakpoints: {0: ActionState.none},
                   actionDuplicateBreakpoints: {0: ActionState.none},
                   actionEditBreakpoints: {0: ActionState.none},
@@ -1595,8 +1625,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 final value = Container(
                   alignment: Alignment.centerLeft,
                   child: e.buildViewWidget(context,
-                    linkToInnerDAOs: this.viewDialogLinksToInnerDAOs,
-                    showViewButtons: this.viewDialogShowsViewButtons,
+                    linkToInnerDAOs: dao.viewDialogLinksToInnerDAOs,
+                    showViewButtons: dao.viewDialogShowsViewButtons,
                   ),
                 );
                 Widget layout;
@@ -1647,7 +1677,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 return Material(
                   color: !applyAlternateBackground ? Colors.transparent
                       : clear ? Theme.of(context).cardColor
-                              : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
+                      : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
                   child: layout,
                 );
               }
