@@ -922,31 +922,35 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                         secondaryAnimation: ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation,
                                         scaffoldChangeNotifier: changeNotifierNotListen,
                                       );
-                                      return AnimatedTheme(
-                                        duration: widget.drawerAnimationDuration,
-                                        curve: widget.appbarAnimationCurve,
-                                        data: Theme.of(context).copyWith(
-                                          scrollbarTheme: Theme.of(context).scrollbarTheme.copyWith(
-                                            thickness: MaterialStateProperty.resolveWith((states) {
-                                              final baseThickness = states.contains(MaterialState.hovered) ? 12.0 : 8.0;
-                                              return baseThickness + (widget.drawerWidth - currentDrawerWidth - 4).coerceIn(0);
-                                            }),
-                                          ),
-                                        ),
-                                        child: ScrollbarFromZero(
+                                      result = ScrollbarFromZero(
+                                        controller: drawerContentScrollController,
+                                        applyOpacityGradientToChildren: false,
+                                        ignoreDevicePadding: false,
+                                        child: SingleChildScrollView(
+                                          clipBehavior: Clip.none,
                                           controller: drawerContentScrollController,
-                                          applyOpacityGradientToChildren: false,
-                                          ignoreDevicePadding: false,
-                                          child: SingleChildScrollView(
-                                            clipBehavior: Clip.none,
-                                            controller: drawerContentScrollController,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(top: widget.drawerPaddingTop),
-                                              child: result,
-                                            ),
+                                          child: Padding(
+                                            padding: EdgeInsets.only(top: widget.drawerPaddingTop),
+                                            child: result,
                                           ),
                                         ),
                                       );
+                                      if (widget.useCompactDrawerInsteadOfClose) {
+                                        result = AnimatedTheme(
+                                          duration: widget.drawerAnimationDuration,
+                                          curve: widget.appbarAnimationCurve,
+                                          data: Theme.of(context).copyWith(
+                                            scrollbarTheme: Theme.of(context).scrollbarTheme.copyWith(
+                                              thickness: MaterialStateProperty.resolveWith((states) {
+                                                final baseThickness = states.contains(MaterialState.hovered) ? 12.0 : 8.0;
+                                                return baseThickness + (widget.drawerWidth - currentDrawerWidth - 4).coerceIn(0);
+                                              }),
+                                            ),
+                                          ),
+                                          child: result,
+                                        );
+                                      }
+                                      return result;
                                     },
                                   ),
                                 ),
