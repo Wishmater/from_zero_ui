@@ -62,6 +62,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout;
   DAO? parentDAO; /// if not null, undo/redo calls will be relayed to the parent
   DAOValueGetter<String, ModelType>? editDialogTitle;
+  DAOValueGetter<String, ModelType>? saveButtonTitle;
   DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle;
   DAOValueGetter<String, ModelType>? saveConfirmationDialogDescription;
 
@@ -96,6 +97,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.searchNameGetter,
     this.editDialogTitle,
     this.saveConfirmationDialogTitle,
+    this.saveButtonTitle,
     this.saveConfirmationDialogDescription,
   }) :  this._undoRecord = undoRecord ?? [],
         this._redoRecord = redoRecord ?? [],
@@ -145,6 +147,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     DAOValueGetter<String, ModelType>? searchNameGetter,
     DAOValueGetter<String, ModelType>? editDialogTitle,
     DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle,
+    DAOValueGetter<String, ModelType>? saveButtonTitle,
     DAOValueGetter<String, ModelType>? saveConfirmationDialogDescription,
   }) {
     final result = DAO<ModelType>(
@@ -177,6 +180,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       searchNameGetter: searchNameGetter ?? this.searchNameGetter,
       editDialogTitle: editDialogTitle ?? this.editDialogTitle,
       saveConfirmationDialogTitle: saveConfirmationDialogTitle ?? this.saveConfirmationDialogTitle,
+      saveButtonTitle: saveButtonTitle ?? this.saveButtonTitle,
       saveConfirmationDialogDescription: saveConfirmationDialogDescription ?? this.saveConfirmationDialogDescription,
     );
     result._selfUpdateListeners = _selfUpdateListeners;
@@ -546,7 +550,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                       children: [
                                         Text(validation
                                             ? (saveConfirmationDialogDescription?.call(this) ?? (FromZeroLocalizations.of(context).translate("confirm_save_desc") + "\r\n" + shownName))
-                                            : 'Debe resolver los siguientes errores de validación antes de guardar:'), // TODO 3 internationalize
+                                            : 'Debe resolver los siguientes errores de validación:'), // TODO 3 internationalize
                                         SaveConfirmationValidationMessage(allErrors: validationErrors),
                                       ],
                                     ),
@@ -580,7 +584,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                         return FlatButton(
                                           child: Padding(
                                             padding: const EdgeInsets.all(8.0),
-                                            child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
+                                            child: Text((saveButtonTitle?.call(this).toUpperCase() ?? FromZeroLocalizations.of(context).translate("save_caps")),
                                               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                             ),
                                           ),
@@ -2056,7 +2060,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     child: ElevatedButton(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(FromZeroLocalizations.of(context).translate("save_caps"),
+                        child: Text((saveButtonTitle?.call(this).toUpperCase() ?? FromZeroLocalizations.of(context).translate("save_caps")),
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600,),
                         ),
                       ),
