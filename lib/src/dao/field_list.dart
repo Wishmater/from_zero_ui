@@ -147,7 +147,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     BuildContext? context, // for localization
   }) {
     return list.length>5
-        ? listToStringCount(list)
+        ? listToStringCount(list, modelNameSingular: modelNameSingular, modelNamePlural: modelNamePlural)
         : listToStringAll(list);
   }
   static String listToStringAll(List list) {
