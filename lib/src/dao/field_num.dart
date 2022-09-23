@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'dart:ui' as ui;
 
@@ -9,7 +10,6 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao/dao.dart';
 import 'package:from_zero_ui/src/dao/field_validators.dart';
 import 'package:intl/intl.dart';
-import 'package:from_zero_ui/src/dao/field.dart';
 import 'package:dartx/dartx.dart';
 
 
@@ -21,6 +21,7 @@ class NumField extends Field<num> {
   InputDecoration? inputDecoration;
   int digitsAfterComma;
   bool allowNegative;
+  Timer? valUpdateTimer;
 
   set value(num? v) {
     super.value = v;
@@ -269,6 +270,7 @@ class NumField extends Field<num> {
   }) {
     focusNode.addListener(() {
       if (!focusNode.hasFocus) {
+        valUpdateTimer?.cancel();
         final textVal = getTextVal(controller.text);
         if (textVal != value) {
           super.value = textVal;
@@ -337,6 +339,7 @@ class NumField extends Field<num> {
                           focusNode.nextFocus();
                         },
                         onChanged: (v) {
+                          valUpdateTimer?.cancel();
                           int? lastMinusIndex;
                           do {
                             lastMinusIndex = v.contains('-') ? v.lastIndexOf('-') : null;
@@ -378,6 +381,9 @@ class NumField extends Field<num> {
                           } else if (value!=textVal) {
                             addUndoEntry(value);
                           }
+                          valUpdateTimer = Timer(Duration(seconds: 2), () {
+                            value = textVal;
+                          });
                         },
                         keyboardType: TextInputType.number,
                         inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9${digitsAfterComma==0 ? '' : '.'}${allowNegative ? '-' : ''}]')),],

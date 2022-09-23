@@ -3,7 +3,6 @@ import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao/dao.dart';
-import 'package:from_zero_ui/src/dao/field.dart';
 import 'package:from_zero_ui/src/dao/field_validators.dart';
 
 

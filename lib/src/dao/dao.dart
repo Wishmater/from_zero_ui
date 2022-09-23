@@ -10,6 +10,10 @@ import 'package:from_zero_ui/src/app_scaffolding/api_snackbar.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
+
+part 'field.dart';
 
 
 typedef FutureOr<ModelType?> OnSaveCallback<ModelType>(BuildContext context, DAO<ModelType> e);
@@ -20,6 +24,7 @@ typedef ApiState OnDeleteAPICallback<ModelType>(BuildContext context, DAO<ModelT
 typedef void OnDidDeleteCallback<ModelType>(BuildContext context, DAO<ModelType> dao);
 typedef Widget DAOWidgetBuilder<ModelType>(BuildContext context, DAO<ModelType> dao);
 typedef T DAOValueGetter<T, ModelType>(DAO<ModelType> dao);
+
 
 class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
@@ -400,12 +405,23 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     for (final e in props.values) {
       if (validateNonEditedFields) { // await syncing text controllers when saving
         if (e is StringField) {
-          while (e.controller.text != e.value) {
-            await Future.delayed(Duration(milliseconds: 100));
+          e.valUpdateTimer?.cancel();
+          if (e.controller.text != e.value) {
+            e._value = e.controller.text;
+            e.passedFirstEdit = true;
+            e.addUndoEntry(e._value);
+            e.onValueChanged?.call(e.dao, e, e._value);
+            e.notifyListeners();
           }
         } else if (e is NumField) {
-          while (e.getTextVal(e.controller.text) != e.value) {
-            await Future.delayed(Duration(milliseconds: 100));
+          e.valUpdateTimer?.cancel();
+          final numVal = e.getTextVal(e.controller.text);
+          while (numVal != e.value) {
+            e._value = numVal;
+            e.passedFirstEdit = true;
+            e.addUndoEntry(e._value);
+            e.onValueChanged?.call(e.dao, e, e._value);
+            e.notifyListeners();
           }
         }
       }
@@ -1382,7 +1398,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }) {
     ScrollController scrollController = ScrollController();
     if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
-        && props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty) {
+        && props.values.where((e) => e is ListField && (e as ListField).buildViewWidgetAsTable).isNotEmpty) {
       useIntrinsicHeight = false;
       useIntrinsicWidth = false;
     }
@@ -1557,7 +1573,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }) {
     if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
         && (titleMaxWidth!=null
-            || dao.props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty)) {
+            || dao.props.values.where((e) => e is ListField && (e as ListField).buildViewWidgetAsTable).isNotEmpty)) {
       useIntrinsicHeight ??= false;
       useIntrinsicWidth ??= false;
     }
@@ -1577,7 +1593,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             mainAxisSize: MainAxisSize.min,
             children: fields.map((e) {
               clear = !clear;
-              if (e is ListField && e.buildViewWidgetAsTable) {
+              if (e is ListField && (e as ListField).buildViewWidgetAsTable) {
                 clear = false;
                 final ViewWidgetBuilder<ComparableList<DAO<dynamic>>> temp = ListField.defaultViewWidgetBuilder; // hack to allow correct equality with static function
                 if (e.viewWidgetBuilder != temp) {
@@ -1586,7 +1602,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     showViewButtons: dao.viewDialogShowsViewButtons,
                   );
                 }
-                final newField = e.copyWith(
+                final newField = (e as ListField).copyWith(
                   tableCellsEditable: false,
                   allowAddNew: false,
                   actionViewBreakpoints: dao.viewDialogLinksToInnerDAOs&&dao.viewDialogShowsViewButtons

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/gestures.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/cupertino.dart';
@@ -5,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao/dao.dart';
-import 'package:from_zero_ui/src/dao/field.dart';
 import 'package:from_zero_ui/src/dao/field_validators.dart';
 
 enum StringFieldType {
@@ -23,19 +24,27 @@ class StringField extends Field<String> {
   List<TextInputFormatter>? inputFormatters;
   bool obfuscate;
   bool showObfuscationToggleButton; // TODO 2 implement obfuscation toggle button
+  Timer? valUpdateTimer;
 
   set dbValue(String? v) {
     super.dbValue = v ?? '';
   }
 
   set value(String? v) {
+    valUpdateTimer?.cancel();
     v ??= '';
-    if (v.isEmpty || v.characters.last==' ' || v.characters.last=='\n' || !isEdited) {
-      super.value = v;
-      syncTextEditingController();
-    } else if (value!=controller.text) {
+    if (v.isEmpty || v.characters.last == ' ' || v.characters.last == '\n' || !isEdited) {
+      _commitValue(v);
+    } else if (value != controller.text) {
       addUndoEntry(value);
+      valUpdateTimer = Timer(Duration(seconds: 2), () {
+        _commitValue(v);
+      });
     }
+  }
+  void _commitValue(String? v) {
+    super.value = v;
+    syncTextEditingController();
   }
 
   @override
@@ -271,6 +280,7 @@ class StringField extends Field<String> {
   }) {
     focusNode.addListener(() {
       if (!focusNode.hasFocus) {
+        valUpdateTimer?.cancel();
         if (controller.text != value) {
           super.value = controller.text;
         }

@@ -1,18 +1,4 @@
-import 'dart:async';
-import 'dart:math';
-import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_icons/flutter_icons.dart';
-import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
-import 'package:from_zero_ui/src/dao/dao.dart';
-import 'package:from_zero_ui/src/dao/field_validators.dart';
-import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
-import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
-import 'package:from_zero_ui/src/ui_utility/util.dart';
-import 'package:dartx/dartx.dart';
-import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
+part of 'dao.dart';
 
 typedef FutureOr<ValidationError?> FieldValidator<T extends Comparable>(BuildContext context, DAO dao, Field<T> field);
 typedef T FieldValueGetter<T, R extends Field>(R field, DAO dao);

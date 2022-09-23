@@ -5,7 +5,6 @@ import 'package:from_zero_ui/src/dao/dao.dart';
 import 'package:from_zero_ui/src/dao/field_validators.dart';
 import 'package:from_zero_ui/util/my_tooltip.dart';
 import 'package:intl/intl.dart';
-import 'package:from_zero_ui/src/dao/field.dart';
 import 'package:dartx/dartx.dart';
 
 
