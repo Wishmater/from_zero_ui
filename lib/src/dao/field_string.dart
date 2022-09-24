@@ -34,15 +34,15 @@ class StringField extends Field<String> {
     valUpdateTimer?.cancel();
     v ??= '';
     if (v.isEmpty || v.characters.last == ' ' || v.characters.last == '\n' || !isEdited) {
-      _commitValue(v);
+      commitValue(v);
     } else if (value != controller.text) {
       addUndoEntry(value);
       valUpdateTimer = Timer(Duration(seconds: 2), () {
-        _commitValue(v);
+        commitValue(v);
       });
     }
   }
-  void _commitValue(String? v) {
+  void commitValue(String? v) {
     super.value = v;
     syncTextEditingController();
   }
