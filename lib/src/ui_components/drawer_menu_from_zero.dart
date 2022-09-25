@@ -899,7 +899,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
     this.contentPadding = const EdgeInsets.only(left: 0),
     this.titleHorizontalOffset=0,
     this.subtitleRight,
-    this.mouseCursor,
+    this.mouseCursor = SystemMouseCursors.click,
   }) : super(key: key);
 
   @override
@@ -960,7 +960,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
             ),
         contentPadding: widget.contentPadding,
         dense: widget.dense,
-        mouseCursor: widget.mouseCursor ?? SystemMouseCursors.click,
+        mouseCursor: widget.mouseCursor,
         leading: Stack(
           clipBehavior: Clip.none,
           children: [

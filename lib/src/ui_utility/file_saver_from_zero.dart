@@ -249,7 +249,7 @@ Future<bool> saveFileFromZero ({
         title: Text(FromZeroLocalizations.of(context).translate('download_fail')),
         message: Text(downloadSuccess
             ? FromZeroLocalizations.of(context).translate('error_file')
-            : FromZeroLocalizations.of(context).translate('error_connection')),
+            : FromZeroLocalizations.of(context).translate('error_connection')), // TODO 2 improve error handling, parse server response properly
         actions: [
           if (onRetry!=null)
           SnackBarAction(
