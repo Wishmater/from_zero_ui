@@ -936,19 +936,22 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                         ),
                                       );
                                       if (widget.useCompactDrawerInsteadOfClose) {
-                                        result = AnimatedTheme(
-                                          duration: widget.drawerAnimationDuration,
-                                          curve: widget.appbarAnimationCurve,
-                                          data: Theme.of(context).copyWith(
-                                            scrollbarTheme: Theme.of(context).scrollbarTheme.copyWith(
-                                              thickness: MaterialStateProperty.resolveWith((states) {
-                                                final baseThickness = states.contains(MaterialState.hovered) ? 12.0 : 8.0;
-                                                return baseThickness + (widget.drawerWidth - currentDrawerWidth - 4).coerceIn(0);
-                                              }),
+                                        final isMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
+                                        if (!isMobileLayout) {
+                                          result = AnimatedTheme(
+                                            duration: widget.drawerAnimationDuration,
+                                            curve: widget.appbarAnimationCurve,
+                                            data: Theme.of(context).copyWith(
+                                              scrollbarTheme: Theme.of(context).scrollbarTheme.copyWith(
+                                                thickness: MaterialStateProperty.resolveWith((states) {
+                                                  final baseThickness = states.contains(MaterialState.hovered) ? 12.0 : 8.0;
+                                                  return baseThickness + (widget.drawerWidth - currentDrawerWidth - 4).coerceIn(0);
+                                                }),
+                                              ),
                                             ),
-                                          ),
-                                          child: result,
-                                        );
+                                            child: result,
+                                          );
+                                        }
                                       }
                                       return result;
                                     },
