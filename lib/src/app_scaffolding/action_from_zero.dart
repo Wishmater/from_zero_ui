@@ -35,7 +35,7 @@ typedef Widget OverflowActionBuilder({
   bool forceIconSpace,
 });
 
-class ActionFromZero<T extends Function> extends StatelessWidget{ // TODO 2 separate this into its own file
+class ActionFromZero<T extends Function> extends StatelessWidget{
 
   /// callback called when icon/button/overflowMenuItem is clicked
   /// if null and expandedWidget!= null, will switch expanded

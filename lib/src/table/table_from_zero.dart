@@ -365,7 +365,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         final Map<dynamic, Map<dynamic, DAO>> daoAliases = {
           for (final key in widget.columns!.keys) key: {},
         };
-        // TODO 2 cancel isolate computations if widget is disposed or initFilters is called again
         availableFiltersIsolateController = cancelable_compute.compute(_getAvailableFilters,
             [
               widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
@@ -959,7 +958,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           bottom = addon;
         }
         if (row.rowAddonIsSticky ?? widget.enableStickyHeaders){
-          result = StickyHeader( // TODO 2 this is probably broken, use SliverStickyHeader instead
+          result = StickyHeader( // TODO 1 fix addon stickyHeader, use SliverStickyHeader instead
             controller: widget.scrollController,
             header: top,
             content: bottom,
@@ -1229,7 +1228,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         List<Widget> colActions = [
           if (col?.sortEnabled ?? true)
             ActionFromZero(
-              title: 'Ordenar Ascendente', // TODO 2 internationalize
+              title: 'Ordenar Ascendente', // TODO 3 internationalize
               icon: Icon(MaterialCommunityIcons.sort_ascending),
               onTap: (context) {
                 if (sortedColumn!=colKey || !sortedAscending) {
@@ -1243,7 +1242,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             ),
           if (col?.sortEnabled ?? true)
             ActionFromZero(
-              title: 'Ordenar Descendente', // TODO 2 internationalize
+              title: 'Ordenar Descendente', // TODO 3 internationalize
               icon: Icon(MaterialCommunityIcons.sort_descending),
               onTap: (context) {
                 if (sortedColumn!=colKey || sortedAscending) {
@@ -1257,7 +1256,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             ),
           if (availableFilters!=null && (col?.filterEnabled ?? true))
             ActionFromZero(
-              title: 'Filtros...', // TODO 2 internationalize
+              title: 'Filtros...', // TODO 3 internationalize
               icon: Icon(MaterialCommunityIcons.filter),
               onTap: (context) => showFilterDialog(colKey),
             ),
