@@ -7,6 +7,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
@@ -593,6 +594,18 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         final appbarChangeNotifier = ref.watch(fromZeroAppbarChangeNotifierProvider);
         return Stack(
           children: <Widget>[
+
+            // show correct color on mobile status bar when no appbar
+            if (widget.appbarType == ScaffoldFromZero.appbarTypeNone)
+              Positioned(
+                top: 0, left: 0, right: 0,
+                height: appbarChangeNotifier.safeAreaOffset,
+                child: AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: ThemeData.estimateBrightnessForColor(Theme.of(context).primaryColor)==Brightness.light
+                      ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
+                  child: ColoredBox(color: Theme.of(context).primaryColor,),
+                ),
+              ),
 
             //BODY
             AnimatedPadding(
