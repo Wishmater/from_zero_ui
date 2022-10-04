@@ -28,6 +28,7 @@ typedef T DAOValueGetter<T, ModelType>(DAO<ModelType> dao);
 
 class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
+  static bool ignoreBlockingErrors = true; // VERY careful with this
   dynamic id;
   DAOValueGetter<String, ModelType> classUiNameGetter;
   String get classUiName => classUiNameGetter(this);
@@ -605,7 +606,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                             ),
                                           ),
                                           textColor: Colors.blue,
-                                          onPressed: remaining!=Duration.zero || !validation ? null : () {
+                                          onPressed: !ignoreBlockingErrors && (remaining!=Duration.zero || !validation) ? null : () {
                                             Navigator.of(context).pop(true); // Dismiss alert dialog
                                           },
                                         );
@@ -840,6 +841,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
 
   void applyDefaultValues(List<InvalidatingError> invalidatingErrors) {
+    if (ignoreBlockingErrors) return;
     bool keepUndo = _undoRecord.isNotEmpty; // don't keep undo record if the invalidation error is thrown when opening dialog
     beginUndoTransaction();
     for (final e in invalidatingErrors) {
