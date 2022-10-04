@@ -19,8 +19,8 @@ dependencies:
   cancelable_compute: ^1.3.0
 
   # * State Management
-  go_router: ^4.2.2
-  flutter_riverpod: ^2.0.0-dev.9
+  go_router: 4.2.2
+  flutter_riverpod: 2.0.0-dev.9
   hive: ^2.2.2
   hive_flutter: ^1.1.0
 

@@ -18,7 +18,7 @@ class ComboFromZero<T> extends StatefulWidget {
   final List<T>? possibleValues;
   final AsyncValue<List<T>>? possibleValuesAsync;
   final Future<List<T>>? possibleValuesFuture;
-  final StateNotifierProviderOverrideMixin<ApiState<List<T>>, AsyncValue<List<T>>>? possibleValuesProvider;
+  final AutoDisposeStateNotifierProvider<ApiState<List<T>>, AsyncValue<List<T>>>? possibleValuesProvider;
   final VoidCallback? onCanceled;
   final OnPopupItemSelected<T>? onSelected;
   final bool? showSearchBox;

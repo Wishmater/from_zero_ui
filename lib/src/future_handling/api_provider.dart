@@ -19,8 +19,8 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
 
   // StateNotifierProviderRef<ApiState<State>, AsyncValue<State>> _ref;
   AutoDisposeRef? _ref;
-  FutureOr<State> Function(ApiState<State>) _create;
-  late FutureOr<State> future;
+  Future<State> Function(ApiState<State>) _create;
+  late Future<State> future;
   bool _running = true;
   late final ValueNotifier<double?> selfTotalNotifier;
   late final ValueNotifier<double?> selfProgressNotifier;
@@ -69,7 +69,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
       newApiState.wholeProgressNotifier.addListener(_computeProgress);
       newApiState.wholePercentageNotifier.addListener(_computePercentage);
     }
-    return _ref!.watch(watchProvider.future);
+    return _ref!.watch(watchProvider.notifier).future;
   }
 
   // a new ref needs to be passed to read the watching notifiers. watch() won't be called on it.
@@ -250,7 +250,7 @@ typedef ApiErrorBuilder = Widget Function(BuildContext context, Object error, St
 
 class ApiProviderBuilder<T> extends ConsumerWidget {
 
-  final StateNotifierProviderOverrideMixin<ApiState<T>, AsyncValue<T>> provider;
+  final AutoDisposeStateNotifierProvider<ApiState<T>, AsyncValue<T>> provider;
   final DataBuilder<T> dataBuilder;
   final ApiLoadingBuilder loadingBuilder;
   final ApiErrorBuilder errorBuilder;
@@ -480,7 +480,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
 
 class ApiProviderMultiBuilder<T> extends ConsumerWidget {
 
-  final List<StateNotifierProviderOverrideMixin<ApiState<T>, AsyncValue<T>>> providers;
+  final List<AutoDisposeStateNotifierProvider<ApiState<T>, AsyncValue<T>>> providers;
   final DataMultiBuilder<T> dataBuilder;
   final ApiLoadingBuilder loadingBuilder;
   final ApiErrorBuilder errorBuilder;

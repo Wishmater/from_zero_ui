@@ -11,7 +11,7 @@ class ComboField<T extends DAO> extends Field<T> {
   ContextFulFieldValueGetter<List<T>?, ComboField<T>>? possibleValuesGetter;
   ContextFulFieldValueGetter<Future<List<T>>?, ComboField<T>>? possibleValuesFutureGetter;
   ContextFulFieldValueGetter<
-          StateNotifierProviderOverrideMixin<ApiState<List<T>>,
+          AutoDisposeStateNotifierProvider<ApiState<List<T>>,
           AsyncValue<List<T>>
       >?,
       ComboField<T>>? possibleValuesProviderGetter;

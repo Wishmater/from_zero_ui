@@ -358,7 +358,6 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
   @override
   void dispose() {
     super.dispose();
-    appbarChangeNotifier!.dispose();
     _changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.removeListener(_onDrawerScrollOffsetChanged);
     widget.mainScrollController?.removeListener(_handleScroll);
   }
@@ -384,7 +383,9 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
       data: MediaQuery.of(context).copyWith(padding: MediaQuery.of(context).padding.copyWith(top: 0)),
       child: ProviderScope(
         overrides: [
-          fromZeroAppbarChangeNotifierProvider.overrideWithValue(appbarChangeNotifier!),
+          fromZeroAppbarChangeNotifierProvider.overrideWithProvider(ChangeNotifierProvider<AppbarChangeNotifier>((ref) {
+            return appbarChangeNotifier!;
+          })),
         ],
         child: FadeUpwardsFadeTransition(
           routeAnimation: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
