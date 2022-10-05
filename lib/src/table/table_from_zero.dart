@@ -265,7 +265,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   void didUpdateWidget(TableFromZero<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (isStateInvalidated) {
-      init();
+      init(notifyListeners: false);
     }
   }
 

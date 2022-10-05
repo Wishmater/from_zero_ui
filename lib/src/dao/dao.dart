@@ -28,7 +28,7 @@ typedef T DAOValueGetter<T, ModelType>(DAO<ModelType> dao);
 
 class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
-  static bool ignoreBlockingErrors = true; // VERY careful with this
+  static bool ignoreBlockingErrors = false; // VERY careful with this
   dynamic id;
   DAOValueGetter<String, ModelType> classUiNameGetter;
   String get classUiName => classUiNameGetter(this);
@@ -844,8 +844,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     if (ignoreBlockingErrors) return;
     bool keepUndo = _undoRecord.isNotEmpty; // don't keep undo record if the invalidation error is thrown when opening dialog
     beginUndoTransaction();
+    Map<Field, List<InvalidatingError>> map = {
+    };
     for (final e in invalidatingErrors) {
-      e.field.value = e.defaultValue;
+      map[e.field] = [...(map[e]??[]), e];
+    }
+    for (final field in map.keys) {
+      field.value = map[field]!.first.defaultValue;
     }
     if (!keepUndo) beginUndoTransaction(); // discard undo transaction
     commitUndoTransaction();
@@ -1183,7 +1188,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             bool allowSetInvalidatingFieldsToDefaultValues = true;
             bool allowUndoInvalidatingChanges = _undoRecord.isNotEmpty;
             for (Field e in props.values) {
-              final errors = e.validationErrors.where((error) => error.severity==ValidationErrorSeverity.invalidating);
+              final errors = e.validationErrors.where((error) => error is InvalidatingError);
               errors.forEach((err) {
                 final error = err as InvalidatingError;
                 allowSetInvalidatingFieldsToDefaultValues = allowSetInvalidatingFieldsToDefaultValues && error.allowSetThisFieldToDefaultValue;
