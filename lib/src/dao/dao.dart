@@ -844,13 +844,17 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     if (ignoreBlockingErrors) return;
     bool keepUndo = _undoRecord.isNotEmpty; // don't keep undo record if the invalidation error is thrown when opening dialog
     beginUndoTransaction();
-    Map<Field, List<InvalidatingError>> map = {
-    };
+    Map<Object, List<InvalidatingError>> map = {};
     for (final e in invalidatingErrors) {
-      map[e.field] = [...(map[e]??[]), e];
+      map[e.field.fieldGlobalKey] = [...(map[e.field.fieldGlobalKey]??[]), e];
     }
-    for (final field in map.keys) {
-      field.value = map[field]!.first.defaultValue;
+    map.forEach((key, value) {
+
+    });
+    for (final errorList in map.values) {
+      final error = errorList.first;
+      final field = error.field;
+      field.value = error.defaultValue;
     }
     if (!keepUndo) beginUndoTransaction(); // discard undo transaction
     commitUndoTransaction();
@@ -1188,9 +1192,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             bool allowSetInvalidatingFieldsToDefaultValues = true;
             bool allowUndoInvalidatingChanges = _undoRecord.isNotEmpty;
             for (Field e in props.values) {
-              final errors = e.validationErrors.where((error) => error is InvalidatingError);
-              errors.forEach((err) {
-                final error = err as InvalidatingError;
+              final errors = e.validationErrors.whereType<InvalidatingError>();
+              errors.forEach((error) {
                 allowSetInvalidatingFieldsToDefaultValues = allowSetInvalidatingFieldsToDefaultValues && error.allowSetThisFieldToDefaultValue;
                 allowUndoInvalidatingChanges = allowUndoInvalidatingChanges && error.allowUndoInvalidatingChange;
                 if (error.showVisualConfirmation) {
