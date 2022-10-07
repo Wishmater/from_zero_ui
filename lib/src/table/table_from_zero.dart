@@ -1857,8 +1857,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       } else {
         return 1;
       }
-    } else if (a is Comparable) {
-      result = a.compareTo(b);
+    } if (a is Comparable) {
+      try {
+        result = a.compareTo(b);
+      } catch (_) {
+        result = a.toString().compareTo(b.toString());
+      }
     } else {
       result = a.toString().compareTo(b.toString());
     }
