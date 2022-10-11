@@ -130,7 +130,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     tableController.reInit();
   }
 
-  bool get enabled => listFieldValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).isEmpty;
+  bool get enabled => DAO.ignoreBlockingErrors ? true : listFieldValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).isEmpty;
 
   late ValueNotifier<Map<T, bool>> selectedObjects;
 
@@ -149,7 +149,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         ? listToStringCount(list, modelNameSingular: modelNameSingular, modelNamePlural: modelNamePlural)
         : listToStringAll(list);
   }
-  static String listToStringAll(List list) {
+  static String listToStringAll(Iterable list) {
     String result = '';
     for (final e in list) {
       if (result.isNotEmpty) {
@@ -159,7 +159,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     }
     return result;
   }
-  static String listToStringCount(List list, {
+  static String listToStringCount(Iterable list, {
     String? modelNameSingular,
     String? modelNamePlural,
     BuildContext? context, // for localization

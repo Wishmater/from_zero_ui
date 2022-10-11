@@ -132,9 +132,13 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
   @override
   Widget build(BuildContext context) {
     //TODO 3 add restrictions to fontSize, uiScale logic, etc. here
-    bool showWindowButtons = PlatformExtended.appWindow!=null;
+    var mediaQueryData = MediaQuery.of(context);
+    final double scale = mediaQueryData.textScaleFactor.clamp(1, 1.25);
+    // TODO 2 experiment with app ui scale with this approach, it looks promising. Some forms break though
+    mediaQueryData = mediaQueryData.copyWith(textScaleFactor: scale,);
     final screen = ref.read(fromZeroScreenProvider);
     final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
+    bool showWindowButtons = PlatformExtended.appWindow!=null && scaffoldChangeNotifier.showWindowBarOnDesktop;
     ScrollBehavior scrollConfiguration = ScrollConfiguration.of(context).copyWith(
       scrollbars: false,
     );
@@ -194,33 +198,42 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
             child: SizedBox(
               width: screenWidth,
               height: screenHeight,
-              child: Stack(
-                children: [
-                  SnackBarHostFromZero(
-                    child: widget.child,
-                  ),
-                  if (showWindowButtons)
-                    Positioned(
-                      top: 0, left: 0, right: 0,
-                      child: ValueListenableBuilder<bool>(
-                        valueListenable: isMouseOverWindowBar,
-                        builder: (context, value, child) {
-                          return AppearOnMouseOver(
-                            appear: !value,
-                            child: WindowBar(
-                              backgroundColor: Theme.of(context).cardColor,
-                              iconTheme: Theme.of(context).iconTheme,
-                              goRouter: widget.goRouter,
-                              onMaximizeOrRestore: (context) {
-                                // hack so the windowBar doesn't get stuck after maximize
-                                context.findAncestorStateOfType<_AppearOnMouseOverState>()!.pressed = false;
+              child: FittedBox(
+                child: SizedBox(
+                  width: screenWidth / scale,
+                  height: screenHeight / scale,
+                  child: MediaQuery(
+                    data: mediaQueryData,
+                    child: Stack(
+                      children: [
+                        SnackBarHostFromZero(
+                          child: widget.child,
+                        ),
+                        if (showWindowButtons)
+                          Positioned(
+                            top: 0, left: 0, right: 0,
+                            child: ValueListenableBuilder<bool>(
+                              valueListenable: isMouseOverWindowBar,
+                              builder: (context, value, child) {
+                                return AppearOnMouseOver(
+                                  appear: !value,
+                                  child: WindowBar(
+                                    backgroundColor: Theme.of(context).cardColor,
+                                    iconTheme: Theme.of(context).iconTheme,
+                                    goRouter: widget.goRouter,
+                                    onMaximizeOrRestore: (context) {
+                                      // hack so the windowBar doesn't get stuck after maximize
+                                      context.findAncestorStateOfType<_AppearOnMouseOverState>()!.pressed = false;
+                                    },
+                                  ),
+                                );
                               },
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                      ],
                     ),
-                ],
+                  ),
+                ),
               ),
             ),
           );
@@ -304,9 +317,13 @@ class WindowBar extends StatelessWidget {
   final double? height;
   final Color? backgroundColor;
   final IconThemeData? iconTheme;
+  final bool showMinimize;
+  final bool showMaximizeOrRestore;
+  final bool showClose;
   final bool? Function(BuildContext context)? onMinimize;
   final bool? Function(BuildContext context)? onMaximizeOrRestore;
   final bool? Function(BuildContext context)? onClose;
+  final Widget? title;
   final GoRouter? goRouter;
 
   const WindowBar({
@@ -318,6 +335,10 @@ class WindowBar extends StatelessWidget {
     this.onMaximizeOrRestore,
     this.onClose,
     this.iconTheme,
+    this.showMinimize = true,
+    this.showMaximizeOrRestore = true,
+    this.showClose = true,
+    this.title,
   })  : super(key: key);
 
   @override
@@ -335,56 +356,61 @@ class WindowBar extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            MinimizeWindowButton(
-              animate: true,
-              onPressed: () {
-                if (onMinimize?.call(context) ?? true) {
-                  appWindow.minimize();
-                }
-              },
-              colors: WindowButtonColors(
-                mouseOver: iconColor.withOpacity(0.1),
-                mouseDown: iconColor.withOpacity(0.2),
-                iconNormal: iconColor.withOpacity(0.8),
-                iconMouseOver: iconColor,
-                iconMouseDown: iconColor,
+            if (title!=null)
+              Expanded(child: title!,),
+            if (showMinimize)
+              MinimizeWindowButton(
+                animate: true,
+                onPressed: () {
+                  if (onMinimize?.call(context) ?? true) {
+                    appWindow.minimize();
+                  }
+                },
+                colors: WindowButtonColors(
+                  mouseOver: iconColor.withOpacity(0.1),
+                  mouseDown: iconColor.withOpacity(0.2),
+                  iconNormal: iconColor.withOpacity(0.8),
+                  iconMouseOver: iconColor,
+                  iconMouseDown: iconColor,
+                ),
               ),
-            ),
-            WindowButton(
-              animate: true,
-              iconBuilder: (buttonContext) => appWindow.isMaximized
-                  ? RestoreIcon(color: buttonContext.iconColor)
-                  : MaximizeIcon(color: buttonContext.iconColor),
-              padding: EdgeInsets.zero,
-              onPressed: () {
-                if (onMaximizeOrRestore?.call(context) ?? true) {
-                  appWindow.maximizeOrRestore();
-                }
-              },
-              colors: WindowButtonColors(
-                mouseOver: iconColor.withOpacity(0.1),
-                mouseDown: iconColor.withOpacity(0.2),
-                iconNormal: iconColor.withOpacity(0.8),
-                iconMouseOver: iconColor,
-                iconMouseDown: iconColor,
+            if (showMaximizeOrRestore)
+              WindowButton(
+                animate: true,
+                iconBuilder: (buttonContext) => appWindow.isMaximized
+                    ? RestoreIcon(color: buttonContext.iconColor)
+                    : MaximizeIcon(color: buttonContext.iconColor),
+                padding: EdgeInsets.zero,
+                onPressed: () {
+                  if (onMaximizeOrRestore?.call(context) ?? true) {
+                    appWindow.maximizeOrRestore();
+                  }
+                },
+                colors: WindowButtonColors(
+                  mouseOver: iconColor.withOpacity(0.1),
+                  mouseDown: iconColor.withOpacity(0.2),
+                  iconNormal: iconColor.withOpacity(0.8),
+                  iconMouseOver: iconColor,
+                  iconMouseDown: iconColor,
+                ),
               ),
-            ),
-            CloseWindowButton(
-              animate: true,
-              onPressed: () async {
-                if (onClose?.call(context) ?? true) {
-                  final goRouter = this.goRouter ?? GoRouter.of(context);
-                  await smartMultiPop(goRouter);
-                }
-              },
-              colors: WindowButtonColors(
-                mouseOver: Color(0xFFD32F2F),
-                mouseDown: Color(0xFFB71C1C),
-                iconNormal: iconColor.withOpacity(0.8),
-                iconMouseOver: Colors.white,
-                iconMouseDown: Colors.white,
+            if (showClose)
+              CloseWindowButton(
+                animate: true,
+                onPressed: () async {
+                  if (onClose?.call(context) ?? true) {
+                    final goRouter = this.goRouter ?? GoRouter.of(context);
+                    await smartMultiPop(goRouter);
+                  }
+                },
+                colors: WindowButtonColors(
+                  mouseOver: Color(0xFFD32F2F),
+                  mouseDown: Color(0xFFB71C1C),
+                  iconNormal: iconColor.withOpacity(0.8),
+                  iconMouseOver: Colors.white,
+                  iconMouseDown: Colors.white,
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -503,9 +529,11 @@ class ScreenFromZero extends ChangeNotifier{
 class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
 
   final bool drawerOpenByDefaultOnDesktop;
+  final bool showWindowBarOnDesktop;
 
   ScaffoldFromZeroChangeNotifier({
     this.drawerOpenByDefaultOnDesktop = true,
+    this.showWindowBarOnDesktop = true,
   });
 
   int _animationType = ScaffoldFromZero.animationTypeOther;

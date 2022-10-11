@@ -427,8 +427,16 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         }
       }
       if (currentValidationId!=validationCallCount) return false;
-      results.add(e.validate(contextForValidation!, this, currentValidationId,
-          validateIfNotEdited: validateNonEditedFields)..then((v) => notifyListeners()));
+      final future = e.validate(
+        contextForValidation!,
+        this,
+        currentValidationId,
+        validateIfNotEdited: validateNonEditedFields,
+      ).then((v) {
+        e.notifyListeners();
+        return v;
+      });
+      results.add(future);
     }
     if (currentValidationId!=validationCallCount) return false;
     for (final e in results) {
@@ -1012,7 +1020,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       ),
                     ),
                     actions: [
-                      ...(formDialogExtraActions?.call(context, this) ?? []),
+                      ...(formDialogExtraActions?.call(contextForValidation??context, this) ?? []),
                       if (enableUndoRedoMechanism && showUndoRedo)
                         ActionFromZero(
                           title: FromZeroLocalizations.of(context).translate("undo"),

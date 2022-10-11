@@ -582,7 +582,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         child: body,
       );
     }
-    if (widget.appbarType==ScaffoldFromZero.appbarTypeNone && !kIsWeb && Platform.isWindows && windowsDesktopBitsdojoWorking) {
+    if (widget.appbarType==ScaffoldFromZero.appbarTypeNone && changeNotifierNotListen.showWindowBarOnDesktop && !kIsWeb && Platform.isWindows && windowsDesktopBitsdojoWorking) {
       body = Column(
         children: [
           WindowBar(backgroundColor: Theme.of(context).cardColor,),
@@ -645,7 +645,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                     Positioned.fill(child: AbsorbPointer()),
                     AppbarFromZero(
                       key: appbarGlobalKey,
-                      mainAppbar: true,
+                      mainAppbar: changeNotifierNotListen.showWindowBarOnDesktop,
                       controller: widget.appbarController,
                       onExpanded: widget.onAppbarActionExpanded,
                       onUnexpanded: widget.onAppbarActionUnexpanded,

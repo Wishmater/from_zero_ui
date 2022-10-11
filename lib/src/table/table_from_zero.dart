@@ -773,26 +773,28 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           if (j==0){
             return SizedBox(
               width: _checkmarkWidth,
-              child: row.onCheckBoxSelected==null ? SizedBox.shrink() :  StatefulBuilder(
-                builder: (context, checkboxSetState) {
-                  return LoadingCheckbox(
-                    value: row==headerRowModel
-                        ? filtered.isNotEmpty && filtered.every((element) => element.selected==true)
-                        : row.selected,
-                    onChanged: row==headerRowModel&&filtered.isEmpty ? null : (value) {
-                      if (row==headerRowModel) {
-                        if (widget.onAllSelected!(value, filtered) ?? false) {
-                          setState(() {});
-                        }
-                      } else {
-                        if (row.onCheckBoxSelected!(row, value) ?? false) {
-                          checkboxSetState(() {});
-                        }
-                      }
-                    },
-                  );
-                },
-              ),
+              child: row.onCheckBoxSelected==null||(row==headerRowModel&&widget.onAllSelected==null)
+                  ? SizedBox.shrink()
+                  : StatefulBuilder(
+                      builder: (context, checkboxSetState) {
+                        return LoadingCheckbox(
+                          value: row==headerRowModel
+                              ? filtered.isNotEmpty && filtered.every((element) => element.selected==true)
+                              : row.selected,
+                          onChanged: row==headerRowModel&&filtered.isEmpty ? null : (value) {
+                            if (row==headerRowModel) {
+                              if (widget.onAllSelected!(value, filtered) ?? false) {
+                                setState(() {});
+                              }
+                            } else {
+                              if (row.onCheckBoxSelected!(row, value) ?? false) {
+                                checkboxSetState(() {});
+                              }
+                            }
+                          },
+                        );
+                      },
+                    ),
             );
           } else{
             j--;
