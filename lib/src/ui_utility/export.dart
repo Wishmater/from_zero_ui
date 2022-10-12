@@ -540,7 +540,7 @@ class ExportState extends State<Export> {
     });
     excel.delete('Sheet1');
     if (!mounted) return;
-    var encoded = excel.encode()!.cast<int>();
+    var encoded = excel.encode()!;
     if (!mounted) return;
     File file = File((await widget.path)+widget.title+'.xlsx');
     filePath = file.absolute.path;
