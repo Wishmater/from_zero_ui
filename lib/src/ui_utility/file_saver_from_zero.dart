@@ -42,6 +42,9 @@ Future<bool> saveFileFromZero ({
   if (!kIsWeb && Platform.isAndroid && !(await Permission.storage.request().isGranted)) {
     return false;
   }
+  name = name // cleanup filename so it doesn't cause issues with system file path requirements
+      .replaceAll('/', '-')
+      .replaceAll('\\', '-'); // TODO 3 validate all banned characters, depending on OS
 
   SnackBarControllerFromZero? downloadSnackBarController;
   bool cancelled = false;
