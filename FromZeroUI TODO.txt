@@ -6,6 +6,12 @@ P0
 
 APISnackbar -- Implement showError (and maybe retry)
 
+Experiment with flutter_smooth
+    https://github.com/fzyzcjy/flutter_smooth
+    test applying it to 2 edge cases:
+        route animation (including GoRouteFromZero and big animations in ScaffoldFromZero)
+        scrolling (specially in TableFromZero)
+
 Android -- popupFromZero and SnackBarFromZero don't resize for android keyboard offset appropriately
 	https://www.youtube.com/watch?v=ceCo8U0XHqw
     also -- popupFromZero doesn't reposition child in response to window resize
