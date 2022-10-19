@@ -20,6 +20,7 @@ export 'package:from_zero_ui/src/future_handling/api_provider.dart';
 
 export 'package:from_zero_ui/src/dao/dao.dart';
 // export 'package:from_zero_ui/src/dao/field.dart'; // declared as part of dao, so no need to export it
+export 'package:from_zero_ui/src/dao/lazy_dao.dart';
 export 'package:from_zero_ui/src/dao/field_string.dart';
 export 'package:from_zero_ui/src/dao/field_combo.dart';
 export 'package:from_zero_ui/src/dao/field_num.dart';

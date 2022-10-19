@@ -29,7 +29,7 @@ typedef T DAOValueGetter<T, ModelType>(DAO<ModelType> dao);
 class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
   static bool ignoreBlockingErrors = false; // VERY careful with this
-  dynamic id;
+  dynamic id; // TODO 3 id type should be declared as <>
   DAOValueGetter<String, ModelType> classUiNameGetter;
   String get classUiName => classUiNameGetter(this);
   DAOValueGetter<String, ModelType> classUiNamePluralGetter;
@@ -917,12 +917,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
   }
 
-  Future<ModelType?> maybeEdit(BuildContext context, {
+  /// this code assumes it is called only once on showModal, if it is called multiple times inside a build() method it will behave weirdly
+  Widget buildEditModalWidget(BuildContext context, {
     bool showDefaultSnackBars = true,
     bool showRevertChanges = false,
     bool? askForSaveConfirmation,
     bool showUndoRedo = true,
-  }) async {
+  }) {
     askForSaveConfirmation ??= showDefaultSnackBars;
     final props = this.props;
     parentDAO = null;
@@ -1045,7 +1046,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                             redo();
                           },
                         ),
-                      ],
+                    ],
                   ),
                 ),
                 Expanded(
@@ -1138,36 +1139,36 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                         ),
                                         Expanded(
                                           child: Builder(
-                                            builder: (context) {
-                                              return PreloadPageView(
-                                                controller: pageController,
-                                                preloadPagesCount: 999,
-                                                onPageChanged: (value) {
-                                                  DefaultTabController.of(context)?.animateTo(value);
-                                                },
-                                                children: secondaryFormWidgets.keys.map((e) {
-                                                  return ScrollbarFromZero(
-                                                    controller: secondaryScrollControllers[e],
-                                                    child: Padding(
-                                                      padding: const EdgeInsets.only(right: 12),
-                                                      child: FocusTraversalGroup(
-                                                        child: SingleChildScrollView(
-                                                          controller: secondaryScrollControllers[e],
-                                                          child: Padding(
-                                                            padding: EdgeInsets.only(
-                                                              top: secondaryFormWidgets.length==1 && secondaryFormWidgets.keys.first=='Grupo 1'
-                                                                  ? 12 : 0,
-                                                              bottom: 28,
+                                              builder: (context) {
+                                                return PreloadPageView(
+                                                  controller: pageController,
+                                                  preloadPagesCount: 999,
+                                                  onPageChanged: (value) {
+                                                    DefaultTabController.of(context)?.animateTo(value);
+                                                  },
+                                                  children: secondaryFormWidgets.keys.map((e) {
+                                                    return ScrollbarFromZero(
+                                                      controller: secondaryScrollControllers[e],
+                                                      child: Padding(
+                                                        padding: const EdgeInsets.only(right: 12),
+                                                        child: FocusTraversalGroup(
+                                                          child: SingleChildScrollView(
+                                                            controller: secondaryScrollControllers[e],
+                                                            child: Padding(
+                                                              padding: EdgeInsets.only(
+                                                                top: secondaryFormWidgets.length==1 && secondaryFormWidgets.keys.first=='Grupo 1'
+                                                                    ? 12 : 0,
+                                                                bottom: 28,
+                                                              ),
+                                                              child: secondaryFormWidgets[e]!,
                                                             ),
-                                                            child: secondaryFormWidgets[e]!,
                                                           ),
                                                         ),
                                                       ),
-                                                    ),
-                                                  );
-                                                }).toList(),
-                                              );
-                                            }
+                                                    );
+                                                  }).toList(),
+                                                );
+                                              }
                                           ),
                                         ),
                                       ],
@@ -1397,6 +1398,21 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       focusNode.requestFocus();
     });
+    return content;
+  }
+
+  Future<ModelType?> maybeEdit(BuildContext context, {
+    bool showDefaultSnackBars = true,
+    bool showRevertChanges = false,
+    bool? askForSaveConfirmation,
+    bool showUndoRedo = true,
+  }) async {
+    final content = buildEditModalWidget(context,
+      showDefaultSnackBars: showDefaultSnackBars,
+      showRevertChanges: showRevertChanges,
+      askForSaveConfirmation: askForSaveConfirmation,
+      showUndoRedo: showUndoRedo,
+    );
     ModelType? confirm = await showModal(
       context: context,
       builder: (modalContext) {
