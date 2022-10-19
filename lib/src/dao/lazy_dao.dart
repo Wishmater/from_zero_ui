@@ -346,7 +346,6 @@ abstract class LazyDAO<ModelType> implements DAO<ModelType> {
     bool? askForSaveConfirmation,
     bool showUndoRedo = true,
   }) {
-    // TODO 1 override this method in ConcurrencyAwareDAO (put this in mpg_flutter)
     return dao.buildEditModalWidget(context,
       showDefaultSnackBars: showDefaultSnackBars,
       showRevertChanges: showRevertChanges,
