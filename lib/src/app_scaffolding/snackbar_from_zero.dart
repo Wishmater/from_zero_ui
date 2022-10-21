@@ -56,6 +56,8 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
   final Widget? widget; /// Overrides everything else
   final VoidCallback? onCancel;
   final ValueNotifier<bool> blockUI;
+  final bool dismissable;
+  final bool pushScreen;
   late final SnackBarControllerFromZero? controller;
 
 
@@ -75,6 +77,8 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
     this.actions,
     this.widget,
     this.onCancel,
+    this.dismissable = true,
+    this.pushScreen = false,
     bool blockUI = false,
   })  : this.blockUI = ValueNotifier(blockUI),
         super(key: key,);
@@ -219,17 +223,18 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
               ),
             ),
           ),
-        SizedBox(
-          width: 42, height: double.infinity,
-          child: FlatButton(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(Icons.close, size: 24,),
-            onPressed: () {
-              widget.onCancel?.call();
-              widget.dismiss();
-            },
+        if (widget.dismissable)
+          SizedBox(
+            width: 42, height: double.infinity,
+            child: FlatButton(
+              padding: EdgeInsets.only(right: 16),
+              child: Icon(Icons.close, size: 24,),
+              onPressed: () {
+                widget.onCancel?.call();
+                widget.dismiss();
+              },
+            ),
           ),
-        ),
       ],
     );
     Widget progressIndicator;

@@ -936,7 +936,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     _undoRecord.clear();
     _redoRecord.clear();
     _contextForValidation = _contextForValidation ?? context;
-    validate(context,
+    final initialValidation = validate(context,
       validateNonEditedFields: false,
     );
     final focusNode = FocusNode();
@@ -1022,30 +1022,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     ),
                     actions: [
                       ...(formDialogExtraActions?.call(contextForValidation??context, this) ?? []),
-                      if (enableUndoRedoMechanism && showUndoRedo)
-                        ActionFromZero(
-                          title: FromZeroLocalizations.of(context).translate("undo"),
-                          icon: Icon(MaterialCommunityIcons.undo_variant,),
-                          breakpoints: {
-                            ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
-                            ScaffoldFromZero.screenSizeMedium: ActionState.icon,
-                          },
-                          onTap: _undoRecord.isEmpty ? null : (context) {
-                            undo();
-                          },
-                        ),
-                      if (enableUndoRedoMechanism && showUndoRedo)
-                        ActionFromZero(
-                          title: FromZeroLocalizations.of(context).translate("redo"),
-                          icon: Icon(MaterialCommunityIcons.redo_variant,),
-                          breakpoints: {
-                            ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
-                            ScaffoldFromZero.screenSizeMedium: ActionState.icon,
-                          },
-                          onTap: _redoRecord.isEmpty ? null : (context) {
-                            redo();
-                          },
-                        ),
+                      ...buildFormDialogDefaultActions(context, showUndoRedo: showUndoRedo),
                     ],
                   ),
                 ),
@@ -1394,11 +1371,55 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         return result;
       },
     );
-    // Future.delayed(Duration(milliseconds: 200)).then((value) => focusNode.requestFocus());
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
       focusNode.requestFocus();
     });
-    return content;
+    return FutureBuilderFromZero(
+      applyDefaultTransition: false,
+      future: initialValidation,
+      successBuilder: (context, data) => content,
+      loadingBuilder: (context) {
+        return Card(
+          child: Container(
+            width: formDialogWidth,
+            height: 256,
+            alignment: Alignment.center,
+            child: ApiProviderBuilder.defaultLoadingBuilder(context, null),
+          ),
+        );
+      },
+    );
+  }
+
+  List<Widget> buildFormDialogDefaultActions(BuildContext context, {
+    bool showUndoRedo = true,
+  }) {
+    return [
+      if (enableUndoRedoMechanism && showUndoRedo)
+        ActionFromZero(
+          title: FromZeroLocalizations.of(context).translate("undo"),
+          icon: Icon(MaterialCommunityIcons.undo_variant,),
+          breakpoints: {
+            ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
+            ScaffoldFromZero.screenSizeMedium: ActionState.icon,
+          },
+          onTap: _undoRecord.isEmpty ? null : (context) {
+            undo();
+          },
+        ),
+      if (enableUndoRedoMechanism && showUndoRedo)
+        ActionFromZero(
+          title: FromZeroLocalizations.of(context).translate("redo"),
+          icon: Icon(MaterialCommunityIcons.redo_variant,),
+          breakpoints: {
+            ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
+            ScaffoldFromZero.screenSizeMedium: ActionState.icon,
+          },
+          onTap: _redoRecord.isEmpty ? null : (context) {
+            redo();
+          },
+        ),
+    ];
   }
 
   Future<ModelType?> maybeEdit(BuildContext context, {
@@ -1627,7 +1648,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             mainAxisSize: MainAxisSize.min,
             children: fields.map((e) {
               clear = !clear;
-              if (e is ListField && (e as ListField).buildViewWidgetAsTable) {
+              if (e is ListField && e.buildViewWidgetAsTable) {
                 clear = false;
                 final ViewWidgetBuilder<ComparableList<DAO<dynamic>>> temp = ListField.defaultViewWidgetBuilder; // hack to allow correct equality with static function
                 if (e.viewWidgetBuilder != temp) {
@@ -1636,7 +1657,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     showViewButtons: dao.viewDialogShowsViewButtons,
                   );
                 }
-                final newField = (e as ListField).copyWith(
+                final newField = e.copyWith(
                   tableCellsEditable: false,
                   allowAddNew: false,
                   actionViewBreakpoints: dao.viewDialogLinksToInnerDAOs&&dao.viewDialogShowsViewButtons

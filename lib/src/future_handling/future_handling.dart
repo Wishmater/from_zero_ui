@@ -155,9 +155,10 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            SlidingNumber(
-                              number: (value*100).round(),
-                              duration: Duration(milliseconds: 250),
+                            Text((value*100).round().toString(),
+                              // SlidingNumber
+                              //   number: (value*100).round(),
+                              //   duration: Duration(milliseconds: 250),
                               style: TextStyle(
                                 fontSize: fontSize,
                                 color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),

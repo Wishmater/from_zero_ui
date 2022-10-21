@@ -325,6 +325,7 @@ abstract class LazyDAO<ModelType> implements DAO<ModelType> {
   void revertChanges() => dao.revertChanges();
   void undo() => dao.undo();
   Future<bool> validate(context, {bool validateNonEditedFields = true}) => dao.validate(context, validateNonEditedFields: validateNonEditedFields);
+  List<Widget> buildFormDialogDefaultActions(BuildContext context, {bool showUndoRedo = true,}) => dao.buildFormDialogDefaultActions(context, showUndoRedo: showUndoRedo);
   List<Widget> buildActionButtons(BuildContext context, {
     bool showRevertChanges = false,
     bool popAfterSuccessfulSave = true,

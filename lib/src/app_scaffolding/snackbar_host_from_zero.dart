@@ -4,6 +4,7 @@ import 'dart:async';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/api_snackbar.dart';
 import 'package:from_zero_ui/src/app_scaffolding/snackbar_from_zero.dart';
 
@@ -100,25 +101,43 @@ class SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
     }
     Widget result = Stack(
       children: [
-        widget.child,
-        Positioned.fill(
-          child: ValueListenableBuilder<bool>(
-            valueListenable: controller._snackBarQueue.isEmpty
-                ? ValueNotifier(false)
-                : controller._snackBarQueue.first.blockUI,
-            builder: (context, blockUI, child) {
-              return IgnorePointer(
-                ignoring: !blockUI,
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 250),
-                  curve: Curves.ease,
-                  color: blockUI
-                      ? Colors.black54
-                      : Colors.black.withOpacity(0),
-                ),
-              );
-            },
-          ),
+        Column(
+          children: [
+            Expanded(
+              child: Stack(
+                children: [
+                  widget.child,
+                  Positioned.fill(
+                    child: ValueListenableBuilder<bool>(
+                      valueListenable: controller._snackBarQueue.isEmpty
+                          ? ValueNotifier(false)
+                          : controller._snackBarQueue.first.blockUI,
+                      builder: (context, blockUI, child) {
+                        return IgnorePointer(
+                          ignoring: !blockUI,
+                          child: AnimatedContainer(
+                            duration: Duration(milliseconds: 250),
+                            curve: Curves.ease,
+                            color: blockUI
+                                ? Colors.black54
+                                : Colors.black.withOpacity(0),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            AnimatedContainerFromChildSize(
+              child: controller._snackBarQueue.isEmpty || !controller._snackBarQueue.first.pushScreen
+                  ? SizedBox.shrink()
+                  : Container(
+                    key: ValueKey(controller._snackBarQueue.first.hashCode),
+                    child: controller._snackBarQueue.first,
+                  ),
+            )
+          ],
         ),
         Positioned(
           bottom: 0, left: 0, right: 0, // TODO 3 snackbar doesnt respond to bottom keyboard inset
@@ -146,7 +165,7 @@ class SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
                 );
               }
             },
-            child: controller._snackBarQueue.isEmpty
+            child: controller._snackBarQueue.isEmpty || controller._snackBarQueue.first.pushScreen
                 ? SizedBox.shrink()
                 : Container(
                   key: ValueKey(controller._snackBarQueue.first.hashCode),
