@@ -20,9 +20,73 @@ abstract class LazyDAO<ModelType> implements DAO<ModelType> {
     }
     return _dao!;
   }
+  bool get isDaoBuilt => _dao!=null;
 
   LazyDAO(this.originalModel);
 
+
+  // functions required to be overriden
+  //
+  DAO<ModelType> buildDAO();
+
+
+  // DAO methods that should be overriden, to delay build as much as possible
+  //
+  /// @mustOverride
+  String get classUiName;
+  /// @mustOverride
+  String get uiName;
+  /// @mustOverride ???
+  bool get canSave => dao.canSave;
+  /// @mustOverride ???
+  bool get canDelete => dao.canDelete;
+
+  // DAO methods that should be overriden if also changed in dao
+  //
+  /// @mustOverride
+  String get classUiNamePlural => dao.classUiNamePlural;
+  /// @mustOverride
+  String get searchName => dao.searchName;
+
+
+  // DAO methods that were modified, but don't need to be overridden
+  //
+  int compareTo(other) => other is LazyDAO
+      ? _dao!=null && other._dao!=null
+        ? dao.compareTo(other.dao)
+        : uiName.compareTo(other.uiName)
+      : other is DAO
+        ? dao.compareTo(other)
+        : -1;
+
+  @override
+  String toString() => _dao!=null ? dao.uiName : uiName;
+
+  @override
+  bool operator == (dynamic other) => (other is DAO)
+      && (id==null
+          ? hashCode==other.hashCode
+          : (this.runtimeType==other.runtimeType && this.id==other.id));
+
+  @override
+  int get hashCode => _dao!=null ? dao.hashCode
+      : originalModel==null ? identityHashCode(this) : (runtimeType.hashCode+originalModel.hashCode).hashCode;
+
+  Future<ModelType?> save(context, {
+    bool updateDbValuesAfterSuccessfulSave = true,
+    bool showDefaultSnackBar = true,
+    bool skipValidation = false,
+  }) async {
+    final result = await dao.save(context,
+      updateDbValuesAfterSuccessfulSave: updateDbValuesAfterSuccessfulSave,
+      showDefaultSnackBar: showDefaultSnackBar,
+      skipValidation: skipValidation,
+    );
+    if (updateDbValuesAfterSuccessfulSave && result!=null) {
+      originalModel = result;
+    }
+    return result;
+  }
 
   void copyDaoWith({
     DAOValueGetter<String, ModelType>? classUiNameGetter,
@@ -90,68 +154,6 @@ abstract class LazyDAO<ModelType> implements DAO<ModelType> {
       saveButtonTitle: saveButtonTitle,
       saveConfirmationDialogDescription: saveConfirmationDialogDescription,
     );
-  }
-
-
-  // functions required to be overriden
-  //
-  DAO<ModelType> buildDAO();
-
-
-  // DAO methods that should be overriden, to delay build as much as possible
-  //
-  String get classUiName;
-  String get uiName;
-  /// @mustOverride
-  bool get canSave => dao.canSave;
-  /// @mustOverride
-  bool get canDelete => dao.canDelete;
-
-  // DAO methods that should be overriden if also changed in dao
-  //
-  /// @mustOverride
-  String get classUiNamePlural => dao.classUiNamePlural;
-  /// @mustOverride
-  String get searchName => dao.searchName;
-
-
-  // DAO methods that were modified, but don't need to be overridden
-  //
-  int compareTo(other) => other is LazyDAO
-      ? _dao!=null && other._dao!=null
-        ? dao.compareTo(other.dao)
-        : uiName.compareTo(other.uiName)
-      : other is DAO
-        ? dao.compareTo(other)
-        : -1;
-
-  @override
-  String toString() => _dao!=null ? dao.uiName : uiName;
-
-  @override
-  bool operator == (dynamic other) => (other is DAO)
-      && (id==null
-          ? hashCode==other.hashCode
-          : (this.runtimeType==other.runtimeType && this.id==other.id));
-
-  @override
-  int get hashCode => _dao!=null ? dao.hashCode
-      : originalModel==null ? identityHashCode(this) : (runtimeType.hashCode+originalModel.hashCode).hashCode;
-
-  Future<ModelType?> save(context, {
-    bool updateDbValuesAfterSuccessfulSave = true,
-    bool showDefaultSnackBar = true,
-    bool skipValidation = false,
-  }) async {
-    final result = await dao.save(context,
-      updateDbValuesAfterSuccessfulSave: updateDbValuesAfterSuccessfulSave,
-      showDefaultSnackBar: showDefaultSnackBar,
-      skipValidation: skipValidation,
-    );
-    if (updateDbValuesAfterSuccessfulSave && result!=null) {
-      originalModel = result;
-    }
-    return result;
   }
 
 
