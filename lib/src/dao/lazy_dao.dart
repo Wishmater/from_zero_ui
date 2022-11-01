@@ -14,7 +14,8 @@ abstract class LazyDAO<ModelType> implements DAO<ModelType> {
   DAO<ModelType> get dao  {
     if (_dao==null) {
       if (logDaoBuild) {
-        log('Building dao: $classUiName -- $uiName', stackTrace: StackTrace.current);
+        log('Building dao: $classUiName -- $uiName');
+        // log('Building dao: $classUiName -- $uiName', stackTrace: StackTrace.current);
       }
       _dao = buildDAO();
     }
