@@ -23,7 +23,9 @@ abstract class LazyDAO<ModelType> implements DAO<ModelType> {
   }
   bool get isDaoBuilt => _dao!=null;
 
-  LazyDAO(this.originalModel);
+  LazyDAO(this.originalModel, {
+    DAO<ModelType>? dao,
+  })  : _dao = dao;
 
 
   // functions required to be overriden
@@ -87,74 +89,6 @@ abstract class LazyDAO<ModelType> implements DAO<ModelType> {
       originalModel = result;
     }
     return result;
-  }
-
-  void copyDaoWith({
-    DAOValueGetter<String, ModelType>? classUiNameGetter,
-    DAOValueGetter<String, ModelType>? classUiNamePluralGetter,
-    DAOValueGetter<String, ModelType>? uiNameGetter,
-    dynamic id,
-    List<FieldGroup>? fieldGroups,
-    OnSaveCallback<ModelType>? onSave,
-    OnSaveAPICallback<ModelType>? onSaveAPI,
-    OnDidSaveCallback<ModelType>? onDidSave,
-    OnDeleteCallback<ModelType>? onDelete,
-    OnDeleteAPICallback<ModelType>? onDeleteAPI,
-    OnDidDeleteCallback<ModelType>? onDidDelete,
-    DAOWidgetBuilder<ModelType>? viewWidgetBuilder,
-    List<Widget> Function(BuildContext context, DAO dao)? viewDialogExtraActions,
-    List<Widget> Function(BuildContext context, DAO dao)? formDialogExtraActions,
-    bool? useIntrinsicHeightForViewDialog,
-    bool? wantsLinkToSelfFromOtherDAOs,
-    double? viewDialogWidth,
-    double? formDialogWidth,
-    bool? viewDialogLinksToInnerDAOs,
-    bool? viewDialogShowsViewButtons,
-    bool? viewDialogShowsEditButton,
-    List<List<Field>>? undoRecord,
-    List<List<Field>>? redoRecord,
-    bool? showConfirmDialogWithBlockingErrors,
-    DAO? parentDAO,
-    DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout,
-    DAOValueGetter<String, ModelType>? searchNameGetter,
-    DAOValueGetter<String, ModelType>? editDialogTitle,
-    DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle,
-    DAOValueGetter<String, ModelType>? saveButtonTitle,
-    DAOValueGetter<String, ModelType>? saveConfirmationDialogDescription,
-  }) {
-    _dao = dao.copyWith(
-      id: id,
-      classUiNameGetter: classUiNameGetter,
-      fieldGroups: fieldGroups,
-      classUiNamePluralGetter: classUiNamePluralGetter,
-      uiNameGetter: uiNameGetter,
-      onSave: onSave,
-      onSaveAPI: onSaveAPI,
-      onDidSave: onDidSave,
-      onDelete: onDelete,
-      onDeleteAPI: onDeleteAPI,
-      onDidDelete: onDidDelete,
-      viewWidgetBuilder: viewWidgetBuilder,
-      viewDialogExtraActions: viewDialogExtraActions,
-      formDialogExtraActions: formDialogExtraActions,
-      useIntrinsicHeightForViewDialog: useIntrinsicHeightForViewDialog,
-      viewDialogWidth: viewDialogWidth,
-      formDialogWidth: formDialogWidth,
-      viewDialogLinksToInnerDAOs: viewDialogLinksToInnerDAOs,
-      viewDialogShowsViewButtons: viewDialogShowsViewButtons,
-      viewDialogShowsEditButton: viewDialogShowsEditButton,
-      wantsLinkToSelfFromOtherDAOs: wantsLinkToSelfFromOtherDAOs,
-      undoRecord: undoRecord,
-      redoRecord: redoRecord,
-      showConfirmDialogWithBlockingErrors: showConfirmDialogWithBlockingErrors,
-      parentDAO: parentDAO,
-      enableDoubleColumnLayout: enableDoubleColumnLayout,
-      searchNameGetter: searchNameGetter,
-      editDialogTitle: editDialogTitle,
-      saveConfirmationDialogTitle: saveConfirmationDialogTitle,
-      saveButtonTitle: saveButtonTitle,
-      saveConfirmationDialogDescription: saveConfirmationDialogDescription,
-    );
   }
 
 
@@ -459,7 +393,7 @@ abstract class LazyDAO<ModelType> implements DAO<ModelType> {
     bool? useIntrinsicHeight,
     bool showDefaultSnackBars = true,
   }) {
-    return pushViewDialog(mainContext,
+    return dao.pushViewDialog(mainContext,
       showDefaultSnackBars: showDefaultSnackBars,
       useIntrinsicWidth: useIntrinsicWidth,
       useIntrinsicHeight: useIntrinsicHeight,
