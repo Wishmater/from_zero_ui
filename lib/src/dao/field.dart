@@ -1,5 +1,6 @@
 part of 'dao.dart';
 
+
 typedef FutureOr<ValidationError?> FieldValidator<T extends Comparable>(BuildContext context, DAO dao, Field<T> field);
 typedef T FieldValueGetter<T, R extends Field>(R field, DAO dao);
 typedef T ContextFulFieldValueGetter<T, R extends Field>(BuildContext context, R field, DAO dao);

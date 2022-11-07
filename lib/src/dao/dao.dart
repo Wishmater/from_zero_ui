@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
-
 import 'package:animations/animations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -14,6 +14,7 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
 
 part 'field.dart';
+part 'lazy_dao.dart';
 
 
 typedef FutureOr<ModelType?> OnSaveCallback<ModelType>(BuildContext context, DAO<ModelType> e);
@@ -30,16 +31,16 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
   static bool ignoreBlockingErrors = false; // VERY careful with this
   dynamic id; // TODO 3 id type should be declared as <>
-  DAOValueGetter<String, ModelType> classUiNameGetter;
+  late DAOValueGetter<String, ModelType> classUiNameGetter;
   String get classUiName => classUiNameGetter(this);
-  DAOValueGetter<String, ModelType> classUiNamePluralGetter;
+  late DAOValueGetter<String, ModelType> classUiNamePluralGetter;
   String get classUiNamePlural => classUiNamePluralGetter(this);
-  DAOValueGetter<String, ModelType> uiNameGetter;
+  late DAOValueGetter<String, ModelType> uiNameGetter;
   String get uiName => uiNameGetter(this);
   DAOValueGetter<String, ModelType>? searchNameGetter;
   String get searchName => searchNameGetter?.call(this) ?? uiName;
   /// props shouldn't be added or removed manually, only changes at construction and on load()
-  List<FieldGroup> fieldGroups;
+  late List<FieldGroup> fieldGroups;
   Map<String, Field> get props {
     return {
       if (fieldGroups.isNotEmpty)
@@ -52,25 +53,26 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   OnDeleteCallback<ModelType>? onDelete;
   OnDeleteAPICallback<ModelType>? onDeleteAPI;
   OnDidDeleteCallback<ModelType>? onDidDelete;
-  List<ValueChanged<DAO<ModelType>>> _selfUpdateListeners = [];
+  late List<ValueChanged<DAO<ModelType>>> _selfUpdateListeners = [];
   DAOWidgetBuilder<ModelType>? viewWidgetBuilder;
   List<Widget> Function(BuildContext context, DAO dao)? viewDialogExtraActions;
   List<Widget> Function(BuildContext context, DAO dao)? formDialogExtraActions;
-  bool useIntrinsicHeightForViewDialog;
-  double viewDialogWidth;
-  double formDialogWidth;
-  bool viewDialogLinksToInnerDAOs;
-  bool viewDialogShowsViewButtons;
+  late bool useIntrinsicHeightForViewDialog;
+  late double viewDialogWidth;
+  late double formDialogWidth;
+  late bool viewDialogLinksToInnerDAOs;
+  late bool viewDialogShowsViewButtons;
   bool? viewDialogShowsEditButton;
-  bool wantsLinkToSelfFromOtherDAOs;
-  bool enableUndoRedoMechanism;
-  bool showConfirmDialogWithBlockingErrors;
+  late bool wantsLinkToSelfFromOtherDAOs;
+  late bool enableUndoRedoMechanism;
+  late bool showConfirmDialogWithBlockingErrors;
   DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout;
   DAO? parentDAO; /// if not null, undo/redo calls will be relayed to the parent
   DAOValueGetter<String, ModelType>? editDialogTitle;
   DAOValueGetter<String, ModelType>? saveButtonTitle;
   DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle;
   DAOValueGetter<String, ModelType>? saveConfirmationDialogDescription;
+
 
   DAO({
     required this.classUiNameGetter,
@@ -121,6 +123,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             });
           });
         }
+
+
+  DAO._uninitialized();
+
 
   /// @mustOverride
   DAO<ModelType> copyWith({
@@ -247,8 +253,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
 
 
-  List<List<Field>> _undoRecord;
-  List<List<Field>> _redoRecord;
+  late List<List<Field>> _undoRecord;
+  late List<List<Field>> _redoRecord;
   List<Field>? _undoTransaction;
   List<Field>? _redoTransaction;
 
@@ -1628,7 +1634,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }) {
     if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
         && (titleMaxWidth!=null
-            || dao.props.values.where((e) => e is ListField && (e as ListField).buildViewWidgetAsTable).isNotEmpty)) {
+            || dao.props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty)) {
       useIntrinsicHeight ??= false;
       useIntrinsicWidth ??= false;
     }
