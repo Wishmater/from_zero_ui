@@ -138,6 +138,26 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
     return state;
   }
 
+  static Widget defaultAnimatedSwitcherBuilder({
+    required Widget child,
+  }) {
+    return child; // TODO 3 implemet animating between action states, currently it breaks due to some change in Appbar
+    return AnimatedSwitcher(
+      duration: Duration(milliseconds: 300),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) {
+        return SizeTransition(
+          sizeFactor: animation,
+          axis: Axis.horizontal,
+          axisAlignment: -1,
+          child: child,
+        );
+      },
+      child: child,
+    );
+  }
+
   static Widget defaultIconBuilder({
     required BuildContext context,
     required String title,
@@ -145,13 +165,15 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
     ContextCallback? onTap,
     bool enabled = true,
   }) {
-    return TooltipFromZero(
-      message: title,
-      child: IconButton(
-        icon: icon ?? SizedBox.shrink(),
-        onPressed: (!enabled || onTap==null) ? null : (){
-          onTap.call(context);
-        },
+    return defaultAnimatedSwitcherBuilder(
+      child: TooltipFromZero(
+        message: title,
+        child: IconButton(
+          icon: icon ?? SizedBox.shrink(),
+          onPressed: (!enabled || onTap==null) ? null : (){
+            onTap.call(context);
+          },
+        ),
       ),
     );
   }
@@ -163,42 +185,44 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
     ContextCallback? onTap,
     bool enabled = true,
   }) {
-    return SizedBox(
-      height: 64,
-      child: GestureDetector(
-        onDoubleTap: () => (!enabled || onTap==null) ? null : onTap.call(context),
-        child: TextButton(
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            primary: Theme.of(context).appBarTheme.toolbarTextStyle?.color
-              ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
-          ),
-          onPressed: (!enabled || onTap==null) ? null : (){
-            onTap.call(context);
-          },
-          // onLongPress: () => null,
-          child: IconTheme(
-            data: IconThemeData(
-              color: Theme.of(context).appBarTheme.toolbarTextStyle?.color
-                  ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+    return defaultAnimatedSwitcherBuilder(
+      child: SizedBox(
+        height: 64,
+        child: GestureDetector(
+          onDoubleTap: () => (!enabled || onTap==null) ? null : onTap.call(context),
+          child: TextButton(
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              primary: Theme.of(context).appBarTheme.toolbarTextStyle?.color
+                ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(width: 8),
-                if (icon!=null)
-                  icon,
-                if (icon!=null)
-                  SizedBox(width: 6,),
-                Text(title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Theme.of(context).appBarTheme.toolbarTextStyle?.color
-                      ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+            onPressed: (!enabled || onTap==null) ? null : (){
+              onTap.call(context);
+            },
+            // onLongPress: () => null,
+            child: IconTheme(
+              data: IconThemeData(
+                color: Theme.of(context).appBarTheme.toolbarTextStyle?.color
+                    ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(width: 8),
+                  if (icon!=null)
+                    icon,
+                  if (icon!=null)
+                    SizedBox(width: 6,),
+                  Text(title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).appBarTheme.toolbarTextStyle?.color
+                        ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+                    ),
                   ),
-                ),
-                SizedBox(width: 8),
-              ],
+                  SizedBox(width: 8),
+                ],
+              ),
             ),
           ),
         ),
