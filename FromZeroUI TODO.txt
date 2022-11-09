@@ -158,5 +158,5 @@ implement PageIndicatorForZero
 implement DialogButton widget to streamline appearance
 
 implement AlertDialogFromZero, taking simple parameters (title, message, onAccept, onCancel)
-
+    optional: receives an async WidgetBuilder, and shows loading while the builder finishes
 
