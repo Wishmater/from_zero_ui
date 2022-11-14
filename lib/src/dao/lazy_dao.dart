@@ -150,7 +150,79 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle,
     DAOValueGetter<String, ModelType>? saveButtonTitle,
     DAOValueGetter<String, ModelType>? saveConfirmationDialogDescription,
-  });
+  }) {
+    final result = copyWithLazyData();
+    if (id!=null
+        || classUiNameGetter!=null
+        || classUiNamePluralGetter!=null
+        || uiNameGetter!=null
+        || fieldGroups!=null
+        || onSave!=null
+        || onSaveAPI!=null
+        || onDidSave!=null
+        || onDelete!=null
+        || onDeleteAPI!=null
+        || onDidDelete!=null
+        || viewWidgetBuilder!=null
+        || viewDialogExtraActions!=null
+        || formDialogExtraActions!=null
+        || useIntrinsicHeightForViewDialog!=null
+        || wantsLinkToSelfFromOtherDAOs!=null
+        || viewDialogWidth!=null
+        || formDialogWidth!=null
+        || viewDialogLinksToInnerDAOs!=null
+        || viewDialogShowsViewButtons!=null
+        || viewDialogShowsEditButton!=null
+        || undoRecord!=null
+        || redoRecord!=null
+        || showConfirmDialogWithBlockingErrors!=null
+        || parentDAO!=null
+        || enableDoubleColumnLayout!=null
+        || searchNameGetter!=null
+        || editDialogTitle!=null
+        || saveConfirmationDialogTitle!=null
+        || saveButtonTitle!=null
+        || saveConfirmationDialogDescription!=null) {
+      ensureInitialized();
+    }
+    if (isInitialized) {
+      result.initialize(
+        id: id??this.id,
+        classUiNameGetter: classUiNameGetter??this.classUiNameGetter,
+        fieldGroups: fieldGroups??this.fieldGroups.map((e) => e.copyWith()).toList(),
+        classUiNamePluralGetter: classUiNamePluralGetter??this.classUiNamePluralGetter,
+        uiNameGetter: uiNameGetter??this.uiNameGetter,
+        onSave: onSave??this.onSave,
+        onSaveAPI: onSaveAPI??this.onSaveAPI,
+        onDidSave: onDidSave??this.onDidSave,
+        onDelete: onDelete??this.onDelete,
+        onDeleteAPI: onDeleteAPI??this.onDeleteAPI,
+        onDidDelete: onDidDelete??this.onDidDelete,
+        viewWidgetBuilder: viewWidgetBuilder??this.viewWidgetBuilder,
+        viewDialogExtraActions: viewDialogExtraActions??this.viewDialogExtraActions,
+        formDialogExtraActions: formDialogExtraActions??this.formDialogExtraActions,
+        useIntrinsicHeightForViewDialog: useIntrinsicHeightForViewDialog??this.useIntrinsicHeightForViewDialog,
+        viewDialogWidth: viewDialogWidth??this.viewDialogWidth,
+        formDialogWidth: formDialogWidth??this.formDialogWidth,
+        viewDialogLinksToInnerDAOs: viewDialogLinksToInnerDAOs??this.viewDialogLinksToInnerDAOs,
+        viewDialogShowsViewButtons: viewDialogShowsViewButtons??this.viewDialogShowsViewButtons,
+        viewDialogShowsEditButton: viewDialogShowsEditButton??this.viewDialogShowsEditButton,
+        wantsLinkToSelfFromOtherDAOs: wantsLinkToSelfFromOtherDAOs??this.wantsLinkToSelfFromOtherDAOs,
+        // undoRecord: undoRecord??this._undoRecord, // cannot reach _undoRecord and _redoRecord since they're private, surely its fine :)
+        // redoRecord: redoRecord??this._redoRecord,
+        showConfirmDialogWithBlockingErrors: showConfirmDialogWithBlockingErrors??this.showConfirmDialogWithBlockingErrors,
+        parentDAO: parentDAO??this.parentDAO,
+        enableDoubleColumnLayout: enableDoubleColumnLayout??this.enableDoubleColumnLayout,
+        searchNameGetter: searchNameGetter ?? this.searchNameGetter,
+        editDialogTitle: editDialogTitle ?? this.editDialogTitle,
+        saveConfirmationDialogTitle: saveConfirmationDialogTitle ?? this.saveConfirmationDialogTitle,
+        saveButtonTitle: saveButtonTitle ?? this.saveButtonTitle,
+        saveConfirmationDialogDescription: saveConfirmationDialogDescription ?? this.saveConfirmationDialogDescription,
+      );
+    }
+    return result;
+  }
+  LazyDAO<ModelType> copyWithLazyData();
 
 
   // DAO methods that should be overriden, to delay build as much as possible
