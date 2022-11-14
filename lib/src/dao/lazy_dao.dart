@@ -1,10 +1,17 @@
 part of 'dao.dart';
 
 
+enum DAOBuildLogType {
+  none,
+  simple,
+  fullStackTrace,
+}
+
 /// receives a model and a function to turn it into a DAO, only calls said function when necessary
 abstract class LazyDAO<ModelType> extends DAO<ModelType> {
 
-  static bool logDaoBuild = !kReleaseMode;
+  // static DAOBuildLogType logDaoBuild = DAOBuildLogType.fullStackTrace;
+  static DAOBuildLogType logDaoBuild = kReleaseMode ? DAOBuildLogType.none : DAOBuildLogType.simple;
 
   ModelType? originalModel;
   bool _isInitialized = false;
@@ -12,10 +19,11 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   void ensureInitialized()  {
     if (!isInitialized) {
       buildDAO();
-      if (logDaoBuild) {
+      if (logDaoBuild!=DAOBuildLogType.none) {
         try {
-          log('Building dao: $classUiName -- $uiName');
-          // log('Building dao: $classUiName -- $uiName', stackTrace: StackTrace.current);
+          log('Building dao $runtimeType: $classUiName -- $uiName',
+            stackTrace: logDaoBuild==DAOBuildLogType.fullStackTrace ? StackTrace.current : null,
+          );
         } catch(_) {
           log('Building dao: Error logging name $runtimeType');
         }
