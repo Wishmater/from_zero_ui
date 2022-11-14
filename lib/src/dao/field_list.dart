@@ -1755,10 +1755,15 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 };
                 break;
               case RowTapType.edit:
-                onRowTap = (row) {
-                  e.maybeEdit(dao.contextForValidation ?? context,
-                    showDefaultSnackBars: showDefaultSnackBars,
-                  );
+                onRowTap = (row) async {
+                  final copy = row.id.copyWith() as T;
+                  copy.parentDAO = null;
+                  copy.contextForValidation = dao.contextForValidation;
+                  final result = await copy.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+                  if (result!=null) {
+                    replaceRow(row.id, copy);
+                    notifyListeners();
+                  }
                 };
                 break;
               case RowTapType.none:
