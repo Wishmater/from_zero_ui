@@ -100,6 +100,25 @@ class AsyncValueBuilder<T> extends StatelessWidget {
       switchInCurve: transitionInCurve,
       switchOutCurve: transitionOutCurve,
       transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
+      layoutBuilder: (currentChild, previousChildren) {
+        final knownKeys = <Key>[if (currentChild?.key!=null) currentChild!.key!];
+        final cleanPreviousChildren = [];
+        for (final e in previousChildren) {
+          if (e.key==null || !knownKeys.contains(e.key!)) {
+            cleanPreviousChildren.add(e);
+            if (e.key!=null) {
+              knownKeys.add(e.key!);
+            }
+          }
+        }
+        return Stack(
+          alignment: Alignment.center,
+          children: <Widget>[
+            ...cleanPreviousChildren,
+            if (currentChild != null) currentChild,
+          ],
+        );
+      },
     );
     if (applyAnimatedContainerFromChildSize) {
       result = AnimatedContainerFromChildSize(
@@ -197,6 +216,25 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
       switchInCurve: transitionInCurve,
       switchOutCurve: transitionOutCurve,
       transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
+      layoutBuilder: (currentChild, previousChildren) {
+        final knownKeys = <Key>[if (currentChild?.key!=null) currentChild!.key!];
+        final cleanPreviousChildren = [];
+        for (final e in previousChildren) {
+          if (e.key==null || !knownKeys.contains(e.key!)) {
+            cleanPreviousChildren.add(e);
+            if (e.key!=null) {
+              knownKeys.add(e.key!);
+            }
+          }
+        }
+        return Stack(
+          alignment: Alignment.center,
+          children: <Widget>[
+            ...cleanPreviousChildren,
+            if (currentChild != null) currentChild,
+          ],
+        );
+      },
     );
     if (applyAnimatedContainerFromChildSize) {
       result = AnimatedContainerFromChildSize(
