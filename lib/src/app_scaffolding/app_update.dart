@@ -72,9 +72,9 @@ class UpdateFromZero{
       return showModal(
         context: context,
         builder: (context) => _UpdateWidget(this),
-        configuration: FadeScaleTransitionConfiguration(
-          barrierDismissible: false,
-        ),
+        // configuration: FadeScaleTransitionConfiguration(
+        //   barrierDismissible: false,
+        // ),
       );
     }
   }
