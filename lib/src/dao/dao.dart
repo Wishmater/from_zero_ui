@@ -474,6 +474,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   Future<ModelType?> maybeSave(BuildContext context, {
     bool updateDbValuesAfterSuccessfulSave=true,
     bool showDefaultSnackBars=true,
+    bool snackBarCancellable=true,
     bool askForSaveConfirmation=true,
   }) async {
     final validationFuture = validate(context,
@@ -649,6 +650,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         skipValidation: true,
         updateDbValuesAfterSuccessfulSave: updateDbValuesAfterSuccessfulSave,
         showDefaultSnackBar: showDefaultSnackBars,
+        snackBarCancellable: snackBarCancellable,
       );
     } else if (confirm==null) {
       final errors = validationErrors.where((e) => e.severity!=ValidationErrorSeverity.unfinished).toList();
@@ -663,6 +665,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   Future<ModelType?> save(context, {
     bool updateDbValuesAfterSuccessfulSave=true,
     bool showDefaultSnackBar=true,
+    bool snackBarCancellable=true,
     bool skipValidation=false,
   }) async {
     if (!skipValidation) {
@@ -694,6 +697,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         context: context,
         stateNotifier: stateNotifier,
         duration: showDefaultSnackBar ? 3.seconds : Duration.zero,
+        cancelable: snackBarCancellable,
         successTitle: '$classUiName ${newInstance ? FromZeroLocalizations.of(context).translate("added")
             : FromZeroLocalizations.of(context).translate("edited")} ${FromZeroLocalizations.of(context).translate("successfully")}.',
       ).show();

@@ -273,12 +273,14 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   Future<ModelType?> save(context, {
     bool updateDbValuesAfterSuccessfulSave = true,
     bool showDefaultSnackBar = true,
+    bool snackBarCancellable=true,
     bool skipValidation = false,
   }) async {
     ensureInitialized();
     final result = await super.save(context,
       updateDbValuesAfterSuccessfulSave: updateDbValuesAfterSuccessfulSave,
       showDefaultSnackBar: showDefaultSnackBar,
+      snackBarCancellable: snackBarCancellable,
       skipValidation: skipValidation,
     );
     if (updateDbValuesAfterSuccessfulSave && result!=null) {
@@ -616,11 +618,13 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   Future<ModelType?> maybeSave(BuildContext context, {
     bool updateDbValuesAfterSuccessfulSave = true,
     bool showDefaultSnackBars = true,
+    bool snackBarCancellable=true,
     bool askForSaveConfirmation = true,
   }) {
     ensureInitialized();
     return super.maybeSave(context,
       showDefaultSnackBars: showDefaultSnackBars,
+      snackBarCancellable: snackBarCancellable,
       askForSaveConfirmation: askForSaveConfirmation,
       updateDbValuesAfterSuccessfulSave: updateDbValuesAfterSuccessfulSave,
     );

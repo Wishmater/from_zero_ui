@@ -40,6 +40,7 @@ class APISnackBar<T> extends SnackBarFromZero {
           behaviour: behaviour,
           duration: duration,
           width: width,
+          dismissable: cancelable,
           showProgressIndicatorForRemainingTime: showProgressIndicatorForRemainingTime,
           onCancel: onCancel,
           blockUI: blockUIType==APISnackBarBlockUIType.never ? false : true,
@@ -399,7 +400,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
         ),
         if (showAcceptInsteadOfClose)
           SizedBox(width: 16,),
-        if (!showAcceptInsteadOfClose)
+        if (!showAcceptInsteadOfClose && (error==null||widget.dismissable))
           SizedBox(
             width: 42, height: double.infinity,
             child: FlatButton(

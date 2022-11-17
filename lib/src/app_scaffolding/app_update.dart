@@ -67,16 +67,17 @@ class UpdateFromZero{
     return this;
   }
 
-  Future<void> promptUpdate(BuildContext context) async {
+  Future<bool> promptUpdate(BuildContext context) async {
     if (updateAvailable==true){
-      return showModal(
+      return (await showModal<bool>(
         context: context,
         builder: (context) => _UpdateWidget(this),
-        // configuration: FadeScaleTransitionConfiguration(
-        //   barrierDismissible: false,
-        // ),
-      );
+        configuration: FadeScaleTransitionConfiguration(
+          barrierDismissible: false,
+        ),
+      )) ?? false;
     }
+    return false;
   }
 
   Future<Response?> executeUpdate(BuildContext context, {ProgressCallback? onReceiveProgress}) async{
@@ -139,6 +140,7 @@ class UpdateFromZero{
       });
       return download;
     }
+    return null;
   }
 
   Future<String> getDownloadPath() async{
@@ -258,7 +260,7 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
             ),
             textColor: Theme.of(context).textTheme.caption!.color,
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(context).pop(false);
             },
           ),
           if (!started)
