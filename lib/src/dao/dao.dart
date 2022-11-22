@@ -866,13 +866,14 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     for (final e in invalidatingErrors) {
       map[e.field.fieldGlobalKey] = [...(map[e.field.fieldGlobalKey]??[]), e];
     }
-    map.forEach((key, value) {
-
-    });
     for (final errorList in map.values) {
       final error = errorList.first;
       final field = error.field;
-      field.value = error.defaultValue;
+      if (field is StringField) {
+        field.commitValue(error.defaultValue as String?);
+      } else {
+        field.value = error.defaultValue;
+      }
     }
     if (!keepUndo) beginUndoTransaction(); // discard undo transaction
     commitUndoTransaction();
