@@ -258,7 +258,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       sortedColumn = widget.initialSortedColumn;
     }
     sortedAscending = widget.columns?[sortedColumn]?.defaultSortAscending ?? true;
-    init(notifyListeners: false);
+    init(
+      notifyListeners: false,
+      isFirstInit: true,
+    );
   }
 
   @override
@@ -275,7 +278,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         (n) => n is ScrollNotification || n is ScrollMetricsNotification,
   );
 
-  void init({bool notifyListeners=true}) {
+  void init({
+    bool notifyListeners = true,
+    bool isFirstInit = false,
+  }) {
     bool filtersAltered = false;
     isStateInvalidated = false;
     currentColumnKeys = widget.columns?.keys.toList();
@@ -292,7 +298,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         conditionFilters = {};
       } else{
         conditionFilters = Map.from(widget.tableController!.initialConditionFilters ?? {});
+        filtersAltered = true;
       }
+    } else if (isFirstInit) {
+      filtersAltered = true;
     }
     if (widget.tableController?.valueFilters==null) {
       if (widget.tableController?.initialValueFilters==null){
@@ -307,19 +316,20 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         };
         filtersAltered = true;
       }
+    } else if (isFirstInit) {
+      filtersAltered = true;
     }
     initHeaderRowModel();
+    _updateFiltersApplied();
     if (widget.columns!=null) {
-      initFilters().then((value) {
+      initFilters(
+        filterAfter: filtersAltered,
+      ).then((value) {
         if (mounted && filtersAltered) {
-          setState(() {
-            _updateFiltersApplied();
-            filter();
-          });
+          setState(() {});
         }
       });
     }
-    _updateFiltersApplied();
     sort(notifyListeners: notifyListeners);
   }
   void initHeaderRowModel() {
@@ -357,7 +367,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
   cancelable_compute.ComputeOperation<Map<dynamic, List<dynamic>>>? availableFiltersIsolateController;
   cancelable_compute.ComputeOperation<Map<dynamic, Map<Object?, bool>>?>? validInitialFiltersIsolateController;
-  Future<void> initFilters([bool? computeFiltersInIsolate]) async {
+  Future<void> initFilters({
+    bool? filterAfter,
+    bool? computeFiltersInIsolate,
+  }) async {
     availableFiltersIsolateController?.cancel();
     validInitialFiltersIsolateController?.cancel();
     Map<dynamic, List<dynamic>> computedAvailableFilters;
@@ -402,7 +415,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       } catch (e, st) {
         log('Isolate creation for computing table filters failed. Computing synchronously...');
         log(e, stackTrace: st, isError: false,);
-        initFilters(false);
+        initFilters(
+          computeFiltersInIsolate: false,
+          filterAfter: filterAfter,
+        );
         return;
       }
     } else {
@@ -416,8 +432,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     }
     if (mounted) {
       availableFilters.value = computedAvailableFilters;
-      if (computedValidInitialFilters != null) {
-        valueFilters = computedValidInitialFilters;
+      if (filterAfter ?? (computedValidInitialFilters!=null)) {
+        if (computedValidInitialFilters!=null) valueFilters = computedValidInitialFilters;
         _updateFiltersApplied();
         filter();
       }
