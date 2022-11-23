@@ -266,6 +266,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     super.didUpdateWidget(oldWidget);
     if (isStateInvalidated) {
       init(notifyListeners: false);
+    } else if (widget.headerRowModel!=null) {
+      initHeaderRowModel();
     }
   }
 
@@ -306,6 +308,21 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         filtersAltered = true;
       }
     }
+    initHeaderRowModel();
+    if (widget.columns!=null) {
+      initFilters().then((value) {
+        if (mounted && filtersAltered) {
+          setState(() {
+            _updateFiltersApplied();
+            filter();
+          });
+        }
+      });
+    }
+    _updateFiltersApplied();
+    sort(notifyListeners: notifyListeners);
+  }
+  void initHeaderRowModel() {
     if (widget.columns==null && widget.showHeaders) {
       headerRowModel = widget.headerRowModel;
     } else {
@@ -336,18 +353,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       }
       availableFilters.value = null;
     }
-    if (widget.columns!=null) {
-      initFilters().then((value) {
-        if (mounted && filtersAltered) {
-          setState(() {
-            _updateFiltersApplied();
-            filter();
-          });
-        }
-      });
-    }
-    _updateFiltersApplied();
-    sort(notifyListeners: notifyListeners);
   }
 
   cancelable_compute.ComputeOperation<Map<dynamic, List<dynamic>>>? availableFiltersIsolateController;

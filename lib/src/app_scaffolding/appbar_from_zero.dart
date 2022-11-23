@@ -178,11 +178,13 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
     List<Widget> expanded = [];
     List<int> removeIndices = [];
     if (forceExpanded!=null){
+
       ActionState state = forceExpanded!.getStateForMaxWidth(constraints.maxWidth);
       if (state==ActionState.expanded)
         forceExpanded = null;
-    }
-    if (forceExpanded==null){
+
+    } else {
+
       actions = List.from(widget.actions);
       for (int i=0; i<actions.length; i++){
         if (actions[i] is ActionFromZero){
@@ -252,6 +254,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
           ),
         );
       }
+
     }
     final titleContent = AnimatedSwitcher(
       duration: widget.transitionsDuration,
