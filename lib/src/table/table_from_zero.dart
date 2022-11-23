@@ -322,12 +322,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     initHeaderRowModel();
     _updateFiltersApplied();
     if (widget.columns!=null) {
-      initFilters(
-        filterAfter: filtersAltered,
-      ).then((value) {
-        if (mounted && filtersAltered) {
-          setState(() {});
-        }
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        initFilters(
+          filterAfter: filtersAltered,
+        ).then((value) {
+          if (mounted && filtersAltered) {
+            setState(() {});
+          }
+        });
       });
     }
     sort(notifyListeners: notifyListeners);
