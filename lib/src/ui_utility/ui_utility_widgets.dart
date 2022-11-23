@@ -741,8 +741,7 @@ class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
               message: FromZeroLocalizations.of(context).translate('return_to_top'),
               child: FloatingActionButton(
                 child: widget.icon ?? Icon(Icons.arrow_upward,
-                  color: Theme.of(context).appBarTheme.iconTheme?.color
-                      ?? Theme.of(context).textTheme.bodyText1!.color!,
+                  color: Theme.of(context).textTheme.bodyText1!.color!,
                 ),
                 backgroundColor: Theme.of(context).cardColor,
                 onPressed: widget.onTap ?? () {
