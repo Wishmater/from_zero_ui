@@ -282,6 +282,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     bool notifyListeners = true,
     bool isFirstInit = false,
   }) {
+    availableFilters.value = null;
     bool filtersAltered = false;
     isStateInvalidated = false;
     currentColumnKeys = widget.columns?.keys.toList();
@@ -363,7 +364,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           height: widget.rows.isEmpty ? 36 : widget.rows.first.height,
         );
       }
-      availableFilters.value = null;
     }
   }
 
