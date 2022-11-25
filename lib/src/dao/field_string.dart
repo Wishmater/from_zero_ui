@@ -23,13 +23,16 @@ class StringField extends Field<String> {
   InputDecoration? inputDecoration;
   List<TextInputFormatter>? inputFormatters;
   bool obfuscate;
+  bool trimOnSave;
   bool showObfuscationToggleButton; // TODO 2 implement obfuscation toggle button
   Timer? valUpdateTimer;
 
+  @override
   set dbValue(String? v) {
     super.dbValue = v ?? '';
   }
 
+  @override
   set value(String? v) {
     valUpdateTimer?.cancel();
     v ??= '';
@@ -99,6 +102,7 @@ class StringField extends Field<String> {
     bool? showObfuscationToggleButton,
     this.inputDecoration,
     this.inputFormatters,
+    this.trimOnSave = true,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -165,6 +169,7 @@ class StringField extends Field<String> {
     StringFieldType? type,
     int? minLines,
     int? maxLines,
+    bool? trimOnSave,
     InputDecoration? inputDecoration,
     List<TextInputFormatter>? inputFormatters,
     double? tableColumnWidth,
@@ -214,6 +219,7 @@ class StringField extends Field<String> {
       actions: actions ?? this.actions,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       onValueChanged: onValueChanged ?? this.onValueChanged,
+      trimOnSave: trimOnSave ?? this.trimOnSave,
     );
   }
 

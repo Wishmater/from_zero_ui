@@ -210,7 +210,7 @@ ValidationError? fieldValidatorStringIsEmail(BuildContext context, DAO dao, Fiel
 }) {
   return field.value==null
       ? null
-      : EmailValidator.validate(field.value!,)
+      : EmailValidator.validate(field.value!.trim(),)
           ? null
           : ValidationError(
             field: field,

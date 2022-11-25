@@ -677,6 +677,11 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         return null;
       }
     }
+    for (final e in props.values) {
+      if (e is StringField && e.trimOnSave) {
+        e.commitValue((e.value??'').trim());
+      }
+    }
     bool newInstance = id==null || id==-1;
     bool success = false;
     ModelType? model;
