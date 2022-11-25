@@ -183,43 +183,46 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
             textTheme: ButtonTextTheme.accent,
             padding: EdgeInsets.symmetric(horizontal: 4, vertical: 0),
             minWidth: 64.0,
-            child: IntrinsicWidth(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (widget.actions!.length>1)
-                    SizedBox(height: 6,),
-                  ...widget.actions!.map((e) {
-                    if (e is SnackBarAction){
-                      SnackBarAction action = e;
-                      return Expanded(
-                        child: FlatButton(
-                          onPressed: () {
-                            widget.dismiss();
-                            action.onPressed();
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
-                            child: Text(action.label.toUpperCase(),
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: 128),
+              child: IntrinsicWidth(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (widget.actions!.length>1)
+                      SizedBox(height: 6,),
+                    ...widget.actions!.map((e) {
+                      if (e is SnackBarAction){
+                        SnackBarAction action = e;
+                        return Expanded(
+                          child: FlatButton(
+                            onPressed: () {
+                              widget.dismiss();
+                              action.onPressed();
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              child: Text(action.label.toUpperCase(),
+                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                              ),
                             ),
+                            textColor: action.textColor ?? actionColor,
+                            disabledTextColor: action.disabledTextColor ?? Theme.of(context).disabledColor,
+                            hoverColor: (action.textColor ?? actionColor).withOpacity(0.1),
+                            highlightColor: (action.textColor ?? actionColor).withOpacity(0.1),
+                            splashColor: (action.textColor ?? actionColor).withOpacity(0.3),
+                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
-                          textColor: action.textColor ?? actionColor,
-                          disabledTextColor: action.disabledTextColor ?? Theme.of(context).disabledColor,
-                          hoverColor: (action.textColor ?? actionColor).withOpacity(0.1),
-                          highlightColor: (action.textColor ?? actionColor).withOpacity(0.1),
-                          splashColor: (action.textColor ?? actionColor).withOpacity(0.3),
-                          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                      );
-                    }
-                    return e;
-                  }).toList(),
-                  if (widget.actions!.length>1)
-                    SizedBox(height: 6,),
-                ],
+                        );
+                      }
+                      return e;
+                    }).toList(),
+                    if (widget.actions!.length>1)
+                      SizedBox(height: 6,),
+                  ],
+                ),
               ),
             ),
           ),
@@ -304,7 +307,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
       );
     }
     result = Container(
-      width: fixed ? double.infinity : (widget.width ?? (512 + (widget.actions?.length??0)==0 ? 0 : 128)),
+      width: fixed ? double.infinity : (widget.width ?? (512 + ((widget.actions?.length??0)==0 ? 0 : 128))),
       padding: EdgeInsets.only(bottom: fixed ? 0 : 48,),
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: 64,),

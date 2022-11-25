@@ -114,6 +114,8 @@ Future<bool> saveFileFromZero ({
   bool downloadSuccess = false;
   File? file;
   String? uiPath;
+  Object? error;
+  StackTrace? stackTrace;
   // execute save
   try {
 
@@ -193,6 +195,8 @@ Future<bool> saveFileFromZero ({
   } catch (e, st) {
     log ('Error while saving file:', isError: true);
     log (e, stackTrace: st);
+    error = e;
+    stackTrace = st;
     success = false;
   }
   if (cancelled) {
@@ -244,15 +248,19 @@ Future<bool> saveFileFromZero ({
         ],
       ).show(context).closed;
     } else if (!success) {
+      final errorSubtitle = ApiProviderBuilder.getErrorSubtitle(context, error, stackTrace);
       await SnackBarFromZero(
         key: snackBarKey ?? ValueKey(data.hashCode),
         context: context,
         type: SnackBarFromZero.error,
+        icon: downloadSuccess
+            ? null
+            : ApiProviderBuilder.getErrorIcon(context, error, stackTrace),
         duration: Duration(seconds: 6),
         title: Text(FromZeroLocalizations.of(context).translate('download_fail')),
         message: Text(downloadSuccess
             ? FromZeroLocalizations.of(context).translate('error_file')
-            : FromZeroLocalizations.of(context).translate('error_connection')), // TODO 2 improve error handling, parse server response properly
+            : (ApiProviderBuilder.getErrorTitle(context, error, stackTrace) + '${errorSubtitle==null ? '' : '\n$errorSubtitle'}')),
         actions: [
           if (onRetry!=null)
           SnackBarAction(
