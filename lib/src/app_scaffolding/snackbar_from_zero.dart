@@ -196,7 +196,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
                       SnackBarAction action = e;
                       return Expanded(
                         child: FlatButton(
-                          onPressed: action.onPressed==null ? null : (){
+                          onPressed: () {
                             widget.dismiss();
                             action.onPressed();
                           },
@@ -304,7 +304,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
       );
     }
     result = Container(
-      width: fixed ? double.infinity : (widget.width ?? 512),
+      width: fixed ? double.infinity : (widget.width ?? (512 + (widget.actions?.length??0)==0 ? 0 : 128)),
       padding: EdgeInsets.only(bottom: fixed ? 0 : 48,),
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: 64,),

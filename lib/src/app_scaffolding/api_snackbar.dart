@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -141,6 +142,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
     Widget result = ApiStateBuilder<T>(
       stateNotifier: widget.stateNotifier,
       applyAnimatedContainerFromChildSize: true,
+      alignment: Alignment.bottomCenter,
       dataBuilder: (context, data) {
         return resultBuilder(context, null, null);
       },
@@ -156,37 +158,6 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
           opacity: animation,
         );
       },
-    );
-    final fixed = widget.behaviour!=SnackBarFromZero.behaviourFloating
-        && (widget.behaviour==SnackBarFromZero.behaviourFixed
-            || ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout)));
-    if (!fixed) {
-      result = Card(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(28)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        elevation: 12,
-        shadowColor: Colors.black,
-        child: result,
-      );
-    }
-    result = MouseRegion(
-      child: result,
-      onEnter: (event) {
-        animationController?.stop();
-      },
-      onExit: (event) {
-        animationController?.forward();
-      },
-    );
-    result = Container(
-      width: fixed ? double.infinity : (widget.width ?? 512),
-      padding: EdgeInsets.only(bottom: fixed ? 0 : 48,),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: 64,),
-        child: result,
-      ),
     );
     return result;
   }
@@ -287,14 +258,14 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
       ),
       child: result,
     );
-    return result;
+    return buildWrapper(context, result: result,);
   }
 
   Widget resultBuilder(BuildContext context, Object? error, StackTrace? stackTrace) {
     final type = error==null ? SnackBarFromZero.success : SnackBarFromZero.error;
     final actionColor = SnackBarFromZero.colors[type];
     final splashColor = Theme.of(context).splashColor.withOpacity(1);
-    bool showRetry = true;
+    bool showRetry = true, showErrorDetails = false;
     Widget? icon;
     String? title, message;
     if (error==null) {
@@ -302,18 +273,82 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
       title = widget.successTitle;
       message = widget.successMessage;
     } else {
-      log ('Error caught by API snackbar:');
-      log (error, stackTrace: stackTrace, isError: true); // TODO 2 remove this after implementing details button
       if (error is String) {
         title = error;
       } else {
-        showRetry = ApiProviderBuilder.isErrorRetryable(context, error, stackTrace);
+        final isRetryable = ApiProviderBuilder.isErrorRetryable(context, error, stackTrace);
+        showRetry = !kReleaseMode || isRetryable;
+        showErrorDetails = !kReleaseMode || (!isRetryable && ApiProviderBuilder.shouldShowErrorDetails(context, error, stackTrace));
         icon = ApiProviderBuilder.getErrorIcon(context, error, stackTrace);
         title = ApiProviderBuilder.getErrorTitle(context, error, stackTrace);
         message = ApiProviderBuilder.getErrorSubtitle(context, error, stackTrace);
       }
     }
     bool showAcceptInsteadOfClose = error!=null && !showRetry;
+    final actions = [
+      if (showAcceptInsteadOfClose)
+        Expanded(
+          child: FlatButton(
+            onPressed: () {
+              widget.onCancel?.call();
+              widget.dismiss();
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(FromZeroLocalizations.of(context).translate("accept_caps").toUpperCase(),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            textColor: splashColor,
+            disabledTextColor: Theme.of(context).disabledColor,
+            hoverColor: splashColor.withOpacity(0.1),
+            highlightColor: splashColor.withOpacity(0.1),
+            splashColor: splashColor.withOpacity(0.3),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      if (showRetry)
+        Expanded(
+          child: FlatButton(
+            onPressed: () {
+              widget.stateNotifier.refresh(null);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text(FromZeroLocalizations.of(context).translate("retry").toUpperCase(),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            textColor: splashColor,
+            disabledTextColor: Theme.of(context).disabledColor,
+            hoverColor: splashColor.withOpacity(0.1),
+            highlightColor: splashColor.withOpacity(0.1),
+            splashColor: splashColor.withOpacity(0.3),
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+        ),
+      if (showErrorDetails)
+        Expanded(
+          child: TextButton(
+            onPressed: () {
+              widget.dismiss();
+              ApiProviderBuilder.showErrorDetailsDialog(widget.context, error, stackTrace);
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              child: Text('Detalles del Error',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            style: TextButton.styleFrom(
+              primary: Theme.of(context).textTheme.bodyText1!.color!,
+            ),
+          ),
+        ),
+    ];
     Widget result = Row(
       children: [
         SizedBox(width: 10,),
@@ -345,56 +380,19 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
           textTheme: ButtonTextTheme.accent,
           padding: EdgeInsets.symmetric(horizontal: 4, vertical: 0),
           minWidth: 64.0,
-          child: IntrinsicWidth(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(height: 6,),
-                if (showAcceptInsteadOfClose)
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {
-                        widget.onCancel?.call();
-                        widget.dismiss();
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Text(FromZeroLocalizations.of(context).translate("accept_caps").toUpperCase(),
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      textColor: splashColor,
-                      disabledTextColor: Theme.of(context).disabledColor,
-                      hoverColor: splashColor.withOpacity(0.1),
-                      highlightColor: splashColor.withOpacity(0.1),
-                      splashColor: splashColor.withOpacity(0.3),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                if (showRetry)
-                  Expanded(
-                    child: FlatButton(
-                      onPressed: () {
-                        widget.stateNotifier.refresh(null);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Text(FromZeroLocalizations.of(context).translate("retry").toUpperCase(),
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      textColor: splashColor,
-                      disabledTextColor: Theme.of(context).disabledColor,
-                      hoverColor: splashColor.withOpacity(0.1),
-                      highlightColor: splashColor.withOpacity(0.1),
-                      splashColor: splashColor.withOpacity(0.3),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                SizedBox(height: 6,),
-              ],
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 128),
+            child: IntrinsicWidth(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(height: 6,),
+                  ...actions,
+                  SizedBox(height: 6,),
+                ],
+              ),
             ),
           ),
         ),
@@ -454,6 +452,44 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
         size: 32,
       ),
       child: result,
+    );
+    return buildWrapper(context, result: result, hasActions: actions.length>0);
+  }
+
+  Widget buildWrapper(BuildContext context, {
+    required Widget result,
+    bool hasActions = false,
+  }) {
+    final fixed = widget.behaviour!=SnackBarFromZero.behaviourFloating
+        && (widget.behaviour==SnackBarFromZero.behaviourFixed
+            || ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout)));
+    if (!fixed) {
+      result = Card(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(28)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        elevation: 12,
+        shadowColor: Colors.black,
+        child: result,
+      );
+    }
+    result = MouseRegion(
+      child: result,
+      onEnter: (event) {
+        animationController?.stop();
+      },
+      onExit: (event) {
+        animationController?.forward();
+      },
+    );
+    result = Container(
+      width: fixed ? double.infinity : (widget.width ?? (512 + (hasActions ? 128 : 0))),
+      padding: EdgeInsets.only(bottom: fixed ? 0 : 48,),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: 64,),
+        child: result,
+      ),
     );
     return result;
   }

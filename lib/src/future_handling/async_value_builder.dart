@@ -21,6 +21,7 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
   final bool applyAnimatedContainerFromChildSize;
+  final Alignment? alignment; // used for animated switches
 
   const FutureProviderBuilder({
     Key? key,
@@ -33,6 +34,7 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
     this.applyAnimatedContainerFromChildSize = false,
+    this.alignment
   }) : super(key: key);
 
   @override
@@ -47,6 +49,7 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
       transitionInCurve: transitionInCurve,
       transitionOutCurve: transitionOutCurve,
       applyAnimatedContainerFromChildSize: applyAnimatedContainerFromChildSize,
+      alignment: alignment,
     );
   }
 
@@ -64,6 +67,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
   final bool applyAnimatedContainerFromChildSize;
+  final Alignment? alignment; // used for animated switches
 
   const AsyncValueBuilder({
     Key? key,
@@ -76,6 +80,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
     this.applyAnimatedContainerFromChildSize = false,
+    this.alignment,
   }) : super(key: key);
 
   @override
@@ -112,7 +117,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
           }
         }
         return Stack(
-          alignment: Alignment.center,
+          alignment: alignment ?? Alignment.center,
           children: <Widget>[
             ...cleanPreviousChildren,
             if (currentChild != null) currentChild,
@@ -123,6 +128,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
     if (applyAnimatedContainerFromChildSize) {
       result = AnimatedContainerFromChildSize(
         duration: transitionDuration,
+        alignment: alignment ?? Alignment.topLeft,
         child: result,
       );
     }
@@ -164,6 +170,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
   final bool applyAnimatedContainerFromChildSize;
+  final Alignment? alignment; // used for animated switches
 
   const AsyncValueMultiBuilder({
     Key? key,
@@ -176,6 +183,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
     this.applyAnimatedContainerFromChildSize = false,
+    this.alignment,
   }) : super(key: key);
 
   @override
@@ -228,7 +236,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
           }
         }
         return Stack(
-          alignment: Alignment.center,
+          alignment: alignment ?? Alignment.center,
           children: <Widget>[
             ...cleanPreviousChildren,
             if (currentChild != null) currentChild,
@@ -239,6 +247,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
     if (applyAnimatedContainerFromChildSize) {
       result = AnimatedContainerFromChildSize(
         duration: transitionDuration,
+        alignment: alignment ?? Alignment.topLeft,
         child: result,
       );
     }

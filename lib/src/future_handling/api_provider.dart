@@ -259,6 +259,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
   final bool applyAnimatedContainerFromChildSize;
+  final Alignment? alignment; // used for animated switches
 
   const ApiProviderBuilder({
     Key? key,
@@ -271,6 +272,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
     this.applyAnimatedContainerFromChildSize = false,
+    this.alignment,
   }) : super(key: key);
 
   @override
@@ -287,6 +289,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     return AsyncValueBuilder<T>(
       asyncValue: stateNotifier.state, // using stateNotifier.state instead of value because value is kept when realoading, so loading state is never shown
       dataBuilder: dataBuilder,
+      alignment: alignment,
       loadingBuilder: (context) {
         return ValueListenableBuilder<double?>(
           valueListenable: stateNotifier.wholePercentageNotifier,
@@ -314,15 +317,16 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   }
 
   static Widget defaultErrorBuilder(BuildContext context, Object? error, StackTrace? stackTrace, VoidCallback? onRetry) {
+    final isRetryable = isErrorRetryable(context, error, stackTrace);
     return ErrorSign(
       key: ValueKey(error),
       icon: getErrorIcon(context, error, stackTrace),
       title: getErrorTitle(context, error, stackTrace),
       subtitle: getErrorSubtitle(context, error, stackTrace),
-      onRetry: onRetry,
-      retryButton: isErrorRetryable(context, error, stackTrace)
-          ? null
-          : buildErrorDetailsButton(context, error, stackTrace, onRetry),
+      onRetry: !kReleaseMode || isRetryable ? onRetry : null,
+      retryButton: !kReleaseMode || (!isRetryable && shouldShowErrorDetails(context, error, stackTrace))
+              ? buildErrorDetailsButton(context, error, stackTrace, onRetry)
+              : null,
     );
   }
   static Widget getErrorIcon(BuildContext context, Object? error, StackTrace? stackTrace) {
@@ -403,6 +407,25 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
       }
     } else {
       return false;
+    }
+  }
+  static bool shouldShowErrorDetails(BuildContext context, Object? error, StackTrace? stackTrace) {
+    if (error is DioError) {
+      if (error.type==DioErrorType.response) {
+        if (error.response!.statusCode==404) {
+          return false;
+        } else if (error.response!.statusCode==400) {
+          return false;
+        } else if (error.response!.statusCode==403) {
+          return false;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    } else {
+      return true;
     }
   }
   static Widget buildErrorDetailsButton(BuildContext context, Object? error, StackTrace? stackTrace, [VoidCallback? onRetry]) {
@@ -489,6 +512,7 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
   final bool applyAnimatedContainerFromChildSize;
+  final Alignment? alignment; // used for animated switches
 
   const ApiProviderMultiBuilder({
     Key? key,
@@ -501,6 +525,7 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
     this.applyAnimatedContainerFromChildSize = false,
+    this.alignment,
   }) : super(key: key);
 
   @override
@@ -516,6 +541,7 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
     return AsyncValueMultiBuilder<T>(
       asyncValues: values,
       dataBuilder: dataBuilder,
+      alignment: alignment,
       loadingBuilder: (context) {
         final listenable = MultiValueListenable(stateNotifiers.map((e) => e.wholePercentageNotifier).toList());
         return AnimatedBuilder(
@@ -572,6 +598,7 @@ class ApiStateBuilder<T> extends ConsumerStatefulWidget {
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
   final bool applyAnimatedContainerFromChildSize;
+  final Alignment? alignment; // used for animated switches
 
   const ApiStateBuilder({
     Key? key,
@@ -584,6 +611,7 @@ class ApiStateBuilder<T> extends ConsumerStatefulWidget {
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
     this.applyAnimatedContainerFromChildSize = false,
+    this.alignment,
   }) : super(key: key);
 
   @override
@@ -613,6 +641,7 @@ class _ApiStateBuilderState<T> extends ConsumerState<ApiStateBuilder<T>> {
     return AsyncValueBuilder<T>(
       asyncValue: value,
       dataBuilder: widget.dataBuilder,
+      alignment: widget.alignment,
       loadingBuilder: (context) {
         return ValueListenableBuilder<double?>(
           valueListenable: widget.stateNotifier.wholePercentageNotifier,
