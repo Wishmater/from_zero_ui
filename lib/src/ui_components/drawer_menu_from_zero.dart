@@ -38,6 +38,7 @@ class ResponsiveDrawerMenuItem{
   final double titleHorizontalOffset;
   final Key? itemKey;
   final List<ActionFromZero> contextMenuActions;
+  final Widget Function(String title)? titleBuilder;
 
   ResponsiveDrawerMenuItem({
     required this.title,
@@ -59,6 +60,7 @@ class ResponsiveDrawerMenuItem{
     this.subtitleRight,
     this.itemKey,
     this.contextMenuActions = const [],
+    this.titleBuilder,
   });
 
   static List<ResponsiveDrawerMenuItem> fromGoRoutes({
@@ -93,6 +95,7 @@ class ResponsiveDrawerMenuItem{
               ),
             ResponsiveDrawerMenuItem(
               title: e.title ?? e.path,
+              titleBuilder: e.titleBuilder,
               icon: e.icon,
               children: children,
             ),
@@ -113,6 +116,7 @@ class ResponsiveDrawerMenuItem{
         return [
           ResponsiveDrawerMenuItem(
             title: e.title ?? '',
+            titleBuilder: e.titleBuilder,
             subtitle: e.subtitle,
             icon: e.icon,
             route: e.name,
@@ -151,6 +155,7 @@ class ResponsiveDrawerMenuItem{
     double? titleHorizontalOffset,
     Key? itemKey,
     List<ActionFromZero>? contextMenuActions,
+    Widget Function(String title)? titleBuilder,
   }){
     return ResponsiveDrawerMenuItem(
       title: title ?? this.title,
@@ -172,6 +177,7 @@ class ResponsiveDrawerMenuItem{
       titleHorizontalOffset: titleHorizontalOffset ?? this.titleHorizontalOffset,
       itemKey: itemKey ?? this.itemKey,
       contextMenuActions: contextMenuActions ?? this.contextMenuActions,
+      titleBuilder: titleBuilder ?? this.titleBuilder,
     );
   }
 
@@ -645,6 +651,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             DrawerMenuButtonFromZero(
               key: tabs[i].itemKey,
               title: tabs[i].title,
+              titleWidget: tabs[i].titleBuilder?.call(tabs[i].title),
               subtitle: tabs[i].subtitle,
               subtitleRight: tabs[i].subtitleRight,
               selected: selected==i && tabs[i].selectedChild<0,
@@ -785,6 +792,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             DrawerMenuButtonFromZero(
               key: tabs[i].itemKey,
               title: tabs[i].title,
+              titleWidget: tabs[i].titleBuilder?.call(tabs[i].title),
               subtitle: tabs[i].subtitle,
               subtitleRight: tabs[i].subtitleRight,
               selected: selected==i,

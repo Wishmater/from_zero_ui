@@ -109,6 +109,9 @@ class GoRouteFromZero extends GoRoute {
   int pageScaffoldDepth;
   /// If false will draw children in DrawerMenu in the same depth as this route, instead of the default expansion tile
   bool childrenAsDropdownInDrawerNavigation;
+  /// used in DrawerFromZero
+  Widget Function(String title)? titleBuilder;
+
 
   GoRouteFromZero({
     required String path,
@@ -126,6 +129,7 @@ class GoRouteFromZero extends GoRoute {
     this.childrenAsDropdownInDrawerNavigation = true,
     GoRouterPageBuilder? pageBuilder,
     LocalKey Function(BuildContext context, GoRouterState state,)? pageKeyGetter,
+    this.titleBuilder,
   }) :  assert((builder==emptyBuilder && transitionBuilder==null) || pageBuilder==null),
         super(
           path: path,
