@@ -884,6 +884,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
   final bool dense;
   final double titleHorizontalOffset;
   final MouseCursor? mouseCursor;
+  final bool showAnimatedShadowIfSelected;
 
   DrawerMenuButtonFromZero({
     Key? key,
@@ -900,6 +901,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
     this.titleHorizontalOffset=0,
     this.subtitleRight,
     this.mouseCursor = SystemMouseCursors.click,
+    this.showAnimatedShadowIfSelected = true,
   }) : super(key: key);
 
   @override
@@ -964,7 +966,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
         leading: Stack(
           clipBehavior: Clip.none,
           children: [
-            if (widget.selected)
+            if (widget.selected && widget.showAnimatedShadowIfSelected)
               InitiallyAnimatedWidget(
                 duration: Duration(milliseconds: 600),
                 curve: Curves.easeOut,

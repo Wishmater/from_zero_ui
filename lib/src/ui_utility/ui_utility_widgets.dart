@@ -450,6 +450,7 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
 
   @override
   void initState() {
+    super.initState();
     _addListener(widget.scrollController);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _updateScroll();
@@ -491,15 +492,24 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
       size1 = widget.scrollController.position.pixels.clamp(0, widget.maxSize);
       size2 = (widget.scrollController.position.maxScrollExtent-widget.scrollController.position.pixels).clamp(0, widget.maxSize);
     } catch(e){ }
-    return OpacityGradient(
-      size: widget.applyAtStart ? size1 : 0,
-      direction: widget.direction==OpacityGradient.horizontal ? OpacityGradient.left : OpacityGradient.top,
-      child: OpacityGradient(
-        size: widget.applyAtEnd ? size2 : 0,
-        direction: widget.direction==OpacityGradient.horizontal ? OpacityGradient.right : OpacityGradient.bottom,
+    if (widget.direction==OpacityGradient.horizontal || widget.direction==OpacityGradient.vertical) {
+      return OpacityGradient(
+        size: widget.applyAtStart ? size1 : 0,
+        direction: widget.direction==OpacityGradient.horizontal ? OpacityGradient.left : OpacityGradient.top,
+        child: OpacityGradient(
+          size: widget.applyAtEnd ? size2 : 0,
+          direction: widget.direction==OpacityGradient.horizontal ? OpacityGradient.right : OpacityGradient.bottom,
+          child: widget.child,
+        ),
+      );
+    } else {
+      return OpacityGradient(
+        size: widget.direction==OpacityGradient.left || widget.direction==OpacityGradient.top
+            ? size1 : size2,
+        direction: widget.direction,
         child: widget.child,
-      ),
-    );
+      );
+    }
   }
 
 }

@@ -28,7 +28,7 @@ class APISnackBar<T> extends SnackBarFromZero {
     required this.stateNotifier,
     this.successTitle,
     this.successMessage,
-    this.cancelable = true,
+    this.cancelable = false,
     int? behaviour,
     Duration? duration = const Duration(milliseconds: 3000),
     double? width,
