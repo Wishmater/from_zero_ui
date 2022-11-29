@@ -178,12 +178,11 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
     List<Widget> expanded = [];
     List<int> removeIndices = [];
     if (forceExpanded!=null){
-
       ActionState state = forceExpanded!.getStateForMaxWidth(constraints.maxWidth);
       if (state==ActionState.expanded)
         forceExpanded = null;
-
-    } else {
+    }
+    if (forceExpanded==null) {
 
       actions = List.from(widget.actions);
       for (int i=0; i<actions.length; i++){
