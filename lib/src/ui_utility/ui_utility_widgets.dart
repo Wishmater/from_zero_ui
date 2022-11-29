@@ -750,6 +750,7 @@ class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
             child: !show ? SizedBox.shrink() : TooltipFromZero(
               message: FromZeroLocalizations.of(context).translate('return_to_top'),
               child: FloatingActionButton(
+                heroTag: null,
                 child: widget.icon ?? Icon(Icons.arrow_upward,
                   color: Theme.of(context).textTheme.bodyText1!.color!,
                 ),
