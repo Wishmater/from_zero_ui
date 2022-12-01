@@ -11,7 +11,8 @@ enum DAOBuildLogType {
 abstract class LazyDAO<ModelType> extends DAO<ModelType> {
 
   // static DAOBuildLogType logDaoBuild = DAOBuildLogType.fullStackTrace;
-  static DAOBuildLogType logDaoBuild = kReleaseMode ? DAOBuildLogType.none : DAOBuildLogType.simple;
+  // static DAOBuildLogType logDaoBuild = kReleaseMode ? DAOBuildLogType.none : DAOBuildLogType.simple;
+  static DAOBuildLogType logDaoBuild = DAOBuildLogType.none;
 
   ModelType? originalModel;
   bool _isInitialized = false;
