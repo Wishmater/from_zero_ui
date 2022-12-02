@@ -44,6 +44,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }
   ContextFulFieldValueGetter<Future<List<T>>, ListField<T, U>>? availableObjectsPoolGetter;
   ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T, U>>? availableObjectsPoolProvider;
+  bool invalidateValuesNotInAvailablePool;
   bool allowDuplicateObjectsFromAvailablePool;
   bool allowAddMultipleFromAvailablePool;
   bool showObjectsFromAvailablePoolAsTable;
@@ -229,6 +230,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     List<ComparableList<T>?>? redoValues,
     GlobalKey? fieldGlobalKey,
     bool invalidateNonEmptyValuesIfHiddenInForm = true,
+    this.invalidateValuesNotInAvailablePool = false,
     ComparableList<T>? defaultValue,
     this.expandHorizontally = true,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
@@ -324,27 +326,46 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool validateIfNotEdited=false,
     bool validateIfHidden=false,
   }) async {
+    final objects = this.objects;
     final superResult = super.validate(context, dao, currentValidationId,
       validateIfNotEdited: validateIfNotEdited,
       validateIfHidden: validateIfHidden,
     );
     if (currentValidationId!=dao.validationCallCount) return false;
-    if (!validateChildren) {
+    if (!validateChildren && !invalidateValuesNotInAvailablePool) {
       bool success = await superResult;
       listFieldValidationErrors = List.from(validationErrors);
       return success;
     }
     List<Future<bool>> results = [];
     final templateProps = objectTemplate.props;
+    List<T>? possibleValues;
+    List<T>? confirmedValidValues;
+    if (invalidateValuesNotInAvailablePool) {
+      confirmedValidValues = [];
+      final provider = availableObjectsPoolProvider?.call(context, this, dao);
+      if (provider!=null) {
+        possibleValues = await (context as WidgetRef).watch(provider.notifier).future;
+      } else {
+        possibleValues = await availableObjectsPoolGetter?.call(context, this, dao);
+      }
+    }
     for (final e in objects) {
       final objectProps = e.props;
-      for (final key in templateProps.keys) {
-        final field = objectProps[key];
-        if (field!=null) {
-          if (currentValidationId!=dao.validationCallCount) return false;
-          results.add(field.validate(context, e, currentValidationId,
-            validateIfNotEdited: validateIfNotEdited,
-          ));
+      if (invalidateValuesNotInAvailablePool && possibleValues!=null && !possibleValues.contains(e)) {
+        // don't add to confirmed, so it will be removed by the invalidatingError
+      } else {
+        confirmedValidValues?.add(e);
+        if (validateChildren) {
+          for (final key in templateProps.keys) {
+            final field = objectProps[key];
+            if (field!=null) {
+              if (currentValidationId!=dao.validationCallCount) return false;
+              results.add(field.validate(context, e, currentValidationId,
+                validateIfNotEdited: validateIfNotEdited,
+              ));
+            }
+          }
         }
       }
     }
@@ -354,6 +375,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     for (final e in results) {
       success = success && await e;
       if (currentValidationId!=dao.validationCallCount) return false;
+    }
+    if (invalidateValuesNotInAvailablePool && confirmedValidValues!=null && confirmedValidValues.length!=objects.length) {
+      validationErrors.add(InvalidatingError<ComparableList<T>>(
+        field: this,
+        error: FromZeroLocalizations.of(context).translate("validation_combo_not_possible"),
+        defaultValue: ComparableList(list: confirmedValidValues),
+      ));
     }
     for (final e in objects) {
       final objectProps = e.props;
@@ -430,6 +458,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     List<ComparableList<T>?>? undoValues,
     List<ComparableList<T>?>? redoValues,
     bool? invalidateNonEmptyValuesIfHiddenInForm,
+    bool? invalidateValuesNotInAvailablePool,
     ComparableList<T>? defaultValue,
     bool? expandHorizontally,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
@@ -500,6 +529,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       undoValues: undoValues ?? List.from(this.undoValues),
       redoValues: redoValues ?? List.from(this.redoValues),
       invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
+      invalidateValuesNotInAvailablePool: invalidateValuesNotInAvailablePool ?? this.invalidateValuesNotInAvailablePool,
       defaultValue: defaultValue ?? this.defaultValue,
       expandHorizontally: expandHorizontally ?? this.expandHorizontally,
       backgroundColor: backgroundColor ?? this.backgroundColor,
