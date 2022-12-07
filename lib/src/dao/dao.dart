@@ -1474,7 +1474,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }) {
     ScrollController scrollController = ScrollController();
     if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
-        && props.values.where((e) => e is ListField && (e as ListField).buildViewWidgetAsTable).isNotEmpty) {
+        && props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty) {
       useIntrinsicHeight = false;
       useIntrinsicWidth = false;
     }
@@ -1681,6 +1681,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 final newField = e.copyWith(
                   tableCellsEditable: false,
                   allowAddNew: false,
+                  availableObjectsPoolGetter: null,
+                  availableObjectsPoolProvider: null,
                   actionViewBreakpoints: dao.viewDialogLinksToInnerDAOs&&dao.viewDialogShowsViewButtons
                       ? {0: ActionState.icon}
                       : dao.viewDialogLinksToInnerDAOs

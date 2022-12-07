@@ -34,6 +34,8 @@ enum ListFieldDisplayType {
   tabbedForm,
 }
 
+typedef T AvailablePoolTransformerFunction<T>(T selected);
+
 class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   FieldValueGetter<T, ListField<T, U>> objectTemplateGetter;
@@ -48,6 +50,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool allowDuplicateObjectsFromAvailablePool;
   bool allowAddMultipleFromAvailablePool;
   bool showObjectsFromAvailablePoolAsTable;
+  AvailablePoolTransformerFunction<T>? transformSelectedFromAvailablePool; /// transformation applied to selected items from available pool before adding them to ListField rows
   ContextFulFieldValueGetter<List<ActionFromZero>, Field>? availablePoolTableActions;
   bool? _allowAddNew;
   bool get allowAddNew => _allowAddNew ?? objectTemplate.canSave;
@@ -182,6 +185,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.availableObjectsPoolProvider,
     this.allowDuplicateObjectsFromAvailablePool = false,
     this.showObjectsFromAvailablePoolAsTable = false,
+    this.transformSelectedFromAvailablePool,
     this.availablePoolTableActions,
     bool? allowAddNew,
     FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, /// Unused in table
@@ -435,6 +439,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     ContextFulFieldValueGetter<ApiProvider<List<T>>, ListField<T, U>>? availableObjectsPoolProvider,
     bool? allowDuplicateObjectsFromAvailablePool,
     bool? showObjectsFromAvailablePoolAsTable,
+    AvailablePoolTransformerFunction<T>? transformSelectedFromAvailablePool,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? availablePoolTableActions,
     bool? allowAddNew,
     ListFieldDisplayType? displayType,
@@ -522,6 +527,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       validatorsGetter: validatorsGetter ?? this.validatorsGetter,
       validateOnlyOnConfirm: validateOnlyOnConfirm ?? this.validateOnlyOnConfirm,
       showObjectsFromAvailablePoolAsTable: showObjectsFromAvailablePoolAsTable ?? this.showObjectsFromAvailablePoolAsTable,
+      transformSelectedFromAvailablePool: transformSelectedFromAvailablePool ?? this.transformSelectedFromAvailablePool,
       tableController: tableController ?? this.tableController,
       tableSortable: tableSortable ?? this.tableSortable,
       tableFilterable: tableFilterable ?? this.tableFilterable,
@@ -855,8 +861,14 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       }
       if (selected!=null) {
         if (selected is T) {
+          if (transformSelectedFromAvailablePool!=null) {
+            selected = transformSelectedFromAvailablePool!(selected);
+          }
           addRow(selected, insertIndex);
         } else {
+          if (transformSelectedFromAvailablePool!=null) {
+            selected = (selected as List<T>).map((e) => transformSelectedFromAvailablePool!(e)).toList();
+          }
           addRows(selected as List<T>, insertIndex);
         }
         return selected;
@@ -1753,7 +1765,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     collapsed ??= this.collapsed;
     fieldGlobalKey ??= this.fieldGlobalKey;
     focusNode ??= this.focusNode;
-    final objectTemplate = this.objectTemplate;
+    T objectTemplate = this.objectTemplate;
+    if (transformSelectedFromAvailablePool!=null) {
+      objectTemplate = transformSelectedFromAvailablePool!(objectTemplate);
+    }
     final allowAddNew = this.allowAddNew;
     Widget result;
     final actions = this.actions?.call(dao.contextForValidation ?? context, this, dao) ?? [];
@@ -1983,7 +1998,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             ),
             if (objectTemplate.canDelete) // TODO 3 maybe add allowDelete param
               RowAction<T>(
-                icon: Icon(allowAddNew ? Icons.delete_forever_outlined : Icons.clear),
+                icon: Icon(allowAddNew&&!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
                 title: FromZeroLocalizations.of(context).translate('delete'),
                 breakpoints: actionDeleteBreakpoints,
                 onRowTap: (context, row) async {
