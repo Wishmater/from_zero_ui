@@ -11,10 +11,12 @@ import 'package:dartx/dartx.dart';
 class DateField extends Field<DateTime> {
 
   DateFormat formatter;
+  DateFormat formatterDense;
   DateTime firstDate;
   DateTime lastDate;
 
   static late final defaultFormatter = DateFormat(DateFormat.YEAR_MONTH_DAY);
+  static late final defaultDenseFormatter = DateFormat("dd/MM/yyyy"); // TODO 3 internationalize
   static late final defaultFirstDate = DateTime(1900);
   static late final defaultLastDate = DateTime(2200);
 
@@ -29,6 +31,7 @@ class DateField extends Field<DateTime> {
     double minWidth = 128,
     double flex = 0,
     DateFormat? formatter,
+    DateFormat? formatterDense,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
     double? tableColumnWidth,
@@ -52,6 +55,7 @@ class DateField extends Field<DateTime> {
   }) :  this.firstDate = firstDate ?? defaultFirstDate,
         this.lastDate = lastDate ?? defaultLastDate,
         this.formatter = formatter ?? defaultFormatter,
+        this.formatterDense = formatterDense ?? formatter ?? defaultDenseFormatter,
         super(
           uiNameGetter: uiNameGetter,
           value: value,
@@ -91,6 +95,8 @@ class DateField extends Field<DateTime> {
     double? maxWidth,
     double? minWidth,
     double? flex,
+    DateFormat? formatter,
+    DateFormat? formatterDense,
     DateTime? firstDate,
     DateTime? lastDate,
     FieldValueGetter<String?, Field>? hintGetter,
@@ -120,6 +126,8 @@ class DateField extends Field<DateTime> {
       maxWidth: maxWidth??this.maxWidth,
       minWidth: minWidth??this.minWidth,
       flex: flex??this.flex,
+      formatter: formatter??this.formatter,
+      formatterDense: formatterDense??this.formatterDense,
       firstDate: firstDate??this.firstDate,
       lastDate: lastDate??this.lastDate,
       hintGetter: hintGetter??this.hintGetter,
@@ -224,7 +232,7 @@ class DateField extends Field<DateTime> {
           },
           popupWidth: maxWidth,
           buttonPadding: dense ? EdgeInsets.zero : null,
-          formatter: formatter,
+          formatter: dense ? formatterDense : formatter,
           buttonChildBuilder: (context, title, hint, value, formatter, enabled, clearable) {
             return Padding(
               padding: EdgeInsets.only(right: dense ? 0 : context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40),

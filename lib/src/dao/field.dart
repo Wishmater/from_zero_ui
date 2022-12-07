@@ -326,10 +326,14 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       }
       return [result];
     }
-    result = ListTile(
-      leading: Icon(Icons.error_outline),
-      title: Text('Unimplemented Widget for type: ${T.toString()}'),
-    );
+    if (false) {
+      result = ListTile(
+        leading: Icon(Icons.error_outline),
+        title: Text('Unimplemented Widget for type: ${T.toString()}'),
+      );
+    } else {
+      result = Container();
+    }
     if (addCard) {
       result = Card(
         child: Padding(
@@ -380,9 +384,17 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     final onTap = linkToInnerDAOs
         ? ()=>(field.value as DAO).pushViewDialog(context)
         : null;
-    final message = dense && field.value is DAO
-        ? (field.value as DAO).uiNameDense
-        : field.toString();
+    String message;
+    if (field.value is DAO) {
+      message = dense ? (field.value as DAO).uiNameDense : (field.value as DAO).uiName;
+    } else if (field is DateField) {
+      message = field.value==null ? ''
+          : dense
+              ? field.formatterDense.format(field.value!)
+              : field.formatter.format(field.value!);
+    } else {
+      message = field.toString();
+    }
     return Stack(
       children: [
         Padding(

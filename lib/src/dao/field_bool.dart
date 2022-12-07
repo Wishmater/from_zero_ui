@@ -464,6 +464,8 @@ class BoolField extends Field<BoolComparable> {
                       child: Center(
                         child: AutoSizeText(uiNameValue,
                           textAlign: TextAlign.center,
+                          maxLines: displayType==BoolFieldDisplayType.compactCheckBox ? 1 : 2,
+                          softWrap: displayType==BoolFieldDisplayType.compactCheckBox ? false : true,
                           style: TextStyle(
                             height: 1,
                             color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
@@ -503,6 +505,8 @@ class BoolField extends Field<BoolComparable> {
                       child: Center(
                         child: AutoSizeText(uiNameValue,
                           textAlign: TextAlign.center,
+                          maxLines: displayType==BoolFieldDisplayType.compactCheckBox ? 1 : 2,
+                          softWrap: displayType==BoolFieldDisplayType.compactCheckBox ? false : true,
                           style: TextStyle(
                             height: 1,
                             color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
