@@ -219,11 +219,11 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   @override
   bool operator == (dynamic other) => (other is DAO)
       && (id==null
-          ? hashCode==other.hashCode
-          : (this.runtimeType==other.runtimeType && this.id==other.id));
+          ? this.hashCode==other.hashCode
+          : this.id==other.id);
 
   @override
-  int get hashCode => id==null ? super.hashCode : (runtimeType.hashCode+id.hashCode).hashCode;
+  int get hashCode => id==null ? super.hashCode : id;
 
 
   bool blockNotifyListeners = false;
@@ -1683,6 +1683,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   allowAddNew: false,
                   availableObjectsPoolGetter: null,
                   availableObjectsPoolProvider: null,
+                  actions: null,
                   actionViewBreakpoints: dao.viewDialogLinksToInnerDAOs&&dao.viewDialogShowsViewButtons
                       ? {0: ActionState.icon}
                       : dao.viewDialogLinksToInnerDAOs

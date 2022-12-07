@@ -168,10 +168,12 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     String? modelNamePlural,
     BuildContext? context, // for localization
   }) {
+    print (modelNameSingular);
+    print (modelNamePlural);
     final name = list.length==1
-        ? (modelNameSingular ?? (context==null ? ''
+        ? (modelNameSingular.isNotNullOrBlank ? modelNameSingular : (context==null ? ''
             : FromZeroLocalizations.of(context).translate('element_sing')))
-        : (modelNamePlural ?? (context==null ? ''
+        : (modelNamePlural.isNotNullOrBlank ? modelNamePlural : (context==null ? ''
             : FromZeroLocalizations.of(context).translate('element_plur')));
     return '${list.length} $name';
   }

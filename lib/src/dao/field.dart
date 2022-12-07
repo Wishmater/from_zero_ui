@@ -257,7 +257,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool validateIfHidden=false,
   }) async {
     validationErrors = [];
-    if (hiddenInForm) {
+    if (dao.parentDAO==null ? hiddenInForm : hiddenInTable) {
       if (invalidateNonEmptyValuesIfHiddenInForm && value!=defaultValue) {
         validationErrors.add(InvalidatingError(
           field: this,
