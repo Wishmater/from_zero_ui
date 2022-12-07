@@ -380,7 +380,9 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     final onTap = linkToInnerDAOs
         ? ()=>(field.value as DAO).pushViewDialog(context)
         : null;
-    final message = field.toString();
+    final message = dense && field.value is DAO
+        ? (field.value as DAO).uiNameDense
+        : field.toString();
     return Stack(
       children: [
         Padding(

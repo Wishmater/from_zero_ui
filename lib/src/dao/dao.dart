@@ -37,6 +37,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   String get classUiNamePlural => classUiNamePluralGetter(this);
   late DAOValueGetter<String, ModelType> uiNameGetter;
   String get uiName => uiNameGetter(this);
+  DAOValueGetter<String, ModelType>? uiNameDenseGetter; /// used in table, or whenever build is called with dense=true
+  String get uiNameDense => uiNameDenseGetter?.call(this) ?? uiName;
   DAOValueGetter<String, ModelType>? searchNameGetter;
   String get searchName => searchNameGetter?.call(this) ?? uiName;
   /// props shouldn't be added or removed manually, only changes at construction and on load()
@@ -78,6 +80,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     required this.classUiNameGetter,
     DAOValueGetter<String, ModelType>? classUiNamePluralGetter,
     required this.uiNameGetter,
+    this.uiNameDenseGetter,
     this.id,
     this.fieldGroups = const [],
     this.onSave,
@@ -133,6 +136,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     DAOValueGetter<String, ModelType>? classUiNameGetter,
     DAOValueGetter<String, ModelType>? classUiNamePluralGetter,
     DAOValueGetter<String, ModelType>? uiNameGetter,
+    DAOValueGetter<String, ModelType>? uiNameDenseGetter,
     dynamic id,
     List<FieldGroup>? fieldGroups,
     OnSaveCallback<ModelType>? onSave,
@@ -168,6 +172,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       fieldGroups: fieldGroups??this.fieldGroups.map((e) => e.copyWith()).toList(),
       classUiNamePluralGetter: classUiNamePluralGetter??this.classUiNamePluralGetter,
       uiNameGetter: uiNameGetter??this.uiNameGetter,
+      uiNameDenseGetter: uiNameDenseGetter??this.uiNameDenseGetter,
       onSave: onSave??this.onSave,
       onSaveAPI: onSaveAPI??this.onSaveAPI,
       onDidSave: onDidSave??this.onDidSave,

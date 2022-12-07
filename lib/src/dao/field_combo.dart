@@ -338,7 +338,7 @@ class ComboField<T extends DAO> extends Field<T> {
           buttonChildBuilder: (context, title, hint, value, enabled, clearable, {showDropdownIcon=false}) {
             return Padding(
               padding: EdgeInsets.only(right: dense ? 0 : context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40),
-              child: buttonContentBuilder(context, title, hint, value, enabled, false,
+              child: buttonContentBuilder(context, title, hint, (dense ? value?.uiNameDense : value), enabled, false,
                 showDropdownIcon: showDropdownIcon,
                 dense: dense,
               ),

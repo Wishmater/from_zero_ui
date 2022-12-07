@@ -45,6 +45,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     required DAOValueGetter<String, ModelType> classUiNameGetter,
     DAOValueGetter<String, ModelType>? classUiNamePluralGetter,
     required DAOValueGetter<String, ModelType> uiNameGetter,
+    DAOValueGetter<String, ModelType>? uiNameDenseGetter,
     dynamic id,
     List<FieldGroup> fieldGroups = const [],
     OnSaveCallback<ModelType>? onSave,
@@ -79,6 +80,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     _isInitialized = true;
     this.classUiNameGetter = classUiNameGetter;
     this.uiNameGetter = uiNameGetter;
+    this.uiNameDenseGetter = uiNameDenseGetter;
     this.id = id;
     this.fieldGroups = fieldGroups;
     this.onSave = onSave;
@@ -131,6 +133,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     DAOValueGetter<String, ModelType>? classUiNameGetter,
     DAOValueGetter<String, ModelType>? classUiNamePluralGetter,
     DAOValueGetter<String, ModelType>? uiNameGetter,
+    DAOValueGetter<String, ModelType>? uiNameDenseGetter,
     dynamic id,
     List<FieldGroup>? fieldGroups,
     OnSaveCallback<ModelType>? onSave,
@@ -165,6 +168,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
         || classUiNameGetter!=null
         || classUiNamePluralGetter!=null
         || uiNameGetter!=null
+        || uiNameDenseGetter!=null
         || fieldGroups!=null
         || onSave!=null
         || onSaveAPI!=null
@@ -201,6 +205,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
         fieldGroups: fieldGroups??this.fieldGroups.map((e) => e.copyWith()).toList(),
         classUiNamePluralGetter: classUiNamePluralGetter??this.classUiNamePluralGetter,
         uiNameGetter: uiNameGetter??this.uiNameGetter,
+        uiNameDenseGetter: uiNameDenseGetter??this.uiNameDenseGetter,
         onSave: onSave??this.onSave,
         onSaveAPI: onSaveAPI??this.onSaveAPI,
         onDidSave: onDidSave??this.onDidSave,

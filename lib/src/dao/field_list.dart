@@ -2174,7 +2174,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     final field = fieldParam as ListField;
     final uiNames = {
       for (final e in field.objects)
-        e: e.toString(),
+        e: dense ? e.uiNameDense : e.toString(),
     };
     final List<DAO> sortedObjects = List.from(field.objects);
     if (field.initialSortedColumn!=null) {
