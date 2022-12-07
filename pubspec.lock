@@ -35,7 +35,14 @@ packages:
       name: barcode
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "2.2.0"
+    version: "2.2.3"
+  bidi:
+    dependency: transitive
+    description:
+      name: bidi
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "2.0.3"
   bitsdojo_window:
     dependency: "direct main"
     description:
@@ -476,10 +483,12 @@ packages:
   pdf:
     dependency: "direct main"
     description:
-      name: pdf
-      url: "https://pub.dartlang.org"
-    source: hosted
-    version: "3.8.1"
+      path: pdf
+      ref: HEAD
+      resolved-ref: "592366dc2a8a169ccca0fbbdbaa0687eeab922b8"
+      url: "https://github.com/Wishmater/dart_pdf"
+    source: git
+    version: "3.8.5"
   pedantic:
     dependency: transitive
     description:
