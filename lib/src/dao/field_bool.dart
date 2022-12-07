@@ -224,8 +224,9 @@ class BoolField extends Field<BoolComparable> {
     bool linkToInnerDAOs=true,
     bool showViewButtons=false,
     bool dense = false,
+    bool? hidden,
   }) {
-    if (fieldParam.hiddenInView) {
+    if (hidden ?? fieldParam.hiddenInView) {
       return SizedBox.shrink();
     }
     final field = fieldParam as BoolField;

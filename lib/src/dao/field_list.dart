@@ -1911,6 +1911,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               addCard: false,
               asSliver: false,
               dense: true,
+              ignoreHidden: true,
             );
             return SizedBox(
               height: row.height,
@@ -1928,6 +1929,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               linkToInnerDAOs: false,
               showViewButtons: false,
               dense: true,
+              hidden: false
             );
           },
           rowActions: [
@@ -2157,6 +2159,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool linkToInnerDAOs=true,
     bool showViewButtons=false,
     bool dense = false,
+    bool? hidden,
   }) {
     if (dense) {
       return Field.defaultViewWidgetBuilder(context, fieldParam,
@@ -2165,7 +2168,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         dense: dense,
       );
     }
-    if (fieldParam.hiddenInView) {
+    if (hidden ?? fieldParam.hiddenInView) {
       return SizedBox.shrink();
     }
     final field = fieldParam as ListField;

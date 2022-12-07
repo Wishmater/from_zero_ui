@@ -5,7 +5,7 @@ typedef FutureOr<ValidationError?> FieldValidator<T extends Comparable>(BuildCon
 typedef T FieldValueGetter<T, R extends Field>(R field, DAO dao);
 typedef T ContextFulFieldValueGetter<T, R extends Field>(BuildContext context, R field, DAO dao);
 typedef void OnFieldValueChanged<T>(DAO dao, Field field, T value);
-typedef Widget ViewWidgetBuilder<T extends Comparable>(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons, bool dense});
+typedef Widget ViewWidgetBuilder<T extends Comparable>(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons, bool dense, bool? hidden});
 bool trueFieldGetter(_, __) => true;
 bool falseFieldGetter(_, __) => false;
 List defaultValidatorsGetter(_, __) => [];
@@ -356,11 +356,13 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool linkToInnerDAOs=true,
     bool showViewButtons=false,
     bool dense = false,
+    bool? hidden,
   }) {
     return viewWidgetBuilder(context, this,
       linkToInnerDAOs: linkToInnerDAOs,
       showViewButtons: showViewButtons,
       dense: dense,
+      hidden: hidden,
     );
   }
   static Widget defaultViewWidgetBuilder<T extends Comparable>
@@ -368,8 +370,9 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool linkToInnerDAOs=true,
     bool showViewButtons=false,
     bool dense = false,
+    bool? hidden,
   }) {
-    if (field.hiddenInView) {
+    if (hidden ?? field.hiddenInView) {
       return SizedBox.shrink();
     }
     linkToInnerDAOs = linkToInnerDAOs && (field.value is DAO)
