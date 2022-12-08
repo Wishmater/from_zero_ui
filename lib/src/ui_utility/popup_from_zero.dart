@@ -23,6 +23,7 @@ Future<T?> showPopupFromZero<T>({
     context: context,
     barrierColor: barrierColor ?? Colors.black.withOpacity(0.2),
     barrierDismissible: barrierDismissible,
+    useSafeArea: false,
     builder: (context) {
       return PopupFromZero(
         anchorKey: anchorKey,
@@ -93,8 +94,12 @@ class _PopupFromZeroState extends State<PopupFromZero> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final padding = mediaQuery.padding + mediaQuery.viewInsets; // padding has the permanent padding (notch), viewInsets has the keyboard inset
     return LayoutBuilder(
       builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth - padding.horizontal;
+        final maxHeight = constraints.maxHeight - padding.vertical;
         final animation = CurvedAnimation(
           parent: ModalRoute.of(context)!.animation!,
           curve: Curves.easeInOutCubic,
@@ -111,13 +116,13 @@ class _PopupFromZeroState extends State<PopupFromZero> {
         lastReferencePosition = referencePosition;
         lastReferenceSize = referenceSize;
         double popupWidth = widget.width ?? (referenceSize==null ? 312 : (referenceSize.width+8).clamp(312, double.infinity));
-        popupWidth = popupWidth.clamp(0, constraints.maxWidth);
+        popupWidth = popupWidth.clamp(0, maxWidth);
         Size childSize = lastChildSize ?? Size(popupWidth, 0);
         try {
           childSize = (childGlobalKey.currentContext!.findRenderObject()! as RenderBox).size;
           childSize = Size(
-            childSize.width.clamp(0, constraints.maxWidth),
-            childSize.height.clamp(0, constraints.maxHeight),
+            childSize.width.clamp(0, maxWidth),
+            childSize.height.clamp(0, maxHeight),
           );
           lastChildSize = childSize;
         } catch(_) {
@@ -141,13 +146,13 @@ class _PopupFromZeroState extends State<PopupFromZero> {
               y = referencePosition.dy
                   + referenceSize.height*((widget.anchorAlignment.y+1)/2)
                   - childSize.height*((widget.popupAlignment.y-1)/-2);
-              x = x.clamp(0, constraints.maxWidth);
-              y = y.clamp(0, constraints.maxHeight);
-              if (constraints.maxWidth-x < popupWidth) {
-                x = constraints.maxWidth - popupWidth;
+              x = x.clamp(padding.left, maxWidth);
+              y = y.clamp(padding.top, maxHeight);
+              if (maxWidth-x < popupWidth) {
+                x = maxWidth - popupWidth;
               }
-              if (constraints.maxHeight-y < childSize.height) {
-                y = constraints.maxHeight - childSize.height;
+              if (maxHeight-y < childSize.height) {
+                y = maxHeight - childSize.height;
               }
               double overlappingWidth = Rectangle(referencePosition.dx, 0, referenceSize.width, 1)
                   .intersection(Rectangle(x, 0, popupWidth, 1))?.width.toDouble() ?? 0;
@@ -169,17 +174,17 @@ class _PopupFromZeroState extends State<PopupFromZero> {
               } else {
                 y = referencePosition.dy - ((currentChildHeight-overlappingHeight) * ((popupAlignment.y-1)/-2));
               }
-              x = x.clamp(0, constraints.maxWidth);
-              y = y.clamp(0, constraints.maxHeight);
-              if (constraints.maxWidth-x < currentChildWidth) {
-                x = constraints.maxWidth - currentChildWidth;
+              x = x.clamp(padding.left, maxWidth);
+              y = y.clamp(padding.top, maxHeight);
+              if (maxWidth-x < currentChildWidth) {
+                x = (maxWidth - currentChildWidth).clamp(padding.left, maxWidth);
               }
-              if (constraints.maxHeight-y < currentChildHeight) {
-                y = constraints.maxHeight - currentChildHeight;
+              if (maxHeight-y < currentChildHeight) {
+                y = (maxHeight - currentChildHeight).clamp(padding.top, maxHeight);
               }
             } else {
-              x = constraints.maxWidth/2-currentChildWidth/2;
-              y = constraints.maxHeight/2-currentChildHeight/2;
+              x = maxWidth/2-currentChildWidth/2;
+              y = maxHeight/2-currentChildHeight/2;
             }
             return Stack(
               fit: StackFit.expand,
@@ -203,7 +208,7 @@ class _PopupFromZeroState extends State<PopupFromZero> {
                       minWidth: popupWidth,
                       maxWidth: popupWidth,
                       minHeight: 0,
-                      maxHeight: MediaQuery.of(context).size.height,
+                      maxHeight: mediaQuery.size.height,
                       child: Container(
                         key: childGlobalKey,
                         child: child!,
