@@ -3,13 +3,12 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:animations/animations.dart';
-import 'package:downloads_path_provider/downloads_path_provider.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_icons/flutter_icons.dart';
+import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/my_arrow_page_indicator.dart' as my_arrow_page_indicator;
 import 'package:hive/hive.dart';
@@ -170,19 +169,12 @@ class Export extends StatefulWidget { //TODO 3 internationalize
   ExportState createState() => ExportState();
 
   static Future<String> getDefaultDirectoryPath([String? addon]) async{
-    String? result;
-    if (Platform.isWindows){
-      result = (await getApplicationDocumentsDirectory()).absolute.path;
-    } else if (Platform.isAndroid){
-      result = (await DownloadsPathProvider.downloadsDirectory).absolute.path;
-    } else{
-      // crash, platform not supported
-    }
-    if (result!=null && addon!=null){
+    String result = (await PlatformExtended.getDownloadsDirectory()).absolute.path;
+    if (addon!=null){
       if (!addon.endsWith('/')) addon += '/';
       result = p.join(result, addon);
     }
-    return result!;
+    return result;
   }
 
 }

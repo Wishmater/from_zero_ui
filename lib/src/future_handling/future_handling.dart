@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/animations/exposed_transitions.dart';
 import 'package:intl/intl.dart';
-import 'package:sliding_number/sliding_number.dart';
 
 
 class LoadingCard extends StatelessWidget {
@@ -156,9 +155,6 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text((value*100).round().toString(),
-                              // SlidingNumber
-                              //   number: (value*100).round(),
-                              //   duration: Duration(milliseconds: 250),
                               style: TextStyle(
                                 fontSize: fontSize,
                                 color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),

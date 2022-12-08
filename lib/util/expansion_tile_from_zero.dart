@@ -2,7 +2,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_icons/flutter_icons.dart';
+import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
 import 'package:from_zero_ui/src/future_handling/future_handling.dart';
@@ -184,10 +184,10 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
   late AnimationController _controller;
   late Animation<double> _iconTurns;
   late Animation<double> _heightFactor;
-  late Animation<Color> _borderColor;
-  late Animation<Color> _headerColor;
-  late Animation<Color> _iconColor;
-  late Animation<Color> _backgroundColor;
+  // late Animation<Color?> _borderColor;
+  // late Animation<Color?> _headerColor;
+  late Animation<Color?> _iconColor;
+  late Animation<Color?> _backgroundColor;
 
   bool _isExpanded = false;
   bool get isExpanded => _isExpanded;
@@ -202,10 +202,10 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     _controller = AnimationController(duration: _kExpand, vsync: this);
     _heightFactor = _controller.drive(_easeInTween);
     _iconTurns = _controller.drive(_halfTween.chain(_easeInTween));
-    _borderColor = _controller.drive(_borderColorTween.chain(_easeOutTween)) as Animation<Color>;
-    _headerColor = _controller.drive(_headerColorTween.chain(_easeInTween)) as Animation<Color>;
-    _iconColor = _controller.drive(_iconColorTween.chain(_easeInTween)) as Animation<Color>;
-    _backgroundColor = _controller.drive(_backgroundColorTween.chain(_easeOutTween)) as Animation<Color>;
+    // _borderColor = _controller.drive<Color?>(_borderColorTween.chain(_easeOutTween));
+    // _headerColor = _controller.drive<Color?>(_headerColorTween.chain(_easeInTween));
+    _iconColor = _controller.drive<Color?>(_iconColorTween.chain(_easeInTween));
+    _backgroundColor = _controller.drive<Color?>(_backgroundColorTween.chain(_easeOutTween));
 
     _isExpanded = widget.expanded ?? (PageStorage.of(context)?.readState(context) ?? widget.initiallyExpanded);
     if (_isExpanded)

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
-import 'package:downloads_path_provider/downloads_path_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +8,6 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/snackbar_from_zero.dart';
 import 'package:from_zero_ui/src/app_scaffolding/snackbar_host_from_zero.dart';
 import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:humanizer/humanizer.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
@@ -143,52 +141,41 @@ Future<bool> saveFileFromZero ({
     } else{
 
       // get base path depending on the platform
-      String? basePath;
-      if (Platform.isWindows) {
-        basePath = (await getApplicationDocumentsDirectory()).absolute.path;
-      } else if (Platform.isAndroid){
-        basePath = (await DownloadsPathProvider.downloadsDirectory).absolute.path;
+      String basePath = (await PlatformExtended.getDownloadsDirectory()).absolute.path;
+      // add pathAppend to the target path
+      if (pathAppend!=null) {
+        basePath = p.join(basePath, pathAppend);
       }
-
-      if (basePath!=null){
-
-        // add pathAppend to the target path
-        if (pathAppend!=null) {
-          basePath = p.join(basePath, pathAppend);
-        }
-
-        // if file already exists, add numbers at the end to avoid conflict
-        int i = 1;
+      // if file already exists, add numbers at the end to avoid conflict
+      int i = 1;
+      file = File(p.join(basePath, name));
+      String baseName = name;
+      String extension = '';
+      int pointIndex = name.lastIndexOf('.');
+      if (pointIndex >= 0) {
+        baseName = name.substring(0, pointIndex);
+        extension = name.substring(pointIndex);
+      }
+      while (file!.existsSync()) {
+        i++;
+        name = '$baseName ($i)$extension';
         file = File(p.join(basePath, name));
-        String baseName = name;
-        String extension = '';
-        int pointIndex = name.lastIndexOf('.');
-        if (pointIndex >= 0) {
-          baseName = name.substring(0, pointIndex);
-          extension = name.substring(pointIndex);
-        }
-        while (file!.existsSync()) {
-          i++;
-          name = '$baseName ($i)$extension';
-          file = File(p.join(basePath, name));
-        }
-
-        // write data to file
-        await file.create(recursive: true);
-        await file.writeAsBytes(bytes);
-
-        // get pretty path to show to user
-        if (Platform.isWindows) {
-          uiPath = FromZeroLocalizations.of(context).translate('documents');
-        } else {
-          uiPath = FromZeroLocalizations.of(context).translate('downloads');
-        }
-        if (pathAppend!=null) {
-          uiPath = p.join(uiPath, pathAppend);
-        }
-        uiPath = p.join(uiPath, name);
-
       }
+
+      // write data to file
+      await file.create(recursive: true);
+      await file.writeAsBytes(bytes);
+
+      // get pretty path to show to user
+      if (Platform.isWindows) {
+        uiPath = FromZeroLocalizations.of(context).translate('documents');
+      } else {
+        uiPath = FromZeroLocalizations.of(context).translate('downloads');
+      }
+      if (pathAppend!=null) {
+        uiPath = p.join(uiPath, pathAppend);
+      }
+      uiPath = p.join(uiPath, name);
 
     }
 

@@ -358,7 +358,9 @@ class WindowBar extends StatelessWidget {
         ?? theme.iconTheme.color
         ?? (theme.brightness==Brightness.light ? Colors.black : Colors.white);
     return Container(
-      height: height ?? (appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight),
+      height: height ?? (PlatformExtended.appWindow==null
+          ? 32
+          : appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight),
       color: backgroundColor,
       child: MoveWindowFromZero(
         child: Row(
@@ -366,7 +368,7 @@ class WindowBar extends StatelessWidget {
           children: [
             if (title!=null)
               Expanded(child: title!,),
-            if (showMinimize)
+            if (PlatformExtended.appWindow!=null && showMinimize)
               MinimizeWindowButton(
                 animate: true,
                 onPressed: () {
@@ -382,7 +384,7 @@ class WindowBar extends StatelessWidget {
                   iconMouseDown: iconColor,
                 ),
               ),
-            if (showMaximizeOrRestore)
+            if (PlatformExtended.appWindow!=null && showMaximizeOrRestore)
               WindowButton(
                 animate: true,
                 iconBuilder: (buttonContext) => appWindow.isMaximized
@@ -402,7 +404,7 @@ class WindowBar extends StatelessWidget {
                   iconMouseDown: iconColor,
                 ),
               ),
-            if (showClose)
+            if (PlatformExtended.appWindow!=null && showClose)
               CloseWindowButton(
                 animate: true,
                 onPressed: () async {

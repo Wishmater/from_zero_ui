@@ -19,6 +19,7 @@ import 'package:dartx/dartx.dart';
 
 
 import 'package:dartx/dartx.dart';
+import 'package:path_provider/path_provider.dart' as path_provider;
 
 
 // TODO 2 break this up into individual files
@@ -1434,6 +1435,34 @@ class PlatformExtended {
 
   static bool get isDesktop{
     return !PlatformExtended.isMobile;
+  }
+
+  static Future<Directory> getDownloadsDirectory() async {
+    if (kIsWeb) {
+      throw UnimplementedError('Web needs to download through the browser');
+    }
+
+    Directory? result;
+    if (Platform.isWindows) {
+
+      result = await path_provider.getApplicationDocumentsDirectory();
+      if (!(await result.exists())) {
+        result = await getDownloadsDirectory();
+      }
+
+    } else if (Platform.isAndroid) {
+
+      result = Directory('/storage/emulated/0/Download');
+      if (!(await result.exists())) {
+        result = await path_provider.getExternalStorageDirectory();
+      }
+
+    }
+
+    if (result==null || !(await result.exists())) {
+      result = await path_provider.getApplicationDocumentsDirectory();
+    }
+    return result;
   }
 
 }

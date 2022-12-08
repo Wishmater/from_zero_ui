@@ -57,7 +57,7 @@ class ValueString<T> with Comparable implements ContainsValue {
                                                 : other is T ? _compare(other)
                                                 : 1;
 
-  int _compare(T other) {
+  int _compare(T? other) {
     if (value==null) {
       if (other==null) {
         return 0;
