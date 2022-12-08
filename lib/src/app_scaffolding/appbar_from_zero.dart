@@ -4,6 +4,7 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dartx/dartx.dart';
+import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
 import 'package:from_zero_ui/src/ui_components/context_menu.dart';
@@ -361,7 +362,16 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
     );
     Widget result;
     if (widget.useFlutterAppbar) {
+      final statusBarColor = widget.backgroundColor ?? Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).primaryColor;
+      Brightness statusBarBrightness = ThemeData.estimateBrightnessForColor(statusBarColor);
+      statusBarBrightness = statusBarBrightness==Brightness.light ? Brightness.dark : Brightness.light;
       result = AppBar(
+        systemOverlayStyle: SystemUiOverlayStyle(
+          systemStatusBarContrastEnforced: true, // TODO 2 conditionally allow transparency in status bar for cool quickReturn appbars, currently disabled because popups break it
+          statusBarColor: statusBarColor,
+          statusBarIconBrightness: statusBarBrightness, // For Android (dark icons)
+          statusBarBrightness: statusBarBrightness, // For iOS (dark icons)
+        ),
         // title: titleContent,
         // actions: [actionsContent],
         // flexibleSpace: expandedContent,

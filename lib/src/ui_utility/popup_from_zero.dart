@@ -208,7 +208,7 @@ class _PopupFromZeroState extends State<PopupFromZero> {
                       minWidth: popupWidth,
                       maxWidth: popupWidth,
                       minHeight: 0,
-                      maxHeight: mediaQuery.size.height,
+                      maxHeight: maxHeight,
                       child: Container(
                         key: childGlobalKey,
                         child: child!,
