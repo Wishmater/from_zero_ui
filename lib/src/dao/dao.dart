@@ -1256,7 +1256,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     child: Center(
                       child: SizedBox(
                         width: formDialogWidth-32,
-                        child: Dialog(
+                        child: ResponsiveInsetsDialog(
                           child: IntrinsicHeight(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,

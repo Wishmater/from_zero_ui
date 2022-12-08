@@ -575,9 +575,11 @@ class ExportState extends State<Export> {
     }
     export = () async {
       if (!Platform.isAndroid || (await Permission.storage.request().isGranted)){
-        showDialog(
+        showModal(
           context: context,
-          barrierDismissible: false,
+          configuration: FadeScaleTransitionConfiguration(
+            barrierDismissible: false
+          ),
           builder: (context) {
             return Center(
               child: Column(
@@ -615,8 +617,7 @@ class ExportState extends State<Export> {
         Navigator.of(context).pop();
       }
     };
-    return Dialog(
-      insetPadding: EdgeInsets.all(16),
+    return ResponsiveInsetsDialog(
       child: Container(
         width: ScaffoldFromZero.screenSizeLarge,
         child: Padding(

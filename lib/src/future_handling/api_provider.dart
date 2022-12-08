@@ -485,6 +485,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
         return AlertDialog(
           title: Text('Detalles del Error'),
           content: SelectableText("$error\r\n\r\n$stackTrace}"),
+          insetPadding: EdgeInsets.all(16),
           actions: [
             TextButton(
               child: Text('Cerrar'), // TODO 3 internationalize

@@ -1011,7 +1011,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   Future<bool> maybeDelete(BuildContext context, List<T> elements,) async {
     if (elements.isEmpty) return false;
-    bool? delete = skipDeleteConfirmation || hasAvailableObjectsPool || (await showDialog(
+    bool? delete = skipDeleteConfirmation || hasAvailableObjectsPool || (await showModal(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -1135,7 +1135,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           child: Center(
             child: SizedBox(
               width: 512+128,
-              child: Dialog(
+              child: ResponsiveInsetsDialog(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1196,7 +1196,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                 ),
                                 textColor: Colors.blue,
                                 onPressed: dao.isEdited ? () async {
-                                  bool? edit = await showDialog(
+                                  bool? edit = await showModal(
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(
