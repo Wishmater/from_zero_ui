@@ -2075,6 +2075,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
               child: CustomScrollView(
                 shrinkWrap: !expandToFillContainer,
+                physics: NeverScrollableScrollPhysics(),
                 slivers: [result],
               ),
             ),

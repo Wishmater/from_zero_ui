@@ -489,7 +489,17 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               : () async {
                 bool result;
                 result = tabs[i].onTap?.call() ?? false;
-                if (i!=selected && tabs[i].route!=null) {
+                if (tabs[i].route!=null) {
+                  ScaffoldState? scaffold;
+                  try { scaffold = Scaffold.of(context); } catch(_) {}
+                  if (scaffold!=null) {
+                    if (scaffold.isDrawerOpen) {
+                      scaffold.closeDrawer();
+                    }
+                    if (scaffold.isEndDrawerOpen) {
+                      scaffold.closeEndDrawer();
+                    }
+                  }
                   GoRouter.of(context).goNamed(
                     tabs[i].route!,
                     params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
