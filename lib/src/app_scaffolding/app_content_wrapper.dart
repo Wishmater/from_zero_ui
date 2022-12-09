@@ -598,7 +598,7 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     return getCurrentDrawerWidth(pageScaffoldId)==expandedDrawerWidths[pageScaffoldId];
   }
 
-  // Mechanism to automatically expand/collapse drawer in response to screen width changes
+  // Mechanism to automatically expand/collapse drawer in response to screen width changes in desktop
   double? _previousWidth;
   double? _previousHeight;
   void _updateDrawerWidths(bool isMobileLayout, double width){
@@ -609,9 +609,9 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
   void _updateDrawerWidth(String pageScaffoldId, bool isMobileLayout, double width){
     if (width < ScaffoldFromZero.screenSizeMedium) {
       setCurrentDrawerWidth(pageScaffoldId, 0);
-    } else if (_previousWidth!=null && _previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
+    } else if (PlatformExtended.isDesktop && _previousWidth!=null && _previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
       setCurrentDrawerWidth(pageScaffoldId, expandedDrawerWidths[pageScaffoldId]!);
-    } else if (_previousWidth!=null && _previousWidth!>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
+    } else if (PlatformExtended.isDesktop && _previousWidth!=null && _previousWidth!>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
       setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId]!);
     } else if (getCurrentDrawerWidth(pageScaffoldId) < collapsedDrawerWidths[pageScaffoldId]!){
       setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId]!);
