@@ -58,6 +58,7 @@ dependencies:
   window_manager: ^0.2.7
 
   # * Update
+  r_upgrade: ^0.4.1
   archive: ^3.3.0
 
   # * Specific Utility

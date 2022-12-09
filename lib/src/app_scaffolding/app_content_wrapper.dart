@@ -774,6 +774,13 @@ class WindowEventListener{
 
 class CloseConfirmDialog extends StatelessWidget {
 
+  final bool? forceExitApp;
+
+  CloseConfirmDialog({
+    Key? key,
+    this.forceExitApp,
+  }) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -786,7 +793,7 @@ class CloseConfirmDialog extends StatelessWidget {
           ),
           textColor: Theme.of(context).textTheme.caption!.color,
           onPressed: () {
-            Navigator.of(context).pop(null); // Dismiss alert dialog
+            Navigator.of(context).pop(false);
           },
         ),
         FlatButton(
@@ -796,7 +803,10 @@ class CloseConfirmDialog extends StatelessWidget {
           ),
           textColor: Colors.red,
           onPressed: () {
-            FromZeroAppContentWrapper.exitApp(0);
+            if (forceExitApp ?? PlatformExtended.isDesktop) {
+              FromZeroAppContentWrapper.exitApp(0);
+            }
+            Navigator.of(context).pop(true);
           },
         ),
         SizedBox(width: 6,),

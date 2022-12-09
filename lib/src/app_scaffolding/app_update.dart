@@ -7,12 +7,15 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_smart_retry/dio_smart_retry.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 import 'package:intl/intl.dart';
 import 'package:archive/archive.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:r_upgrade/r_upgrade.dart';
 
 class UpdateFromZero{
 
@@ -45,14 +48,18 @@ class UpdateFromZero{
       _checkUpdate = _checkUpdateInternal();
       File file = File(await getDownloadPath());
       if (file.existsSync()) {
-        if (file.path.endsWith('.zip')) {
-          final bytes = file.readAsBytesSync();
-          final archive = ZipDecoder().decodeBytes(bytes);
-          String tempDirectory = (await getTemporaryDirectory()).absolute.path;
-          File extracted = File(p.join(tempDirectory, archive.first.name.substring(0, archive.first.name.length-1)));
-          try{ extracted.deleteSync(recursive: true); } catch(_){}
+        if (!kIsWeb && Platform.isAndroid && await Permission.storage.request().isGranted) {
+          file.delete(recursive: true);
+        } else {
+          if (file.path.endsWith('.zip')) {
+            final bytes = file.readAsBytesSync();
+            final archive = ZipDecoder().decodeBytes(bytes);
+            String tempDirectory = (await getTemporaryDirectory()).absolute.path;
+            File extracted = File(p.join(tempDirectory, archive.first.name.substring(0, archive.first.name.length-1)));
+            try{ extracted.deleteSync(recursive: true); } catch(_){}
+          }
+          file.delete(recursive: true);
         }
-        file.delete(recursive: true);
       }
     }
     return _checkUpdate!;
@@ -62,9 +69,27 @@ class UpdateFromZero{
       final response = await dio.get(versionJsonUrl);
       versionInfo = response.data;
     }
-    int ver = versionInfo!['windows'];
+    int ver = versionInfo![_getPlatformString()];
     updateAvailable = ver > currentVersion;
     return this;
+  }
+  String _getPlatformString() {
+    if (kIsWeb) {
+      return 'web';
+    } else if (Platform.isWindows) {
+      return 'windows';
+    } else if (Platform.isAndroid) {
+      return 'android';
+    } else if (Platform.isMacOS) {
+      return 'macos';
+    } else if (Platform.isIOS) {
+      return 'ios';
+    } else if (Platform.isLinux) {
+      return 'linux';
+    } else if (Platform.isFuchsia) {
+      return 'fuchsia';
+    }
+    return 'unknown';
   }
 
   Future<bool> promptUpdate(BuildContext context) async {
@@ -81,10 +106,12 @@ class UpdateFromZero{
   }
 
   Future<Response?> executeUpdate(BuildContext context, {ProgressCallback? onReceiveProgress}) async{
-    if (updateAvailable==true){
+    if (updateAvailable==true && !kIsWeb){
       log ('Downloading Update...');
-      String tempDirectory = (await getTemporaryDirectory()).absolute.path;
-      String downloadPath = await getDownloadPath();
+      final downloadPath = await getDownloadPath();
+      if (!kIsWeb && Platform.isAndroid && !(await Permission.storage.request().isGranted)) {
+        return null;
+      }
       final download = dio.download(
         appDownloadUrl,
         downloadPath,
@@ -94,47 +121,58 @@ class UpdateFromZero{
         deleteOnError: true,
       );
       download.then((value) async{
-        if (appDownloadUrl.endsWith('.exe')
-            || appDownloadUrl.endsWith('.msi')
-            || appDownloadUrl.endsWith('.msix')) {
+        if (Platform.isWindows) {
 
-          // Update is a windows native installer, just run it and let it do its magic
-          Process.start(downloadPath.replaceAll('/', '\\'), [],);
-          await Future.delayed(Duration(seconds: 1));
-          FromZeroAppContentWrapper.exitApp(0);
-
-        } else {
-
-          // Assume update is a zip file and manually extract it
-          appWindow.title = FromZeroLocalizations.of(context).translate('processing_update');
-          final file = File(downloadPath);
-          final bytes = file.readAsBytesSync();
-          final archive = ZipDecoder().decodeBytes(bytes);
-          for (final file in archive) {
-            final filename = file.name;
-            if (file.isFile) {
-              final data = file.content as List<int>;
-              File('$tempDirectory/' + filename)
-                ..createSync(recursive: true)
-                ..writeAsBytesSync(data);
-            } else {
-              Directory('$tempDirectory/' + filename)
-                ..create(recursive: true);
+          if (appDownloadUrl.endsWith('.exe')
+              || appDownloadUrl.endsWith('.msi')
+              || appDownloadUrl.endsWith('.msix')) {
+            // Update is a windows native installer, just run it and let it do its magic
+            Process.start(downloadPath.replaceAll('/', '\\'), [],);
+            await Future.delayed(Duration(seconds: 1));
+            FromZeroAppContentWrapper.exitApp(0);
+          } else {
+            // Assume update is a zip file and manually extract it
+            appWindow.title = FromZeroLocalizations.of(context).translate('processing_update');
+            final file = File(downloadPath);
+            final bytes = file.readAsBytesSync();
+            final archive = ZipDecoder().decodeBytes(bytes);
+            final tempDirectory = (await getTemporaryDirectory()).absolute.path;
+            for (final file in archive) {
+              final filename = file.name;
+              if (file.isFile) {
+                final data = file.content as List<int>;
+                File('$tempDirectory/' + filename)
+                  ..createSync(recursive: true)
+                  ..writeAsBytesSync(data);
+              } else {
+                Directory('$tempDirectory/' + filename)
+                  ..create(recursive: true);
+              }
             }
+            File argumentsFile = File("update_temp_args.txt");
+            String newAppDirectory = p.join(tempDirectory, archive.first.name);
+            String scriptPath = Platform.script.path.substring(1, Platform.script.path.indexOf(Platform.script.pathSegments.last))
+                .replaceAll('%20', ' ');
+            var executableFile = Directory(newAppDirectory).listSync()
+                .firstWhere((element) => element.path.endsWith('.exe'));
+            argumentsFile.writeAsStringSync(newAppDirectory + "\n" + scriptPath);
+            log(executableFile.absolute.path.replaceAll('/', '\\'));
+            Process.start(executableFile.absolute.path.replaceAll('/', '\\'), [],
+              workingDirectory: scriptPath.replaceAll('/', '\\'),
+            );
+            await Future.delayed(Duration(seconds: 1));
+            FromZeroAppContentWrapper.exitApp(0);
           }
-          File argumentsFile = File("update_temp_args.txt");
-          String newAppDirectory = p.join(tempDirectory, archive.first.name);
-          String scriptPath = Platform.script.path.substring(1, Platform.script.path.indexOf(Platform.script.pathSegments.last))
-              .replaceAll('%20', ' ');
-          var executableFile = Directory(newAppDirectory).listSync()
-              .firstWhere((element) => element.path.endsWith('.exe'));
-          argumentsFile.writeAsStringSync(newAppDirectory + "\n" + scriptPath);
-          log(executableFile.absolute.path.replaceAll('/', '\\'));
-          Process.start(executableFile.absolute.path.replaceAll('/', '\\'), [],
-            workingDirectory: scriptPath.replaceAll('/', '\\'),
-          );
-          await Future.delayed(Duration(seconds: 1));
-          FromZeroAppContentWrapper.exitApp(0);
+
+        } else if (Platform.isAndroid) {
+
+          if (await Permission.storage.request().isGranted){
+            // this requires adding the following permission to manifest, which causes problems with google play upload
+            // <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"></uses-permission>
+            RUpgrade.installByPath(downloadPath);
+            await Future.delayed(Duration(seconds: 1));
+            // FromZeroAppContentWrapper.exitApp(0);
+          }
 
         }
       });
@@ -144,8 +182,12 @@ class UpdateFromZero{
   }
 
   Future<String> getDownloadPath() async{
-    return p.join((await getTemporaryDirectory()).absolute.path,
-      appDownloadUrl.substring(appDownloadUrl.lastIndexOf('/')+1));
+    final addon = appDownloadUrl.substring(appDownloadUrl.lastIndexOf('/')+1);
+    if (!kIsWeb && Platform.isAndroid) {
+      return p.join((await PlatformExtended.getDownloadsDirectory()).absolute.path,  addon);
+    } else {
+      return p.join((await getTemporaryDirectory()).absolute.path,  addon);
+    }
   }
 
   static Future<void> finishUpdate(String newAppPath, String oldAppPath) async{
@@ -271,11 +313,11 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
                 , style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
             ),
             textColor: Colors.blue,
-            onPressed: () {
+            onPressed: () async {
               setState(() {
                 started = true;
               });
-              widget.update.executeUpdate(context,
+              await widget.update.executeUpdate(context,
                 onReceiveProgress: (count, total) {
                   setState(() {
                     this.count = count/1048576;
@@ -284,6 +326,7 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
                   });
                 },
               );
+              Navigator.of(context).pop();
             },
           ),
           SizedBox(width: 6,),
