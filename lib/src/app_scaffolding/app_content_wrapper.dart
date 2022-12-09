@@ -145,7 +145,8 @@ class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWr
   Widget build(BuildContext context) {
     //TODO 3 add restrictions to fontSize, uiScale logic, etc. here
     var mediaQueryData = MediaQuery.of(context);
-    final double scale = mediaQueryData.textScaleFactor.clamp(1, 1.25);
+    // final double scale = mediaQueryData.textScaleFactor.clamp(1, 1.25);
+    final double scale = 1;
     // TODO 2 experiment with app ui scale with this approach, it looks promising. Some forms break though
     mediaQueryData = mediaQueryData.copyWith(textScaleFactor: scale,);
     final screen = ref.read(fromZeroScreenProvider);
