@@ -43,7 +43,8 @@ dependencies:
   url_launcher: ^6.1.3
   path_provider: ^2.0.11
   platform_detect: ^2.0.7
-  permission_handler: ^10.2.0   # ^10.0.0 throws error on windows (^8.1.4+2 works)
+  permission_handler: ^8.1.4+2  # ^10.0.0 throws error on windows (^8.1.4+2 works)
+#  permission_handler: ^10.2.0  # <10.0.0 throws error on Android
   open_file: ^3.2.1
   file_picker: ^5.2.2
   pdf: # 3.8.4
