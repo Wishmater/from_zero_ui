@@ -299,7 +299,6 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
 
 class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
 
-
   AppbarChangeNotifier? appbarChangeNotifier;
   late ScrollController drawerContentScrollController;
   late bool canPop;
@@ -400,7 +399,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                   floatingActionButton: Consumer(
                     builder: (context, ref, child) {
                       final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-                      return LayoutBuilder(
+                      Widget result = LayoutBuilder(
                         builder: (context, constraints) {
                           return AnimatedPadding(
                             padding: EdgeInsets.only(
@@ -414,6 +413,24 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                           );
                         },
                       );
+                      if (!canPop && (PlatformExtended.isDesktop
+                          ? FromZeroAppContentWrapper.confirmAppCloseOnDesktop
+                          : FromZeroAppContentWrapper.confirmAppCloseOnMobile)) {
+                        result = WillPopScope(
+                          onWillPop: () async {
+                            try {
+                              final scaffold = Scaffold.of(context); // this context needs to be below the scaffold
+                              if (scaffold.isDrawerOpen || scaffold.isEndDrawerOpen) {
+                                return Future.value(true);
+                              }
+                            } catch(_) {}
+                            showModal(context: context, builder: (context) => CloseConfirmDialog(),);
+                            return false;
+                          },
+                          child: result,
+                        );
+                      }
+                      return result;
                     },
                   ),
                   drawer: isMobileLayout && widget.drawerContentBuilder!=null ? Container(
@@ -601,10 +618,21 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
               Positioned(
                 top: 0, left: 0, right: 0,
                 height: appbarChangeNotifier.safeAreaOffset,
-                child: AnnotatedRegion<SystemUiOverlayStyle>(
-                  value: ThemeData.estimateBrightnessForColor(Theme.of(context).primaryColor)==Brightness.light
-                      ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
-                  child: ColoredBox(color: Theme.of(context).primaryColor,),
+                child: Builder(
+                  builder: (context) {
+                    final statusBarColor = Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).primaryColor;
+                    Brightness statusBarBrightness = ThemeData.estimateBrightnessForColor(statusBarColor);
+                    statusBarBrightness = statusBarBrightness==Brightness.light ? Brightness.dark : Brightness.light;
+                    return AnnotatedRegion<SystemUiOverlayStyle>(
+                      value: SystemUiOverlayStyle(
+                        systemStatusBarContrastEnforced: true, // TODO 2 conditionally allow transparency in status bar for cool quickReturn appbars, currently disabled because popups break it
+                        statusBarColor: statusBarColor,
+                        statusBarIconBrightness: statusBarBrightness, // For Android (dark icons)
+                        statusBarBrightness: statusBarBrightness, // For iOS (dark icons)
+                      ),
+                      child: ColoredBox(color: statusBarColor,),
+                    );
+                  }
                 ),
               ),
 

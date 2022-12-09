@@ -72,6 +72,10 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
   @override
   _FromZeroAppContentWrapperState createState() => _FromZeroAppContentWrapperState();
 
+  static bool confirmAppCloseOnMobile = true;
+  static bool confirmAppCloseOnDesktop = false;
+  static String? appNameForCloseConfirmation;
+
   static String? windowsProcessName;
   static exitApp(int code) {
     log('Exiting app with code: $code...');
@@ -767,3 +771,37 @@ class WindowEventListener{
 
 }
 
+
+class CloseConfirmDialog extends StatelessWidget {
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text("¿Seguro que quiere cerrar ${FromZeroAppContentWrapper.appNameForCloseConfirmation ?? 'la aplicación'}?"), // TODO 3 internationalize
+      actions: <Widget>[
+        FlatButton(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text("CANCELAR", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),), // TODO 3 internationalize
+          ),
+          textColor: Theme.of(context).textTheme.caption!.color,
+          onPressed: () {
+            Navigator.of(context).pop(null); // Dismiss alert dialog
+          },
+        ),
+        FlatButton(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Text("CERRAR", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),), // TODO 3 internationalize
+          ),
+          textColor: Colors.red,
+          onPressed: () {
+            FromZeroAppContentWrapper.exitApp(0);
+          },
+        ),
+        SizedBox(width: 6,),
+      ],
+    );
+  }
+
+}
