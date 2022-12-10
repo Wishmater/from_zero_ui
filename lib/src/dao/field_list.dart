@@ -344,7 +344,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       return success;
     }
     List<Future<bool>> results = [];
-    final templateProps = objectTemplate.props;
+    final templateProps = transformSelectedFromAvailablePool==null
+        ? objectTemplate.props
+        : transformSelectedFromAvailablePool!(objectTemplate).props;
     List<T>? possibleValues;
     List<T>? confirmedValidValues;
     if (invalidateValuesNotInAvailablePool) {
@@ -356,6 +358,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         possibleValues = await availableObjectsPoolGetter?.call(context, this, dao);
       }
     }
+    print ('passTableValudation $validateChildren');
     for (final e in objects) {
       final objectProps = e.props;
       if (invalidateValuesNotInAvailablePool && possibleValues!=null && !possibleValues.contains(e)) {
@@ -364,6 +367,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         confirmedValidValues?.add(e);
         if (validateChildren) {
           for (final key in templateProps.keys) {
+            print (key);
             final field = objectProps[key];
             if (field!=null) {
               if (currentValidationId!=dao.validationCallCount) return false;
