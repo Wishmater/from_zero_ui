@@ -879,6 +879,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     for (final errorList in map.values) {
       final error = errorList.first;
       final field = error.field;
+      if (error.setAsDbValue) {
+        field.dbValue = error.defaultValue;
+      }
       if (field is StringField) {
         field.commitValue(error.defaultValue as String?);
       } else {

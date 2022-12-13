@@ -76,6 +76,7 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
   bool showVisualConfirmation;
   bool allowUndoInvalidatingChange;
   bool allowSetThisFieldToDefaultValue;
+  bool setAsDbValue;
   InvalidatingError({
     required Field<T> field,
     required String error,
@@ -83,6 +84,7 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
     this.showVisualConfirmation = false,
     this.allowUndoInvalidatingChange = true,
     this.allowSetThisFieldToDefaultValue = true,
+    this.setAsDbValue = false,
     bool? isVisibleAsSaveConfirmation,
     bool? isVisibleAsHintMessage,
     bool? isVisibleAsTooltip,
