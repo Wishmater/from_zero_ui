@@ -168,8 +168,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     String? modelNamePlural,
     BuildContext? context, // for localization
   }) {
-    print (modelNameSingular);
-    print (modelNamePlural);
     final name = list.length==1
         ? (modelNameSingular.isNotNullOrBlank ? modelNameSingular : (context==null ? ''
             : FromZeroLocalizations.of(context).translate('element_sing')))
@@ -358,7 +356,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         possibleValues = await availableObjectsPoolGetter?.call(context, this, dao);
       }
     }
-    print ('passTableValudation $validateChildren');
     for (final e in objects) {
       final objectProps = e.props;
       if (invalidateValuesNotInAvailablePool && possibleValues!=null && !possibleValues.contains(e)) {
@@ -367,7 +364,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         confirmedValidValues?.add(e);
         if (validateChildren) {
           for (final key in templateProps.keys) {
-            print (key);
             final field = objectProps[key];
             if (field!=null) {
               if (currentValidationId!=dao.validationCallCount) return false;
