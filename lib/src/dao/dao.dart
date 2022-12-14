@@ -1681,21 +1681,21 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     showViewButtons: dao.viewDialogShowsViewButtons,
                   );
                 }
+                if (e.dao is LazyDAO) (e.dao as LazyDAO).ensureInitialized();
                 final newField = e.copyWith(
                   tableCellsEditable: false,
                   allowAddNew: false,
-                  availableObjectsPoolGetter: null,
-                  availableObjectsPoolProvider: null,
-                  actions: null,
                   actionViewBreakpoints: dao.viewDialogLinksToInnerDAOs&&dao.viewDialogShowsViewButtons
                       ? {0: ActionState.icon}
                       : dao.viewDialogLinksToInnerDAOs
-                      ? {0: ActionState.popup}
-                      : {0: ActionState.none},
+                          ? {0: ActionState.popup}
+                          : {0: ActionState.none},
                   actionDeleteBreakpoints: {0: ActionState.none},
                   actionDuplicateBreakpoints: {0: ActionState.none},
                   actionEditBreakpoints: {0: ActionState.none},
-                );
+                ) ..availableObjectsPoolGetter = null
+                  ..availableObjectsPoolProvider = null
+                  ..actions = null;
                 newField.dao = e.dao;
                 return Column(
                   mainAxisSize: MainAxisSize.min,
