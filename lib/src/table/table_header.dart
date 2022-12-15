@@ -21,6 +21,7 @@ class TableHeaderFromZero<T> extends StatefulWidget {
   final bool addSearchAction;
   final bool searchActionExpandedByDefault;
   final Color? defaultActionsColor;
+  final bool Function(RowModel<T> row)? rowCountSelector;
 
   const TableHeaderFromZero({
     required this.controller,
@@ -33,6 +34,7 @@ class TableHeaderFromZero<T> extends StatefulWidget {
     this.addSearchAction = false,
     this.searchActionExpandedByDefault = true,
     this.defaultActionsColor,
+    this.rowCountSelector,
     Key? key,
   }) : super(key: key);
 
@@ -80,17 +82,20 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
     Widget result = AnimatedBuilder(
       animation: widget.controller,
       builder: (context, child) {
-        List<RowModel>? filtered;
+        List<RowModel<T>>? filtered;
         try {
           filtered = widget.controller.filtered;
         } catch (_) {}
         int selectedCount = filtered==null ? 0
-            : filtered.where((e) => e.selected==true).length;
+            : filtered.where((e) => e.onCheckBoxSelected!=null && e.selected==true).length;
         Widget subtitle;
         if (selectedCount==0) {
           if (filtered!=null && widget.showElementCount) {
+            final count = widget.rowCountSelector==null
+                ? filtered.length
+                : filtered.where((e) => widget.rowCountSelector!(e)).length;
             subtitle = Text(filtered.length==0 ? FromZeroLocalizations.of(context).translate('no_elements')
-                : '${filtered.length} ${filtered.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
+                : '$count ${count>1 ? FromZeroLocalizations.of(context).translate('element_plur')
                 : FromZeroLocalizations.of(context).translate('element_sing')}',
               // key: ValueKey('normal'),
               style: Theme.of(context).textTheme.caption,
@@ -99,7 +104,8 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
             subtitle = SizedBox.shrink();
           }
         } else {
-          subtitle = Text('$selectedCount/${filtered!.length} ${selectedCount>1 ? FromZeroLocalizations.of(context).translate('selected_plur')
+          final count = filtered!.where((e) => e.onCheckBoxSelected!=null).length;
+          subtitle = Text('$selectedCount/$count ${selectedCount>1 ? FromZeroLocalizations.of(context).translate('selected_plur')
               : FromZeroLocalizations.of(context).translate('selected_sing')}',
             // key: ValueKey('selected'),
             style: Theme.of(context).textTheme.caption,

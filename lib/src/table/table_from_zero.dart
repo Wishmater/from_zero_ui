@@ -802,7 +802,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                       builder: (context, checkboxSetState) {
                         return LoadingCheckbox(
                           value: row==headerRowModel
-                              ? filtered.isNotEmpty && filtered.every((element) => element.selected==true)
+                              ? filtered.isNotEmpty && filtered.every((element) => element.selected==true || element.onCheckBoxSelected==null)
                               : row.selected,
                           onChanged: row==headerRowModel&&filtered.isEmpty ? null : (value) {
                             if (row==headerRowModel) {
@@ -1167,7 +1167,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                 ),
               ),
               Positioned(
-                left: -4, width: 32, top: 0, bottom: 0,
+                left: -6, width: 32, top: 0, bottom: 0,
                 child: OverflowBox(
                   maxHeight: row.height, maxWidth: 32,
                   alignment: Alignment.center,
@@ -1175,7 +1175,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                     duration: Duration(milliseconds: 300),
                     switchInCurve: Curves.easeOut,
                     child: (widget.enabled && !export && sortedColumn==colKey) ? Icon(
-                      sortedAscending ? MaterialCommunityIcons.sort_ascending : MaterialCommunityIcons.sort_descending,
+                      sortedAscending ? MaterialCommunityIcons.sort_alphabetical_ascending : MaterialCommunityIcons.sort_alphabetical_descending,
                       key: ValueKey(sortedAscending),
 //                                color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
                       color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
