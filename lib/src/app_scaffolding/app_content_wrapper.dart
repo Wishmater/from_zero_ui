@@ -70,7 +70,7 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
   });
 
   @override
-  _FromZeroAppContentWrapperState createState() => _FromZeroAppContentWrapperState();
+  FromZeroAppContentWrapperState createState() => FromZeroAppContentWrapperState();
 
   static bool confirmAppCloseOnMobile = true;
   static bool confirmAppCloseOnDesktop = false;
@@ -125,7 +125,7 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
 
 
 ValueNotifier<bool> isMouseOverWindowBar = ValueNotifier(false);
-class _FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWrapper> {
+class FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWrapper> {
 
   @override
   void initState() {
