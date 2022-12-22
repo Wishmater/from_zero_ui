@@ -201,7 +201,8 @@ Future<bool> saveFileFromZero ({
       await launch(file!.absolute.path);
       // await launch(file!.parent.absolute.path);
     }
-  } if (showSnackBars && showResultSnackBar) {
+  }
+  if (error!=null || (showSnackBars && showResultSnackBar)) {
     if (success && uiPath!=null) {
       await SnackBarFromZero(
         key: snackBarKey ?? ValueKey(data.hashCode),
