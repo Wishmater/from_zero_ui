@@ -235,11 +235,12 @@ class BoolField extends Field<BoolComparable> {
         ? field.uiNameTrueGetter==null ? null : field.uiNameTrue
         : field.uiNameFalseGetter==null ? null : field.uiNameFalse;
     Widget? icon;
+    final activeColor = field.selectedColor?.call(context, field, field.dao) ?? Colors.green;
     if (field.displayType==BoolFieldDisplayType.checkBoxTile
         || field.displayType==BoolFieldDisplayType.compactCheckBox) {
       icon = value
           ? Icon(Icons.check,
-            color: Colors.green,
+            color: activeColor,
           )
           : Icon(Icons.close,
             color: Colors.red,
@@ -248,10 +249,10 @@ class BoolField extends Field<BoolComparable> {
         || field.displayType==BoolFieldDisplayType.compactSwitch) {
       icon = value
           ? Icon(MaterialCommunityIcons.toggle_switch,
-            color: Colors.green,
+            color: activeColor,
           )
           : Icon(MaterialCommunityIcons.toggle_switch_off_outline,
-            color: Colors.red,
+            color: Colors.grey,
           );
     }
     return Padding(
