@@ -424,13 +424,17 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         return;
       }
     } else {
-      computedAvailableFilters = _getAvailableFilters(
+      computedAvailableFilters = await _getAvailableFilters(
           [
             widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
             widget.rows.map((e) => e.values).toList(),
-          ]);
+          ],
+          artifitialThrottle: true,
+          state: this,
+      );
       computedValidInitialFilters = _getValidInitialFilters(
-          [valueFilters, computedAvailableFilters]);
+          [valueFilters, computedAvailableFilters],
+      );
     }
     if (mounted) {
       availableFilters.value = computedAvailableFilters;
@@ -475,14 +479,22 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       return value;
     }
   }
-  static Map<dynamic, List<dynamic>> _getAvailableFilters(List<dynamic> params) {
+  static Future<Map<dynamic, List<dynamic>>> _getAvailableFilters(List<dynamic> params, {
+    bool artifitialThrottle = false,
+    State? state,
+  }) async {
+    print ('artifitialThrottle: $artifitialThrottle');
     final Map<dynamic, List<bool?>> columnOptions = params[0];
     final List<Map<dynamic, dynamic>> rowValues = params[1];
     Map<dynamic, List<dynamic>> availableFilters = {};
-    columnOptions.forEach((key, options) {
+    int operationCounter = 0;
+    for (final e in columnOptions.entries) {
+      final key = e.key;
+      final options = e.value;
       List<dynamic> available = [];
       if (options[0] ?? true) { // filterEnabled
-        rowValues.forEach((row) {
+        for (final row in rowValues) {
+          print (operationCounter);
           final element = row[key];
           if (element is List || element is ComparableList || element is ListField) {
             final List list = element is List ? element
@@ -492,18 +504,41 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
               if (!available.contains(e)) {
                 available.add(e);
               }
+              if (artifitialThrottle) {
+                operationCounter+=available.length;
+                if (operationCounter>1000000) {
+                  print ('awaiting $operationCounter');
+                  operationCounter = 0;
+                  await Future.delayed(Duration(milliseconds: 50));
+                  if (state!=null && !state.mounted) {
+                    return {};
+                  }
+                }
+              }
             }
           } else {
             if (!available.contains(element)) {
               available.add(element);
             }
           }
-        });
+          if (artifitialThrottle) {
+            operationCounter+=available.length;
+            if (operationCounter>1000000) {
+              print ('awaiting $operationCounter');
+              operationCounter = 0;
+              await Future.delayed(Duration(milliseconds: 50));
+              if (state!=null && !state.mounted) {
+                return {};
+              }
+            }
+          }
+        }
       }
       bool sortAscending = options[1] ?? true; // defaultSortAscending
       available.sort((a, b) => defaultComparator(a, b, sortAscending));
       availableFilters[key] = available;
-    });
+      print ('artifitialThrottle: $artifitialThrottle');
+    }
     return availableFilters;
   }
   static Map<dynamic, Map<Object?, bool>>? _getValidInitialFilters(List<dynamic> params) {
