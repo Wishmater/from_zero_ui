@@ -2069,17 +2069,37 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           );
         }
         if (!asSliver) {
-          result = Material(
-            color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
-            child: Container(
-              color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
-              child: CustomScrollView(
-                shrinkWrap: !expandToFillContainer,
-                physics: NeverScrollableScrollPhysics(),
-                slivers: [result],
+          if (objects.length > 30) {
+            final mediaQuery = MediaQuery.of(context);
+            final scrollController = ScrollController();
+            result = Material(
+              color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
+              child: Container(
+                color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
+                padding: addCard ? null : const EdgeInsets.only(right: 24),
+                height: mediaQuery.size.height - mediaQuery.padding.vertical - mediaQuery.viewInsets.vertical - 256,
+                child: ScrollbarFromZero(
+                  controller: scrollController,
+                  child: CustomScrollView(
+                    controller: scrollController,
+                    slivers: [result],
+                  ),
+                ),
               ),
-            ),
-          );
+            );
+          } else {
+            result = Material(
+              color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
+              child: Container(
+                color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
+                child: CustomScrollView(
+                  shrinkWrap: !expandToFillContainer,
+                  physics: NeverScrollableScrollPhysics(),
+                  slivers: [result],
+                ),
+              ),
+            );
+          }
         }
         return result;
       }
@@ -2190,65 +2210,99 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       return SizedBox.shrink();
     }
     final field = fieldParam as ListField;
-    final uiNames = {
-      for (final e in field.objects)
-        e: dense ? e.uiNameDense : e.toString(),
-    };
     final List<DAO> sortedObjects = List.from(field.objects);
     if (field.initialSortedColumn!=null) {
       sortedObjects.sort();
     }
-    return Padding(
-      padding: dense
-          ? EdgeInsets.zero
-          : const EdgeInsets.symmetric(vertical: 3),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: sortedObjects.map((e) {
-          final objectLinkToInnerDAOs = linkToInnerDAOs && e.wantsLinkToSelfFromOtherDAOs;
-          final onTap = objectLinkToInnerDAOs
-              ? () => e.pushViewDialog(context)
-              : null;
-          return Stack(
+    if (sortedObjects.length > 30) {
+      final scrollController = ScrollController();
+      final mediaQuery = MediaQuery.of(context);
+      return Container(
+        height: mediaQuery.size.height - mediaQuery.padding.vertical - mediaQuery.viewInsets.vertical - 256,
+        padding: EdgeInsets.only(right: 24),
+        child: ScrollbarFromZero(
+          controller: scrollController,
+          child: ListView.builder(
+            controller: scrollController,
+            itemCount: sortedObjects.length,
+            padding: dense
+                ? EdgeInsets.zero
+                : const EdgeInsets.symmetric(vertical: 3),
+            itemBuilder: (context, index) {
+              return defaultViewWidgetBuilderElement(context, sortedObjects[index],
+                linkToInnerDAOs: linkToInnerDAOs,
+                showViewButtons: showViewButtons,
+                dense: dense,
+              );
+            },
+          ),
+        ),
+      );
+    } else {
+      return Padding(
+        padding: dense
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(vertical: 3),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: sortedObjects.map((e) {
+            return defaultViewWidgetBuilderElement(context, e,
+              linkToInnerDAOs: linkToInnerDAOs,
+              showViewButtons: showViewButtons,
+              dense: dense,
+            );
+          }).toList(),
+        ),
+      );
+    }
+  }
+  static Widget defaultViewWidgetBuilderElement(BuildContext context, DAO e, {
+    bool linkToInnerDAOs=true,
+    bool showViewButtons=false,
+    bool dense = false,
+  }) {
+    final objectLinkToInnerDAOs = linkToInnerDAOs && e.wantsLinkToSelfFromOtherDAOs;
+    final onTap = objectLinkToInnerDAOs
+        ? () => e.pushViewDialog(context)
+        : null;
+    final uiName = dense ? e.uiNameDense : e.toString();
+    return Stack(
+      children: [
+        Padding(
+          padding: dense
+              ? EdgeInsets.zero
+              : const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              Padding(
-                padding: dense
-                    ? EdgeInsets.zero
-                    : const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: dense
-                          ? Text(uiNames[e]!,
-                            style: Theme.of(context).textTheme.subtitle1,
-                          ) : SelectableText(uiNames[e]!,
-                            style: Theme.of(context).textTheme.subtitle1,
-                          ),
-                    ),
-                    if (showViewButtons && onTap!=null)
-                      Padding(
-                        padding: EdgeInsets.only(left: 12),
-                        child: IconButton(
-                          icon: Icon(Icons.info_outline),
-                          padding: EdgeInsets.all(0),
-                          constraints: BoxConstraints(maxHeight: 32),
-                          onPressed: onTap,
-                        ),
-                      ),
-                  ],
+              Expanded(
+                child: dense
+                    ? Text(uiName,
+                  style: Theme.of(context).textTheme.subtitle1,
+                ) : SelectableText(uiName,
+                  style: Theme.of(context).textTheme.subtitle1,
                 ),
               ),
-              if (onTap!=null)
-                Positioned.fill(
-                  child: translucent.InkWell(
-                    onTap: onTap,
+              if (showViewButtons && onTap!=null)
+                Padding(
+                  padding: EdgeInsets.only(left: 12),
+                  child: IconButton(
+                    icon: Icon(Icons.info_outline),
+                    padding: EdgeInsets.all(0),
+                    constraints: BoxConstraints(maxHeight: 32),
+                    onPressed: onTap,
                   ),
                 ),
             ],
-          );
-        }).toList(),
-      ),
+          ),
+        ),
+        if (onTap!=null)
+          Positioned.fill(
+            child: translucent.InkWell(
+              onTap: onTap,
+            ),
+          ),
+      ],
     );
   }
 

@@ -1477,7 +1477,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }) {
     ScrollController scrollController = ScrollController();
     if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
-        && props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty) {
+        && props.values.where((e) => e is ListField && !e.hiddenInView && (e.buildViewWidgetAsTable || e.objects.length>50)).isNotEmpty) {
       useIntrinsicHeight = false;
       useIntrinsicWidth = false;
     }
