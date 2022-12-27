@@ -68,7 +68,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     List<List<Field>>? redoRecord,
     bool enableUndoRedoMechanism = true,
     bool showConfirmDialogWithBlockingErrors = true,
-    DAO? parentDAO,
+    // DAO? parentDAO,  // i don't see the case where .initialize() will need to set parrent DAO, and removing it allows for better performance, by not having to force initialization when parentDAO set
     DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout,
     DAOValueGetter<String, ModelType>? searchNameGetter,
     DAOValueGetter<String, ModelType>?  editDialogTitle,
@@ -101,7 +101,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     this.wantsLinkToSelfFromOtherDAOs = wantsLinkToSelfFromOtherDAOs;
     this.enableUndoRedoMechanism = enableUndoRedoMechanism;
     this.showConfirmDialogWithBlockingErrors = showConfirmDialogWithBlockingErrors;
-    this.parentDAO = parentDAO;
+    // this.parentDAO = parentDAO;
     this.enableDoubleColumnLayout = enableDoubleColumnLayout;
     this.searchNameGetter = searchNameGetter;
     this.editDialogTitle = editDialogTitle;
@@ -225,7 +225,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
         // undoRecord: undoRecord??this._undoRecord, // cannot reach _undoRecord and _redoRecord since they're private, surely its fine :)
         // redoRecord: redoRecord??this._redoRecord,
         showConfirmDialogWithBlockingErrors: showConfirmDialogWithBlockingErrors??this.showConfirmDialogWithBlockingErrors,
-        parentDAO: parentDAO??this.parentDAO,
+        // parentDAO: parentDAO??this.parentDAO,
         enableDoubleColumnLayout: enableDoubleColumnLayout??this.enableDoubleColumnLayout,
         searchNameGetter: searchNameGetter ?? this.searchNameGetter,
         editDialogTitle: editDialogTitle ?? this.editDialogTitle,
@@ -370,14 +370,14 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   // set onSaveAPI(OnSaveAPICallback<ModelType>? value) {
   //   super.onSaveAPI = value;
   // }
-  DAO? get parentDAO {
-    ensureInitialized();
-    return super.parentDAO;
-  }
-  set parentDAO(DAO? value) {
-    ensureInitialized();
-    super.parentDAO = value;
-  }
+  // DAO? get parentDAO {
+  //   ensureInitialized();
+  //   return super.parentDAO;
+  // }
+  // set parentDAO(DAO? value) {
+  //   ensureInitialized();  // we dont need to ensure initialization when parentDAO is set, because the argument was removed from initialize(), so it won't be overriden
+  //   super.parentDAO = value;
+  // }
   // DAOValueGetter<String, ModelType>? get saveButtonTitle => super.saveButtonTitle;
   // set saveButtonTitle(DAOValueGetter<String, ModelType>? value) {
   //   super.saveButtonTitle = value;
