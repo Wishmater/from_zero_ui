@@ -483,7 +483,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     bool artifitialThrottle = false,
     State? state,
   }) async {
-    print ('artifitialThrottle: $artifitialThrottle');
     final Map<dynamic, List<bool?>> columnOptions = params[0];
     final List<Map<dynamic, dynamic>> rowValues = params[1];
     Map<dynamic, List<dynamic>> availableFilters = {};
@@ -494,7 +493,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       List<dynamic> available = [];
       if (options[0] ?? true) { // filterEnabled
         for (final row in rowValues) {
-          print (operationCounter);
           final element = row[key];
           if (element is List || element is ComparableList || element is ListField) {
             final List list = element is List ? element
@@ -507,7 +505,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
               if (artifitialThrottle) {
                 operationCounter+=available.length;
                 if (operationCounter>1000000) {
-                  print ('awaiting $operationCounter');
                   operationCounter = 0;
                   await Future.delayed(Duration(milliseconds: 50));
                   if (state!=null && !state.mounted) {
@@ -524,7 +521,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           if (artifitialThrottle) {
             operationCounter+=available.length;
             if (operationCounter>1000000) {
-              print ('awaiting $operationCounter');
               operationCounter = 0;
               await Future.delayed(Duration(milliseconds: 50));
               if (state!=null && !state.mounted) {
@@ -537,7 +533,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       bool sortAscending = options[1] ?? true; // defaultSortAscending
       available.sort((a, b) => defaultComparator(a, b, sortAscending));
       availableFilters[key] = available;
-      print ('artifitialThrottle: $artifitialThrottle');
     }
     return availableFilters;
   }
