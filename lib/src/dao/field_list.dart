@@ -96,6 +96,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   double tableFooterStickyOffset;
   double tableHorizontalPadding;
   String? rowAddonField;
+  double? separateScrollableBreakpoint;
 
   T get objectTemplate => objectTemplateGetter(this, dao)..parentDAO = dao;
   List<T> get objects => value!.list;
@@ -253,6 +254,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.allowAddMultipleFromAvailablePool = true,
     ValueNotifier<Map<T, bool>>? selectedObjects,
     this.pageNotifier,
+    this.separateScrollableBreakpoint = 30,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? (displayType==ListFieldDisplayType.table && !tableCellsEditable),
@@ -483,6 +485,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     String? rowAddonField,
     bool? allowAddMultipleFromAvailablePool,
     ValueNotifier<int>? pageNotifier,
+    double? separateScrollableBreakpoint,
   }) {
     return ListField<T, U>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -556,6 +559,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       rowAddonField: rowAddonField ?? this.rowAddonField,
       allowAddMultipleFromAvailablePool: allowAddMultipleFromAvailablePool ?? this.allowAddMultipleFromAvailablePool,
       pageNotifier: pageNotifier ?? this.pageNotifier,
+      separateScrollableBreakpoint: separateScrollableBreakpoint ?? this.separateScrollableBreakpoint,
     );
   }
 
@@ -2069,7 +2073,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           );
         }
         if (!asSliver) {
-          if (objects.length > 30) {
+          if (separateScrollableBreakpoint!=null && objects.length>separateScrollableBreakpoint!) {
             final mediaQuery = MediaQuery.of(context);
             final scrollController = ScrollController();
             result = Material(
@@ -2214,7 +2218,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     if (field.initialSortedColumn!=null) {
       sortedObjects.sort();
     }
-    if (sortedObjects.length > 30) {
+    if (field.separateScrollableBreakpoint!=null && field.objects.length>field.separateScrollableBreakpoint!) {
       final scrollController = ScrollController();
       final mediaQuery = MediaQuery.of(context);
       return Container(
