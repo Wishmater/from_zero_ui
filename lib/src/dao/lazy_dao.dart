@@ -269,9 +269,15 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   // DAO methods that should be overriden if also changed in dao
   //
   /// @mustOverride
-  String get classUiNamePlural => super.classUiNamePlural;
+  String get classUiNamePlural {
+    assert(isInitialized, 'classUiNamePlural called without initializing DAO: ${this.runtimeType}: $this.classUiName');
+    return super.classUiNamePlural;
+  }
   /// @mustOverride
-  String get searchName => super.searchName;
+  String get searchName {
+    assert(isInitialized, 'searchName called without initializing DAO: ${this.runtimeType}: $this.classUiName');
+    return super.searchName;
+  }
 
 
   // DAO methods that were modified, but don't need to be overridden
