@@ -76,7 +76,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     DAOValueGetter<String, ModelType>?  saveButtonTitle,
     DAOValueGetter<String, ModelType>?  saveConfirmationDialogDescription,
   }) {
-    assert(!_isInitialized, 'Attempted to initialize DAO twice');
+    assert(!_isInitialized, 'Attempted to initialize DAO twice: ${this.runtimeType}: ${this.classUiName}');
     _isInitialized = true;
     this.classUiNameGetter = classUiNameGetter;
     this.uiNameGetter = uiNameGetter;
@@ -270,13 +270,21 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   //
   /// @mustOverride
   String get classUiNamePlural {
-    assert(isInitialized, 'classUiNamePlural called without initializing DAO: ${this.runtimeType}: $this.classUiName');
-    return super.classUiNamePlural;
+    try {
+      return super.classUiNamePlural;
+    } catch (e) {
+      assert(isInitialized, 'classUiNamePlural called without initializing DAO: ${this.runtimeType}: ${this.classUiName}');
+      rethrow;
+    }
   }
   /// @mustOverride
   String get searchName {
-    assert(isInitialized, 'searchName called without initializing DAO: ${this.runtimeType}: $this.classUiName');
-    return super.searchName;
+    try {
+      return super.searchName;
+    } catch (e) {
+      assert(isInitialized, 'searchName called without initializing DAO: ${this.runtimeType}: ${this.classUiName}');
+      rethrow;
+    }
   }
 
 
