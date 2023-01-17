@@ -23,7 +23,9 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   T? defaultValue; /// used for reversing the field to default state when hidden, noly if invalidateNonEmptyValuesIfHiddenInForm==true, default null
   FieldValueGetter<bool, Field> clearableGetter;
   bool get clearable => clearableGetter(this, dao);
-  bool get enabled => DAO.ignoreBlockingErrors ? true : validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).isEmpty;
+  bool get enabled => DAO.ignoreBlockingErrors
+      ? true
+      : validationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling || e.severity==ValidationErrorSeverity.invalidating).isEmpty;
   FieldValueGetter<bool, Field> hiddenInTableGetter;
   bool get hiddenInTable => hiddenInTableGetter(this, dao);
   FieldValueGetter<bool, Field> hiddenInViewGetter;
