@@ -63,10 +63,7 @@ class ComboField<T extends DAO> extends Field<T> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<T> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<T?>? onValueChanged,
-  }) :  assert(possibleValuesGetter!=null
-              || possibleValuesFutureGetter!=null
-              || possibleValuesProviderGetter!=null),
-        super(
+  }) :  super(
           uiNameGetter: uiNameGetter,
           value: value,
           dbValue: dbValue,
