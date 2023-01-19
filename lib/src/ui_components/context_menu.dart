@@ -57,53 +57,79 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
 
   final GlobalKey anchorKey = GlobalKey();
 
-  void showContextMenu(BuildContext context) {
-    var actions = widget.actions.where((e) => e.getStateForMaxWidth(0).shownOnContextMenu).toList();
-    if (widget.enabled && (widget.contextMenuWidget!=null || actions.isNotEmpty)) {
-      widget.onShowMenu?.call();
-      Offset? mousePosition = widget.useCursorLocation ? tapDownDetails?.globalPosition : null;
-      showPopupFromZero<dynamic>( // TODO 3 find a way to show a non-blocking popup (an overlay)
-        context: context,
-        anchorKey: mousePosition==null ? anchorKey : null,
-        referencePosition: mousePosition,
-        referenceSize: mousePosition==null ? null : Size(1, 1),
-        width: widget.contextMenuWidth,
-        popupAlignment: widget.popupAlignment,
-        anchorAlignment: widget.anchorAlignment,
-        offsetCorrection: widget.offsetCorrection,
-        barrierColor: widget.barrierColor,
-        builder: (context) {
-          final scrollController = ScrollController();
-          if (widget.contextMenuWidget!=null) {
-            return widget.contextMenuWidget!;
-          } else {
-            return ScrollbarFromZero(
+  static void showContextMenuFromZero(BuildContext context, {
+    required List<ActionFromZero> actions,
+    required GlobalKey anchorKey,
+    VoidCallback? onShowMenu,
+    bool useCursorLocation = true,
+    TapDownDetails? tapDownDetails,
+    Widget? contextMenuWidget,
+    double contextMenuWidth = 256,
+    Alignment anchorAlignment = Alignment.bottomRight,
+    Alignment popupAlignment = Alignment.bottomRight,
+    Offset offsetCorrection = Offset.zero,
+    Color? barrierColor,
+  }) {
+    actions = actions.where((e) => e.getStateForMaxWidth(0).shownOnContextMenu).toList();
+    onShowMenu?.call();
+    Offset? mousePosition = useCursorLocation ? tapDownDetails?.globalPosition : null;
+    showPopupFromZero<dynamic>( // TODO 3 find a way to show a non-blocking popup (an overlay)
+      context: context,
+      anchorKey: mousePosition==null ? anchorKey : null,
+      referencePosition: mousePosition,
+      referenceSize: mousePosition==null ? null : Size(1, 1),
+      width: contextMenuWidth,
+      popupAlignment: popupAlignment,
+      anchorAlignment: anchorAlignment,
+      offsetCorrection: offsetCorrection,
+      barrierColor: barrierColor,
+      builder: (context) {
+        final scrollController = ScrollController();
+        if (contextMenuWidget!=null) {
+          return contextMenuWidget;
+        } else {
+          return ScrollbarFromZero(
+            controller: scrollController,
+            child: ListView.builder(
               controller: scrollController,
-              child: ListView.builder(
-                controller: scrollController,
-                shrinkWrap: true,
-                itemCount: actions.length,
-                padding: EdgeInsets.symmetric(vertical: 8),
-                itemBuilder: (context, index) {
-                  final action = actions[index];
-                  return action.copyWith(
-                    onTap: action.onTap==null ? null : (context) {
-                      Navigator.of(context).pop();
-                      action.onTap?.call(context);
-                    },
-                  ).buildOverflow(context, forceIconSpace: actions.where((e) => e.icon!=null).isNotEmpty);
-                },
-              ),
-            );
-          }
-        },
-      );
-    }
+              shrinkWrap: true,
+              itemCount: actions.length,
+              padding: EdgeInsets.symmetric(vertical: 8),
+              itemBuilder: (context, index) {
+                final action = actions[index];
+                return action.copyWith(
+                  onTap: action.onTap==null ? null : (context) {
+                    Navigator.of(context).pop();
+                    action.onTap?.call(context);
+                  },
+                ).buildOverflow(context, forceIconSpace: actions.where((e) => e.icon!=null).isNotEmpty);
+              },
+            ),
+          );
+        }
+      },
+    );
   }
 
 
   void onTapDown(details) => tapDownDetails = details;
-  void _showContextMenu() => showContextMenu(context);
+  void showContextMenu() {
+    if (widget.enabled && (widget.contextMenuWidget!=null || widget.actions.isNotEmpty)) {
+      showContextMenuFromZero(context,
+        actions: widget.actions,
+        anchorKey: anchorKey,
+        contextMenuWidth: widget.contextMenuWidth,
+        popupAlignment: widget.popupAlignment,
+        anchorAlignment: widget.anchorAlignment,
+        offsetCorrection: widget.offsetCorrection,
+        barrierColor: widget.barrierColor,
+        contextMenuWidget: widget.contextMenuWidget,
+        onShowMenu: widget.onShowMenu,
+        tapDownDetails: tapDownDetails,
+        useCursorLocation: widget.useCursorLocation,
+      );
+    }
+  }
 
 
   TapDownDetails? tapDownDetails;
@@ -125,7 +151,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
           }
           instance
             ..onSecondaryTapDown = onTapDown
-            ..onSecondaryTap = _showContextMenu;
+            ..onSecondaryTap = showContextMenu;
         },
       );
       result = RawGestureDetector(
@@ -136,7 +162,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
       result = GestureDetector(
         behavior: HitTestBehavior.translucent,
         onLongPress: PlatformExtended.isMobile ? () {
-          showContextMenu(context);
+          showContextMenu();
         } : null,
         child: result,
       );
@@ -193,7 +219,7 @@ class ContextMenuButton extends StatelessWidget {
           ),
         ),
         buttonBuilder(context, () {
-          contextMenuKey.currentState!.showContextMenu(context);
+          contextMenuKey.currentState!.showContextMenu();
         }),
       ],
     );
@@ -279,7 +305,7 @@ class ContextMenuIconButton extends StatelessWidget {
           highlightColor: highlightColor,
           hoverColor: hoverColor,
           onPressed: () {
-            contextMenuKey.currentState!.showContextMenu(context);
+            contextMenuKey.currentState!.showContextMenu();
           },
         ),
       ],

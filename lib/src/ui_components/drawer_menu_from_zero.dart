@@ -751,7 +751,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 onExpansionChanged: (value) async {
                   if (widget.compact||tabs[i].forcePopup){
                     if (!(await onTap())) {
-                      _menuButtonKeys[i]!.currentState!.showContextMenu(context);
+                      _menuButtonKeys[i]!.currentState!.showContextMenu();
                     }
                     return false;
                   } else if (widget.depth==0 && !widget.allowCollapseRoot) {
