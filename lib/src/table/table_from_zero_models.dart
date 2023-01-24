@@ -56,7 +56,7 @@ abstract class RowModel<T> {
   Map get values;
   Color? get backgroundColor => null;
   TextStyle? get textStyle => null;
-  double get height => 36;
+  double? get height => 36;
   bool? get selected => null;
   ValueChanged<RowModel<T>>? get onRowTap => null;
   ValueChanged<RowModel<T>>? get onRowDoubleTap => null;
@@ -107,7 +107,7 @@ class SimpleRowModel<T> extends RowModel<T> {
   Map values;
   Color? backgroundColor;
   TextStyle? textStyle;
-  double height;
+  double? height;
   bool? selected;
   ValueChanged<RowModel<T>>? onRowTap;
   ValueChanged<RowModel<T>>? onRowDoubleTap;

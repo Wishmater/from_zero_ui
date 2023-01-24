@@ -565,7 +565,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
       if (widget.enableFixedHeightForListRows && filtered.isNotEmpty) {
         result = SliverFixedExtentList(
-          itemExtent: filtered.first.height,
+          itemExtent: filtered.first.height??36,
           delegate: SliverChildBuilderDelegate(
                 (BuildContext context, int i) => _getRow(context, filtered.isEmpty ? null : filtered[i]),
             childCount: childCount,
@@ -859,7 +859,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           return SizedBox.shrink();
         }
         Widget result = Container(
-          height: widget.enableFixedHeightForListRows ? row.height : null,
+          height: row.height, // widget.enableFixedHeightForListRows ? row.height : null,
           alignment: Alignment.center,
           padding: row==headerRowModel ? null : widget.cellPadding,
           child: Container(
@@ -971,7 +971,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           child: SizedBox(
             height: row.height,
             child: OverflowBox( // hack to fix Appbar actions overflowing when rowHeight<40
-              maxHeight: max(40, row.height),
+              maxHeight: max(40, row.height??0),
               child: AppbarFromZero(
                 title: result,
                 actions: rowActions,
@@ -1019,7 +1019,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             content: bottom,
             stickOffset: row is! RowModel<T> ? 0
                 : filtered.indexOf(row)==0 ? 0
-                : widget.stickyOffset + row.height,
+                : widget.stickyOffset + (row.height??0),
           );
         } else{
           result = Column(
