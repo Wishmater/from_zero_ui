@@ -867,7 +867,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
               child: row==headerRowModel
                   ? defaultHeaderCellBuilder(context, headerRowModel!, colKey)
                   : widget.cellBuilder?.call(context, row as RowModel<T>, colKey)
-                      ?? defaultCellBuilder.call(context, row as RowModel<T>, colKey),
+                      ?? TableFromZeroState.defaultCellBuilder<T>(context, row as RowModel<T>, colKey, _getStyle(context, row, colKey), _getAlignment(colKey)),
           ),
         );
         if (row.onCellTap!=null || row.onCellDoubleTap!=null || row.onCellLongPress!=null || row.onCellHover!=null){
@@ -1625,7 +1625,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     // }
   }
 
-  Widget defaultCellBuilder(BuildContext context, RowModel<T> row, dynamic colKey) {
+  static Widget defaultCellBuilder<T>(BuildContext context, RowModel<T> row, dynamic colKey, TextStyle? style, TextAlign alignment) {
     // final col = widget.columns?[colKey];
     final value = row.values[colKey];
     String message;
@@ -1639,8 +1639,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     final autoSizeTextMaxLines = 1;
     Widget result = AutoSizeText(
       message,
-      style: _getStyle(context, row, colKey),
-      textAlign: _getAlignment(colKey),
+      style: style,
+      textAlign: alignment,
       maxLines: autoSizeTextMaxLines,
       minFontSize: 14,
       overflowReplacement: TooltipFromZero(
@@ -1649,8 +1649,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         verticalOffset: -16,
         child: AutoSizeText(
           message,
-          style: _getStyle(context, row, colKey),
-          textAlign: _getAlignment(colKey),
+          style: style,
+          textAlign: alignment,
           maxLines: autoSizeTextMaxLines,
           softWrap: autoSizeTextMaxLines>1,
           overflow: autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,
@@ -1663,13 +1663,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   BoxDecoration? _getDecoration(RowModel row, dynamic colKey,){
     bool header = row==headerRowModel;
     Color? backgroundColor = _getBackgroundColor(row, colKey, header);
+    // print (backgroundColor);
     if (header && backgroundColor==null){
       backgroundColor = _getMaterialColor();
     }
     if (backgroundColor!=null) {
-      bool applyDarker = widget.alternateRowBackgroundBrightness==true
+      bool applyDarker = widget.alternateRowBackgroundBrightness
           && _shouldApplyDarkerBackground(backgroundColor, row, colKey, header);
-      if (backgroundColor.opacity<1) {
+      if (backgroundColor.opacity<1 && widget.alternateRowBackgroundBrightness) {
         backgroundColor = Color.alphaBlend(backgroundColor, _getMaterialColor());
       }
       if(applyDarker){
