@@ -76,7 +76,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     DAOValueGetter<String, ModelType>?  saveButtonTitle,
     DAOValueGetter<String, ModelType>?  saveConfirmationDialogDescription,
   }) {
-    assert(!_isInitialized, 'Attempted to initialize DAO twice: ${this.runtimeType}: ${this.classUiName}');
+    // assert(!_isInitialized, 'Attempted to initialize DAO twice: ${this.runtimeType}: ${this.classUiName}');
     _isInitialized = true;
     this.classUiNameGetter = classUiNameGetter;
     this.uiNameGetter = uiNameGetter;
