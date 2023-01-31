@@ -14,6 +14,7 @@ class DateField extends Field<DateTime> {
   DateFormat formatterDense;
   DateTime firstDate;
   DateTime lastDate;
+  final DateTimePickerType type;
 
   static late final defaultFormatter = DateFormat(DateFormat.YEAR_MONTH_DAY);
   static late final defaultDenseFormatter = DateFormat("dd/MM/yyyy"); // TODO 3 internationalize
@@ -52,6 +53,7 @@ class DateField extends Field<DateTime> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<DateTime> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<DateTime?>? onValueChanged,
+    this.type = DateTimePickerType.date,
   }) :  this.firstDate = firstDate ?? defaultFirstDate,
         this.lastDate = lastDate ?? defaultLastDate,
         this.formatter = formatter ?? defaultFormatter,
@@ -117,6 +119,7 @@ class DateField extends Field<DateTime> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<DateTime>? viewWidgetBuilder,
     OnFieldValueChanged<DateTime?>? onValueChanged,
+    DateTimePickerType? type,
   }) {
     return DateField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -147,6 +150,7 @@ class DateField extends Field<DateTime> {
       actions: actions ?? this.actions,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       onValueChanged: onValueChanged ?? this.onValueChanged,
+      type: type ?? this.type,
     );
   }
 
@@ -225,6 +229,7 @@ class DateField extends Field<DateTime> {
           lastDate: lastDate,
           hint: hint,
           value: value,
+          type: type,
           onSelected: (v) {
             value=v;
             focusNode.requestFocus();
@@ -236,7 +241,7 @@ class DateField extends Field<DateTime> {
           buttonChildBuilder: (context, title, hint, value, formatter, enabled, clearable) {
             return Padding(
               padding: EdgeInsets.only(right: dense ? 0 : context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40),
-              child: _buttonContentBuilder(context, title, hint, value, formatter, enabled, false,
+              child: _buttonContentBuilder(context, title, hint, value, type, formatter, enabled, false,
                 dense: dense,
               ),
             );
@@ -320,9 +325,12 @@ class DateField extends Field<DateTime> {
     return result;
   }
 
-  Widget _buttonContentBuilder(BuildContext context, String? title, String? hint, DateTime? value, formatter, bool enabled, bool clearable, {
+  Widget _buttonContentBuilder(BuildContext context, String? title, String? hint, DateTime? value, DateTimePickerType type, formatter, bool enabled, bool clearable, {
     dense = false,
   }) {
+    final formattedValue = value==null ? null : type==DateTimePickerType.time
+        ? TimeOfDay.fromDateTime(value).format(context)
+        : formatter.format(value);
     return Padding(
       padding: EdgeInsets.only(right: enabled&&clearable ? 40 : 0),
       child: Row(
@@ -336,7 +344,7 @@ class DateField extends Field<DateTime> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 dense
-                    ? Text(value==null ? (hint ?? title ?? '') : formatter.format(value), style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                    ? Text(value==null ? (hint ?? title ?? '') : formattedValue, style: Theme.of(context).textTheme.subtitle1!.copyWith(
                         height: 0.8,
                         color: value==null ? Theme.of(context).textTheme.caption!.color!
                             : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
@@ -351,7 +359,7 @@ class DateField extends Field<DateTime> {
                       titleStyle: Theme.of(context).textTheme.caption!.copyWith(
                         color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
                       ),
-                      value: value==null ? (hint ?? '') : formatter.format(value),
+                      value: value==null ? (hint ?? '') : formattedValue,
                       valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
                         height: 1,
                         color: value==null ? Theme.of(context).textTheme.caption!.color!
