@@ -91,7 +91,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
         enabled = true,
         this.breakpoints = breakpoints ?? {
           0: ActionState.overflow,
-          ScaffoldFromZero.screenSizeLarge: ActionState.icon,
+          // ScaffoldFromZero.screenSizeLarge: ActionState.icon,
         };
 
   static final Function(BuildContext context)? nullOnTap = (context)=>null;
