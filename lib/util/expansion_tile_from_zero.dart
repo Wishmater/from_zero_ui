@@ -303,7 +303,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
                 ),
               ),
             ),
-          if (widget.trailing==null && widget.style==DrawerMenuFromZero.styleTree && _isExpanded)
+          if (widget.style==DrawerMenuFromZero.styleTree && _isExpanded) // && widget.trailing==null
             Positioned(
               left: 10, right: 0, bottom: -1, top: -1,
               child: FractionallySizedBox(
