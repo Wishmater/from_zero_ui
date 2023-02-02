@@ -434,7 +434,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
               return SimpleRowModel(
                 id: e,
                 values: {0: e.toString()},
-                height: widget.rowHeight,
+                height: widget.useFixedRowHeight ? widget.rowHeight : null,
                 // backgroundColor: widget.value==e ? Theme.of(context).splashColor.withOpacity(0.2) : null,
                 onRowTap: (value) {
                   _select(e);
