@@ -119,6 +119,7 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
 }
 
 class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
+  bool Function(T? value, T? defaultValue)? comparator;
   ForcedValueError({
     required Field<T> field,
     required T? defaultValue,
@@ -127,6 +128,7 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
     bool? isVisibleAsSaveConfirmation,
     bool? isVisibleAsHintMessage,
     bool? isVisibleAsTooltip,
+    this.comparator,
   })  : super(
           field: field,
           error: error,
@@ -138,7 +140,7 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
           isVisibleAsHintMessage: isVisibleAsHintMessage,
           isVisibleAsTooltip: isVisibleAsTooltip,
         ) {
-    severity = field.value==defaultValue
+    severity = (comparator?.call(field.value, defaultValue) ?? field.value==defaultValue)
         ? ValidationErrorSeverity.disabling
         : ValidationErrorSeverity.invalidating;
   }
@@ -148,6 +150,7 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
     bool? isVisibleAsSaveConfirmation,
     bool? isVisibleAsHintMessage,
     bool? isVisibleAsTooltip,
+    bool Function(T? value, T? defaultValue)? comparator,
   }) {
     return ForcedValueError<T>(
       field: this.field as Field<T>,
@@ -157,6 +160,7 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
       isVisibleAsSaveConfirmation: isVisibleAsSaveConfirmation ?? this.isVisibleAsSaveConfirmation,
       isVisibleAsHintMessage: isVisibleAsHintMessage ?? this.isVisibleAsHintMessage,
       isVisibleAsTooltip: isVisibleAsTooltip ?? this.isVisibleAsTooltip,
+      comparator: comparator ?? this.comparator,
     )..animationController=this.animationController;
   }
 }
