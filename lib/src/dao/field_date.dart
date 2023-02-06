@@ -18,6 +18,7 @@ class DateField extends Field<DateTime> {
 
   static late final defaultFormatter = DateFormat(DateFormat.YEAR_MONTH_DAY);
   static late final defaultDenseFormatter = DateFormat("dd/MM/yyyy"); // TODO 3 internationalize
+  static late final defaultTimeFormatter = DateFormat("H:mm");
   static late final defaultFirstDate = DateTime(1900);
   static late final defaultLastDate = DateTime(2200);
 
@@ -56,8 +57,8 @@ class DateField extends Field<DateTime> {
     this.type = DateTimePickerType.date,
   }) :  this.firstDate = firstDate ?? defaultFirstDate,
         this.lastDate = lastDate ?? defaultLastDate,
-        this.formatter = formatter ?? defaultFormatter,
-        this.formatterDense = formatterDense ?? formatter ?? defaultDenseFormatter,
+        this.formatter = formatter ?? (type==DateTimePickerType.time ? defaultTimeFormatter : defaultFormatter),
+        this.formatterDense = formatterDense ?? formatter ?? (type==DateTimePickerType.time ? defaultTimeFormatter : defaultDenseFormatter),
         super(
           uiNameGetter: uiNameGetter,
           value: value,
@@ -155,7 +156,10 @@ class DateField extends Field<DateTime> {
   }
 
   @override
-  String toString() => value==null ? '' : formatter.format(value!);
+  String toString() => value==null ? ''
+      : type==DateTimePickerType.time && dao.contextForValidation!=null
+          ? TimeOfDay.fromDateTime(value!).format(dao.contextForValidation!)
+          : formatter.format(value!);
 
   @override
   List<Widget> buildFieldEditorWidgets(BuildContext context, {
