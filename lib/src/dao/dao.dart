@@ -445,6 +445,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         validateIfNotEdited: validateNonEditedFields,
       ).then((v) {
         e.notifyListeners();
+        print (v);
+        print ('${e.uiName}: ${e.value}');
+        print (e.validationErrors.map((e)=>e.severity));
         return v;
       });
       results.add(future);
@@ -554,6 +557,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     },
                     successBuilder: (context, validation) {
                       validation = validation && validationErrors.firstOrNullWhere((e) => e.isBlocking)==null;
+                      print (validationErrors.map((e) => e.severity));
                       if (!showConfirmDialogWithBlockingErrors && !validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
                         Navigator.of(context).pop(null);
                       }
