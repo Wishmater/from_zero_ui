@@ -211,7 +211,7 @@ class _DatePickerFromZeroPopupState extends State<DatePickerFromZeroPopup> {
 
       case DateTimePickerType.time:
         return timePickerDialogFromZero.TimePickerDialog(
-          initialTime: TimeOfDay.fromDateTime(widget.value ?? DateTime.now()),
+          initialTime: TimeOfDay.fromDateTime(widget.value ?? DateTime.now().copyWith(minute: 0)),
           includeDialog: false,
           useLayoutBuilderInsteadOfMediaQuery: true,
           helpText: widget.title,
