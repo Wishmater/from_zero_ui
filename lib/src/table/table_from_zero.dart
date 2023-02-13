@@ -72,6 +72,7 @@ class TableFromZero<T> extends StatefulWidget {
   /// if null, excel export option disabled
   final FutureOr<String>? exportPathForExcel;
   final bool? computeFiltersInIsolate;
+  final Color? backgroundColor;
 
   TableFromZero({
     Key? key,
@@ -108,6 +109,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.exportPathForExcel,
     this.enableSkipFrameWidgetForRows,
     this.computeFiltersInIsolate,
+    this.backgroundColor,
   }) :  super(key: key,);
 
   @override
@@ -802,9 +804,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           child: result,
         );
         if (addSizing){
-          if (col?.width!=null){
+          if (col?.width!=null) {
             result = SizedBox(width: col!.width, child: result,);
-          } else{
+          } else {
             if (constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
               return SizedBox(width: widget.minWidth! * (_getFlex(colKey)/maxFlex), child: result,);
             } else {
@@ -815,7 +817,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         return result;
       };
       final cellBuilder = (BuildContext context, int j) {
-        if (widget.verticalDivider!=null){
+        if (widget.verticalDivider!=null) {
           if (j%2==0) return Padding(
             padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
             child: widget.verticalDivider,
@@ -823,7 +825,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           j = (j-1)~/2;
         }
         if (_showCheckboxes) {
-          if (j==0){
+          if (j==0) {
             return SizedBox(
               width: _checkmarkWidth,
               child: row.onCheckBoxSelected==null||(row==headerRowModel&&widget.onAllSelected==null)
@@ -1661,43 +1663,33 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   }
 
   BoxDecoration? _getDecoration(RowModel row, dynamic colKey,){
-    bool header = row==headerRowModel;
-    Color? backgroundColor = _getBackgroundColor(row, colKey, header);
-    // print (backgroundColor);
-    if (header && backgroundColor==null){
-      backgroundColor = _getMaterialColor();
-    }
+    bool isHeader = row==headerRowModel;
+    Color? backgroundColor = _getBackgroundColor(row, colKey, isHeader);
     if (backgroundColor!=null) {
       bool applyDarker = widget.alternateRowBackgroundBrightness
-          && _shouldApplyDarkerBackground(backgroundColor, row, colKey, header);
+          && _shouldApplyDarkerBackground(backgroundColor, row, colKey, isHeader);
       if (backgroundColor.opacity<1 && widget.alternateRowBackgroundBrightness) {
         backgroundColor = Color.alphaBlend(backgroundColor, _getMaterialColor());
       }
-      if(applyDarker){
+      if (applyDarker) {
         backgroundColor = Color.alphaBlend(backgroundColor.withOpacity(0.965), Colors.black);
       }
     }
     return backgroundColor==null ? null : BoxDecoration(color: backgroundColor);
   }
-  Color _getMaterialColor() => Material.of(context)!.color ?? Theme.of(context).cardColor;
-  Color? _getBackgroundColor(RowModel row, dynamic colKey, bool header){
+  Color _getMaterialColor() => widget.backgroundColor ?? Material.of(context)!.color ?? Theme.of(context).cardColor;
+  Color? _getBackgroundColor(RowModel row, dynamic colKey, bool isHeader){
     Color? backgroundColor;
-    if (header){
+    if (isHeader){
       backgroundColor = widget.columns?[colKey]?.backgroundColor;
-    } else if (colKey==null) {
-      backgroundColor = row.backgroundColor ?? _getMaterialColor();
-    } else{
-      if (widget.rowStyleTakesPriorityOverColumn){
-        backgroundColor = row.backgroundColor!=null
-            ? null
-            : widget.columns?[colKey]?.backgroundColor;
-      } else{
-        backgroundColor = widget.columns?[colKey]?.backgroundColor;
-      }
+    } else {
+      backgroundColor = widget.rowStyleTakesPriorityOverColumn
+          ? (row.backgroundColor ?? widget.columns?[colKey]?.backgroundColor)
+          : (widget.columns?[colKey]?.backgroundColor ?? row.backgroundColor);
     }
-    return backgroundColor;
+    return backgroundColor ?? _getMaterialColor();
   }
-  bool _shouldApplyDarkerBackground(Color? current, RowModel row, dynamic colKey, bool header){
+  bool _shouldApplyDarkerBackground(Color? current, RowModel row, dynamic colKey, bool isHeader){
 //    if (filtered[i]!=row) return false;
     int i = row is! RowModel<T> ? -1 : filtered.indexOf(row);
     if (i<0) {
@@ -1707,9 +1699,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     } else if (!(widget.alternateRowBackgroundSmartly??filtered.length<50) || i > filtered.length) {
       return i.isEven;
     } else {
-      Color? previous = _getBackgroundColor(filtered[i-1], colKey, header);
+      Color? previous = _getBackgroundColor(filtered[i-1], colKey, isHeader);
       if (previous!=current) return false;
-      return !_shouldApplyDarkerBackground(previous, filtered[i-1], colKey, header);
+      return !_shouldApplyDarkerBackground(previous, filtered[i-1], colKey, isHeader);
     }
   }
 

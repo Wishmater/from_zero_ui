@@ -1894,7 +1894,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   duration: Duration(milliseconds: 300),
                   builder: (animationController, child) {
                     return Container(
-                      color: Material.of(context)!.color ?? Theme.of(context).cardColor,
+                      color: backgroundColor?.call(context, this, dao) ?? Material.of(context)!.color ?? Theme.of(context).cardColor,
                       height: 128*CurveTween(curve: Curves.easeInCubic).chain(Tween(begin: 1.0, end: 0.0,)).evaluate(animationController),
                     );
                   },
@@ -1926,6 +1926,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           rows: builtRows.values.toList(),
           enableFixedHeightForListRows: rowAddonField==null,
           cellPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+          backgroundColor: backgroundColor?.call(context, this, dao),
           cellBuilder: tableCellsEditable ? (context, row, colKey) {
             final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
               expandToFillContainer: false,
@@ -2079,7 +2080,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             result = Material(
               color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
               child: Container(
-                color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
+                color: backgroundColor?.call(context, this, dao) ?? Material.of(context)?.color ?? Theme.of(context).canvasColor,
                 padding: addCard ? null : const EdgeInsets.only(right: 24),
                 height: mediaQuery.size.height - mediaQuery.padding.vertical - mediaQuery.viewInsets.vertical - 256,
                 child: ScrollbarFromZero(
@@ -2095,7 +2096,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             result = Material(
               color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
               child: Container(
-                color: Material.of(context)?.color ?? Theme.of(context).canvasColor,
+                color: backgroundColor?.call(context, this, dao) ?? Material.of(context)?.color ?? Theme.of(context).canvasColor,
                 child: CustomScrollView(
                   shrinkWrap: !expandToFillContainer,
                   physics: NeverScrollableScrollPhysics(),
@@ -2164,7 +2165,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         return Transform.translate(
           offset: Offset(0, 0),
           child: Container(
-            color: Material.of(context)!.color ?? Theme.of(context).cardColor,
+            color: backgroundColor?.call(context, this, dao) ?? Material.of(context)!.color ?? Theme.of(context).cardColor,
             child: TextButton(
               child: Padding(
                 padding: const EdgeInsets.only(top: 10, bottom: 10,),
@@ -2338,6 +2339,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 onShowAppbarContextMenu: () => focusNode.requestFocus(),
                 exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
                 addSearchAction: addSearchAction,
+                backgroundColor: backgroundColor?.call(context, this, dao),
                 leading: !collapsible ? icon : IconButton(
                   icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
                   onPressed: () {

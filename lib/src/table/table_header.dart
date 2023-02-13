@@ -22,6 +22,7 @@ class TableHeaderFromZero<T> extends StatefulWidget {
   final bool searchActionExpandedByDefault;
   final Color? defaultActionsColor;
   final bool Function(RowModel<T> row)? rowCountSelector;
+  final Color? backgroundColor;
 
   const TableHeaderFromZero({
     required this.controller,
@@ -35,6 +36,7 @@ class TableHeaderFromZero<T> extends StatefulWidget {
     this.searchActionExpandedByDefault = true,
     this.defaultActionsColor,
     this.rowCountSelector,
+    this.backgroundColor,
     Key? key,
   }) : super(key: key);
 
@@ -126,7 +128,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
         return Theme(
           data: Theme.of(context).copyWith(
             appBarTheme: AppBarTheme(
-              color: Material.of(context)!.color ?? Theme.of(context).cardColor, // Colors.transparent
+              color: widget.backgroundColor ?? Material.of(context)!.color ?? Theme.of(context).cardColor, // Colors.transparent
               iconTheme: Theme.of(context).iconTheme,
               actionsIconTheme: widget.defaultActionsColor==null
                   ? Theme.of(context).iconTheme
