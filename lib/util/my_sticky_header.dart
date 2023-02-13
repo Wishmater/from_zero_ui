@@ -213,11 +213,11 @@ class RenderStickyHeader extends RenderBox
     }
     final ScrollPosition? oldValue = _scrollPosition;
     _scrollPosition = newValue;
-    markNeedsLayout();
-    if (attached) {
-      oldValue?.removeListener(markNeedsLayout);
-      newValue?.addListener(markNeedsLayout);
-    }
+    // markNeedsLayout();
+    // if (attached) {
+    //   oldValue?.removeListener(markNeedsLayout);
+    //   newValue?.addListener(markNeedsLayout);
+    // }
   }
   set scrollController(ScrollController? newValue){
     if (_scrollController == newValue) {
@@ -225,11 +225,11 @@ class RenderStickyHeader extends RenderBox
     }
     final ScrollController? oldValue = _scrollController;
     _scrollController = newValue;
-    markNeedsLayout();
-    if (attached) {
-      oldValue?.removeListener(markNeedsLayout);
-      newValue?.addListener(markNeedsLayout);
-    }
+    // markNeedsLayout();
+    // if (attached) {
+    //   oldValue?.removeListener(markNeedsLayout);
+    //   newValue?.addListener(markNeedsLayout);
+    // }
   }
   
   set callback(RenderStickyHeaderCallback? newValue) {
@@ -376,7 +376,11 @@ class RenderStickyHeader extends RenderBox
 
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
-    return defaultHitTestChildren(result, position: position);
+    if (debugNeedsLayout) {
+      return false;
+    } else {
+      return defaultHitTestChildren(result, position: position);
+    }
   }
 
   @override
