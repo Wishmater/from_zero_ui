@@ -241,6 +241,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
     required Animation<double> animation,
     required Animation<double> secondaryAnimation,
     required ScaffoldFromZeroChangeNotifier scaffoldChangeNotifier,
+    bool upwards = true,
   }) {
     return AnimatedBuilder(
       child: child,
@@ -278,6 +279,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
                 child: FadeUpwardsSlideTransition(
                   routeAnimation: animation,
                   child: child!,
+                  upwards: upwards,
                 ),
               );
               // return FadeThroughTransition(

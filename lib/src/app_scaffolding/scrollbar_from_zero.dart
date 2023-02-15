@@ -64,6 +64,14 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   }
 
   @override
+  void didUpdateWidget(covariant ScrollbarFromZero oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller!=widget.controller) {
+      alwaysAttachedScrollController = AlwaysAttachedScrollController(parent: widget.controller, context: context);
+    }
+  }
+
+  @override
   void dispose() {
     super.dispose();
     // try { widget.controller?.dispose(); } catch(_) {}
@@ -76,7 +84,6 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
       return widget.child;
     }
 
-    alwaysAttachedScrollController.parent = widget.controller;
     Widget child = widget.child;
     bool wantsAlwaysShown = Theme.of(context).scrollbarTheme.isAlwaysShown ?? PlatformExtended.isDesktop;
     bool supportsAlwaysShown = widget.controller!=null && (widget.controller!.hasClients || alwaysAttachedScrollController.lastPosition!=null);

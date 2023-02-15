@@ -2,6 +2,7 @@
 // Use of this source code is governed by a the MIT license that can be
 // found in the LICENSE file.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
 import 'package:flutter/rendering.dart';
@@ -376,7 +377,7 @@ class RenderStickyHeader extends RenderBox
 
   @override
   bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
-    if (debugNeedsLayout) {
+    if (!kReleaseMode && debugNeedsLayout) {
       return false;
     } else {
       return defaultHitTestChildren(result, position: position);
