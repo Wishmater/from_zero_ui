@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:animations/animations.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/src/table/table_header.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
@@ -902,7 +903,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     );
   }
 
-  Widget _availablePoolLoadingBuilder(BuildContext context, [double? progress]) {
+  Widget _availablePoolLoadingBuilder(BuildContext context, [ValueListenable<double?>? progress]) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 42),
       child: SizedBox(

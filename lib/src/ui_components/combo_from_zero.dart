@@ -1,5 +1,6 @@
 import 'package:animations/animations.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -159,7 +160,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
     );
   }
 
-  Widget _buildComboLoading(BuildContext context, [double? progress]) {
+  Widget _buildComboLoading(BuildContext context, [ValueListenable<double?>? progress]) {
     Widget result;
     if (widget.buttonChildBuilder==null) {
       result = ComboFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, widget.value, widget.enabled, widget.clearable,
@@ -319,7 +320,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
     );
   }
 
-  Widget _buildPopupLoading(BuildContext context, [double? progress]) {
+  Widget _buildPopupLoading(BuildContext context, [ValueListenable<double?>? progress]) {
     return SizedBox(
       height: 128,
       child: ApiProviderBuilder.defaultLoadingBuilder(context, progress),

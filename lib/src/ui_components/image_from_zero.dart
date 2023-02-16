@@ -243,7 +243,7 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
         }
         final progress = state.loadingProgress?.expectedTotalBytes==null ? null
             :  state.loadingProgress!.cumulativeBytesLoaded / state.loadingProgress!.expectedTotalBytes!;
-        return ApiProviderBuilder.defaultLoadingBuilder(context, progress);
+        return ApiProviderBuilder.defaultLoadingBuilder(context, ValueNotifier(progress));
 
     ///if you don't want override completed widget
     ///please return null or state.completedWidget

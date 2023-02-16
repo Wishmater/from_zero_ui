@@ -86,18 +86,27 @@ class AsyncValueBuilder<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Widget result = asyncValue.when(
-      data: (data) => Container(
-        key: ValueKey(data.hashCode),
-        child: dataBuilder(context, data),
-      ),
-      error: (error, stackTrace) => Container(
-        key: ValueKey(error.hashCode),
-        child: errorBuilder(context, error, stackTrace),
-      ),
-      loading: () => Container(
-        key: const ValueKey('loading'),
-        child: loadingBuilder(context),
-      ),
+      data: (data) {
+        final result = dataBuilder(context, data);
+        return Container(
+          key: result.key ?? ValueKey(data.hashCode),
+          child: result,
+        );
+      },
+      error: (error, stackTrace) {
+        final result = errorBuilder(context, error, stackTrace);
+        return Container(
+        key: result.key ?? ValueKey(error.hashCode),
+          child: result,
+        );
+      },
+      loading: () {
+        final result = loadingBuilder(context);
+        return Container(
+          key: result.key ?? const ValueKey('loading'),
+          child: result,
+        );
+      },
     );
     result = AnimatedSwitcher(
       child: result,
@@ -203,19 +212,22 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
     }
     Widget result;
     if (error!=null) {
+      result = errorBuilder(context, error!, stackTrace);
       result = Container(
-        key: ValueKey(error.hashCode),
-        child: errorBuilder(context, error!, stackTrace),
+        key: result.key ?? ValueKey(error.hashCode),
+        child: result,
       );
     } else if (data.length==asyncValues.length) {
+      result = dataBuilder(context, data);
       result = Container(
-        key: ValueKey(asyncValues.isEmpty ? 'empty' : asyncValues.map((e) => e.hashCode).reduce((v, e) => v+e)),
-        child: dataBuilder(context, data),
+        key: result.key ?? ValueKey(asyncValues.isEmpty ? 'empty' : asyncValues.map((e) => e.hashCode).reduce((v, e) => v+e)),
+        child: result,
       );
     } else {
+      result = loadingBuilder(context);
       result = Container(
-        key: const ValueKey('loading'),
-        child: loadingBuilder(context),
+        key: result.key ?? const ValueKey('loading'),
+        child: result,
       );
     }
     result = AnimatedSwitcher(

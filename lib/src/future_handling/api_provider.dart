@@ -245,7 +245,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
 
 
 
-typedef ApiLoadingBuilder = Widget Function(BuildContext context, double? progress);
+typedef ApiLoadingBuilder = Widget Function(BuildContext context, ValueListenable<double?>? progress);
 typedef ApiErrorBuilder = Widget Function(BuildContext context, Object error, StackTrace? stackTrace, VoidCallback? onRetry);
 
 class ApiProviderBuilder<T> extends ConsumerWidget {
@@ -291,12 +291,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
       dataBuilder: dataBuilder,
       alignment: alignment,
       loadingBuilder: (context) {
-        return ValueListenableBuilder<double?>(
-          valueListenable: stateNotifier.wholePercentageNotifier,
-          builder: (context, percentage, child) {
-            return loadingBuilder(context, percentage);
-          },
-        );
+        return loadingBuilder(context, stateNotifier.wholePercentageNotifier);
       },
       errorBuilder: (context, error, stackTrace) {
         return errorBuilder(context, error, stackTrace, ()=>stateNotifier.retry(ref));
@@ -309,11 +304,23 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     );
   }
 
-  static Widget defaultLoadingBuilder(BuildContext context, double? progress) {
-    return LoadingSign(
-      value: progress,
-      color: Theme.of(context).splashColor.withOpacity(1),
-    );
+  static Widget defaultLoadingBuilder(BuildContext context, ValueListenable<double?>? progress) {
+    final color = Theme.of(context).splashColor.withOpacity(1);
+    if (progress==null) {
+      return LoadingSign(
+        color: color,
+      );
+    } else {
+      return ValueListenableBuilder<double?>(
+        valueListenable: progress,
+        builder: (context, progress, child) {
+          return LoadingSign(
+            value: progress,
+            color: Theme.of(context).splashColor.withOpacity(1),
+          );
+        },
+      );
+    }
   }
 
   static Widget defaultErrorBuilder(BuildContext context, Object? error, StackTrace? stackTrace, VoidCallback? onRetry) {
@@ -544,19 +551,17 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
       dataBuilder: dataBuilder,
       alignment: alignment,
       loadingBuilder: (context) {
-        final listenable = MultiValueListenable(stateNotifiers.map((e) => e.wholePercentageNotifier).toList());
-        return AnimatedBuilder(
-          animation: listenable,
-          builder: (context, child) {
-            double? percentage;
-            try {
-              final meaningfulValues = listenable.values.whereType<double>().toList();
-              percentage = meaningfulValues.isEmpty ? 0
-                  : meaningfulValues.reduce((v, e) => v+e) / meaningfulValues.length;
-            } catch (_) {}
-            return loadingBuilder(context, percentage);
-          },
-        );
+        final listenables = stateNotifiers.map((e) => e.wholePercentageNotifier);
+        final unifiedListenable = UnitedValueListenable(listenables, (values) {
+          double? percentage;
+          try {
+            final meaningfulValues = values.whereType<double>().toList();
+            percentage = meaningfulValues.isEmpty ? null
+                : meaningfulValues.reduce((v, e) => v+e) / meaningfulValues.length;
+          } catch (_) {}
+          return percentage;
+        });
+        return loadingBuilder(context, unifiedListenable);
       },
       errorBuilder: (context, error, stackTrace) {
         return errorBuilder(context, error, stackTrace, () {
@@ -577,13 +582,32 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
 
 
 class MultiValueListenable<T> extends ChangeNotifier {
-  List<ValueNotifier<T>> _notifiers;
-  MultiValueListenable(this._notifiers) {
-    for (final e in _notifiers) {
+  final Iterable<ValueListenable<T>> _listenables;
+  MultiValueListenable(this._listenables) {
+    for (final e in _listenables) {
       e.addListener(() => notifyListeners());
     }
   }
-  List<T> get values => _notifiers.map((e) => e.value).toList();
+  List<T> get values => _listenables.map((e) => e.value).toList();
+}
+class UnitedValueListenable<T> extends ValueListenable<T> {
+  final Iterable<ValueListenable<T>> _listenables;
+  final T Function(Iterable<T>) _unificator;
+  UnitedValueListenable(this._listenables, this._unificator);
+  @override
+  void addListener(VoidCallback listener) {
+    for (final e in _listenables) {
+      e.addListener(listener);
+    }
+  }
+  @override
+  void removeListener(VoidCallback listener) {
+    for (final e in _listenables) {
+      e.addListener(listener);
+    }
+  }
+  @override
+  T get value => _unificator(_listenables.map((e) => e.value));
 }
 
 
@@ -644,16 +668,10 @@ class _ApiStateBuilderState<T> extends ConsumerState<ApiStateBuilder<T>> {
       dataBuilder: widget.dataBuilder,
       alignment: widget.alignment,
       loadingBuilder: (context) {
-        return ValueListenableBuilder<double?>(
-          valueListenable: widget.stateNotifier.wholePercentageNotifier,
-          builder: (context, percentage, child) {
-            return widget.loadingBuilder(context, percentage);
-          },
-        );
+        return widget.loadingBuilder(context, widget.stateNotifier.wholePercentageNotifier);
       },
       errorBuilder: (context, error, stackTrace) {
-        return widget.errorBuilder(
-            context, error, stackTrace, () => widget.stateNotifier.retry(ref));
+        return widget.errorBuilder(context, error, stackTrace, () => widget.stateNotifier.retry(ref));
       },
       transitionBuilder: widget.transitionBuilder,
       transitionDuration: widget.transitionDuration,
@@ -664,3 +682,5 @@ class _ApiStateBuilderState<T> extends ConsumerState<ApiStateBuilder<T>> {
   }
 
 }
+
+

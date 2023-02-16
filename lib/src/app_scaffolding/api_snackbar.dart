@@ -162,7 +162,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
     return result;
   }
 
-  Widget loadingBuilder(BuildContext context, double? progress) {
+  Widget loadingBuilder(BuildContext context, ValueListenable<double?>? progress) {
     final type = SnackBarFromZero.loading;
     final icon = SnackBarFromZero.icons[type];
     final actionColor = SnackBarFromZero.colors[type];
@@ -234,11 +234,21 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
         SizedBox(width: 16,),
       ],
     );
-    Widget progressIndicator = LinearProgressIndicator(
-      value: progress,
-      valueColor: AlwaysStoppedAnimation(actionColor),
-      backgroundColor: SnackBarFromZero.softColors[type],
-    );
+    Widget progressIndicator = progress==null
+        ? LinearProgressIndicator(
+            valueColor: AlwaysStoppedAnimation(actionColor),
+            backgroundColor: SnackBarFromZero.softColors[type],
+          )
+        : ValueListenableBuilder<double?>(
+            valueListenable: progress,
+            builder: (context, progress, child) {
+              return LinearProgressIndicator(
+                value: progress,
+                valueColor: AlwaysStoppedAnimation(actionColor),
+                backgroundColor: SnackBarFromZero.softColors[type],
+              );
+            },
+          );
     result = IntrinsicHeight(
       child: Container(
         color: Color.alphaBlend(SnackBarFromZero.colors[type].withOpacity(0.066), Theme.of(context).cardColor),
