@@ -441,6 +441,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
   }
 
   List<Widget> _getWidgets(BuildContext context, List<ResponsiveDrawerMenuItem> tabs, int selected){
+    final theme = Theme.of(context);
     List<Widget> result = List.generate(tabs.length, (i) {
       if (tabs[i] is ResponsiveDrawerMenuDivider){
 
@@ -468,7 +469,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                     Divider(height: 1,),
                     tabs[i].title.isEmpty ? SizedBox(height: 6,) : Padding(
                       padding: const EdgeInsets.only(left: 64),
-                      child: Text(tabs[i].title, style: Theme.of(context).textTheme.caption,),
+                      child: Text(tabs[i].title, style: theme.textTheme.caption,),
                     )
                   ],
                 ),
@@ -676,98 +677,97 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             ), tabs, i,
           );
           result = ContextMenuFromZero(
-            child: Material(
-              type: MaterialType.transparency,
-              child: ExpansionTileFromZero(
-                key: widget.expansionTileKeys?[i],
-                initiallyExpanded: selected==i || tabs[i].selectedChild>=0,
-                expanded: widget.compact||tabs[i].forcePopup ? false
-                    : scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] ?? tabs[i].defaultExpanded,
-                expandedAlignment: Alignment.topCenter,
-                contextMenuActions: tabs[i].contextMenuActions,
-                addExpandCollapseContextMenuAction: !widget.compact,
-                childrenKeysForExpandCollapse: childKeys[i]?.values.toList(),
-                style: widget.style,
-                leading: widget.depth!=0 || widget.allowCollapseRoot ? null : SizedBox.shrink(),
-                actionPadding: EdgeInsets.only(
-                  left: widget.style==DrawerMenuFromZero.styleTree ? widget.depth*20.0 : 0,
-                ),
-                title: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 6),
-                  child: title,
-                ),
-                titleExpanded: Padding(
-                  padding: const EdgeInsets.only(top: 6),
-                  child: title,
-                ),
-                trailing: widget.depth==0 && !widget.allowCollapseRoot
-                    ? SizedBox.shrink()
-                    : tabs[i].customExpansionTileTrailing ?? (tabs[i].forcePopup ? SizedBox.shrink() : null),
-                children: [
-                  Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 6),
-                        child: DrawerMenuFromZero(
-                          tabs: tabs[i].children!,
-                          expansionTileKeys: childKeys[i],
-                          compact: widget.compact,
-                          selected: tabs[i].selectedChild,
-                          inferSelected: false,
-                          depth: widget.depth+1,
-                          pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
-                              ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
-                              : widget.pushType,
-                          style: widget.style,
-                          homeRoute: widget.homeRoute,
-                          parentTabs: widget.parentTabs ?? _tabs,
-                          paintPreviousTreeLines: [...widget.paintPreviousTreeLines, i!=tabs.length-1,],
-                        ),
+            child: ExpansionTileFromZero(
+              key: widget.expansionTileKeys?[i],
+              initiallyExpanded: selected==i || tabs[i].selectedChild>=0,
+              expanded: widget.compact||tabs[i].forcePopup ? false
+                  : scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] ?? tabs[i].defaultExpanded,
+              expandedAlignment: Alignment.topCenter,
+              contextMenuActions: tabs[i].contextMenuActions,
+              addExpandCollapseContextMenuAction: !widget.compact,
+              childrenKeysForExpandCollapse: childKeys[i]?.values.toList(),
+              style: widget.style,
+              leading: widget.depth!=0 || widget.allowCollapseRoot ? null : SizedBox.shrink(),
+              actionPadding: EdgeInsets.only(
+                left: widget.style==DrawerMenuFromZero.styleTree ? widget.depth*20.0 : 0,
+              ),
+              title: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: title,
+              ),
+              titleExpanded: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: title,
+              ),
+              trailing: widget.depth==0 && !widget.allowCollapseRoot
+                  ? SizedBox.shrink()
+                  : tabs[i].customExpansionTileTrailing ?? (tabs[i].forcePopup ? SizedBox.shrink() : null),
+              children: [
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: DrawerMenuFromZero(
+                        tabs: tabs[i].children!,
+                        expansionTileKeys: childKeys[i],
+                        compact: widget.compact,
+                        selected: tabs[i].selectedChild,
+                        inferSelected: false,
+                        depth: widget.depth+1,
+                        pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
+                            ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
+                            : widget.pushType,
+                        style: widget.style,
+                        homeRoute: widget.homeRoute,
+                        parentTabs: widget.parentTabs ?? _tabs,
+                        paintPreviousTreeLines: [...widget.paintPreviousTreeLines, i!=tabs.length-1,],
                       ),
-                      if (widget.style==DrawerMenuFromZero.styleDrawerMenu)
-                        Positioned(
-                          left: 0, right: 0, bottom: 0, top: 0, // -8
-                          child: IgnorePointer(
+                    ),
+                    if (widget.style==DrawerMenuFromZero.styleDrawerMenu)
+                      Positioned(
+                        left: 0, right: 0, bottom: 0, top: 0, // -8
+                        child: IgnorePointer(
+                          child: Container(
+                            padding: EdgeInsets.only(left: widget.depth*20.0),
+                            alignment: Alignment.centerLeft,
                             child: Container(
-                              padding: EdgeInsets.only(left: widget.depth*20.0),
-                              alignment: Alignment.centerLeft,
-                              child: Container(
-                                width: 20.0, //(widget.depth+1)*20.0
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.only(topRight: Radius.circular(20)),
-                                  color: Color.alphaBlend(
-                                    Theme.of(context).dividerColor,
-                                    Material.of(context)?.color ?? Theme.of(context).cardColor,
-                                  ),
+                              width: 20.0, //(widget.depth+1)*20.0
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.only(topRight: Radius.circular(20)),
+                                color: Color.alphaBlend(
+                                  selected!=i
+                                      ? theme.dividerColor
+                                      : Color.lerp(theme.textTheme.bodyText1!.color, theme.indicatorColor, 0.7)!.withOpacity(0.1),
+                                  Material.of(context)?.color ?? theme.cardColor,
                                 ),
                               ),
                             ),
                           ),
                         ),
-                    ],
-                  ),
-                ],
-                onExpansionChanged: (value) async {
-                  if (widget.compact||tabs[i].forcePopup){
-                    if (!(await onTap())) {
-                      _menuButtonKeys[i]!.currentState!.showContextMenu();
-                    }
-                    return false;
-                  } else if (widget.depth==0 && !widget.allowCollapseRoot) {
-                    await onTap();
-                    return false;
-                  } else {
-                    if ((await onTap()) && value){
-                      return false;
-                    }
-                    return true;
+                      ),
+                  ],
+                ),
+              ],
+              onExpansionChanged: (value) async {
+                if (widget.compact||tabs[i].forcePopup){
+                  if (!(await onTap())) {
+                    _menuButtonKeys[i]!.currentState!.showContextMenu();
                   }
-                },
-                onPostExpansionChanged: (value) {
-                  scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] = value;
-                },
-              ),
+                  return false;
+                } else if (widget.depth==0 && !widget.allowCollapseRoot) {
+                  await onTap();
+                  return false;
+                } else {
+                  if ((await onTap()) && value){
+                    return false;
+                  }
+                  return true;
+                }
+              },
+              onPostExpansionChanged: (value) {
+                scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] = value;
+              },
             ),
             addGestureDetector: false,
             key: _menuButtonKeys[i],
@@ -934,8 +934,8 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final selectedColor = widget.selectedColor
-        ?? Color.lerp(theme.textTheme.bodyText1!.color, theme.indicatorColor, 0.7)!;
+    final selectedColor = !widget.selected ? Colors.transparent
+        : widget.selectedColor ?? Color.lerp(theme.textTheme.bodyText1!.color, theme.indicatorColor, 0.7)!;
     return Material(
       type: MaterialType.transparency,
       color: widget.selected
