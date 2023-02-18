@@ -492,7 +492,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     for (final e in columnOptions.entries) {
       final key = e.key;
       final options = e.value;
-      List<dynamic> available = [];
+      Set<dynamic> available = {};
       if (options[0] ?? true) { // filterEnabled
         for (final row in rowValues) {
           final element = row[key];
@@ -501,9 +501,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                 : element is ComparableList ? element.list
                 : element is ListField ? element.objects : [];
             for (final e in list) {
-              if (!available.contains(e)) {
                 available.add(e);
-              }
               if (artifitialThrottle) {
                 operationCounter+=available.length;
                 if (operationCounter>1000000) {
@@ -516,9 +514,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
               }
             }
           } else {
-            if (!available.contains(element)) {
               available.add(element);
-            }
           }
           if (artifitialThrottle) {
             operationCounter+=available.length;
@@ -533,8 +529,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         }
       }
       bool sortAscending = options[1] ?? true; // defaultSortAscending
-      available.sort((a, b) => defaultComparator(a, b, sortAscending));
-      availableFilters[key] = available;
+      availableFilters[key] = available.sortedWith((a, b) => defaultComparator(a, b, sortAscending));
     }
     return availableFilters;
   }
