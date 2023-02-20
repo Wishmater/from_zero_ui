@@ -448,13 +448,13 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
         ResponsiveDrawerMenuDivider divider = tabs[i] as ResponsiveDrawerMenuDivider;
         if (divider.widget!=null){
           return Padding(
-            padding: EdgeInsets.only(left: widget.depth*20.0),
+            padding: EdgeInsets.only(left: widget.depth==0 ? 0 : 26 + (widget.depth-1)*21.0),
             child: divider.widget!,
           );
         } else{
           double height = widget.compact||tabs[i].title.isNullOrEmpty ? 13 : 32;
           return Padding(
-            padding: EdgeInsets.only(left: widget.depth*20.0),
+            padding: EdgeInsets.only(left: widget.depth==0 ? 0 : 26 + (widget.depth-1)*21.0),
             child: AnimatedContainer(
               duration: 300.milliseconds,
               height: height,
@@ -658,30 +658,13 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             }
           }
           final scaffoldChangeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-          Widget title = getTreeOverlay(
-            DrawerMenuButtonFromZero(
-              key: tabs[i].itemKey,
-              title: tabs[i].title,
-              titleWidget: tabs[i].titleBuilder?.call(tabs[i].title),
-              subtitle: tabs[i].subtitle,
-              subtitleRight: tabs[i].subtitleRight,
-              selected: selected==i && tabs[i].selectedChild<0,
-              compact: widget.compact,
-              dense: tabs[i].dense,
-              titleHorizontalOffset: tabs[i].titleHorizontalOffset,
-              icon: tabs[i].icon ?? SizedBox.shrink(),
-              contentPadding: EdgeInsets.only(
-                left: widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
-                right: widget.paddingRight + (widget.style==DrawerMenuFromZero.styleDrawerMenu ? 42 : 0),
-              ),
-            ), tabs, i,
-          );
+          final expanded = widget.compact||tabs[i].forcePopup ? false
+              : scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] ?? tabs[i].defaultExpanded;
           result = ContextMenuFromZero(
             child: ExpansionTileFromZero(
               key: widget.expansionTileKeys?[i],
               initiallyExpanded: selected==i || tabs[i].selectedChild>=0,
-              expanded: widget.compact||tabs[i].forcePopup ? false
-                  : scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] ?? tabs[i].defaultExpanded,
+              expanded: expanded,
               expandedAlignment: Alignment.topCenter,
               contextMenuActions: tabs[i].contextMenuActions,
               addExpandCollapseContextMenuAction: !widget.compact,
@@ -691,61 +674,76 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               actionPadding: EdgeInsets.only(
                 left: widget.style==DrawerMenuFromZero.styleTree ? widget.depth*20.0 : 0,
               ),
-              title: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6),
-                child: title,
-              ),
-              titleExpanded: Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: title,
-              ),
               trailing: widget.depth==0 && !widget.allowCollapseRoot
                   ? SizedBox.shrink()
                   : tabs[i].customExpansionTileTrailing ?? (tabs[i].forcePopup ? SizedBox.shrink() : null),
+              titleBuilder: (context, expanded) {
+                return Padding (
+                  padding: expanded
+                      ? const EdgeInsets.only(top: 6)
+                      : const EdgeInsets.symmetric(vertical: 6),
+                  child: getTreeOverlay(
+                    DrawerMenuButtonFromZero(
+                      key: tabs[i].itemKey,
+                      title: tabs[i].title,
+                      titleWidget: tabs[i].titleBuilder?.call(tabs[i].title),
+                      subtitle: tabs[i].subtitle,
+                      subtitleRight: tabs[i].subtitleRight,
+                      selected: selected==i && (tabs[i].selectedChild<0 || !expanded),
+                      compact: widget.compact,
+                      dense: tabs[i].dense,
+                      titleHorizontalOffset: tabs[i].titleHorizontalOffset,
+                      icon: tabs[i].icon ?? SizedBox.shrink(),
+                      contentPadding: EdgeInsets.only(
+                        left: widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
+                        right: widget.paddingRight + (widget.style==DrawerMenuFromZero.styleDrawerMenu ? 42 : 0),
+                      ),
+                    ), tabs, i,
+                  ),
+                );
+              },
               children: [
                 Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: DrawerMenuFromZero(
-                        tabs: tabs[i].children!,
-                        expansionTileKeys: childKeys[i],
-                        compact: widget.compact,
-                        selected: tabs[i].selectedChild,
-                        inferSelected: false,
-                        depth: widget.depth+1,
-                        pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
-                            ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
-                            : widget.pushType,
-                        style: widget.style,
-                        homeRoute: widget.homeRoute,
-                        parentTabs: widget.parentTabs ?? _tabs,
-                        paintPreviousTreeLines: [...widget.paintPreviousTreeLines, i!=tabs.length-1,],
-                      ),
-                    ),
                     if (widget.style==DrawerMenuFromZero.styleDrawerMenu)
                       Positioned(
                         left: 0, right: 0, bottom: 0, top: 0, // -8
                         child: IgnorePointer(
                           child: Container(
-                            padding: EdgeInsets.only(left: widget.depth*20.0),
+                            padding: EdgeInsets.only(left: widget.depth*21.0),
                             alignment: Alignment.centerLeft,
                             child: Container(
-                              width: 20.0, //(widget.depth+1)*20.0
+                              width: 26.0, //(widget.depth+1)*20.0
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.only(topRight: Radius.circular(20)),
-                                color: Color.alphaBlend(
-                                  selected!=i
-                                      ? theme.dividerColor
-                                      : Color.lerp(theme.textTheme.bodyText1!.color, theme.indicatorColor, 0.7)!.withOpacity(0.1),
-                                  Material.of(context)?.color ?? theme.cardColor,
-                                ),
+                                borderRadius: BorderRadius.only(topRight: Radius.circular(16)),
+                                color: Color.alphaBlend(theme.dividerColor.withOpacity(theme.dividerColor.opacity*0.5), Material.of(context)?.color ?? theme.cardColor),
+                                // color: Color.alphaBlend(
+                                //   selected!=i
+                                //       ? theme.dividerColor
+                                //       : Color.lerp(theme.indicatorColor, Colors.white, 0.33)!,
+                                //   Material.of(context)?.color ?? theme.cardColor,
+                                // ),
                               ),
                             ),
                           ),
                         ),
                       ),
+                    DrawerMenuFromZero(
+                      tabs: tabs[i].children!,
+                      expansionTileKeys: childKeys[i],
+                      compact: widget.compact,
+                      selected: tabs[i].selectedChild,
+                      inferSelected: false,
+                      depth: widget.depth+1,
+                      pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
+                          ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
+                          : widget.pushType,
+                      style: widget.style,
+                      homeRoute: widget.homeRoute,
+                      parentTabs: widget.parentTabs ?? _tabs,
+                      paintPreviousTreeLines: [...widget.paintPreviousTreeLines, i!=tabs.length-1,],
+                    ),
                   ],
                 ),
               ],
@@ -935,6 +933,8 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final selectedColor = !widget.selected ? Colors.transparent
+        : Color.lerp((widget.selectedColor ?? theme.indicatorColor), Material.of(context)?.color ?? theme.cardColor, 0.75);
+    final selectedTextColor = !widget.selected ? Colors.transparent
         : widget.selectedColor ?? Color.lerp(theme.textTheme.bodyText1!.color, theme.indicatorColor, 0.7)!;
     return Material(
       type: MaterialType.transparency,
@@ -949,7 +949,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
             duration: Duration(milliseconds: 100),
             style: TextStyle(
               fontSize: widget.selected ? 17 : 16,
-              color: widget.selected ? selectedColor : theme.textTheme.bodyText1!.color,
+              color: widget.selected ? selectedTextColor : theme.textTheme.bodyText1!.color,
               fontWeight: widget.selected ? FontWeight.w700 : null,
             ),
             child: widget.titleWidget ?? Text(widget.title,),
@@ -961,7 +961,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
               child: AnimatedDefaultTextStyle(
                 duration: Duration(milliseconds: 100),
                 style: TextStyle(
-                  color: widget.selected ? selectedColor.withOpacity(0.75)
+                  color: widget.selected ? selectedTextColor.withOpacity(0.75)
                       : theme.textTheme.caption!.color,
                   fontWeight: widget.selected ? FontWeight.w600 : null,
                 ),
@@ -991,13 +991,13 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 builder: (animation, child) {
                   return Positioned(
                     top: 4, bottom: 4,
-                    right: -2 - 128*(1 - animation.value) - (widget.titleHorizontalOffset/2),
+                    right: -2 + 96*(1 - animation.value) - (widget.titleHorizontalOffset/2),
                     left: -widget.contentPadding.left,
                     child: Opacity(
                       opacity: (animation.value*2).coerceIn(0, 1),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: selectedColor.withOpacity(0.1),
+                          color: selectedColor,
                           borderRadius: BorderRadius.only(
                             topRight: Radius.circular(16),
                             bottomRight: Radius.circular(16),
@@ -1028,7 +1028,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                     );
                     result = IconTheme(
                       data: theme.iconTheme.copyWith(
-                        color: widget.selected ? selectedColor
+                        color: widget.selected ? selectedTextColor
                             : theme.brightness==Brightness.light? Colors.black45 : null,
                       ),
                       child: result,

@@ -37,8 +37,7 @@ class ExpansionTileFromZero extends StatefulWidget {
   const ExpansionTileFromZero({
     Key? key,
     this.leading,
-    required this.title,
-    this.titleExpanded,
+    this.title,
     this.subtitle,
     this.backgroundColor,
     this.onExpansionChanged,
@@ -58,7 +57,10 @@ class ExpansionTileFromZero extends StatefulWidget {
     this.addExpandCollapseContextMenuAction = true,
     this.childrenKeysForExpandCollapse = const [],
     this.enabled = true,
-  }) :  assert(
+    this.titleBuilder,
+  }) :  assert(title!=null || titleBuilder!=null, 'Must specify a title'),
+        assert(title==null || titleBuilder==null, 'Only 1 title must be specified'),
+        assert(
         expandedCrossAxisAlignment != CrossAxisAlignment.baseline,
         'CrossAxisAlignment.baseline is not supported since the expanded children '
             'are aligned in a column, not a row. Try to use another constant.',
@@ -71,11 +73,11 @@ class ExpansionTileFromZero extends StatefulWidget {
   final void Function(bool)? onPostExpansionChanged;
   final int? style;
   final EdgeInsets actionPadding;
-  final Widget? titleExpanded;
   final bool addExpandCollapseContextMenuAction;
   final List<ActionFromZero> contextMenuActions;
   final List<GlobalKey<ExpansionTileFromZeroState>>? childrenKeysForExpandCollapse;
   final bool enabled;
+  final Widget Function(BuildContext context, bool expanded)? titleBuilder;
 
   /// A widget to display before the title.
   ///
@@ -85,7 +87,7 @@ class ExpansionTileFromZero extends StatefulWidget {
   /// The primary content of the list item.
   ///
   /// Typically a [Text] widget.
-  final Widget title;
+  final Widget? title;
 
   /// Additional content displayed below the title.
   ///
@@ -280,7 +282,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
             curve: Curves.easeOutCubic,
             child: Container(
                 key: ValueKey(_isExpanded),
-                child: _isExpanded ? (widget.titleExpanded??widget.title) : widget.title
+                child: widget.titleBuilder?.call(context, _isExpanded) ?? widget.title,
             ),
           ),
           if (!(widget.trailing is SizedBox) && widget.children.isNotEmpty)
@@ -371,17 +373,19 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
         },
       );
     }
-    return Container(
-      decoration: BoxDecoration(
-        color: _backgroundColor.value,
-        // border: Border(
-        //   top: BorderSide(color: borderSideColor),
-        //   bottom: BorderSide(color: borderSideColor),
-        // ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
+    return Material(
+      type: MaterialType.transparency,
+      child: Container(
+        decoration: BoxDecoration(
+          color: _backgroundColor.value,
+          // border: Border(
+          //   top: BorderSide(color: borderSideColor),
+          //   bottom: BorderSide(color: borderSideColor),
+          // ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
 //          ListTileTheme.merge(
 //            iconColor: _iconColor.value,
 //            textColor: _headerColor.value,
@@ -398,16 +402,17 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
 //              ),
 //            ),
 //          ),
-          title,
-          ClipPath(
-            clipper: BottomClipper(),
-            child: Align(
-              alignment: widget.expandedAlignment ?? Alignment.center,
-              heightFactor: _heightFactor.value,
-              child: child,
+            title,
+            ClipPath(
+              clipper: BottomClipper(),
+              child: Align(
+                alignment: widget.expandedAlignment ?? Alignment.center,
+                heightFactor: _heightFactor.value,
+                child: child,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
