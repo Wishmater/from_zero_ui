@@ -933,7 +933,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final selectedColor = !widget.selected ? Colors.transparent
-        : Color.lerp((widget.selectedColor ?? theme.indicatorColor), Material.of(context)?.color ?? theme.cardColor, 0.75);
+        : Color.lerp((widget.selectedColor ?? theme.indicatorColor), Material.of(context)?.color ?? theme.cardColor, 0.77);
     final selectedTextColor = !widget.selected ? Colors.transparent
         : widget.selectedColor ?? Color.lerp(theme.textTheme.bodyText1!.color, theme.indicatorColor, 0.7)!;
     return Material(
