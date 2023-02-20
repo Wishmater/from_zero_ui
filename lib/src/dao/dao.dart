@@ -223,7 +223,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           : this.id==other.id);
 
   @override
-  int get hashCode => id==null ? super.hashCode : id;
+  int get hashCode => id==null ? super.hashCode : id.hashCode;
 
 
   bool blockNotifyListeners = false;
