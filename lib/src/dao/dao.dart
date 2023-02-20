@@ -1693,6 +1693,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   actionDeleteBreakpoints: {0: ActionState.none},
                   actionDuplicateBreakpoints: {0: ActionState.none},
                   actionEditBreakpoints: {0: ActionState.none},
+                  rowTapType: e.rowTapType==RowTapType.edit ? RowTapType.view : e.rowTapType,
                 ) ..availableObjectsPoolGetter = null
                   ..availableObjectsPoolProvider = null
                   ..actions = null;
