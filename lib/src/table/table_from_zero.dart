@@ -379,7 +379,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     validInitialFiltersIsolateController?.cancel();
     Map<dynamic, List<dynamic>> computedAvailableFilters;
     Map<dynamic, Map<Object?, bool>>? computedValidInitialFilters;
-    if (computeFiltersInIsolate ?? widget.computeFiltersInIsolate ?? widget.rows.length>50) {
+    if (computeFiltersInIsolate ?? widget.computeFiltersInIsolate ?? widget.rows.length>200) {
       try {
         final Map<dynamic, Map<dynamic, Field>> fieldAliases = {
           for (final key in widget.columns!.keys) key: {},
