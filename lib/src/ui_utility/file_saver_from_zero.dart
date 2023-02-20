@@ -22,13 +22,13 @@ final _percentFormatter = NumberFormat.decimalPercentPattern(decimalDigits: 1);
 Future<bool> saveFileFromZero ({
   Key? snackBarKey,
   required BuildContext context,
-  required FutureOr<Uint8List> data,
+  required FutureOr<List<int>> data,
   required String? pathAppend,
   required String name,
   ValueNotifier<int>? downloadedAmount,
   ValueNotifier<int?>? fileSize,
   VoidCallback? onCancel,
-  FutureOr<Uint8List> Function()? onRetry,
+  FutureOr<List<int>> Function()? onRetry,
   bool autoOpenOnFinish = true,
   bool showSnackBars = true,
   bool showDownloadSnackBar = true,
@@ -118,7 +118,7 @@ Future<bool> saveFileFromZero ({
   try {
 
     // finish download
-    Uint8List bytes = await data;
+    List<int> bytes = await data;
     if (cancelled) {
       return false;
     }
