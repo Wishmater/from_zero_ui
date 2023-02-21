@@ -508,6 +508,35 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
 
 }
 
+class SliverApiProviderBuilder<T> extends ApiProviderBuilder<T> {
+
+  SliverApiProviderBuilder({
+    required super.provider,
+    required super.dataBuilder,
+    ApiLoadingBuilder loadingBuilder = SliverApiProviderBuilder.defaultLoadingBuilder,
+    ApiErrorBuilder errorBuilder = SliverApiProviderBuilder.defaultErrorBuilder,
+  }) : super(
+    transitionDuration: Duration.zero,
+    applyAnimatedContainerFromChildSize: false,
+    loadingBuilder: loadingBuilder,
+    errorBuilder: errorBuilder,
+  );
+
+  static Widget defaultLoadingBuilder(BuildContext context, ValueListenable<double?>? progress) {
+    return SliverToBoxAdapter(
+      child: ApiProviderBuilder.defaultLoadingBuilder(context, progress),
+    );
+  }
+
+  static Widget defaultErrorBuilder(BuildContext context, Object? error, StackTrace? stackTrace, VoidCallback? onRetry) {
+    return SliverToBoxAdapter(
+      child: ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, onRetry),
+    );
+  }
+
+}
+
+
 
 class ApiProviderMultiBuilder<T> extends ConsumerWidget {
 
@@ -579,6 +608,21 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
   }
 
 }
+
+class SliverApiProviderMultiBuilder<T> extends ApiProviderMultiBuilder<T> {
+  SliverApiProviderMultiBuilder({
+    required super.providers,
+    required super.dataBuilder,
+    ApiLoadingBuilder loadingBuilder = SliverApiProviderBuilder.defaultLoadingBuilder,
+    ApiErrorBuilder errorBuilder = SliverApiProviderBuilder.defaultErrorBuilder,
+  }) : super(
+    transitionDuration: Duration.zero,
+    applyAnimatedContainerFromChildSize: false,
+    loadingBuilder: loadingBuilder,
+    errorBuilder: errorBuilder,
+  );
+}
+
 
 
 class MultiValueListenable<T> extends ChangeNotifier {
@@ -683,4 +727,17 @@ class _ApiStateBuilderState<T> extends ConsumerState<ApiStateBuilder<T>> {
 
 }
 
+class SliverApiStateBuilder<T> extends ApiStateBuilder<T> {
+  SliverApiStateBuilder({
+    required super.stateNotifier,
+    required super.dataBuilder,
+    ApiLoadingBuilder loadingBuilder = SliverApiProviderBuilder.defaultLoadingBuilder,
+    ApiErrorBuilder errorBuilder = SliverApiProviderBuilder.defaultErrorBuilder,
+  }) : super(
+    transitionDuration: Duration.zero,
+    applyAnimatedContainerFromChildSize: false,
+    loadingBuilder: loadingBuilder,
+    errorBuilder: errorBuilder,
+  );
+}
 
