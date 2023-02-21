@@ -57,6 +57,11 @@ enum BoolFieldDisplayType {
   combo,
   radio,
 }
+enum BoolFieldShowViewCheckmark {
+  always,
+  whenTrue,
+  whenFalse,
+}
 
 
 class BoolField extends Field<BoolComparable> {
@@ -70,6 +75,7 @@ class BoolField extends Field<BoolComparable> {
   ListTileControlAffinity listTileControlAffinity;
   bool showBothNeutralAndSpecificUiName;
   ContextFulFieldValueGetter<Color?, BoolField>? selectedColor;
+  BoolFieldShowViewCheckmark showViewCheckmark;
 
   @override
   set value(BoolComparable? v) {
@@ -111,6 +117,7 @@ class BoolField extends Field<BoolComparable> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<BoolComparable> viewWidgetBuilder = BoolField.defaultViewWidgetBuilder,
     OnFieldValueChanged<BoolComparable?>? onValueChanged,
+    this.showViewCheckmark = BoolFieldShowViewCheckmark.always,
   }) :  showBothNeutralAndSpecificUiName = showBothNeutralAndSpecificUiName ?? (uiNameFalseGetter!=null||uiNameTrueGetter!=null),
         super(
           uiNameGetter: uiNameGetter,
@@ -179,6 +186,7 @@ class BoolField extends Field<BoolComparable> {
     ViewWidgetBuilder<BoolComparable>? viewWidgetBuilder,
     bool? showBothNeutralAndSpecificUiName,
     OnFieldValueChanged<BoolComparable?>? onValueChanged,
+    BoolFieldShowViewCheckmark? showViewCheckmark,
   }) {
     return BoolField(
       displayType: displayType??this.displayType,
@@ -210,6 +218,7 @@ class BoolField extends Field<BoolComparable> {
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       showBothNeutralAndSpecificUiName: showBothNeutralAndSpecificUiName ?? this.showBothNeutralAndSpecificUiName,
       onValueChanged: onValueChanged ?? this.onValueChanged,
+      showViewCheckmark: showViewCheckmark ?? this.showViewCheckmark,
     );
   }
 
@@ -231,6 +240,10 @@ class BoolField extends Field<BoolComparable> {
     }
     final field = fieldParam as BoolField;
     final value = field.value!.value;
+    if (value&&fieldParam.showViewCheckmark==BoolFieldShowViewCheckmark.whenFalse
+        || !value&&fieldParam.showViewCheckmark==BoolFieldShowViewCheckmark.whenTrue) {
+      return SizedBox.shrink();
+    }
     final valueName = value
         ? field.uiNameTrueGetter==null ? null : field.uiNameTrue
         : field.uiNameFalseGetter==null ? null : field.uiNameFalse;
