@@ -105,7 +105,7 @@ class ResponsiveDrawerMenuItem{
           ];
         } else {
           return <ResponsiveDrawerMenuItem>[
-            if (i>0 || e.title!=null)
+            if ((i>0 && routes[i-1] is! GoRouteGroupFromZero) || e.title!=null)
               ResponsiveDrawerMenuDivider(title: e.title),
             ...children,
             if (i<routes.lastIndex || e.title!=null)
@@ -452,7 +452,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             child: divider.widget!,
           );
         } else{
-          double height = widget.compact||tabs[i].title.isNullOrEmpty ? 13 : 32;
+          double height = widget.compact||tabs[i].title.isNullOrEmpty ? 9 : 32;
           return Padding(
             padding: EdgeInsets.only(left: widget.depth==0 ? 0 : 26 + (widget.depth-1)*21.0),
             child: AnimatedContainer(
@@ -465,9 +465,9 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 6,),
+                    SizedBox(height: 4,),
                     Divider(height: 1,),
-                    tabs[i].title.isEmpty ? SizedBox(height: 6,) : Padding(
+                    tabs[i].title.isEmpty ? SizedBox(height: 4,) : Padding(
                       padding: const EdgeInsets.only(left: 64),
                       child: Text(tabs[i].title, style: theme.textTheme.caption,),
                     )
