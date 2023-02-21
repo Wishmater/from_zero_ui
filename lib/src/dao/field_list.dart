@@ -1778,7 +1778,14 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     }
     final allowAddNew = this.allowAddNew;
     Widget result;
-    final actions = this.actions?.call(dao.contextForValidation ?? context, this, dao) ?? [];
+    final actions = this.actions?.call(dao.contextForValidation ?? context, this, dao).map((e) {
+      return e.copyWith(
+        onTap: e.onTap==null ? null : (context) {
+          focusNode?.requestFocus();
+          e.onTap!(context);
+        },
+      );
+    }).toList() ?? [];
     final defaultActions = buildDefaultActions(context, focusNode: focusNode);
     if (actions.isNotEmpty && defaultActions.isNotEmpty) {
       actions.add(ActionFromZero.divider(breakpoints: actions.first.breakpoints,));
