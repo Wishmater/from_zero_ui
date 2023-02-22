@@ -714,17 +714,30 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                       navigator.pop();
                                     }
                                   };
+                                  final iconButtonColor = Theme.of(context).appBarTheme.toolbarTextStyle?.color
+                                      ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+                                  final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
+                                  final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
                                   result = GestureDetector(
                                     onDoubleTap: () => onPressed,
                                     child: TooltipFromZero(
                                       message: FromZeroLocalizations.of(context).translate("back"),
                                       child: IconButton(
                                         icon: Icon(Icons.arrow_back),
+                                        color: iconButtonColor,
+                                        hoverColor: iconButtonTransparentColor,
+                                        highlightColor: iconButtonSemiTransparentColor,
+                                        focusColor: iconButtonSemiTransparentColor,
+                                        splashColor: iconButtonSemiTransparentColor,
                                         onPressed: onPressed,
                                       ),
                                     ),
                                   );
                                 } else{
+                                  final iconButtonColor = Theme.of(context).appBarTheme.toolbarTextStyle?.color
+                                      ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+                                  final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
+                                  final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
                                   result = AnimatedBuilder(
                                     animation: ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation,
                                     builder: (context, child) => GestureDetector(
@@ -732,13 +745,18 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                       child: TooltipFromZero(
                                         message: FromZeroLocalizations.of(context).translate("menu_open"),
                                         child: IconButton(
+                                          color: iconButtonColor,
+                                          hoverColor: iconButtonTransparentColor,
+                                          highlightColor: iconButtonSemiTransparentColor,
+                                          focusColor: iconButtonSemiTransparentColor,
+                                          splashColor: iconButtonSemiTransparentColor,
+                                          onPressed: () => _toggleDrawer(context, changeNotifierNotListen),
                                           icon: AnimatedIcon(
                                             progress: widget.alwaysShowHamburgerButtonOnMobile
                                                 ? kAlwaysDismissedAnimation
                                                 : (ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation),
                                             icon: AnimatedIcons.menu_arrow,
                                           ),
-                                          onPressed: () => _toggleDrawer(context, changeNotifierNotListen),
                                         ),
                                       ),
                                     ),
@@ -853,6 +871,10 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                         navigator.pop();
                       }
                     };
+                    final iconButtonColor = Theme.of(context).appBarTheme.toolbarTextStyle?.color
+                        ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+                    final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
+                    final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
                     return Stack(
                       alignment: Alignment.centerLeft,
                       clipBehavior: Clip.none,
@@ -866,6 +888,11 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                 message: FromZeroLocalizations.of(context).translate("back"),
                                 child: IconButton(
                                   icon: Icon(Icons.arrow_back),
+                                  color: iconButtonColor,
+                                  hoverColor: iconButtonTransparentColor,
+                                  highlightColor: iconButtonSemiTransparentColor,
+                                  focusColor: iconButtonSemiTransparentColor,
+                                  splashColor: iconButtonSemiTransparentColor,
                                   onPressed: onBackPressed,
                                 ),
                               ),
@@ -900,6 +927,10 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                         else
                           _toggleDrawer(context, changeNotifier);
                       };
+                      final iconButtonColor = Theme.of(context).appBarTheme.toolbarTextStyle?.color
+                          ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+                      final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
+                      final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
                       return Padding(
                         padding: EdgeInsets.only(right: 8),
                         child: GestureDetector(
@@ -909,6 +940,11 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                 ? FromZeroLocalizations.of(context).translate("menu_close") : FromZeroLocalizations.of(context).translate("menu_open"),
                             child: IconButton(
                               icon: Icon(Icons.menu),
+                              color: iconButtonColor,
+                              hoverColor: iconButtonTransparentColor,
+                              highlightColor: iconButtonSemiTransparentColor,
+                              focusColor: iconButtonSemiTransparentColor,
+                              splashColor: iconButtonSemiTransparentColor,
                               onPressed: onTap,
                             ),
                           ),

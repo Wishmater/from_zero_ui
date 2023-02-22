@@ -245,9 +245,18 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
         }
       }
       if (overflows.isNotEmpty) {
+        final iconButtonColor = Theme.of(context).appBarTheme.toolbarTextStyle?.color
+            ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+        final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
+        final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
         actions.add(
           ContextMenuIconButton(
             icon: Icon(Icons.more_vert),
+            color: iconButtonColor,
+            hoverColor: iconButtonTransparentColor,
+            highlightColor: iconButtonSemiTransparentColor,
+            focusColor: iconButtonSemiTransparentColor,
+            splashColor: iconButtonSemiTransparentColor,
             anchorAlignment: Alignment.bottomCenter,
             popupAlignment: Alignment.bottomCenter,
             actions: overflows,

@@ -165,11 +165,20 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
     ContextCallback? onTap,
     bool enabled = true,
   }) {
+    final color = Theme.of(context).appBarTheme.toolbarTextStyle?.color
+        ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+    final transparentColor = color.withOpacity(0.05);
+    final semiTransparentColor = color.withOpacity(0.1);
     return defaultAnimatedSwitcherBuilder(
       child: TooltipFromZero(
         message: title,
         child: IconButton(
           icon: icon ?? SizedBox.shrink(),
+          color: color,
+          hoverColor: transparentColor,
+          highlightColor: semiTransparentColor,
+          focusColor: semiTransparentColor,
+          splashColor: semiTransparentColor,
           onPressed: (!enabled || onTap==null) ? null : (){
             onTap.call(context);
           },
