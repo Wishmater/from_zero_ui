@@ -1484,16 +1484,19 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     Widget content = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
-        Widget result = Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 24, left: 32, right: 8, bottom: 8,),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            Widget result = Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                AppbarFromZero(
+                  constraints: constraints,
+                  useFlutterAppbar: false,
+                  paddingRight: 16,
+                  toolbarHeight: 96,
+                  title: Padding(
+                    padding: const EdgeInsets.only(left: 24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1507,103 +1510,85 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       ],
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
-                        TextButton(
-                          onPressed: () async {
-                            final tempDao = copyWith();
-                            final result = await tempDao.maybeEdit(mainContext,
-                              showDefaultSnackBars: showDefaultSnackBars,
-                            );
-                            if (result != null) {
-                              final tempProps = tempDao.props;
-                              props.forEach((key, value) {
-                                if (value.value != tempProps[key]!.value) {
-                                  value.value = tempProps[key]!.value;
-                                }
-                              });
-                              Navigator.of(context).pop();
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SizedBox(width: 2,),
-                                Icon(Icons.edit_outlined),
-                                SizedBox(width: 6,),
-                                Text('${FromZeroLocalizations.of(context).translate('edit')}'.toUpperCase(),
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                ),
-                                SizedBox(width: 4,),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ...(viewDialogExtraActions?.call(mainContext, this) ?? []),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ScrollbarFromZero(
-                controller: scrollController,
-                child: SingleChildScrollView(
-                  controller: scrollController,
-                  child: buildViewWidget(mainContext,
-                    mainScrollController: scrollController
-                  ),
+                  actions: [
+                    if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
+                      ActionFromZero(
+                        title: FromZeroLocalizations.of(context).translate('edit').toUpperCase(),
+                        icon: Icon(Icons.edit_outlined),
+                        onTap: (context) async {
+                          final tempDao = copyWith();
+                          final result = await tempDao.maybeEdit(mainContext,
+                            showDefaultSnackBars: showDefaultSnackBars,
+                          );
+                          if (result != null) {
+                            final tempProps = tempDao.props;
+                            props.forEach((key, value) {
+                              if (value.value != tempProps[key]!.value) {
+                                value.value = tempProps[key]!.value;
+                              }
+                            });
+                            Navigator.of(context).pop();
+                          }
+                        },
+                      ),
+                    ...(viewDialogExtraActions?.call(mainContext, this) ?? []),
+                  ],
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  FlatButton(
-                    child: Padding(
-                      padding: const EdgeInsets.all(6.0),
-                      child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                Expanded(
+                  child: ScrollbarFromZero(
+                    controller: scrollController,
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      child: buildViewWidget(mainContext,
+                          mainScrollController: scrollController
                       ),
                     ),
-                    textColor: Theme.of(context).textTheme.caption!.color,
-                    onPressed: () {
-                      Navigator.of(context).pop(); // Dismiss alert dialog
-                    },
                   ),
-                ],
-              ),
-            ),
-          ],
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      FlatButton(
+                        child: Padding(
+                          padding: const EdgeInsets.all(6.0),
+                          child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        textColor: Theme.of(context).textTheme.caption!.color,
+                        onPressed: () {
+                          Navigator.of(context).pop(); // Dismiss alert dialog
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+            if (useIntrinsicWidth ?? true) {
+              result = ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: viewDialogWidth*0.5,
+                  maxWidth: viewDialogWidth*1.5,
+                ),
+                child: IntrinsicWidth(child: result,),
+              );
+            } else {
+              result = SizedBox(
+                width: viewDialogWidth,
+                child: result,
+              );
+            }
+            if (useIntrinsicHeight ?? useIntrinsicHeightForViewDialog) {
+              result = IntrinsicHeight(child: result,);
+            }
+            return result;
+          },
         );
-        if (useIntrinsicWidth ?? true) {
-          result = ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: viewDialogWidth*0.5,
-              maxWidth: viewDialogWidth*1.5,
-            ),
-            child: IntrinsicWidth(child: result,),
-          );
-        } else {
-          result = SizedBox(
-            width: viewDialogWidth,
-            child: result,
-          );
-        }
-        return result;
       },
     );
-    if (useIntrinsicHeight ?? useIntrinsicHeightForViewDialog) {
-      content = IntrinsicHeight(child: content,);
-    }
     return showModal(context: mainContext,
       builder: (context) {
         return Center(
@@ -1667,126 +1652,125 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         Widget result;
         if (fields.isEmpty) {
           return SizedBox.shrink();
-        } else {
-          result = Column(
-            mainAxisSize: MainAxisSize.min,
-            children: fields.map((e) {
-              clear = !clear;
-              if (e is ListField && e.buildViewWidgetAsTable) {
-                clear = false;
-                final ViewWidgetBuilder<ComparableList<DAO<dynamic>>> temp = ListField.defaultViewWidgetBuilder; // hack to allow correct equality with static function
-                if (e.viewWidgetBuilder != temp) {
-                  return e.buildViewWidget(context,
-                    linkToInnerDAOs: dao.viewDialogLinksToInnerDAOs,
-                    showViewButtons: dao.viewDialogShowsViewButtons,
-                  );
-                }
-                if (e.dao is LazyDAO) (e.dao as LazyDAO).ensureInitialized();
-                final newField = e.copyWith(
-                  tableCellsEditable: false,
-                  allowAddNew: false,
-                  actionViewBreakpoints: dao.viewDialogLinksToInnerDAOs&&dao.viewDialogShowsViewButtons
-                      ? {0: ActionState.icon}
-                      : dao.viewDialogLinksToInnerDAOs
-                          ? {0: ActionState.popup}
-                          : {0: ActionState.none},
-                  actionDeleteBreakpoints: {0: ActionState.none},
-                  actionDuplicateBreakpoints: {0: ActionState.none},
-                  actionEditBreakpoints: {0: ActionState.none},
-                  rowTapType: e.rowTapType==RowTapType.edit ? RowTapType.view : e.rowTapType,
-                ) ..availableObjectsPoolGetter = null
-                  ..availableObjectsPoolProvider = null
-                  ..actions = null;
-                newField.dao = e.dao;
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SizedBox(height: 16,),
-                    ...newField.buildFieldEditorWidgets(context,
-                      dense: false,
-                      addCard: false,
-                      asSliver: false,
-                      expandToFillContainer: false,
-                      mainScrollController: mainScrollController,
-                    ),
-                    SizedBox(height: 16,),
-                  ],
+        }
+        result = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: fields.map((e) {
+            clear = !clear;
+            if (e is ListField && e.buildViewWidgetAsTable) {
+              clear = false;
+              final ViewWidgetBuilder<ComparableList<DAO<dynamic>>> temp = ListField.defaultViewWidgetBuilder; // hack to allow correct equality with static function
+              if (e.viewWidgetBuilder != temp) {
+                return e.buildViewWidget(context,
+                  linkToInnerDAOs: dao.viewDialogLinksToInnerDAOs,
+                  showViewButtons: dao.viewDialogShowsViewButtons,
                 );
-              } else {
-                final title = Container(
-                  padding: const EdgeInsets.only(bottom: 6, top: 8, left: 12, right: 12,),
-                  // alignment: Alignment.centerRight,
-                  child: SelectableText(e.uiName,
-                    style: Theme.of(context).textTheme.subtitle2!.copyWith(
-                      color: Theme.of(context).textTheme.bodyText1!.color!
-                          .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
-                      wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
-                    ),
-                    textAlign: TextAlign.right,
+              }
+              if (e.dao is LazyDAO) (e.dao as LazyDAO).ensureInitialized();
+              final newField = e.copyWith(
+                tableCellsEditable: false,
+                allowAddNew: false,
+                actionViewBreakpoints: dao.viewDialogLinksToInnerDAOs&&dao.viewDialogShowsViewButtons
+                    ? {0: ActionState.icon}
+                    : dao.viewDialogLinksToInnerDAOs
+                    ? {0: ActionState.popup}
+                    : {0: ActionState.none},
+                actionDeleteBreakpoints: {0: ActionState.none},
+                actionDuplicateBreakpoints: {0: ActionState.none},
+                actionEditBreakpoints: {0: ActionState.none},
+                rowTapType: e.rowTapType==RowTapType.edit ? RowTapType.view : e.rowTapType,
+              ) ..availableObjectsPoolGetter = null
+                ..availableObjectsPoolProvider = null
+                ..actions = null;
+              newField.dao = e.dao;
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(height: 16,),
+                  ...newField.buildFieldEditorWidgets(context,
+                    dense: false,
+                    addCard: false,
+                    asSliver: false,
+                    expandToFillContainer: false,
+                    mainScrollController: mainScrollController,
                   ),
-                );
-                final value = Container(
-                  alignment: Alignment.centerLeft,
-                  child: e.buildViewWidget(context,
-                    linkToInnerDAOs: dao.viewDialogLinksToInnerDAOs,
-                    showViewButtons: dao.viewDialogShowsViewButtons,
+                  SizedBox(height: 16,),
+                ],
+              );
+            } else {
+              final title = Container(
+                padding: const EdgeInsets.only(bottom: 6, top: 8, left: 12, right: 12,),
+                // alignment: Alignment.centerRight,
+                child: SelectableText(e.uiName,
+                  style: Theme.of(context).textTheme.subtitle2!.copyWith(
+                    color: Theme.of(context).textTheme.bodyText1!.color!
+                        .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
+                    wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
                   ),
-                );
-                Widget layout;
-                if (titleMaxWidth==null) {
-                  layout = IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Expanded(
-                          flex: titleFlex,
-                          child: title,
-                        ),
-                        Container(
-                          height: 24,
-                          child: VerticalDivider(width: 0,),
-                        ),
-                        Expanded(
-                          flex: valueFlex,
-                          child: value,
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  layout = FlexibleLayoutFromZero(
+                  textAlign: TextAlign.right,
+                ),
+              );
+              final value = Container(
+                alignment: Alignment.centerLeft,
+                child: e.buildViewWidget(context,
+                  linkToInnerDAOs: dao.viewDialogLinksToInnerDAOs,
+                  showViewButtons: dao.viewDialogShowsViewButtons,
+                ),
+              );
+              Widget layout;
+              if (titleMaxWidth==null) {
+                layout = IntrinsicHeight(
+                  child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    applyIntrinsicCrossAxis: true,
                     children: [
-                      FlexibleLayoutItemFromZero(
-                        flex: titleFlex.toDouble(),
-                        maxSize: titleMaxWidth,
+                      Expanded(
+                        flex: titleFlex,
                         child: title,
                       ),
-                      FlexibleLayoutItemFromZero(
-                        minSize: 1, maxSize: 1,
-                        child: Container(
-                          height: 24,
-                          child: VerticalDivider(width: 0,),
-                        ),
+                      Container(
+                        height: 24,
+                        child: VerticalDivider(width: 0,),
                       ),
-                      FlexibleLayoutItemFromZero(
-                        flex: valueFlex.toDouble(),
+                      Expanded(
+                        flex: valueFlex,
                         child: value,
                       ),
                     ],
-                  );
-                }
-                return Material(
-                  color: !applyAlternateBackground ? Colors.transparent
-                      : clear ? Theme.of(context).cardColor
-                      : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
-                  child: layout,
+                  ),
+                );
+              } else {
+                layout = FlexibleLayoutFromZero(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  applyIntrinsicCrossAxis: true,
+                  children: [
+                    FlexibleLayoutItemFromZero(
+                      flex: titleFlex.toDouble(),
+                      maxSize: titleMaxWidth,
+                      child: title,
+                    ),
+                    FlexibleLayoutItemFromZero(
+                      minSize: 1, maxSize: 1,
+                      child: Container(
+                        height: 24,
+                        child: VerticalDivider(width: 0,),
+                      ),
+                    ),
+                    FlexibleLayoutItemFromZero(
+                      flex: valueFlex.toDouble(),
+                      child: value,
+                    ),
+                  ],
                 );
               }
-            }).toList(),
-          );
-        }
+              return Material(
+                color: !applyAlternateBackground ? Colors.transparent
+                    : clear ? Theme.of(context).cardColor
+                    : Color.alphaBlend(Theme.of(context).cardColor.withOpacity(0.965), Colors.black),
+                child: layout,
+              );
+            }
+          }).toList(),
+        );
         if (!first || group.name!=null) {
           result = Column(
             mainAxisSize: MainAxisSize.min,

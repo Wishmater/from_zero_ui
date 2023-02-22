@@ -260,6 +260,15 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
       duration: widget.transitionsDuration,
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
+      layoutBuilder: (currentChild, previousChildren) {
+        return Stack(
+          alignment: Alignment.centerLeft,
+          children: <Widget>[
+            ...previousChildren,
+            if (currentChild != null) currentChild,
+          ],
+        );
+      },
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: Tween<double>(begin: -0.5, end: 1).animate(animation),
         child: SlideTransition(
