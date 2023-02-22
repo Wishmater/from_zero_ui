@@ -425,6 +425,10 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
           ],
         );
       }
+      content = SizedBox(
+        height: toolbarHeight,
+        child: content,
+      );
       result = Column(
         children: [
           SizedBox(height: widget.topSafePadding,),

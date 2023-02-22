@@ -1493,27 +1493,31 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 AppbarFromZero(
                   constraints: constraints,
                   useFlutterAppbar: false,
+                  primary: false,
                   paddingRight: 16,
-                  toolbarHeight: 96,
-                  title: Padding(
-                    padding: const EdgeInsets.only(left: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SelectableText(uiName,
-                          style: Theme.of(context).textTheme.headline6,
-                        ),
-                        if (uiName.isNotEmpty)
-                          SelectableText(classUiName,
-                            style: Theme.of(context).textTheme.subtitle2,
+                  toolbarHeight: 68,
+                  title: OverflowScroll(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 24),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SelectableText(uiName,
+                            style: Theme.of(context).textTheme.headline6,
                           ),
-                      ],
+                          if (uiName.isNotEmpty)
+                            SelectableText(classUiName,
+                              style: Theme.of(context).textTheme.subtitle2,
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                   actions: [
                     if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
                       ActionFromZero(
-                        title: FromZeroLocalizations.of(context).translate('edit').toUpperCase(),
+                        title: FromZeroLocalizations.of(context).translate('edit'),
                         icon: Icon(Icons.edit_outlined),
                         onTap: (context) async {
                           final tempDao = copyWith();
