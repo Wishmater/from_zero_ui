@@ -69,7 +69,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     bool enableUndoRedoMechanism = true,
     bool showConfirmDialogWithBlockingErrors = true,
     // DAO? parentDAO,  // i don't see the case where .initialize() will need to set parrent DAO, and removing it allows for better performance, by not having to force initialization when parentDAO set
-    DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout,
+    DAOValueGetter<DoubleColumnLayoutType, ModelType>? enableDoubleColumnLayout,
     DAOValueGetter<String, ModelType>? searchNameGetter,
     DAOValueGetter<String, ModelType>?  editDialogTitle,
     DAOValueGetter<String, ModelType>?  saveConfirmationDialogTitle,
@@ -102,7 +102,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     this.enableUndoRedoMechanism = enableUndoRedoMechanism;
     this.showConfirmDialogWithBlockingErrors = showConfirmDialogWithBlockingErrors;
     // this.parentDAO = parentDAO;
-    this.enableDoubleColumnLayout = enableDoubleColumnLayout;
+    this.doubleColumnLayoutType = enableDoubleColumnLayout;
     this.searchNameGetter = searchNameGetter;
     this.editDialogTitle = editDialogTitle;
     this.saveConfirmationDialogTitle = saveConfirmationDialogTitle;
@@ -156,7 +156,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     List<List<Field>>? redoRecord,
     bool? showConfirmDialogWithBlockingErrors,
     DAO? parentDAO,
-    DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout,
+    DAOValueGetter<DoubleColumnLayoutType, ModelType>? enableDoubleColumnLayout,
     DAOValueGetter<String, ModelType>? searchNameGetter,
     DAOValueGetter<String, ModelType>? editDialogTitle,
     DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle,
@@ -226,7 +226,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
         // redoRecord: redoRecord??this._redoRecord,
         showConfirmDialogWithBlockingErrors: showConfirmDialogWithBlockingErrors??this.showConfirmDialogWithBlockingErrors,
         // parentDAO: parentDAO??this.parentDAO,
-        enableDoubleColumnLayout: enableDoubleColumnLayout??this.enableDoubleColumnLayout,
+        enableDoubleColumnLayout: enableDoubleColumnLayout??this.doubleColumnLayoutType,
         searchNameGetter: searchNameGetter ?? this.searchNameGetter,
         editDialogTitle: editDialogTitle ?? this.editDialogTitle,
         saveConfirmationDialogTitle: saveConfirmationDialogTitle ?? this.saveConfirmationDialogTitle,
@@ -332,8 +332,8 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   // set editDialogTitle(DAOValueGetter<String, ModelType>? value) {
   //   super.editDialogTitle = value;
   // }
-  // DAOValueGetter<bool, ModelType>? get enableDoubleColumnLayout => super.enableDoubleColumnLayout;
-  // set enableDoubleColumnLayout(DAOValueGetter<bool, ModelType>? value) {
+  // DAOValueGetter<DoubleColumnLayout, ModelType>? get enableDoubleColumnLayout => super.enableDoubleColumnLayout;
+  // set enableDoubleColumnLayout(DAOValueGetter<DoubleColumnLayout, ModelType>? value) {
   //   super.enableDoubleColumnLayout = value;
   // }
   // bool get enableUndoRedoMechanism => super.enableUndoRedoMechanism;

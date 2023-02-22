@@ -26,6 +26,11 @@ typedef void OnDidDeleteCallback<ModelType>(BuildContext context, DAO<ModelType>
 typedef Widget DAOWidgetBuilder<ModelType>(BuildContext context, DAO<ModelType> dao);
 typedef T DAOValueGetter<T, ModelType>(DAO<ModelType> dao);
 
+enum DoubleColumnLayoutType {
+  tabbed,
+  joined,
+  none,
+}
 
 class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
@@ -68,7 +73,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   late bool wantsLinkToSelfFromOtherDAOs;
   late bool enableUndoRedoMechanism;
   late bool showConfirmDialogWithBlockingErrors;
-  DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout;
+  DAOValueGetter<DoubleColumnLayoutType, ModelType>? doubleColumnLayoutType;
   DAO? parentDAO; /// if not null, undo/redo calls will be relayed to the parent
   DAOValueGetter<String, ModelType>? editDialogTitle;
   DAOValueGetter<String, ModelType>? saveButtonTitle;
@@ -104,7 +109,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.enableUndoRedoMechanism = true,
     this.showConfirmDialogWithBlockingErrors = true,
     this.parentDAO,
-    this.enableDoubleColumnLayout,
+    this.doubleColumnLayoutType,
     this.searchNameGetter,
     this.editDialogTitle,
     this.saveConfirmationDialogTitle,
@@ -159,7 +164,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     List<List<Field>>? redoRecord,
     bool? showConfirmDialogWithBlockingErrors,
     DAO? parentDAO,
-    DAOValueGetter<bool, ModelType>? enableDoubleColumnLayout,
+    DAOValueGetter<DoubleColumnLayoutType, ModelType>? enableDoubleColumnLayout,
     DAOValueGetter<String, ModelType>? searchNameGetter,
     DAOValueGetter<String, ModelType>? editDialogTitle,
     DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle,
@@ -193,7 +198,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       redoRecord: redoRecord??this._redoRecord,
       showConfirmDialogWithBlockingErrors: showConfirmDialogWithBlockingErrors??this.showConfirmDialogWithBlockingErrors,
       parentDAO: parentDAO??this.parentDAO,
-      enableDoubleColumnLayout: enableDoubleColumnLayout??this.enableDoubleColumnLayout,
+      doubleColumnLayoutType: enableDoubleColumnLayout??this.doubleColumnLayoutType,
       searchNameGetter: searchNameGetter ?? this.searchNameGetter,
       editDialogTitle: editDialogTitle ?? this.editDialogTitle,
       saveConfirmationDialogTitle: saveConfirmationDialogTitle ?? this.saveConfirmationDialogTitle,
@@ -970,7 +975,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           animation: this,
           builder: (context, child) {
             double widescreenDialogWidth = formDialogWidth*2+32+24+16+32+16+38;
-            bool widescreen = (enableDoubleColumnLayout?.call(this)??true)
+            final doubleColumnLayoutType = this.doubleColumnLayoutType?.call(this)??DoubleColumnLayoutType.tabbed;
+            bool widescreen = doubleColumnLayoutType!=DoubleColumnLayoutType.none
                 && constraints.maxWidth>=widescreenDialogWidth;
             bool expandToFillContainer = false;
             if (props.values.where((e) => !e.hiddenInForm && (e is ListField)).isNotEmpty) {
@@ -988,7 +994,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             for (final e in fieldGroups) {
               if (e.props.values.where((e) => !e.hiddenInForm).isNotEmpty) {
                 bool asPrimary = !widescreen || e.primary;
-                final name = e.name ?? 'Grupo $i'; // TODO 3 internationalize
+                final name = doubleColumnLayoutType==DoubleColumnLayoutType.tabbed
+                    ? e.name ?? 'Grupo $i'
+                    : 'Grupo 1'; // TODO 3 internationalize
                 final scrollController = asPrimary ? primaryScrollController : ScrollController();
                 Widget groupWidget = buildGroupWidget(
                   context: context,
@@ -1007,12 +1015,25 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 if (asPrimary) {
                   primaryFormWidgets.add(groupWidget);
                 } else {
-                  secondaryScrollControllers[name] = scrollController;
-                  secondaryFormWidgets[name] = FocusTraversalOrder(
-                    order: NumericFocusOrder(i.toDouble()),
-                    child: groupWidget,
-                  );
-                  i++;
+                  if (doubleColumnLayoutType==DoubleColumnLayoutType.tabbed) {
+                    secondaryScrollControllers[name] = scrollController;
+                    secondaryFormWidgets[name] = FocusTraversalOrder(
+                      order: NumericFocusOrder(i.toDouble()),
+                      child: groupWidget,
+                    );
+                    i++;
+                  } else {
+                    secondaryScrollControllers[name] = scrollController;
+                    secondaryFormWidgets[name] = FocusTraversalOrder(
+                      order: NumericFocusOrder(i.toDouble()),
+                      child: Column(
+                        children: [
+                          ...(((secondaryFormWidgets[name] as FocusTraversalOrder?)?.child as Column?)?.children??[]),
+                          groupWidget,
+                        ],
+                      ),
+                    );
+                  }
                 }
               }
             }
@@ -1506,7 +1527,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                           SelectableText(uiName,
                             style: Theme.of(context).textTheme.headline6,
                           ),
-                          if (uiName.isNotEmpty)
+                          if (uiName!=classUiName)
                             SelectableText(classUiName,
                               style: Theme.of(context).textTheme.subtitle2,
                             ),
