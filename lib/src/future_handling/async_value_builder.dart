@@ -1,3 +1,4 @@
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -84,7 +85,8 @@ class AsyncValueBuilder<T> extends StatelessWidget {
           return Stack(
             alignment: alignment ?? Alignment.center,
             children: <Widget>[
-              ...cleanPreviousChildren,
+              // ...cleanPreviousChildren, // TODO 1 implement a transition switcher that uses images for widgets fading out, to avoid conflicts with scrollControllers, etc.
+              if (cleanPreviousChildren.isNotEmpty) cleanPreviousChildren.last,
               if (currentChild != null) currentChild,
             ],
           );
@@ -236,7 +238,8 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
           return Stack(
             alignment: alignment ?? Alignment.center,
             children: <Widget>[
-              ...cleanPreviousChildren,
+              // ...cleanPreviousChildren, // TODO 1 implement a transition switcher that uses images for widgets fading out, to avoid conflicts with scrollControllers, etc.
+              if (cleanPreviousChildren.isNotEmpty) cleanPreviousChildren.last,
               if (currentChild != null) currentChild,
             ],
           );
@@ -329,3 +332,5 @@ class SliverFutureProviderBuilder<T> extends FutureProviderBuilder<T> {
     errorBuilder: errorBuilder,
   );
 }
+
+
