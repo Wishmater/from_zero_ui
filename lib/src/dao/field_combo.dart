@@ -23,6 +23,8 @@ class ComboField<T extends DAO> extends Field<T> {
   bool showViewActionOnDAOs;
   bool showDropdownIcon;
   bool invalidateValuesNotInPossibleValues;
+  bool showNullInSelection;
+  bool showHintAsNullInSelection;
 
 
   ComboField({
@@ -63,6 +65,8 @@ class ComboField<T extends DAO> extends Field<T> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<T> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<T?>? onValueChanged,
+    this.showNullInSelection = false,
+    this.showHintAsNullInSelection = true,
   }) :  super(
           uiNameGetter: uiNameGetter,
           value: value,
@@ -131,6 +135,8 @@ class ComboField<T extends DAO> extends Field<T> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
     ViewWidgetBuilder<T>? viewWidgetBuilder,
     OnFieldValueChanged<T?>? onValueChanged,
+    bool? showNullInSelection,
+    bool? showHintAsNullInSelection,
   }) {
     return ComboField<T>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -167,6 +173,8 @@ class ComboField<T extends DAO> extends Field<T> {
       actions: actions ?? this.actions,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       onValueChanged: onValueChanged ?? this.onValueChanged,
+      showNullInSelection: showNullInSelection ?? this.showNullInSelection,
+      showHintAsNullInSelection: showHintAsNullInSelection ?? this.showHintAsNullInSelection,
     );
   }
 
@@ -322,6 +330,8 @@ class ComboField<T extends DAO> extends Field<T> {
           title: uiName,
           hint: hint,
           value: value,
+          showNullInSelection: showNullInSelection,
+          showHintAsNullInSelection: showHintAsNullInSelection,
           possibleValues: possibleValuesGetter?.call(context, this, dao),
           possibleValuesFuture: possibleValuesFutureGetter?.call(context, this, dao),
           possibleValuesProvider: provider,

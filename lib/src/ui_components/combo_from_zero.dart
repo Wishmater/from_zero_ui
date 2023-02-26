@@ -39,6 +39,8 @@ class ComboFromZero<T> extends StatefulWidget {
   final ButtonStyle? buttonStyle;
   final double popupRowHeight;
   final bool useFixedPopupRowHeight;
+  final bool showNullInSelection;
+  final bool showHintAsNullInSelection;
 
   ComboFromZero({
     this.value,
@@ -65,6 +67,8 @@ class ComboFromZero<T> extends StatefulWidget {
     this.popupRowHeight = 38,
     this.useFixedPopupRowHeight = true,
     this.blockComboWhilePossibleValuesLoad = false,
+    this.showNullInSelection = false,
+    this.showHintAsNullInSelection = true,
   }) :  assert(possibleValues!=null
               || possibleValuesFuture!=null
               || possibleValuesProvider!=null);
@@ -256,7 +260,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
                 return result;
               },
             );
-            if (selected!=null) {
+            if (selected==null) {
               widget.onCanceled?.call();
             }
           } : null,
@@ -311,6 +315,9 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
       popupWidgetBuilder: widget.popupWidgetBuilder,
       rowHeight: widget.popupRowHeight,
       useFixedRowHeight: widget.useFixedPopupRowHeight,
+      showNullInSelection: widget.showNullInSelection,
+      showHintAsNullInSelection: widget.showHintAsNullInSelection,
+      hint: widget.hint,
     );
   }
 
@@ -345,6 +352,9 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
   final Widget Function(T value)? popupWidgetBuilder;
   final double rowHeight;
   final bool useFixedRowHeight;
+  final bool showNullInSelection;
+  final bool showHintAsNullInSelection;
+  final String? hint;
 
   ComboFromZeroPopup({
     required this.possibleValues,
@@ -359,6 +369,9 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
     this.popupWidgetBuilder,
     this.rowHeight = 38,
     this.useFixedRowHeight = true,
+    this.showNullInSelection = false,
+    this.showHintAsNullInSelection = true,
+    this.hint,
   });
 
   @override
@@ -389,6 +402,29 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final rows = widget.possibleValues.map((e) {
+      return SimpleRowModel<T?>(
+        id: e,
+        values: {0: e.toString()},
+        height: widget.useFixedRowHeight ? widget.rowHeight : null,
+        // backgroundColor: widget.value==e ? Theme.of(context).splashColor.withOpacity(0.2) : null,
+        onRowTap: (value) {
+          _select(e);
+        },
+      );
+    }).toList();
+    if (widget.showNullInSelection) {
+      rows.add(SimpleRowModel<T?>(
+        id: null,
+        values: {0: (widget.showHintAsNullInSelection ? widget.hint : null) ?? '< Vacío >'}, // TODO 3 internationalize
+        height: widget.useFixedRowHeight ? widget.rowHeight : null,
+        alwaysOnTop: true,
+        // backgroundColor: widget.value==e ? Theme.of(context).splashColor.withOpacity(0.2) : null,
+        onRowTap: (value) {
+          _select(null);
+        },
+      ));
+    }
     return ScrollbarFromZero(
       controller: popupScrollController,
       child: CustomScrollView(
@@ -397,17 +433,18 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
         slivers: [
           if (!showSearchBox)
             SliverToBoxAdapter(child: SizedBox(height: 12,),),
-          TableFromZero<T>(
+          TableFromZero<T?>(
             tableController: tableController,
             tableHorizontalPadding: 8,
             initialSortedColumn: widget.sort ? 0 : -1,
             enableFixedHeightForListRows: widget.useFixedRowHeight,
             cellBuilder: widget.popupWidgetBuilder==null ? null
-                : (context, row, colKey) => widget.popupWidgetBuilder!(row.id),
+                : (context, row, colKey) => widget.popupWidgetBuilder!(row.id!),
+            rows: rows,
             onFilter: (filtered) {
-              List<RowModel<T>> startsWhole = [];
-              List<RowModel<T>> starts = [];
-              List<RowModel<T>> contains = [];
+              List<RowModel<T?>> startsWhole = [];
+              List<RowModel<T?>> starts = [];
+              List<RowModel<T?>> contains = [];
               if (searchQuery==null || searchQuery!.isEmpty) {
                 contains = filtered;
               } else {
@@ -415,6 +452,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                 for (final e in filtered) {
                   final value = (e.id is DAO)
                       ? (e.id as DAO).searchName.toUpperCase()
+                      : e.id==null ? e.values[0]
                       : e.id.toString().toUpperCase();
                   if (value.contains(q)) {
                     if (value.startsWith(q)) {
@@ -431,17 +469,6 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
               // }
               return [...starts, ...contains];
             },
-            rows: widget.possibleValues.map((e) {
-              return SimpleRowModel(
-                id: e,
-                values: {0: e.toString()},
-                height: widget.useFixedRowHeight ? widget.rowHeight : null,
-                // backgroundColor: widget.value==e ? Theme.of(context).splashColor.withOpacity(0.2) : null,
-                onRowTap: (value) {
-                  _select(e);
-                },
-              );
-            }).toList(),
             rowActions: widget.showViewActionOnDAOs && T is DAO
                 ? [
                     RowAction<T>(
@@ -524,7 +551,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
     );
   }
 
-  void _select(T e) {
+  void _select(T? e) {
     bool? pop = widget.onSelected?.call(e);
     if (pop??true) {
       Navigator.of(context).pop(e);
