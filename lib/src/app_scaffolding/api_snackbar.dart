@@ -19,7 +19,7 @@ class APISnackBar<T> extends SnackBarFromZero {
   final ApiState<T> stateNotifier;
   final String? successTitle;
   final String? successMessage;
-  final bool cancelable;
+  final bool? cancelable;
   final APISnackBarBlockUIType blockUIType;
 
   APISnackBar({
@@ -28,7 +28,7 @@ class APISnackBar<T> extends SnackBarFromZero {
     required this.stateNotifier,
     this.successTitle,
     this.successMessage,
-    this.cancelable = false,
+    this.cancelable,
     int? behaviour,
     Duration? duration = const Duration(milliseconds: 3000),
     double? width,
@@ -41,7 +41,7 @@ class APISnackBar<T> extends SnackBarFromZero {
           behaviour: behaviour,
           duration: duration,
           width: width,
-          dismissable: cancelable,
+          dismissable: cancelable??false,
           showProgressIndicatorForRemainingTime: showProgressIndicatorForRemainingTime,
           onCancel: onCancel,
           blockUI: blockUIType==APISnackBarBlockUIType.never ? false : true,
@@ -193,7 +193,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
           ),
         ),
         SizedBox(width: 8,),
-        if (widget.cancelable)
+        if (widget.cancelable??false)
           ButtonTheme(
             textTheme: ButtonTextTheme.accent,
             padding: EdgeInsets.symmetric(horizontal: 4, vertical: 0),
@@ -408,7 +408,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
         ),
         if (showAcceptInsteadOfClose)
           SizedBox(width: 16,),
-        if (!showAcceptInsteadOfClose && (error==null||widget.dismissable))
+        if (!showAcceptInsteadOfClose && (error==null||(widget.cancelable??true)))
           SizedBox(
             width: 42, height: double.infinity,
             child: FlatButton(

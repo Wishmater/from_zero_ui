@@ -293,7 +293,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   Future<ModelType?> save(context, {
     bool updateDbValuesAfterSuccessfulSave = true,
     bool showDefaultSnackBar = true,
-    bool snackBarCancellable=true,
+    bool? snackBarCancellable,
     bool skipValidation = false,
   }) async {
     ensureInitialized();
@@ -638,7 +638,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   Future<ModelType?> maybeSave(BuildContext context, {
     bool updateDbValuesAfterSuccessfulSave = true,
     bool showDefaultSnackBars = true,
-    bool snackBarCancellable=true,
+    bool? snackBarCancellable,
     bool askForSaveConfirmation = true,
   }) {
     ensureInitialized();

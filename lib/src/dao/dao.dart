@@ -484,7 +484,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   Future<ModelType?> maybeSave(BuildContext context, {
     bool updateDbValuesAfterSuccessfulSave=true,
     bool showDefaultSnackBars=true,
-    bool snackBarCancellable=false,
+    bool? snackBarCancellable,
     bool askForSaveConfirmation=true,
   }) async {
     final validationFuture = validate(context,
@@ -675,7 +675,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   Future<ModelType?> save(context, {
     bool updateDbValuesAfterSuccessfulSave=true,
     bool showDefaultSnackBar=true,
-    bool snackBarCancellable=true,
+    bool? snackBarCancellable,
     bool skipValidation=false,
   }) async {
     if (!skipValidation) {
