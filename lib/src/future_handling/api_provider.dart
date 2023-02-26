@@ -650,7 +650,6 @@ class UnitedValueListenable<T> extends ValueListenable<T> {
       e.addListener(listener);
     }
   }
-  @override
   T get value => _unificator(_listenables.map((e) => e.value));
 }
 
