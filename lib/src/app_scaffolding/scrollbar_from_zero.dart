@@ -8,6 +8,36 @@ import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
 import 'package:from_zero_ui/src/ui_utility/export.dart';
 
 
+/// extends default scroll controller by notifying listeners in extra cases
+/// for example, on attach/detach scroll position. This means it is slightly
+/// less porformant, but solves a number of edge case bugs
+class ScrollControllerFromZero extends ScrollController {
+
+  ScrollControllerFromZero({
+    super.initialScrollOffset = 0.0,
+    super.keepScrollOffset = true,
+    super.debugLabel,
+  });
+
+  @override
+  void attach(ScrollPosition position) {
+    super.attach(position);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      notifyListeners();
+    });
+  }
+
+  @override
+  void detach(ScrollPosition position) {
+    super.detach(position);
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      notifyListeners();
+    });
+  }
+
+}
+
+
 class ScrollbarFromZero extends StatefulWidget {
 
   final ScrollController? controller;
@@ -55,7 +85,6 @@ class ScrollbarFromZero extends StatefulWidget {
 class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
   late AlwaysAttachedScrollController alwaysAttachedScrollController;
-  /// only used on mainWindowScrollbar
 
   @override
   void initState() {
@@ -74,7 +103,6 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   @override
   void dispose() {
     super.dispose();
-    // try { widget.controller?.dispose(); } catch(_) {}
   }
 
   @override
@@ -170,7 +198,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
     }
 
-    return NotificationListener(
+    return NotificationListener( // TODO 2 only scroll-related notifications should be consumed
       onNotification: (notification) => true,
       child: result,
     );
@@ -272,9 +300,6 @@ class AlwaysAttachedScrollController implements ScrollController {
   ScrollController? _parent;
   ScrollController? get parent => _parent;
   set parent(ScrollController? value) {
-    // if (value!=_parent) {
-    //   try { _parent?.dispose(); } catch(_) {}
-    // }
     _parent = value;
   }
 
@@ -309,6 +334,7 @@ class AlwaysAttachedScrollController implements ScrollController {
   @override
   void attach(ScrollPosition position) {
     parent?.attach(position);
+    // TODO 1 on attach/detach, a ScrollMetricsNotification.empty should be dispatched to potentially notify the scrollbar that no positions are attached
   }
 
   @override
@@ -331,6 +357,7 @@ class AlwaysAttachedScrollController implements ScrollController {
   @override
   void detach(ScrollPosition position) {
     parent?.detach(position);
+    // TODO 1 on attach/detach, a ScrollMetricsNotification.empty should be dispatched to potentially notify the scrollbar that no positions are attached
   }
 
   @override
