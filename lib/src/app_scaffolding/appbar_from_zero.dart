@@ -232,6 +232,9 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
         }
       }
       removeIndices.reversed.forEach((element) {actions.removeAt(element);});
+      if (overflows.length==1 && overflows.first.icon!=null) {
+        actions.add(overflows.removeLast().buildIcon(context));
+      }
       for (int i=0; i<actions.length; i++) {
         if ((actions[i] is VerticalDivider || actions[i] is Divider)
             && (i==0 || i==actions.lastIndex || actions[i+1] is VerticalDivider || actions[i+1] is Divider)) {
