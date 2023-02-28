@@ -25,6 +25,7 @@ typedef Widget ActionBuilder({
   Widget? icon,
   ContextCallback? onTap,
   bool enabled,
+  Color? color,
 });
 typedef Widget OverflowActionBuilder({
   required BuildContext context,
@@ -53,13 +54,19 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
   Widget buildOverflow(BuildContext context, {bool forceIconSpace=false}) => overflowBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, forceIconSpace: forceIconSpace);
 
   final ActionBuilder iconBuilder;
-  Widget buildIcon(BuildContext context) => iconBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled,);
+  Widget buildIcon(BuildContext context, {
+    Color? color,
+  }) => iconBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color);
 
   final ActionBuilder buttonBuilder;
-  Widget buildButton(BuildContext context) => buttonBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled,);
+  Widget buildButton(BuildContext context, {
+    Color? color,
+  }) => buttonBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color);
 
   final ActionBuilder? expandedBuilder;
-  Widget buildExpanded(BuildContext context) => expandedBuilder!(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled,);
+  Widget buildExpanded(BuildContext context, {
+    Color? color,
+  }) => expandedBuilder!(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color);
   final bool centerExpanded;
 
   ActionFromZero({
@@ -164,8 +171,9 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
     Widget? icon,
     ContextCallback? onTap,
     bool enabled = true,
+    Color? color,
   }) {
-    final color = Theme.of(context).appBarTheme.toolbarTextStyle?.color
+    color ??= Theme.of(context).appBarTheme.toolbarTextStyle?.color
         ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
     final transparentColor = color.withOpacity(0.05);
     final semiTransparentColor = color.withOpacity(0.1);
@@ -193,7 +201,10 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
     Widget? icon,
     ContextCallback? onTap,
     bool enabled = true,
+    Color? color,
   }) {
+    color ??= Theme.of(context).appBarTheme.toolbarTextStyle?.color
+        ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
     return defaultAnimatedSwitcherBuilder(
       child: SizedBox(
         height: 64,
@@ -202,8 +213,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
           child: TextButton(
             style: TextButton.styleFrom(
               padding: EdgeInsets.zero,
-              primary: Theme.of(context).appBarTheme.toolbarTextStyle?.color
-                ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+              primary: color,
             ),
             onPressed: (!enabled || onTap==null) ? null : (){
               onTap.call(context);
@@ -211,8 +221,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
             // onLongPress: () => null,
             child: IconTheme(
               data: IconThemeData(
-                color: Theme.of(context).appBarTheme.toolbarTextStyle?.color
-                    ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+                color: color,
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -225,8 +234,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
                   Text(title,
                     style: TextStyle(
                       fontSize: 16,
-                      color: Theme.of(context).appBarTheme.toolbarTextStyle?.color
-                        ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white),
+                      color: color,
                     ),
                   ),
                   SizedBox(width: 8),
@@ -305,6 +313,7 @@ class ActionFromZero<T extends Function> extends StatelessWidget{
     Widget? icon,
     ContextCallback? onTap,
     bool enabled = true,
+    Color? color,
   }) {
     return VerticalDivider();
   }

@@ -174,6 +174,12 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
                                                       ? 48 + (showWindowButtons ? titleBarHeight : 0)
                                                       : null);
     actions = [];
+    final actionsColor = widget.backgroundColor==null
+        ? null
+        : widget.backgroundColor!.opacity<0.3
+            ? Theme.of(context).textTheme.bodyText1!.color
+            : ThemeData.estimateBrightnessForColor(widget.backgroundColor!)==Brightness.light
+                ? Colors.black : Colors.white;
     List<ActionFromZero> overflows = [];
     List<ActionFromZero> contextMenuActions = [];
     List<Widget> expanded = [];
@@ -207,7 +213,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
               removeIndices.add(i);
               break;
             case ActionState.icon:
-              actions[i] = action.buildIcon(context);
+              actions[i] = action.buildIcon(context, color: actionsColor);
               if (actions[i] is! VerticalDivider && actions[i] is! Divider) {
                 actions[i] = Padding(
                   padding: EdgeInsets.symmetric(horizontal: widget.actionPadding),
@@ -217,15 +223,15 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
               contextMenuActions.add(action);
               break;
             case ActionState.button:
-              actions[i] = action.buildButton(context);
+              actions[i] = action.buildButton(context, color: actionsColor);
               contextMenuActions.add(action);
               break;
             case ActionState.expanded:
               if (action.centerExpanded){
-                expanded.add(action.buildExpanded(context));
+                expanded.add(action.buildExpanded(context, color: actionsColor));
                 removeIndices.add(i);
               } else{
-                actions[i] = action.buildExpanded(context);
+                actions[i] = action.buildExpanded(context, color: actionsColor);
               }
               break;
           }
@@ -233,7 +239,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
       }
       removeIndices.reversed.forEach((element) {actions.removeAt(element);});
       if (overflows.length==1 && overflows.first.icon!=null) {
-        actions.add(overflows.removeLast().buildIcon(context));
+        actions.add(overflows.removeLast().buildIcon(context, color: actionsColor));
       }
       for (int i=0; i<actions.length; i++) {
         if ((actions[i] is VerticalDivider || actions[i] is Divider)
@@ -364,7 +370,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: forceExpanded==null ? expanded : [
                 Expanded(
-                  child: forceExpanded!.buildExpanded(context),
+                  child: forceExpanded!.buildExpanded(context, color: actionsColor),
                 ),
                 IconButton(
                   icon: Icon(Icons.close),
