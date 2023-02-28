@@ -114,7 +114,7 @@ class BoolField extends Field<BoolComparable> {
     BoolComparable? defaultValue = const BoolComparable(false),
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     this.selectedColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    super.actionsGetter,
     ViewWidgetBuilder<BoolComparable> viewWidgetBuilder = BoolField.defaultViewWidgetBuilder,
     OnFieldValueChanged<BoolComparable?>? onValueChanged,
     this.showViewCheckmark = BoolFieldShowViewCheckmark.always,
@@ -148,7 +148,6 @@ class BoolField extends Field<BoolComparable> {
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,
-          actions: actions,
           viewWidgetBuilder: viewWidgetBuilder,
           onValueChanged: onValueChanged,
         );
@@ -182,7 +181,7 @@ class BoolField extends Field<BoolComparable> {
     BoolComparable? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     ContextFulFieldValueGetter<Color?, Field>? selectedColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actionsGetter,
     ViewWidgetBuilder<BoolComparable>? viewWidgetBuilder,
     bool? showBothNeutralAndSpecificUiName,
     OnFieldValueChanged<BoolComparable?>? onValueChanged,
@@ -214,7 +213,7 @@ class BoolField extends Field<BoolComparable> {
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       selectedColor: selectedColor ?? this.selectedColor,
-      actions: actions ?? this.actions,
+      actionsGetter: actionsGetter ?? this.actionsGetter,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       showBothNeutralAndSpecificUiName: showBothNeutralAndSpecificUiName ?? this.showBothNeutralAndSpecificUiName,
       onValueChanged: onValueChanged ?? this.onValueChanged,
@@ -382,6 +381,7 @@ class BoolField extends Field<BoolComparable> {
               checkColor: selectedColor?.call(context, this, dao),
               onChanged: !enabled ? null : (value) {
                 focusNode.requestFocus();
+                userInteracted = true;
                 this.value = value!.comparable;
               },
               title: Transform.translate(
@@ -448,6 +448,7 @@ class BoolField extends Field<BoolComparable> {
               ),
               onChanged: !enabled ? null : (value) {
                 focusNode.requestFocus();
+                userInteracted = true;
                 this.value = value.comparable;
               },
             );
@@ -468,6 +469,7 @@ class BoolField extends Field<BoolComparable> {
                   checkColor: selectedColor?.call(context, this, dao),
                   onChanged: !enabled ? null : (value) {
                     focusNode.requestFocus();
+                    userInteracted = true;
                     this.value = value!.comparable;
                   },
                 ),
@@ -517,6 +519,7 @@ class BoolField extends Field<BoolComparable> {
                   activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
                   onChanged: !enabled ? null : (value) {
                     focusNode.requestFocus();
+                    userInteracted = true;
                     this.value = value.comparable;
                   },
                 ),
@@ -576,6 +579,7 @@ class BoolField extends Field<BoolComparable> {
               showSearchBox: false,
               onSelected: (value) {
                 focusNode.requestFocus();
+                userInteracted = true;
                 this.value = value!.id as BoolComparable;
               },
               popupWidth: maxWidth,

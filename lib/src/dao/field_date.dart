@@ -51,7 +51,7 @@ class DateField extends Field<DateTime> {
     bool invalidateNonEmptyValuesIfHiddenInForm = true,
     DateTime? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    super.actionsGetter,
     ViewWidgetBuilder<DateTime> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<DateTime?>? onValueChanged,
     this.type = DateTimePickerType.date,
@@ -84,7 +84,6 @@ class DateField extends Field<DateTime> {
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,
-          actions: actions,
           viewWidgetBuilder: viewWidgetBuilder,
           onValueChanged: onValueChanged,
         );
@@ -117,7 +116,7 @@ class DateField extends Field<DateTime> {
     bool? invalidateNonEmptyValuesIfHiddenInForm,
     DateTime? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actionsGetter,
     ViewWidgetBuilder<DateTime>? viewWidgetBuilder,
     OnFieldValueChanged<DateTime?>? onValueChanged,
     DateTimePickerType? type,
@@ -148,7 +147,7 @@ class DateField extends Field<DateTime> {
       invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
-      actions: actions ?? this.actions,
+      actionsGetter: actionsGetter ?? this.actionsGetter,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       onValueChanged: onValueChanged ?? this.onValueChanged,
       type: type ?? this.type,
@@ -235,7 +234,8 @@ class DateField extends Field<DateTime> {
           value: value,
           type: type,
           onSelected: (v) {
-            value=v;
+            userInteracted = true;
+            value = v;
             focusNode.requestFocus();
             return true;
           },
@@ -269,7 +269,7 @@ class DateField extends Field<DateTime> {
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
         if (!dense) {
-          final actions = this.actions?.call(context, this, dao) ?? [];
+          final actions = buildActions(context, focusNode);
           final defaultActions = buildDefaultActions(context);
           result = AppbarFromZero(
             addContextMenu: enabled,

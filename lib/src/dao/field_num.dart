@@ -93,7 +93,7 @@ class NumField extends Field<num> {
     bool invalidateNonEmptyValuesIfHiddenInForm = true,
     num? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    super.actionsGetter,
     ViewWidgetBuilder<num> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<num?>? onValueChanged,
     this.allowNegative = false,
@@ -123,7 +123,6 @@ class NumField extends Field<num> {
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,
-          actions: actions,
           viewWidgetBuilder: viewWidgetBuilder,
           onValueChanged: onValueChanged,
         );
@@ -162,7 +161,7 @@ class NumField extends Field<num> {
     bool? invalidateNonEmptyValuesIfHiddenInForm,
     num? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actionsGetter,
     ViewWidgetBuilder<num>? viewWidgetBuilder,
     OnFieldValueChanged<num?>? onValueChanged,
     bool? allowNegative,
@@ -191,7 +190,7 @@ class NumField extends Field<num> {
       invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
-      actions: actions ?? this.actions,
+      actionsGetter: actionsGetter ?? this.actionsGetter,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       onValueChanged: onValueChanged ?? this.onValueChanged,
       allowNegative: allowNegative ?? this.allowNegative,
@@ -339,6 +338,7 @@ class NumField extends Field<num> {
                           focusNode.nextFocus();
                         },
                         onChanged: (v) {
+                          userInteracted = true;
                           valUpdateTimer?.cancel();
                           int? lastMinusIndex;
                           do {
@@ -446,7 +446,7 @@ class NumField extends Field<num> {
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
           if (!dense) {
-            final actions = this.actions?.call(context, this, dao) ?? [];
+            final actions = buildActions(context, focusNode);
             final defaultActions = buildDefaultActions(context);
             result = AppbarFromZero(
               addContextMenu: enabled,

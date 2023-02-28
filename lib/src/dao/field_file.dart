@@ -56,7 +56,7 @@ class FileField extends Field<String> {
     bool invalidateNonEmptyValuesIfHiddenInForm = true,
     String? defaultValue = '',
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    super.actionsGetter,
     ViewWidgetBuilder<String> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<String?>? onValueChanged,
     this.fileType = FileType.any,
@@ -90,7 +90,6 @@ class FileField extends Field<String> {
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,
-          actions: actions,
           viewWidgetBuilder: viewWidgetBuilder,
           onValueChanged: onValueChanged,
         );
@@ -121,7 +120,7 @@ class FileField extends Field<String> {
     bool? invalidateNonEmptyValuesIfHiddenInForm,
     String? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actionsGetter,
     ViewWidgetBuilder<String>? viewWidgetBuilder,
     OnFieldValueChanged<String?>? onValueChanged,
     FileType? fileType,
@@ -153,7 +152,7 @@ class FileField extends Field<String> {
       invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
-      actions: actions ?? this.actions,
+      actionsGetter: actionsGetter ?? this.actionsGetter,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       onValueChanged: onValueChanged ?? this.onValueChanged,
       fileType: fileType ?? this.fileType,
@@ -251,6 +250,7 @@ class FileField extends Field<String> {
                   focusNode: focusNode,
                   initialDirectory: initialDirectory,
                   onSelected: (value) {
+                    userInteracted = true;
                     this.value = value.first.absolute.path;
                   },
                   child: Padding(
@@ -287,7 +287,7 @@ class FileField extends Field<String> {
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
           if (!dense) {
-            final actions = this.actions?.call(context, this, dao) ?? [];
+            final actions = buildActions(context, focusNode);
             final defaultActions = buildDefaultActions(context);
             result = AppbarFromZero(
               addContextMenu: enabled,

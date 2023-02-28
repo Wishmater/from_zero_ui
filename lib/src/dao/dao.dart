@@ -210,7 +210,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
 
   bool get isNew => id==null;
-  bool get isEdited => props.values.any((element) => element.isEdited);
+  bool get isEdited => props.values.any((e) => e.isEdited);
+  bool get userInteracted => props.values.any((e) => e.userInteracted);
   List<ValidationError> get validationErrors => props.values.map((e) => e.validationErrors).flatten().toList();
   bool get canSave => onSave!=null || onSaveAPI!=null;
   bool get canDelete => onDelete!=null || onDeleteAPI!=null;
@@ -1706,7 +1707,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 rowTapType: e.rowTapType==RowTapType.edit ? RowTapType.view : e.rowTapType,
               ) ..availableObjectsPoolGetter = null
                 ..availableObjectsPoolProvider = null
-                ..actions = null;
+                ..actionsGetter = null;
               newField.dao = e.dao;
               return Column(
                 mainAxisSize: MainAxisSize.min,
@@ -2081,7 +2082,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       Center(
         child: WillPopScope(
           onWillPop: () async {
-            if (!isEdited) return true;
+            if (!userInteracted || !isEdited) return true;
             bool? pop = (await showModal(
               context: context,
               builder: (modalContext) {
@@ -2157,7 +2158,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                         style: ElevatedButton.styleFrom(
                           primary: Colors.grey,
                         ),
-                        onPressed: isEdited ? () {
+                        onPressed: isEdited && userInteracted ? () {
                           maybeRevertChanges(context);
                         } : null,
                       ),
@@ -2166,6 +2167,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     SizedBox(width: 12,),
                   Expanded(
                     child: ElevatedButton(
+                      style: userInteracted ? null : ElevatedButton.styleFrom(
+                        primary: Theme.of(context).canvasColor,
+                        onPrimary: Theme.of(context).textTheme.caption!.color,
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: Text((saveButtonTitle?.call(this).toUpperCase() ?? FromZeroLocalizations.of(context).translate("save_caps")),

@@ -138,6 +138,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   bool get enabled => DAO.ignoreBlockingErrors ? true : listFieldValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling).isEmpty;
 
+  bool get userInteracted => super.userInteracted || objects.any((e) => e.userInteracted);
+
   late ValueNotifier<Map<T, bool>> selectedObjects;
 
   static String defaultToString(ListField field) {
@@ -240,7 +242,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     ComparableList<T>? defaultValue,
     this.expandHorizontally = true,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    super.actionsGetter,
     ViewWidgetBuilder<ComparableList<T>> viewWidgetBuilder = ListField.defaultViewWidgetBuilder,
     this.icon,
     this.onFilter,
@@ -293,7 +295,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue ?? ComparableList<T>(),
           backgroundColor: backgroundColor,
-          actions: actions,
           viewWidgetBuilder: viewWidgetBuilder,
           onValueChanged: onValueChanged,
         ) {
@@ -472,7 +473,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     ComparableList<T>? defaultValue,
     bool? expandHorizontally,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actionsGetter,
     ViewWidgetBuilder<ComparableList<T>>? viewWidgetBuilder,
     Widget? icon,
     List<RowModel<T>> Function(List<RowModel<T>>)? onFilter,
@@ -545,7 +546,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       defaultValue: defaultValue ?? this.defaultValue,
       expandHorizontally: expandHorizontally ?? this.expandHorizontally,
       backgroundColor: backgroundColor ?? this.backgroundColor,
-      actions: actions ?? this.actions,
+      actionsGetter: actionsGetter ?? this.actionsGetter,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       icon: icon ?? this.icon,
       onFilter: onFilter ?? this.onFilter,
@@ -928,7 +929,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       actionViewBreakpoints: actionViewBreakpoints,
       actionEditBreakpoints: actionEditBreakpoints,
       objects: data,
-      actions: availablePoolTableActions,
+      actionsGetter: availablePoolTableActions,
       allowAddNew: allowAddNew && emptyDAO.canSave,
       initialSortedColumn: initialSortedColumn,
       tableFooterStickyOffset: 56,
@@ -1416,7 +1417,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           child: result,
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
-        final actions = this.actions?.call(dao.contextForValidation ?? context, this, dao) ?? [];
+        final actions = buildActions(dao.contextForValidation ?? context, focusNode);
         final defaultActions = buildDefaultActions(context);
         result = ContextMenuFromZero(
           enabled: enabled,
@@ -1481,7 +1482,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       animation: this,
       builder: (context, child) {
         final tabBarScrollController = ScrollController();
-        final userActions = this.actions?.call(dao.contextForValidation ?? context, this, dao) ?? [];
+        final userActions = buildActions(dao.contextForValidation ?? context, focusNode);
         final defaultActions = buildDefaultActions(context);
         final allActions = [
           ...userActions,
@@ -1564,6 +1565,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                       icon: Icon(Icons.add, color: Colors.blue),
                                       breakpoints: {0: ActionState.popup,},
                                       onTap: (context) {
+                                        userInteracted = true;
                                         maybeAddRow(context, i);
                                         pageNotifier!.value = i+1;
                                       },
@@ -1575,6 +1577,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                     title: FromZeroLocalizations.of(context).translate('edit'),
                                     breakpoints: actionEditBreakpoints,
                                     onTap: (context) async {
+                                      userInteracted = true;
                                       final copy = e.copyWith() as T;
                                       copy.parentDAO = null;
                                       copy.contextForValidation = dao.contextForValidation;
@@ -1590,6 +1593,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                     title: FromZeroLocalizations.of(context).translate('duplicate'),
                                     breakpoints: actionDuplicateBreakpoints,
                                     onTap: (context) async {
+                                      userInteracted = true;
                                       duplicateRows([e]);
                                     },
                                   ),
@@ -1599,6 +1603,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                       title: FromZeroLocalizations.of(context).translate('delete'),
                                       breakpoints: actionDeleteBreakpoints,
                                       onTap: (context) async {
+                                        userInteracted = true;
                                         if (await maybeDelete(context, [e],)) {
                                           focusNode!.requestFocus();
                                           passedFirstEdit = true;
@@ -1778,14 +1783,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     }
     final allowAddNew = this.allowAddNew;
     Widget result;
-    final actions = this.actions?.call(dao.contextForValidation ?? context, this, dao).map((e) {
-      return e.copyWith(
-        onTap: e.onTap==null ? null : (context) {
-          focusNode?.requestFocus();
-          e.onTap!(context);
-        },
-      );
-    }).toList() ?? [];
+    final actions = buildActions(dao.contextForValidation ?? context, focusNode);
     final defaultActions = buildDefaultActions(context, focusNode: focusNode);
     if (actions.isNotEmpty && defaultActions.isNotEmpty) {
       actions.add(ActionFromZero.divider(breakpoints: actions.first.breakpoints,));
@@ -2048,6 +2046,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                         ? buildAddAddon(context: context, collapsed: collapsed)
                         : InkWell(
                           onTap: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty ? () {
+                            userInteracted = true;
                             maybeAddRow(context);
                           } : null,
                           child: ErrorSign(
@@ -2413,6 +2412,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           ),
           title: '${FromZeroLocalizations.of(context).translate('edit')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
           onTap: (context) {
+            userInteracted = true;
             focusNode?.requestFocus();
             maybeEditMultiple(context, currentSelected);
           },
@@ -2426,6 +2426,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           ),
           title: '${FromZeroLocalizations.of(context).translate('duplicate')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
           onTap: (context) {
+            userInteracted = true;
+            focusNode?.requestFocus();
             duplicateRows(currentSelected);
           },
           breakpoints: actionDuplicateBreakpoints[0]==ActionState.none ? actionDuplicateBreakpoints : null,
@@ -2438,6 +2440,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           ),
           title: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
           onTap: (context) async {
+            userInteracted = true;
+            focusNode?.requestFocus();
             if (await maybeDelete(context, currentSelected)) {
               focusNode?.requestFocus();
             }
@@ -2452,6 +2456,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           ),
           title: FromZeroLocalizations.of(context).translate('cancel_selection'),
           onTap: (context) {
+            userInteracted = true;
             focusNode?.requestFocus();
             selectedObjects.value = {};
             notifyListeners();
@@ -2462,6 +2467,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
           icon: Icon(Icons.add, color: Colors.blue),
           onTap: (context) async {
+            userInteracted = true;
             focusNode?.requestFocus();
             if (await maybeAddRow(context) != null) {
               pageNotifier?.value = objects.length-1;
@@ -2475,6 +2481,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           title: 'Deshacer', // TODO 3 internationalize
           icon: Icon(MaterialCommunityIcons.undo_variant),
           onTap: (context) {
+            userInteracted = true;
             focusNode?.requestFocus();
             undo(removeEntryFromDAO: true);
           },
@@ -2488,6 +2495,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           title: 'Rehacer', // TODO 3 internationalize
           icon: Icon(MaterialCommunityIcons.redo_variant),
           onTap: (context) {
+            userInteracted = true;
             focusNode?.requestFocus();
             redo(removeEntryFromDAO: true);
           },
@@ -2496,15 +2504,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             0: ActionState.popup,
           },
         ),
-      // ActionFromZero( // maybe add a 'delete-all'
-      //   title: 'Limpiar', // TODO 3 internationalize
-      //   icon: Icon(Icons.clear),
-      //   onTap: (context) => value = defaultValue,
-      //   enabled: clearable && value!=defaultValue,
-      //   breakpoints: {
-      //     0: ActionState.popup,
-      //   },
-      // ),
       if (availableObjectsPoolProvider!=null)
         ActionFromZero.divider(
           breakpoints: {0: ActionState.popup},
@@ -2515,6 +2514,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           icon: Icon(Icons.refresh,),
           breakpoints: {0: ActionState.popup},
           onTap: (context) {
+            userInteracted = true;
+            focusNode?.requestFocus();
             final ref = dao.contextForValidation! as WidgetRef;
             final provider = availableObjectsPoolProvider!(context, this, dao);
             final stateNotifier = ref.read(provider.notifier);

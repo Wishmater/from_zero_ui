@@ -62,7 +62,7 @@ class ComboField<T extends DAO> extends Field<T> {
     bool invalidateNonEmptyValuesIfHiddenInForm = true,
     T? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    super.actionsGetter,
     ViewWidgetBuilder<T> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<T?>? onValueChanged,
     this.showNullInSelection = false,
@@ -92,7 +92,6 @@ class ComboField<T extends DAO> extends Field<T> {
           invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue,
           backgroundColor: backgroundColor,
-          actions: actions,
           viewWidgetBuilder: viewWidgetBuilder,
           onValueChanged: onValueChanged,
         );
@@ -132,7 +131,7 @@ class ComboField<T extends DAO> extends Field<T> {
     bool? invalidateNonEmptyValuesIfHiddenInForm,
     T? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actionsGetter,
     ViewWidgetBuilder<T>? viewWidgetBuilder,
     OnFieldValueChanged<T?>? onValueChanged,
     bool? showNullInSelection,
@@ -170,7 +169,7 @@ class ComboField<T extends DAO> extends Field<T> {
       invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
-      actions: actions ?? this.actions,
+      actionsGetter: actionsGetter ?? this.actionsGetter,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       onValueChanged: onValueChanged ?? this.onValueChanged,
       showNullInSelection: showNullInSelection ?? this.showNullInSelection,
@@ -409,7 +408,7 @@ class ComboField<T extends DAO> extends Field<T> {
           waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
         if (!dense) {
-          final actions = this.actions?.call(context, this, dao) ?? [];
+          final actions = buildActions(context, focusNode);
           final defaultActions = buildDefaultActions(context);
           // TODO 2 implement rendering actions in an AppbarFromZero in other fields (StringField, NumField,)
           result = AppbarFromZero(
@@ -471,6 +470,7 @@ class ComboField<T extends DAO> extends Field<T> {
   }
 
   bool? _onSelected(T? v, FocusNode focusNode) {
+    userInteracted = true;
     value = v;
     focusNode.requestFocus();
   }
@@ -548,6 +548,8 @@ class ComboField<T extends DAO> extends Field<T> {
           icon: Icon(Icons.refresh,),
           breakpoints: {0: ActionState.popup},
           onTap: (context) {
+            userInteracted = true;
+            focusNode?.requestFocus();
             final ref = dao.contextForValidation! as WidgetRef;
             final provider = possibleValuesProviderGetter!(context, this, dao);
             final stateNotifier = ref.read(provider!.notifier);

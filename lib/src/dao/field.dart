@@ -41,11 +41,23 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   List<FieldValidator<T>> get validators => validatorsGetter?.call(this, dao) ?? [];
   bool validateOnlyOnConfirm;
   bool passedFirstEdit = false;
+  bool userInteracted = false;
   List<ValidationError> validationErrors = [];
   FieldValueGetter<SimpleColModel, Field> colModelBuilder;
   bool invalidateNonEmptyValuesIfHiddenInForm;
   ContextFulFieldValueGetter<Color?, Field>? backgroundColor;
-  ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions;
+  ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actionsGetter;
+  List<ActionFromZero> buildActions(BuildContext context, FocusNode? focusNode) {
+    return actionsGetter?.call(dao.contextForValidation ?? context, this, dao).map((e) {
+      return e.copyWith(
+        onTap: e.onTap==null ? null : (context) {
+          userInteracted = true;
+          focusNode?.requestFocus();
+          e.onTap!(context);
+        },
+      );
+    }).toList() ?? [];
+  }
   ViewWidgetBuilder<T> viewWidgetBuilder;
   OnFieldValueChanged<T?>? onValueChanged;
   FocusNode? _focusNode;
@@ -111,7 +123,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     this.invalidateNonEmptyValuesIfHiddenInForm = true,
     this.defaultValue,
     this.backgroundColor,
-    this.actions,
+    this.actionsGetter,
     this.viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     this.onValueChanged,
   }) :  this._value = value,
@@ -147,7 +159,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool? invalidateNonEmptyValuesIfHiddenInForm,
     T? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
-    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actions,
+    ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actionsGetter,
     ViewWidgetBuilder<T>? viewWidgetBuilder,
     OnFieldValueChanged<T?>? onValueChanged,
   }) {
@@ -173,7 +185,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm ?? this.invalidateNonEmptyValuesIfHiddenInForm,
       defaultValue: defaultValue ?? this.defaultValue,
       backgroundColor: backgroundColor ?? this.backgroundColor,
-      actions: actions ?? this.actions,
+      actionsGetter: actionsGetter ?? this.actionsGetter,
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       onValueChanged: onValueChanged ?? this.onValueChanged,
     );
@@ -461,7 +473,11 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
         ActionFromZero(
           title: 'Deshacer', // TODO 3 internationalize
           icon: Icon(MaterialCommunityIcons.undo_variant),
-          onTap: (context) => undo(removeEntryFromDAO: true),
+          onTap: (context) {
+            userInteracted = true;
+            focusNode?.requestFocus();
+            undo(removeEntryFromDAO: true);
+          },
           breakpoints: {0: ActionState.popup},
           enabled: undoValues.isNotEmpty,
         ),
@@ -469,7 +485,11 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
         ActionFromZero(
           title: 'Rehacer', // TODO 3 internationalize
           icon: Icon(MaterialCommunityIcons.redo_variant),
-          onTap: (context) => redo(removeEntryFromDAO: true),
+          onTap: (context) {
+            userInteracted = true;
+            focusNode?.requestFocus();
+            redo(removeEntryFromDAO: true);
+          },
           breakpoints: {0: ActionState.popup},
           enabled: redoValues.isNotEmpty,
         ),
@@ -478,6 +498,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
           title: 'Limpiar', // TODO 3 internationalize
           icon: Icon(Icons.clear),
           onTap: (context) {
+            userInteracted = true;
             value = defaultValue;
             WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
               (focusNode??_focusNode)?.requestFocus();
@@ -558,7 +579,7 @@ class HiddenValueField<T> extends Field<BoolComparable> {
     hiddenGetter: (field, dao) => true,
   );
   @override
-  Field<BoolComparable> copyWith({FieldValueGetter<String, Field<Comparable>>? uiNameGetter, BoolComparable? value, BoolComparable? dbValue, FieldValueGetter<bool, Field<Comparable>>? clearableGetter, double? maxWidth, double? minWidth, double? flex, FieldValueGetter<String?, Field<Comparable>>? hintGetter, FieldValueGetter<String?, Field<Comparable>>? tooltipGetter, double? tableColumnWidth, FieldValueGetter<bool, Field<Comparable>>? hiddenGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInTableGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInViewGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInFormGetter, FieldValueGetter<List<FieldValidator<BoolComparable>>, Field<Comparable>>? validatorsGetter, bool? validateOnlyOnConfirm, FieldValueGetter<SimpleColModel, Field<Comparable>>? colModelBuilder, List<BoolComparable?>? undoValues, List<BoolComparable?>? redoValues, bool? invalidateNonEmptyValuesIfHiddenInForm, BoolComparable? defaultValue, ContextFulFieldValueGetter<Color?, Field<Comparable>>? backgroundColor, ContextFulFieldValueGetter<List<ActionFromZero<Function>>, Field<Comparable>>? actions, ViewWidgetBuilder<BoolComparable>? viewWidgetBuilder, OnFieldValueChanged<BoolComparable>? onValueChanged}) {
+  Field<BoolComparable> copyWith({FieldValueGetter<String, Field<Comparable>>? uiNameGetter, BoolComparable? value, BoolComparable? dbValue, FieldValueGetter<bool, Field<Comparable>>? clearableGetter, double? maxWidth, double? minWidth, double? flex, FieldValueGetter<String?, Field<Comparable>>? hintGetter, FieldValueGetter<String?, Field<Comparable>>? tooltipGetter, double? tableColumnWidth, FieldValueGetter<bool, Field<Comparable>>? hiddenGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInTableGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInViewGetter, FieldValueGetter<bool, Field<Comparable>>? hiddenInFormGetter, FieldValueGetter<List<FieldValidator<BoolComparable>>, Field<Comparable>>? validatorsGetter, bool? validateOnlyOnConfirm, FieldValueGetter<SimpleColModel, Field<Comparable>>? colModelBuilder, List<BoolComparable?>? undoValues, List<BoolComparable?>? redoValues, bool? invalidateNonEmptyValuesIfHiddenInForm, BoolComparable? defaultValue, ContextFulFieldValueGetter<Color?, Field<Comparable>>? backgroundColor, ContextFulFieldValueGetter<List<ActionFromZero<Function>>, Field<Comparable>>? actionsGetter, ViewWidgetBuilder<BoolComparable>? viewWidgetBuilder, OnFieldValueChanged<BoolComparable>? onValueChanged}) {
     return HiddenValueField(hiddenValue);
   }
 }
