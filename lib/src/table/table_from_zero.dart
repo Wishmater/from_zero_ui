@@ -63,8 +63,8 @@ class TableFromZero<T> extends StatefulWidget {
   final bool showFirstHorizontalDivider;
   final List<RowAction<T>> rowActions;
   final Widget? Function(BuildContext context, RowModel<T> row, dynamic colKey)? cellBuilder;
-  final Widget? Function(BuildContext context, RowModel<T> row,
-      Widget Function(BuildContext context, RowModel<T> row) defaultRowBuilder)? rowBuilder;
+  final Widget? Function(BuildContext context, RowModel<T> row, int index,
+      Widget Function(BuildContext context, RowModel<T> row, int index) defaultRowBuilder)? rowBuilder;
   final Widget? Function(BuildContext context, RowModel row)? headerRowBuilder;
   final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   final TableController<T>? tableController;
@@ -289,7 +289,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     bool filtersAltered = false;
     isStateInvalidated = false;
     currentColumnKeys = widget.columns?.keys.toList();
-    sorted = List.from(widget.rows);
+    sorted = widget.rows.map((e) => e.visibleRows).flatten().toList();
     if (widget.tableController!=null) {
       widget.tableController!.currentState = this;
       widget.tableController!._filter = _controllerFilter;
@@ -327,7 +327,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     _updateFiltersApplied();
     if (widget.columns!=null) {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        initFilters(
+        initFilters(widget.rows.map((e) => e.allRows).flatten().toList(), // passing sorted would count only visible rows
           filterAfter: filtersAltered,
         ).then((value) {
           if (mounted && filtersAltered) {
@@ -345,8 +345,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       if (widget.headerRowModel!=null) {
         if (widget.headerRowModel is SimpleRowModel) {
           headerRowModel = (widget.headerRowModel as SimpleRowModel).copyWith(
-            onCheckBoxSelected: widget.headerRowModel!.onCheckBoxSelected
-                ?? (widget.onAllSelected!=null||widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null),
+            onCheckBoxSelected: widget.headerRowModel!.onCheckBoxSelected,
             values: widget.columns==null || widget.columns!.length==widget.headerRowModel!.values.length
                 ? widget.headerRowModel!.values
                 : widget.columns!.map((key, value) => MapEntry(key, value.name)),
@@ -362,7 +361,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         headerRowModel = SimpleRowModel(
           id: "header_row",
           values: widget.columns!.map((key, value) => MapEntry(key, value.name)),
-          onCheckBoxSelected: widget.onAllSelected!=null||widget.rows.any((element) => element.onCheckBoxSelected!=null) ? (_, __){} : null,
           selected: true,
           height: widget.rows.isEmpty ? 36 : widget.rows.first.height,
         );
@@ -372,7 +370,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
   cancelable_compute.ComputeOperation<Map<dynamic, List<dynamic>>>? availableFiltersIsolateController;
   cancelable_compute.ComputeOperation<Map<dynamic, Map<Object?, bool>>?>? validInitialFiltersIsolateController;
-  Future<void> initFilters({
+  Future<void> initFilters(List<RowModel<T>> rows, {
     bool? filterAfter,
     bool? computeFiltersInIsolate,
   }) async {
@@ -380,7 +378,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     validInitialFiltersIsolateController?.cancel();
     Map<dynamic, List<dynamic>> computedAvailableFilters;
     Map<dynamic, Map<Object?, bool>>? computedValidInitialFilters;
-    if (computeFiltersInIsolate ?? widget.computeFiltersInIsolate ?? widget.rows.length>200) {
+    if (computeFiltersInIsolate ?? widget.computeFiltersInIsolate ?? rows.length>200) {
       try {
         final Map<dynamic, Map<dynamic, Field>> fieldAliases = {
           for (final key in widget.columns!.keys) key: {},
@@ -391,7 +389,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         availableFiltersIsolateController = cancelable_compute.compute(_getAvailableFilters,
             [
               widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
-              widget.rows.map((e) {
+              rows.map((e) {
                 return e.values.map((key, value) {
                   return MapEntry(key, _sanitizeValueForIsolate(key, value, // TODO 2 performance, maybe allow to manually disable sanitization
                     fieldAliases: fieldAliases[key]!,
@@ -420,7 +418,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       } catch (e, st) {
         log('Isolate creation for computing table filters failed. Computing synchronously...');
         log(e, stackTrace: st, isError: false,);
-        initFilters(
+        initFilters(rows,
           computeFiltersInIsolate: false,
           filterAfter: filterAfter,
         );
@@ -430,7 +428,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       computedAvailableFilters = await _getAvailableFilters(
           [
             widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
-            widget.rows.map((e) => e.values).toList(),
+            rows.map((e) => e.values).toList(),
             true,
           ],
           artifitialThrottle: true,
@@ -577,14 +575,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         result = SliverFixedExtentList(
           itemExtent: filtered.first.height??36,
           delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int i) => _getRow(context, filtered.isEmpty ? null : filtered[i]),
+                (BuildContext context, int i) => _getRow(context, filtered.isEmpty ? null : filtered[i], i),
             childCount: childCount,
           ),
         );
       } else {
         result = SliverList(
           delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int i) => _getRow(context, filtered.isEmpty ? null : filtered[i]),
+                (BuildContext context, int i) => _getRow(context, filtered.isEmpty ? null : filtered[i], i),
             childCount: childCount,
           ),
         );
@@ -605,7 +603,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
               sizeFraction: 0.7,
               curve: Curves.easeOutCubic,
               animation: animation,
-              child: _getRow(context, item),
+              child: _getRow(context, item, index),
             ),
           );
         },
@@ -614,7 +612,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             position: Tween<Offset>(begin: Offset(-0.10, 0), end: Offset(0, 0)).animate(animation),
             child: FadeTransition(
               opacity: animation,
-              child: _getRow(context, item),
+              child: _getRow(context, item, -1),
             ),
           );
         },
@@ -626,7 +624,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         ? headerRowModel!=null
             ? headerRowModel!.values.isEmpty && headerRowModel!.rowAddon!=null
                 ? headerRowModel!.rowAddon!
-                : _getRow(context, headerRowModel!)
+                : _getRow(context, headerRowModel!, -1)
             : null
         : headerRowModel?.rowAddon;
     if (header!=null) {
@@ -701,7 +699,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   }
 
 
-  Widget _getRow(BuildContext context, RowModel? row){
+  Widget _getRow(BuildContext context, RowModel? row, int index){
     if (row==null){
 
       return InitiallyAnimatedWidget(
@@ -726,7 +724,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
       if (row==headerRowModel){
         return widget.headerRowBuilder?.call(context, headerRowModel!)
-            ?? _defaultGetRow.call(context, headerRowModel!);
+            ?? _defaultGetRow.call(context, headerRowModel!, index);
       } else {
         if (widget.enableSkipFrameWidgetForRows ?? filtered.length>50) {
           return SkipFrameWidget(
@@ -736,25 +734,25 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
               );
             },
             childBuilder: (context) {
-              return widget.rowBuilder?.call(context, row as RowModel<T>, _defaultGetRow)
-                  ?? _defaultGetRow.call(context, row as RowModel<T>);
+              return widget.rowBuilder?.call(context, row as RowModel<T>, index, _defaultGetRow)
+                  ?? _defaultGetRow.call(context, row as RowModel<T>, index);
             },
           );
         } else {
-          return widget.rowBuilder?.call(context, row as RowModel<T>, _defaultGetRow)
-              ?? _defaultGetRow.call(context, row as RowModel<T>);
+          return widget.rowBuilder?.call(context, row as RowModel<T>, index, _defaultGetRow)
+              ?? _defaultGetRow.call(context, row as RowModel<T>, index);
         }
       }
 
     }
   }
-  Widget _defaultGetRow(BuildContext context, RowModel row){
+  Widget _defaultGetRow(BuildContext context, RowModel row, int index){
 
     int maxFlex = 0;
     for (final key in currentColumnKeys??row.values.keys) {
       maxFlex += _getFlex(key);
     }
-    int cols = (((currentColumnKeys??row.values.keys).length) + (_showCheckboxes ? 1 : 0))
+    int cols = (((currentColumnKeys??row.values.keys).length) + (_showLeadingControls ? 1 : 0))
         * (widget.verticalDivider==null ? 1 : 2)
         + (widget.verticalDivider==null ? 0 : 1);
 
@@ -794,7 +792,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           );
           j = (j-1)~/2;
         }
-        if (result==null && _showCheckboxes){
+        if (result==null && _showLeadingControls){
           if (j==0){
             addSizing = false;
             result = SizedBox(width: _checkmarkWidth, height: double.infinity,);
@@ -832,13 +830,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           );
           j = (j-1)~/2;
         }
-        if (_showCheckboxes) {
+        if (_showLeadingControls) {
           if (j==0) {
             return SizedBox(
               width: _checkmarkWidth,
-              child: row.onCheckBoxSelected==null||(row==headerRowModel&&widget.onAllSelected==null)
-                  ? SizedBox.shrink()
-                  : StatefulBuilder(
+              child: (row==headerRowModel ? row.onCheckBoxSelected!=null||widget.onAllSelected!=null : row.onCheckBoxSelected!=null)
+                  ? StatefulBuilder(
                       builder: (context, checkboxSetState) {
                         return LoadingCheckbox(
                           value: row==headerRowModel
@@ -846,7 +843,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                               : row.selected,
                           onChanged: row==headerRowModel&&filtered.isEmpty ? null : (value) {
                             if (row==headerRowModel) {
-                              if (widget.onAllSelected!(value, filtered) ?? false) {
+                              if (row.onCheckBoxSelected!=null) {
+                                if (row.onCheckBoxSelected!(row, value) ?? false) {
+                                  checkboxSetState(() {});
+                                }
+                              } else if (widget.onAllSelected!(value, filtered) ?? false) {
                                 setState(() {});
                               }
                             } else {
@@ -857,7 +858,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                           },
                         );
                       },
-                    ),
+                    )
+                  : row.isExpandable ? IconButton(
+                      icon: row.expanded ? Icon(Icons.expand_less) : Icon(Icons.expand_more),
+                      onPressed: () {
+                        toggleRowExpanded(row as RowModel<T>, index);
+                      },
+                    )
+                  : SizedBox.shrink(),
             );
           } else{
             j--;
@@ -967,6 +975,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         result = _buildRowGestureDetector(
           context: context,
           row: row as RowModel<T>,
+          index: index,
           child: result,
         );
       }
@@ -1046,6 +1055,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         result = _buildRowGestureDetector(
           context: context,
           row: row as RowModel<T>,
+          index: index,
           child: result,
         );
       }
@@ -1118,17 +1128,27 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     return result;
 
   }
-  Widget _buildRowGestureDetector({required BuildContext context, required RowModel<T> row, required Widget child}) {
+  Widget _buildRowGestureDetector({
+    required BuildContext context,
+    required RowModel<T> row,
+    required int index,
+    required Widget child,
+  }) {
     Widget result = child;
-    if (row.onRowTap!=null || row.onCheckBoxSelected!=null) {
+    if (row.onRowTap!=null || row.onCheckBoxSelected!=null || row.isExpandable) {
       result = InkWell(
         onTap: !widget.enabled ? null
-            : row.onRowTap!=null ? () => row.onRowTap!(row)
+            : row.onRowTap!=null
+                ? () => row.onRowTap!(row)
             : row.onCheckBoxSelected!=null
                 ? () {
                     if (row.onCheckBoxSelected!(row, !(row.selected??false)) ?? false) {
                       setState(() {});
                     }
+                  }
+            : row.isExpandable
+                ? () {
+                    toggleRowExpanded(row, index);
                   }
             : null,
         onDoubleTap: widget.enabled&&row.onRowDoubleTap!=null ? () => row.onRowDoubleTap!(row) : null,
@@ -1796,6 +1816,24 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     ];
   }
 
+  void toggleRowExpanded(RowModel<T> row, int index) {
+    setState(() {
+      if (!row.expanded) {
+        row.expanded = true;
+        final visibleRows = row.visibleRows..removeAt(0);
+        final toAdd = visibleRows.where(_passesFilters).toList();
+        smartSort(toAdd,
+          sortedColumn: sortedColumn,
+          sortedAscending: sortedAscending,
+        );
+        filtered.insertAll(index+1, toAdd);
+      } else {
+        filtered.removeRange(index+1, index+row.length);
+        row.expanded = false;
+      }
+    });
+  }
+
   int get disabledColumnCount => widget.columns==null ? 0
       : widget.columns!.values.where((element) => element.flex==0).length;
   List<RowModel<T>> _controllerSort ({bool filterAfter=true}) {
@@ -1855,57 +1893,55 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     }
     return result;
   }
+
   List<RowModel<T>> filter({bool notifyListeners=true}){
-    filtered = sorted.where((element) {
-      bool pass = true;
-      for (final key in valueFilters.keys) {
-        if (valueFiltersApplied[key] ?? false) {
-          final value = element.values[key];
-          if (value is List || value is ComparableList || value is ListField) {
-            final List list = value is List ? value
-                : value is ComparableList ? value.list
-                : value is ListField ? value.objects : [];
-            pass = false;
-            for (final e in list) {
-              pass = valueFilters[key]![e] ?? false;
-              if (pass) {
-                break; // make it pass true if at least 1 element is accepted
-              }
-            }
-          } else {
-            pass = valueFilters[key]![value] ?? false;
-          }
-        }
-        if (!pass) {
-          break;
-        }
-      }
-      conditionFilters.forEach((key, filters) {
-        for (var j = 0; j < filters.length && pass; ++j) {
-          pass = filters[j].isAllowed(element.values[key], element.values, key);
-        }
-      });
-      return pass;
-    }).toList();
+    filtered = sorted.where(_passesFilters).toList();
     if (widget.onFilter!=null) {
       filtered = widget.onFilter!(filtered);
     }
     for (final e in (widget.tableController?.extraFilters ?? [])) {
       filtered = e(filtered);
     }
-    _showCheckboxes = false;
-    for (int i=0; i<filtered.length; i++) {
-      if (filtered[i].onCheckBoxSelected!=null) {
-        _showCheckboxes = true;
-        break;
-      }
-    }
+    _showLeadingControls = filtered.any((e) => e.onCheckBoxSelected!=null
+        || e.children.isNotEmpty || (e.rowAddon!=null && e.rowAddonIsExpandable));
     if (mounted && notifyListeners) {
       widget.tableController?.notifyListeners();
     }
     return filtered;
   }
-  bool _showCheckboxes = false;
+  bool _passesFilters(RowModel<T> row) {
+    bool pass = true;
+    for (final key in valueFilters.keys) {
+      if (valueFiltersApplied[key] ?? false) {
+        final value = row.values[key];
+        if (value is List || value is ComparableList || value is ListField) {
+          final List list = value is List ? value
+              : value is ComparableList ? value.list
+              : value is ListField ? value.objects : [];
+          pass = false;
+          for (final e in list) {
+            pass = valueFilters[key]![e] ?? false;
+            if (pass) {
+              break; // make it pass true if at least 1 element is accepted
+            }
+          }
+        } else {
+          pass = valueFilters[key]![value] ?? false;
+        }
+      }
+      if (!pass) {
+        break;
+      }
+    }
+    conditionFilters.forEach((key, filters) {
+      for (var j = 0; j < filters.length && pass; ++j) {
+        pass = filters[j].isAllowed(row.values[key], row.values, key);
+      }
+    });
+    return pass;
+  }
+
+  bool _showLeadingControls = false;
   void _updateFiltersApplied(){
     valueFiltersApplied = {
       for (final key in widget.columns?.keys ?? [])

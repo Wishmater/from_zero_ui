@@ -1,3 +1,4 @@
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 
@@ -37,15 +38,15 @@ class RowAction<T> extends ActionFromZero {
     ActionBuilder buttonBuilder = ActionFromZero.dividerIconBuilder,
   })  : this.onRowTap = null,
         super(
-        onTap: null,
-        title: '',
-        overflowBuilder: overflowBuilder,
-        iconBuilder: iconBuilder,
-        buttonBuilder: buttonBuilder,
-        breakpoints: breakpoints ?? {
-          0: ActionState.popup,
-        },
-      );
+          onTap: null,
+          title: '',
+          overflowBuilder: overflowBuilder,
+          iconBuilder: iconBuilder,
+          buttonBuilder: buttonBuilder,
+          breakpoints: breakpoints ?? {
+            0: ActionState.popup,
+          },
+        );
 
 }
 
@@ -71,16 +72,30 @@ abstract class RowModel<T> {
   bool? get rowAddonIsCoveredByGestureDetector => null;
   bool? get rowAddonIsCoveredByBackground => null;
   bool? get rowAddonIsCoveredByScrollable => null;
+  bool get rowAddonIsExpandable => false;
   bool? get rowAddonIsSticky => null;
   bool? get rowAddonIsAboveRow => null;
   bool? get alwaysOnTop => null;
+  List<RowModel<T>> get children;
+  bool expanded;
+  int depth;
   late FocusNode focusNode = FocusNode();
+
+  RowModel({
+    this.expanded = false,
+    this.depth = 0,
+  });
   @override
   bool operator == (dynamic other) => other is RowModel && this.id==other.id;
   @override
   int get hashCode => id.hashCode;
+
+  bool get isExpandable => children.isNotEmpty || (rowAddon!=null && rowAddonIsExpandable);
+  List<RowModel<T>> get visibleRows => [this, if (expanded) ...children.map((e) => e.visibleRows).flatten()];
+  List<RowModel<T>> get allRows => [this, ...children.map((e) => e.allRows).flatten()];
+  int get length => 1 + (expanded ? children.sumBy((e) => e.length) : 0);
 }
-///The widget assumes columns will be constant, so bugs may arise when changing columns
+///The widget assumes columns will be constant, so bugs may happen when changing columns
 abstract class ColModel{
   String get name;
   Color? get backgroundColor => null;
@@ -123,8 +138,10 @@ class SimpleRowModel<T> extends RowModel<T> {
   bool? rowAddonIsCoveredByBackground;
   bool? rowAddonIsCoveredByScrollable;
   bool? rowAddonIsSticky;
+  bool rowAddonIsExpandable;
   bool? rowAddonIsAboveRow;
   bool? alwaysOnTop;
+  List<RowModel<T>> children;
   SimpleRowModel({
     required this.id,
     this.rowKey,
@@ -143,12 +160,16 @@ class SimpleRowModel<T> extends RowModel<T> {
     this.rowAddonIsCoveredByBackground,
     this.rowAddonIsCoveredByScrollable,
     this.rowAddonIsSticky,
+    this.rowAddonIsExpandable = false,
     this.rowAddonIsAboveRow,
     this.alwaysOnTop,
     this.onCellTap,
     this.onCellDoubleTap,
     this.onCellLongPress,
     this.onCellHover,
+    this.children = const [],
+    super.expanded = false,
+    super.depth = 0,
   });
   SimpleRowModel copyWith({
     T? id,
@@ -168,12 +189,16 @@ class SimpleRowModel<T> extends RowModel<T> {
     bool? rowAddonIsCoveredByBackground,
     bool? rowAddonIsCoveredByScrollable,
     bool? rowAddonIsSticky,
+    bool? rowAddonIsExpandable,
     bool? rowAddonIsAboveRow,
     bool? alwaysOnTop,
     OnCellTapCallback? onCellTap,
     OnCellTapCallback? onCellDoubleTap,
     OnCellTapCallback? onCellLongPress,
     OnCellHoverCallback? onCellHover,
+    List<RowModel<T>>? children,
+    bool? expanded,
+    int? depth,
   }) {
     return SimpleRowModel<T>(
       id: id ?? this.id,
@@ -199,6 +224,10 @@ class SimpleRowModel<T> extends RowModel<T> {
       onCellLongPress: onCellLongPress ?? this.onCellLongPress,
       onCellHover: onCellHover ?? this.onCellHover,
       alwaysOnTop: alwaysOnTop ?? this.alwaysOnTop,
+      rowAddonIsExpandable: rowAddonIsExpandable ?? this.rowAddonIsExpandable,
+      children: children ?? this.children,
+      expanded: expanded ?? this.expanded,
+      depth: depth ?? this.depth,
     );
   }
 }
