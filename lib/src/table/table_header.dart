@@ -21,7 +21,6 @@ class TableHeaderFromZero<T> extends StatefulWidget {
   final bool addSearchAction;
   final bool searchActionExpandedByDefault;
   final Color? defaultActionsColor;
-  final bool Function(RowModel<T> row)? rowCountSelector;
   final Color? backgroundColor;
 
   const TableHeaderFromZero({
@@ -35,7 +34,6 @@ class TableHeaderFromZero<T> extends StatefulWidget {
     this.addSearchAction = false,
     this.searchActionExpandedByDefault = true,
     this.defaultActionsColor,
-    this.rowCountSelector,
     this.backgroundColor,
     Key? key,
   }) : super(key: key);
@@ -93,12 +91,17 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
         Widget subtitle;
         if (selectedCount==0) {
           if (filtered!=null && widget.showElementCount) {
-            final count = widget.rowCountSelector==null
-                ? filtered.length
-                : filtered.where((e) => widget.rowCountSelector!(e)).length;
-            subtitle = Text(filtered.length==0 ? FromZeroLocalizations.of(context).translate('no_elements')
-                : '$count ${count>1 ? FromZeroLocalizations.of(context).translate('element_plur')
-                : FromZeroLocalizations.of(context).translate('element_sing')}',
+            final column = widget.controller.columns?[widget.controller.sortedColumn];
+            String subtitleText;
+            if (column!=null) {
+              subtitleText = column.getSubtitleText(context, filtered);
+            } else {
+              final count = filtered.length;
+              subtitleText = count==0 ? FromZeroLocalizations.of(context).translate('no_elements')
+                  : '$count ${count>1 ? FromZeroLocalizations.of(context).translate('element_plur')
+                  : FromZeroLocalizations.of(context).translate('element_sing')}';
+            }
+            subtitle = Text(subtitleText,
               // key: ValueKey('normal'),
               style: Theme.of(context).textTheme.caption,
             );

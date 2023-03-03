@@ -102,7 +102,7 @@ abstract class RowModel<T> {
   }
 }
 ///The widget assumes columns will be constant, so bugs may happen when changing columns
-abstract class ColModel{
+abstract class ColModel<T>{
   String get name;
   Color? get backgroundColor => null;
   TextStyle? get textStyle => null;
@@ -120,6 +120,20 @@ abstract class ColModel{
   bool? get textConditionFiltersEnabled => null;
   bool? get numberConditionFiltersEnabled => null;
   bool? get dateConditionFiltersEnabled => null;
+  bool Function(RowModel<T> row)? get rowCountSelector;
+
+  String getSubtitleText(BuildContext context, List<RowModel<T>>? filtered) {
+    if (filtered==null) {
+      return '';
+    } else {
+      final count = rowCountSelector==null
+          ? filtered.length
+          : filtered.where((e) => rowCountSelector!(e)).length;
+      return count==0 ? FromZeroLocalizations.of(context).translate('no_elements')
+          : '$count ${count>1 ? FromZeroLocalizations.of(context).translate('element_plur')
+          : FromZeroLocalizations.of(context).translate('element_sing')}';
+    }
+  }
 }
 
 class SimpleRowModel<T> extends RowModel<T> {
@@ -237,7 +251,7 @@ class SimpleRowModel<T> extends RowModel<T> {
     );
   }
 }
-class SimpleColModel extends ColModel{
+class SimpleColModel<T> extends ColModel<T>{
   String name;
   Color? backgroundColor;
   TextStyle? textStyle;
@@ -255,6 +269,7 @@ class SimpleColModel extends ColModel{
   bool? textConditionFiltersEnabled;
   bool? numberConditionFiltersEnabled;
   bool? dateConditionFiltersEnabled;
+  bool Function(RowModel<T> row)? rowCountSelector;
   SimpleColModel({
     required this.name,
     this.backgroundColor,
@@ -273,6 +288,7 @@ class SimpleColModel extends ColModel{
     this.textConditionFiltersEnabled,
     this.numberConditionFiltersEnabled,
     this.dateConditionFiltersEnabled,
+    this.rowCountSelector,
   });
   SimpleColModel copyWith({
     String? name,
@@ -292,8 +308,9 @@ class SimpleColModel extends ColModel{
     bool? textConditionFiltersEnabled,
     bool? numberConditionFiltersEnabled,
     bool? dateConditionFiltersEnabled,
+    bool Function(RowModel<T> row)? rowCountSelector,
   }){
-    return SimpleColModel(
+    return SimpleColModel<T>(
       name: name ?? this.name,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       textStyle: textStyle ?? this.textStyle,
@@ -311,6 +328,7 @@ class SimpleColModel extends ColModel{
       textConditionFiltersEnabled: textConditionFiltersEnabled ?? this.textConditionFiltersEnabled,
       numberConditionFiltersEnabled: numberConditionFiltersEnabled ?? this.numberConditionFiltersEnabled,
       dateConditionFiltersEnabled: dateConditionFiltersEnabled ?? this.dateConditionFiltersEnabled,
+      rowCountSelector: rowCountSelector ?? this.rowCountSelector,
     );
   }
 }

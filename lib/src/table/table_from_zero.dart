@@ -228,6 +228,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           widget.tableController!._getFiltered = ()=>[];
         }
       } catch (_) {}
+      try {
+        if (widget.tableController!._getColumns==_getColumns) {
+          widget.tableController!._getColumns = ()=>{};
+        }
+      } catch (_) {}
       if (widget.tableController!._sort==_controllerSort) {
         widget.tableController!._sort = null;
       }
@@ -307,6 +312,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       widget.tableController!._sort = _controllerSort;
       widget.tableController!._reInit = _invalidateState;
       widget.tableController!._getFiltered = _getFiltered;
+      widget.tableController!._getColumns = _getColumns;
     }
     if (widget.tableController?.conditionFilters==null) {
       if (widget.tableController?.initialConditionFilters==null){
@@ -1873,7 +1879,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         row.expanded = true;
         final visibleRows = row.visibleRows..removeAt(0);
         final toAdd = visibleRows.where(_passesFilters).toList();
-        smartSort(toAdd,
+        smartSort<T>(toAdd,
           sortedColumn: sortedColumn,
           sortedAscending: sortedAscending,
         );
@@ -1903,7 +1909,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return result;
   }
   List<RowModel<T>> sort({bool notifyListeners=true}) {
-    smartSort(sorted,
+    smartSort<T>(sorted,
       sortedColumn: sortedColumn,
       sortedAscending: sortedAscending,
     );
@@ -1915,8 +1921,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     Object? sortedColumn,
     bool sortedAscending = true,
   }) {
+    print (list.runtimeType);
     if (list.isEmpty) return;
-    mergeSort(list, compare: ((RowModel<T> a, RowModel<T> b) {
+    mergeSort<RowModel<T>>(list, compare: ((RowModel<T> a, RowModel<T> b) {
       if (a.alwaysOnTop!=null || b.alwaysOnTop!=null && a.alwaysOnTop!=b.alwaysOnTop) {
         if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
         if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1;
@@ -1933,12 +1940,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           : aVal==null ? -1 : bVal==null ? 1 : bVal.compareTo(aVal);
     }));
     for (final e in list) {
-      smartSort(e.children,
+      smartSort<T>(e.children,
         sortedColumn: sortedColumn,
         sortedAscending: sortedAscending,
       );
     }
   }
+  Map<dynamic, ColModel>? _getColumns() => widget.columns;
   List<RowModel<T>> _getFiltered() => filtered;
   List<RowModel<T>> _controllerFilter() {
     List<RowModel<T>> result = [];
@@ -2061,7 +2069,6 @@ class TableController<T> extends ChangeNotifier {
   Map<dynamic, Map<Object?, bool>>? valueFilters;
   Map<dynamic, bool>? valueFiltersApplied;
   Map<dynamic, bool>? filtersApplied;
-  Map<dynamic, bool> columnVisibilities;
   bool sortedAscending;
   dynamic sortedColumn;
 
@@ -2072,9 +2079,7 @@ class TableController<T> extends ChangeNotifier {
     this.sortedAscending = true,
     this.sortedColumn,
     this.initialValueFiltersExcludeAllElse = false,
-    Map<int, bool>? columnVisibilities,
-  })  : this.extraFilters = extraFilters ?? [],
-        this.columnVisibilities = columnVisibilities ?? {};
+  })  : this.extraFilters = extraFilters ?? [];
 
   TableController<T> copyWith({
     List<List<RowModel<T>> Function(List<RowModel<T>>)>? extraFilters,
@@ -2095,7 +2100,6 @@ class TableController<T> extends ChangeNotifier {
       ..initialValueFilters = initialValueFilters ?? this.initialValueFilters
       ..initialValueFiltersExcludeAllElse = initialValueFiltersExcludeAllElse ?? this.initialValueFiltersExcludeAllElse
       ..valueFilters = valueFilters ?? this.valueFilters
-      ..columnVisibilities = columnVisibilities ?? this.columnVisibilities
       ..sortedAscending = sortedAscending ?? this.sortedAscending
       ..sortedColumn = sortedColumnIndex ?? this.sortedColumn
       .._filter = this._filter
@@ -2120,5 +2124,8 @@ class TableController<T> extends ChangeNotifier {
 
   late List<RowModel<T>> Function() _getFiltered;
   List<RowModel<T>> get filtered => _getFiltered();
+
+  late Map<dynamic, ColModel>? Function() _getColumns;
+  Map<dynamic, ColModel>? get columns => _getColumns();
 
 }
