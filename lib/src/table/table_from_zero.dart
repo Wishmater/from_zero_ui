@@ -129,7 +129,7 @@ class TrackingScrollControllerFomZero extends TrackingScrollController {
 }
 
 
-class TableFromZeroState<T> extends State<TableFromZero<T>> {
+class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderStateMixin {
 
   static const double _checkmarkWidth = 48;
   static const bool showFiltersLoading = false;
@@ -144,6 +144,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   void _invalidateState() {
     isStateInvalidated = true;
   }
+  final Map<RowModel<T>, Animation<double>> rowAddonEntranceAnimations = {};
+  final Map<RowModel<T>, Animation<double>> nestedRowEntranceAnimations = {};
 
   late Map<dynamic, List<ConditionFilter>> _conditionFilters;
   Map<dynamic, List<ConditionFilter>> get conditionFilters => widget.tableController?.conditionFilters ?? _conditionFilters;
@@ -292,6 +294,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     isStateInvalidated = false;
     currentColumnKeys = widget.columns?.keys.toList();
     sorted = widget.rows;
+    for (final e in sorted) {
+      e.calculateDepth();
+    }
+    _showLeadingControls = sorted.map((e) => e.allRows).flatten()
+        .any((e) => e.onCheckBoxSelected!=null
+                    || e.children.isNotEmpty
+                    || (e.rowAddon!=null && e.rowAddonIsExpandable));
     if (widget.tableController!=null) {
       widget.tableController!.currentState = this;
       widget.tableController!._filter = _controllerFilter;
@@ -726,7 +735,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
       if (row==headerRowModel){
         return widget.headerRowBuilder?.call(context, headerRowModel!)
-            ?? _defaultGetRow.call(context, headerRowModel!, index);
+            ?? _defaultRowBuilder.call(context, headerRowModel!, index);
       } else {
         if (widget.enableSkipFrameWidgetForRows ?? allFiltered.length>50) {
           return SkipFrameWidget(
@@ -736,19 +745,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
               );
             },
             childBuilder: (context) {
-              return widget.rowBuilder?.call(context, row as RowModel<T>, index, _defaultGetRow)
-                  ?? _defaultGetRow.call(context, row as RowModel<T>, index);
+              return widget.rowBuilder?.call(context, row as RowModel<T>, index, _defaultRowBuilder)
+                  ?? _defaultRowBuilder.call(context, row as RowModel<T>, index);
             },
           );
         } else {
-          return widget.rowBuilder?.call(context, row as RowModel<T>, index, _defaultGetRow)
-              ?? _defaultGetRow.call(context, row as RowModel<T>, index);
+          return widget.rowBuilder?.call(context, row as RowModel<T>, index, _defaultRowBuilder)
+              ?? _defaultRowBuilder.call(context, row as RowModel<T>, index);
         }
       }
 
     }
   }
-  Widget _defaultGetRow(BuildContext context, RowModel row, int index){
+  Widget _defaultRowBuilder(BuildContext context, RowModel row, int index){
 
     int maxFlex = 0;
     for (final key in currentColumnKeys??row.values.keys) {
@@ -1015,7 +1024,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           ),
         );
       }
-      if (row.rowAddon!=null) {
+      if (row.rowAddon!=null && (row.expanded || !row.rowAddonIsExpandable)) {
         Widget addon = row.rowAddon!;
         if ((row.rowAddonIsCoveredByScrollable??true) && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
           addon = NotificationListener(
@@ -1028,6 +1037,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                 child: addon,
               ),
             ),
+          );
+        }
+        if (row.rowAddonIsExpandable && rowAddonEntranceAnimations[row]!=null) {
+          addon = _buildEntranceAnimation(
+            child: addon,
+            row: row,
+            animation: rowAddonEntranceAnimations[row]!,
           );
         }
         Widget top, bottom;
@@ -1128,6 +1144,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     } else {
       result = builder(context, null);
     }
+    if (nestedRowEntranceAnimations[row]!=null) {
+      result = _buildEntranceAnimation(
+        child: result,
+        row: row,
+        animation: nestedRowEntranceAnimations[row]!,
+      );
+    }
     result = ClipRect(
       clipBehavior: Clip.hardEdge,
       child: result,
@@ -1176,6 +1199,27 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       ),
     );
     return result;
+  }
+  Widget _buildEntranceAnimation({
+    required Widget child,
+    required RowModel row,
+    required Animation<double> animation,
+  }) {
+    return AnimatedBuilder(
+      animation: animation,
+      child: child,
+      builder: (context, child) {
+        final value = animation.value;
+        return Transform.translate(
+          offset: Offset(-128*(1-value), -(row.height??36)*(1-value)*0.5),
+          transformHitTests: false,
+          child: Opacity(
+            opacity: value,
+            child: child,
+          ),
+        );
+      },
+    );
   }
 
   Widget defaultHeaderCellBuilder(BuildContext context, RowModel row, dynamic colKey, {
@@ -1834,6 +1878,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           sortedAscending: sortedAscending,
         );
         allFiltered.insertAll(index+1, toAdd);
+        final animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 300));
+        final curvedAnimation = CurvedAnimation(parent: animationController, curve: Curves.easeOutCubic);
+        animationController.forward();
+        rowAddonEntranceAnimations[row] = curvedAnimation;
+        for (final e in toAdd) {
+          nestedRowEntranceAnimations[e] = curvedAnimation;
+        }
       } else {
         allFiltered.removeRange(index+1, index+row.length);
         row.expanded = false;
@@ -1906,9 +1957,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     for (final e in (widget.tableController?.extraFilters ?? [])) {
       filtered = e(filtered);
     }
-    _showLeadingControls = filtered.any((e) => e.onCheckBoxSelected!=null
-        || e.children.isNotEmpty || (e.rowAddon!=null && e.rowAddonIsExpandable));
-    allFiltered = filtered.map((e) => e.visibleRows).flatten().toList();
+    allFiltered = filtered.map((e) => e.visibleRows).flatten()
+        .where((e) => e.depth==0 || _passesFilters(e)).toList();
     if (mounted && notifyListeners) {
       widget.tableController?.notifyListeners();
     }

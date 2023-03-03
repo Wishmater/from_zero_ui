@@ -94,6 +94,12 @@ abstract class RowModel<T> {
   List<RowModel<T>> get visibleRows => [this, if (expanded) ...children.map((e) => e.visibleRows).flatten()];
   List<RowModel<T>> get allRows => [this, ...children.map((e) => e.allRows).flatten()];
   int get length => 1 + (expanded ? children.sumBy((e) => e.length) : 0);
+  void calculateDepth() {
+    for (final e in children) {
+      e.depth = depth+1;
+      e.calculateDepth();
+    }
+  }
 }
 ///The widget assumes columns will be constant, so bugs may happen when changing columns
 abstract class ColModel{
