@@ -1923,7 +1923,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   }) {
     print (list.runtimeType);
     if (list.isEmpty) return;
-    mergeSort<RowModel<T>>(list, compare: ((RowModel<T> a, RowModel<T> b) {
+    mergeSort<RowModel<T>>(list.cast<RowModel<T>>(), compare: ((RowModel<T> a, RowModel<T> b) {
       if (a.alwaysOnTop!=null || b.alwaysOnTop!=null && a.alwaysOnTop!=b.alwaysOnTop) {
         if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
         if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1;
