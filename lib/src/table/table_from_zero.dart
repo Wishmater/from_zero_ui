@@ -135,7 +135,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   static const bool showFiltersLoading = false;
 
   late List<RowModel<T>> sorted;
+  late List<RowModel<T>> allSorted;
   late List<RowModel<T>> filtered;
+  late List<RowModel<T>> allFiltered;
   late Map<dynamic, FocusNode> headerFocusNodes = {};
   List<dynamic>? currentColumnKeys;
   bool isStateInvalidated = false;
@@ -289,7 +291,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     bool filtersAltered = false;
     isStateInvalidated = false;
     currentColumnKeys = widget.columns?.keys.toList();
-    sorted = widget.rows.map((e) => e.visibleRows).flatten().toList();
+    sorted = widget.rows;
     if (widget.tableController!=null) {
       widget.tableController!.currentState = this;
       widget.tableController!._filter = _controllerFilter;
@@ -562,27 +564,27 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
   @override
   Widget build(BuildContext context) {
 
-    if (widget.hideIfNoRows && filtered.isEmpty) {
+    if (widget.hideIfNoRows && allFiltered.isEmpty) {
       return SliverToBoxAdapter(child: SizedBox.shrink(),);
     }
-    int childCount = filtered.length.coerceIn(1);
+    int childCount = allFiltered.length.coerceIn(1);
     Widget result;
 
     if (true) {
-    // if (!(widget.implicitlyAnimated ?? filtered.length<10)) {
+    // if (!(widget.implicitlyAnimated ?? allFiltered.length<10)) {
 
-      if (widget.enableFixedHeightForListRows && filtered.isNotEmpty) {
+      if (widget.enableFixedHeightForListRows && allFiltered.isNotEmpty) {
         result = SliverFixedExtentList(
-          itemExtent: filtered.first.height??36,
+          itemExtent: allFiltered.first.height??36,
           delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int i) => _getRow(context, filtered.isEmpty ? null : filtered[i], i),
+                (BuildContext context, int i) => _getRow(context, allFiltered.isEmpty ? null : allFiltered[i], i),
             childCount: childCount,
           ),
         );
       } else {
         result = SliverList(
           delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int i) => _getRow(context, filtered.isEmpty ? null : filtered[i], i),
+                (BuildContext context, int i) => _getRow(context, allFiltered.isEmpty ? null : allFiltered[i], i),
             childCount: childCount,
           ),
         );
@@ -592,7 +594,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     } else {
 
       result = SliverImplicitlyAnimatedList<RowModel<T>>(
-        items: filtered.isEmpty ? [] : filtered,
+        items: allFiltered.isEmpty ? [] : allFiltered,
         areItemsTheSame: (a, b) => a==b,
         insertDuration: Duration(milliseconds: 400),
         updateDuration: Duration(milliseconds: 400),
@@ -726,7 +728,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
         return widget.headerRowBuilder?.call(context, headerRowModel!)
             ?? _defaultGetRow.call(context, headerRowModel!, index);
       } else {
-        if (widget.enableSkipFrameWidgetForRows ?? filtered.length>50) {
+        if (widget.enableSkipFrameWidgetForRows ?? allFiltered.length>50) {
           return SkipFrameWidget(
             paceholderBuilder: (context) {
               return SizedBox(
@@ -806,7 +808,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           return SizedBox.shrink();
         }
         result = Container(
-          decoration: _getDecoration(row, colKey),
+          decoration: _getDecoration(row, index, colKey),
           child: result,
         );
         if (addSizing){
@@ -839,15 +841,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                       builder: (context, checkboxSetState) {
                         return LoadingCheckbox(
                           value: row==headerRowModel
-                              ? filtered.isNotEmpty && filtered.every((element) => element.selected==true || element.onCheckBoxSelected==null)
+                              ? allFiltered.isNotEmpty && allFiltered.every((element) => element.selected==true || element.onCheckBoxSelected==null)
                               : row.selected,
-                          onChanged: row==headerRowModel&&filtered.isEmpty ? null : (value) {
+                          onChanged: row==headerRowModel&&allFiltered.isEmpty ? null : (value) {
                             if (row==headerRowModel) {
                               if (row.onCheckBoxSelected!=null) {
                                 if (row.onCheckBoxSelected!(row, value) ?? false) {
                                   checkboxSetState(() {});
                                 }
-                              } else if (widget.onAllSelected!(value, filtered) ?? false) {
+                              } else if (widget.onAllSelected!(value, allFiltered) ?? false) {
                                 setState(() {});
                               }
                             } else {
@@ -1037,7 +1039,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
             header: top,
             content: bottom,
             stickOffset: row is! RowModel<T> ? 0
-                : filtered.indexOf(row)==0 ? 0
+                : index==0 ? 0
                 : widget.stickyOffset + (row.height??0),
           );
         } else{
@@ -1074,7 +1076,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                 child: Stack(
                   children: [
                     Container(
-                      decoration: _getDecoration(row, null),
+                      decoration: _getDecoration(row, index, null),
                     ),
                     Padding(
                       padding: EdgeInsets.only(right: actionsWidth),
@@ -1718,12 +1720,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     return result;
   }
 
-  BoxDecoration? _getDecoration(RowModel row, dynamic colKey,){
+  BoxDecoration? _getDecoration(RowModel row, int index, dynamic colKey,){
     bool isHeader = row==headerRowModel;
     Color? backgroundColor = _getBackgroundColor(row, colKey, isHeader);
     if (backgroundColor!=null) {
       bool applyDarker = widget.alternateRowBackgroundBrightness
-          && _shouldApplyDarkerBackground(backgroundColor, row, colKey, isHeader);
+          && _shouldApplyDarkerBackground(backgroundColor, row, index, colKey, isHeader);
       if (backgroundColor.opacity<1 && widget.alternateRowBackgroundBrightness) {
         backgroundColor = Color.alphaBlend(backgroundColor, _getMaterialColor());
       }
@@ -1745,19 +1747,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     }
     return backgroundColor ?? _getMaterialColor();
   }
-  bool _shouldApplyDarkerBackground(Color? current, RowModel row, dynamic colKey, bool isHeader){
-//    if (filtered[i]!=row) return false;
-    int i = row is! RowModel<T> ? -1 : filtered.indexOf(row);
-    if (i<0) {
-      return false;
-    } else if (i==0) {
-      return true;
-    } else if (!(widget.alternateRowBackgroundSmartly??filtered.length<50) || i > filtered.length) {
-      return i.isEven;
+  bool _shouldApplyDarkerBackground(Color? current, RowModel row, int index, dynamic colKey, bool isHeader) {
+    if (widget.alternateRowBackgroundSmartly??allFiltered.length<50) {
+      if (index<0 || index>allFiltered.length) {
+        return false;
+      } else if (index==0) {
+        return true;
+      } else {
+        Color? previous = _getBackgroundColor(allFiltered[index-1], colKey, isHeader);
+        if (previous!=current) return false;
+        return !_shouldApplyDarkerBackground(previous, allFiltered[index-1], index, colKey, isHeader);
+      }
     } else {
-      Color? previous = _getBackgroundColor(filtered[i-1], colKey, isHeader);
-      if (previous!=current) return false;
-      return !_shouldApplyDarkerBackground(previous, filtered[i-1], colKey, isHeader);
+      return index.isEven;
     }
   }
 
@@ -1826,9 +1828,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           sortedColumn: sortedColumn,
           sortedAscending: sortedAscending,
         );
-        filtered.insertAll(index+1, toAdd);
+        allFiltered.insertAll(index+1, toAdd);
       } else {
-        filtered.removeRange(index+1, index+row.length);
+        allFiltered.removeRange(index+1, index+row.length);
         row.expanded = false;
       }
     });
@@ -1836,38 +1838,29 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
 
   int get disabledColumnCount => widget.columns==null ? 0
       : widget.columns!.values.where((element) => element.flex==0).length;
-  List<RowModel<T>> _controllerSort ({bool filterAfter=true}) {
+  List<RowModel<T>> _controllerSort () {
     List<RowModel<T>> result = [];
     if (mounted){
-      result = sort(filterAfter: filterAfter);
+      result = sort();
       setState(() {});
     }
     return result;
   }
-  List<RowModel<T>> sort({bool notifyListeners=true, bool filterAfter=true}) {
-    if (filterAfter) {
-      _sort(sorted);
-      filter(notifyListeners: notifyListeners);
-      return sorted;
-    } else {
-      _sort(filtered);
-      if (notifyListeners) {
-        widget.tableController?.notifyListeners();
-      }
-      return filtered;
-    }
-  }
-  void _sort(List<RowModel<T>> list) {
-    smartSort(list,
+  List<RowModel<T>> sort({bool notifyListeners=true}) {
+    smartSort(sorted,
       sortedColumn: sortedColumn,
       sortedAscending: sortedAscending,
     );
+    allSorted = sorted.map((e) => e.visibleRows).flatten().toList();
+    filter(notifyListeners: notifyListeners);
+    return sorted;
   }
   static void smartSort<T>(List<RowModel<T>> list, {
     Object? sortedColumn,
     bool sortedAscending = true,
   }) {
-    mergeSort(list, compare: ((RowModel<T> a, RowModel<T> b){
+    if (list.isEmpty) return;
+    mergeSort(list, compare: ((RowModel<T> a, RowModel<T> b) {
       if (a.alwaysOnTop!=null || b.alwaysOnTop!=null && a.alwaysOnTop!=b.alwaysOnTop) {
         if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
         if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1;
@@ -1883,6 +1876,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
           ? aVal==null ? 1 : bVal==null ? -1 : aVal.compareTo(bVal)
           : aVal==null ? -1 : bVal==null ? 1 : bVal.compareTo(aVal);
     }));
+    for (final e in list) {
+      smartSort(e.children,
+        sortedColumn: sortedColumn,
+        sortedAscending: sortedAscending,
+      );
+    }
   }
   List<RowModel<T>> _getFiltered() => filtered;
   List<RowModel<T>> _controllerFilter() {
@@ -1904,6 +1903,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
     }
     _showLeadingControls = filtered.any((e) => e.onCheckBoxSelected!=null
         || e.children.isNotEmpty || (e.rowAddon!=null && e.rowAddonIsExpandable));
+    allFiltered = filtered.map((e) => e.visibleRows).flatten().toList();
     if (mounted && notifyListeners) {
       widget.tableController?.notifyListeners();
     }
@@ -2052,9 +2052,9 @@ class TableController<T> extends ChangeNotifier {
     return _filter?.call() ?? [];
   }
 
-  List<RowModel<T>> Function({bool filterAfter})? _sort;
-  List<RowModel<T>> sort({bool filterAfter=true}){
-    return _sort?.call(filterAfter: filterAfter) ?? [];
+  List<RowModel<T>> Function()? _sort;
+  List<RowModel<T>> sort(){
+    return _sort?.call() ?? [];
   }
 
   VoidCallback? _reInit;
