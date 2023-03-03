@@ -862,10 +862,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
                       },
                     )
                   : row.isExpandable ? IconButton(
-                      icon: row.expanded ? Icon(Icons.expand_less) : Icon(Icons.expand_more),
                       onPressed: () {
                         toggleRowExpanded(row as RowModel<T>, index);
                       },
+                      icon: SelectableIcon(
+                        selected: row.expanded,
+                        icon: Icons.expand_less,
+                        unselectedOffset: 0.25,
+                        selectedOffset: 0.5,
+                      ),
                     )
                   : SizedBox.shrink(),
             );
@@ -1756,7 +1761,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> {
       } else {
         Color? previous = _getBackgroundColor(allFiltered[index-1], colKey, isHeader);
         if (previous!=current) return false;
-        return !_shouldApplyDarkerBackground(previous, allFiltered[index-1], index, colKey, isHeader);
+        return !_shouldApplyDarkerBackground(previous, allFiltered[index-1], index-1, colKey, isHeader);
       }
     } else {
       return index.isEven;

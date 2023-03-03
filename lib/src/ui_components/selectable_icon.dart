@@ -13,8 +13,8 @@ class SelectableIcon extends StatefulWidget {
   final double iconSize;
 
   const SelectableIcon({
-    required this.icon,
     required this.selected,
+    this.icon = Icons.expand_more,
     this.iconSize = 24,
     this.unselectedColor,
     this.selectedColor,
@@ -33,18 +33,15 @@ class SelectableIcon extends StatefulWidget {
 class _SelectableIconState extends State<SelectableIcon> with SingleTickerProviderStateMixin {
 
   late AnimationController _controller;
-  late CurvedAnimation _curvedAnimation;
-  late Animation<double> _iconTurns;
-  late Animation<Color?> _iconColor;
+  CurvedAnimation? _curvedAnimation;
+  Animation<double>? _iconTurns;
+  Animation<Color?>? _iconColor;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(duration: Duration(milliseconds: 300), vsync: this);
     _controller.value = widget.selected ? 1 : 0;
-    initCurvedAnimation();
-    initTurnsAnimation();
-    initColorAnimation();
   }
   void initCurvedAnimation() {
     _curvedAnimation = CurvedAnimation(
@@ -54,13 +51,13 @@ class _SelectableIconState extends State<SelectableIcon> with SingleTickerProvid
     );
   }
   void initTurnsAnimation() {
-    _iconTurns = _curvedAnimation.drive(Tween<double>(
+    _iconTurns = _curvedAnimation!.drive(Tween<double>(
       begin: widget.unselectedOffset,
       end: widget.selectedOffset,
     ));
   }
   void initColorAnimation() {
-    _iconColor = _curvedAnimation.drive(ColorTween(
+    _iconColor = _curvedAnimation!.drive(ColorTween(
       begin: widget.unselectedColor ?? Theme.of(context).textTheme.bodyText1!.color!,
       end: widget.selectedColor ?? Theme.of(context).splashColor.withOpacity(1),
     ));
@@ -93,13 +90,18 @@ class _SelectableIconState extends State<SelectableIcon> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
+    if (_curvedAnimation==null) {
+      initCurvedAnimation();
+      initTurnsAnimation();
+      initColorAnimation();
+    }
     return  RotationTransition(
-      turns: _iconTurns,
+      turns: _iconTurns!,
       child: AnimatedBuilder(
-        animation: _iconColor,
+        animation: _iconColor!,
         builder: (context, child) {
           return Icon(widget.icon,
-            color: _iconColor.value,
+            color: _iconColor!.value,
             size: widget.iconSize,
           );
         },
