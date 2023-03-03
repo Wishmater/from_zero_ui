@@ -15,6 +15,7 @@ export 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 export 'package:from_zero_ui/src/app_scaffolding/app_update.dart';
 export 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 export 'package:from_zero_ui/src/ui_components/context_menu.dart';
+export 'package:from_zero_ui/src/ui_components/selectable_icon.dart';
 export 'package:from_zero_ui/src/future_handling/async_value_builder.dart';
 export 'package:from_zero_ui/src/future_handling/api_provider.dart';
 
