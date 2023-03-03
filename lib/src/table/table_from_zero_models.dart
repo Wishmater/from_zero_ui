@@ -116,10 +116,6 @@ abstract class ColModel<T>{
   bool? get defaultSortAscending => null;
   bool? get sortEnabled => true;
   bool? get filterEnabled => null;
-  bool? get neutralConditionFiltersEnabled => null;
-  bool? get textConditionFiltersEnabled => null;
-  bool? get numberConditionFiltersEnabled => null;
-  bool? get dateConditionFiltersEnabled => null;
   bool Function(RowModel<T> row)? get rowCountSelector;
 
   String getSubtitleText(BuildContext context, List<RowModel<T>>? filtered) {
@@ -134,6 +130,20 @@ abstract class ColModel<T>{
           : FromZeroLocalizations.of(context).translate('element_sing')}';
     }
   }
+  Widget? buildSortedIcon(BuildContext context, bool ascending) => null;
+  List<ConditionFilter> getAvailableConditionFilters() => [
+    // FilterIsEmpty(),
+    // FilterTextExactly(),
+    FilterTextContains(),
+    FilterTextStartsWith(),
+    FilterTextEndsWith(),
+    // FilterNumberEqualTo(),
+    // FilterNumberGreaterThan(),
+    // FilterNumberLessThan(),
+    // FilterDateExactDay(),
+    // FilterDateAfter(),
+    // FilterDateBefore(),
+  ];
 }
 
 class SimpleRowModel<T> extends RowModel<T> {
@@ -265,10 +275,6 @@ class SimpleColModel<T> extends ColModel<T>{
   bool? defaultSortAscending;
   bool? sortEnabled;
   bool? filterEnabled;
-  bool? neutralConditionFiltersEnabled;
-  bool? textConditionFiltersEnabled;
-  bool? numberConditionFiltersEnabled;
-  bool? dateConditionFiltersEnabled;
   bool Function(RowModel<T> row)? rowCountSelector;
   SimpleColModel({
     required this.name,
@@ -284,10 +290,6 @@ class SimpleColModel<T> extends ColModel<T>{
     this.defaultSortAscending,
     this.sortEnabled = true,
     this.filterEnabled,
-    this.neutralConditionFiltersEnabled,
-    this.textConditionFiltersEnabled,
-    this.numberConditionFiltersEnabled,
-    this.dateConditionFiltersEnabled,
     this.rowCountSelector,
   });
   SimpleColModel copyWith({
@@ -304,10 +306,6 @@ class SimpleColModel<T> extends ColModel<T>{
     bool? defaultSortAscending,
     bool? sortEnabled,
     bool? filterEnabled,
-    bool? neutralConditionFiltersEnabled,
-    bool? textConditionFiltersEnabled,
-    bool? numberConditionFiltersEnabled,
-    bool? dateConditionFiltersEnabled,
     bool Function(RowModel<T> row)? rowCountSelector,
   }){
     return SimpleColModel<T>(
@@ -324,10 +322,6 @@ class SimpleColModel<T> extends ColModel<T>{
       defaultSortAscending: defaultSortAscending ?? this.defaultSortAscending,
       sortEnabled: sortEnabled ?? this.sortEnabled,
       filterEnabled: filterEnabled ?? this.filterEnabled,
-      neutralConditionFiltersEnabled: neutralConditionFiltersEnabled ?? this.neutralConditionFiltersEnabled,
-      textConditionFiltersEnabled: textConditionFiltersEnabled ?? this.textConditionFiltersEnabled,
-      numberConditionFiltersEnabled: numberConditionFiltersEnabled ?? this.numberConditionFiltersEnabled,
-      dateConditionFiltersEnabled: dateConditionFiltersEnabled ?? this.dateConditionFiltersEnabled,
       rowCountSelector: rowCountSelector ?? this.rowCountSelector,
     );
   }

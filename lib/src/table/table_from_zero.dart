@@ -1309,12 +1309,17 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               child: AnimatedSwitcher(
                 duration: Duration(milliseconds: 300),
                 switchInCurve: Curves.easeOut,
-                child: (widget.enabled && !export && sortedColumn==colKey) ? Icon(
-                  sortedAscending ? MaterialCommunityIcons.sort_alphabetical_ascending : MaterialCommunityIcons.sort_alphabetical_descending,
-                  key: ValueKey(sortedAscending),
-//                                color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
-                  color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
-                ) : SizedBox(height: 24,),
+                child: (widget.enabled && !export && sortedColumn==colKey)
+                    ? col?.buildSortedIcon(context, sortedAscending)
+                        ?? Icon(
+                            sortedAscending
+                                ? MaterialCommunityIcons.sort_alphabetical_ascending
+                                : MaterialCommunityIcons.sort_alphabetical_descending,
+                            key: ValueKey(sortedAscending),
+                            // color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
+                            color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                          )
+                    : SizedBox(height: 24,),
                 transitionBuilder: (child, animation) => ScaleTransition(
                   scale: animation,
                   child: FadeTransition(opacity: animation, child: child,),
@@ -1442,35 +1447,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     ScrollController filtersScrollController = ScrollController();
     TableController filterTableController = TableController();
     bool modified = false;
-    List<ConditionFilter> possibleConditionFilters = [];
-    // if (widget.columns![j].neutralConditionFiltersEnabled ?? true) {
-    //   possibleConditionFilters.addAll([
-    //     FilterIsEmpty(),
-    //   ]);
-    // }
-    // TODO 2 when selecting available filters, automatically enable only possible filters (if null in the column)
-    if (col?.textConditionFiltersEnabled ?? true) {
-      possibleConditionFilters.addAll([
-        // FilterTextExactly(),
-        FilterTextContains(),
-        FilterTextStartsWith(),
-        FilterTextEndsWith(),
-      ]);
-    }
-    if (col?.numberConditionFiltersEnabled ?? true) {
-      possibleConditionFilters.addAll([
-        // FilterNumberEqualTo(),
-        FilterNumberGreaterThan(),
-        FilterNumberLessThan(),
-      ]);
-    }
-    if (col?.dateConditionFiltersEnabled ?? true) {
-      possibleConditionFilters.addAll([
-        // FilterDateExactDay(),
-        FilterDateAfter(),
-        FilterDateBefore(),
-      ]);
-    }
+    List<ConditionFilter> possibleConditionFilters = col?.getAvailableConditionFilters() ?? [
+      // FilterIsEmpty(),
+      // FilterTextExactly(),
+      FilterTextContains(),
+      FilterTextStartsWith(),
+      FilterTextEndsWith(),
+      // FilterNumberEqualTo(),
+      FilterNumberGreaterThan(),
+      FilterNumberLessThan(),
+      // FilterDateExactDay(),
+      FilterDateAfter(),
+      FilterDateBefore(),
+    ];
     final filterSearchFocusNode = FocusNode();
     if (PlatformExtended.isDesktop) {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
