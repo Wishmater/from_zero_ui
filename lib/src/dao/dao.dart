@@ -1635,6 +1635,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     int valueFlex = 1618034,
     double? titleMaxWidth,
     bool applyAlternateBackground = true,
+    bool initialAlternateBackground = false,
   }) {
     if (viewWidgetBuilder!=null) {
       return viewWidgetBuilder!(context, this);
@@ -1648,6 +1649,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         valueFlex: valueFlex,
         titleMaxWidth: titleMaxWidth,
         applyAlternateBackground: applyAlternateBackground,
+        initialAlternateBackground: initialAlternateBackground,
       );
     }
   }
@@ -1660,6 +1662,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     int valueFlex = 1618034,
     double? titleMaxWidth,
     bool applyAlternateBackground = true,
+    bool initialAlternateBackground = false,
   }) {
     if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
         && (titleMaxWidth!=null
@@ -1668,7 +1671,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       useIntrinsicWidth ??= false;
     }
     fieldGroups ??= dao.fieldGroups;
-    bool clear = false;
+    bool clear = initialAlternateBackground;
     bool first = true;
     Widget result = Column(
       mainAxisSize: MainAxisSize.min,

@@ -594,11 +594,13 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     int valueFlex = 1618034,
     double? titleMaxWidth,
     bool applyAlternateBackground = true,
+    bool initialAlternateBackground = false,
   }) {
     ensureInitialized();
     return super.buildViewWidget(context,
       mainScrollController: mainScrollController,
       applyAlternateBackground: applyAlternateBackground,
+      initialAlternateBackground: initialAlternateBackground,
       fieldGroups: fieldGroups,
       titleFlex: titleFlex,
       titleMaxWidth: titleMaxWidth,
