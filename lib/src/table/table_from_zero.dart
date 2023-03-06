@@ -73,6 +73,7 @@ class TableFromZero<T> extends StatefulWidget {
   final FutureOr<String>? exportPathForExcel;
   final bool? computeFiltersInIsolate;
   final Color? backgroundColor;
+  final Widget? tableHeader;
 
   TableFromZero({
     Key? key,
@@ -110,6 +111,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.enableSkipFrameWidgetForRows,
     this.computeFiltersInIsolate,
     this.backgroundColor,
+    this.tableHeader,
   }) :  super(key: key,);
 
   @override
@@ -366,9 +368,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             values: widget.columns==null || widget.columns!.length==widget.headerRowModel!.values.length
                 ? widget.headerRowModel!.values
                 : widget.columns!.map((key, value) => MapEntry(key, value.name)),
+            rowAddon: headerRowModel?.rowAddon ?? widget.tableHeader,
             rowAddonIsAboveRow: widget.headerRowModel?.rowAddonIsAboveRow ?? true,
-            rowAddonIsCoveredByBackground: widget.headerRowModel?.rowAddonIsCoveredByBackground ?? true,
-            rowAddonIsCoveredByScrollable: widget.headerRowModel?.rowAddonIsCoveredByScrollable ?? true,
+            rowAddonIsCoveredByBackground: widget.headerRowModel?.rowAddonIsCoveredByBackground ?? widget.tableHeader==null,
+            rowAddonIsCoveredByScrollable: widget.headerRowModel?.rowAddonIsCoveredByScrollable ?? widget.tableHeader==null,
+            rowAddonIsCoveredByGestureDetector: widget.headerRowModel?.rowAddonIsCoveredByGestureDetector ?? true,
             rowAddonIsSticky: widget.headerRowModel?.rowAddonIsSticky ?? false,
           );
         } else {
@@ -380,6 +384,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           values: widget.columns!.map((key, value) => MapEntry(key, value.name)),
           selected: true,
           height: widget.rows.isEmpty ? 36 : widget.rows.first.height,
+          rowAddon: widget.tableHeader,
+          rowAddonIsAboveRow: true,
+          rowAddonIsCoveredByScrollable: false,
+          rowAddonIsCoveredByBackground: false,
+          rowAddonIsCoveredByGestureDetector: true,
+          rowAddonIsSticky: false,
         );
       }
     }
@@ -763,7 +773,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
     }
   }
-  Widget _defaultRowBuilder(BuildContext context, RowModel row, int index){
+  Widget _defaultRowBuilder(BuildContext context, RowModel row, int index) {
 
     int maxFlex = 0;
     for (final key in currentColumnKeys??row.values.keys) {
