@@ -1622,10 +1622,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                             SliverToBoxAdapter(child: Divider(height: 32,)),
                             TableFromZero(
                               tableController: filterTableController,
+                              columns: col==null ? null : {colKey: col},
+                              showHeaders: false,
                               rows: (availableFilters[colKey] ?? []).map((e) {
                                 return SimpleRowModel(
                                   id: e,
-                                  values: {0: e},
+                                  values: {colKey: e},
                                   selected: valueFilters[colKey]![e] ?? false,
                                   onCheckBoxSelected: (row, selected) {
                                     modified = true;
