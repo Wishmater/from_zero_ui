@@ -69,7 +69,7 @@ class TableFromZero<T> extends StatefulWidget {
   final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   final TableController<T>? tableController;
   final bool? enableSkipFrameWidgetForRows;
-  /// if null, excel export option disabled
+  /// if null, excel export option is disabled
   final FutureOr<String>? exportPathForExcel;
   final bool? computeFiltersInIsolate;
   final Color? backgroundColor;
@@ -917,7 +917,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               child: row==headerRowModel
                   ? defaultHeaderCellBuilder(context, headerRowModel!, colKey)
                   : widget.cellBuilder?.call(context, row as RowModel<T>, colKey)
-                      ?? TableFromZeroState.defaultCellBuilder<T>(context, row as RowModel<T>, colKey, _getStyle(context, row, colKey), _getAlignment(colKey)),
+                      ?? TableFromZeroState.defaultCellBuilder<T>(context, row as RowModel<T>, colKey, col, _getStyle(context, row, colKey), _getAlignment(colKey)),
           ),
         );
         if (row.onCellTap!=null || row.onCellDoubleTap!=null || row.onCellLongPress!=null || row.onCellHover!=null){
@@ -1263,7 +1263,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     int autoSizeTextMaxLines = 1,
   }) {
     final col = widget.columns?[colKey];
-    final name = col?.name ?? (row.values[colKey]!=null ? row.values[colKey].toString() : "");
+    final name = col?.name ?? getRowValueString(row, colKey, col) ?? '';
     bool export = context.findAncestorWidgetOfExactType<Export>()!=null;
     if (!filterGlobalKeys.containsKey(colKey)) {
       filterGlobalKeys[colKey] = GlobalKey();
@@ -1361,7 +1361,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                           color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
                         ),
                         splashRadius: 20,
-                        onPressed: () => showFilterDialog(colKey),
+                        onPressed: () => _showFilterPopup(colKey),
                       ),
                     ),
               ),
@@ -1434,7 +1434,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         ActionFromZero(
           title: 'Filtros...', // TODO 3 internationalize
           icon: Icon(MaterialCommunityIcons.filter),
-          onTap: (context) => showFilterDialog(colKey),
+          onTap: (context) => _showFilterPopup(colKey),
         ),
     ];
     if (widget.exportPathForExcel != null) {
@@ -1452,8 +1452,34 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return result;
   }
 
-  void showFilterDialog(dynamic j) async{
-    final col = widget.columns?[j];
+  void _showFilterPopup(dynamic colKey) async {
+    final col = widget.columns?[colKey];
+    final callback = col?.showFilterPopupCallback ?? showDefaultFilterPopup;
+    bool modified = await callback(
+      context: context,
+      colKey: colKey,
+      col: col,
+      availableFilters: availableFilters,
+      conditionFilters: conditionFilters,
+      valueFilters: valueFilters,
+      anchorKey: filterGlobalKeys[colKey],
+    );
+    if (modified && mounted) {
+      setState(() {
+        _updateFiltersApplied();
+        filter();
+      });
+    }
+  }
+  static Future<bool> showDefaultFilterPopup({
+    required BuildContext context,
+    required dynamic colKey,
+    required ColModel? col,
+    required ValueNotifier<Map<dynamic, List<dynamic>>?> availableFilters,
+    required Map<dynamic, List<ConditionFilter>> conditionFilters,
+    required Map<dynamic, Map<Object?, bool>> valueFilters,
+    GlobalKey? anchorKey,
+  }) async {
     ScrollController filtersScrollController = ScrollController();
     TableController filterTableController = TableController();
     bool modified = false;
@@ -1478,7 +1504,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     }
     await showPopupFromZero(
       context: context,
-      anchorKey: filterGlobalKeys[j],
+      anchorKey: anchorKey,
       builder: (context) {
         return ValueListenableBuilder<Map<dynamic, List<dynamic>>?>(
           valueListenable: availableFilters,
@@ -1549,10 +1575,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                         onSelected: (value) {
                                           filterPopupSetState((){
                                             modified = true;
-                                            if (conditionFilters[j]==null) {
-                                              conditionFilters[j] = [];
+                                            if (conditionFilters[colKey]==null) {
+                                              conditionFilters[colKey] = [];
                                             }
-                                            conditionFilters[j]!.add(value);
+                                            conditionFilters[colKey]!.add(value);
                                           });
                                           WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                                             value.focusNode.requestFocus();
@@ -1563,7 +1589,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                   ],
                                 ),
                               ),),
-                            if ((conditionFilters[j] ?? []).isEmpty)
+                            if ((conditionFilters[colKey] ?? []).isEmpty)
                               SliverToBoxAdapter(child: Padding(
                                 padding: EdgeInsets.only(left: 24, bottom: 8,),
                                 child: Text (FromZeroLocalizations.of(context).translate('none'),
@@ -1572,7 +1598,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                               ),),
                             SliverList(
                               delegate: SliverChildListDelegate.fixed(
-                                (conditionFilters[j] ?? []).map((e) {
+                                (conditionFilters[colKey] ?? []).map((e) {
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                     child: e.buildFormWidget(
@@ -1584,7 +1610,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                       onDelete: () {
                                         modified = true;
                                         filterPopupSetState((){
-                                          conditionFilters[j]!.remove(e);
+                                          conditionFilters[colKey]!.remove(e);
                                         });
                                       },
                                     ),
@@ -1592,18 +1618,18 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                 }).toList(),
                               ),
                             ),
-                            SliverToBoxAdapter(child: SizedBox(height: (conditionFilters[j] ?? []).isEmpty ? 6 : 12,)),
+                            SliverToBoxAdapter(child: SizedBox(height: (conditionFilters[colKey] ?? []).isEmpty ? 6 : 12,)),
                             SliverToBoxAdapter(child: Divider(height: 32,)),
                             TableFromZero(
                               tableController: filterTableController,
-                              rows: (availableFilters[j] ?? []).map((e) {
+                              rows: (availableFilters[colKey] ?? []).map((e) {
                                 return SimpleRowModel(
                                   id: e,
                                   values: {0: e},
-                                  selected: valueFilters[j]![e] ?? false,
+                                  selected: valueFilters[colKey]![e] ?? false,
                                   onCheckBoxSelected: (row, selected) {
                                     modified = true;
-                                    valueFilters[j]![row.id] = selected!;
+                                    valueFilters[colKey]![row.id] = selected!;
                                     (row as SimpleRowModel).selected = selected;
                                     return true;
                                   },
@@ -1649,7 +1675,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                                 modified = true;
                                                 filterPopupSetState(() {
                                                   filterTableController.filtered.forEach((row) {
-                                                    valueFilters[j]![row.id] = true;
+                                                    valueFilters[colKey]![row.id] = true;
                                                     (row as SimpleRowModel).selected = true;
                                                   });
                                                 });
@@ -1663,7 +1689,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                                 modified = true;
                                                 filterPopupSetState(() {
                                                   filterTableController.filtered.forEach((row) {
-                                                    valueFilters[j]![row.id] = false;
+                                                    valueFilters[colKey]![row.id] = false;
                                                     (row as SimpleRowModel).selected = false;
                                                   });
                                                 });
@@ -1728,28 +1754,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         );
       },
     );
-    if (modified && mounted) {
-      setState(() {
-        _updateFiltersApplied();
-        filter();
-      });
-    }
-    // if (accepted!=true) {
-    //   widget.onCanceled?.call();
-    // }
+    return modified;
   }
 
-  static Widget defaultCellBuilder<T>(BuildContext context, RowModel<T> row, dynamic colKey, TextStyle? style, TextAlign alignment) {
+  static Widget defaultCellBuilder<T>(BuildContext context, RowModel<T> row, dynamic colKey, ColModel? col, TextStyle? style, TextAlign alignment) {
     // final col = widget.columns?[colKey];
-    final value = row.values[colKey];
-    String message;
-    if (value is List || value is ComparableList) {
-      final List list = value is List ? value
-          : value is ComparableList ? value.list : [];
-      message = ListField.listToStringAll(list);
-    } else {
-      message = value!=null ? value.toString() : "";
-    }
+    final message = getRowValueString(row, colKey, col);
     final autoSizeTextMaxLines = 1;
     Widget result = AutoSizeText(
       message,
@@ -1774,6 +1784,22 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return result;
   }
 
+  static Object? getRowValue(RowModel row, dynamic key, ColModel? col) {
+    return col?.getValue(row, key) ?? row.values[key];
+  }
+  static String getRowValueString(RowModel row, dynamic key, ColModel? col) {
+    if (col!=null) {
+      col.getValueString(row, key);
+    }
+    final value = getRowValue(row, key, col);
+    if (value is List || value is ComparableList) {
+      final List list = value is List ? value
+          : value is ComparableList ? value.list : [];
+      return ListField.listToStringAll(list);
+    } else {
+      return value!=null ? value.toString() : "";
+    }
+  }
   BoxDecoration? _getDecoration(RowModel row, int index, dynamic colKey,){
     bool isHeader = row==headerRowModel;
     Color? backgroundColor = _getBackgroundColor(row, colKey, isHeader);
@@ -1879,7 +1905,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         final visibleRows = row.visibleRows..removeAt(0);
         final toAdd = visibleRows.where(_passesFilters).toList();
         smartSort<T>(toAdd,
-          sortedColumn: sortedColumn,
+          sortedColumnKey: sortedColumn,
           sortedAscending: sortedAscending,
         );
         allFiltered.insertAll(index+1, toAdd);
@@ -1909,7 +1935,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   }
   List<RowModel<T>> sort({bool notifyListeners=true}) {
     smartSort<T>(sorted,
-      sortedColumn: sortedColumn,
+      sortedColumnKey: sortedColumn,
       sortedAscending: sortedAscending,
     );
     allSorted = sorted.map((e) => e.visibleRows).flatten().toList();
@@ -1917,8 +1943,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return sorted;
   }
   static void smartSort<T>(List<RowModel<T>> list, {
-    Object? sortedColumn,
     bool sortedAscending = true,
+    Object? sortedColumnKey,
+    ColModel? col,
   }) {
     if (list.isEmpty) return;
     mergeSort<RowModel<T>>(list.cast<RowModel<T>>(), compare: ((RowModel<T> a, RowModel<T> b) {
@@ -1926,20 +1953,20 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
         if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1;
       }
-      if (sortedColumn==null) {
+      if (sortedColumnKey==null) {
         return 0;
       }
-      var aVal = a.values[sortedColumn];
-      var bVal = b.values[sortedColumn];
-      if (aVal!=null && aVal is! Comparable) aVal = aVal.toString();
-      if (bVal!=null && bVal is! Comparable) bVal = bVal.toString();
+      dynamic aVal = getRowValue(a, sortedColumnKey, col);
+      dynamic bVal = getRowValue(b, sortedColumnKey, col);
+      if (aVal!=null && aVal is! Comparable) aVal = getRowValueString(a, sortedColumnKey, col);
+      if (bVal!=null && bVal is! Comparable) bVal = getRowValueString(b, sortedColumnKey, col);
       return sortedAscending
           ? aVal==null ? 1 : bVal==null ? -1 : aVal.compareTo(bVal)
           : aVal==null ? -1 : bVal==null ? 1 : bVal.compareTo(aVal);
     }));
     for (final e in list) {
       smartSort<T>(e.children,
-        sortedColumn: sortedColumn,
+        sortedColumnKey: sortedColumnKey,
         sortedAscending: sortedAscending,
       );
     }
@@ -1973,8 +2000,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   bool _passesFilters(RowModel<T> row) {
     bool pass = true;
     for (final key in valueFilters.keys) {
+      final col = widget.columns?[key];
       if (valueFiltersApplied[key] ?? false) {
-        final value = row.values[key];
+        final value = getRowValue(row, key, col);
         if (value is List || value is ComparableList || value is ListField) {
           final List list = value is List ? value
               : value is ComparableList ? value.list
@@ -1995,8 +2023,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       }
     }
     conditionFilters.forEach((key, filters) {
+      final col = widget.columns?[key];
       for (var j = 0; j < filters.length && pass; ++j) {
-        pass = filters[j].isAllowed(row.values[key], row.values, key);
+        pass = filters[j].isAllowed(row, key, col);
       }
     });
     return pass;

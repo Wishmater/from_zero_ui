@@ -1,7 +1,18 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/util/comparable_list.dart';
 
+
+typedef ShowFilterPopupCallback = Future<bool> Function({
+  required BuildContext context,
+  required dynamic colKey,
+  required ColModel? col,
+  required ValueNotifier<Map<dynamic, List<dynamic>>?> availableFilters,
+  required Map<dynamic, List<ConditionFilter>> conditionFilters,
+  required Map<dynamic, Map<Object?, bool>> valueFilters,
+  GlobalKey? anchorKey,
+});
 
 
 
@@ -117,7 +128,21 @@ abstract class ColModel<T>{
   bool? get sortEnabled => true;
   bool? get filterEnabled => null;
   bool Function(RowModel<T> row)? get rowCountSelector;
+  ShowFilterPopupCallback? get showFilterPopupCallback;
 
+  Object? getValue(RowModel row, dynamic key) {
+    return row.values[key];
+  }
+  String getValueString(RowModel row, dynamic key) {
+    final value = getValue(row, key);
+    if (value is List || value is ComparableList) {
+      final List list = value is List ? value
+          : value is ComparableList ? value.list : [];
+      return ListField.listToStringAll(list);
+    } else {
+      return value!=null ? value.toString() : "";
+    }
+  }
   String getSubtitleText(BuildContext context, List<RowModel<T>>? filtered) {
     if (filtered==null) {
       return '';
@@ -276,6 +301,7 @@ class SimpleColModel<T> extends ColModel<T>{
   bool? sortEnabled;
   bool? filterEnabled;
   bool Function(RowModel<T> row)? rowCountSelector;
+  ShowFilterPopupCallback? showFilterPopupCallback;
   SimpleColModel({
     required this.name,
     this.backgroundColor,
@@ -291,6 +317,7 @@ class SimpleColModel<T> extends ColModel<T>{
     this.sortEnabled = true,
     this.filterEnabled,
     this.rowCountSelector,
+    this.showFilterPopupCallback,
   });
   SimpleColModel copyWith({
     String? name,
@@ -307,6 +334,7 @@ class SimpleColModel<T> extends ColModel<T>{
     bool? sortEnabled,
     bool? filterEnabled,
     bool Function(RowModel<T> row)? rowCountSelector,
+    ShowFilterPopupCallback? showFilterPopupCallback,
   }){
     return SimpleColModel<T>(
       name: name ?? this.name,
@@ -323,6 +351,7 @@ class SimpleColModel<T> extends ColModel<T>{
       sortEnabled: sortEnabled ?? this.sortEnabled,
       filterEnabled: filterEnabled ?? this.filterEnabled,
       rowCountSelector: rowCountSelector ?? this.rowCountSelector,
+      showFilterPopupCallback: showFilterPopupCallback ?? this.showFilterPopupCallback,
     );
   }
 }

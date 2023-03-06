@@ -12,7 +12,7 @@ abstract class ConditionFilter<T> {
   String getUiName(BuildContext context);
   String getExtraUiName(BuildContext context);
   String getExtraUiTooltipFromZero(BuildContext context);
-  bool isAllowed(dynamic value, Map<dynamic, T> values, dynamic key);
+  bool isAllowed(RowModel row, dynamic key, ColModel? col);
   late FocusNode focusNode = FocusNode();
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,});
 }
@@ -157,8 +157,9 @@ class FilterTextContains extends FilterText {
   @override
   String getExtraUiTooltipFromZero(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse_tooltip');
   @override
-  bool isAllowed(value, values, index) {
-    bool result = value.toString().toUpperCase().contains(query.toUpperCase());
+  bool isAllowed(row, key, col) {
+    final value = col!=null ? col.getValueString(row, key) : (row.values[key]?.toString() ?? '');
+    bool result = value.toUpperCase().contains(query.toUpperCase());
     if (extra) result = !result;
     return result;
   }
@@ -177,8 +178,9 @@ class FilterTextStartsWith extends FilterText {
   @override
   String getExtraUiTooltipFromZero(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse_tooltip');
   @override
-  bool isAllowed(value, values, index) {
-    bool result = value.toString().toUpperCase().startsWith(query.toUpperCase());
+  bool isAllowed(row, key, col) {
+    final value = col!=null ? col.getValueString(row, key) : (row.values[key]?.toString() ?? '');
+    bool result = value.toUpperCase().startsWith(query.toUpperCase());
     if (extra) result = !result;
     return result;
   }
@@ -197,8 +199,9 @@ class FilterTextEndsWith extends FilterText {
   @override
   String getExtraUiTooltipFromZero(BuildContext context) => FromZeroLocalizations.of(context).translate('reverse_tooltip');
   @override
-  bool isAllowed(value, values, index) {
-    bool result = value.toString().toUpperCase().endsWith(query.toUpperCase());
+  bool isAllowed(row, key, col) {
+    final value = col!=null ? col.getValueString(row, key) : (row.values[key]?.toString() ?? '');
+    bool result = value.toUpperCase().endsWith(query.toUpperCase());
     if (extra) result = !result;
     return result;
   }
@@ -335,8 +338,9 @@ class FilterNumberGreaterThan extends FilterNumber {
   @override
   String getExtraUiTooltipFromZero(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
   @override
-  bool isAllowed(v, values, index) {
+  bool isAllowed(row, key, col) {
     if (query==null) return true;
+    final v = col!=null ? col.getValue(row, key) : row.values[key];
     final value = (v is ContainsValue) ? v.value : v;
     if (!(value is num)) return false;
     bool result = extra ? value>=query! : value>query!;
@@ -357,8 +361,9 @@ class FilterNumberLessThan extends FilterNumber {
   @override
   String getExtraUiTooltipFromZero(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
   @override
-  bool isAllowed(v, values, index) {
+  bool isAllowed(row, key, col) {
     if (query==null) return true;
+    final v = col!=null ? col.getValue(row, key) : row.values[key];
     final value = (v is ContainsValue) ? v.value : v;
     if (!(value is num)) return false;
     bool result = extra ? value<=query! : value<query!;
@@ -514,8 +519,9 @@ class FilterDateAfter extends FilterDate {
   @override
   String getExtraUiTooltipFromZero(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
   @override
-  bool isAllowed(v, values, index) {
+  bool isAllowed(row, key, col) {
     if (query==null) return true;
+    final v = col!=null ? col.getValue(row, key) : row.values[key];
     final value = (v is ContainsValue) ? v.value : v;
     if (!(value is DateTime)) return false;
     bool result = value.isAfter(query!) || (extra&&isSameDay(value, query!));
@@ -536,8 +542,9 @@ class FilterDateBefore extends FilterDate {
   @override
   String getExtraUiTooltipFromZero(BuildContext context) => FromZeroLocalizations.of(context).translate('include_tooltip');
   @override
-  bool isAllowed(v, values, index) {
+  bool isAllowed(row, key, col) {
     if (query==null) return true;
+    final v = col!=null ? col.getValue(row, key) : row.values[key];
     final value = (v is ContainsValue) ? v.value : v;
     if (!(value is DateTime)) return false;
     bool result = value.isBefore(query!) || (extra&&isSameDay(value, query!));
