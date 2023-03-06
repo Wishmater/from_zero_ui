@@ -1,7 +1,9 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
+import 'package:intl/intl.dart';
 
 
 typedef ShowFilterPopupCallback = Future<bool> Function({
@@ -112,6 +114,7 @@ abstract class RowModel<T> {
     }
   }
 }
+
 ///The widget assumes columns will be constant, so bugs may happen when changing columns
 abstract class ColModel<T>{
   String get name;
@@ -143,7 +146,7 @@ abstract class ColModel<T>{
       return value!=null ? value.toString() : "";
     }
   }
-  String getSubtitleText(BuildContext context, List<RowModel<T>>? filtered) {
+  String getSubtitleText(BuildContext context, List<RowModel<T>>? filtered, dynamic key) {
     if (filtered==null) {
       return '';
     } else {
@@ -170,6 +173,7 @@ abstract class ColModel<T>{
     // FilterDateBefore(),
   ];
 }
+
 
 class SimpleRowModel<T> extends RowModel<T> {
   T id;
@@ -357,3 +361,138 @@ class SimpleColModel<T> extends ColModel<T>{
 }
 
 
+class NumColModel<T> extends SimpleColModel<T> {
+  NumberFormat? formatter;
+  NumColModel({
+    required super.name,
+    super.backgroundColor,
+    super.textStyle,
+    super.flex,
+    super.width,
+    super.onHeaderTap,
+    super.onHeaderDoubleTap,
+    super.onHeaderLongPress,
+    super.onHeaderHover,
+    super.sortEnabled = true,
+    super.filterEnabled,
+    super.rowCountSelector,
+    super.showFilterPopupCallback,
+    this.formatter,
+    super.defaultSortAscending = false,
+    super.alignment = TextAlign.right,
+  });
+  @override
+  SimpleColModel copyWith({
+    String? name,
+    Color? backgroundColor,
+    TextStyle? textStyle,
+    TextAlign? alignment,
+    int? flex,
+    double? width,
+    ValueChanged<int>? onHeaderTap,
+    ValueChanged<int>? onHeaderDoubleTap,
+    ValueChanged<int>? onHeaderLongPress,
+    OnHeaderHoverCallback? onHeaderHover,
+    bool? defaultSortAscending,
+    bool? sortEnabled,
+    bool? filterEnabled,
+    bool Function(RowModel<T> row)? rowCountSelector,
+    ShowFilterPopupCallback? showFilterPopupCallback,
+    NumberFormat? formatter,
+  }){
+    return NumColModel<T>(
+      name: name ?? this.name,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      textStyle: textStyle ?? this.textStyle,
+      alignment: alignment ?? this.alignment,
+      flex: flex ?? this.flex,
+      width: width ?? this.width,
+      onHeaderTap: onHeaderTap ?? this.onHeaderTap,
+      onHeaderDoubleTap: onHeaderDoubleTap ?? this.onHeaderDoubleTap,
+      onHeaderLongPress: onHeaderLongPress ?? this.onHeaderLongPress,
+      onHeaderHover: onHeaderHover ?? this.onHeaderHover,
+      defaultSortAscending: defaultSortAscending ?? this.defaultSortAscending,
+      sortEnabled: sortEnabled ?? this.sortEnabled,
+      filterEnabled: filterEnabled ?? this.filterEnabled,
+      rowCountSelector: rowCountSelector ?? this.rowCountSelector,
+      showFilterPopupCallback: showFilterPopupCallback ?? this.showFilterPopupCallback,
+      formatter: formatter ?? this.formatter,
+    );
+  }
+  @override
+  Object? getValue(RowModel row, dynamic key) {
+    return row.values[key];
+  }
+  @override
+  String getValueString(RowModel row, dynamic key) {
+    final value = getValue(row, key);
+    if (value is List || value is ComparableList) {
+      final List list = value is List ? value
+          : value is ComparableList ? value.list : [];
+      return ListField.listToStringAll(list,
+        converter: (value) => _format(value),
+      );
+    } else {
+      return _format(value);
+    }
+  }
+  String _format(value) {
+    return value==null ? ''
+        : (formatter!=null && value is num) ? formatter!.format(value)
+        : value.toString();
+  }
+  @override
+  String getSubtitleText(BuildContext context, List<RowModel<T>>? filtered, dynamic key) {
+    if (filtered==null) {
+      return '';
+    } else {
+      final reFiltered = rowCountSelector==null
+          ? filtered
+          : filtered.where((e) => rowCountSelector!(e)).toList();
+      final count = reFiltered.length;
+      String result = count==0 ? FromZeroLocalizations.of(context).translate('no_elements')
+          : '$count ${count>1 ? FromZeroLocalizations.of(context).translate('element_plur')
+          : FromZeroLocalizations.of(context).translate('element_sing')}';
+      if (reFiltered.isNotEmpty) {
+        final sum = _sumList(reFiltered.map((e) => getValue(e, key)));
+        final avg = sum / reFiltered.length;
+        result += '      $name suma: ${_format(sum)}  promedio: ${_format(avg)}';
+      }
+      return result;
+    }
+  }
+  num _sumList(Iterable list) {
+    return list.sumBy((value) {
+      if (value is num) {
+        return value;
+      }
+      if (value is ContainsValue<num>) {
+        return value.value ?? 0;
+      }
+      if (value is List) {
+        return _sumList(value);
+      }
+      if (value is ComparableList) {
+        return _sumList(value.list);
+      }
+      return 0;
+    });
+  }
+  @override
+  Widget? buildSortedIcon(BuildContext context, bool ascending) {
+    return Icon(
+      ascending
+          ? MaterialCommunityIcons.sort_numeric_ascending
+          : MaterialCommunityIcons.sort_numeric_descending,
+      key: ValueKey(ascending),
+      color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+    );
+  }
+  @override
+  List<ConditionFilter> getAvailableConditionFilters() => [
+    // FilterIsEmpty(),
+    // FilterNumberEqualTo(),
+    FilterNumberGreaterThan(),
+    FilterNumberLessThan(),
+  ];
+}

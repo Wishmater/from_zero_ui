@@ -94,7 +94,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
             final column = widget.controller.columns?[widget.controller.sortedColumn];
             String subtitleText;
             if (column!=null) {
-              subtitleText = column.getSubtitleText(context, filtered);
+              subtitleText = column.getSubtitleText(context, filtered, widget.controller.sortedColumn);
             } else {
               final count = filtered.length;
               subtitleText = count==0 ? FromZeroLocalizations.of(context).translate('no_elements')

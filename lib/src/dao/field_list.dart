@@ -157,13 +157,15 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         ? listToStringCount(list, modelNameSingular: modelNameSingular, modelNamePlural: modelNamePlural)
         : listToStringAll(list);
   }
-  static String listToStringAll(Iterable list) {
+  static String listToStringAll<T>(Iterable<T> list, {
+    String Function(T value)? converter,
+  }) {
     String result = '';
     for (final e in list) {
       if (result.isNotEmpty) {
         result += ', ';
       }
-      result += e.toString();
+      result += converter?.call(e) ?? e.toString();
     }
     return result;
   }

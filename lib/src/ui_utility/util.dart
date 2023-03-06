@@ -20,13 +20,13 @@ class RedoIntent extends Intent {}
 
 
 
-abstract class ContainsValue {
-  dynamic get value;
+abstract class ContainsValue<T> {
+  T? get value;
 }
 
-class SimpleValueString implements ContainsValue {
-  var value;
-  var string;
+class SimpleValueString<T> implements ContainsValue<T> {
+  T? value;
+  Object string;
   SimpleValueString(this.value, this.string);
   @override
   String toString() {
@@ -37,10 +37,10 @@ class SimpleValueString implements ContainsValue {
 
 
 
-class ValueString<T> with Comparable implements ContainsValue {
+class ValueString<T> with Comparable implements ContainsValue<T> {
 
   T? value;
-  var string;
+  Object string;
 
   ValueString(this.value, this.string);
 
@@ -90,7 +90,7 @@ class ValueStringReference<T> extends ValueString<T> {
   String Function(T value) toStringFunction;
 
   ValueStringReference(T value, this.toStringFunction)
-      : super (value, null);
+      : super (value, '');
 
   @override
   String toString() {
@@ -116,7 +116,7 @@ class NumGroupComparingBySum with Comparable implements ValueString<num>  {
     });
   }
 
-  late dynamic string = toString();
+  late Object string = toString();
   @override
   String toString() {
     return formatter==null ? value.toString() : formatter!.format(value);

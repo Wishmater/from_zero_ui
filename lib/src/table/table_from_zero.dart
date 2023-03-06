@@ -1263,7 +1263,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     int autoSizeTextMaxLines = 1,
   }) {
     final col = widget.columns?[colKey];
-    final name = col?.name ?? getRowValueString(row, colKey, col) ?? '';
+    final name = col?.name ?? getRowValueString(row, colKey, col);
     bool export = context.findAncestorWidgetOfExactType<Export>()!=null;
     if (!filterGlobalKeys.containsKey(colKey)) {
       filterGlobalKeys[colKey] = GlobalKey();
@@ -1789,7 +1789,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   }
   static String getRowValueString(RowModel row, dynamic key, ColModel? col) {
     if (col!=null) {
-      col.getValueString(row, key);
+      return col.getValueString(row, key);
     }
     final value = getRowValue(row, key, col);
     if (value is List || value is ComparableList) {
