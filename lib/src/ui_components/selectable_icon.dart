@@ -57,9 +57,12 @@ class _SelectableIconState extends State<SelectableIcon> with SingleTickerProvid
     ));
   }
   void initColorAnimation() {
+    print (widget.unselectedColor);
     _iconColor = _curvedAnimation!.drive(ColorTween(
-      begin: widget.unselectedColor ?? Theme.of(context).textTheme.bodyText1!.color!,
-      end: widget.selectedColor ?? Theme.of(context).splashColor.withOpacity(1),
+      begin: widget.unselectedColor 
+          ?? Theme.of(context).textTheme.caption!.color,
+      end: widget.selectedColor 
+          ?? Theme.of(context).splashColor.withOpacity(1),
     ));
   }
 
@@ -97,6 +100,7 @@ class _SelectableIconState extends State<SelectableIcon> with SingleTickerProvid
     }
     return  RotationTransition(
       turns: _iconTurns!,
+      alignment: Alignment.center,
       child: AnimatedBuilder(
         animation: _iconColor!,
         builder: (context, child) {
