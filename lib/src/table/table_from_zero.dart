@@ -3,13 +3,13 @@ import 'dart:math';
 
 import 'package:animations/animations.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/table/filter_popup.dart';
 import 'package:from_zero_ui/src/ui_utility/notification_relayer.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:from_zero_ui/src/table/table_from_zero_filters.dart';
@@ -133,8 +133,12 @@ class TrackingScrollControllerFomZero extends TrackingScrollController {
 
 class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderStateMixin {
 
-  static const double _checkmarkWidth = 48;
   static const bool showFiltersLoading = false;
+  static const double _checkmarkWidth = 40;
+  static const double _dropdownButtonWidth = 28;
+  static const double _depthPadding = 16;
+  double _leadingControlsWidth = 0;
+  bool get _showLeadingControls => _leadingControlsWidth>0;
 
   late List<RowModel<T>> sorted;
   late List<RowModel<T>> allSorted;
@@ -231,6 +235,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         }
       } catch (_) {}
       try {
+        if (widget.tableController!._getAllFiltered==_getAllFiltered) {
+          widget.tableController!._getAllFiltered = ()=>[];
+        }
+      } catch (_) {}
+      try {
         if (widget.tableController!._getColumns==_getColumns) {
           widget.tableController!._getColumns = ()=>{};
         }
@@ -304,16 +313,23 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     for (final e in sorted) {
       e.calculateDepth();
     }
-    _showLeadingControls = sorted.map((e) => e.allRows).flatten()
-        .any((e) => e.onCheckBoxSelected!=null
-                    || e.children.isNotEmpty
-                    || (e.rowAddon!=null && e.rowAddonIsExpandable));
+    bool showCheckboxes = false;
+    bool showDropdowns = false;
+    for (final e in sorted.map((e) => e.allRows).flatten()) {
+      if (showCheckboxes && showDropdowns) {
+        break;
+      }
+      showCheckboxes = showCheckboxes || e.onCheckBoxSelected!=null;
+      showDropdowns = showDropdowns || e.isExpandable;
+    }
+    _leadingControlsWidth = (showCheckboxes ? _checkmarkWidth : 0) + (showDropdowns ? _dropdownButtonWidth : 0);
     if (widget.tableController!=null) {
       widget.tableController!.currentState = this;
       widget.tableController!._filter = _controllerFilter;
       widget.tableController!._sort = _controllerSort;
       widget.tableController!._reInit = _invalidateState;
       widget.tableController!._getFiltered = _getFiltered;
+      widget.tableController!._getAllFiltered = _getAllFiltered;
       widget.tableController!._getColumns = _getColumns;
     }
     if (widget.tableController?.conditionFilters==null) {
@@ -822,7 +838,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         if (result==null && _showLeadingControls){
           if (j==0){
             addSizing = false;
-            result = SizedBox(width: _checkmarkWidth, height: double.infinity,);
+            result = SizedBox(width: _leadingControlsWidth, height: double.infinity,);
           } else{
             j--;
           }
@@ -860,49 +876,86 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         if (_showLeadingControls) {
           if (j==0) {
             return SizedBox(
-              width: _checkmarkWidth,
-              child: (row==headerRowModel ? row.onCheckBoxSelected!=null||widget.onAllSelected!=null : row.onCheckBoxSelected!=null)
-                  ? StatefulBuilder(
-                      builder: (context, checkboxSetState) {
-                        return LoadingCheckbox(
-                          value: row==headerRowModel
-                              ? allFiltered.isNotEmpty && allFiltered.every((element) => element.selected==true || element.onCheckBoxSelected==null)
-                              : row.selected,
-                          onChanged: row==headerRowModel&&allFiltered.isEmpty ? null : (value) {
-                            if (row==headerRowModel) {
-                              if (row.onCheckBoxSelected!=null) {
-                                if (row.onCheckBoxSelected!(row, value) ?? false) {
-                                  checkboxSetState(() {});
+              width: _leadingControlsWidth,
+              child: Transform.translate(
+                offset: Offset(row.depth*_depthPadding, 0),
+                child: Row(
+                  mainAxisAlignment: row.depth==0 ? MainAxisAlignment.start : MainAxisAlignment.end,
+                  children: [
+                    if (row==headerRowModel
+                        ? row.onCheckBoxSelected!=null || widget.onAllSelected!=null
+                        : row.onCheckBoxSelected!=null || (row.children.isNotEmpty && _leadingControlsWidth>_dropdownButtonWidth))
+                      SizedBox(
+                        width: _checkmarkWidth,
+                        child: StatefulBuilder(
+                          builder: (context, checkboxSetState) {
+                            return Checkbox(
+                              tristate: true,
+                              value: row==headerRowModel
+                                  ? allFiltered.some((e) => e.selected)
+                                  : row.onCheckBoxSelected!=null
+                                      ? row.selected
+                                      : row.allChildren.some((e) => e.selected),
+                              onChanged: row==headerRowModel&&allFiltered.isEmpty ? null : (value) {
+                                value = value ?? false;
+                                if (row==headerRowModel) {
+                                  if (row.onCheckBoxSelected!=null) {
+                                    if (row.onCheckBoxSelected!(row, value) ?? false) {
+                                      checkboxSetState(() {});
+                                    }
+                                  } else if (widget.onAllSelected!(value, allFiltered) ?? false) {
+                                    setState(() {});
+                                  }
+                                } else {
+                                  if (row.onCheckBoxSelected!=null) {
+                                    if (row.onCheckBoxSelected!(row, value) ?? false) {
+                                      checkboxSetState(() {});
+                                    }
+                                  } else {
+                                    bool result = false;
+                                    for (final e in row.allChildren) { // TODO NOW .allChildren is not correct because it isn't filtered
+                                      if (e.onCheckBoxSelected!=null) {
+                                        final evaluation = e.onCheckBoxSelected!(e, value) ?? false;
+                                        result = result || evaluation;
+                                      }
+                                    }
+                                    if (result) {
+                                      setState(() {});
+                                    }
+                                  }
                                 }
-                              } else if (widget.onAllSelected!(value, allFiltered) ?? false) {
-                                setState(() {});
-                              }
-                            } else {
-                              if (row.onCheckBoxSelected!(row, value) ?? false) {
-                                checkboxSetState(() {});
-                              }
-                            }
+                              },
+                            );
                           },
-                        );
-                      },
-                    )
-                  : row.isExpandable ? IconButton(
-                      splashRadius: 24,
-                      onPressed: () {
-                        toggleRowExpanded(row as RowModel<T>, index);
-                      },
-                      icon: OverflowBox(
-                        alignment: Alignment.center,
-                        maxHeight: double.infinity, maxWidth: double.infinity,
-                        child: SelectableIcon(
-                          selected: row.expanded,
-                          icon: Icons.expand_less,
-                          unselectedOffset: 0.25,
-                          selectedOffset: 0.5,
                         ),
                       ),
-                    )
-                  : SizedBox.shrink(),
+                    if (row.isExpandable)
+                      SizedBox(
+                        width: _dropdownButtonWidth,
+                        child: OverflowBox(
+                          alignment: Alignment.center,
+                          maxWidth: double.infinity, maxHeight: double.infinity,
+                          child: IconButton(
+                            splashRadius: 24,
+                            onPressed: () {
+                              toggleRowExpanded(row as RowModel<T>, index);
+                            },
+                            icon: OverflowBox(
+                              alignment: Alignment.center,
+                              maxHeight: double.infinity, maxWidth: double.infinity,
+                              child: SelectableIcon(
+                                selected: row.expanded,
+                                icon: Icons.expand_less,
+                                unselectedOffset: 0.25,
+                                selectedOffset: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             );
           } else{
             j--;
@@ -916,7 +969,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         Widget result = Container(
           height: row.height, // widget.enableFixedHeightForListRows ? row.height : null,
           alignment: Alignment.center,
-          padding: row==headerRowModel ? null : widget.cellPadding,
+          padding: row==headerRowModel
+              ? null
+              : row.depth>0 && j==0
+                  ? widget.cellPadding.copyWith(left: widget.cellPadding.left + row.depth*_depthPadding)
+                  : widget.cellPadding,
           child: Container(
               width: double.infinity,
               child: row==headerRowModel
@@ -1273,7 +1330,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     int autoSizeTextMaxLines = 1,
   }) {
     final col = widget.columns?[colKey];
-    final name = col?.name ?? getRowValueString(row, colKey, col);
+    final name = col?.name ?? ColModel.getRowValueString(row, colKey, col);
     bool export = context.findAncestorWidgetOfExactType<Export>()!=null;
     if (!filterGlobalKeys.containsKey(colKey)) {
       filterGlobalKeys[colKey] = GlobalKey();
@@ -1464,7 +1521,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
   void _showFilterPopup(dynamic colKey) async {
     final col = widget.columns?[colKey];
-    final callback = col?.showFilterPopupCallback ?? showDefaultFilterPopup;
+    final callback = col?.showFilterPopupCallback ?? TableFromZeroFilterPopup.showDefaultFilterPopup;
     bool modified = await callback(
       context: context,
       colKey: colKey,
@@ -1481,318 +1538,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       });
     }
   }
-  static Future<bool> showDefaultFilterPopup({
-    required BuildContext context,
-    required dynamic colKey,
-    required ColModel? col,
-    required ValueNotifier<Map<dynamic, List<dynamic>>?> availableFilters,
-    required Map<dynamic, List<ConditionFilter>> conditionFilters,
-    required Map<dynamic, Map<Object?, bool>> valueFilters,
-    GlobalKey? anchorKey,
-  }) async {
-    ScrollController filtersScrollController = ScrollController();
-    TableController filterTableController = TableController();
-    bool modified = false;
-    List<ConditionFilter> possibleConditionFilters = col?.getAvailableConditionFilters() ?? [
-      // FilterIsEmpty(),
-      // FilterTextExactly(),
-      FilterTextContains(),
-      FilterTextStartsWith(),
-      FilterTextEndsWith(),
-      // FilterNumberEqualTo(),
-      FilterNumberGreaterThan(),
-      FilterNumberLessThan(),
-      // FilterDateExactDay(),
-      FilterDateAfter(),
-      FilterDateBefore(),
-    ];
-    final filterSearchFocusNode = FocusNode();
-    if (PlatformExtended.isDesktop) {
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        filterSearchFocusNode.requestFocus();
-      });
-    }
-    await showPopupFromZero(
-      context: context,
-      anchorKey: anchorKey,
-      builder: (context) {
-        return ValueListenableBuilder<Map<dynamic, List<dynamic>>?>(
-          valueListenable: availableFilters,
-          builder: (context, availableFilters, child) {
-            if (availableFilters==null) {
-              return AspectRatio(
-                aspectRatio: 1,
-                child: ApiProviderBuilder.defaultLoadingBuilder(context, null),
-              );
-            } else {
-              return ScrollbarFromZero(
-                controller: filtersScrollController,
-                child: Stack (
-                  children: [
-                    StatefulBuilder(
-                      builder: (context, filterPopupSetState) {
-                        return CustomScrollView(
-                          controller: filtersScrollController,
-                          shrinkWrap: true,
-                          slivers: [
-                            SliverToBoxAdapter(child: Padding(
-                              padding: const EdgeInsets.only(top: 4.0),
-                              child: Center(
-                                child: Text(FromZeroLocalizations.of(context).translate('filters'),
-                                  style: Theme.of(context).textTheme.subtitle1,
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ),),
-                            SliverToBoxAdapter(child: SizedBox(height: 16,)),
-                            if (possibleConditionFilters.isNotEmpty)
-                              SliverToBoxAdapter(child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(left: 4,),
-                                      child: Text(FromZeroLocalizations.of(context).translate('condition_filters'),
-                                        style: Theme.of(context).textTheme.subtitle1,
-                                      ),
-                                    ),
-                                    TooltipFromZero(
-                                      message: FromZeroLocalizations.of(context).translate('add_condition_filter'),
-                                      child: PopupMenuButton<ConditionFilter>(
-                                        tooltip: '',
-                                        child: Padding(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4,),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(Icons.add, color: Colors.blue,),
-                                              SizedBox(width: 6,),
-                                              Text(FromZeroLocalizations.of(context).translate('add'),
-                                                style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.blue,),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        itemBuilder: (context) {
-                                          return possibleConditionFilters.map((e) {
-                                            return PopupMenuItem(
-                                              value: e,
-                                              child: Text(e.getUiName(context)+'...'),
-                                            );
-                                          }).toList();
-                                        },
-                                        onSelected: (value) {
-                                          filterPopupSetState((){
-                                            modified = true;
-                                            if (conditionFilters[colKey]==null) {
-                                              conditionFilters[colKey] = [];
-                                            }
-                                            conditionFilters[colKey]!.add(value);
-                                          });
-                                          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                                            value.focusNode.requestFocus();
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),),
-                            if ((conditionFilters[colKey] ?? []).isEmpty)
-                              SliverToBoxAdapter(child: Padding(
-                                padding: EdgeInsets.only(left: 24, bottom: 8,),
-                                child: Text (FromZeroLocalizations.of(context).translate('none'),
-                                  style: Theme.of(context).textTheme.caption,
-                                ),
-                              ),),
-                            SliverList(
-                              delegate: SliverChildListDelegate.fixed(
-                                (conditionFilters[colKey] ?? []).map((e) {
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                    child: e.buildFormWidget(
-                                      context: context,
-                                      onValueChanged: () {
-                                        modified = true;
-                                        // filterPopupSetState((){});
-                                      },
-                                      onDelete: () {
-                                        modified = true;
-                                        filterPopupSetState((){
-                                          conditionFilters[colKey]!.remove(e);
-                                        });
-                                      },
-                                    ),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
-                            SliverToBoxAdapter(child: SizedBox(height: (conditionFilters[colKey] ?? []).isEmpty ? 6 : 12,)),
-                            SliverToBoxAdapter(child: Divider(height: 32,)),
-                            TableFromZero(
-                              tableController: filterTableController,
-                              columns: col==null ? null : {colKey: col},
-                              showHeaders: false,
-                              emptyWidget: SizedBox.shrink(),
-                              rows: (availableFilters[colKey] ?? []).map((e) {
-                                return SimpleRowModel(
-                                  id: e,
-                                  values: {colKey: e},
-                                  selected: valueFilters[colKey]![e] ?? false,
-                                  onCheckBoxSelected: (row, selected) {
-                                    modified = true;
-                                    valueFilters[colKey]![row.id] = selected!;
-                                    (row as SimpleRowModel).selected = selected;
-                                    return true;
-                                  },
-                                );
-                              }).toList(),
-                              // override style and text alignment
-                              cellBuilder: (context, row, colKey) {
-                                final message = getRowValueString(row, colKey, col);
-                                final autoSizeTextMaxLines = 1;
-                                Widget result = AutoSizeText(
-                                  message,
-                                  style: TextStyle(fontSize: 16),
-                                  textAlign: TextAlign.left,
-                                  maxLines: autoSizeTextMaxLines,
-                                  minFontSize: 14,
-                                  overflowReplacement: TooltipFromZero(
-                                    message: message,
-                                    waitDuration: Duration(milliseconds: 0),
-                                    verticalOffset: -16,
-                                    child: AutoSizeText(
-                                      message,
-                                      textAlign: TextAlign.left,
-                                      maxLines: autoSizeTextMaxLines,
-                                      softWrap: autoSizeTextMaxLines>1,
-                                      overflow: autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,
-                                    ),
-                                  ),
-                                );
-                                return result;
-                              },
-                              tableHeader: Container(
-                                padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
-                                color: Theme.of(context).cardColor,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    SizedBox(
-                                      height: 32,
-                                      child: TextFormField(
-                                        focusNode: filterSearchFocusNode,
-                                        onChanged: (v) {
-                                          filterTableController.conditionFilters![0] = [];
-                                          filterTableController.conditionFilters![0]!.add(
-                                            FilterTextContains(query: v,),
-                                          );
-                                          filterPopupSetState((){
-                                            filterTableController.filter();
-                                          });
-                                        },
-                                        decoration: InputDecoration(
-                                          labelText: FromZeroLocalizations.of(context).translate('search...'),
-                                          contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
-                                          labelStyle: TextStyle(height: 0.2),
-                                          suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
-                                        ),
-                                      ),
-                                    ),
-                                    SizedBox(height: 6,),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: TextButton(
-                                            child: Text(FromZeroLocalizations.of(context).translate('select_all')),
-                                            onPressed: () {
-                                              modified = true;
-                                              filterPopupSetState(() {
-                                                filterTableController.filtered.forEach((row) {
-                                                  valueFilters[colKey]![row.id] = true;
-                                                  (row as SimpleRowModel).selected = true;
-                                                });
-                                              });
-                                            },
-                                          ),
-                                        ),
-                                        Expanded(
-                                          child: TextButton(
-                                            child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
-                                            onPressed: () {
-                                              modified = true;
-                                              filterPopupSetState(() {
-                                                filterTableController.filtered.forEach((row) {
-                                                  valueFilters[colKey]![row.id] = false;
-                                                  (row as SimpleRowModel).selected = false;
-                                                });
-                                              });
-                                            },
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            SliverToBoxAdapter(child: SizedBox(height: 16+42,),),
-                          ],
-                        );
-                      },
-                    ),
-                    Positioned(
-                      bottom: 0, left: 0, right: 0,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            height: 16,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Theme.of(context).cardColor.withOpacity(0),
-                                  Theme.of(context).cardColor,
-                                ],
-                              ),
-                            ),
-                          ),
-                          Container(
-                            alignment: Alignment.centerRight,
-                            padding: EdgeInsets.only(bottom: 8, right: 16,),
-                            color: Theme.of(context).cardColor,
-                            child: FlatButton(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                              textColor: Colors.blue,
-                              onPressed: () {
-                                Navigator.of(context).pop(true);
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-          },
-        );
-      },
-    );
-    return modified;
-  }
 
   static Widget defaultCellBuilder<T>(BuildContext context, RowModel<T> row, dynamic colKey, ColModel? col, TextStyle? style, TextAlign alignment) {
-    final message = getRowValueString(row, colKey, col);
+    final message = ColModel.getRowValueString(row, colKey, col);
     final autoSizeTextMaxLines = 1;
     Widget result = AutoSizeText(
       message,
@@ -1817,22 +1565,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return result;
   }
 
-  static Object? getRowValue(RowModel row, dynamic key, ColModel? col) {
-    return col?.getValue(row, key) ?? row.values[key];
-  }
-  static String getRowValueString(RowModel row, dynamic key, ColModel? col) {
-    if (col!=null) {
-      return col.getValueString(row, key);
-    }
-    final value = getRowValue(row, key, col);
-    if (value is List || value is ComparableList) {
-      final List list = value is List ? value
-          : value is ComparableList ? value.list : [];
-      return ListField.listToStringAll(list);
-    } else {
-      return value!=null ? value.toString() : "";
-    }
-  }
   BoxDecoration? _getDecoration(RowModel row, int index, dynamic colKey,){
     bool isHeader = row==headerRowModel;
     Color? backgroundColor = _getBackgroundColor(row, colKey, isHeader);
@@ -1989,10 +1721,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       if (sortedColumnKey==null) {
         return 0;
       }
-      dynamic aVal = getRowValue(a, sortedColumnKey, col);
-      dynamic bVal = getRowValue(b, sortedColumnKey, col);
-      if (aVal!=null && aVal is! Comparable) aVal = getRowValueString(a, sortedColumnKey, col);
-      if (bVal!=null && bVal is! Comparable) bVal = getRowValueString(b, sortedColumnKey, col);
+      dynamic aVal = ColModel.getRowValue(a, sortedColumnKey, col);
+      dynamic bVal = ColModel.getRowValue(b, sortedColumnKey, col);
+      if (aVal!=null && aVal is! Comparable) aVal = ColModel.getRowValueString(a, sortedColumnKey, col);
+      if (bVal!=null && bVal is! Comparable) bVal = ColModel.getRowValueString(b, sortedColumnKey, col);
       return sortedAscending
           ? aVal==null ? 1 : bVal==null ? -1 : aVal.compareTo(bVal)
           : aVal==null ? -1 : bVal==null ? 1 : bVal.compareTo(aVal);
@@ -2006,6 +1738,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   }
   Map<dynamic, ColModel>? _getColumns() => widget.columns;
   List<RowModel<T>> _getFiltered() => filtered;
+  List<RowModel<T>> _getAllFiltered() => allFiltered;
   List<RowModel<T>> _controllerFilter() {
     List<RowModel<T>> result = [];
     if (mounted){
@@ -2017,11 +1750,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
   List<RowModel<T>> filter({bool notifyListeners=true}){
     filtered = sorted.where(_passesFilters).toList();
-    if (widget.onFilter!=null) {
-      filtered = widget.onFilter!(filtered);
-    }
     for (final e in (widget.tableController?.extraFilters ?? [])) {
       filtered = e(filtered);
+    }
+    if (widget.onFilter!=null) {
+      filtered = widget.onFilter!(filtered);
     }
     allFiltered = filtered.map((e) => e.visibleRows).flatten()
         .where((e) => e.depth==0 || _passesFilters(e)).toList();
@@ -2035,7 +1768,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     for (final key in valueFilters.keys) {
       final col = widget.columns?[key];
       if (valueFiltersApplied[key] ?? false) {
-        final value = getRowValue(row, key, col);
+        final value = ColModel.getRowValue(row, key, col);
         if (value is List || value is ComparableList || value is ListField) {
           final List list = value is List ? value
               : value is ComparableList ? value.list
@@ -2064,7 +1797,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return pass;
   }
 
-  bool _showLeadingControls = false;
   void _updateFiltersApplied(){
     valueFiltersApplied = {
       for (final key in widget.columns?.keys ?? [])
@@ -2185,7 +1917,28 @@ class TableController<T> extends ChangeNotifier {
   late List<RowModel<T>> Function() _getFiltered;
   List<RowModel<T>> get filtered => _getFiltered();
 
+  late List<RowModel<T>> Function() _getAllFiltered;
+  List<RowModel<T>> get allFiltered => _getAllFiltered();
+
   late Map<dynamic, ColModel>? Function() _getColumns;
   Map<dynamic, ColModel>? get columns => _getColumns();
 
+}
+
+
+extension Some<T> on List<T> {
+  bool? some(bool? Function(T element) evaluate) {
+    if (isEmpty) return false;
+    bool any = false; bool every = true;
+    for (final element in this) {
+      final evaluation = evaluate(element);
+      if (evaluation!=null) {
+        any = any || evaluation;
+        every = every && evaluation;
+      }
+    }
+    return every ? true
+        : any ? null
+        : false;
+  }
 }

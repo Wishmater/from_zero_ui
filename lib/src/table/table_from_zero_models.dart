@@ -2,19 +2,11 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/table/filter_popup.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:intl/intl.dart';
 
 
-typedef ShowFilterPopupCallback = Future<bool> Function({
-  required BuildContext context,
-  required dynamic colKey,
-  required ColModel? col,
-  required ValueNotifier<Map<dynamic, List<dynamic>>?> availableFilters,
-  required Map<dynamic, List<ConditionFilter>> conditionFilters,
-  required Map<dynamic, Map<Object?, bool>> valueFilters,
-  GlobalKey? anchorKey,
-});
 
 
 
@@ -64,6 +56,7 @@ class RowAction<T> extends ActionFromZero {
 }
 
 
+
 abstract class RowModel<T> {
   T get id;
   Key? get rowKey => null;
@@ -105,7 +98,9 @@ abstract class RowModel<T> {
 
   bool get isExpandable => children.isNotEmpty || (rowAddon!=null && rowAddonIsExpandable);
   List<RowModel<T>> get visibleRows => [this, if (expanded) ...children.map((e) => e.visibleRows).flatten()];
+  List<RowModel<T>> get visibleChildren => visibleRows..removeAt(0);
   List<RowModel<T>> get allRows => [this, ...children.map((e) => e.allRows).flatten()];
+  List<RowModel<T>> get allChildren => allRows..removeAt(0);
   int get length => 1 + (expanded ? children.sumBy((e) => e.length) : 0);
   void calculateDepth() {
     for (final e in children) {
@@ -158,6 +153,7 @@ abstract class ColModel<T>{
           : FromZeroLocalizations.of(context).translate('element_sing')}';
     }
   }
+  String getMetadataText(BuildContext context, List<RowModel<T>>? filtered, dynamic key) => '';
   Widget? buildSortedIcon(BuildContext context, bool ascending) => null;
   List<ConditionFilter> getAvailableConditionFilters() => [
     // FilterIsEmpty(),
@@ -172,7 +168,41 @@ abstract class ColModel<T>{
     // FilterDateAfter(),
     // FilterDateBefore(),
   ];
+
+  static Object? getRowValue(RowModel row, dynamic key, ColModel? col) {
+    return col?.getValue(row, key) ?? row.values[key];
+  }
+  static String getRowValueString(RowModel row, dynamic key, ColModel? col) {
+    if (col!=null) {
+      return col.getValueString(row, key);
+    }
+    final value = getRowValue(row, key, col);
+    if (value is List || value is ComparableList) {
+      final List list = value is List ? value
+          : value is ComparableList ? value.list : [];
+      return ListField.listToStringAll(list);
+    } else {
+      return value!=null ? value.toString() : "";
+    }
+  }
+
+  List<RowModel> buildFilterPopupRowModels(List<dynamic> availableFilters, Map<dynamic, Map<Object?, bool>> valueFilters, dynamic colKey, ValueNotifier<bool> modified) {
+    return availableFilters.map((e) {
+      return SimpleRowModel(
+        id: e,
+        values: {colKey: e},
+        selected: valueFilters[colKey]![e] ?? false,
+        onCheckBoxSelected: (row, selected) {
+          modified.value = true;
+          valueFilters[colKey]![row.id] = selected!;
+          (row as SimpleRowModel).selected = selected;
+          return true;
+        },
+      );
+    }).toList();
+  }
 }
+
 
 
 class SimpleRowModel<T> extends RowModel<T> {
@@ -290,6 +320,7 @@ class SimpleRowModel<T> extends RowModel<T> {
     );
   }
 }
+
 class SimpleColModel<T> extends ColModel<T>{
   String name;
   Color? backgroundColor;
@@ -323,7 +354,7 @@ class SimpleColModel<T> extends ColModel<T>{
     this.rowCountSelector,
     this.showFilterPopupCallback,
   });
-  SimpleColModel copyWith({
+  SimpleColModel<T> copyWith({
     String? name,
     Color? backgroundColor,
     TextStyle? textStyle,
@@ -361,6 +392,7 @@ class SimpleColModel<T> extends ColModel<T>{
 }
 
 
+
 class NumColModel<T> extends SimpleColModel<T> {
   NumberFormat? formatter;
   NumColModel({
@@ -382,7 +414,7 @@ class NumColModel<T> extends SimpleColModel<T> {
     super.alignment = TextAlign.right,
   });
   @override
-  SimpleColModel copyWith({
+  NumColModel<T> copyWith({
     String? name,
     Color? backgroundColor,
     TextStyle? textStyle,
@@ -453,13 +485,26 @@ class NumColModel<T> extends SimpleColModel<T> {
       String result = count==0 ? FromZeroLocalizations.of(context).translate('no_elements')
           : '$count ${count>1 ? FromZeroLocalizations.of(context).translate('element_plur')
           : FromZeroLocalizations.of(context).translate('element_sing')}';
-      if (reFiltered.isNotEmpty) {
-        final sum = _sumList(reFiltered.map((e) => getValue(e, key)));
-        final avg = sum / reFiltered.length;
-        result += '      $name suma: ${_format(sum)}  promedio: ${_format(avg)}';
+      final metadata = getMetadataText(context, filtered, key, reFiltered: reFiltered);
+      if (metadata.isNotBlank) {
+        result += '     $metadata';
       }
       return result;
     }
+  }
+  @override
+  String getMetadataText(BuildContext context, List<RowModel<T>>? filtered, dynamic key, {
+    List<RowModel<T>>? reFiltered,
+  }) {
+    if (filtered!=null) {
+      reFiltered ??= filtered.where((e) => rowCountSelector!(e)).toList();
+      if (reFiltered.isNotEmpty) {
+        final sum = _sumList(reFiltered.map((e) => getValue(e, key)));
+        final avg = sum / reFiltered.length;
+        return '$name suma: ${_format(sum)}  promedio: ${_format(avg)}';
+      }
+    }
+    return '';
   }
   num _sumList(Iterable list) {
     return list.sumBy((value) {
@@ -495,4 +540,152 @@ class NumColModel<T> extends SimpleColModel<T> {
     FilterNumberGreaterThan(),
     FilterNumberLessThan(),
   ];
+}
+
+
+
+class DateColModel<T> extends SimpleColModel<T> {
+  DateFormat? formatter;
+  DateColModel({
+    required super.name,
+    super.backgroundColor,
+    super.textStyle,
+    super.flex,
+    super.width,
+    super.alignment,
+    super.onHeaderTap,
+    super.onHeaderDoubleTap,
+    super.onHeaderLongPress,
+    super.onHeaderHover,
+    super.sortEnabled = true,
+    super.filterEnabled,
+    super.rowCountSelector,
+    super.showFilterPopupCallback,
+    this.formatter,
+    super.defaultSortAscending = false,
+  });
+  @override
+  DateColModel<T> copyWith({
+    String? name,
+    Color? backgroundColor,
+    TextStyle? textStyle,
+    TextAlign? alignment,
+    int? flex,
+    double? width,
+    ValueChanged<int>? onHeaderTap,
+    ValueChanged<int>? onHeaderDoubleTap,
+    ValueChanged<int>? onHeaderLongPress,
+    OnHeaderHoverCallback? onHeaderHover,
+    bool? defaultSortAscending,
+    bool? sortEnabled,
+    bool? filterEnabled,
+    bool Function(RowModel<T> row)? rowCountSelector,
+    ShowFilterPopupCallback? showFilterPopupCallback,
+    DateFormat? formatter,
+  }){
+    return DateColModel<T>(
+      name: name ?? this.name,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      textStyle: textStyle ?? this.textStyle,
+      alignment: alignment ?? this.alignment,
+      flex: flex ?? this.flex,
+      width: width ?? this.width,
+      onHeaderTap: onHeaderTap ?? this.onHeaderTap,
+      onHeaderDoubleTap: onHeaderDoubleTap ?? this.onHeaderDoubleTap,
+      onHeaderLongPress: onHeaderLongPress ?? this.onHeaderLongPress,
+      onHeaderHover: onHeaderHover ?? this.onHeaderHover,
+      defaultSortAscending: defaultSortAscending ?? this.defaultSortAscending,
+      sortEnabled: sortEnabled ?? this.sortEnabled,
+      filterEnabled: filterEnabled ?? this.filterEnabled,
+      rowCountSelector: rowCountSelector ?? this.rowCountSelector,
+      showFilterPopupCallback: showFilterPopupCallback ?? this.showFilterPopupCallback,
+      formatter: formatter ?? this.formatter,
+    );
+  }
+  @override
+  Object? getValue(RowModel row, dynamic key) {
+    return row.values[key];
+  }
+  @override
+  String getValueString(RowModel row, dynamic key) {
+    final value = getValue(row, key);
+    if (value is List || value is ComparableList) {
+      final List list = value is List ? value
+          : value is ComparableList ? value.list : [];
+      return ListField.listToStringAll(list,
+        converter: (value) => _format(value),
+      );
+    } else {
+      return _format(value);
+    }
+  }
+  String _format(value) {
+    return value==null ? ''
+        : (formatter!=null && value is DateTime) ? formatter!.format(value)
+        : value.toString();
+  }
+  @override
+  List<ConditionFilter> getAvailableConditionFilters() => [
+    // FilterDateExactDay(),
+    FilterDateAfter(),
+    FilterDateBefore(),
+  ];
+  @override
+  List<RowModel> buildFilterPopupRowModels(List<dynamic> availableFilters, Map<dynamic, Map<Object?, bool>> valueFilters, dynamic colKey, ValueNotifier<bool> modified) {
+    final Map<int, Map<int, List<DateTime>>> grouped = {};
+    final List<dynamic> other = [];
+    for (final e in availableFilters) {
+      if (e is DateTime) {
+        if (!grouped.containsKey(e.year)) grouped[e.year] = {};
+        if (!grouped[e.year]!.containsKey(e.month)) grouped[e.year]![e.month] = [];
+        grouped[e.year]![e.month]!.add(e);
+      } else {
+        other.add(e);
+      }
+    }
+    final List<RowModel> result = [];
+    for (final e in other) {
+      result.add(SimpleRowModel(
+        id: e,
+        values: {colKey: e},
+        selected: valueFilters[colKey]![e] ?? false,
+        onCheckBoxSelected: (row, selected) {
+          modified.value = true;
+          valueFilters[colKey]![row.id] = selected!;
+          (row as SimpleRowModel).selected = selected;
+          return true;
+        },
+      ));
+    }
+    for (final year in grouped.keys) {
+      result.add(SimpleRowModel(
+        id: year,
+        values: {colKey: year},
+        expanded: grouped.length==1,
+        children: [
+          for (final month in grouped[year]!.keys)
+            SimpleRowModel(
+              id: month,
+              values: {colKey: ValueString(month, DateFormat("MMMM", "es").format(DateTime(year, month)))}, // TODO 3 internationalize
+              expanded: grouped[year]!.length==1,
+              children: [
+                for (final date in grouped[year]![month]!)
+                  SimpleRowModel(
+                    id: date,
+                    values: {colKey: date},
+                    selected: valueFilters[colKey]![date] ?? false,
+                    onCheckBoxSelected: (row, selected) {
+                      modified.value = true;
+                      valueFilters[colKey]![row.id] = selected!;
+                      (row as SimpleRowModel).selected = selected;
+                      return true;
+                    },
+                  ),
+              ],
+            ),
+        ],
+      ));
+    }
+    return result;
+  }
 }
