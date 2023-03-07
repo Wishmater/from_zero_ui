@@ -668,7 +668,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               AnimatedPositioned(
                 left: 0, right: 0, bottom: -2,
                 height: state.isPinned ? 2 : 0,
-                duration: Duration(milliseconds: 300),
+                duration: Duration(milliseconds: 250),
                 curve: Curves.easeOutCubic,
                 child: const CustomPaint(
                   painter: SimpleShadowPainter(
@@ -887,14 +887,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                       },
                     )
                   : row.isExpandable ? IconButton(
+                      splashRadius: 24,
                       onPressed: () {
                         toggleRowExpanded(row as RowModel<T>, index);
                       },
-                      icon: SelectableIcon(
-                        selected: row.expanded,
-                        icon: Icons.expand_less,
-                        unselectedOffset: 0.25,
-                        selectedOffset: 0.5,
+                      icon: OverflowBox(
+                        alignment: Alignment.center,
+                        maxHeight: double.infinity, maxWidth: double.infinity,
+                        child: SelectableIcon(
+                          selected: row.expanded,
+                          icon: Icons.expand_less,
+                          unselectedOffset: 0.25,
+                          selectedOffset: 0.5,
+                        ),
                       ),
                     )
                   : SizedBox.shrink(),
@@ -1040,27 +1045,32 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           ),
         );
       }
-      if (row.rowAddon!=null && (row.expanded || !row.rowAddonIsExpandable)) {
-        Widget addon = row.rowAddon!;
-        if ((row.rowAddonIsCoveredByScrollable??true) && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
-          addon = NotificationListener(
-            onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
-            child: SingleChildScrollView(
-              controller: sharedController,
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(
-                width: widget.minWidth!,
-                child: addon,
+      if (row.rowAddon!=null) {
+        Widget addon;
+        if (row.expanded || !row.rowAddonIsExpandable) {
+          addon = row.rowAddon!;
+          if ((row.rowAddonIsCoveredByScrollable??true) && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
+            addon = NotificationListener(
+              onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
+              child: SingleChildScrollView(
+                controller: sharedController,
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: widget.minWidth!,
+                  child: addon,
+                ),
               ),
-            ),
-          );
-        }
-        if (row.rowAddonIsExpandable && rowAddonEntranceAnimations[row]!=null) {
-          addon = _buildEntranceAnimation(
-            child: addon,
-            row: row,
-            animation: rowAddonEntranceAnimations[row]!,
-          );
+            );
+          }
+          if (row.rowAddonIsExpandable && rowAddonEntranceAnimations[row]!=null) {
+            addon = _buildEntranceAnimation(
+              child: addon,
+              row: row,
+              animation: rowAddonEntranceAnimations[row]!,
+            );
+          }
+        } else {
+          addon = SizedBox.shrink();
         }
         Widget top, bottom;
         if (row.rowAddonIsAboveRow ?? false) {
@@ -1276,7 +1286,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         clipBehavior: Clip.none,
         children: [
           AnimatedPadding(
-            duration: Duration(milliseconds: 300),
+            duration: Duration(milliseconds: 250),
             curve: Curves.easeOut,
             padding: EdgeInsets.only(
               left: widget.cellPadding.left + (!export && sortedColumn==colKey ? 15 : 4),
@@ -1317,7 +1327,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               maxHeight: row.height, maxWidth: 32,
               alignment: Alignment.center,
               child: AnimatedSwitcher(
-                duration: Duration(milliseconds: 300),
+                duration: Duration(milliseconds: 250),
                 switchInCurve: Curves.easeOut,
                 child: (widget.enabled && !export && sortedColumn==colKey)
                     ? col?.buildSortedIcon(context, sortedAscending)
@@ -1911,7 +1921,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           sortedAscending: sortedAscending,
         );
         allFiltered.insertAll(index+1, toAdd);
-        final animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 300));
+        final animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 250));
         final curvedAnimation = CurvedAnimation(parent: animationController, curve: Curves.easeOutCubic);
         animationController.forward();
         rowAddonEntranceAnimations[row] = curvedAnimation;

@@ -1830,6 +1830,38 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 break;
             }
           }
+          Widget? rowAddonWidget;
+          if (rowAddonField!=null) {
+            final rowAddonField = e.props[this.rowAddonField!]!;
+            if (rowAddonField.value!=null && rowAddonField.value.toString().isNotBlank) {
+              rowAddonWidget = Theme(
+                data: Theme.of(context).copyWith(
+                  textTheme: Theme.of(context).textTheme.copyWith(
+                    subtitle1: Theme.of(context).textTheme.bodyText1!.copyWith(fontWeight: FontWeight.w400),
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    left: (tableHorizontalPadding-6).coerceAtLeast(0),
+                    right: (tableHorizontalPadding-6).coerceAtLeast(0),
+                    bottom: 12,
+                  ),
+                  child: IgnorePointer(
+                    ignoring: onRowTap!=null,
+                    child: Builder(
+                      builder: (context) {
+                        return rowAddonField.buildViewWidget(context,
+                          showViewButtons: false,
+                          linkToInnerDAOs: false,
+                          dense: false,
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              );
+            }
+          }
           builtRows[e] = SimpleRowModel(
             id: e,
             values: columns.map((key, value) => MapEntry(key, e.props[key])),
@@ -1848,32 +1880,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               notifyListeners();
               return true;
             } : null,
-            rowAddon: rowAddonField==null ? null : Theme(
-              data: Theme.of(context).copyWith(
-                textTheme: Theme.of(context).textTheme.copyWith(
-                  subtitle1: Theme.of(context).textTheme.bodyText1!.copyWith(fontWeight: FontWeight.w400),
-                ),
-              ),
-              child: Padding(
-                padding: EdgeInsets.only(
-                  left: (tableHorizontalPadding-6).coerceAtLeast(0),
-                  right: (tableHorizontalPadding-6).coerceAtLeast(0),
-                  bottom: 12,
-                ),
-                child: IgnorePointer(
-                  ignoring: onRowTap!=null,
-                  child: Builder(
-                    builder: (context) {
-                      return e.props[rowAddonField!]!.buildViewWidget(context,
-                        showViewButtons: false,
-                        linkToInnerDAOs: false,
-                        dense: false,
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
+            rowAddon: rowAddonWidget,
+            rowAddonIsExpandable: true,
             rowAddonIsSticky: false,
             rowAddonIsCoveredByGestureDetector: true,
             rowAddonIsCoveredByScrollable: false,
