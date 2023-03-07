@@ -1634,6 +1634,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                               tableController: filterTableController,
                               columns: col==null ? null : {colKey: col},
                               showHeaders: false,
+                              emptyWidget: SizedBox.shrink(),
                               rows: (availableFilters[colKey] ?? []).map((e) {
                                 return SimpleRowModel(
                                   id: e,
@@ -1647,71 +1648,92 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                   },
                                 );
                               }).toList(),
-                              emptyWidget: SizedBox.shrink(),
-                              headerRowModel: SimpleRowModel(
-                                id: 'header', values: {},
-                                rowAddon: Container(
-                                  padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
-                                  color: Theme.of(context).cardColor,
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      SizedBox(
-                                        height: 32,
-                                        child: TextFormField(
-                                          focusNode: filterSearchFocusNode,
-                                          onChanged: (v) {
-                                            filterTableController.conditionFilters![0] = [];
-                                            filterTableController.conditionFilters![0]!.add(
-                                              FilterTextContains(query: v,),
-                                            );
-                                            filterPopupSetState((){
-                                              filterTableController.filter();
-                                            });
-                                          },
-                                          decoration: InputDecoration(
-                                            labelText: FromZeroLocalizations.of(context).translate('search...'),
-                                            contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
-                                            labelStyle: TextStyle(height: 0.2),
-                                            suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
-                                          ),
+                              // override style and text alignment
+                              cellBuilder: (context, row, colKey) {
+                                final message = getRowValueString(row, colKey, col);
+                                final autoSizeTextMaxLines = 1;
+                                Widget result = AutoSizeText(
+                                  message,
+                                  style: TextStyle(fontSize: 16),
+                                  textAlign: TextAlign.left,
+                                  maxLines: autoSizeTextMaxLines,
+                                  minFontSize: 14,
+                                  overflowReplacement: TooltipFromZero(
+                                    message: message,
+                                    waitDuration: Duration(milliseconds: 0),
+                                    verticalOffset: -16,
+                                    child: AutoSizeText(
+                                      message,
+                                      textAlign: TextAlign.left,
+                                      maxLines: autoSizeTextMaxLines,
+                                      softWrap: autoSizeTextMaxLines>1,
+                                      overflow: autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,
+                                    ),
+                                  ),
+                                );
+                                return result;
+                              },
+                              tableHeader: Container(
+                                padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
+                                color: Theme.of(context).cardColor,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    SizedBox(
+                                      height: 32,
+                                      child: TextFormField(
+                                        focusNode: filterSearchFocusNode,
+                                        onChanged: (v) {
+                                          filterTableController.conditionFilters![0] = [];
+                                          filterTableController.conditionFilters![0]!.add(
+                                            FilterTextContains(query: v,),
+                                          );
+                                          filterPopupSetState((){
+                                            filterTableController.filter();
+                                          });
+                                        },
+                                        decoration: InputDecoration(
+                                          labelText: FromZeroLocalizations.of(context).translate('search...'),
+                                          contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
+                                          labelStyle: TextStyle(height: 0.2),
+                                          suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
                                         ),
                                       ),
-                                      SizedBox(height: 6,),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: TextButton(
-                                              child: Text(FromZeroLocalizations.of(context).translate('select_all')),
-                                              onPressed: () {
-                                                modified = true;
-                                                filterPopupSetState(() {
-                                                  filterTableController.filtered.forEach((row) {
-                                                    valueFilters[colKey]![row.id] = true;
-                                                    (row as SimpleRowModel).selected = true;
-                                                  });
+                                    ),
+                                    SizedBox(height: 6,),
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: TextButton(
+                                            child: Text(FromZeroLocalizations.of(context).translate('select_all')),
+                                            onPressed: () {
+                                              modified = true;
+                                              filterPopupSetState(() {
+                                                filterTableController.filtered.forEach((row) {
+                                                  valueFilters[colKey]![row.id] = true;
+                                                  (row as SimpleRowModel).selected = true;
                                                 });
-                                              },
-                                            ),
+                                              });
+                                            },
                                           ),
-                                          Expanded(
-                                            child: TextButton(
-                                              child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
-                                              onPressed: () {
-                                                modified = true;
-                                                filterPopupSetState(() {
-                                                  filterTableController.filtered.forEach((row) {
-                                                    valueFilters[colKey]![row.id] = false;
-                                                    (row as SimpleRowModel).selected = false;
-                                                  });
+                                        ),
+                                        Expanded(
+                                          child: TextButton(
+                                            child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
+                                            onPressed: () {
+                                              modified = true;
+                                              filterPopupSetState(() {
+                                                filterTableController.filtered.forEach((row) {
+                                                  valueFilters[colKey]![row.id] = false;
+                                                  (row as SimpleRowModel).selected = false;
                                                 });
-                                              },
-                                            ),
+                                              });
+                                            },
                                           ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -1770,7 +1792,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   }
 
   static Widget defaultCellBuilder<T>(BuildContext context, RowModel<T> row, dynamic colKey, ColModel? col, TextStyle? style, TextAlign alignment) {
-    // final col = widget.columns?[colKey];
     final message = getRowValueString(row, colKey, col);
     final autoSizeTextMaxLines = 1;
     Widget result = AutoSizeText(
