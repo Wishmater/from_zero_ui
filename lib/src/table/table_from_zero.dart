@@ -140,6 +140,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   double _leadingControlsWidth = 0;
   bool _showCheckmarks = false;
   bool _showDropdowns = false;
+  bool _enableSkipFrameWidgetForRows = false;
   bool get _showLeadingControls => _leadingControlsWidth>0;
 
   late List<RowModel<T>> sorted;
@@ -317,7 +318,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     }
     _showCheckmarks = false;
     _showDropdowns = false;
-    for (final e in sorted.map((e) => e.allRows).flatten()) {
+    final allRows = sorted.map((e) => e.allRows).flatten();
+    _enableSkipFrameWidgetForRows = widget.enableSkipFrameWidgetForRows ?? allRows.length>50;
+    for (final e in allRows) {
       if (_showCheckmarks && _showDropdowns) {
         break;
       }
@@ -771,7 +774,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         return widget.headerRowBuilder?.call(context, headerRowModel!)
             ?? _defaultRowBuilder.call(context, headerRowModel!, index);
       } else {
-        if (widget.enableSkipFrameWidgetForRows ?? allFiltered.length>50) {
+        if (_enableSkipFrameWidgetForRows) {
           return SkipFrameWidget(
             paceholderBuilder: (context) {
               return SizedBox(
@@ -1816,8 +1819,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     });
     return pass;
   }
-  void _setAllChildrenAsFiltered(RowModel row) {
-    row.filteredChildren = List.from(row.children);
+  void _setAllChildrenAsFiltered(RowModel<T> row) {
+    row.filteredChildren = List<RowModel<T>>.from(row.children);
     for (final e in row.children) {
       _setAllChildrenAsFiltered(e);
     }
