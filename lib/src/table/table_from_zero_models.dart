@@ -83,9 +83,11 @@ abstract class RowModel<T> {
   bool? get rowAddonIsAboveRow => null;
   bool? get alwaysOnTop => null;
   List<RowModel<T>> get children;
+
   bool expanded;
   int depth;
   late FocusNode focusNode = FocusNode();
+  late List<RowModel<T>> filteredChildren = [];
 
   RowModel({
     this.expanded = false,
@@ -93,15 +95,18 @@ abstract class RowModel<T> {
   });
   @override
   bool operator == (dynamic other) => other is RowModel && this.id==other.id;
-  @override
-  int get hashCode => id.hashCode;
+  // @override
+  // int get hashCode => id.hashCode;
 
   bool get isExpandable => children.isNotEmpty || (rowAddon!=null && rowAddonIsExpandable);
   List<RowModel<T>> get visibleRows => [this, if (expanded) ...children.map((e) => e.visibleRows).flatten()];
+  List<RowModel<T>> get visibleFilteredRows => [this, if (expanded) ...filteredChildren.map((e) => e.visibleFilteredRows).flatten()];
   List<RowModel<T>> get visibleChildren => visibleRows..removeAt(0);
   List<RowModel<T>> get allRows => [this, ...children.map((e) => e.allRows).flatten()];
   List<RowModel<T>> get allChildren => allRows..removeAt(0);
+  List<RowModel<T>> get allFilteredChildren => filteredChildren.map((e) => [e, ...e.allFilteredChildren]).flatten().toList();
   int get length => 1 + (expanded ? children.sumBy((e) => e.length) : 0);
+  int get filteredLength => 1 + (expanded ? filteredChildren.sumBy((e) => e.filteredLength) : 0);
   void calculateDepth() {
     for (final e in children) {
       e.depth = depth+1;

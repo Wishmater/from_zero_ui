@@ -229,9 +229,13 @@ abstract class TableFromZeroFilterPopup {
                                             onPressed: () {
                                               modified.value = true;
                                               filterPopupSetState(() {
-                                                filterTableController.filtered.forEach((row) {
-                                                  valueFilters[colKey]![row.id] = true;
-                                                  (row as SimpleRowModel).selected = true;
+                                                filterTableController.filtered.forEach((initialRow) {
+                                                  for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
+                                                    if (row.onCheckBoxSelected!=null) {
+                                                      valueFilters[colKey]![row.id] = true;
+                                                      (row as SimpleRowModel).selected = true;
+                                                    }
+                                                  }
                                                 });
                                               });
                                             },
@@ -243,9 +247,13 @@ abstract class TableFromZeroFilterPopup {
                                             onPressed: () {
                                               modified.value = true;
                                               filterPopupSetState(() {
-                                                filterTableController.filtered.forEach((row) {
-                                                  valueFilters[colKey]![row.id] = false;
-                                                  (row as SimpleRowModel).selected = false;
+                                                filterTableController.filtered.forEach((initialRow) {
+                                                  for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
+                                                    if (row.onCheckBoxSelected!=null) {
+                                                      valueFilters[colKey]![row.id] = false;
+                                                      (row as SimpleRowModel).selected = false;
+                                                    }
+                                                  }
                                                 });
                                               });
                                             },

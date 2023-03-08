@@ -138,6 +138,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   static const double _dropdownButtonWidth = 28;
   static const double _depthPadding = 16;
   double _leadingControlsWidth = 0;
+  bool _showCheckmarks = false;
+  bool _showDropdowns = false;
   bool get _showLeadingControls => _leadingControlsWidth>0;
 
   late List<RowModel<T>> sorted;
@@ -313,16 +315,16 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     for (final e in sorted) {
       e.calculateDepth();
     }
-    bool showCheckboxes = false;
-    bool showDropdowns = false;
+    _showCheckmarks = false;
+    _showDropdowns = false;
     for (final e in sorted.map((e) => e.allRows).flatten()) {
-      if (showCheckboxes && showDropdowns) {
+      if (_showCheckmarks && _showDropdowns) {
         break;
       }
-      showCheckboxes = showCheckboxes || e.onCheckBoxSelected!=null;
-      showDropdowns = showDropdowns || e.isExpandable;
+      _showCheckmarks = _showCheckmarks || e.onCheckBoxSelected!=null;
+      _showDropdowns = _showDropdowns || e.isExpandable;
     }
-    _leadingControlsWidth = (showCheckboxes ? _checkmarkWidth : 0) + (showDropdowns ? _dropdownButtonWidth : 0);
+    _leadingControlsWidth = (_showCheckmarks ? _checkmarkWidth : 0) + (_showDropdowns ? _dropdownButtonWidth : 0);
     if (widget.tableController!=null) {
       widget.tableController!.currentState = this;
       widget.tableController!._filter = _controllerFilter;
@@ -884,7 +886,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                   children: [
                     if (row==headerRowModel
                         ? row.onCheckBoxSelected!=null || widget.onAllSelected!=null
-                        : row.onCheckBoxSelected!=null || (row.children.isNotEmpty && _leadingControlsWidth>_dropdownButtonWidth))
+                        : row.onCheckBoxSelected!=null || (row.children.isNotEmpty && _showCheckmarks))
                       SizedBox(
                         width: _checkmarkWidth,
                         child: StatefulBuilder(
@@ -913,7 +915,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                     }
                                   } else {
                                     bool result = false;
-                                    for (final e in row.allChildren) { // TODO NOW .allChildren is not correct because it isn't filtered
+                                    for (final e in row.allFilteredChildren) {
                                       if (e.onCheckBoxSelected!=null) {
                                         final evaluation = e.onCheckBoxSelected!(e, value) ?? false;
                                         result = result || evaluation;
@@ -1667,8 +1669,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     setState(() {
       if (!row.expanded) {
         row.expanded = true;
-        final visibleRows = row.visibleRows..removeAt(0);
-        final toAdd = visibleRows.where(_passesFilters).toList();
+        final toAdd = row.visibleFilteredRows..removeAt(0);
         smartSort<T>(toAdd,
           sortedColumnKey: sortedColumn,
           sortedAscending: sortedAscending,
@@ -1682,7 +1683,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           nestedRowEntranceAnimations[e] = curvedAnimation;
         }
       } else {
-        allFiltered.removeRange(index+1, index+row.length);
+        allFiltered.removeRange(index+1, index+row.filteredLength);
         row.expanded = false;
       }
     });
@@ -1690,22 +1691,20 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
   int get disabledColumnCount => widget.columns==null ? 0
       : widget.columns!.values.where((element) => element.flex==0).length;
-  List<RowModel<T>> _controllerSort () {
-    List<RowModel<T>> result = [];
+  void _controllerSort () {
     if (mounted){
-      result = sort();
-      setState(() {});
+      setState(() {
+        sort();
+      });
     }
-    return result;
   }
-  List<RowModel<T>> sort({bool notifyListeners=true}) {
+  void sort({bool notifyListeners=true}) {
     smartSort<T>(sorted,
       sortedColumnKey: sortedColumn,
       sortedAscending: sortedAscending,
     );
     allSorted = sorted.map((e) => e.visibleRows).flatten().toList();
     filter(notifyListeners: notifyListeners);
-    return sorted;
   }
   static void smartSort<T>(List<RowModel<T>> list, {
     bool sortedAscending = true,
@@ -1739,29 +1738,50 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   Map<dynamic, ColModel>? _getColumns() => widget.columns;
   List<RowModel<T>> _getFiltered() => filtered;
   List<RowModel<T>> _getAllFiltered() => allFiltered;
-  List<RowModel<T>> _controllerFilter() {
-    List<RowModel<T>> result = [];
+  void _controllerFilter() {
     if (mounted){
-      result = filter();
-      setState(() {});
+      setState(() {
+        filter();
+      });
     }
-    return result;
   }
 
-  List<RowModel<T>> filter({bool notifyListeners=true}){
-    filtered = sorted.where(_passesFilters).toList();
-    for (final e in (widget.tableController?.extraFilters ?? [])) {
-      filtered = e(filtered);
-    }
-    if (widget.onFilter!=null) {
-      filtered = widget.onFilter!(filtered);
-    }
-    allFiltered = filtered.map((e) => e.visibleRows).flatten()
-        .where((e) => e.depth==0 || _passesFilters(e)).toList();
+  void filter({bool notifyListeners=true}) {
+    final result = getFilterResults(sorted);
+    filtered = result[0];
+    allFiltered = result[1];
     if (mounted && notifyListeners) {
       widget.tableController?.notifyListeners();
     }
-    return filtered;
+  }
+  List<List<RowModel<T>>> getFilterResults(List<RowModel<T>> rows) {
+    List<RowModel<T>> result = rows.where(_passesFilters).toList();
+    for (final e in (widget.tableController?.extraFilters ?? [])) {
+      result = e(result);
+    }
+    if (widget.onFilter!=null) {
+      result = widget.onFilter!(result);
+    }
+    List<RowModel<T>> allResults = [];
+    for (final e in result) {
+      _setAllChildrenAsFiltered(e);
+      allResults.addAll(e.visibleRows);
+    }
+    final resultSet = Set.from(result);
+    for (final e in rows) {
+      if (e.children.isNotEmpty && !resultSet.contains(e)) {
+        final subResult = getFilterResults(e.children);
+        e.filteredChildren = subResult[0];
+        if (subResult[0].isNotEmpty) {
+          result.add(e);
+          allResults.add(e);
+          if (e.expanded) {
+            allResults.addAll(subResult[1]);
+          }
+        }
+      }
+    }
+    return [result, allResults];
   }
   bool _passesFilters(RowModel<T> row) {
     bool pass = true;
@@ -1795,6 +1815,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       }
     });
     return pass;
+  }
+  void _setAllChildrenAsFiltered(RowModel row) {
+    row.filteredChildren = List.from(row.children);
+    for (final e in row.children) {
+      _setAllChildrenAsFiltered(e);
+    }
   }
 
   void _updateFiltersApplied(){
@@ -1898,14 +1924,14 @@ class TableController<T> extends ChangeNotifier {
       ..currentState = currentState ?? this.currentState;
   }
 
-  List<RowModel<T>> Function()? _filter;
-  List<RowModel<T>> filter(){
-    return _filter?.call() ?? [];
+  void Function()? _filter;
+  void filter(){
+    _filter?.call();
   }
 
-  List<RowModel<T>> Function()? _sort;
-  List<RowModel<T>> sort(){
-    return _sort?.call() ?? [];
+  void Function()? _sort;
+  void sort(){
+    _sort?.call();
   }
 
   VoidCallback? _reInit;
