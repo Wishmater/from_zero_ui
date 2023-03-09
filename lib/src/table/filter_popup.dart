@@ -160,6 +160,7 @@ abstract class TableFromZeroFilterPopup {
                               columns: col==null ? null : {colKey: col},
                               showHeaders: false,
                               emptyWidget: SizedBox.shrink(),
+                              initialSortedColumn: colKey,
                               rows: (col ?? SimpleColModel(name: ''))
                                   .buildFilterPopupRowModels(availableFilters[colKey] ?? [], valueFilters, colKey, modified),
                               // override style and text alignment

@@ -654,6 +654,7 @@ class DateColModel<T> extends SimpleColModel<T> {
         id: e,
         values: {colKey: e},
         selected: valueFilters[colKey]![e] ?? false,
+        alwaysOnTop: true,
         onCheckBoxSelected: (row, selected) {
           modified.value = true;
           valueFilters[colKey]![row.id] = selected!;
