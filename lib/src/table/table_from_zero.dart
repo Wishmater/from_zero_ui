@@ -1673,11 +1673,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     setState(() {
       if (!row.expanded) {
         row.expanded = true;
-        final toAdd = row.visibleFilteredRows..removeAt(0);
-        smartSort<T>(toAdd,
-          sortedColumnKey: sortedColumn,
-          sortedAscending: sortedAscending,
-        );
+        final toAdd = _getVisibleFilteredRowsSorted(row.filteredChildren);
         allFiltered.insertAll(index+1, toAdd);
         final animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 250));
         final curvedAnimation = CurvedAnimation(parent: animationController, curve: Curves.easeOutCubic);
@@ -1691,6 +1687,20 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         row.expanded = false;
       }
     });
+  }
+  List<RowModel<T>> _getVisibleFilteredRowsSorted(List<RowModel<T>> rows) {
+    smartSort<T>(rows,
+      sortedColumnKey: sortedColumn,
+      sortedAscending: sortedAscending,
+    );
+    final List<RowModel<T>> result = [];
+    for (final e in rows) {
+      result.add(e);
+      if (e.expanded && e.filteredChildren.isNotEmpty) {
+        result.addAll(_getVisibleFilteredRowsSorted(e.filteredChildren));
+      }
+    }
+    return result;
   }
 
   int get disabledColumnCount => widget.columns==null ? 0
