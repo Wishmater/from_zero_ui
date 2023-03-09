@@ -204,10 +204,48 @@ abstract class TableFromZeroFilterPopup {
                                       child: TextFormField(
                                         focusNode: filterSearchFocusNode,
                                         onChanged: (v) {
-                                          filterTableController.conditionFilters![colKey] = [];
-                                          filterTableController.conditionFilters![colKey]!.add(
-                                            FilterTextContains(query: v,),
-                                          );
+                                          filterTableController.extraFilters = [
+                                                (rows) {
+                                              List<RowModel> starts = [];
+                                              List<RowModel> contains = [];
+                                              final q = v
+                                                  .replaceAll('.', '')
+                                                  .replaceAll(',', '')
+                                                  .trim()
+                                                  .toUpperCase();
+                                              if (q.isEmpty) {
+                                                return rows;
+                                              } else {
+                                                for (final e in rows) {
+                                                  final List<String> values = [
+                                                    ColModel.getRowValueString(e, colKey, col),
+                                                  ];
+                                                  for (int i=0; i<values.length; i++) {
+                                                    values[i] = values[i]
+                                                        .replaceAll('.', '')
+                                                        .replaceAll(',', '')
+                                                        .trim()
+                                                        .toUpperCase();
+                                                  }
+                                                  bool doesContain = false, doesStart = false;
+                                                  for (final value in values) {
+                                                    if (value.contains(q)) {
+                                                      doesContain = true;
+                                                      if (value.startsWith(q)) {
+                                                        doesStart = true;
+                                                      }
+                                                    }
+                                                  }
+                                                  if (doesStart) {
+                                                    starts.add(e);
+                                                  } else if (doesContain) {
+                                                    contains.add(e);
+                                                  }
+                                                }
+                                              }
+                                              return [...starts, ...contains];
+                                            },
+                                          ];
                                           filterPopupSetState((){
                                             filterTableController.filter();
                                           });

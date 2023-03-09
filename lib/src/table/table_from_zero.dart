@@ -880,10 +880,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         }
         if (_showLeadingControls) {
           if (j==0) {
-            return SizedBox(
-              width: _leadingControlsWidth,
-              child: Transform.translate(
-                offset: Offset(row.depth*_depthPadding, 0),
+            // return SizedBox(width: _leadingControlsWidth,);
+            return Transform.translate(
+              offset: Offset(row.depth*_depthPadding, 0),
+              child: SizedBox(
+                width: _leadingControlsWidth,
                 child: Row(
                   mainAxisAlignment: row.depth==0 ? MainAxisAlignment.start : MainAxisAlignment.end,
                   children: [
