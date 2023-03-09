@@ -88,6 +88,7 @@ abstract class RowModel<T> {
   int depth;
   late FocusNode focusNode = FocusNode();
   late List<RowModel<T>> filteredChildren = [];
+  late bool isFilteredInBecauseOfChildren = false;
 
   RowModel({
     this.expanded = false,

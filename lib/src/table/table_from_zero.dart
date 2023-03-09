@@ -943,15 +943,18 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                           maxWidth: double.infinity, maxHeight: double.infinity,
                           child: IconButton(
                             splashRadius: 24,
-                            onPressed: () {
+                            onPressed: row.isFilteredInBecauseOfChildren ? null : () {
                               toggleRowExpanded(row as RowModel<T>, index);
                             },
                             icon: OverflowBox(
                               alignment: Alignment.center,
                               maxHeight: double.infinity, maxWidth: double.infinity,
                               child: SelectableIcon(
-                                selected: row.expanded,
+                                selected: row.expanded || row.isFilteredInBecauseOfChildren,
                                 icon: Icons.expand_less,
+                                selectedColor: row.isFilteredInBecauseOfChildren
+                                    ? Theme.of(context).disabledColor
+                                    : Theme.of(context).splashColor.withOpacity(1),
                                 unselectedOffset: 0.25,
                                 selectedOffset: 0.5,
                               ),
@@ -1787,6 +1790,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         final subResult = getFilterResults(e.children);
         e.filteredChildren = subResult[0];
         if (subResult[0].isNotEmpty) {
+          e.isFilteredInBecauseOfChildren = true;
           result.add(e);
           allResults.add(e);
           if (e.expanded) {
@@ -1831,6 +1835,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return pass;
   }
   void _setAllChildrenAsFiltered(RowModel<T> row) {
+    row.isFilteredInBecauseOfChildren = false;
     row.filteredChildren = List<RowModel<T>>.from(row.children);
     for (final e in row.children) {
       _setAllChildrenAsFiltered(e);
