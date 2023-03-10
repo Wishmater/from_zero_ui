@@ -140,11 +140,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   double _leadingControlsWidth = 0;
   bool _showCheckmarks = false;
   bool _showDropdowns = false;
+  bool? _expandableRowsExist;
   bool _enableSkipFrameWidgetForRows = false;
   bool get _showLeadingControls => _leadingControlsWidth>0;
 
   late List<RowModel<T>> sorted;
-  late List<RowModel<T>> allSorted;
   late List<RowModel<T>> filtered;
   late List<RowModel<T>> allFiltered;
   late Map<dynamic, FocusNode> headerFocusNodes = {};
@@ -811,21 +811,49 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       };
       List<Widget> rowActions = row==headerRowModel ? []
           : widget.rowActions.map((e) => e.copyWith(onTap: (context) {
-            e.onRowTap?.call(context, row as RowModel<T>);
-          },)).toList();
-      if (widget.exportPathForExcel != null) {
-        rowActions = addExportExcelAction(context,
-          actions: rowActions,
-          exportPathForExcel: widget.exportPathForExcel!,
-          tableController: widget.tableController ?? (TableController()..currentState=this),
-        );
-      }
+              e.onRowTap?.call(context, row as RowModel<T>);
+            },)).toList();
       for (final e in rowActions) {
         if (!rowActionStates.containsKey(e)) {
           rowActionStates[e] = e is ActionFromZero
               ? e.getStateForMaxWidth(constraints?.maxWidth??double.infinity)
               : ActionState.none;
         }
+      }
+      if (row.hasExpandableRows!=null && row!=headerRowModel) {
+        rowActions.add(ActionFromZero(
+          icon: Icon(row.hasExpandableRows! ? MaterialCommunityIcons.arrow_collapse_up : MaterialCommunityIcons.arrow_expand_down,),
+          title: row.hasExpandableRows! ? 'Colapsar fila' : 'Expandir fila',
+          breakpoints: {0: ActionState.popup},
+          onTap: (context) {
+            toggleRowExpanded(row as RowModel<T>, index,
+              expanded: !row.hasExpandableRows!,
+              forceChildrenAsSame: true,
+            );
+          },
+        ));
+      }
+      if (_expandableRowsExist!=null) {
+        rowActions.add(ActionFromZero(
+          icon: Icon(_expandableRowsExist! ? MaterialCommunityIcons.arrow_collapse_up : MaterialCommunityIcons.arrow_expand_down,),
+          title: _expandableRowsExist! ? 'Colapsar todas las filas' : 'Expandir todas las filas',
+          breakpoints: {0: ActionState.popup},
+          onTap: (context) {
+            for (int i=0; i<allFiltered.length; i++) {
+              toggleRowExpanded(allFiltered[i], i,
+                expanded: !_expandableRowsExist!,
+                forceChildrenAsSame: true,
+              );
+            }
+          },
+        ));
+      }
+      if (widget.exportPathForExcel != null) {
+        rowActions = addExportExcelAction(context,
+          actions: rowActions,
+          exportPathForExcel: widget.exportPathForExcel!,
+          tableController: widget.tableController ?? (TableController()..currentState=this),
+        );
       }
       // This assumes standard icon size, custom action iconBuilders will probably break the table,
       // this is very prone to breaking, but there is no other efficient way of doing it
@@ -1211,7 +1239,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         result = ContextMenuFromZero(
           child: result,
           onShowMenu: () => row.focusNode.requestFocus(),
-          actions: rowActions.where((e) => rowActionStates[e]! != ActionState.none).toList().cast(),
+          actions: rowActions.where((e) => (rowActionStates[e]??ActionState.popup) != ActionState.none).toList().cast(),
         );
       }
       if (widget.horizontalDivider!=null) {
@@ -1676,24 +1704,36 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     ];
   }
 
-  void toggleRowExpanded(RowModel<T> row, int index) {
-    setState(() {
-      if (!row.expanded) {
-        row.expanded = true;
-        final toAdd = _getVisibleFilteredRowsSorted(row.filteredChildren);
-        allFiltered.insertAll(index+1, toAdd);
-        final animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 250));
-        final curvedAnimation = CurvedAnimation(parent: animationController, curve: Curves.easeOutCubic);
-        animationController.forward();
-        rowAddonEntranceAnimations[row] = curvedAnimation;
-        for (final e in toAdd) {
-          nestedRowEntranceAnimations[e] = curvedAnimation;
+  void toggleRowExpanded(RowModel<T> row, int index, {
+    bool? expanded,
+    bool forceChildrenAsSame = false,
+  }) {
+    expanded ??= !row.expanded;
+    if (expanded!=row.expanded && !row.isFilteredInBecauseOfChildren) {
+      setState(() {
+        if (expanded!) {
+          row.expanded = true;
+          if (forceChildrenAsSame) {
+            _setAllChildrenExpanded(row, true);
+          }
+          final toAdd = _getVisibleFilteredRowsSorted(row.filteredChildren);
+          allFiltered.insertAll(index+1, toAdd);
+          final animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 250));
+          final curvedAnimation = CurvedAnimation(parent: animationController, curve: Curves.easeOutCubic);
+          animationController.forward();
+          rowAddonEntranceAnimations[row] = curvedAnimation;
+          for (final e in toAdd) {
+            nestedRowEntranceAnimations[e] = curvedAnimation;
+          }
+        } else {
+          allFiltered.removeRange(index+1, index+row.filteredLength);
+          row.expanded = false;
+          if (forceChildrenAsSame) {
+            _setAllChildrenExpanded(row, false);
+          }
         }
-      } else {
-        allFiltered.removeRange(index+1, index+row.filteredLength);
-        row.expanded = false;
-      }
-    });
+      });
+    }
   }
   List<RowModel<T>> _getVisibleFilteredRowsSorted(List<RowModel<T>> rows) {
     smartSort<T>(rows,
@@ -1708,6 +1748,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       }
     }
     return result;
+  }
+  void _setAllChildrenExpanded(RowModel<T> row, bool expanded) {
+    row.expanded = expanded;
+    for (final e in row.filteredChildren) {
+      _setAllChildrenExpanded(e, expanded);
+    }
   }
 
   int get disabledColumnCount => widget.columns==null ? 0
@@ -1724,7 +1770,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       sortedColumnKey: sortedColumn,
       sortedAscending: sortedAscending,
     );
-    allSorted = sorted.map((e) => e.visibleRows).flatten().toList();
     filter(notifyListeners: notifyListeners);
   }
   static void smartSort<T>(List<RowModel<T>> list, {
@@ -1769,42 +1814,53 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
   void filter({bool notifyListeners=true}) {
     final result = getFilterResults(sorted);
-    filtered = result[0];
-    allFiltered = result[1];
+    filtered = result.filtered;
+    allFiltered = result.allFiltered;
+    _expandableRowsExist = result.expandableRowsExist;
+    print (_expandableRowsExist);
     if (mounted && notifyListeners) {
       widget.tableController?.notifyListeners();
     }
   }
-  List<List<RowModel<T>>> getFilterResults(List<RowModel<T>> rows) {
-    List<RowModel<T>> result = rows.where(_passesFilters).toList();
+  FilterResults<T> getFilterResults(List<RowModel<T>> rows) {
+    List<RowModel<T>> filtered = rows.where(_passesFilters).toList();
     for (final e in (widget.tableController?.extraFilters ?? [])) {
-      result = e(result);
+      filtered = e(filtered);
     }
     if (widget.onFilter!=null) {
-      result = widget.onFilter!(result);
+      filtered = widget.onFilter!(filtered);
     }
-    List<RowModel<T>> allResults = [];
-    for (final e in result) {
-      _setAllChildrenAsFiltered(e);
-      allResults.addAll(e.visibleRows);
+    final result = FilterResults(
+      filtered: filtered,
+    );
+    for (final e in result.filtered) {
+      bool? hasExpandableRows = _setAllChildrenAsFiltered(e);
+      result.allFiltered.addAll(e.visibleRows);
+      if (hasExpandableRows!=null) {
+        result.expandableRowsExist = (result.expandableRowsExist??true) && hasExpandableRows;
+      }
     }
-    final resultSet = Set.from(result);
+    final filteredSet = Set.from(result.filtered);
     for (final e in rows) {
-      if (e.children.isNotEmpty && !resultSet.contains(e)) {
+      if (e.children.isNotEmpty && !filteredSet.contains(e)) {
         final subResult = getFilterResults(e.children);
-        e.filteredChildren = subResult[0];
-        if (subResult[0].isNotEmpty) {
+        e.filteredChildren = subResult.filtered;
+        e.hasExpandableRows = subResult.expandableRowsExist;
+        if (subResult.expandableRowsExist!=null) {
+          result.expandableRowsExist = (result.expandableRowsExist??true) && subResult.expandableRowsExist!;
+        }
+        if (subResult.filtered.isNotEmpty) {
           e.isFilteredInBecauseOfChildren = true;
-          result.add(e);
-          allResults.add(e);
-          allResults.addAll(subResult[1]);
+          result.filtered.add(e);
+          result.allFiltered.add(e);
+          result.allFiltered.addAll(subResult.allFiltered);
           // if (e.expanded) { // subResult added always because rows where isFilteredInBecauseOfChildren are always forced expanded
           //   allResults.addAll(subResult[1]);
           // }
         }
       }
     }
-    return [result, allResults];
+    return result;
   }
   bool _passesFilters(RowModel<T> row) {
     bool pass = true;
@@ -1839,12 +1895,17 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     });
     return pass;
   }
-  void _setAllChildrenAsFiltered(RowModel<T> row) {
+  /// returns row.hasExpandableRows
+  bool? _setAllChildrenAsFiltered(RowModel<T> row) {
+    bool? hasExpandableRows = row.isExpandable ? row.expanded : null;
+    for (final e in row.children) {
+      final childHasExpandableRows = _setAllChildrenAsFiltered(e);
+      hasExpandableRows = hasExpandableRows! && (childHasExpandableRows??true);
+    }
+    row.hasExpandableRows = hasExpandableRows;
     row.isFilteredInBecauseOfChildren = false;
     row.filteredChildren = List<RowModel<T>>.from(row.children);
-    for (final e in row.children) {
-      _setAllChildrenAsFiltered(e);
-    }
+    return hasExpandableRows;
   }
 
   void _updateFiltersApplied(){
@@ -1991,4 +2052,17 @@ extension Some<T> on List<T> {
         : any ? null
         : false;
   }
+}
+
+
+class FilterResults<T> {
+  final List<RowModel<T>> filtered;
+  final List<RowModel<T>> allFiltered;
+  bool? expandableRowsExist;
+  FilterResults({
+    List<RowModel<T>>? filtered,
+    List<RowModel<T>>? allFiltered,
+    this.expandableRowsExist,
+  })  : this.filtered = filtered ?? [],
+        this.allFiltered = allFiltered ?? [];
 }

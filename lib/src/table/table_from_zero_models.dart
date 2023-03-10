@@ -84,11 +84,13 @@ abstract class RowModel<T> {
   bool? get alwaysOnTop => null;
   List<RowModel<T>> get children;
 
+  // these fields should only be changed by RowModel and TableFromZeroState
   bool expanded;
   int depth;
   late FocusNode focusNode = FocusNode();
   late List<RowModel<T>> filteredChildren = [];
   late bool isFilteredInBecauseOfChildren = false;
+  bool? hasExpandableRows;
 
   RowModel({
     this.expanded = false,
