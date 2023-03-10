@@ -1445,8 +1445,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                     ? col?.buildSortedIcon(context, sortedAscending)
                         ?? Icon(
                             sortedAscending
-                                ? MaterialCommunityIcons.sort_alphabetical_ascending
-                                : MaterialCommunityIcons.sort_alphabetical_descending,
+                                ? MaterialCommunityIcons.sort_ascending
+                                : MaterialCommunityIcons.sort_descending,
                             key: ValueKey(sortedAscending),
                             // color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
                             color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
@@ -1839,9 +1839,20 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       dynamic bVal = ColModel.getRowValue(b, sortedColumnKey, col);
       if (aVal!=null && aVal is! Comparable) aVal = ColModel.getRowValueString(a, sortedColumnKey, col);
       if (bVal!=null && bVal is! Comparable) bVal = ColModel.getRowValueString(b, sortedColumnKey, col);
-      return sortedAscending
-          ? aVal==null ? 1 : bVal==null ? -1 : aVal.compareTo(bVal)
-          : aVal==null ? -1 : bVal==null ? 1 : bVal.compareTo(aVal);
+      final sortedAscendingMultiplier = sortedAscending ? 1 : -1;
+      if (aVal==null) {
+        if (bVal==null) {
+          return 0;
+        }
+        return 1;
+      }
+      if (bVal==null) {
+        return -1;
+      }
+      if (aVal is ContainsValue) {
+        return (aVal as dynamic).compareTo(bVal) * sortedAscendingMultiplier;
+      }
+      return bVal.compareTo(aVal) * -sortedAscendingMultiplier;
     }));
     for (final e in list) {
       smartSort<T>(e.children,
