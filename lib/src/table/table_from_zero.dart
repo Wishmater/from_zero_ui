@@ -826,10 +826,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           title: row.hasExpandableRows! ? 'Colapsar fila' : 'Expandir fila',
           breakpoints: {0: ActionState.popup},
           onTap: (context) {
-            toggleRowExpanded(row as RowModel<T>, index,
-              expanded: !row.hasExpandableRows!,
-              forceChildrenAsSame: true,
-            );
+            for (int i=index; i<allFiltered.length && (i==index || allFiltered[i].depth>row.depth); i++) {
+              toggleRowExpanded(allFiltered[i], i,
+                expanded: !row.hasExpandableRows!,
+                forceChildrenAsSame: true,
+                updateHasExpandableRows: false,
+              );
+            }
+            int i = index;
+            while (allFiltered[i].depth>0) {
+              i--;
+            }
+            _recalculateHasExpandableRows(filtered[i]);
+            _recalculateExpandableRowsExist();
           },
         ));
       }
@@ -843,8 +852,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               toggleRowExpanded(allFiltered[i], i,
                 expanded: !_expandableRowsExist!,
                 forceChildrenAsSame: true,
+                updateHasExpandableRows: false,
               );
             }
+            for (final e in filtered) {
+              _setAllChildrenHasExpandableRows(e, !_expandableRowsExist!);
+            }
+            _recalculateExpandableRowsExist();
           },
         ));
       }
@@ -914,8 +928,35 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               child: SizedBox(
                 width: _leadingControlsWidth,
                 child: Row(
-                  mainAxisAlignment: row.depth==0 ? MainAxisAlignment.start : MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.end,
                   children: [
+                    if (row.isExpandable)
+                      SizedBox(
+                        width: _dropdownButtonWidth,
+                        child: OverflowBox(
+                          alignment: Alignment.center,
+                          maxWidth: double.infinity, maxHeight: double.infinity,
+                          child: IconButton(
+                            splashRadius: 24,
+                            onPressed: row.isFilteredInBecauseOfChildren ? null : () {
+                              toggleRowExpanded(row as RowModel<T>, index);
+                            },
+                            icon: OverflowBox(
+                              alignment: Alignment.center,
+                              maxHeight: double.infinity, maxWidth: double.infinity,
+                              child: SelectableIcon(
+                                selected: row.expanded || row.isFilteredInBecauseOfChildren,
+                                icon: Icons.expand_less,
+                                selectedColor: row.isFilteredInBecauseOfChildren
+                                    ? Theme.of(context).disabledColor
+                                    : Theme.of(context).splashColor.withOpacity(1),
+                                unselectedOffset: 0.25,
+                                selectedOffset: 0.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     if (row==headerRowModel
                         ? row.onCheckBoxSelected!=null || widget.onAllSelected!=null
                         : row.onCheckBoxSelected!=null || (row.children.isNotEmpty && _showCheckmarks))
@@ -965,33 +1006,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                               },
                             );
                           },
-                        ),
-                      ),
-                    if (row.isExpandable)
-                      SizedBox(
-                        width: _dropdownButtonWidth,
-                        child: OverflowBox(
-                          alignment: Alignment.center,
-                          maxWidth: double.infinity, maxHeight: double.infinity,
-                          child: IconButton(
-                            splashRadius: 24,
-                            onPressed: row.isFilteredInBecauseOfChildren ? null : () {
-                              toggleRowExpanded(row as RowModel<T>, index);
-                            },
-                            icon: OverflowBox(
-                              alignment: Alignment.center,
-                              maxHeight: double.infinity, maxWidth: double.infinity,
-                              child: SelectableIcon(
-                                selected: row.expanded || row.isFilteredInBecauseOfChildren,
-                                icon: Icons.expand_less,
-                                selectedColor: row.isFilteredInBecauseOfChildren
-                                    ? Theme.of(context).disabledColor
-                                    : Theme.of(context).splashColor.withOpacity(1),
-                                unselectedOffset: 0.25,
-                                selectedOffset: 0.5,
-                              ),
-                            ),
-                          ),
                         ),
                       ),
                   ],
@@ -1704,12 +1718,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     ];
   }
 
-  void toggleRowExpanded(RowModel<T> row, int index, {
+  bool toggleRowExpanded(RowModel<T> row, int index, {
     bool? expanded,
     bool forceChildrenAsSame = false,
+    bool updateHasExpandableRows = true,
   }) {
     expanded ??= !row.expanded;
-    if (expanded!=row.expanded && !row.isFilteredInBecauseOfChildren) {
+    if (row.isExpandable && expanded!=row.expanded && !row.isFilteredInBecauseOfChildren) {
       setState(() {
         if (expanded!) {
           row.expanded = true;
@@ -1732,14 +1747,21 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             _setAllChildrenExpanded(row, false);
           }
         }
+        if (updateHasExpandableRows) {
+          // if (forceChildrenAsSame) { // TODO 3 PERFORMANCE, deep iteration could be avoided since we know all children are the same, by _setAllChildrenHasExpandableRows on them reccursively and then trusting the parent when recalculating
+          // }
+          while (allFiltered[index].depth>0) {
+            index--;
+          }
+          _recalculateHasExpandableRows(filtered[index]);
+          _recalculateExpandableRowsExist();
+        }
       });
+      return true;
     }
+    return false;
   }
   List<RowModel<T>> _getVisibleFilteredRowsSorted(List<RowModel<T>> rows) {
-    smartSort<T>(rows,
-      sortedColumnKey: sortedColumn,
-      sortedAscending: sortedAscending,
-    );
     final List<RowModel<T>> result = [];
     for (final e in rows) {
       result.add(e);
@@ -1755,9 +1777,36 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       _setAllChildrenExpanded(e, expanded);
     }
   }
+  void _setAllChildrenHasExpandableRows(RowModel<T> row, bool hasExpandableRows) {
+    if (row.hasExpandableRows!=null) {
+      row.hasExpandableRows = hasExpandableRows;
+    }
+    for (final e in row.filteredChildren) {
+      _setAllChildrenHasExpandableRows(e, hasExpandableRows);
+    }
+  }
+  bool? _recalculateHasExpandableRows(RowModel<T> row) {
+    bool? hasExpandableRows = row.isExpandable ? row.expanded : null;
+    for (final e in row.filteredChildren) {
+      final subResult = _recalculateHasExpandableRows(e);
+      if (subResult!=null) {
+        hasExpandableRows = hasExpandableRows! && subResult;
+      }
+    }
+    row.hasExpandableRows = hasExpandableRows;
+    return hasExpandableRows;
+  }
+  void _recalculateExpandableRowsExist() {
+    bool? hasExpandableRows = null;
+    for (final e in filtered) {
+      if (e.hasExpandableRows!=null) {
+        hasExpandableRows = (hasExpandableRows??true) && e.hasExpandableRows!;
+      }
+    }
+    _expandableRowsExist = hasExpandableRows;
+  }
 
-  int get disabledColumnCount => widget.columns==null ? 0
-      : widget.columns!.values.where((element) => element.flex==0).length;
+
   void _controllerSort () {
     if (mounted){
       setState(() {
@@ -1817,7 +1866,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     filtered = result.filtered;
     allFiltered = result.allFiltered;
     _expandableRowsExist = result.expandableRowsExist;
-    print (_expandableRowsExist);
     if (mounted && notifyListeners) {
       widget.tableController?.notifyListeners();
     }
