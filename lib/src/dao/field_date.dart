@@ -1,3 +1,4 @@
+import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -384,12 +385,20 @@ class DateField extends Field<DateTime> {
   }
 
   static SimpleColModel dateFieldDefaultGetColumn(Field field, DAO dao) {
-    return SimpleColModel(
-      name: field.uiName,
-      filterEnabled: true,
-      defaultSortAscending: false,
-      flex: field.tableColumnWidth?.round() ?? 192,
-    );
+    if (field is DateField && field.type==DateTimePickerType.date) {
+      return DateColModel(
+        name: field.uiName,
+        filterEnabled: true,
+        flex: field.tableColumnWidth?.round() ?? 192,
+        formatter: field.formatterDense,
+      );
+    } else {
+      return SimpleColModel(
+        name: field.uiName,
+        filterEnabled: true,
+        flex: field.tableColumnWidth?.round() ?? 192,
+      );
+    }
   }
-
 }
+

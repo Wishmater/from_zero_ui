@@ -460,10 +460,6 @@ class NumColModel<T> extends SimpleColModel<T> {
     );
   }
   @override
-  Object? getValue(RowModel row, dynamic key) {
-    return row.values[key];
-  }
-  @override
   String getValueString(RowModel row, dynamic key) {
     final value = getValue(row, key);
     if (value is List || value is ComparableList) {
@@ -611,10 +607,6 @@ class DateColModel<T> extends SimpleColModel<T> {
     );
   }
   @override
-  Object? getValue(RowModel row, dynamic key) {
-    return row.values[key];
-  }
-  @override
   String getValueString(RowModel row, dynamic key) {
     final value = getValue(row, key);
     if (value is List || value is ComparableList) {
@@ -630,6 +622,7 @@ class DateColModel<T> extends SimpleColModel<T> {
   String _format(value) {
     return value==null ? ''
         : (formatter!=null && value is DateTime) ? formatter!.format(value)
+        : value is DateField && value.value!=null ? value.formatterDense.format(value.value!)
         : value.toString();
   }
   @override
@@ -640,13 +633,19 @@ class DateColModel<T> extends SimpleColModel<T> {
   ];
   @override
   List<RowModel> buildFilterPopupRowModels(List<dynamic> availableFilters, Map<dynamic, Map<Object?, bool>> valueFilters, dynamic colKey, ValueNotifier<bool> modified) {
-    final Map<int, Map<int, List<DateTime>>> grouped = {};
+    final Map<int, Map<int, List<Object>>> grouped = {};
     final List<dynamic> other = [];
     for (final e in availableFilters) {
+      DateTime? value;
       if (e is DateTime) {
-        if (!grouped.containsKey(e.year)) grouped[e.year] = {};
-        if (!grouped[e.year]!.containsKey(e.month)) grouped[e.year]![e.month] = [];
-        grouped[e.year]![e.month]!.add(e);
+        value = e;
+      } else if (e is ContainsValue<DateTime>) {
+        value = e.value;
+      }
+      if (value!=null) {
+        if (!grouped.containsKey(value.year)) grouped[value.year] = {};
+        if (!grouped[value.year]!.containsKey(value.month)) grouped[value.year]![value.month] = [];
+        grouped[value.year]![value.month]!.add(e);
       } else {
         other.add(e);
       }

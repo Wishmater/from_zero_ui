@@ -10,7 +10,7 @@ bool trueFieldGetter(_, __) => true;
 bool falseFieldGetter(_, __) => false;
 List defaultValidatorsGetter(_, __) => [];
 
-class Field<T extends Comparable> extends ChangeNotifier implements Comparable, ContainsValue {
+class Field<T extends Comparable> extends ChangeNotifier implements Comparable, ContainsValue<T> {
 
   late DAO dao;
   FieldValueGetter<String, Field> uiNameGetter;

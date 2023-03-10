@@ -506,12 +506,11 @@ class NumField extends Field<num> {
   }
 
   static SimpleColModel numFieldDefaultGetColumn(Field field, DAO dao) {
-    return SimpleColModel(
+    return NumColModel(
       name: field.uiName,
       filterEnabled: true,
       flex: field.tableColumnWidth?.round() ?? 192,
-      alignment: TextAlign.right,
-      defaultSortAscending: false,
+      formatter: field is NumField ? field.formatter : null,
     );
   }
 
