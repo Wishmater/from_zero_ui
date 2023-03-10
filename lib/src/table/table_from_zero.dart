@@ -915,7 +915,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                 } else {
                                   if (row.onCheckBoxSelected!=null) {
                                     if (row.onCheckBoxSelected!(row, value) ?? false) {
-                                      checkboxSetState(() {});
+                                      if (row.depth==0) {
+                                        checkboxSetState(() {});
+                                      } else {
+                                        setState(() {}); // nested rows need to set state for whole table, so parents can react to potential changes
+                                      }
                                     }
                                   } else {
                                     bool result = false;
@@ -1268,7 +1272,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                       setState(() {});
                     }
                   }
-            : row.isExpandable
+            : row.isExpandable && !row.isFilteredInBecauseOfChildren
                 ? () {
                     toggleRowExpanded(row, index);
                   }
@@ -1793,9 +1797,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           e.isFilteredInBecauseOfChildren = true;
           result.add(e);
           allResults.add(e);
-          if (e.expanded) {
-            allResults.addAll(subResult[1]);
-          }
+          allResults.addAll(subResult[1]);
+          // if (e.expanded) { // subResult added always because rows where isFilteredInBecauseOfChildren are always forced expanded
+          //   allResults.addAll(subResult[1]);
+          // }
         }
       }
     }
