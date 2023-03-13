@@ -10,6 +10,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/table/filter_popup.dart';
+import 'package:from_zero_ui/src/table/manage_popup.dart';
 import 'package:from_zero_ui/src/ui_utility/notification_relayer.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:from_zero_ui/src/table/table_from_zero_filters.dart';
@@ -863,6 +864,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           },
         ));
       }
+      rowActions = addManageActions(context,
+        actions: rowActions,
+      );
       if (widget.exportPathForExcel != null) {
         rowActions = addExportExcelAction(context,
           actions: rowActions,
@@ -1524,7 +1528,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         ),
       ),
     );
-    final colActions1 = [
+    List<Widget> colActions = [
       if (col?.sortEnabled ?? true)
         ActionFromZero(
           title: 'Ordenar Ascendente', // TODO 3 internationalize
@@ -1564,20 +1568,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           },
         ),
     ];
-    final colActions2 = [
-      if ((!showFiltersLoading||availableFilters!=null) && (col?.filterEnabled ?? true))
-        ActionFromZero(
-          title: 'Filtros...', // TODO 3 internationalize
-          icon: Icon(MaterialCommunityIcons.filter),
-          onTap: (context) => _showFilterPopup(colKey),
-        ),
-    ];
-    List<Widget> colActions = [
-      ...colActions1,
-      if (colActions1.isNotEmpty && colActions2.isNotEmpty)
-        ActionFromZero.divider(),
-      ...colActions2,
-    ];
+    colActions = addManageActions(context,
+      actions: colActions,
+      availableFilters: availableFilters,
+      colKey: colKey,
+      col: col,
+    );
     if (widget.exportPathForExcel != null) {
       colActions = addExportExcelAction(context,
         actions: colActions,
@@ -1610,6 +1606,20 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         _updateFiltersApplied();
         filter();
       });
+    }
+  }
+  void _showManageTablePopup() async {
+    if (currentColumnKeys!=null && widget.columns!=null) {
+      bool modified = await TableFromZeroManagePopup.showDefaultManagePopup(
+        context: context,
+        columns: widget.columns!,
+        currentColumnKeys: currentColumnKeys!,
+      );
+      if (modified && mounted) {
+        setState(() {
+          filter();
+        });
+      }
     }
   }
 
@@ -1700,6 +1710,37 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return widget.columns?[j]?.flex ?? 1;
   }
 
+  static List<Widget> addManageActions(BuildContext context, {
+    required List<Widget> actions,
+    required TableController controller,
+    Map<dynamic, List<dynamic>>? availableFilters,
+    dynamic colKey,
+    ColModel? col,
+  }) {
+    final manageActions = [
+      if (colKey!=null && (col?.filterEnabled ?? true) && (!showFiltersLoading||availableFilters!=null))
+        ActionFromZero(
+          title: 'Filtros...', // TODO 3 internationalize
+          icon: Icon(MaterialCommunityIcons.filter),
+          onTap: (context) => _showFilterPopup(colKey),
+        ),
+      if (currentColumnKeys!=null && widget.columns!=null)
+        ActionFromZero(
+          title: 'Personalizar Tabla...', // TODO 3 internationalize
+          icon: Icon(Icons.settings),
+          onTap: (context) => _showManageTablePopup(),
+        ),
+    ];
+    return [
+      ...actions,
+      if (actions.isNotEmpty && manageActions.isNotEmpty)
+        ActionFromZero.divider(
+          breakpoints: {0: ActionState.popup},
+        ),
+
+      ...manageActions,
+    ];
+  }
   static List<Widget> addExportExcelAction(BuildContext context, {
     required List<Widget> actions,
     required TableController tableController,
