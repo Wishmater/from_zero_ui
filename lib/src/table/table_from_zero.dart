@@ -137,6 +137,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   static const double _checkmarkWidth = 40;
   static const double _dropdownButtonWidth = 28;
   static const double _depthPadding = 16;
+
   double _leadingControlsWidth = 0;
   bool _showCheckmarks = false;
   bool _showDropdowns = false;
@@ -837,7 +838,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             while (allFiltered[i].depth>0) {
               i--;
             }
-            _recalculateHasExpandableRows(filtered[i]);
+            _recalculateHasExpandableRows(allFiltered[i]);
             _recalculateExpandableRowsExist();
           },
         ));
@@ -1523,7 +1524,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         ),
       ),
     );
-    List<Widget> colActions = [
+    final colActions1 = [
       if (col?.sortEnabled ?? true)
         ActionFromZero(
           title: 'Ordenar Ascendente', // TODO 3 internationalize
@@ -1552,12 +1553,30 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             }
           },
         ),
-      if (showFiltersLoading&&availableFilters!=null && (col?.filterEnabled ?? true))
+      if (currentColumnKeys!=null)
+        ActionFromZero(
+          title: 'Esconder Columna', // TODO 3 internationalize
+          icon: Icon(Icons.visibility_off),
+          onTap: (context) {
+            setState(() {
+              currentColumnKeys?.remove(colKey);
+            });
+          },
+        ),
+    ];
+    final colActions2 = [
+      if ((!showFiltersLoading||availableFilters!=null) && (col?.filterEnabled ?? true))
         ActionFromZero(
           title: 'Filtros...', // TODO 3 internationalize
           icon: Icon(MaterialCommunityIcons.filter),
           onTap: (context) => _showFilterPopup(colKey),
         ),
+    ];
+    List<Widget> colActions = [
+      ...colActions1,
+      if (colActions1.isNotEmpty && colActions2.isNotEmpty)
+        ActionFromZero.divider(),
+      ...colActions2,
     ];
     if (widget.exportPathForExcel != null) {
       colActions = addExportExcelAction(context,
@@ -1750,10 +1769,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         if (updateHasExpandableRows) {
           // if (forceChildrenAsSame) { // TODO 3 PERFORMANCE, deep iteration could be avoided since we know all children are the same, by _setAllChildrenHasExpandableRows on them reccursively and then trusting the parent when recalculating
           // }
-          while (allFiltered[index].depth>0) {
+          int i = index;
+          while (allFiltered[i].depth>0) {
             index--;
           }
-          _recalculateHasExpandableRows(filtered[index]);
+          _recalculateHasExpandableRows(allFiltered[i]);
           _recalculateExpandableRowsExist();
         }
       });
