@@ -150,14 +150,20 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   late List<RowModel<T>> filtered;
   late List<RowModel<T>> allFiltered;
   late Map<dynamic, FocusNode> headerFocusNodes = {};
-  List<dynamic>? currentColumnKeys;
   bool isStateInvalidated = false;
-  void _invalidateState() {
-    isStateInvalidated = true;
-  }
   final Map<RowModel<T>, Animation<double>> rowAddonEntranceAnimations = {};
   final Map<RowModel<T>, Animation<double>> nestedRowEntranceAnimations = {};
 
+
+  List<dynamic>? _currentColumnKeys;
+  List<dynamic>? get currentColumnKeys => widget.tableController?.currentColumnKeys ?? _currentColumnKeys;
+  set currentColumnKeys(List<dynamic>? value) {
+    if (widget.tableController == null) {
+      _currentColumnKeys = value;
+    } else {
+      widget.tableController!.currentColumnKeys = value;
+    }
+  }
   late Map<dynamic, List<ConditionFilter>> _conditionFilters;
   Map<dynamic, List<ConditionFilter>> get conditionFilters => widget.tableController?.conditionFilters ?? _conditionFilters;
   set conditionFilters(Map<dynamic, List<ConditionFilter>> value) {
@@ -227,34 +233,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     super.dispose();
     availableFiltersIsolateController?.cancel();
     validInitialFiltersIsolateController?.cancel();
-    if (widget.tableController!=null) {
-      if (widget.tableController!.currentState==this) {
-        widget.tableController!.currentState = null;
-      }
-      if (widget.tableController!._filter==_controllerFilter) {
-        widget.tableController!._filter = null;
-      }
-      try {
-        if (widget.tableController!._getFiltered==_getFiltered) {
-          widget.tableController!._getFiltered = ()=>[];
-        }
-      } catch (_) {}
-      try {
-        if (widget.tableController!._getAllFiltered==_getAllFiltered) {
-          widget.tableController!._getAllFiltered = ()=>[];
-        }
-      } catch (_) {}
-      try {
-        if (widget.tableController!._getColumns==_getColumns) {
-          widget.tableController!._getColumns = ()=>{};
-        }
-      } catch (_) {}
-      if (widget.tableController!._sort==_controllerSort) {
-        widget.tableController!._sort = null;
-      }
-      if (widget.tableController!._reInit==_invalidateState) {
-        widget.tableController!._reInit = null;
-      }
+    if (widget.tableController?.currentState==this) {
+      widget.tableController!.currentState = null;
     }
   }
 
@@ -332,12 +312,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     _leadingControlsWidth = (_showCheckmarks ? _checkmarkWidth : 0) + (_showDropdowns ? _dropdownButtonWidth : 0);
     if (widget.tableController!=null) {
       widget.tableController!.currentState = this;
-      widget.tableController!._filter = _controllerFilter;
-      widget.tableController!._sort = _controllerSort;
-      widget.tableController!._reInit = _invalidateState;
-      widget.tableController!._getFiltered = _getFiltered;
-      widget.tableController!._getAllFiltered = _getAllFiltered;
-      widget.tableController!._getColumns = _getColumns;
     }
     if (widget.tableController?.conditionFilters==null) {
       if (widget.tableController?.initialConditionFilters==null){
@@ -866,6 +840,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       }
       rowActions = addManageActions(context,
         actions: rowActions,
+        controller: widget.tableController ?? (TableController()
+          ..currentState = this
+          ..currentColumnKeys = currentColumnKeys
+        ),
       );
       if (widget.exportPathForExcel != null) {
         rowActions = addExportExcelAction(context,
@@ -1570,6 +1548,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     ];
     colActions = addManageActions(context,
       actions: colActions,
+      controller: widget.tableController ?? (TableController()
+        ..currentState = this
+        ..currentColumnKeys = currentColumnKeys
+      ),
       availableFilters: availableFilters,
       colKey: colKey,
       col: col,
@@ -1722,13 +1704,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         ActionFromZero(
           title: 'Filtros...', // TODO 3 internationalize
           icon: Icon(MaterialCommunityIcons.filter),
-          onTap: (context) => _showFilterPopup(colKey),
+          breakpoints: {0: ActionState.popup},
+          onTap: (context) => controller.currentState!._showFilterPopup(colKey),
         ),
-      if (currentColumnKeys!=null && widget.columns!=null)
+      if (controller.currentColumnKeys!=null && controller.columns!=null)
         ActionFromZero(
           title: 'Personalizar Tabla...', // TODO 3 internationalize
           icon: Icon(Icons.settings),
-          onTap: (context) => _showManageTablePopup(),
+          breakpoints: {0: ActionState.popup},
+          onTap: (context) => controller.currentState!._showManageTablePopup(),
         ),
     ];
     return [
@@ -1737,7 +1721,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         ActionFromZero.divider(
           breakpoints: {0: ActionState.popup},
         ),
-
       ...manageActions,
     ];
   }
@@ -1867,14 +1850,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     _expandableRowsExist = hasExpandableRows;
   }
 
-
-  void _controllerSort () {
-    if (mounted){
-      setState(() {
-        sort();
-      });
-    }
-  }
   void sort({bool notifyListeners=true}) {
     smartSort<T>(sorted,
       sortedColumnKey: sortedColumn,
@@ -1920,16 +1895,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         sortedColumnKey: sortedColumnKey,
         sortedAscending: sortedAscending,
       );
-    }
-  }
-  Map<dynamic, ColModel>? _getColumns() => widget.columns;
-  List<RowModel<T>> _getFiltered() => filtered;
-  List<RowModel<T>> _getAllFiltered() => allFiltered;
-  void _controllerFilter() {
-    if (mounted){
-      setState(() {
-        filter();
-      });
     }
   }
 
@@ -2083,17 +2048,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
 class TableController<T> extends ChangeNotifier {
 
-  List<List<RowModel<T>> Function(List<RowModel<T>>)> extraFilters;
   TableFromZeroState<T>? currentState;
+  List<List<RowModel<T>> Function(List<RowModel<T>>)> extraFilters;
   Map<dynamic, List<ConditionFilter>>? initialConditionFilters;
-  Map<dynamic, List<ConditionFilter>>? conditionFilters;
   Map<dynamic, Map<Object?, bool>>? initialValueFilters;
   bool initialValueFiltersExcludeAllElse;
+
+  List<dynamic>? currentColumnKeys;
+  Map<dynamic, List<ConditionFilter>>? conditionFilters;
   Map<dynamic, Map<Object?, bool>>? valueFilters;
   Map<dynamic, bool>? valueFiltersApplied;
   Map<dynamic, bool>? filtersApplied;
-  bool sortedAscending;
   dynamic sortedColumn;
+  bool sortedAscending;
 
   TableController({
     List<List<RowModel<T>> Function(List<RowModel<T>>)>? extraFilters,
@@ -2125,34 +2092,29 @@ class TableController<T> extends ChangeNotifier {
       ..valueFilters = valueFilters ?? this.valueFilters
       ..sortedAscending = sortedAscending ?? this.sortedAscending
       ..sortedColumn = sortedColumnIndex ?? this.sortedColumn
-      .._filter = this._filter
       ..currentState = currentState ?? this.currentState;
   }
 
-  void Function()? _filter;
-  void filter(){
-    _filter?.call();
-  }
+  List<RowModel<T>> get filtered => currentState!.filtered;
+  List<RowModel<T>> get allFiltered => currentState!.allFiltered;
+  Map<dynamic, ColModel>? get columns => currentState!.widget.columns;
 
-  void Function()? _sort;
-  void sort(){
-    _sort?.call();
-  }
-
-  VoidCallback? _reInit;
   /// Call this if the rows change, to re-initialize rows
-  void reInit(){
-    _reInit?.call();
+  void reInit() => currentState?.isStateInvalidated = true;
+  void sort () {
+    if (currentState?.mounted ?? false){
+      currentState!.setState(() {
+        currentState!.sort();
+      });
+    }
   }
-
-  late List<RowModel<T>> Function() _getFiltered;
-  List<RowModel<T>> get filtered => _getFiltered();
-
-  late List<RowModel<T>> Function() _getAllFiltered;
-  List<RowModel<T>> get allFiltered => _getAllFiltered();
-
-  late Map<dynamic, ColModel>? Function() _getColumns;
-  Map<dynamic, ColModel>? get columns => _getColumns();
+  void filter(){
+    if (currentState?.mounted ?? false){
+      currentState!.setState(() {
+        currentState!.filter();
+      });
+    }
+  }
 
 }
 

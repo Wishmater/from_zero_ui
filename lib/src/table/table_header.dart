@@ -69,6 +69,10 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
   @override
   Widget build(BuildContext context) {
     List<Widget> actions = this.widget.actions ?? [];
+    actions = TableFromZeroState.addManageActions(context,
+      actions: actions,
+      controller: widget.controller,
+    );
     if (widget.exportPathForExcel!=null) {
       actions = TableFromZeroState.addExportExcelAction(context,
         actions: actions,
