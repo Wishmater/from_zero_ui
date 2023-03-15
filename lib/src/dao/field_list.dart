@@ -1888,13 +1888,19 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             rowAddonIsCoveredByBackground: true,
           );
         }
-        double width = 0;
-        columns.forEach((key, value) {
-          width += value.flex ?? 192;
-        });
+        final getMinWidth = (Iterable currentColumnKeys) {
+          double width = 0;
+          columns.forEach((key, value) {
+            width += value.flex ?? 192;
+          });
+          return width;
+        };
+        final getMaxWidth = (Iterable currentColumnKeys) {
+          return 1.4 * getMinWidth(currentColumnKeys);
+        };
         if (collapsed!) {
           Widget result = SizedBox(
-            width: expandHorizontally ? null : maxWidth==double.infinity ? width : maxWidth,
+            width: expandHorizontally ? null : maxWidth==double.infinity ? getMinWidth(columns.keys) : maxWidth,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -1929,7 +1935,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         Widget result = TableFromZero<T>(
           // key: ValueKey(value.hashCode),
           scrollController: mainScrollController,
-          minWidth: width,
+          minWidthGetter: getMinWidth,
+          maxWidthGetter: getMaxWidth,
           initialSortedColumn: initialSortedColumn,
           tableController: tableController,
           alternateRowBackgroundSmartly: false,
@@ -2084,12 +2091,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             ) : null,
           ),
         );
-        if (!expandHorizontally) {
-          result = SliverCrossAxisConstrained(
-            maxCrossAxisExtent: maxWidth==double.infinity ? width*1.4 : maxWidth,
-            child: result,
-          );
-        }
         if (!asSliver) {
           if (separateScrollableBreakpoint!=null && objects.length>separateScrollableBreakpoint!) {
             final mediaQuery = MediaQuery.of(context);

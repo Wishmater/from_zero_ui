@@ -34,6 +34,7 @@ typedef OnCheckBoxSelectedCallback = bool? Function(RowModel row, bool? selected
 typedef OnHeaderHoverCallback = void Function(dynamic key, bool selected);
 typedef OnCellTapCallback = ValueChanged<RowModel>? Function(dynamic key,);
 typedef OnCellHoverCallback = OnRowHoverCallback? Function(dynamic key,);
+typedef double WidthGetter(List<dynamic> currentColumnKeys);
 
 
 class TableFromZero<T> extends StatefulWidget {
@@ -41,7 +42,8 @@ class TableFromZero<T> extends StatefulWidget {
   final List<RowModel<T>> rows;
   final Map<dynamic, ColModel>? columns;
   final bool enabled;
-  final double? minWidth; // TODO 3 maybe be more smart about this, like autommatically sum rows
+  final WidthGetter? minWidthGetter;
+  final WidthGetter? maxWidthGetter;
   final bool enableFixedHeightForListRows;
   final bool showHeaders;
   final RowModel? headerRowModel;
@@ -64,9 +66,9 @@ class TableFromZero<T> extends StatefulWidget {
   final bool showFirstHorizontalDivider;
   final List<RowAction<T>> rowActions;
   final Widget? Function(BuildContext context, RowModel<T> row, dynamic colKey)? cellBuilder;
-  final Widget? Function(BuildContext context, RowModel<T> row, int index,
-      Widget Function(BuildContext context, RowModel<T> row, int index) defaultRowBuilder)? rowBuilder;
-  final Widget? Function(BuildContext context, RowModel row)? headerRowBuilder;
+  final Widget? Function(BuildContext context, RowModel<T> row, int index, double? minWidth,
+      Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder)? rowBuilder;
+  final Widget? Function(BuildContext context, RowModel row, double? minWidth)? headerRowBuilder;
   final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   final TableController<T>? tableController;
   final bool? enableSkipFrameWidgetForRows;
@@ -81,7 +83,8 @@ class TableFromZero<T> extends StatefulWidget {
     required this.rows,
     this.columns,
     this.enabled = true,
-    this.minWidth,
+    this.minWidthGetter,
+    this.maxWidthGetter,
     this.enableFixedHeightForListRows = true,
     this.showHeaders = true,
     this.headerRowModel,
@@ -619,11 +622,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
   @override
   Widget build(BuildContext context) {
-
+    
     if (widget.hideIfNoRows && allFiltered.isEmpty) {
       return SliverToBoxAdapter(child: SizedBox.shrink(),);
     }
     int childCount = allFiltered.length.coerceIn(1);
+    final minWidth = currentColumnKeys==null ? null : widget.minWidthGetter?.call(currentColumnKeys!);
+    final maxWidth = currentColumnKeys==null ? null : widget.maxWidthGetter?.call(currentColumnKeys!);
     Widget result;
 
     if (true) {
@@ -633,14 +638,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         result = SliverFixedExtentList(
           itemExtent: allFiltered.first.height??36,
           delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int i) => _getRow(context, allFiltered.isEmpty ? null : allFiltered[i], i),
+                (BuildContext context, int i) => _getRow(context, allFiltered.isEmpty ? null : allFiltered[i], i, minWidth),
             childCount: childCount,
           ),
         );
       } else {
         result = SliverList(
           delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int i) => _getRow(context, allFiltered.isEmpty ? null : allFiltered[i], i),
+                (BuildContext context, int i) => _getRow(context, allFiltered.isEmpty ? null : allFiltered[i], i, minWidth),
             childCount: childCount,
           ),
         );
@@ -661,7 +666,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               sizeFraction: 0.7,
               curve: Curves.easeOutCubic,
               animation: animation,
-              child: _getRow(context, item, index),
+              child: _getRow(context, item, index, minWidth),
             ),
           );
         },
@@ -670,7 +675,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             position: Tween<Offset>(begin: Offset(-0.10, 0), end: Offset(0, 0)).animate(animation),
             child: FadeTransition(
               opacity: animation,
-              child: _getRow(context, item, -1),
+              child: _getRow(context, item, -1, minWidth),
             ),
           );
         },
@@ -682,7 +687,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         ? headerRowModel!=null
             ? headerRowModel!.values.isEmpty && headerRowModel!.rowAddon!=null
                 ? headerRowModel!.rowAddon!
-                : _getRow(context, headerRowModel!, -1)
+                : _getRow(context, headerRowModel!, -1, minWidth)
             : null
         : headerRowModel?.rowAddon;
     if (header!=null) {
@@ -714,7 +719,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       );
     }
 
-    if (widget.minWidth!=null) {
+    if (minWidth!=null) {
       result = SliverStickyHeader(
         sliver: SliverPadding(
           padding: EdgeInsets.only(bottom: 8),
@@ -727,7 +732,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         stickOffset: widget.footerStickyOffset,
         header: LayoutBuilder(
           builder: (context, constraints) {
-            if (constraints.maxWidth < widget.minWidth!) {
+            if (constraints.maxWidth < minWidth) {
               return ScrollbarFromZero(
                 controller: sharedController,
                 opacityGradientDirection: OpacityGradient.horizontal,
@@ -747,6 +752,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       );
     }
 
+    if (maxWidth!=null) {
+      result = SliverCrossAxisConstrained(
+        maxCrossAxisExtent: maxWidth,
+        child: result,
+      );
+    }
     result = FocusTraversalGroup(
       policy: ReadingOrderTraversalPolicy(),
       child: result,
@@ -757,7 +768,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   }
 
 
-  Widget _getRow(BuildContext context, RowModel? row, int index){
+  Widget _getRow(BuildContext context, RowModel? row, int index, double? minWidth){
     if (row==null){
 
       return InitiallyAnimatedWidget(
@@ -781,8 +792,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     } else {
 
       if (row==headerRowModel){
-        return widget.headerRowBuilder?.call(context, headerRowModel!)
-            ?? _defaultRowBuilder.call(context, headerRowModel!, index);
+        return widget.headerRowBuilder?.call(context, headerRowModel!, minWidth)
+            ?? _defaultRowBuilder.call(context, headerRowModel!, index, minWidth);
       } else {
         if (_enableSkipFrameWidgetForRows) {
           return SkipFrameWidget(
@@ -792,19 +803,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               );
             },
             childBuilder: (context) {
-              return widget.rowBuilder?.call(context, row as RowModel<T>, index, _defaultRowBuilder)
-                  ?? _defaultRowBuilder.call(context, row as RowModel<T>, index);
+              return widget.rowBuilder?.call(context, row as RowModel<T>, index, minWidth, _defaultRowBuilder)
+                  ?? _defaultRowBuilder.call(context, row as RowModel<T>, index, minWidth);
             },
           );
         } else {
-          return widget.rowBuilder?.call(context, row as RowModel<T>, index, _defaultRowBuilder)
-              ?? _defaultRowBuilder.call(context, row as RowModel<T>, index);
+          return widget.rowBuilder?.call(context, row as RowModel<T>, index, minWidth, _defaultRowBuilder)
+              ?? _defaultRowBuilder.call(context, row as RowModel<T>, index, minWidth);
         }
       }
 
     }
   }
-  Widget _defaultRowBuilder(BuildContext context, RowModel row, int index) {
+  Widget _defaultRowBuilder(BuildContext context, RowModel row, int index, double? minWidth) {
 
     int maxFlex = 0;
     for (final key in currentColumnKeys??row.values.keys) {
@@ -920,8 +931,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           if (col?.width!=null) {
             result = SizedBox(width: col!.width, child: result,);
           } else {
-            if (constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
-              return SizedBox(width: widget.minWidth! * (_getFlex(colKey)/maxFlex), child: result,);
+            if (constraints!=null && minWidth!=null && constraints.maxWidth<minWidth) {
+              return SizedBox(width: minWidth * (_getFlex(colKey)/maxFlex), child: result,);
             } else {
               return Expanded(flex: _getFlex(colKey), child: result,);
             }
@@ -1074,8 +1085,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         if (col?.width!=null){
           return SizedBox(width: col!.width, child: result,);
         } else {
-          if (constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
-            return SizedBox(width: (widget.minWidth! * (_getFlex(colKey)/maxFlex)), child: result,);
+          if (constraints!=null && minWidth!=null && constraints.maxWidth<minWidth) {
+            return SizedBox(width: (minWidth * (_getFlex(colKey)/maxFlex)), child: result,);
           } else {
             return Flexible(flex: _getFlex(colKey), child: result,);
           }
@@ -1083,7 +1094,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       };
       Widget background;
       Widget result;
-      if (constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
+      if (constraints!=null && minWidth!=null && constraints.maxWidth<minWidth) {
         background = NotificationListener(
           onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
           child: ListView.builder(
@@ -1178,14 +1189,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         Widget addon;
         if (row.expanded || !row.rowAddonIsExpandable) {
           addon = row.rowAddon!;
-          if ((row.rowAddonIsCoveredByScrollable??true) && constraints!=null && widget.minWidth!=null && constraints.maxWidth<widget.minWidth!) {
+          if ((row.rowAddonIsCoveredByScrollable??true) && constraints!=null && minWidth!=null && constraints.maxWidth<minWidth) {
             addon = NotificationListener(
               onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
               child: SingleChildScrollView(
                 controller: sharedController,
                 scrollDirection: Axis.horizontal,
                 child: SizedBox(
-                  width: widget.minWidth!,
+                  width: minWidth,
                   child: addon,
                 ),
               ),
@@ -1293,8 +1304,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     Widget result;
     // bool intrinsicDimensions = context.findAncestorWidgetOfExactType<IntrinsicHeight>()!=null
     //     || context.findAncestorWidgetOfExactType<IntrinsicWidth>()!=null;
-    // if (!intrinsicDimensions && (widget.minWidth!=null || widget.maxWidth!=null)){
-    if (widget.minWidth!=null){
+    // if (!intrinsicDimensions && (minWidth!=null || widget.maxWidth!=null)){
+    if (minWidth!=null){
       result = LayoutBuilder(builder: builder,);
     } else {
       result = builder(context, null);

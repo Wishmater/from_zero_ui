@@ -115,8 +115,8 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
     );
     table2 = TableFromZero(
       scrollController: tableScrollController,
-      minWidth: 640,
       enableStickyHeaders: true,
+      minWidthGetter: (currentColumnKeys) => 640,
       alternateRowBackgroundBrightness: true,
       rows: List.generate(100, (index) => ["Dummy data " + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",]).map((e) {
         return SimpleRowModel(
