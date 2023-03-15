@@ -155,6 +155,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   final Map<RowModel<T>, Animation<double>> nestedRowEntranceAnimations = {};
 
 
+  List<dynamic>? _columnKeys;
+  List<dynamic>? get columnKeys => widget.tableController?.columnKeys ?? _columnKeys;
+  set columnKeys(List<dynamic>? value) {
+    if (widget.tableController == null) {
+      _columnKeys = value;
+    } else {
+      widget.tableController!.columnKeys = value;
+    }
+  }
   List<dynamic>? _currentColumnKeys;
   List<dynamic>? get currentColumnKeys => widget.tableController?.currentColumnKeys ?? _currentColumnKeys;
   set currentColumnKeys(List<dynamic>? value) {
@@ -293,7 +302,33 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     availableFilters.value = null;
     bool filtersAltered = false;
     isStateInvalidated = false;
-    currentColumnKeys = widget.columns?.keys.toList();
+    if (widget.columns==null) {
+      columnKeys = null;
+      currentColumnKeys = null;
+    } else {
+      columnKeys ??= [];
+      currentColumnKeys ??= [];
+      for (int i=0; i<columnKeys!.length; i++) {
+        if (!widget.columns!.keys.contains(columnKeys![i])) {
+          columnKeys!.removeAt(i);
+        }
+      }
+      for (int i=0; i<currentColumnKeys!.length; i++) {
+        if (!widget.columns!.keys.contains(currentColumnKeys![i])) {
+          currentColumnKeys!.removeAt(i);
+        }
+      }
+      final newKeys = widget.columns!.keys.toList();
+      for (int i=0; i<newKeys.length; i++) {
+        final e = newKeys[i];
+        if (!currentColumnKeys!.contains(e)) {
+          currentColumnKeys!.insert(min(i, currentColumnKeys!.length), e);
+        }
+        if (!columnKeys!.contains(e)) {
+          columnKeys!.insert(min(i, columnKeys!.length), e);
+        }
+      }
+    }
     sorted = widget.rows;
     for (final e in sorted) {
       e.calculateDepth();
@@ -324,20 +359,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       filtersAltered = true;
     }
     if (widget.tableController?.valueFilters==null) {
-      if (widget.tableController?.initialValueFilters==null){
-        valueFilters = {
-          for (final e in widget.columns?.keys ?? [])
-            e: {},
-        };
-      } else {
-        valueFilters = {
-          for (final e in widget.columns?.keys ?? [])
-            e: widget.tableController!.initialValueFilters![e] ?? {},
-        };
-        filtersAltered = true;
+      filtersAltered = widget.tableController?.initialValueFilters!=null;
+      valueFilters = {
+        for (final e in widget.columns?.keys ?? [])
+          e: widget.tableController?.initialValueFilters?[e] ?? {},
+      };
+    } else {
+      filtersAltered = isFirstInit;
+      for (final e in widget.columns?.keys ?? []) {
+        if (!valueFilters.containsKey(e)) {
+          valueFilters[e] = widget.tableController?.initialValueFilters?[e] ?? {};
+          filtersAltered = true;
+        }
       }
-    } else if (isFirstInit) {
-      filtersAltered = true;
     }
     initHeaderRowModel();
     _updateFiltersApplied();
@@ -1571,7 +1605,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return result;
   }
 
-  void _showFilterPopup(dynamic colKey) async {
+  void _showFilterPopup(dynamic colKey, [GlobalKey? anchorKey]) async {
     final col = widget.columns?[colKey];
     final callback = col?.showFilterPopupCallback ?? TableFromZeroFilterPopup.showDefaultFilterPopup;
     bool modified = await callback(
@@ -1581,7 +1615,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       availableFilters: availableFilters,
       conditionFilters: conditionFilters,
       valueFilters: valueFilters,
-      anchorKey: filterGlobalKeys[colKey],
+      anchorKey: anchorKey ?? filterGlobalKeys[colKey],
     );
     if (modified && mounted) {
       setState(() {
@@ -1590,17 +1624,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       });
     }
   }
-  void _showManageTablePopup() async {
+  void _showManageTablePopup(TableController controller) async {
     if (currentColumnKeys!=null && widget.columns!=null) {
       bool modified = await TableFromZeroManagePopup.showDefaultManagePopup(
         context: context,
-        columns: widget.columns!,
-        currentColumnKeys: currentColumnKeys!,
+        controller: controller,
       );
       if (modified && mounted) {
-        setState(() {
-          filter();
-        });
+        setState(() {});
       }
     }
   }
@@ -1701,18 +1732,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   }) {
     final manageActions = [
       if (colKey!=null && (col?.filterEnabled ?? true) && (!showFiltersLoading||availableFilters!=null))
-        ActionFromZero(
-          title: 'Filtros...', // TODO 3 internationalize
-          icon: Icon(MaterialCommunityIcons.filter),
-          breakpoints: {0: ActionState.popup},
-          onTap: (context) => controller.currentState!._showFilterPopup(colKey),
-        ),
+        getOpenFilterPopupAction(context, controller: controller, colKey: colKey),
       if (controller.currentColumnKeys!=null && controller.columns!=null)
         ActionFromZero(
           title: 'Personalizar Tabla...', // TODO 3 internationalize
           icon: Icon(Icons.settings),
           breakpoints: {0: ActionState.popup},
-          onTap: (context) => controller.currentState!._showManageTablePopup(),
+          onTap: (context) => controller.currentState!._showManageTablePopup(controller),
         ),
     ];
     return [
@@ -1723,6 +1749,20 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         ),
       ...manageActions,
     ];
+  }
+  static ActionFromZero getOpenFilterPopupAction(BuildContext context, {
+    required TableController controller,
+    dynamic colKey,
+    GlobalKey? globalKey,
+  }) {
+    return ActionFromZero(
+      title: 'Filtros...', // TODO 3 internationalize
+      icon: Icon((controller.currentState?.filtersApplied[colKey]??false)
+          ? MaterialCommunityIcons.filter
+          : MaterialCommunityIcons.filter_outline),
+      breakpoints: {0: ActionState.popup},
+      onTap: (context) => controller.currentState!._showFilterPopup(colKey, globalKey),
+    );
   }
   static List<Widget> addExportExcelAction(BuildContext context, {
     required List<Widget> actions,
@@ -2054,6 +2094,7 @@ class TableController<T> extends ChangeNotifier {
   Map<dynamic, Map<Object?, bool>>? initialValueFilters;
   bool initialValueFiltersExcludeAllElse;
 
+  List<dynamic>? columnKeys;
   List<dynamic>? currentColumnKeys;
   Map<dynamic, List<ConditionFilter>>? conditionFilters;
   Map<dynamic, Map<Object?, bool>>? valueFilters;

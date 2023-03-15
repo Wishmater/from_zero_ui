@@ -491,7 +491,7 @@ class NumColModel<T> extends SimpleColModel<T> {
           : FromZeroLocalizations.of(context).translate('element_sing')}';
       final metadata = getMetadataText(context, filtered, key, reFiltered: reFiltered);
       if (metadata.isNotBlank) {
-        result += '     $metadata';
+        result += '     $name $metadata';
       }
       return result;
     }
@@ -501,11 +501,13 @@ class NumColModel<T> extends SimpleColModel<T> {
     List<RowModel<T>>? reFiltered,
   }) {
     if (filtered!=null) {
-      reFiltered ??= filtered.where((e) => rowCountSelector!(e)).toList();
+      reFiltered ??= rowCountSelector==null
+          ? filtered
+          : filtered.where((e) => rowCountSelector!(e)).toList();
       if (reFiltered.isNotEmpty) {
         final sum = _sumList(reFiltered.map((e) => getValue(e, key)));
         final avg = sum / reFiltered.length;
-        return '$name suma: ${_format(sum)}  promedio: ${_format(avg)}';
+        return 'suma: ${_format(sum)}  promedio: ${_format(avg)}';
       }
     }
     return '';
