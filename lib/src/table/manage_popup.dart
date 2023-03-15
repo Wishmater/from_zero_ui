@@ -116,6 +116,7 @@ abstract class TableFromZeroManagePopup {
                                             builder: (context, child) {
                                               return TableFromZeroState.getOpenFilterPopupAction(context,
                                                 controller: controller,
+                                                col: col,
                                                 colKey: key,
                                                 globalKey: filterButtonGlobalKeys[key],
                                               ).buildIcon(context);

@@ -887,6 +887,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         actions: rowActions,
         controller: widget.tableController ?? (TableController()
           ..currentState = this
+          ..columnKeys = columnKeys
           ..currentColumnKeys = currentColumnKeys
         ),
       );
@@ -1595,6 +1596,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       actions: colActions,
       controller: widget.tableController ?? (TableController()
         ..currentState = this
+        ..columnKeys = columnKeys
         ..currentColumnKeys = currentColumnKeys
       ),
       availableFilters: availableFilters,
@@ -1636,7 +1638,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     }
   }
   void _showManageTablePopup(TableController controller) async {
-    if (currentColumnKeys!=null && widget.columns!=null) {
+    if (currentColumnKeys!=null && widget.columns!=null ) {
       bool modified = await TableFromZeroManagePopup.showDefaultManagePopup(
         context: context,
         controller: controller,
@@ -1743,7 +1745,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   }) {
     final manageActions = [
       if (colKey!=null && (col?.filterEnabled ?? true) && (!showFiltersLoading||availableFilters!=null))
-        getOpenFilterPopupAction(context, controller: controller, colKey: colKey),
+        getOpenFilterPopupAction(context, controller: controller, col: col, colKey: colKey),
       if (controller.currentColumnKeys!=null && controller.columns!=null)
         ActionFromZero(
           title: 'Personalizar Tabla...', // TODO 3 internationalize
@@ -1763,6 +1765,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   }
   static ActionFromZero getOpenFilterPopupAction(BuildContext context, {
     required TableController controller,
+    ColModel? col,
     dynamic colKey,
     GlobalKey? globalKey,
   }) {
@@ -1771,6 +1774,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       icon: Icon((controller.currentState?.filtersApplied[colKey]??false)
           ? MaterialCommunityIcons.filter
           : MaterialCommunityIcons.filter_outline),
+      enabled: col?.filterEnabled ?? true,
       breakpoints: {0: ActionState.popup},
       onTap: (context) => controller.currentState!._showFilterPopup(colKey, globalKey),
     );
