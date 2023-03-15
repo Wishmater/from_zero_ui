@@ -149,19 +149,54 @@ abstract class ColModel<T>{
       return value!=null ? value.toString() : "";
     }
   }
+
   String getSubtitleText(BuildContext context, List<RowModel<T>>? filtered, dynamic key) {
     if (filtered==null) {
       return '';
     } else {
-      final count = rowCountSelector==null
-          ? filtered.length
-          : filtered.where((e) => rowCountSelector!(e)).length;
-      return count==0 ? FromZeroLocalizations.of(context).translate('no_elements')
+      final reFiltered = rowCountSelector==null
+          ? filtered
+          : filtered.where((e) => rowCountSelector!(e)).toList();
+      final count = reFiltered.length;
+      String result = count==0 ? FromZeroLocalizations.of(context).translate('no_elements')
           : '$count ${count>1 ? FromZeroLocalizations.of(context).translate('element_plur')
           : FromZeroLocalizations.of(context).translate('element_sing')}';
+      final metadata = getMetadataText(context, filtered, key, reFiltered: reFiltered);
+      if (metadata.isNotBlank) {
+        result += '     $name - $metadata';
+      }
+      return result;
     }
   }
-  String getMetadataText(BuildContext context, List<RowModel<T>>? filtered, dynamic key) => '';
+  String getMetadataText(BuildContext context, List<RowModel<T>>? filtered, dynamic key, {
+    List<RowModel<T>>? reFiltered,
+  }) {
+    if (filtered!=null) {
+      reFiltered ??= rowCountSelector==null
+          ? filtered
+          : filtered.where((e) => rowCountSelector!(e)).toList();
+      if (reFiltered.isNotEmpty) {
+        final Set unique = {};
+        for (final row in reFiltered) {
+          final value = getValue(row, key);
+          addValueToSet(unique, value);
+        }
+        return '${unique.length} valores únicos';
+      }
+    }
+    return '';
+  }
+  static addValueToSet(Set set, value) {
+    if (value is ContainsValue) {
+      addValueToSet(set, value.value);
+    } else if (value is List) {
+      for (final e in value) {
+        addValueToSet(set, e);
+      }
+    } else {
+      set.add(value);
+    }
+  }
   Widget? buildSortedIcon(BuildContext context, bool ascending) => null;
   List<ConditionFilter> getAvailableConditionFilters() => [
     // FilterIsEmpty(),
@@ -478,25 +513,6 @@ class NumColModel<T> extends SimpleColModel<T> {
         : value.toString();
   }
   @override
-  String getSubtitleText(BuildContext context, List<RowModel<T>>? filtered, dynamic key) {
-    if (filtered==null) {
-      return '';
-    } else {
-      final reFiltered = rowCountSelector==null
-          ? filtered
-          : filtered.where((e) => rowCountSelector!(e)).toList();
-      final count = reFiltered.length;
-      String result = count==0 ? FromZeroLocalizations.of(context).translate('no_elements')
-          : '$count ${count>1 ? FromZeroLocalizations.of(context).translate('element_plur')
-          : FromZeroLocalizations.of(context).translate('element_sing')}';
-      final metadata = getMetadataText(context, filtered, key, reFiltered: reFiltered);
-      if (metadata.isNotBlank) {
-        result += '     $name $metadata';
-      }
-      return result;
-    }
-  }
-  @override
   String getMetadataText(BuildContext context, List<RowModel<T>>? filtered, dynamic key, {
     List<RowModel<T>>? reFiltered,
   }) {
@@ -608,6 +624,10 @@ class DateColModel<T> extends SimpleColModel<T> {
       formatter: formatter ?? this.formatter,
     );
   }
+  @override
+  String getMetadataText(BuildContext context, List<RowModel<T>>? filtered, dynamic key, {
+    List<RowModel<T>>? reFiltered,
+  }) => '';
   @override
   String getValueString(RowModel row, dynamic key) {
     final value = getValue(row, key);

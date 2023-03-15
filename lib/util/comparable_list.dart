@@ -1,8 +1,10 @@
+import 'package:from_zero_ui/from_zero_ui.dart';
 
 
-class ComparableList<T extends Comparable> with Comparable {
+class ComparableList<T extends Comparable> with Comparable, ContainsValue<List<T>> {
 
   final List<T> list;
+  List<T>? get value => list;
 
   ComparableList({
     List<T>? list,
