@@ -116,6 +116,7 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
 
   Widget _buildDragAndDrop(BuildContext context, Widget child) {
     Widget result = DropTarget(
+      enable: widget.enabled,
       onDragEntered: (detail) {
         if (mounted) {
           setState(() {
