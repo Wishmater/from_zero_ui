@@ -2126,14 +2126,38 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         return result;
       }
     );
-    if (!asSliver && addCard) {
-      if (!enabled) { // TODO 2 implement proper disabled logic in each sliver (color + tooltip + mouseRegion)
-        result = MouseRegion(
-          cursor: SystemMouseCursors.forbidden,
+    if (asSliver) {
+      if (!enabled) {
+        result = SliverStack(
+          children: [
+            SliverIgnorePointer(sliver: result),
+            SliverPositioned.fill(
+              child: TooltipFromZero(
+                message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+                  return a.toString().trim().isEmpty ? b.toString()
+                      : b.toString().trim().isEmpty ? a.toString()
+                      : '$a\n$b';
+                }),
+                child: ColoredBox(
+                  color: enabled ? Colors.transparent : Colors.black.withOpacity(0.25),
+                ),
+              ),
+            ),
+          ],
+        );
+      }
+    } else {
+      if (!enabled) {
+        result = ColoredBox(
+          color: enabled ? Colors.transparent : Theme.of(context).canvasColor,
           child: IgnorePointer(
             child: result,
           ),
         );
+        // result = MouseRegion(
+        //   cursor: SystemMouseCursors.forbidden,
+        //   child: result,
+        // );
       }
       result = TooltipFromZero(
         message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
@@ -2144,7 +2168,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         child: result,
         waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
       );
-      if (addCard) {  // TODO 3 implement addCard in table slivers, VERY HARD IPMLEMENTATION FOR LOW REWARD
+      if (addCard) {
         result = Card(
           clipBehavior: Clip.hardEdge,
           color: enabled ? null : Theme.of(context).canvasColor,
