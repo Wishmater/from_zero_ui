@@ -652,7 +652,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         if (tableCellsEditable) {
           object.props.values.firstOrNullWhere((e) => !e.hiddenInForm)?.focusNode.requestFocus();
         } else {
-          builtRows[object]?.focusNode.requestFocus();
+          _builtRows[object]?.focusNode.requestFocus();
         }
       } catch (_) {}
     });
@@ -1762,8 +1762,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }
 
 
-  late final errorWidgetFocusNode = FocusNode();
-  late Map<T, RowModel<T>> builtRows;
+  late final _errorWidgetFocusNode = FocusNode();
+  late Map<T, RowModel<T>> _builtRows;
   List<Widget> buildWidgetsAsTable(BuildContext context, {
     bool addCard=true,
     bool asSliver = true,
@@ -1796,7 +1796,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       key: fieldGlobalKey,
       animation:  this,
       builder: (context, child) {
-        builtRows = {};
+        _builtRows = {};
         final Map<String, ColModel> columns = tableColumnsBuilder!=null
             ? tableColumnsBuilder!(dao, this, objectTemplate)
             : defaultTableColumnsBuilder(dao, this, objectTemplate);
@@ -1862,7 +1862,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               );
             }
           }
-          builtRows[e] = SimpleRowModel(
+          _builtRows[e] = SimpleRowModel(
             id: e,
             values: columns.map((key, value) => MapEntry(key, e.props[key])),
             height: rowHeight,
@@ -1939,7 +1939,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           showHeaders: showTableHeaders,
           footerStickyOffset: tableFooterStickyOffset,
           tableHorizontalPadding: tableHorizontalPadding,
-          rows: builtRows.values.toList(),
+          rows: _builtRows.values.toList(),
           enableFixedHeightForListRows: rowAddonField==null,
           cellPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
           backgroundColor: backgroundColor?.call(context, this, dao),
@@ -2046,9 +2046,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           emptyWidget: tableErrorWidget
               ?? ContextMenuFromZero(
                 actions: actions,
-                onShowMenu: () => errorWidgetFocusNode.requestFocus(),
+                onShowMenu: () => _errorWidgetFocusNode.requestFocus(),
                 child: Focus(
-                  focusNode: errorWidgetFocusNode,
+                  focusNode: _errorWidgetFocusNode,
                   skipTraversal: true,
                   child: Material(
                     color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
