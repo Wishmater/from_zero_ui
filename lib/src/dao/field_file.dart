@@ -54,7 +54,7 @@ class FileField extends Field<String> {
     GlobalKey? fieldGlobalKey,
     FocusNode? focusNode,
     bool invalidateNonEmptyValuesIfHiddenInForm = true,
-    String? defaultValue = '',
+    String? defaultValue,
     ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
     super.actionsGetter,
     ViewWidgetBuilder<String> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
@@ -238,7 +238,7 @@ class FileField extends Field<String> {
           Widget result = Stack(
             children: [
               Material(
-                type: MaterialType.transparency,
+                color: enabled ? Colors.transparent : Theme.of(context).canvasColor,
                 child: FilePickerFromZero(
                   allowMultiple: false,
                   dialogTitle: hint ?? uiName,
@@ -249,6 +249,7 @@ class FileField extends Field<String> {
                   pickDirectory: pickDirectory,
                   focusNode: focusNode,
                   initialDirectory: initialDirectory,
+                  enabled: enabled,
                   onSelected: (value) {
                     userInteracted = true;
                     this.value = value.first.absolute.path;
@@ -319,7 +320,6 @@ class FileField extends Field<String> {
     if (addCard) {
       result = Card(
         clipBehavior: Clip.hardEdge,
-        color: enabled ? null : Theme.of(context).canvasColor,
         child: result,
       );
     }
