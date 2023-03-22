@@ -29,7 +29,7 @@ Future<bool> saveFileFromZero ({
   ValueNotifier<int?>? fileSize,
   VoidCallback? onCancel,
   FutureOr<List<int>> Function()? onRetry,
-  bool autoOpenOnFinish = true,
+  bool autoOpenOnFinish = false,
   bool showSnackBars = true,
   bool showDownloadSnackBar = true,
   bool showResultSnackBar = true, // TODO 3 implement output pickers in not web (optional)
@@ -222,17 +222,18 @@ Future<bool> saveFileFromZero ({
               }
             },
           ),
-          if (Platform.isWindows)
-            SnackBarAction(
-              label: FromZeroLocalizations.of(context).translate('open_folder').toUpperCase(),
-              onPressed: () async {
-                if (Platform.isAndroid){
-                  OpenFile.open(file!.parent.absolute.path);
-                } else{
-                  await launch(file!.parent.absolute.path);
-                }
-              },
-            ),
+          SnackBarAction(
+            label: FromZeroLocalizations.of(context).translate('open_folder').toUpperCase(),
+            onPressed: () async {
+              if (Platform.isAndroid){
+                OpenFile.open(file!.parent.absolute.path);
+              } else if (Platform.isWindows) {
+                Process.run('explorer.exe /select,"${file!.absolute.path}"', []);
+              } else{
+                await launch(file!.parent.absolute.path);
+              }
+            },
+          ),
         ],
       ).show(context).closed;
     } else if (!success) {
