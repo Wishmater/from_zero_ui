@@ -69,6 +69,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   Map<double, ActionState> actionDuplicateBreakpoints;
   Map<double, ActionState> actionDeleteBreakpoints;
   Map<String, ColModel> Function(DAO dao, ListField<T, U> listField, T objectTemplate)? tableColumnsBuilder;
+  RowModel<T> Function(T element, BuildContext context, ListField<T, U> field, DAO dao, Map<String, ColModel> columns, ValueChanged<RowModel<T>>? onRowTap)? tableRowBuilder;
   /// this means that save() will be called on the object when adding a row
   /// and delete() will be called when removing a row, default false
   bool? _skipDeleteConfirmation;
@@ -212,6 +213,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     Map<double, ActionState>? actionDuplicateBreakpoints,
     Map<double, ActionState>? actionDeleteBreakpoints,
     this.tableColumnsBuilder,
+    this.tableRowBuilder,
     this.showTableHeaders = true,
     this.showTableHeaderAddon = true,
     this.showElementCount = true,
@@ -438,6 +440,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     Map<double, ActionState>? actionDuplicateBreakpoints,
     Map<double, ActionState>? actionDeleteBreakpoints,
     Map<String, ColModel> Function(DAO dao, ListField<T, U> listField, T objectTemplate)? tableColumnsBuilder,
+    RowModel<T> Function(T element, BuildContext context, ListField<T, U> field, DAO dao, Map<String, ColModel> columns, ValueChanged<RowModel<T>>? onRowTap)? tableRowBuilder,
     bool? skipDeleteConfirmation,
     bool? showTableHeaders,
     bool? showTableHeaderAddon,
@@ -558,6 +561,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       onValueChanged: onValueChanged ?? this.onValueChanged,
       rowTapType: rowTapType ?? this.rowTapType,
       tableColumnsBuilder: tableColumnsBuilder ?? this.tableColumnsBuilder,
+      tableRowBuilder: tableRowBuilder ?? this.tableRowBuilder,
       tableFooterStickyOffset: tableFooterStickyOffset ?? this.tableFooterStickyOffset,
       tableHorizontalPadding: tableHorizontalPadding ?? this.tableHorizontalPadding,
       rowAddonField: rowAddonField ?? this.rowAddonField,
@@ -1801,7 +1805,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             ? tableColumnsBuilder!(dao, this, objectTemplate)
             : defaultTableColumnsBuilder(dao, this, objectTemplate);
         for (final e in objects) {
-          final onRowTap;
+          final ValueChanged<RowModel<T>>? onRowTap;
           if (this.onRowTap!=null) {
             onRowTap = this.onRowTap;
           } else {
@@ -1862,31 +1866,38 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               );
             }
           }
-          _builtRows[e] = SimpleRowModel(
-            id: e,
-            values: columns.map((key, value) => MapEntry(key, e.props[key])),
-            height: rowHeight,
-            onRowTap: onRowTap==null ? null : (value) {
+          if (tableRowBuilder!=null) {
+            _builtRows[e] = tableRowBuilder!(e, context, this, dao, columns, onRowTap==null ? null : (value) {
               value.focusNode.requestFocus();
-              onRowTap(value);
-            },
-            selected: allowMultipleSelection ? (selectedObjects.value[e] ?? selectionDefault) : null,
-            // backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
-            onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
-              selectedObjects.value[row.id] = focused??false;
-              (row as SimpleRowModel).selected = focused??false;
-              selectedObjects.notifyListeners();
-              tableController.notifyListeners();
-              notifyListeners();
-              return true;
-            } : null,
-            rowAddon: rowAddonWidget,
-            rowAddonIsExpandable: true,
-            rowAddonIsSticky: false,
-            rowAddonIsCoveredByGestureDetector: true,
-            rowAddonIsCoveredByScrollable: false,
-            rowAddonIsCoveredByBackground: true,
-          );
+              onRowTap!(value);
+            });
+          } else {
+            _builtRows[e] = SimpleRowModel<T>(
+              id: e,
+              values: columns.map((key, value) => MapEntry(key, e.props[key])),
+              height: rowHeight,
+              onRowTap: onRowTap==null ? null : (value) {
+                value.focusNode.requestFocus();
+                onRowTap!(value);
+              },
+              selected: allowMultipleSelection ? (selectedObjects.value[e] ?? selectionDefault) : null,
+              // backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
+              onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
+                selectedObjects.value[row.id] = focused??false;
+                (row as SimpleRowModel).selected = focused??false;
+                selectedObjects.notifyListeners();
+                tableController.notifyListeners();
+                notifyListeners();
+                return true;
+              } : null,
+              rowAddon: rowAddonWidget,
+              rowAddonIsExpandable: true,
+              rowAddonIsSticky: false,
+              rowAddonIsCoveredByGestureDetector: true,
+              rowAddonIsCoveredByScrollable: false,
+              rowAddonIsCoveredByBackground: true,
+            );
+          }
         }
         double width = 0;
         columns.forEach((key, value) {
