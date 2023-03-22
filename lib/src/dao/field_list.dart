@@ -99,10 +99,41 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   double tableHorizontalPadding;
   String? rowAddonField;
   double? separateScrollableBreakpoint;
+  FieldValueGetter<List<ListField<T, U>>, ListField<T, U>>? proxiedListFields; // objects from these fields will also show here
 
   T get objectTemplate => objectTemplateGetter(this, dao)..parentDAO = dao;
-  List<T> get objects => value!.list;
-  List<T> get dbObjects => dbValue!.list;
+  List<T> get objects {
+    if (proxiedListFields==null) {
+      return value!.list;
+    } else {
+      final proxiedFields = proxiedListFields!(this, dao);
+      return [
+        ...value!.list,
+        ...proxiedFields.map((e) {
+          e.addListener(notifyListenersAndReinitTable);
+          for (final e in e.value!.list) {
+            e.addListener(notifyListenersAndReinitTable);
+          }
+          return e.value!.list;
+        }).flatten(),
+      ];
+    }
+  }
+  List<T> get dbObjects {
+    if (proxiedListFields==null) {
+      return dbValue!.list;
+    } else {
+      final proxiedFields = proxiedListFields!(this, dao);
+      return [
+        ...dbValue!.list,
+        ...proxiedFields.map((e) => e.dbValue!.list).flatten(),
+      ];
+    }
+  }
+  void notifyListenersAndReinitTable() {
+    tableController.reInit();
+    notifyListeners();
+  }
   @override
   set value(ComparableList<T>? value) {
     assert(value!=null, 'ListField is non-nullable by design.');
@@ -262,6 +293,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     ValueNotifier<Map<T, bool>>? selectedObjects,
     this.pageNotifier,
     this.separateScrollableBreakpoint = 30,
+    this.proxiedListFields,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? (displayType==ListFieldDisplayType.table && !tableCellsEditable),
@@ -306,10 +338,16 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     addListeners();
   }
 
+  void addListeners() {
+    value!.list.forEach((element) {
+      element.addListener(notifyListeners);
+    });
+  }
+
   @override
   set dao(DAO dao) {
     super.dao = dao;
-    objects.forEach((element) {
+    value!.list.forEach((element) {
       element.parentDAO = dao;
     });
   }
@@ -493,6 +531,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool? allowAddMultipleFromAvailablePool,
     ValueNotifier<int>? pageNotifier,
     double? separateScrollableBreakpoint,
+    FieldValueGetter<List<ListField<T, U>>, ListField<T, U>>? proxiedListFields,
   }) {
     return ListField<T, U>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -568,13 +607,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       allowAddMultipleFromAvailablePool: allowAddMultipleFromAvailablePool ?? this.allowAddMultipleFromAvailablePool,
       pageNotifier: pageNotifier ?? this.pageNotifier,
       separateScrollableBreakpoint: separateScrollableBreakpoint ?? this.separateScrollableBreakpoint,
+      proxiedListFields: proxiedListFields ?? this.proxiedListFields,
     );
-  }
-
-  void addListeners() {
-    objects.forEach((element) {
-      element.addListener(notifyListeners);
-    });
   }
 
   void addRow (T element, [int? insertIndex]) => addRows([element], insertIndex);
@@ -584,7 +618,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       e.parentDAO = dao;
     }
     final newValue = value!.copyWith();
-    if (insertIndex==null) {
+    if (insertIndex==null || insertIndex<0 || insertIndex>newValue.length) {
       newValue.addAll(elements);
     } else {
       for (final e in elements) {
@@ -603,15 +637,26 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     elements.forEach((key, value) {
       value.parentDAO = dao;
       int index = newValue.indexOf(key);
-      if (index>=0) {
-        newValue.removeAt(index);
-      } else {
-        result = false;
+      bool foundInProxy = false;
+      if (index<0 && proxiedListFields!=null) {
+        for (final proxiedList in proxiedListFields!(this, dao)) {
+          if (proxiedList.value!.contains(key)) {
+            foundInProxy = true;
+            proxiedList.replaceRow(key, value);
+          }
+        }
       }
-      if (index>=0) {
-        newValue.insert(index, value);
-      } else {
-        newValue.add(value);
+      if (!foundInProxy) {
+        if (index>=0) {
+          newValue.removeAt(index);
+        } else {
+          result = false;
+        }
+        if (index>=0) {
+          newValue.insert(index, value);
+        } else {
+          newValue.add(value);
+        }
       }
     });
     value = newValue;
@@ -642,6 +687,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     final newValue = value!.copyWith();
     elements.forEach((e) {
       result = newValue.remove(e) || result;
+      for (final proxiedList in proxiedListFields!(this, dao)) {
+        result = proxiedList.removeRow(e) || result;
+      }
     });
     if (result) {
       value = newValue;
@@ -2373,69 +2421,74 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }) {
     collapsible ??= this.collapsible;
     collapsed ??= this.collapsed;
-    return EnsureVisibleWhenFocused(
-      focusNode: focusNode,
-      child: Focus(
-        focusNode: focusNode,
-        key: headerGlobalKey,
-        skipTraversal: true,
-        canRequestFocus: true,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: (tableHorizontalPadding-8).coerceAtLeast(0)),
-          child: Stack(
-            children: [
-              TableHeaderFromZero<T>(
-                controller: tableController,
-                title: Text(uiName),
-                actions: actions,
-                onShowAppbarContextMenu: () => focusNode.requestFocus(),
-                exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
-                addSearchAction: addSearchAction,
-                backgroundColor: backgroundColor?.call(context, this, dao),
-                leading: !collapsible ? icon : IconButton(
-                  icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
-                  onPressed: () {
-                    focusNode.requestFocus();
-                    this.collapsed = !this.collapsed;
-                    notifyListeners();
-                  },
-                ),
-              ),
-              if (availableObjectsPoolProvider!=null)
-                Positioned(
-                  left: 3, top: 3,
-                  child: ApiProviderBuilder(
-                    provider: availableObjectsPoolProvider!.call(context, this, dao),
-                    dataBuilder: (context, data) {
-                      return SizedBox.shrink();
-                    },
-                    loadingBuilder: (context, progress) {
-                      return SizedBox(
-                        height: 10, width: 10,
-                        child: LoadingSign(
-                          value: null,
-                          padding: EdgeInsets.zero,
-                          size: 12,
-                          color: Theme.of(context).splashColor.withOpacity(1),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace, onRetry) {
-                      return SizedBox(
-                        height: 10, width: 10,
-                        child: Icon(
-                          Icons.error_outlined,
-                          color: Colors.red,
-                          size: 12,
-                        ),
-                      );
-                    },
+    return AnimatedBuilder(
+      animation: this,
+      builder: (context, child) {
+        return EnsureVisibleWhenFocused(
+          focusNode: focusNode,
+          child: Focus(
+            focusNode: focusNode,
+            key: headerGlobalKey,
+            skipTraversal: true,
+            canRequestFocus: true,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: (tableHorizontalPadding-8).coerceAtLeast(0)),
+              child: Stack(
+                children: [
+                  TableHeaderFromZero<T>(
+                    controller: tableController,
+                    title: Text(uiName),
+                    actions: actions,
+                    onShowAppbarContextMenu: () => focusNode.requestFocus(),
+                    exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
+                    addSearchAction: addSearchAction,
+                    backgroundColor: backgroundColor?.call(context, this, dao),
+                    leading: !collapsible! ? icon : IconButton(
+                      icon: Icon(collapsed! ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
+                      onPressed: () {
+                        focusNode.requestFocus();
+                        this.collapsed = !this.collapsed;
+                        notifyListeners();
+                      },
+                    ),
                   ),
-                ),
-            ],
+                  if (availableObjectsPoolProvider!=null)
+                    Positioned(
+                      left: 3, top: 3,
+                      child: ApiProviderBuilder(
+                        provider: availableObjectsPoolProvider!.call(context, this, dao),
+                        dataBuilder: (context, data) {
+                          return SizedBox.shrink();
+                        },
+                        loadingBuilder: (context, progress) {
+                          return SizedBox(
+                            height: 10, width: 10,
+                            child: LoadingSign(
+                              value: null,
+                              padding: EdgeInsets.zero,
+                              size: 12,
+                              color: Theme.of(context).splashColor.withOpacity(1),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace, onRetry) {
+                          return SizedBox(
+                            height: 10, width: 10,
+                            child: Icon(
+                              Icons.error_outlined,
+                              color: Colors.red,
+                              size: 12,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      }
     );
   }
 
