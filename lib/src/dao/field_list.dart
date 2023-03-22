@@ -1914,20 +1914,20 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               );
             }
           }
-          if (tableRowBuilder!=null) {
-            _builtRows[e] = tableRowBuilder!(e, context, this, dao, columns, onRowTap==null ? null : (value) {
-              value.focusNode.requestFocus();
+          final ValueChanged<RowModel<T>>? onRowTapFocused = onRowTap==null ? null : (value) {
+            value.focusNode.requestFocus();
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
               onRowTap!(value);
             });
+          };
+          if (tableRowBuilder!=null) {
+            _builtRows[e] = tableRowBuilder!(e, context, this, dao, columns, onRowTapFocused);
           } else {
             _builtRows[e] = SimpleRowModel<T>(
               id: e,
               values: columns.map((key, value) => MapEntry(key, e.props[key])),
               height: rowHeight,
-              onRowTap: onRowTap==null ? null : (value) {
-                value.focusNode.requestFocus();
-                onRowTap!(value);
-              },
+              onRowTap: onRowTapFocused,
               selected: allowMultipleSelection ? (selectedObjects.value[e] ?? selectionDefault) : null,
               // backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
               onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
