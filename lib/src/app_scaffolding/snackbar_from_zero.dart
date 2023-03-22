@@ -206,6 +206,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
                               padding: const EdgeInsets.symmetric(horizontal: 6),
                               child: Text(action.label.toUpperCase(),
                                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                                textAlign: TextAlign.center,
                               ),
                             ),
                             textColor: action.textColor ?? actionColor,

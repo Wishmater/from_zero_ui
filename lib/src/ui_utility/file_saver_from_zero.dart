@@ -15,6 +15,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dartx/dartx.dart';
+import 'package:pasteboard/pasteboard.dart';
 
 
 final _percentFormatter = NumberFormat.decimalPercentPattern(decimalDigits: 1);
@@ -216,20 +217,27 @@ Future<bool> saveFileFromZero ({
             label: FromZeroLocalizations.of(context).translate('open').toUpperCase(),
             onPressed: () async {
               if (Platform.isAndroid){
-                OpenFile.open(file!.absolute.path);
+                await OpenFile.open(file!.absolute.path);
               } else{
                 await launch(file!.absolute.path);
               }
             },
           ),
+          if (Platform.isWindows)
+            SnackBarAction(
+              label: 'COPIAR', // TODO 3 internationalize
+              onPressed: () async {
+                await Pasteboard.writeFiles([file!.absolute.path]);
+              },
+            ),
           SnackBarAction(
             label: FromZeroLocalizations.of(context).translate('open_folder').toUpperCase(),
             onPressed: () async {
-              if (Platform.isAndroid){
-                OpenFile.open(file!.parent.absolute.path);
+              if (Platform.isAndroid) {
+                await OpenFile.open(file!.parent.absolute.path);
               } else if (Platform.isWindows) {
-                Process.run('explorer.exe /select,"${file!.absolute.path}"', []);
-              } else{
+                await Process.run('explorer.exe /select,"${file!.absolute.path.replaceAll('/', '\\')}"', []);
+              } else {
                 await launch(file!.parent.absolute.path);
               }
             },
