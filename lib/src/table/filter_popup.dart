@@ -26,6 +26,14 @@ abstract class TableFromZeroFilterPopup {
     required Map<dynamic, Map<Object?, bool>> valueFilters,
     GlobalKey? anchorKey,
   }) async {
+    final newConditionFilters = {
+      for (final e in conditionFilters.keys)
+        e: List<ConditionFilter>.from(conditionFilters[e]!),
+    };
+    final newValueFilters = {
+      for (final e in valueFilters.keys)
+        e: Map<Object?, bool>.from(valueFilters[e]!),
+    };
     ScrollController filtersScrollController = ScrollController();
     TableController filterTableController = TableController();
     final modified = ValueNotifier(false);
@@ -37,7 +45,7 @@ abstract class TableFromZeroFilterPopup {
         filterSearchFocusNode.requestFocus();
       });
     }
-    await showPopupFromZero(
+    final confirm = await showPopupFromZero(
       context: context,
       anchorKey: anchorKey,
       builder: (context) {
@@ -110,10 +118,10 @@ abstract class TableFromZeroFilterPopup {
                                         onSelected: (value) {
                                           filterPopupSetState((){
                                             modified.value = true;
-                                            if (conditionFilters[colKey]==null) {
-                                              conditionFilters[colKey] = [];
+                                            if (newConditionFilters[colKey]==null) {
+                                              newConditionFilters[colKey] = [];
                                             }
-                                            conditionFilters[colKey]!.add(value);
+                                            newConditionFilters[colKey]!.add(value);
                                           });
                                           WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                                             value.focusNode.requestFocus();
@@ -124,7 +132,7 @@ abstract class TableFromZeroFilterPopup {
                                   ],
                                 ),
                               ),),
-                            if ((conditionFilters[colKey] ?? []).isEmpty)
+                            if ((newConditionFilters[colKey] ?? []).isEmpty)
                               SliverToBoxAdapter(child: Padding(
                                 padding: EdgeInsets.only(left: 24, bottom: 8,),
                                 child: Text (FromZeroLocalizations.of(context).translate('none'),
@@ -133,7 +141,7 @@ abstract class TableFromZeroFilterPopup {
                               ),),
                             SliverList(
                               delegate: SliverChildListDelegate.fixed(
-                                (conditionFilters[colKey] ?? []).map((e) {
+                                (newConditionFilters[colKey] ?? []).map((e) {
                                   return Padding(
                                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                                     child: e.buildFormWidget(
@@ -145,7 +153,7 @@ abstract class TableFromZeroFilterPopup {
                                       onDelete: () {
                                         modified.value = true;
                                         filterPopupSetState((){
-                                          conditionFilters[colKey]!.remove(e);
+                                          newConditionFilters[colKey]!.remove(e);
                                         });
                                       },
                                     ),
@@ -153,7 +161,7 @@ abstract class TableFromZeroFilterPopup {
                                 }).toList(),
                               ),
                             ),
-                            SliverToBoxAdapter(child: SizedBox(height: (conditionFilters[colKey] ?? []).isEmpty ? 6 : 12,)),
+                            SliverToBoxAdapter(child: SizedBox(height: (newConditionFilters[colKey] ?? []).isEmpty ? 6 : 12,)),
                             SliverToBoxAdapter(child: Divider(height: 32,)),
                             TableFromZero(
                               tableController: filterTableController,
@@ -162,7 +170,7 @@ abstract class TableFromZeroFilterPopup {
                               emptyWidget: SizedBox.shrink(),
                               initialSortedColumn: colKey,
                               rows: (col ?? SimpleColModel(name: ''))
-                                  .buildFilterPopupRowModels(availableFilters[colKey] ?? [], valueFilters, colKey, modified),
+                                  .buildFilterPopupRowModels(availableFilters[colKey] ?? [], newValueFilters, colKey, modified),
                               // override style and text alignment
                               cellBuilder: (context, row, colKey) {
                                 var message = ColModel.getRowValueString(row, colKey, col);
@@ -271,7 +279,7 @@ abstract class TableFromZeroFilterPopup {
                                                 filterTableController.filtered.forEach((initialRow) {
                                                   for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
                                                     if (row.onCheckBoxSelected!=null) {
-                                                      valueFilters[colKey]![row.id] = true;
+                                                      newValueFilters[colKey]![row.id] = true;
                                                       (row as SimpleRowModel).selected = true;
                                                     }
                                                   }
@@ -289,7 +297,7 @@ abstract class TableFromZeroFilterPopup {
                                                 filterTableController.filtered.forEach((initialRow) {
                                                   for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
                                                     if (row.onCheckBoxSelected!=null) {
-                                                      valueFilters[colKey]![row.id] = false;
+                                                      newValueFilters[colKey]![row.id] = false;
                                                       (row as SimpleRowModel).selected = false;
                                                     }
                                                   }
@@ -328,20 +336,42 @@ abstract class TableFromZeroFilterPopup {
                             ),
                           ),
                           Container(
-                            alignment: Alignment.centerRight,
-                            padding: EdgeInsets.only(bottom: 8, right: 16,),
+                            padding: EdgeInsets.only(bottom: 8,),
                             color: Theme.of(context).cardColor,
-                            child: FlatButton(
-                              child: Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 128,
+                                  child: FlatButton(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    textColor: Theme.of(context).textTheme.caption!.color,
+                                    onPressed: () {
+                                      Navigator.of(context).pop(false);
+                                    },
+                                  ),
                                 ),
-                              ),
-                              textColor: Colors.blue,
-                              onPressed: () {
-                                Navigator.of(context).pop(true);
-                              },
+                                SizedBox(
+                                  width: 128,
+                                  child: FlatButton(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    textColor: Colors.blue,
+                                    onPressed: () {
+                                      Navigator.of(context).pop(true);
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -355,7 +385,14 @@ abstract class TableFromZeroFilterPopup {
         );
       },
     );
-    return modified.value;
+    if ((confirm ?? false) && modified.value) {
+      conditionFilters.clear();
+      conditionFilters.addAll(newConditionFilters);
+      valueFilters.clear();
+      valueFilters.addAll(newValueFilters);
+      return true;
+    }
+    return false;
   }
   static List<ConditionFilter> getDefaultAvailableConditionFilters() => [
     // FilterIsEmpty(),

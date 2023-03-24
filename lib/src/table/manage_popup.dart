@@ -12,7 +12,7 @@ abstract class TableFromZeroManagePopup {
     required TableController<T> controller,
   }) async {
     final columns = controller.columns!;
-    final columnKeys = controller.columnKeys!;
+    final columnKeys = List.from(controller.columnKeys!);
     final columnVisibility = {
       for (final e in columnKeys)
         e: controller.currentColumnKeys!.contains(e)
@@ -23,7 +23,7 @@ abstract class TableFromZeroManagePopup {
     };
     bool modified = false;
     bool modifiedFilters = false;
-    await showModal(
+    final confirm = await showModal(
       context: context,
       builder: (context) {
         ScrollController scrollController = ScrollController();
@@ -159,7 +159,7 @@ abstract class TableFromZeroManagePopup {
                               return result;
                             },
                           ),
-                          SliverToBoxAdapter(child: SizedBox(height: 16+42,),),
+                          SliverToBoxAdapter(child: SizedBox(height: 24+42,),),
                         ],
                       ),
                       Positioned(
@@ -184,22 +184,39 @@ abstract class TableFromZeroManagePopup {
                               alignment: Alignment.centerRight,
                               padding: EdgeInsets.only(bottom: 8, right: 16,),
                               color: Theme.of(context).cardColor,
-                              child: TooltipFromZero(
-                                message: visibleColumns.isEmpty
-                                    ? 'Debe haber al menos 1 columna visible'
-                                    : null,
-                                child: FlatButton(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  FlatButton(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
+                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                      ),
+                                    ),
+                                    textColor: Theme.of(context).textTheme.caption!.color,
+                                    onPressed: () {
+                                      Navigator.of(context).pop(false);
+                                    },
+                                  ),
+                                  TooltipFromZero(
+                                    message: visibleColumns.isEmpty
+                                        ? 'Debe haber al menos 1 columna visible'
+                                        : null,
+                                    child: FlatButton(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
+                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                                        ),
+                                      ),
+                                      textColor: Colors.blue,
+                                      onPressed: visibleColumns.isEmpty ? null : () {
+                                        Navigator.of(context).pop(true);
+                                      },
                                     ),
                                   ),
-                                  textColor: Colors.blue,
-                                  onPressed: visibleColumns.isEmpty ? null : () {
-                                    Navigator.of(context).pop(true);
-                                  },
-                                ),
+                                ],
                               ),
                             ),
                           ],
@@ -214,8 +231,11 @@ abstract class TableFromZeroManagePopup {
         );
       },
     );
-    controller.currentColumnKeys = columnKeys.where((e) => columnVisibility[e]!).toList();
-    return ManagePopupResult(modified, modifiedFilters);
+    if (confirm ?? false) {
+      controller.columnKeys = columnKeys;
+      controller.currentColumnKeys = columnKeys.where((e) => columnVisibility[e]!).toList();
+    }
+    return ManagePopupResult(modified||modifiedFilters, modifiedFilters);
   }
 
 }
