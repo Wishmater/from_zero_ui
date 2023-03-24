@@ -17,6 +17,7 @@ class FilePickerFromZero extends StatefulWidget {
   final bool allowDragAndDropInWholeScreen;
   final bool pickDirectory;
   final String? initialDirectory;
+  final bool enabled;
 
   const FilePickerFromZero({
     required this.onSelected,
@@ -30,6 +31,7 @@ class FilePickerFromZero extends StatefulWidget {
     this.enableDragAndDrop = true,
     this.allowDragAndDropInWholeScreen = false,
     this.initialDirectory,
+    this.enabled = true,
     Key? key,
   }) : super(key: key);
 
@@ -71,7 +73,7 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
     Widget result = InkWell(
       child: widget.child,
       focusNode: widget.focusNode,
-      onTap: () async {
+      onTap: !widget.enabled ? null : () async {
         if (!widget.pickDirectory) {
           FilePickerResult? result = await FilePicker.platform.pickFiles(
             dialogTitle: widget.dialogTitle,
@@ -114,6 +116,7 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
 
   Widget _buildDragAndDrop(BuildContext context, Widget child) {
     Widget result = DropTarget(
+      enable: widget.enabled,
       onDragEntered: (detail) {
         if (mounted) {
           setState(() {

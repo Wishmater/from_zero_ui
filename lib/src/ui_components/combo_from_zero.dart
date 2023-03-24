@@ -442,7 +442,6 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                 : (context, row, colKey) => widget.popupWidgetBuilder!(row.id!),
             rows: rows,
             onFilter: (filtered) {
-              List<RowModel<T?>> startsWhole = [];
               List<RowModel<T?>> starts = [];
               List<RowModel<T?>> contains = [];
               if (searchQuery==null || searchQuery!.isEmpty) {
@@ -463,10 +462,6 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                   }
                 }
               }
-              // if (widget.sort) {
-              //   TableFromZeroState.smartSort(starts);
-              //   TableFromZeroState.smartSort(contains);
-              // }
               return [...starts, ...contains];
             },
             rowActions: widget.showViewActionOnDAOs && T is DAO

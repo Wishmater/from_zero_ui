@@ -69,6 +69,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   Map<double, ActionState> actionDuplicateBreakpoints;
   Map<double, ActionState> actionDeleteBreakpoints;
   Map<String, ColModel> Function(DAO dao, ListField<T, U> listField, T objectTemplate)? tableColumnsBuilder;
+  RowModel<T> Function(T element, BuildContext context, ListField<T, U> field, DAO dao, Map<String, ColModel> columns, ValueChanged<RowModel<T>>? onRowTap)? tableRowBuilder;
   /// this means that save() will be called on the object when adding a row
   /// and delete() will be called when removing a row, default false
   bool? _skipDeleteConfirmation;
@@ -98,10 +99,41 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   double tableHorizontalPadding;
   String? rowAddonField;
   double? separateScrollableBreakpoint;
+  FieldValueGetter<List<ListField<T, U>>, ListField<T, U>>? proxiedListFields; // objects from these fields will also show here
 
   T get objectTemplate => objectTemplateGetter(this, dao)..parentDAO = dao;
-  List<T> get objects => value!.list;
-  List<T> get dbObjects => dbValue!.list;
+  List<T> get objects {
+    if (proxiedListFields==null) {
+      return value!.list;
+    } else {
+      final proxiedFields = proxiedListFields!(this, dao);
+      return [
+        ...value!.list,
+        ...proxiedFields.map((e) {
+          e.addListener(notifyListenersAndReinitTable);
+          for (final e in e.value!.list) {
+            e.addListener(notifyListenersAndReinitTable);
+          }
+          return e.value!.list;
+        }).flatten(),
+      ];
+    }
+  }
+  List<T> get dbObjects {
+    if (proxiedListFields==null) {
+      return dbValue!.list;
+    } else {
+      final proxiedFields = proxiedListFields!(this, dao);
+      return [
+        ...dbValue!.list,
+        ...proxiedFields.map((e) => e.dbValue!.list).flatten(),
+      ];
+    }
+  }
+  void notifyListenersAndReinitTable() {
+    tableController.reInit();
+    notifyListeners();
+  }
   @override
   set value(ComparableList<T>? value) {
     assert(value!=null, 'ListField is non-nullable by design.');
@@ -212,6 +244,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     Map<double, ActionState>? actionDuplicateBreakpoints,
     Map<double, ActionState>? actionDeleteBreakpoints,
     this.tableColumnsBuilder,
+    this.tableRowBuilder,
     this.showTableHeaders = true,
     this.showTableHeaderAddon = true,
     this.showElementCount = true,
@@ -260,6 +293,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     ValueNotifier<Map<T, bool>>? selectedObjects,
     this.pageNotifier,
     this.separateScrollableBreakpoint = 30,
+    this.proxiedListFields,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? (displayType==ListFieldDisplayType.table && !tableCellsEditable),
@@ -304,10 +338,16 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     addListeners();
   }
 
+  void addListeners() {
+    value!.list.forEach((element) {
+      element.addListener(notifyListeners);
+    });
+  }
+
   @override
   set dao(DAO dao) {
     super.dao = dao;
-    objects.forEach((element) {
+    value!.list.forEach((element) {
       element.parentDAO = dao;
     });
   }
@@ -438,6 +478,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     Map<double, ActionState>? actionDuplicateBreakpoints,
     Map<double, ActionState>? actionDeleteBreakpoints,
     Map<String, ColModel> Function(DAO dao, ListField<T, U> listField, T objectTemplate)? tableColumnsBuilder,
+    RowModel<T> Function(T element, BuildContext context, ListField<T, U> field, DAO dao, Map<String, ColModel> columns, ValueChanged<RowModel<T>>? onRowTap)? tableRowBuilder,
     bool? skipDeleteConfirmation,
     bool? showTableHeaders,
     bool? showTableHeaderAddon,
@@ -490,6 +531,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool? allowAddMultipleFromAvailablePool,
     ValueNotifier<int>? pageNotifier,
     double? separateScrollableBreakpoint,
+    FieldValueGetter<List<ListField<T, U>>, ListField<T, U>>? proxiedListFields,
   }) {
     return ListField<T, U>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -558,19 +600,15 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       onValueChanged: onValueChanged ?? this.onValueChanged,
       rowTapType: rowTapType ?? this.rowTapType,
       tableColumnsBuilder: tableColumnsBuilder ?? this.tableColumnsBuilder,
+      tableRowBuilder: tableRowBuilder ?? this.tableRowBuilder,
       tableFooterStickyOffset: tableFooterStickyOffset ?? this.tableFooterStickyOffset,
       tableHorizontalPadding: tableHorizontalPadding ?? this.tableHorizontalPadding,
       rowAddonField: rowAddonField ?? this.rowAddonField,
       allowAddMultipleFromAvailablePool: allowAddMultipleFromAvailablePool ?? this.allowAddMultipleFromAvailablePool,
       pageNotifier: pageNotifier ?? this.pageNotifier,
       separateScrollableBreakpoint: separateScrollableBreakpoint ?? this.separateScrollableBreakpoint,
+      proxiedListFields: proxiedListFields ?? this.proxiedListFields,
     );
-  }
-
-  void addListeners() {
-    objects.forEach((element) {
-      element.addListener(notifyListeners);
-    });
   }
 
   void addRow (T element, [int? insertIndex]) => addRows([element], insertIndex);
@@ -580,7 +618,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       e.parentDAO = dao;
     }
     final newValue = value!.copyWith();
-    if (insertIndex==null) {
+    if (insertIndex==null || insertIndex<0 || insertIndex>newValue.length) {
       newValue.addAll(elements);
     } else {
       for (final e in elements) {
@@ -599,15 +637,26 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     elements.forEach((key, value) {
       value.parentDAO = dao;
       int index = newValue.indexOf(key);
-      if (index>=0) {
-        newValue.removeAt(index);
-      } else {
-        result = false;
+      bool foundInProxy = false;
+      if (index<0 && proxiedListFields!=null) {
+        for (final proxiedList in proxiedListFields!(this, dao)) {
+          if (proxiedList.value!.contains(key)) {
+            foundInProxy = true;
+            proxiedList.replaceRow(key, value);
+          }
+        }
       }
-      if (index>=0) {
-        newValue.insert(index, value);
-      } else {
-        newValue.add(value);
+      if (!foundInProxy) {
+        if (index>=0) {
+          newValue.removeAt(index);
+        } else {
+          result = false;
+        }
+        if (index>=0) {
+          newValue.insert(index, value);
+        } else {
+          newValue.add(value);
+        }
       }
     });
     value = newValue;
@@ -638,6 +687,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     final newValue = value!.copyWith();
     elements.forEach((e) {
       result = newValue.remove(e) || result;
+      if (proxiedListFields!=null) {
+        for (final proxiedList in proxiedListFields!(this, dao)) {
+          result = proxiedList.removeRow(e) || result;
+        }
+      }
     });
     if (result) {
       value = newValue;
@@ -652,7 +706,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         if (tableCellsEditable) {
           object.props.values.firstOrNullWhere((e) => !e.hiddenInForm)?.focusNode.requestFocus();
         } else {
-          builtRows[object]?.focusNode.requestFocus();
+          _builtRows[object]?.focusNode.requestFocus();
         }
       } catch (_) {}
     });
@@ -1762,8 +1816,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }
 
 
-  late final errorWidgetFocusNode = FocusNode();
-  late Map<T, RowModel<T>> builtRows;
+  late final _errorWidgetFocusNode = FocusNode();
+  late Map<T, RowModel<T>> _builtRows;
   List<Widget> buildWidgetsAsTable(BuildContext context, {
     bool addCard=true,
     bool asSliver = true,
@@ -1796,12 +1850,12 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       key: fieldGlobalKey,
       animation:  this,
       builder: (context, child) {
-        builtRows = {};
+        _builtRows = {};
         final Map<String, ColModel> columns = tableColumnsBuilder!=null
             ? tableColumnsBuilder!(dao, this, objectTemplate)
             : defaultTableColumnsBuilder(dao, this, objectTemplate);
         for (final e in objects) {
-          final onRowTap;
+          final ValueChanged<RowModel<T>>? onRowTap;
           if (this.onRowTap!=null) {
             onRowTap = this.onRowTap;
           } else {
@@ -1862,31 +1916,38 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               );
             }
           }
-          builtRows[e] = SimpleRowModel(
-            id: e,
-            values: columns.map((key, value) => MapEntry(key, e.props[key])),
-            height: rowHeight,
-            onRowTap: onRowTap==null ? null : (value) {
-              value.focusNode.requestFocus();
-              onRowTap(value);
-            },
-            selected: allowMultipleSelection ? (selectedObjects.value[e] ?? selectionDefault) : null,
-            // backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
-            onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
-              selectedObjects.value[row.id] = focused??false;
-              (row as SimpleRowModel).selected = focused??false;
-              selectedObjects.notifyListeners();
-              tableController.notifyListeners();
-              notifyListeners();
-              return true;
-            } : null,
-            rowAddon: rowAddonWidget,
-            rowAddonIsExpandable: true,
-            rowAddonIsSticky: false,
-            rowAddonIsCoveredByGestureDetector: true,
-            rowAddonIsCoveredByScrollable: false,
-            rowAddonIsCoveredByBackground: true,
-          );
+          final ValueChanged<RowModel<T>>? onRowTapFocused = onRowTap==null ? null : (value) {
+            value.focusNode.requestFocus();
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+              onRowTap!(value);
+            });
+          };
+          if (tableRowBuilder!=null) {
+            _builtRows[e] = tableRowBuilder!(e, context, this, dao, columns, onRowTapFocused);
+          } else {
+            _builtRows[e] = SimpleRowModel<T>(
+              id: e,
+              values: columns.map((key, value) => MapEntry(key, e.props[key])),
+              height: rowHeight,
+              onRowTap: onRowTapFocused,
+              selected: allowMultipleSelection ? (selectedObjects.value[e] ?? selectionDefault) : null,
+              // backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
+              onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
+                selectedObjects.value[row.id] = focused??false;
+                (row as SimpleRowModel).selected = focused??false;
+                selectedObjects.notifyListeners();
+                tableController.notifyListeners();
+                notifyListeners();
+                return true;
+              } : null,
+              rowAddon: rowAddonWidget,
+              rowAddonIsExpandable: true,
+              rowAddonIsSticky: false,
+              rowAddonIsCoveredByGestureDetector: true,
+              rowAddonIsCoveredByScrollable: false,
+              rowAddonIsCoveredByBackground: true,
+            );
+          }
         }
         final getMinWidth = (Iterable currentColumnKeys) {
           double width = 0;
@@ -1948,7 +2009,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           showHeaders: showTableHeaders,
           footerStickyOffset: tableFooterStickyOffset,
           tableHorizontalPadding: tableHorizontalPadding,
-          rows: builtRows.values.toList(),
+          rows: _builtRows.values.toList(),
           enableFixedHeightForListRows: rowAddonField==null,
           cellPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
           backgroundColor: backgroundColor?.call(context, this, dao),
@@ -2055,9 +2116,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           emptyWidget: tableErrorWidget
               ?? ContextMenuFromZero(
                 actions: actions,
-                onShowMenu: () => errorWidgetFocusNode.requestFocus(),
+                onShowMenu: () => _errorWidgetFocusNode.requestFocus(),
                 child: Focus(
-                  focusNode: errorWidgetFocusNode,
+                  focusNode: _errorWidgetFocusNode,
                   skipTraversal: true,
                   child: Material(
                     color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
@@ -2129,14 +2190,38 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         return result;
       }
     );
-    if (!asSliver && addCard) {
-      if (!enabled) { // TODO 2 implement proper disabled logic in each sliver (color + tooltip + mouseRegion)
-        result = MouseRegion(
-          cursor: SystemMouseCursors.forbidden,
+    if (asSliver) {
+      if (!enabled) {
+        result = SliverStack(
+          children: [
+            SliverIgnorePointer(sliver: result),
+            SliverPositioned.fill(
+              child: TooltipFromZero(
+                message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+                  return a.toString().trim().isEmpty ? b.toString()
+                      : b.toString().trim().isEmpty ? a.toString()
+                      : '$a\n$b';
+                }),
+                child: ColoredBox(
+                  color: enabled ? Colors.transparent : Colors.black.withOpacity(0.25),
+                ),
+              ),
+            ),
+          ],
+        );
+      }
+    } else {
+      if (!enabled) {
+        result = ColoredBox(
+          color: enabled ? Colors.transparent : Theme.of(context).canvasColor,
           child: IgnorePointer(
             child: result,
           ),
         );
+        // result = MouseRegion(
+        //   cursor: SystemMouseCursors.forbidden,
+        //   child: result,
+        // );
       }
       result = TooltipFromZero(
         message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
@@ -2147,7 +2232,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         child: result,
         waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
       );
-      if (addCard) {  // TODO 3 implement addCard in table slivers, VERY HARD IPMLEMENTATION FOR LOW REWARD
+      if (addCard) {
         result = Card(
           clipBehavior: Clip.hardEdge,
           color: enabled ? null : Theme.of(context).canvasColor,
@@ -2341,69 +2426,74 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }) {
     collapsible ??= this.collapsible;
     collapsed ??= this.collapsed;
-    return EnsureVisibleWhenFocused(
-      focusNode: focusNode,
-      child: Focus(
-        focusNode: focusNode,
-        key: headerGlobalKey,
-        skipTraversal: true,
-        canRequestFocus: true,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: (tableHorizontalPadding-8).coerceAtLeast(0)),
-          child: Stack(
-            children: [
-              TableHeaderFromZero<T>(
-                controller: tableController,
-                title: Text(uiName),
-                actions: actions,
-                onShowAppbarContextMenu: () => focusNode.requestFocus(),
-                exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
-                addSearchAction: addSearchAction,
-                backgroundColor: backgroundColor?.call(context, this, dao),
-                leading: !collapsible ? icon : IconButton(
-                  icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
-                  onPressed: () {
-                    focusNode.requestFocus();
-                    this.collapsed = !this.collapsed;
-                    notifyListeners();
-                  },
-                ),
-              ),
-              if (availableObjectsPoolProvider!=null)
-                Positioned(
-                  left: 3, top: 3,
-                  child: ApiProviderBuilder(
-                    provider: availableObjectsPoolProvider!.call(context, this, dao),
-                    dataBuilder: (context, data) {
-                      return SizedBox.shrink();
-                    },
-                    loadingBuilder: (context, progress) {
-                      return SizedBox(
-                        height: 10, width: 10,
-                        child: LoadingSign(
-                          value: null,
-                          padding: EdgeInsets.zero,
-                          size: 12,
-                          color: Theme.of(context).splashColor.withOpacity(1),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace, onRetry) {
-                      return SizedBox(
-                        height: 10, width: 10,
-                        child: Icon(
-                          Icons.error_outlined,
-                          color: Colors.red,
-                          size: 12,
-                        ),
-                      );
-                    },
+    return AnimatedBuilder(
+      animation: this,
+      builder: (context, child) {
+        return EnsureVisibleWhenFocused(
+          focusNode: focusNode,
+          child: Focus(
+            focusNode: focusNode,
+            key: headerGlobalKey,
+            skipTraversal: true,
+            canRequestFocus: true,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: (tableHorizontalPadding-8).coerceAtLeast(0)),
+              child: Stack(
+                children: [
+                  TableHeaderFromZero<T>(
+                    controller: tableController,
+                    title: Text(uiName),
+                    actions: actions,
+                    onShowAppbarContextMenu: () => focusNode.requestFocus(),
+                    exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
+                    addSearchAction: addSearchAction,
+                    backgroundColor: backgroundColor?.call(context, this, dao),
+                    leading: !collapsible! ? icon : IconButton(
+                      icon: Icon(collapsed! ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
+                      onPressed: () {
+                        focusNode.requestFocus();
+                        this.collapsed = !this.collapsed;
+                        notifyListeners();
+                      },
+                    ),
                   ),
-                ),
-            ],
+                  if (availableObjectsPoolProvider!=null)
+                    Positioned(
+                      left: 3, top: 3,
+                      child: ApiProviderBuilder(
+                        provider: availableObjectsPoolProvider!.call(context, this, dao),
+                        dataBuilder: (context, data) {
+                          return SizedBox.shrink();
+                        },
+                        loadingBuilder: (context, progress) {
+                          return SizedBox(
+                            height: 10, width: 10,
+                            child: LoadingSign(
+                              value: null,
+                              padding: EdgeInsets.zero,
+                              size: 12,
+                              color: Theme.of(context).splashColor.withOpacity(1),
+                            ),
+                          );
+                        },
+                        errorBuilder: (context, error, stackTrace, onRetry) {
+                          return SizedBox(
+                            height: 10, width: 10,
+                            child: Icon(
+                              Icons.error_outlined,
+                              color: Colors.red,
+                              size: 12,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      }
     );
   }
 

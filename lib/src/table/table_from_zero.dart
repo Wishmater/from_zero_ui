@@ -624,7 +624,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
   @override
   Widget build(BuildContext context) {
-    
+
     if (widget.hideIfNoRows && allFiltered.isEmpty) {
       return SliverToBoxAdapter(child: SizedBox.shrink(),);
     }
@@ -843,47 +843,51 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               : ActionState.none;
         }
       }
-      if (row.hasExpandableRows!=null && row!=headerRowModel) {
-        rowActions.add(ActionFromZero(
-          icon: Icon(row.hasExpandableRows! ? MaterialCommunityIcons.arrow_collapse_up : MaterialCommunityIcons.arrow_expand_down,),
-          title: row.hasExpandableRows! ? 'Colapsar fila' : 'Expandir fila',
-          breakpoints: {0: ActionState.popup},
-          onTap: (context) {
-            for (int i=index; i<allFiltered.length && (i==index || allFiltered[i].depth>row.depth); i++) {
-              toggleRowExpanded(allFiltered[i], i,
-                expanded: !row.hasExpandableRows!,
-                forceChildrenAsSame: true,
-                updateHasExpandableRows: false,
-              );
-            }
-            int i = index;
-            while (allFiltered[i].depth>0) {
-              i--;
-            }
-            _recalculateHasExpandableRows(allFiltered[i]);
-            _recalculateExpandableRowsExist();
-          },
-        ));
-      }
-      if (_expandableRowsExist!=null) {
-        rowActions.add(ActionFromZero(
-          icon: Icon(_expandableRowsExist! ? MaterialCommunityIcons.arrow_collapse_up : MaterialCommunityIcons.arrow_expand_down,),
-          title: _expandableRowsExist! ? 'Colapsar todas las filas' : 'Expandir todas las filas',
-          breakpoints: {0: ActionState.popup},
-          onTap: (context) {
-            for (int i=0; i<allFiltered.length; i++) {
-              toggleRowExpanded(allFiltered[i], i,
-                expanded: !_expandableRowsExist!,
-                forceChildrenAsSame: true,
-                updateHasExpandableRows: false,
-              );
-            }
-            for (final e in filtered) {
-              _setAllChildrenHasExpandableRows(e, !_expandableRowsExist!);
-            }
-            _recalculateExpandableRowsExist();
-          },
-        ));
+      final expandActions = [
+        if (row.hasExpandableRows!=null && row!=headerRowModel)
+          ActionFromZero(
+            icon: Icon(row.hasExpandableRows! ? MaterialCommunityIcons.arrow_collapse_up : MaterialCommunityIcons.arrow_expand_down,),
+            title: row.hasExpandableRows! ? 'Colapsar fila' : 'Expandir fila',
+            breakpoints: {0: ActionState.popup},
+            onTap: (context) {
+              for (int i=index; i<allFiltered.length && (i==index || allFiltered[i].depth>row.depth); i++) {
+                toggleRowExpanded(allFiltered[i], i,
+                  expanded: !row.hasExpandableRows!,
+                  forceChildrenAsSame: true,
+                  updateHasExpandableRows: false,
+                );
+              }
+              int i = index;
+              while (allFiltered[i].depth>0) {
+                i--;
+              }
+              _recalculateHasExpandableRows(allFiltered[i]);
+              _recalculateExpandableRowsExist();
+            },
+          ),
+        if (_expandableRowsExist!=null)
+          ActionFromZero(
+            icon: Icon(_expandableRowsExist! ? MaterialCommunityIcons.arrow_collapse_up : MaterialCommunityIcons.arrow_expand_down,),
+            title: _expandableRowsExist! ? 'Colapsar todas las filas' : 'Expandir todas las filas',
+            breakpoints: {0: ActionState.popup},
+            onTap: (context) {
+              for (int i=0; i<allFiltered.length; i++) {
+                toggleRowExpanded(allFiltered[i], i,
+                  expanded: !_expandableRowsExist!,
+                  forceChildrenAsSame: true,
+                  updateHasExpandableRows: false,
+                );
+              }
+              for (final e in filtered) {
+                _setAllChildrenHasExpandableRows(e, !_expandableRowsExist!);
+              }
+              _recalculateExpandableRowsExist();
+            },
+          ),
+      ];
+      if (expandActions.isNotEmpty) {
+        if (rowActions.isNotEmpty) rowActions.add(ActionFromZero.divider());
+        rowActions.addAll(expandActions);
       }
       if (widget.allowCustomization) {
         rowActions = addManageActions(context,

@@ -15,6 +15,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:url_launcher/url_launcher.dart';
 import 'package:dartx/dartx.dart';
+import 'package:pasteboard/pasteboard.dart';
 
 
 final _percentFormatter = NumberFormat.decimalPercentPattern(decimalDigits: 1);
@@ -29,7 +30,7 @@ Future<bool> saveFileFromZero ({
   ValueNotifier<int?>? fileSize,
   VoidCallback? onCancel,
   FutureOr<List<int>> Function()? onRetry,
-  bool autoOpenOnFinish = true,
+  bool autoOpenOnFinish = false,
   bool showSnackBars = true,
   bool showDownloadSnackBar = true,
   bool showResultSnackBar = true, // TODO 3 implement output pickers in not web (optional)
@@ -216,7 +217,7 @@ Future<bool> saveFileFromZero ({
             label: FromZeroLocalizations.of(context).translate('open').toUpperCase(),
             onPressed: () async {
               if (Platform.isAndroid){
-                OpenFile.open(file!.absolute.path);
+                await OpenFile.open(file!.absolute.path);
               } else{
                 await launch(file!.absolute.path);
               }
@@ -224,15 +225,23 @@ Future<bool> saveFileFromZero ({
           ),
           if (Platform.isWindows)
             SnackBarAction(
-              label: FromZeroLocalizations.of(context).translate('open_folder').toUpperCase(),
+              label: 'COPIAR', // TODO 3 internationalize
               onPressed: () async {
-                if (Platform.isAndroid){
-                  OpenFile.open(file!.parent.absolute.path);
-                } else{
-                  await launch(file!.parent.absolute.path);
-                }
+                await Pasteboard.writeFiles([file!.absolute.path]);
               },
             ),
+          SnackBarAction(
+            label: FromZeroLocalizations.of(context).translate('open_folder').toUpperCase(),
+            onPressed: () async {
+              if (Platform.isAndroid) {
+                await OpenFile.open(file!.parent.absolute.path);
+              } else if (Platform.isWindows) {
+                await Process.run('explorer.exe /select,"${file!.absolute.path.replaceAll('/', '\\')}"', []);
+              } else {
+                await launch(file!.parent.absolute.path);
+              }
+            },
+          ),
         ],
       ).show(context).closed;
     } else if (!success) {

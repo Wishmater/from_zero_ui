@@ -563,7 +563,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       if (!showConfirmDialogWithBlockingErrors && !validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
                         Navigator.of(context).pop(null);
                       }
-                      if (!askForSaveConfirmation && validationErrors.where((e) => e.isBlocking).isEmpty) {
+                      if (!askForSaveConfirmation && validationErrors.where((e) => e.isBlocking || e.isVisibleAsSaveConfirmation).isEmpty) {
                         Navigator.of(context).pop(true);
                       }
                       String shownName = uiName;
@@ -622,7 +622,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                       key: timerGlobalKey,
                                       duration: validationErrors.isEmpty || !validation
                                           ? Duration.zero
-                                          : Duration(milliseconds: (1500 + 1200*validationErrors.where((e) => e.isVisibleAsSaveConfirmation).length).clamp(0, 10000)),
+                                          : Duration(milliseconds: (1400 + 1100*Set.from(validationErrors.where((e) => e.isVisibleAsSaveConfirmation).map((e) => e.error)).length).clamp(0, 10000)),
                                       builder: (context, elapsed, remaining) {
                                         return FlatButton(
                                           child: Padding(

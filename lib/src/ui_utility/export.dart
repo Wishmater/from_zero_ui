@@ -298,57 +298,12 @@ class ExportState extends State<Export> {
 
   void _onExportButtonPressed() async{
     await export();
-    if (filePath!=null) {
-      final openFile = () async {
-        if (Platform.isAndroid){
-          OpenFile.open(filePath);
-        } else{
-          await launch(filePath);
-        }
-      };
-      final openFolder = () async {
-        if (Platform.isAndroid){
-          OpenFile.open(directoryPath);
-        } else{
-          await launch(directoryPath);
-        }
-      };
+    if (mounted) {
       Navigator.of(context).pop();
-      if (widget.autoOpenFile == FileAutoOpenType.file) {
-        openFile();
-      } else if (widget.autoOpenFile == FileAutoOpenType.folder) {
-        openFolder();
-      } else {
-        String path = await widget.path;
-        if (Platform.isWindows){
-          path = path.replaceAll("/", "\\");
-        }
-        SnackBarFromZero(
-          context: widget.scaffoldContext!,
-          type: SnackBarFromZero.success,
-          title: Text("Archivo exportado con exito a"),
-          message: Text(pathUi),
-          duration: 10.seconds,
-          actions: [
-            SnackBarAction(
-              label: "ABRIR",
-              onPressed: openFile,
-            ),
-            if (Platform.isWindows)
-              SnackBarAction(
-                label: "ABRIR CARPETA",
-                onPressed: openFolder,
-              ),
-          ],
-        ).show();
-      }
     }
   }
 
   int doneExports = 0;
-  late String directoryPath;
-  late String filePath;
-  late String pathUi;
   Future<void> _export(Size size, [i=0, pdf]) async {
     if (format=='Excel'){
       return _executeExcelExport();
@@ -394,35 +349,33 @@ class ExportState extends State<Export> {
       );
       if (i==widget.childrenCount!(currentSize, portrait, scale, this.format,)-1){
         if (!mounted) return;
-        final file = File((await widget.path)+widget.title+'.pdf');
-        await file.create(recursive: true);
-        filePath = file.absolute.path;
-        directoryPath = file.parent.absolute.path; // TODO 2 always use saverFromZero to save
-        pathUi = filePath;
-        if (Platform.isWindows)
-          pathUi = pathUi.substring(filePath.indexOf("Document")).replaceAll('/', '\\');
-        if (Platform.isAndroid)
-          pathUi = "Downloads/Cutrans CRM/${filePath.substring(filePath.lastIndexOf(p.separator))}";
-        if (!mounted) return;
-        await file.writeAsBytes(await pdf.save());
+        await saveFileFromZero(
+          context: context,
+          name: widget.title+'.pdf',
+          pathAppend: await widget.path,
+          data: pdf.save(),
+        );
       }
     } else if (format=='PNG'){
-      File imgFile = File((await widget.path)+widget.title+(widget.childrenCount!(currentSize, portrait, scale, this.format,)>1?' ${(i+1)}':'')+'.png');
+      final title = widget.title+(widget.childrenCount!(currentSize, portrait, scale, this.format,)>1?' ${(i+1)}':'')+'.png';
+      final path = await widget.path;
       if (!mounted) return;
-      await imgFile.create(recursive: true);
+      final pngBytes = _getImageBytes(size, await _getImage(size, boundaryKeys[i]));
       if (i==0){
-        filePath = imgFile.absolute.path;
-        directoryPath = imgFile.parent.absolute.path;
-        pathUi = filePath;
-        if (Platform.isWindows)
-          pathUi = pathUi.substring(filePath.indexOf("Document")).replaceAll('/', '\\');
-        if (Platform.isAndroid)
-          pathUi = "Downloads/Cutrans CRM/${filePath.substring(filePath.lastIndexOf(p.separator))}";
+        await saveFileFromZero(
+          context: context,
+          name: title,
+          pathAppend: path,
+          data: pdf.save(),
+        );
+      } else {
+        final imgFile = File(path+title);
+        await imgFile.create(recursive: true);
+        final bytes = await pngBytes;
+        if (!mounted) return;
+        await imgFile.writeAsBytes(bytes);
       }
       if (!mounted) return;
-      Uint8List pngBytes = await _getImageBytes(size, await _getImage(size, boundaryKeys[i]));
-      if (!mounted) return;
-      await imgFile.writeAsBytes(pngBytes);
     }
   }
   Future<ui.Image> _getImage(Size size, GlobalKey boundaryKey) async{
@@ -534,17 +487,12 @@ class ExportState extends State<Export> {
     if (!mounted) return;
     var encoded = excel.encode()!;
     if (!mounted) return;
-    File file = File((await widget.path)+widget.title+'.xlsx');
-    filePath = file.absolute.path;
-    directoryPath = file.parent.absolute.path;
-    pathUi = filePath;
-    if (Platform.isWindows)
-      pathUi = pathUi.substring(filePath.indexOf("Document")).replaceAll('/', '\\');
-    if (Platform.isAndroid)
-      pathUi = "Downloads/Cutrans CRM/${filePath.substring(filePath.lastIndexOf(p.separator))}";
-    if (!mounted) return;
-    file..createSync(recursive: true)
-        ..writeAsBytesSync(encoded);
+    await saveFileFromZero(
+      context: context,
+      name: widget.title+'.xlsx',
+      pathAppend: await widget.path,
+      data: encoded,
+    );
     doneExports = widget.childrenCount?.call(currentSize, portrait, scale, format,)??1;
   }
 
@@ -614,7 +562,9 @@ class ExportState extends State<Export> {
         do {
           await Future.delayed(500.milliseconds);
         } while (doneExports<(widget.childrenCount?.call(currentSize, portrait, scale, format,)??1));
-        Navigator.of(context).pop();
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
       }
     };
     return ResponsiveInsetsDialog(

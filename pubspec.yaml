@@ -57,6 +57,7 @@ dependencies:
   enough_convert: ^1.6.0 # ! replace with native converters if ever available on windows and web
   bitsdojo_window: ^0.1.5
   window_manager: ^0.2.7
+  pasteboard: ^0.2.0
 
   # * Update
   r_upgrade: ^0.4.1
