@@ -449,7 +449,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         final Map<dynamic, Map<dynamic, DAO>> daoAliases = {
           for (final key in widget.columns!.keys) key: {},
         };
-        availableFiltersIsolateController = cancelable_compute.compute(_getAvailableFilters,
+        availableFiltersIsolateController = cancelable_compute.compute(getAvailableFilters,
             [
               widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
               rows.map((e) {
@@ -488,7 +488,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         return;
       }
     } else {
-      computedAvailableFilters = await _getAvailableFilters(
+      computedAvailableFilters = await getAvailableFilters(
           [
             widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
             rows.map((e) => e.values).toList(),
@@ -544,68 +544,90 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       return value;
     }
   }
-  static Future<Map<dynamic, List<dynamic>>> _getAvailableFilters(List<dynamic> params, {
+  static Future<Map<dynamic, List<dynamic>>> getAvailableFilters(List<dynamic> params, {
     bool artifitialThrottle = false,
-    State? state,
+    State? state, // for cancelling if unmounted
   }) async {
     final Map<dynamic, List<bool?>> columnOptions = params[0];
     final List<Map<dynamic, dynamic>> rowValues = params[1];
-    final bool sortNeeded = params[2];
+    final bool sort = params[2];
     Map<dynamic, List<dynamic>> availableFilters = {};
-    int operationCounter = 0;
+    ValueNotifier<int> operationCounter = ValueNotifier(0);
     for (final e in columnOptions.entries) {
       final key = e.key;
       final options = e.value;
-      Set<dynamic> available = {};
       if (options[0] ?? true) { // filterEnabled
-        for (final row in rowValues) {
-          final element = row[key];
-          if (element is List || element is ComparableList || element is ListField) {
-            final List list = element is List ? element
-                : element is ComparableList ? element.list
-                : element is ListField ? element.objects : [];
-            for (final e in list) {
-              available.add(e);
-              if (artifitialThrottle) {
-                operationCounter+=available.length;
-                if (operationCounter>5000000) {
-                  operationCounter = 0;
-                  await Future.delayed(Duration(milliseconds: 50));
-                  if (state!=null && !state.mounted) {
-                    return {};
-                  }
-                }
-              }
-            }
-          } else {
-            available.add(element);
-          }
-          if (artifitialThrottle) {
-            operationCounter+=available.length;
-            if (operationCounter>5000000) {
-              operationCounter = 0;
-              await Future.delayed(Duration(milliseconds: 50));
-              if (state!=null && !state.mounted) {
-                return {};
-              }
-            }
-          }
-        }
-      }
-      bool sortAscending = options[1] ?? true; // defaultSortAscending
-      List<dynamic> availableSorted;
-      if (sortNeeded) {
-        if (artifitialThrottle) {
-          availableSorted = available.sortedWith((a, b) => defaultComparator(a, b, sortAscending));
-        } else {
-          availableSorted = available.toList()..sort((a, b) => defaultComparator(a, b, sortAscending));
-        }
+        availableFilters[key] = await getAvailableFiltersForColumn(
+          rowValues: rowValues,
+          key: key,
+          sort: sort,
+          sortAscending: options[1] ?? true,
+          operationCounter: operationCounter,
+          state: state,
+        );
       } else {
-        availableSorted = available.toList();
+        availableFilters[key] = [];
       }
-      availableFilters[key] = availableSorted;
+      if (state!=null && !state.mounted) {
+        return {};
+      }
     }
     return availableFilters;
+  }
+  static Future<List<dynamic>> getAvailableFiltersForColumn({
+    required Iterable<Map<dynamic, dynamic>> rowValues,
+    required dynamic key,
+    bool sort = true,
+    bool sortAscending = true,
+    ValueNotifier<int>? operationCounter, // if null artifitial throttle is disabled
+    State? state, // for cancelling if unmounted
+  }) async {
+    final artifitialThrottle = operationCounter!=null;
+    Set<dynamic> available = {};
+    for (final row in rowValues) {
+      final element = row[key];
+      if (element is List || element is ComparableList || element is ListField) {
+        final List list = element is List ? element
+            : element is ComparableList ? element.list
+            : element is ListField ? element.objects : [];
+        for (final e in list) {
+          available.add(e);
+          if (artifitialThrottle) {
+            operationCounter.value+=available.length;
+            if (operationCounter.value>5000000) {
+              operationCounter.value = 0;
+              await Future.delayed(Duration(milliseconds: 50));
+              if (state!=null && !state.mounted) {
+                return [];
+              }
+            }
+          }
+        }
+      } else {
+        available.add(element);
+      }
+      if (artifitialThrottle) {
+        operationCounter.value+=available.length;
+        if (operationCounter.value>5000000) {
+          operationCounter.value = 0;
+          await Future.delayed(Duration(milliseconds: 50));
+          if (state!=null && !state.mounted) {
+            return [];
+          }
+        }
+      }
+    }
+    List<dynamic> availableSorted;
+    if (sort) {
+      if (artifitialThrottle) {
+        availableSorted = available.sortedWith((a, b) => defaultComparator(a, b, sortAscending));
+      } else {
+        availableSorted = available.toList()..sort((a, b) => defaultComparator(a, b, sortAscending));
+      }
+    } else {
+      availableSorted = available.toList();
+    }
+    return availableSorted;
   }
   static Map<dynamic, Map<Object?, bool>>? _getValidInitialFilters(List<dynamic> params) {
     Map<dynamic, Map<Object?, bool>> initialFilters = params[0];
@@ -1534,6 +1556,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       result = TooltipFromZero(
         message: name,
         child: result,
+        preferBelow: false,
       );
     }
     result = Material(
@@ -1643,11 +1666,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     final callback = col?.showFilterPopupCallback ?? TableFromZeroFilterPopup.showDefaultFilterPopup;
     bool modified = await callback(
       context: context,
+      controller: widget.tableController
+          ?? TableController()
+              ..valueFilters = valueFilters
+              ..conditionFilters = conditionFilters,
       colKey: colKey,
-      col: col,
-      availableFilters: availableFilters,
-      conditionFilters: conditionFilters,
-      valueFilters: valueFilters,
       anchorKey: anchorKey ?? filterGlobalKeys[colKey],
     );
     if (modified && mounted) {
@@ -1998,8 +2021,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       widget.tableController?.notifyListeners();
     }
   }
-  FilterResults<T> getFilterResults(List<RowModel<T>> rows) {
-    List<RowModel<T>> filtered = rows.where(_passesFilters).toList();
+  FilterResults<T> getFilterResults(List<RowModel<T>> rows, {
+    dynamic skipColKey,
+  }) {
+    List<RowModel<T>> filtered = rows.where((e) => _passesFilters(e, skipColKey: skipColKey)).toList();
     for (final e in (widget.tableController?.extraFilters ?? [])) {
       filtered = e(filtered);
     }
@@ -2038,35 +2063,41 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     }
     return result;
   }
-  bool _passesFilters(RowModel<T> row) {
+  bool _passesFilters(RowModel<T> row, {
+    dynamic skipColKey,
+  }) {
     bool pass = true;
     for (final key in valueFilters.keys) {
-      final col = widget.columns?[key];
-      if (valueFiltersApplied[key] ?? false) {
-        final value = ColModel.getRowValue(row, key, col);
-        if (value is List || value is ComparableList || value is ListField) {
-          final List list = value is List ? value
-              : value is ComparableList ? value.list
-              : value is ListField ? value.objects : [];
-          pass = false;
-          for (final e in list) {
-            pass = valueFilters[key]![e] ?? false;
-            if (pass) {
-              break; // make it pass true if at least 1 element is accepted
+      if (key!=skipColKey) {
+        final col = widget.columns?[key];
+        if (valueFiltersApplied[key] ?? false) {
+          final value = ColModel.getRowValue(row, key, col);
+          if (value is List || value is ComparableList || value is ListField) {
+            final List list = value is List ? value
+                : value is ComparableList ? value.list
+                : value is ListField ? value.objects : [];
+            pass = false;
+            for (final e in list) {
+              pass = valueFilters[key]![e] ?? false;
+              if (pass) {
+                break; // make it pass true if at least 1 element is accepted
+              }
             }
+          } else {
+            pass = valueFilters[key]![value] ?? false;
           }
-        } else {
-          pass = valueFilters[key]![value] ?? false;
         }
-      }
-      if (!pass) {
-        break;
+        if (!pass) {
+          break;
+        }
       }
     }
     conditionFilters.forEach((key, filters) {
-      final col = widget.columns?[key];
-      for (var j = 0; j < filters.length && pass; ++j) {
-        pass = filters[j].isAllowed(row, key, col);
+      if (key!=skipColKey) {
+        final col = widget.columns?[key];
+        for (var j = 0; j < filters.length && pass; ++j) {
+          pass = filters[j].isAllowed(row, key, col);
+        }
       }
     });
     return pass;

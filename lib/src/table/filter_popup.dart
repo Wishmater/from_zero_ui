@@ -5,13 +5,10 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 
 
 typedef ShowFilterPopupCallback = Future<bool> Function({
-required BuildContext context,
-required dynamic colKey,
-required ColModel? col,
-required ValueNotifier<Map<dynamic, List<dynamic>>?> availableFilters,
-required Map<dynamic, List<ConditionFilter>> conditionFilters,
-required Map<dynamic, Map<Object?, bool>> valueFilters,
-GlobalKey? anchorKey,
+  required BuildContext context,
+  required TableController controller,
+  required dynamic colKey,
+  GlobalKey? anchorKey,
 });
 
 
@@ -19,13 +16,13 @@ abstract class TableFromZeroFilterPopup {
 
   static Future<bool> showDefaultFilterPopup({
     required BuildContext context,
+    required TableController controller,
     required dynamic colKey,
-    required ColModel? col,
-    required ValueNotifier<Map<dynamic, List<dynamic>>?> availableFilters,
-    required Map<dynamic, List<ConditionFilter>> conditionFilters,
-    required Map<dynamic, Map<Object?, bool>> valueFilters,
     GlobalKey? anchorKey,
   }) async {
+    final ColModel? col = controller.currentState!.widget.columns?[colKey];
+    final Map<dynamic, List<ConditionFilter>> conditionFilters = controller.conditionFilters!;
+    final Map<dynamic, Map<Object?, bool>> valueFilters = controller.valueFilters!;
     final newConditionFilters = {
       for (final e in conditionFilters.keys)
         e: List<ConditionFilter>.from(conditionFilters[e]!),
@@ -45,6 +42,23 @@ abstract class TableFromZeroFilterPopup {
         filterSearchFocusNode.requestFocus();
       });
     }
+    final ValueNotifier<Map<dynamic, List<dynamic>>?> availableFilters = ValueNotifier(null); // controller.currentState.availableFilters
+    final relevantRows = controller.currentState!.getFilterResults(
+      controller.currentState!.sorted,
+      skipColKey: colKey, // skip filters on this column, filter out everything in other columns
+    ); // TODO 3 performance make getFilterResults async (either with an isolate or an artifitial throttle)
+    TableFromZeroState.getAvailableFiltersForColumn(
+      rowValues: relevantRows.allFiltered.map((e) => e.values),
+      key: colKey,
+      operationCounter: ValueNotifier(0),
+      sort: true,
+      sortAscending: col?.defaultSortAscending ?? true,
+      // TODO 3 performance pass a state into that is unmounted when the filterView pops, so it can cancel calculations
+    ).then((result) {
+      availableFilters.value = {
+        colKey: result,
+      };
+    });
     final confirm = await showPopupFromZero(
       context: context,
       anchorKey: anchorKey,
@@ -342,10 +356,10 @@ abstract class TableFromZeroFilterPopup {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 SizedBox(
-                                  width: 128,
+                                  width: 120,
                                   child: FlatButton(
                                     child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
+                                      padding: const EdgeInsets.symmetric(vertical: 8.0),
                                       child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
                                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                       ),
@@ -357,10 +371,10 @@ abstract class TableFromZeroFilterPopup {
                                   ),
                                 ),
                                 SizedBox(
-                                  width: 128,
+                                  width: 120,
                                   child: FlatButton(
                                     child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
+                                      padding: const EdgeInsets.symmetric(vertical: 8.0),
                                       child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
                                         style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                                       ),
