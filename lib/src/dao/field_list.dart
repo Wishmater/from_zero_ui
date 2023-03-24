@@ -687,8 +687,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     final newValue = value!.copyWith();
     elements.forEach((e) {
       result = newValue.remove(e) || result;
-      for (final proxiedList in proxiedListFields!(this, dao)) {
-        result = proxiedList.removeRow(e) || result;
+      if (proxiedListFields!=null) {
+        for (final proxiedList in proxiedListFields!(this, dao)) {
+          result = proxiedList.removeRow(e) || result;
+        }
       }
     });
     if (result) {
