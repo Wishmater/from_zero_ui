@@ -77,6 +77,7 @@ class TableFromZero<T> extends StatefulWidget {
   final bool? computeFiltersInIsolate;
   final Color? backgroundColor;
   final Widget? tableHeader;
+  final bool allowCustomization;
 
   TableFromZero({
     Key? key,
@@ -116,6 +117,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.computeFiltersInIsolate,
     this.backgroundColor,
     this.tableHeader,
+    this.allowCustomization = true,
   }) :  super(key: key,);
 
   @override
@@ -883,14 +885,16 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           },
         ));
       }
-      rowActions = addManageActions(context,
-        actions: rowActions,
-        controller: widget.tableController ?? (TableController()
-          ..currentState = this
-          ..columnKeys = columnKeys
-          ..currentColumnKeys = currentColumnKeys
-        ),
-      );
+      if (widget.allowCustomization) {
+        rowActions = addManageActions(context,
+          actions: rowActions,
+          controller: widget.tableController ?? (TableController()
+            ..currentState = this
+            ..columnKeys = columnKeys
+            ..currentColumnKeys = currentColumnKeys
+          ),
+        );
+      }
       if (widget.exportPathForExcel != null) {
         rowActions = addExportExcelAction(context,
           actions: rowActions,
@@ -1581,7 +1585,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             }
           },
         ),
-      if (currentColumnKeys!=null)
+      if (currentColumnKeys!=null && widget.allowCustomization)
         ActionFromZero(
           title: 'Esconder Columna', // TODO 3 internationalize
           icon: Icon(Icons.visibility_off),
@@ -1592,17 +1596,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           },
         ),
     ];
-    colActions = addManageActions(context,
-      actions: colActions,
-      controller: widget.tableController ?? (TableController()
-        ..currentState = this
-        ..columnKeys = columnKeys
-        ..currentColumnKeys = currentColumnKeys
-      ),
-      availableFilters: availableFilters,
-      colKey: colKey,
-      col: col,
-    );
+    if (widget.allowCustomization) {
+      colActions = addManageActions(context,
+        actions: colActions,
+        controller: widget.tableController ?? (TableController()
+          ..currentState = this
+          ..columnKeys = columnKeys
+          ..currentColumnKeys = currentColumnKeys
+        ),
+        availableFilters: availableFilters,
+        colKey: colKey,
+        col: col,
+      );
+    }
     if (widget.exportPathForExcel != null) {
       colActions = addExportExcelAction(context,
         actions: colActions,
@@ -1618,7 +1624,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return result;
   }
 
-  void _showFilterPopup(dynamic colKey, [GlobalKey? anchorKey]) async {
+  Future<bool> _showFilterPopup(dynamic colKey, {
+    bool updateStateIfModified = true,
+    GlobalKey? anchorKey,
+  }) async {
     final col = widget.columns?[colKey];
     final callback = col?.showFilterPopupCallback ?? TableFromZeroFilterPopup.showDefaultFilterPopup;
     bool modified = await callback(
@@ -1631,20 +1640,28 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       anchorKey: anchorKey ?? filterGlobalKeys[colKey],
     );
     if (modified && mounted) {
-      setState(() {
-        _updateFiltersApplied();
-        filter();
-      });
+      _updateFiltersApplied();
+      if (updateStateIfModified) {
+        setState(() {
+          filter();
+        });
+      }
     }
+    return modified;
   }
   void _showManageTablePopup(TableController controller) async {
     if (currentColumnKeys!=null && widget.columns!=null ) {
-      bool modified = await TableFromZeroManagePopup.showDefaultManagePopup(
+      final result = await TableFromZeroManagePopup.showDefaultManagePopup(
         context: context,
         controller: controller,
       );
-      if (modified && mounted) {
-        setState(() {});
+      if ((result.modified || result.filtersModified) && mounted) {
+        setState(() {
+          if (result.filtersModified) {
+            _updateFiltersApplied();
+            filter();
+          }
+        });
       }
     }
   }
@@ -1768,6 +1785,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     ColModel? col,
     dynamic colKey,
     GlobalKey? globalKey,
+    ValueChanged<bool>? onPopupResult,
+    bool updateStateIfModified = false,
   }) {
     return ActionFromZero(
       title: 'Filtros...', // TODO 3 internationalize
@@ -1776,7 +1795,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           : MaterialCommunityIcons.filter_outline),
       enabled: col?.filterEnabled ?? true,
       breakpoints: {0: ActionState.popup},
-      onTap: (context) => controller.currentState!._showFilterPopup(colKey, globalKey),
+      onTap: (context) async {
+        final result = await controller.currentState!._showFilterPopup(colKey,
+          anchorKey: globalKey,
+          updateStateIfModified: updateStateIfModified,
+        );
+        onPopupResult?.call(result);
+      },
     );
   }
   static List<Widget> addExportExcelAction(BuildContext context, {

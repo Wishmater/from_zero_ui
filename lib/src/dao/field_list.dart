@@ -1890,9 +1890,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         }
         final getMinWidth = (Iterable currentColumnKeys) {
           double width = 0;
-          columns.forEach((key, value) {
+          for (final key in currentColumnKeys) {
+            final value = columns[key]!;
             width += value.flex ?? 192;
-          });
+          }
           return width;
         };
         final getMaxWidth = (Iterable currentColumnKeys) {
@@ -1939,6 +1940,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           maxWidthGetter: getMaxWidth,
           initialSortedColumn: initialSortedColumn,
           tableController: tableController,
+          allowCustomization: !tableCellsEditable,
           alternateRowBackgroundSmartly: false,
           onFilter: onFilter,
           exportPathForExcel: exportPathForExcel,

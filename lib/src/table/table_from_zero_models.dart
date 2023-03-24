@@ -181,7 +181,7 @@ abstract class ColModel<T>{
           final value = getValue(row, key);
           addValueToSet(unique, value);
         }
-        return '${unique.length} valores únicos';
+        return unique.length==1 ? '1 valor único' : '${unique.length} valores únicos';
       }
     }
     return '';
