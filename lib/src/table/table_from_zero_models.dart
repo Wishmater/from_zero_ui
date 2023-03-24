@@ -121,6 +121,7 @@ abstract class RowModel<T> {
 ///The widget assumes columns will be constant, so bugs may happen when changing columns
 abstract class ColModel<T>{
   String get name;
+  String? get compactName;
   Color? get backgroundColor => null;
   TextStyle? get textStyle => null;
   TextAlign? get alignment => null;
@@ -366,6 +367,7 @@ class SimpleRowModel<T> extends RowModel<T> {
 
 class SimpleColModel<T> extends ColModel<T>{
   String name;
+  String? compactName;
   Color? backgroundColor;
   TextStyle? textStyle;
   TextAlign? alignment;
@@ -382,6 +384,7 @@ class SimpleColModel<T> extends ColModel<T>{
   ShowFilterPopupCallback? showFilterPopupCallback;
   SimpleColModel({
     required this.name,
+    this.compactName,
     this.backgroundColor,
     this.textStyle,
     this.alignment,
@@ -440,6 +443,7 @@ class NumColModel<T> extends SimpleColModel<T> {
   NumberFormat? formatter;
   NumColModel({
     required super.name,
+    super.compactName,
     super.backgroundColor,
     super.textStyle,
     super.flex,
@@ -570,6 +574,7 @@ class DateColModel<T> extends SimpleColModel<T> {
   DateFormat? formatter;
   DateColModel({
     required super.name,
+    super.compactName,
     super.backgroundColor,
     super.textStyle,
     super.flex,

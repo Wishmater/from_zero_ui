@@ -1418,6 +1418,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     int autoSizeTextMaxLines = 1,
   }) {
     final col = widget.columns?[colKey];
+    final compactName = col?.compactName ?? col?.name ?? ColModel.getRowValueString(row, colKey, col);
     final name = col?.name ?? ColModel.getRowValueString(row, colKey, col);
     bool export = context.findAncestorWidgetOfExactType<Export>()!=null;
     if (!filterGlobalKeys.containsKey(colKey)) {
@@ -1440,7 +1441,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               bottom: widget.cellPadding.bottom,
             ),
             child: AutoSizeText(
-              name,
+              compactName,
               style: Theme.of(context).textTheme.subtitle2!.copyWith(
                 color: Theme.of(context).textTheme.bodyText1!.color!
                     .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
@@ -1448,7 +1449,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               textAlign: _getAlignment(colKey),
               maxLines: autoSizeTextMaxLines,
               minFontSize: 14,
-              overflowReplacement: TooltipFromZero(
+              overflowReplacement: name!=compactName ? null : TooltipFromZero(
                 message: name,
                 waitDuration: Duration(milliseconds: 0),
                 verticalOffset: -16,
@@ -1525,6 +1526,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       ),
     );
     headerFocusNodes[colKey] ??= FocusNode();
+    if (compactName!=name) {
+      result = TooltipFromZero(
+        message: name,
+        child: result,
+      );
+    }
     result = Material(
       type: MaterialType.transparency,
       child: EnsureVisibleWhenFocused(
