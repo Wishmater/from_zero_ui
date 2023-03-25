@@ -69,8 +69,8 @@ class UpdateFromZero{
       final response = await dio.get(versionJsonUrl);
       versionInfo = response.data;
     }
-    int ver = versionInfo![_getPlatformString()];
-    updateAvailable = ver > currentVersion;
+    int? ver = versionInfo![_getPlatformString()];
+    updateAvailable = ver != null ?  ver > currentVersion : false;
     return this;
   }
   String _getPlatformString() {
