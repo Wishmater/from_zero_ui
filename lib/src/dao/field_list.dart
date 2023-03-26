@@ -2061,6 +2061,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               title: FromZeroLocalizations.of(context).translate('view'),
               breakpoints: actionViewBreakpoints,
               onRowTap: (context, row) async {
+                userInteracted = true;
                 row.focusNode.requestFocus();
                 row.id.pushViewDialog(dao.contextForValidation ?? context);
               },
@@ -2075,6 +2076,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 copy.contextForValidation = dao.contextForValidation;
                 final result = await copy.maybeEdit(dao.contextForValidation ?? context, showDefaultSnackBars: showDefaultSnackBars);
                 if (result!=null) {
+                  userInteracted = true;
                   replaceRow(row.id, copy);
                   notifyListeners();
                 }
@@ -2085,6 +2087,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               title: FromZeroLocalizations.of(context).translate('duplicate'),
               breakpoints: actionDuplicateBreakpoints,
               onRowTap: (context, row) async {
+                userInteracted = true;
                 row.focusNode.requestFocus();
                 duplicateRows([row.id]);
               },
@@ -2095,6 +2098,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 title: FromZeroLocalizations.of(context).translate('delete'),
                 breakpoints: actionDeleteBreakpoints,
                 onRowTap: (context, row) async {
+                  userInteracted = true;
                   row.focusNode.requestFocus();
                   if (await maybeDelete(context, [row.id])) {
                     focusNode!.requestFocus();
