@@ -2220,7 +2220,7 @@ class TableController<T> extends ChangeNotifier {
 
   List<RowModel<T>> get filtered => currentState!.filtered;
   List<RowModel<T>> get allFiltered => currentState!.allFiltered;
-  Map<dynamic, ColModel>? get columns => currentState!.widget.columns;
+  Map<dynamic, ColModel>? get columns => currentState?.widget.columns;
 
   /// Call this if the rows change, to re-initialize rows
   void reInit() => currentState?.isStateInvalidated = true;
