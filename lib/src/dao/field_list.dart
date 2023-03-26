@@ -1653,9 +1653,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                       duplicateRows([e]);
                                     },
                                   ),
-                                  if (objectTemplate.canDelete) // TODO 3 maybe add allowDelete param
+                                  if (objectTemplate.canDelete || hasAvailableObjectsPool)
                                     ActionFromZero(
-                                      icon: Icon(allowAddNew ? Icons.delete_forever_outlined : Icons.clear),
+                                      icon: Icon(!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
                                       title: FromZeroLocalizations.of(context).translate('delete'),
                                       breakpoints: actionDeleteBreakpoints,
                                       onTap: (context) async {
@@ -2089,9 +2089,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 duplicateRows([row.id]);
               },
             ),
-            if (objectTemplate.canDelete) // TODO 3 maybe add allowDelete param
+            if (objectTemplate.canDelete || hasAvailableObjectsPool) // TODO 3 maybe add allowDelete param
               RowAction<T>(
-                icon: Icon(allowAddNew&&!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
+                icon: Icon(!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
                 title: FromZeroLocalizations.of(context).translate('delete'),
                 breakpoints: actionDeleteBreakpoints,
                 onRowTap: (context, row) async {
@@ -2535,11 +2535,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           },
           breakpoints: actionDuplicateBreakpoints[0]==ActionState.none ? actionDuplicateBreakpoints : null,
         ),
-      if (!collapsed && currentSelected.length>0 && objectTemplate.canDelete)
+      if (!collapsed && currentSelected.length>0 && (objectTemplate.canDelete || hasAvailableObjectsPool))
         ActionFromZero(
           icon: IconBackground(
             color: Theme.of(context).accentColor.withOpacity(0.25),
-            child: Icon(allowAddNew ? Icons.delete_forever_outlined : Icons.clear),
+            child: Icon(!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
           ),
           title: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
           onTap: (context) async {
