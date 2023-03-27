@@ -235,7 +235,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   bool blockNotifyListeners = false;
   BuildContext? _contextForValidation;
   set contextForValidation(BuildContext? value) => _contextForValidation = value;
-  BuildContext? get contextForValidation => parentDAO?.contextForValidation ?? this._contextForValidation;
+  BuildContext? get contextForValidation => this._contextForValidation ?? parentDAO?.contextForValidation;
   @override
   void notifyListeners() {
     if (blockNotifyListeners) {
@@ -509,19 +509,23 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     loadingBuilder: (context) {
                       return Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 18),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 18,),
-                            Text('Validando Datos...',
-                              style: Theme.of(context).textTheme.headline6,
-                            ), // TODO 3 internationaliza
-                            Container(
-                              height: 200,
-                              child: ApiProviderBuilder.defaultLoadingBuilder(context, null),
-                            ),
-                          ],
+                        child: IntrinsicHeight(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              SizedBox(height: 18,),
+                              Text('Validando Datos...',
+                                style: Theme.of(context).textTheme.headline6,
+                              ), // TODO 3 internationaliza
+                              Expanded(
+                                child: Container(
+                                  height: 200,
+                                  child: ApiProviderBuilder.defaultLoadingBuilder(context, null),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
@@ -1474,19 +1478,22 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? askForSaveConfirmation,
     bool showUndoRedo = true,
   }) async {
-    final content = buildEditModalWidget(context,
-      showDefaultSnackBars: showDefaultSnackBars,
-      showRevertChanges: showRevertChanges,
-      askForSaveConfirmation: askForSaveConfirmation,
-      showUndoRedo: showUndoRedo,
-    );
     ModelType? confirm = await showModal(
       context: context,
       builder: (modalContext) {
-        return content;
+        return Consumer(
+          builder: (context, ref, child) {
+            _contextForValidation = context;
+            return buildEditModalWidget(context,
+              showDefaultSnackBars: showDefaultSnackBars,
+              showRevertChanges: showRevertChanges,
+              askForSaveConfirmation: askForSaveConfirmation,
+              showUndoRedo: showUndoRedo,
+            );
+          },
+        );
       },
     );
-    _contextForValidation = null;
     return confirm;
   }
 
