@@ -2154,7 +2154,30 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             ) : null,
           ),
         );
-        if (!asSliver) {
+        if (asSliver) {
+          if (!enabled) {
+            result = SliverStack(
+              children: [
+                SliverIgnorePointer(sliver: result),
+                SliverPositioned.fill(
+                  child: TooltipFromZero(
+                    message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+                      return a.toString().trim().isEmpty ? b.toString()
+                          : b.toString().trim().isEmpty ? a.toString()
+                          : '$a\n$b';
+                    }),
+                    child: Center(
+                      child: Container(
+                        width: getMaxWidth(columns.keys),
+                        color: enabled ? Colors.transparent : Colors.black.withOpacity(0.25),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            );
+          }
+        } else {
           if (separateScrollableBreakpoint!=null && objects.length>separateScrollableBreakpoint!) {
             final mediaQuery = MediaQuery.of(context);
             final scrollController = ScrollController();
@@ -2185,61 +2208,36 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 ),
               ),
             );
+            result = TooltipFromZero(
+              message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+                return a.toString().trim().isEmpty ? b.toString()
+                    : b.toString().trim().isEmpty ? a.toString()
+                    : '$a\n$b';
+              }),
+              child: result,
+              waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
+            );
+            if (!enabled) {
+              result = IgnorePointer(
+                child: result,
+              );
+              // result = MouseRegion(
+              //   cursor: SystemMouseCursors.forbidden,
+              //   child: result,
+              // );
+            }
+            if (addCard) {
+              result = Card(
+                clipBehavior: Clip.hardEdge,
+                color: enabled ? null : Theme.of(context).canvasColor,
+                child: result,
+              );
+            }
           }
         }
         return result;
       }
     );
-    if (asSliver) {
-      if (!enabled) {
-        result = SliverStack(
-          children: [
-            SliverIgnorePointer(sliver: result),
-            SliverPositioned.fill(
-              child: TooltipFromZero(
-                message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
-                  return a.toString().trim().isEmpty ? b.toString()
-                      : b.toString().trim().isEmpty ? a.toString()
-                      : '$a\n$b';
-                }),
-                child: ColoredBox(
-                  color: enabled ? Colors.transparent : Colors.black.withOpacity(0.25),
-                ),
-              ),
-            ),
-          ],
-        );
-      }
-    } else {
-      if (!enabled) {
-        result = ColoredBox(
-          color: enabled ? Colors.transparent : Theme.of(context).canvasColor,
-          child: IgnorePointer(
-            child: result,
-          ),
-        );
-        // result = MouseRegion(
-        //   cursor: SystemMouseCursors.forbidden,
-        //   child: result,
-        // );
-      }
-      result = TooltipFromZero(
-        message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
-          return a.toString().trim().isEmpty ? b.toString()
-              : b.toString().trim().isEmpty ? a.toString()
-              : '$a\n$b';
-        }),
-        child: result,
-        waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
-      );
-      if (addCard) {
-        result = Card(
-          clipBehavior: Clip.hardEdge,
-          color: enabled ? null : Theme.of(context).canvasColor,
-          child: result,
-        );
-      }
-    }
     List<Widget> resultList = [
       result,
       if (enabled && (allowAddNew||hasAvailableObjectsPool) && showAddButtonAtEndOfTable && !collapsed && !dense)
