@@ -1623,7 +1623,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                       icon: Icon(Icons.add, color: Colors.blue),
                                       breakpoints: {0: ActionState.popup,},
                                       onTap: (context) async {
-                                        final result = await maybeAddRow(context, i);
+                                        final result = await maybeAddRow(dao.contextForValidation ?? context, i);
                                         if (result!=null) {
                                           userInteracted = true;
                                         }
@@ -2055,7 +2055,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 breakpoints: {0: ActionState.popup,},
                 onRowTap: (context, row) async {
                   row.focusNode.requestFocus();
-                  final result = await maybeAddRow(context, objects.indexOf(row.id)+1);
+                  final result = await maybeAddRow(dao.contextForValidation ?? context, objects.indexOf(row.id)+1);
                   if (result!=null) {
                     userInteracted = true;
                   }
@@ -2138,7 +2138,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                           : InkWell(
                             onTap: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty ? () {
                               userInteracted = true;
-                              maybeAddRow(context);
+                              maybeAddRow(dao.contextForValidation ?? context);
                             } : null,
                             child: ErrorSign(
                               title: FromZeroLocalizations.of(context).translate('no_data'),
@@ -2300,7 +2300,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             style: TextButton.styleFrom(
               backgroundColor: Colors.blue.withOpacity(0.2),
             ),
-            onPressed: () => maybeAddRow(context),
+            onPressed: () => maybeAddRow(dao.contextForValidation ?? context),
           ),
         );
       },
@@ -2577,7 +2577,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           icon: Icon(Icons.add, color: Colors.blue),
           onTap: (context) async {
             focusNode?.requestFocus();
-            final result = await maybeAddRow(context);
+            final result = await maybeAddRow(dao.contextForValidation ?? context);
             if (result!=null) {
               userInteracted = true;
               pageNotifier?.value = objects.length-1;
