@@ -2446,6 +2446,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                     exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
                     addSearchAction: addSearchAction,
                     backgroundColor: backgroundColor?.call(context, this, dao),
+                    showColumnMetadata: showTableHeaders,
                     leading: !collapsible! ? icon : IconButton(
                       icon: Icon(collapsed! ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
                       onPressed: () {

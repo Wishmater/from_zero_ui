@@ -151,7 +151,9 @@ abstract class ColModel<T>{
     }
   }
 
-  String getSubtitleText(BuildContext context, List<RowModel<T>>? filtered, dynamic key) {
+  String getSubtitleText(BuildContext context, List<RowModel<T>>? filtered, dynamic key, {
+    bool addMetadata = true,
+  }) {
     if (filtered==null) {
       return '';
     } else {
@@ -162,9 +164,11 @@ abstract class ColModel<T>{
       String result = count==0 ? FromZeroLocalizations.of(context).translate('no_elements')
           : '$count ${count>1 ? FromZeroLocalizations.of(context).translate('element_plur')
           : FromZeroLocalizations.of(context).translate('element_sing')}';
-      final metadata = getMetadataText(context, filtered, key, reFiltered: reFiltered);
-      if (metadata.isNotBlank) {
-        result += '     $name - $metadata';
+      if (addMetadata) {
+        final metadata = getMetadataText(context, filtered, key, reFiltered: reFiltered);
+        if (metadata.isNotBlank) {
+          result += '     $name - $metadata';
+        }
       }
       return result;
     }

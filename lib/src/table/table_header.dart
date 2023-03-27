@@ -20,6 +20,7 @@ class TableHeaderFromZero<T> extends StatefulWidget {
   final FutureOr<String>? exportPathForExcel;
   final bool addSearchAction;
   final bool searchActionExpandedByDefault;
+  final bool? showColumnMetadata; /// defaults to Table.showHeaders
   final Color? defaultActionsColor;
   final Color? backgroundColor;
 
@@ -35,8 +36,9 @@ class TableHeaderFromZero<T> extends StatefulWidget {
     this.searchActionExpandedByDefault = true,
     this.defaultActionsColor,
     this.backgroundColor,
+    this.showColumnMetadata,
     Key? key,
-  }) : super(key: key);
+  })  : super(key: key);
 
   @override
   _TableHeaderFromZeroState<T> createState() => _TableHeaderFromZeroState();
@@ -100,7 +102,9 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
             final column = widget.controller.columns?[widget.controller.sortedColumn];
             String subtitleText;
             if (column!=null) {
-              subtitleText = column.getSubtitleText(context, filtered, widget.controller.sortedColumn);
+              subtitleText = column.getSubtitleText(context, filtered, widget.controller.sortedColumn,
+                addMetadata: widget.showColumnMetadata ?? widget.controller.currentState!.widget.showHeaders,
+              );
             } else {
               final count = filtered.length;
               subtitleText = count==0 ? FromZeroLocalizations.of(context).translate('no_elements')
