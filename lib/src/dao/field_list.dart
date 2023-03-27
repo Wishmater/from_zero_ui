@@ -940,7 +940,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     } else {
       dynamic result;
       if (showEditDialogOnAdd) {
-        result = await emptyDAO.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+        result = await emptyDAO.maybeEdit(dao.contextForValidation ?? context, showDefaultSnackBars: showDefaultSnackBars);
         if (result!=null) {
           addRow(emptyDAO, insertIndex);
           return emptyDAO;
@@ -1045,7 +1045,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2,),
             child: TextButton(
               onPressed: () async {
-                final model = await emptyDAO.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+                final model = await emptyDAO.maybeEdit(dao.contextForValidation ?? context, showDefaultSnackBars: showDefaultSnackBars);
                 if (model!=null) {
                   Navigator.of(context).pop(emptyDAO);
                 }
@@ -1638,7 +1638,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                       final copy = e.copyWith() as T;
                                       copy.parentDAO = null;
                                       copy.contextForValidation = dao.contextForValidation;
-                                      final result = await copy.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+                                      final result = await copy.maybeEdit(dao.contextForValidation ?? context, showDefaultSnackBars: showDefaultSnackBars);
                                       if (result!=null) {
                                         replaceRow(e, copy);
                                         userInteracted = true;
@@ -1874,7 +1874,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   final copy = row.id.copyWith() as T;
                   copy.parentDAO = null;
                   copy.contextForValidation = dao.contextForValidation;
-                  final result = await copy.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+                  final result = await copy.maybeEdit(dao.contextForValidation ?? context, showDefaultSnackBars: showDefaultSnackBars);
                   if (result!=null) {
                     replaceRow(row.id, copy);
                     notifyListeners();
@@ -2079,7 +2079,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 final copy = row.id.copyWith() as T;
                 copy.parentDAO = null;
                 copy.contextForValidation = dao.contextForValidation;
-                final result = await copy.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
+                final result = await copy.maybeEdit(dao.contextForValidation ?? context, showDefaultSnackBars: showDefaultSnackBars);
                 if (result!=null) {
                   replaceRow(row.id, copy);
                   userInteracted = true;
