@@ -1620,9 +1620,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                       title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
                                       icon: Icon(Icons.add, color: Colors.blue),
                                       breakpoints: {0: ActionState.popup,},
-                                      onTap: (context) {
-                                        userInteracted = true;
-                                        maybeAddRow(context, i);
+                                      onTap: (context) async {
+                                        final result = await maybeAddRow(context, i);
+                                        if (result!=null) {
+                                          userInteracted = true;
+                                        }
                                         pageNotifier!.value = i+1;
                                       },
                                     ),
@@ -1633,13 +1635,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                     title: FromZeroLocalizations.of(context).translate('edit'),
                                     breakpoints: actionEditBreakpoints,
                                     onTap: (context) async {
-                                      userInteracted = true;
                                       final copy = e.copyWith() as T;
                                       copy.parentDAO = null;
                                       copy.contextForValidation = dao.contextForValidation;
                                       final result = await copy.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
                                       if (result!=null) {
                                         replaceRow(e, copy);
+                                        userInteracted = true;
                                         notifyListeners();
                                       }
                                     },
@@ -1653,15 +1655,15 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                       duplicateRows([e]);
                                     },
                                   ),
-                                  if (objectTemplate.canDelete) // TODO 3 maybe add allowDelete param
+                                  if (hasAvailableObjectsPool || objectTemplate.canDelete)
                                     ActionFromZero(
-                                      icon: Icon(allowAddNew ? Icons.delete_forever_outlined : Icons.clear),
+                                      icon: Icon(!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
                                       title: FromZeroLocalizations.of(context).translate('delete'),
                                       breakpoints: actionDeleteBreakpoints,
                                       onTap: (context) async {
-                                        userInteracted = true;
                                         if (await maybeDelete(context, [e],)) {
                                           focusNode!.requestFocus();
+                                          userInteracted = true;
                                           passedFirstEdit = true;
                                           notifyListeners();
                                         }
@@ -2049,9 +2051,12 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
                 icon: Icon(Icons.add, color: Colors.blue),
                 breakpoints: {0: ActionState.popup,},
-                onRowTap: (context, row) {
+                onRowTap: (context, row) async {
                   row.focusNode.requestFocus();
-                  maybeAddRow(context, objects.indexOf(row.id)+1);
+                  final result = await maybeAddRow(context, objects.indexOf(row.id)+1);
+                  if (result!=null) {
+                    userInteracted = true;
+                  }
                 },
               ),
             if ((allowAddNew||hasAvailableObjectsPool))
@@ -2061,6 +2066,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               title: FromZeroLocalizations.of(context).translate('view'),
               breakpoints: actionViewBreakpoints,
               onRowTap: (context, row) async {
+                userInteracted = true; // can't know if the item was edited from within its view dialog
                 row.focusNode.requestFocus();
                 row.id.pushViewDialog(dao.contextForValidation ?? context);
               },
@@ -2076,6 +2082,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 final result = await copy.maybeEdit(context, showDefaultSnackBars: showDefaultSnackBars);
                 if (result!=null) {
                   replaceRow(row.id, copy);
+                  userInteracted = true;
                   notifyListeners();
                 }
               },
@@ -2085,19 +2092,21 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               title: FromZeroLocalizations.of(context).translate('duplicate'),
               breakpoints: actionDuplicateBreakpoints,
               onRowTap: (context, row) async {
+                userInteracted = true;
                 row.focusNode.requestFocus();
                 duplicateRows([row.id]);
               },
             ),
-            if (objectTemplate.canDelete) // TODO 3 maybe add allowDelete param
+            if (hasAvailableObjectsPool || objectTemplate.canDelete)
               RowAction<T>(
-                icon: Icon(allowAddNew&&!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
+                icon: Icon(!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
                 title: FromZeroLocalizations.of(context).translate('delete'),
                 breakpoints: actionDeleteBreakpoints,
                 onRowTap: (context, row) async {
                   row.focusNode.requestFocus();
                   if (await maybeDelete(context, [row.id])) {
                     focusNode!.requestFocus();
+                    userInteracted = true;
                     passedFirstEdit = true;
                     notifyListeners();
                   }
@@ -2531,17 +2540,17 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           },
           breakpoints: actionDuplicateBreakpoints[0]==ActionState.none ? actionDuplicateBreakpoints : null,
         ),
-      if (!collapsed && currentSelected.length>0 && objectTemplate.canDelete)
+      if (!collapsed && currentSelected.length>0 && (hasAvailableObjectsPool || objectTemplate.canDelete))
         ActionFromZero(
           icon: IconBackground(
             color: Theme.of(context).accentColor.withOpacity(0.25),
-            child: Icon(allowAddNew ? Icons.delete_forever_outlined : Icons.clear),
+            child: Icon(!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
           ),
           title: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
           onTap: (context) async {
-            userInteracted = true;
             focusNode?.requestFocus();
             if (await maybeDelete(context, currentSelected)) {
+              userInteracted = true;
               focusNode?.requestFocus();
             }
           },
@@ -2555,7 +2564,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           ),
           title: FromZeroLocalizations.of(context).translate('cancel_selection'),
           onTap: (context) {
-            userInteracted = true;
             focusNode?.requestFocus();
             selectedObjects.value = {};
             notifyListeners();
@@ -2566,9 +2574,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
           icon: Icon(Icons.add, color: Colors.blue),
           onTap: (context) async {
-            userInteracted = true;
             focusNode?.requestFocus();
-            if (await maybeAddRow(context) != null) {
+            final result = await maybeAddRow(context);
+            if (result!=null) {
+              userInteracted = true;
               pageNotifier?.value = objects.length-1;
             }
           },
@@ -2613,7 +2622,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           icon: Icon(Icons.refresh,),
           breakpoints: {0: ActionState.popup},
           onTap: (context) {
-            userInteracted = true;
             focusNode?.requestFocus();
             final ref = dao.contextForValidation! as WidgetRef;
             final provider = availableObjectsPoolProvider!(context, this, dao);
