@@ -229,7 +229,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, /// Unused in table
     this.tableCellsEditable = false,
     double maxWidth = double.infinity,
-    double minWidth = 0,
+    double minWidth = 512,
     double flex = 0,
     TableController<T>? tableController,
     this.collapsed = false,
@@ -1958,7 +1958,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           return width;
         };
         final getMaxWidth = (Iterable currentColumnKeys) {
-          return 1.4 * getMinWidth(currentColumnKeys);
+          return max(minWidth, 1.4 * getMinWidth(currentColumnKeys));
         };
         if (collapsed!) {
           Widget result = SizedBox(
@@ -2115,32 +2115,32 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           } : null,
           emptyWidget: tableErrorWidget
               ?? ContextMenuFromZero(
-                actions: actions,
-                onShowMenu: () => _errorWidgetFocusNode.requestFocus(),
-                child: Focus(
-                  focusNode: _errorWidgetFocusNode,
-                  skipTraversal: true,
-                  child: Material(
-                    color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
-                    child: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
-                        ? buildAddAddon(context: context, collapsed: collapsed)
-                        : InkWell(
-                          onTap: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty ? () {
-                            userInteracted = true;
-                            maybeAddRow(context);
-                          } : null,
-                          child: ErrorSign(
-                            title: FromZeroLocalizations.of(context).translate('no_data'),
-                            subtitle: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
-                                ? FromZeroLocalizations.of(context).translate('no_data_add')
-                                : objects.isEmpty
-                                    ? FromZeroLocalizations.of(context).translate('no_data_desc')
-                                    : FromZeroLocalizations.of(context).translate('no_data_filters'),
+                  actions: actions,
+                  onShowMenu: () => _errorWidgetFocusNode.requestFocus(),
+                  child: Focus(
+                    focusNode: _errorWidgetFocusNode,
+                    skipTraversal: true,
+                    child: Material(
+                      color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
+                      child: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
+                          ? buildAddAddon(context: context, collapsed: collapsed)
+                          : InkWell(
+                            onTap: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty ? () {
+                              userInteracted = true;
+                              maybeAddRow(context);
+                            } : null,
+                            child: ErrorSign(
+                              title: FromZeroLocalizations.of(context).translate('no_data'),
+                              subtitle: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
+                                  ? FromZeroLocalizations.of(context).translate('no_data_add')
+                                  : objects.isEmpty
+                                      ? FromZeroLocalizations.of(context).translate('no_data_desc')
+                                      : FromZeroLocalizations.of(context).translate('no_data_filters'),
+                            ),
                           ),
-                        ),
+                    ),
                   ),
                 ),
-              ),
           headerRowModel: SimpleRowModel(
             id: 'header', values: {},
             rowAddonIsCoveredByScrollable: false,
@@ -2182,9 +2182,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             final mediaQuery = MediaQuery.of(context);
             final scrollController = ScrollController();
             result = Material(
-              color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
+              color: enabled
+                  ? (backgroundColor?.call(context, this, dao) ?? Theme.of(context).cardColor)
+                  : Theme.of(context).canvasColor,
               child: Container(
-                color: backgroundColor?.call(context, this, dao) ?? Material.of(context)?.color ?? Theme.of(context).canvasColor,
                 padding: addCard ? null : const EdgeInsets.only(right: 24),
                 height: mediaQuery.size.height - mediaQuery.padding.vertical - mediaQuery.viewInsets.vertical - 256,
                 child: ScrollbarFromZero(
@@ -2198,41 +2199,40 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             );
           } else {
             result = Material(
-              color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
-              child: Container(
-                color: backgroundColor?.call(context, this, dao) ?? Material.of(context)?.color ?? Theme.of(context).canvasColor,
-                child: CustomScrollView(
-                  shrinkWrap: !expandToFillContainer,
-                  physics: NeverScrollableScrollPhysics(),
-                  slivers: [result],
-                ),
+              color: enabled
+                  ? (backgroundColor?.call(context, this, dao) ?? Theme.of(context).cardColor)
+                  : Theme.of(context).canvasColor,
+              child: CustomScrollView(
+                shrinkWrap: !expandToFillContainer,
+                physics: NeverScrollableScrollPhysics(),
+                slivers: [result],
               ),
             );
-            result = TooltipFromZero(
-              message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
-                return a.toString().trim().isEmpty ? b.toString()
-                    : b.toString().trim().isEmpty ? a.toString()
-                    : '$a\n$b';
-              }),
+          }
+          result = TooltipFromZero(
+            message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+              return a.toString().trim().isEmpty ? b.toString()
+                  : b.toString().trim().isEmpty ? a.toString()
+                  : '$a\n$b';
+            }),
+            child: result,
+            waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
+          );
+          if (!enabled) {
+            result = IgnorePointer(
               child: result,
-              waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
             );
-            if (!enabled) {
-              result = IgnorePointer(
-                child: result,
-              );
-              // result = MouseRegion(
-              //   cursor: SystemMouseCursors.forbidden,
-              //   child: result,
-              // );
-            }
-            if (addCard) {
-              result = Card(
-                clipBehavior: Clip.hardEdge,
-                color: enabled ? null : Theme.of(context).canvasColor,
-                child: result,
-              );
-            }
+            // result = MouseRegion(
+            //   cursor: SystemMouseCursors.forbidden,
+            //   child: result,
+            // );
+          }
+          if (addCard) {
+            result = Card(
+              clipBehavior: Clip.hardEdge,
+              color: enabled ? null : Theme.of(context).canvasColor,
+              child: result,
+            );
           }
         }
         return result;
@@ -2265,34 +2265,31 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         if (collapsed! || !enabled) {
           return SizedBox.shrink();
         }
-        return Transform.translate(
-          offset: Offset(0, 0),
-          child: Container(
-            color: backgroundColor?.call(context, this, dao) ?? Material.of(context)!.color ?? Theme.of(context).cardColor,
-            child: TextButton(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 10, bottom: 10,),
-                child: Center(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add, color: Colors.blue),
-                      SizedBox(width: 8,),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 2),
-                        child: Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}', style: TextStyle(fontSize: 16),),
-                      ),
-                      SizedBox(width: 8,),
-                    ],
-                  ),
+        return Container(
+          color: backgroundColor?.call(context, this, dao) ?? Material.of(context)!.color ?? Theme.of(context).cardColor,
+          child: TextButton(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 10,),
+              child: Center(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add, color: Colors.blue),
+                    SizedBox(width: 8,),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 2),
+                      child: Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}', style: TextStyle(fontSize: 16),),
+                    ),
+                    SizedBox(width: 8,),
+                  ],
                 ),
               ),
-              style: TextButton.styleFrom(
-                backgroundColor: Colors.blue.withOpacity(0.2),
-              ),
-              onPressed: () => maybeAddRow(context),
             ),
+            style: TextButton.styleFrom(
+              backgroundColor: Colors.blue.withOpacity(0.2),
+            ),
+            onPressed: () => maybeAddRow(context),
           ),
         );
       },
