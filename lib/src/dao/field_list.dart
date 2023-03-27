@@ -716,10 +716,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     focusNode.requestFocus();
     final objectTemplate = this.objectTemplate;
     T emptyDAO = (objectTemplate.copyWith() as T)..id=null;
+    if (emptyDAO is LazyDAO) (emptyDAO as LazyDAO).ensureInitialized();
     emptyDAO.contextForValidation = dao.contextForValidation;
     if (hasAvailableObjectsPool) {
       var selected;
       if (showObjectsFromAvailablePoolAsTable) {
+        final ValueNotifier<Map<T, bool>> selectedObjects = ValueNotifier({});
+        ValueNotifier<List<T>?> availableData = ValueNotifier(null);
         emptyDAO.onDidSave = (BuildContext context, U? model, DAO<U> dao) {
           objectTemplate.onDidSave?.call(context, model, dao);
           try {
@@ -729,6 +732,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               if (dao.id!=-1) dao.id = model;
             } catch(_) {}
           }
+          selectedObjects.value[dao as T] = true;
           WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
             Navigator.of(context).pop(dao);
           });
@@ -736,8 +740,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         Widget content = AnimatedBuilder(
           animation:  this,
           builder: (context, child) {
-            final ValueNotifier<Map<T, bool>> selectedObjects = ValueNotifier({});
-            ValueNotifier<List<T>?> availableData = ValueNotifier(null);
             return Stack(
               children: [
                 availableObjectsPoolProvider==null
