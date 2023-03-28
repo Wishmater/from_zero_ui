@@ -1909,7 +1909,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           // }
           int i = index;
           while (allFiltered[i].depth>0) {
-            index--;
+            i--;
           }
           _recalculateHasExpandableRows(allFiltered[i]);
           _recalculateExpandableRowsExist();
