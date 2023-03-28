@@ -385,12 +385,14 @@ class DateField extends Field<DateTime> {
   }
 
   static SimpleColModel dateFieldDefaultGetColumn(Field field, DAO dao) {
-    if (field is DateField && field.type==DateTimePickerType.date) {
+    if (field is! DateField || field.type==DateTimePickerType.date) {
       return DateColModel(
         name: field.uiName,
         filterEnabled: true,
         flex: field.tableColumnWidth?.round() ?? 192,
-        formatter: field.formatterDense,
+        formatter: field is DateField
+            ? field.formatterDense
+            : defaultDenseFormatter,
       );
     } else {
       return SimpleColModel(
