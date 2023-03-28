@@ -2300,7 +2300,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             style: TextButton.styleFrom(
               backgroundColor: Colors.blue.withOpacity(0.2),
             ),
-            onPressed: () => maybeAddRow(dao.contextForValidation ?? context),
+            onPressed: () {
+              userInteracted = true;
+              maybeAddRow(dao.contextForValidation ?? context);
+            },
           ),
         );
       },
