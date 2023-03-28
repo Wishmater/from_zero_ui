@@ -584,7 +584,8 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     );
 
     // Only check for hovering if there is a mouse connected.
-    if (_mouseIsConnected) {
+    // This causes children to be rebuilt (and state not kept) if mouse exists/enters de window on desktop
+    // if (_mouseIsConnected) {
       result = MouseRegion(
         onEnter: (PointerEnterEvent event) {
           _insideChildMouseRegion = true;
@@ -600,7 +601,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
         },
         child: result,
       );
-    }
+    // }
 
     return result;
   }

@@ -1999,7 +1999,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         }
         final extraRowActions = extraRowActionsBuilder?.call(dao.contextForValidation ?? context, this, dao) ?? [];
         Widget result = TableFromZero<T>(
-          // key: ValueKey(value.hashCode),
           scrollController: mainScrollController,
           minWidthGetter: getMinWidth,
           maxWidthGetter: getMaxWidth,
