@@ -1956,8 +1956,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         final getMinWidth = (Iterable currentColumnKeys) {
           double width = 0;
           for (final key in currentColumnKeys) {
-            final value = columns[key]!;
-            width += value.flex ?? 192;
+            final value = columns[key];
+            width += value?.flex ?? 192;
           }
           return width;
         };
@@ -2151,17 +2151,12 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                     ),
                   ),
                 ),
-          headerRowModel: SimpleRowModel(
-            id: 'header', values: {},
-            rowAddonIsCoveredByScrollable: false,
-            rowAddonIsCoveredByBackground: false,
-            rowAddon: showTableHeaderAddon ? _buildTableHeader(context,
-              actions: actions,
-              focusNode: focusNode!,
-              collapsed: collapsed,
-              collapsible: collapsible,
-              asSliver: asSliver,
-            ) : null,
+          tableHeader: !showTableHeaderAddon ? null : _buildTableHeader(context,
+            actions: actions,
+            focusNode: focusNode!,
+            collapsed: collapsed,
+            collapsible: collapsible,
+            asSliver: asSliver,
           ),
         );
         if (asSliver) {
@@ -2434,75 +2429,71 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }) {
     collapsible ??= this.collapsible;
     collapsed ??= this.collapsed;
-    return AnimatedBuilder(
-      animation: this,
-      builder: (context, child) {
-        return EnsureVisibleWhenFocused(
-          focusNode: focusNode,
-          child: Focus(
-            focusNode: focusNode,
-            key: headerGlobalKey,
-            skipTraversal: true,
-            canRequestFocus: true,
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: (tableHorizontalPadding-8).coerceAtLeast(0)),
-              child: Stack(
-                children: [
-                  TableHeaderFromZero<T>(
-                    controller: tableController,
-                    title: Text(uiName),
-                    actions: actions,
-                    onShowAppbarContextMenu: () => focusNode.requestFocus(),
-                    exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
-                    addSearchAction: addSearchAction,
-                    backgroundColor: backgroundColor?.call(context, this, dao),
-                    showColumnMetadata: showTableHeaders,
-                    leading: !collapsible! ? icon : IconButton(
-                      icon: Icon(collapsed! ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
-                      onPressed: () {
-                        focusNode.requestFocus();
-                        this.collapsed = !this.collapsed;
-                        notifyListeners();
-                      },
-                    ),
-                  ),
-                  if (availableObjectsPoolProvider!=null)
-                    Positioned(
-                      left: 3, top: 3,
-                      child: ApiProviderBuilder(
-                        provider: availableObjectsPoolProvider!.call(context, this, dao),
-                        dataBuilder: (context, data) {
-                          return SizedBox.shrink();
-                        },
-                        loadingBuilder: (context, progress) {
-                          return SizedBox(
-                            height: 10, width: 10,
-                            child: LoadingSign(
-                              value: null,
-                              padding: EdgeInsets.zero,
-                              size: 12,
-                              color: Theme.of(context).splashColor.withOpacity(1),
-                            ),
-                          );
-                        },
-                        errorBuilder: (context, error, stackTrace, onRetry) {
-                          return SizedBox(
-                            height: 10, width: 10,
-                            child: Icon(
-                              Icons.error_outlined,
-                              color: Colors.red,
-                              size: 12,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                ],
+    return EnsureVisibleWhenFocused(
+      key: ValueKey(actions.map((e) => e is ActionFromZero ? e.title : 'widget')),
+      focusNode: focusNode,
+      child: Focus(
+        focusNode: focusNode,
+        key: headerGlobalKey,
+        skipTraversal: true,
+        canRequestFocus: true,
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: (tableHorizontalPadding-8).coerceAtLeast(0)),
+          child: Stack(
+            children: [
+              TableHeaderFromZero<T>(
+                controller: tableController,
+                title: Text(uiName),
+                actions: actions,
+                onShowAppbarContextMenu: () => focusNode.requestFocus(),
+                exportPathForExcel: Export.getDefaultDirectoryPath('Cutrans 3.0'),
+                addSearchAction: addSearchAction,
+                backgroundColor: backgroundColor?.call(context, this, dao),
+                showColumnMetadata: showTableHeaders,
+                leading: !collapsible ? icon : IconButton(
+                  icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
+                  onPressed: () {
+                    focusNode.requestFocus();
+                    this.collapsed = !this.collapsed;
+                    notifyListeners();
+                  },
+                ),
               ),
-            ),
+              if (availableObjectsPoolProvider!=null)
+                Positioned(
+                  left: 3, top: 3,
+                  child: ApiProviderBuilder(
+                    provider: availableObjectsPoolProvider!.call(context, this, dao),
+                    dataBuilder: (context, data) {
+                      return SizedBox.shrink();
+                    },
+                    loadingBuilder: (context, progress) {
+                      return SizedBox(
+                        height: 10, width: 10,
+                        child: LoadingSign(
+                          value: null,
+                          padding: EdgeInsets.zero,
+                          size: 12,
+                          color: Theme.of(context).splashColor.withOpacity(1),
+                        ),
+                      );
+                    },
+                    errorBuilder: (context, error, stackTrace, onRetry) {
+                      return SizedBox(
+                        height: 10, width: 10,
+                        child: Icon(
+                          Icons.error_outlined,
+                          color: Colors.red,
+                          size: 12,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+            ],
           ),
-        );
-      }
+        ),
+      ),
     );
   }
 

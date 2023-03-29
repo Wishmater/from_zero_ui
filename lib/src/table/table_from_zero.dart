@@ -291,7 +291,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     super.didUpdateWidget(oldWidget);
     if (isStateInvalidated) {
       init(notifyListeners: false);
-    } else if (widget.headerRowModel!=null) {
+    } else if (widget.headerRowModel!=null || widget.tableHeader!=null) {
       initHeaderRowModel();
     }
   }
