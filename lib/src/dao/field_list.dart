@@ -60,6 +60,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool selectionDefault;
   bool tableCellsEditable;
   bool collapsible;
+  bool allowTableCustomization;
   RowTapType rowTapType;
   ListFieldDisplayType displayType;
   bool validateChildren;
@@ -228,6 +229,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool? allowAddNew,
     FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, /// Unused in table
     this.tableCellsEditable = false,
+    bool? allowTableCustomization,
     double maxWidth = double.infinity,
     double minWidth = 512,
     double flex = 0,
@@ -307,6 +309,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         this._tableController = tableController,
         this._allowAddNew = allowAddNew,
         this.validateChildren = tableCellsEditable && (validateChildren ?? true),
+        this.allowTableCustomization = allowTableCustomization ?? !tableCellsEditable,
         super(
           uiNameGetter: uiNameGetter,
           value: ComparableList(list: objects),
@@ -496,6 +499,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     ContextFulFieldValueGetter<List<RowAction<T>>, ListField<T, U>>? extraRowActionBuilders,
     int? initialSortColumn,
     bool? tableCellsEditable,
+    bool? allowTableCustomization,
     bool? allowMultipleSelection,
     bool? selectionDefault,
     ValueChanged<RowModel>? onRowTap,
@@ -568,6 +572,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       rowHeight: rowHeight ?? this.rowHeight,
       initialSortedColumn: initialSortColumn ?? this.initialSortedColumn,
       tableCellsEditable: tableCellsEditable ?? this.tableCellsEditable,
+      allowTableCustomization: allowTableCustomization ?? this.allowTableCustomization,
       allowMultipleSelection: allowMultipleSelection ?? this.allowMultipleSelection,
       selectionDefault: selectionDefault ?? this.selectionDefault,
       onRowTap: onRowTap ?? this.onRowTap,
@@ -2004,7 +2009,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           maxWidthGetter: asSliver ? getMaxWidth : null,
           initialSortedColumn: initialSortedColumn,
           tableController: tableController,
-          allowCustomization: !tableCellsEditable,
+          allowCustomization: allowTableCustomization,
           alternateRowBackgroundSmartly: false,
           onFilter: onFilter,
           exportPathForExcel: exportPathForExcel,
