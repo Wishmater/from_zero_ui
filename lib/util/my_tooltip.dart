@@ -593,6 +593,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     // Only check for hovering if there is a mouse connected.
     // This causes children to be rebuilt (and state not kept) if mouse exists/enters de window on desktop
     result = Stack(
+      fit: StackFit.passthrough,
       children: [
         result,
         if (_mouseIsConnected)
