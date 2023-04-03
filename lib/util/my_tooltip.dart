@@ -279,6 +279,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
   late AnimationController _controller;
   OverlayEntry? _entry;
   Timer? _hideTimer;
+  Timer? _removeAfterHideTimer;
   Timer? _showTimer;
   late Duration showDuration;
   late Duration hoverShowDuration;
@@ -367,11 +368,10 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     if (immediately) {
       _removeEntry();
       return;
-    }
-    if (_pressActivated) {
-      _hideTimer ??= Timer(showDuration, _controller.reverse);
     } else {
-      _hideTimer ??= Timer(hoverShowDuration, _controller.reverse);
+      final showDuration = _pressActivated ? this.showDuration : hoverShowDuration;
+      _hideTimer ??= Timer(showDuration, _controller.reverse);
+      _removeAfterHideTimer ??= Timer(showDuration+_fadeOutDuration, _removeEntry);
     }
     _pressActivated = false;
   }
@@ -379,6 +379,8 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
   void _showTooltipFromZero({ bool immediately = false }) {
     _hideTimer?.cancel();
     _hideTimer = null;
+    _removeAfterHideTimer?.cancel();
+    _removeAfterHideTimer = null;
     if (immediately) {
       ensureTooltipVisible();
       return;
@@ -398,6 +400,8 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
       // Stop trying to hide, if we were.
       _hideTimer?.cancel();
       _hideTimer = null;
+      _removeAfterHideTimer?.cancel();
+      _removeAfterHideTimer = null;
       _controller.forward();
       return false; // Already visible.
     }
@@ -465,6 +469,8 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     TooltipFromZero._openedToolTips.remove(this);
     _hideTimer?.cancel();
     _hideTimer = null;
+    _removeAfterHideTimer?.cancel();
+    _removeAfterHideTimer = null;
     _showTimer?.cancel();
     _showTimer = null;
     _entry?.remove();
@@ -586,23 +592,30 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
 
     // Only check for hovering if there is a mouse connected.
     // This causes children to be rebuilt (and state not kept) if mouse exists/enters de window on desktop
-    // if (_mouseIsConnected) {
-      result = MouseRegion(
-        onEnter: (PointerEnterEvent event) {
-          _insideChildMouseRegion = true;
-          _onEnteredMouseRegion();
-        },
-        onHover: (PointerHoverEvent event) {
-          _insideChildMouseRegion = true;
-          _onEnteredMouseRegion();
-        },
-        onExit: (PointerExitEvent event) {
-          _insideChildMouseRegion = false;
-          _onExitedMouseRegion();
-        },
-        child: result,
-      );
-    // }
+    result = Stack(
+      children: [
+        result,
+        if (_mouseIsConnected)
+          Positioned.fill(
+            child: MouseRegion(
+              hitTestBehavior: HitTestBehavior.translucent,
+              onEnter: (PointerEnterEvent event) {
+                _insideChildMouseRegion = true;
+                _onEnteredMouseRegion();
+              },
+              onHover: (PointerHoverEvent event) {
+                _insideChildMouseRegion = true;
+                _onEnteredMouseRegion();
+              },
+              onExit: (PointerExitEvent event) {
+                _insideChildMouseRegion = false;
+                _onExitedMouseRegion();
+              },
+              // child: result,
+            ),
+          ),
+      ],
+    );
 
     return result;
   }
