@@ -391,6 +391,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
   /// Returns `false` when the tooltip was already visible or if the context has
   /// become null.
   bool ensureTooltipVisible() {
+    if (!mounted) return false;
     _showTimer?.cancel();
     _showTimer = null;
     if (_entry != null) {
@@ -407,7 +408,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
 
   Stopwatch? timeSinceCreated;
   void _createNewEntry() {
-    if (widget.message==null || widget.message!.trim().isEmpty) {
+    if (!mounted || widget.message==null || widget.message!.trim().isEmpty) {
       return;
     }
     final OverlayState overlayState = Overlay.of(
