@@ -642,6 +642,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     bool showDefaultSnackBars = true,
     bool? snackBarCancellable,
     bool askForSaveConfirmation = true,
+    bool skipValidation = false,
   }) {
     ensureInitialized();
     return super.maybeSave(context,
@@ -649,6 +650,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
       snackBarCancellable: snackBarCancellable,
       askForSaveConfirmation: askForSaveConfirmation,
       updateDbValuesAfterSuccessfulSave: updateDbValuesAfterSuccessfulSave,
+      skipValidation: skipValidation,
     );
   }
 

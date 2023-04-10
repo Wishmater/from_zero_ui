@@ -487,10 +487,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool showDefaultSnackBars=true,
     bool? snackBarCancellable,
     bool askForSaveConfirmation=true,
+    bool skipValidation = false,
   }) async {
-    final validationFuture = validate(context,
-      validateNonEditedFields: true,
-    );
+    final validationFuture = skipValidation
+        ? Future.value(true)
+        : validate(context,
+            validateNonEditedFields: true,
+          );
     final scrollController = ScrollController();
     bool? confirm = await showModal(
       context: context,
@@ -563,7 +566,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       );
                     },
                     successBuilder: (context, validation) {
-                      validation = validation && validationErrors.firstOrNullWhere((e) => e.isBlocking)==null;
+                      validation = skipValidation
+                          ? true
+                          : validation && validationErrors.firstOrNullWhere((e) => e.isBlocking)==null;
                       if (!showConfirmDialogWithBlockingErrors && !validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
                         Navigator.of(context).pop(null);
                       }
