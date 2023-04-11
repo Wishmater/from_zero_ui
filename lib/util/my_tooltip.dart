@@ -579,7 +579,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     enableFeedback = widget.enableFeedback ?? tooltipTheme.enableFeedback ?? _defaultEnableFeedback;
 
     Widget result = GestureDetector(
-      behavior: HitTestBehavior.opaque,
+      behavior: HitTestBehavior.translucent,
       onLongPress: (triggerMode == TooltipTriggerMode.longPress) ?
       _handlePress : null,
       onTap: (triggerMode == TooltipTriggerMode.tap) ? _handlePress : null,
