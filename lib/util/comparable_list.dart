@@ -55,7 +55,7 @@ class ComparableList<T extends Comparable> with Comparable, ContainsValue<List<T
 
   void insert(int index, T value) => list.insert(index, value);
 
-  void addAll(Iterable iterable) => list.addAll(iterable as Iterable<T>);
+  void addAll(Iterable iterable) => list.addAll(iterable.cast<T>());
 
   bool remove(T value) => list.remove(value);
 
