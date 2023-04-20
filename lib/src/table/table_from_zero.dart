@@ -78,6 +78,7 @@ class TableFromZero<T> extends StatefulWidget {
   final Color? backgroundColor;
   final Widget? tableHeader;
   final bool allowCustomization;
+  final String? Function(RowModel<T> row)? rowDisabledValidator;
 
   TableFromZero({
     Key? key,
@@ -118,6 +119,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.backgroundColor,
     this.tableHeader,
     this.allowCustomization = true,
+    this.rowDisabledValidator,
   }) :  super(key: key,);
 
   @override
@@ -849,6 +851,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         * (widget.verticalDivider==null ? 1 : 2)
         + (widget.verticalDivider==null ? 0 : 1);
 
+    final String? rowDisabledReason = row==headerRowModel ? null
+        : widget.rowDisabledValidator?.call(row as RowModel<T>);
     final builder = (BuildContext context, BoxConstraints? constraints) {
       final Map<Widget, ActionState> rowActionStates = {
         for (final e in widget.rowActions)
@@ -1030,7 +1034,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                   : row.onCheckBoxSelected!=null
                                       ? row.selected
                                       : row.allChildren.some((e) => e.selected),
-                              onChanged: row==headerRowModel&&allFiltered.isEmpty ? null : (value) {
+                              onChanged: (row==headerRowModel ? allFiltered.isEmpty : rowDisabledReason!=null) ? null : (value) {
                                 value = value ?? false;
                                 if (row==headerRowModel) {
                                   if (row.onCheckBoxSelected!=null) {
@@ -1185,6 +1189,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           row: row as RowModel<T>,
           index: index,
           child: result,
+          rowDisabledReason: rowDisabledReason,
         );
       }
       if (row==headerRowModel) {
@@ -1277,6 +1282,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           row: row as RowModel<T>,
           index: index,
           child: result,
+          rowDisabledReason: rowDisabledReason,
         );
       }
       result = Stack(
@@ -1360,9 +1366,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     required RowModel<T> row,
     required int index,
     required Widget child,
+    String? rowDisabledReason,
   }) {
     Widget result = child;
-    if (row.onRowTap!=null || row.onCheckBoxSelected!=null || row.isExpandable) {
+    if (rowDisabledReason==null && (row.onRowTap!=null || row.onCheckBoxSelected!=null || row.isExpandable)) {
       result = InkWell(
         onTap: !widget.enabled ? null
             : row.onRowTap!=null
@@ -1382,6 +1389,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         onLongPress: widget.enabled&&row.onRowLongPress!=null ? () => row.onRowLongPress!(row) : null,
         onHover: widget.enabled&&row.onRowHover!=null ? (value) => row.onRowHover!(row, value) : null,
         child: child,
+      );
+    }
+    if (rowDisabledReason!=null) {
+      result = TooltipFromZero(
+        message: rowDisabledReason,
+        child: result,
       );
     }
     result = Material(
