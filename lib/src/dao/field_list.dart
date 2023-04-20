@@ -2508,16 +2508,14 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     final objectTemplate = this.objectTemplate;
     final allowAddNew = this.allowAddNew;
     List<T> currentSelected = [];
-    try {
-      currentSelected = tableController.filtered.where((element) => selectedObjects.value[element]??selectionDefault).map((e) => e.id).toList();
-    } catch (_) {}
+    // TODO 3 re-implement multiple edition, test well. Enabling this might break current uses of selection (when selecion is used for external purposes, like in PageSend EntidadContacto selection)
+    // try {
+    //   currentSelected = tableController.filtered.where((element) => selectedObjects.value[element]??selectionDefault).map((e) => e.id).toList();
+    // } catch (_) {}
     return [
       if (!collapsed && currentSelected.length>0)
         ActionFromZero(
-          icon: IconBackground(
-            color: Theme.of(context).accentColor.withOpacity(0.25),
-            child: Icon(Icons.edit_outlined),
-          ),
+          icon: Icon(Icons.edit_outlined),
           title: '${FromZeroLocalizations.of(context).translate('edit')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
           onTap: (context) {
             userInteracted = true;
@@ -2528,10 +2526,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         ),
       if (!collapsed && currentSelected.length>0)
         ActionFromZero(
-          icon: IconBackground(
-            color: Theme.of(context).accentColor.withOpacity(0.25),
-            child: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
-          ),
+          icon: Icon(MaterialCommunityIcons.content_duplicate, size: 21,),
           title: '${FromZeroLocalizations.of(context).translate('duplicate')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
           onTap: (context) {
             userInteracted = true;
@@ -2542,10 +2537,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         ),
       if (!collapsed && currentSelected.length>0 && (objectTemplate.canDelete || hasAvailableObjectsPool))
         ActionFromZero(
-          icon: IconBackground(
-            color: Theme.of(context).accentColor.withOpacity(0.25),
-            child: Icon(!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
-          ),
+          icon: Icon(!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
           title: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('selected_plur')}',
           onTap: (context) async {
             focusNode?.requestFocus();
@@ -2558,10 +2550,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         ),
       if (!collapsed && currentSelected.length>0)
         ActionFromZero(
-          icon: IconBackground(
-            color: Theme.of(context).accentColor.withOpacity(0.25),
-            child: Icon(Icons.cancel_outlined),
-          ),
+          icon: Icon(Icons.cancel_outlined),
           title: FromZeroLocalizations.of(context).translate('cancel_selection'),
           onTap: (context) {
             focusNode?.requestFocus();
@@ -2657,37 +2646,4 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
 
 
-class IconBackground extends StatelessWidget {
 
-  final Color color;
-  final Widget child;
-  final double overflowSize;
-
-  IconBackground({
-    required this.color,
-    required this.child,
-    this.overflowSize = 16,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Positioned(
-          top: -overflowSize, bottom: -overflowSize, left: -overflowSize, right: -overflowSize,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                colors: [color, color, color.withOpacity(0)],
-                stops: [0, 0.5, 1],
-              ),
-            ),
-          ),
-        ),
-        child,
-      ],
-    );
-  }
-
-}
