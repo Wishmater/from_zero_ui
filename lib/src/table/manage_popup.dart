@@ -36,13 +36,28 @@ abstract class TableFromZeroManagePopup {
               child: StatefulBuilder(
                 builder: (context, setState) {
                   final visibleColumns = columnKeys.where((e) => columnVisibility[e]!);
+                  final isAnyColHidden = columnVisibility.any((key, value) => !value);
+                  final clearFiltersAction = TableFromZeroState.getClearAllFiltersAction(
+                    controller: controller,
+                    skipConditions: true,
+                    updateStateIfModified: false,
+                    onDidTap: () {
+                      modifiedFilters = true;
+                      setState(() {});
+                    },
+                  )?.copyWith(
+                    breakpoints: {
+                      0: ActionState.icon,
+                      ScaffoldFromZero.screenSizeLarge: ActionState.button,
+                    },
+                  );
                   return Stack(
                     children: [
                       CustomScrollView(
                         controller: scrollController,
                         shrinkWrap: true,
                         slivers: [
-                          SliverToBoxAdapter(child: SizedBox(height: 16),),
+                          SliverToBoxAdapter(child: SizedBox(height: 64+12),),
                           SliverReorderableList(
                             proxyDecorator: (child, index, animation) {
                               return Stack(
@@ -118,19 +133,23 @@ abstract class TableFromZeroManagePopup {
                                               AnimatedBuilder(
                                                 animation: controller,
                                                 builder: (context, child) {
-                                                  return TableFromZeroState.getOpenFilterPopupAction(context,
-                                                    controller: controller,
-                                                    col: col,
-                                                    colKey: key,
-                                                    globalKey: filterButtonGlobalKeys[key],
-                                                    updateStateIfModified: false,
-                                                    onPopupResult: (value) {
-                                                      modifiedFilters = modifiedFilters || value;
-                                                      if (value) {
-                                                        itemSetState(() {});
-                                                      }
-                                                    },
-                                                  ).buildIcon(context);
+                                                  return Container(
+                                                    key: filterButtonGlobalKeys[key],
+                                                    child: TableFromZeroState.getOpenFilterPopupAction(context,
+                                                      controller: controller,
+                                                      col: col,
+                                                      colKey: key,
+                                                      globalKey: filterButtonGlobalKeys[key],
+                                                      updateStateIfModified: false,
+                                                      onPopupResult: (value) {
+                                                        modifiedFilters = modifiedFilters || value;
+                                                        if (value) {
+                                                          // itemSetState(() {});
+                                                          setState(() {}); // need to setState for the whole widget to update clearAllFilters button
+                                                        }
+                                                      },
+                                                    ).buildIcon(context,),
+                                                  );
                                                 },
                                               ),
                                             ],
@@ -161,6 +180,33 @@ abstract class TableFromZeroManagePopup {
                           ),
                           SliverToBoxAdapter(child: SizedBox(height: 24+42,),),
                         ],
+                      ),
+                      Positioned(
+                        top: 0, left: 0, right: 0,
+                        child: AppbarFromZero(
+                          title: Text('Personalizar Tabla',
+                            style: Theme.of(context).textTheme.headline6,
+                          ),
+                          backgroundColor: Theme.of(context).cardColor,
+                          elevation: 6,
+                          toolbarHeight: 64,
+                          actions: [
+                            ActionFromZero(
+                              title: isAnyColHidden ? 'Mostrar todas las columnas' : 'Ocultar todas las columnas',
+                              icon: Icon(isAnyColHidden ? Icons.visibility : Icons.visibility_off),
+                              onTap: (context) {
+                                modified = true;
+                                setState(() {
+                                  for (final key in columnVisibility.keys) {
+                                    columnVisibility[key] = isAnyColHidden;
+                                  }
+                                });
+                              },
+                            ),
+                            if (clearFiltersAction!=null)
+                              clearFiltersAction,
+                          ],
+                        ),
                       ),
                       Positioned(
                         bottom: 0, left: 0, right: 0,
