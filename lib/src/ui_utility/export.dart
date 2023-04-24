@@ -349,7 +349,7 @@ class ExportState extends State<Export> {
       );
       if (i==widget.childrenCount!(currentSize, portrait, scale, this.format,)-1){
         if (!mounted) return;
-        await saveFileFromZero(
+        saveFileFromZero( // don't await, so the window closes before snackbar
           context: context,
           name: widget.title+'.pdf',
           pathAppend: await widget.path,
@@ -362,7 +362,7 @@ class ExportState extends State<Export> {
       if (!mounted) return;
       final pngBytes = _getImageBytes(size, await _getImage(size, boundaryKeys[i]));
       if (i==0){
-        await saveFileFromZero(
+        saveFileFromZero( // don't await, so the window closes before snackbar, might have issues with multiple files
           context: context,
           name: title,
           pathAppend: path,
@@ -487,7 +487,7 @@ class ExportState extends State<Export> {
     if (!mounted) return;
     var encoded = excel.encode()!;
     if (!mounted) return;
-    await saveFileFromZero(
+    saveFileFromZero( // don't await, so the window closes before snackbar
       context: context,
       name: widget.title+'.xlsx',
       pathAppend: await widget.path,
