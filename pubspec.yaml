@@ -51,7 +51,6 @@ dependencies:
     git:
       url: https://github.com/Wishmater/dart_pdf
       path: pdf
-  excel: ^2.0.0-null-safety-3
   desktop_drop: ^0.3.3
   universal_html: ^2.0.8
   enough_convert: ^1.6.0 # ! replace with native converters if ever available on windows and web
@@ -66,6 +65,7 @@ dependencies:
   # * Specific Utility
   dio: ^4.0.6
   dio_smart_retry: ^1.2.0
+  flutter_excel: ^1.0.1
 
 
 
