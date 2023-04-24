@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 class SelectableIcon extends StatefulWidget {
 
   final IconData icon;
+  final IconData selectedIcon;
   final bool selected;
   final double unselectedOffset;
   final double selectedOffset;
@@ -15,6 +16,7 @@ class SelectableIcon extends StatefulWidget {
   const SelectableIcon({
     required this.selected,
     this.icon = Icons.expand_more,
+    IconData? selectedIcon,
     this.iconSize = 24,
     this.unselectedColor,
     this.selectedColor,
@@ -23,7 +25,7 @@ class SelectableIcon extends StatefulWidget {
     this.curve = Curves.easeOutCubic,
     this.reverseCurve = Curves.easeInCubic,
     super.key,
-  });
+  })  : this.selectedIcon = selectedIcon ?? icon;
 
   @override
   State<SelectableIcon> createState() => _SelectableIconState();
@@ -103,7 +105,7 @@ class _SelectableIconState extends State<SelectableIcon> with SingleTickerProvid
       child: AnimatedBuilder(
         animation: _iconColor!,
         builder: (context, child) {
-          return Icon(widget.icon,
+          return Icon(widget.selected ? widget.selectedIcon : widget.icon,
             color: _iconColor!.value,
             size: widget.iconSize,
           );

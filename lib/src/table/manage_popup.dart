@@ -120,7 +120,15 @@ abstract class TableFromZeroManagePopup {
                                                   final visible = columnVisibility[key]!;
                                                   return ActionFromZero(
                                                     title: visible ? 'Ocultar Columna' : 'Mostrar Columna', // TODO 3 internationalize
-                                                    icon: Icon(visible ? Icons.visibility : Icons.visibility_off),
+                                                    icon: SelectableIcon(
+                                                      selected: visible,
+                                                      selectedIcon: Icons.visibility,
+                                                      icon: Icons.visibility_off,
+                                                      selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                                                      unselectedColor: Theme.of(context).textTheme.caption!.color!,
+                                                      unselectedOffset: 0,
+                                                      selectedOffset: 0,
+                                                    ),
                                                     onTap: (context) {
                                                       modified = true;
                                                       setState(() {
@@ -193,7 +201,15 @@ abstract class TableFromZeroManagePopup {
                           actions: [
                             ActionFromZero(
                               title: isAnyColHidden ? 'Mostrar todas las columnas' : 'Ocultar todas las columnas',
-                              icon: Icon(isAnyColHidden ? Icons.visibility : Icons.visibility_off),
+                              icon: SelectableIcon(
+                                selected: isAnyColHidden,
+                                selectedIcon: Icons.visibility,
+                                icon: Icons.visibility_off,
+                                selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                                unselectedColor: Theme.of(context).textTheme.bodyText1!.color!,
+                                unselectedOffset: 0,
+                                selectedOffset: 0,
+                              ),
                               onTap: (context) {
                                 modified = true;
                                 setState(() {

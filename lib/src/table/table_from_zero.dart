@@ -1552,8 +1552,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                       message: FromZeroLocalizations.of(context).translate('filters'),
                       child: IconButton(
                         key: filterGlobalKeys[colKey],
-                        icon: Icon((filtersApplied[colKey]??false) ? MaterialCommunityIcons.filter : MaterialCommunityIcons.filter_outline,
-                          color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                        icon: SelectableIcon(
+                          selected: filtersApplied[colKey]??false,
+                          icon: MaterialCommunityIcons.filter_outline,
+                          selectedIcon: MaterialCommunityIcons.filter,
+                          selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                          unselectedColor: Theme.of(context).textTheme.caption!.color!,
+                          unselectedOffset: 0,
+                          selectedOffset: 0,
                         ),
                         splashRadius: 20,
                         onPressed: () => _showFilterPopup(colKey),
@@ -1836,13 +1842,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     dynamic colKey,
     GlobalKey? globalKey,
     ValueChanged<bool>? onPopupResult,
-    bool updateStateIfModified = false,
+    bool updateStateIfModified = true,
   }) {
     return ActionFromZero(
       title: 'Filtros...', // TODO 3 internationalize
-      icon: Icon((controller.currentState?.filtersApplied[colKey]??false)
-          ? MaterialCommunityIcons.filter
-          : MaterialCommunityIcons.filter_outline),
+      icon: SelectableIcon(
+        selected: controller.currentState?.filtersApplied[colKey]??false,
+        icon: MaterialCommunityIcons.filter_outline,
+        selectedIcon: MaterialCommunityIcons.filter,
+        selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+        unselectedColor: Theme.of(context).textTheme.bodyText1!.color!,
+        unselectedOffset: 0,
+        selectedOffset: 0,
+      ),
       enabled: col?.filterEnabled ?? true,
       breakpoints: {0: ActionState.popup},
       onTap: (context) async {
