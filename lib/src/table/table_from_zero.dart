@@ -1810,6 +1810,26 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     final manageActions = [
       if (colKey!=null && (col?.filterEnabled ?? true) && (!showFiltersLoading||availableFilters!=null))
         getOpenFilterPopupAction(context, controller: controller, col: col, colKey: colKey),
+      if (controller.columns!=null && controller.columns!.any((key, value) => (value.filterEnabled??true)))
+        ActionFromZero(
+          title: 'Limpiar todos los Filtros', // TODO 3 internationalize
+          icon: Icon(MaterialCommunityIcons.filter_remove),
+          breakpoints: {0: ActionState.popup},
+          onTap: !controller.currentState!.filtersApplied.any((k, v) => v) ? null : (context) {
+            for (final key in controller.currentState!.valueFilters.keys) {
+              for (final val in controller.currentState!.valueFilters[key]!.keys) {
+                controller.currentState!.valueFilters[key]![val] = false;
+              }
+            }
+            for (final key in controller.currentState!.conditionFilters.keys) {
+              controller.currentState!.conditionFilters[key] = [];
+            }
+            controller.currentState!._updateFiltersApplied();
+            controller.currentState!.setState(() {
+              controller.currentState!.filter();
+            });
+          },
+        ),
       if (controller.currentColumnKeys!=null && controller.columns!=null)
         ActionFromZero(
           title: 'Personalizar Tabla...', // TODO 3 internationalize
