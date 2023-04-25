@@ -96,7 +96,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   void didUpdateWidget(covariant ScrollbarFromZero oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller!=widget.controller) {
-      alwaysAttachedScrollController = AlwaysAttachedScrollController(parent: widget.controller, context: context);
+      alwaysAttachedScrollController.parent = widget.controller;
     }
   }
 
@@ -126,7 +126,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
           setState(() {});
           return false;
         }
-        await Future.delayed(Duration(milliseconds: 200));
+        await Future.delayed(Duration(milliseconds: 100));
         return true;
       });
     }
