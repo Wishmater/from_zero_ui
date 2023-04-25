@@ -270,7 +270,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
   static const Duration _defaultShowDuration = Duration(milliseconds: 1500);
   static const Duration _defaultHoverShowDuration = Duration(milliseconds: 0);
   static const Duration _defaultWaitDuration = Duration.zero;
-  static const Duration _defaultHoverOpaqueDuration = Duration(milliseconds: 1000);
+  static const Duration _defaultHoverOpaqueDuration = Duration(milliseconds: 2500);
   static const bool _defaultExcludeFromSemantics = false;
   static const TooltipTriggerMode _defaultTriggerMode = TooltipTriggerMode.longPress;
   static const bool _defaultEnableFeedback = true;
