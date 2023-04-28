@@ -3,7 +3,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:animations/animations.dart';
-import 'package:excel/excel.dart';
+import 'package:flutter_excel/excel.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/my_arrow_page_indicator.dart' as my_arrow_page_indicator;
+import 'package:from_zero_ui/util/number_fromat.dart';
 import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
 import 'package:open_file/open_file.dart';
@@ -24,7 +25,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/rendering.dart' as rendering;
-
 
 enum FileAutoOpenType {
   none,
@@ -388,6 +388,9 @@ class ExportState extends State<Export> {
   }
 
   Future<void> _executeExcelExport() async {
+    final dateFormat = DateFormat("dd-MM-yyyy");
+    final numberFormat = ExtendedNumberFormat.doubleDecimalNumberFormatter;
+    
     var excel = Excel.createExcel();
     widget.excelSheets!()!.forEach((key, value) {
       Sheet sheetObject = excel[key];
@@ -407,8 +410,9 @@ class ExportState extends State<Export> {
               ?? row.values.keys).toList();
           for (int j=0; j<keys.length; j++) {
             final key = keys[j];
-            // ColModel? col = value.columns?[j];
             ColModel? col = value.currentState!.widget.columns==null ? null : value.currentState!.widget.columns![key];
+            double w = (((col?.width??(col?.flex??1.0)))/5).toDouble();
+            sheetObject.setColWidth(j, w);
             Color? backgroundColor;
             if (i==-1){
               backgroundColor = col?.backgroundColor;
@@ -448,7 +452,13 @@ class ExportState extends State<Export> {
             }
             cellStyle.fontSize = 12;
             final cellValue;
-            if (row.values[key] is ValueStringNum){
+            if (col is DateColModel && row.values[key] is DateTime) {
+              final formatter = col.formatter;
+              cellValue = formatter != null ? formatter.format(row.values[key]) : dateFormat.format(row.values[key]);
+            } else if (col is NumColModel && row.values[key] is double){
+              final formatter = col.formatter;
+              cellValue = formatter != null ? formatter.format(row.values[key]) : numberFormat.format(row.values[key]);
+            } else if (row.values[key] is ValueStringNum){
               cellValue = (row.values[key] as ValueStringNum).value;
             } else if (row.values[key] is ValueString){
               cellValue = (row.values[key] as ValueString).value==null ? null
@@ -472,16 +482,18 @@ class ExportState extends State<Export> {
           }
         }
       }
-      // double flexMultiplier = 6.4;
-      // if (value.columns==null || value.columns!.where((element) => element.flex!=null&&element.flex!>10).length==0)
-      //   flexMultiplier *= 10.0;
-      // if (value.columns!=null){
-      //   for (var i = 0; i < value.columns!.length; ++i) {
-      //     ColModel col = value.columns![i];
-      //     double w = ((col.width??(col.flex??1.0))*flexMultiplier).toDouble();
-      //     sheetObject.setColWidth(i, w);
-      //   }
-      // }
+      /*double flexMultiplier = 6.4;
+      if (value.columns==null || value.columns!.values.where((element) => element.flex!=null&&element.flex!>10).length==0)
+        flexMultiplier *= 10.0;
+      if (value.columns!=null){
+        for (var i = 0; i < value.columns!.length; ++i) {
+          ColModel? col = value.columns![i];
+          print(value.columns![i]);
+          double w = ((col?.width??(col?.flex??1.0))*flexMultiplier).toDouble();
+          //print(w);
+          sheetObject.setColWidth(i, w);
+        }
+      }*/
     });
     excel.delete('Sheet1');
     if (!mounted) return;

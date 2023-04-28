@@ -109,7 +109,13 @@ class TooltipFromZero extends StatefulWidget {
     this.child,
     this.triggerMode,
     this.enableFeedback,
+    this.maxWidth = 512,
+    this.maxHeight = 256,
   }) :  super(key: key);
+
+  /// Null means no max cap on width/height
+  final double? maxWidth;
+  final double? maxHeight;
 
   /// The text to display in the tooltip.
   /// If null, tooltip is disabled
@@ -262,8 +268,9 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
   static const Duration _fadeInDuration = Duration(milliseconds: 150);
   static const Duration _fadeOutDuration = Duration(milliseconds: 75);
   static const Duration _defaultShowDuration = Duration(milliseconds: 1500);
-  static const Duration _defaultHoverShowDuration = Duration(milliseconds: 100);
+  static const Duration _defaultHoverShowDuration = Duration(milliseconds: 0);
   static const Duration _defaultWaitDuration = Duration.zero;
+  static const Duration _defaultHoverOpaqueDuration = Duration(milliseconds: 2500);
   static const bool _defaultExcludeFromSemantics = false;
   static const TooltipTriggerMode _defaultTriggerMode = TooltipTriggerMode.longPress;
   static const bool _defaultEnableFeedback = true;
@@ -439,15 +446,15 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
         padding: padding,
         margin: margin,
         onEnter: _mouseIsConnected ? (PointerEnterEvent event) {  // only keep showing on hover if it has been shown for 1 second. Prevents blocking content behind on desktop.
-          if (timeSinceCreated!.elapsed.inMilliseconds>1000) {
-            _insideTooltipMouseRegion = true;
-            _onEnteredMouseRegion();
-          }
+          _insideTooltipMouseRegion = true;
         } : null,
         onExit: _mouseIsConnected ? (PointerExitEvent event) {
           _insideTooltipMouseRegion = false;
           _onExitedMouseRegion();
         } : null,
+        onForceExit: () {
+          _hideTooltipFromZero();
+        },
         decoration: decoration,
         textStyle: textStyle,
         animation: CurvedAnimation(
@@ -457,6 +464,8 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
         target: target,
         verticalOffset: verticalOffset,
         preferBelow: preferBelow,
+        maxWidth: widget.maxWidth,
+        maxHeight: widget.maxHeight,
       ),
     );
     _entry = OverlayEntry(builder: (BuildContext context) => overlay);
@@ -487,7 +496,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     }
   }
   void _onExitedMouseRegion() {
-    if (!_insideChildMouseRegion && !_insideTooltipMouseRegion) {
+    if (!_insideChildMouseRegion && (!_insideTooltipMouseRegion || timeSinceCreated!.elapsed<_defaultHoverOpaqueDuration)) {
       _hideTooltipFromZero();
     }
   }
@@ -496,12 +505,8 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     if (_entry == null) {
       return;
     }
-    if (!_insideChildMouseRegion && !_insideTooltipMouseRegion) {
-      if (event is PointerUpEvent || event is PointerCancelEvent) {
-        _hideTooltipFromZero();
-      } else if (event is PointerDownEvent) {
-        _hideTooltipFromZero(immediately: true);
-      }
+    if (!_insideChildMouseRegion && (!_insideTooltipMouseRegion || timeSinceCreated!.elapsed<_defaultHoverOpaqueDuration)) {
+      _hideTooltipFromZero();
     }
   }
 
@@ -571,7 +576,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     textStyle = widget.textStyle ?? tooltipTheme.textStyle ?? defaultTextStyle;
     waitDuration = widget.waitDuration ?? tooltipTheme.waitDuration ?? _defaultWaitDuration;
     showDuration = widget.showDuration ?? tooltipTheme.showDuration ?? _defaultShowDuration;
-    hoverShowDuration = widget.showDuration ?? tooltipTheme.showDuration ?? _defaultHoverShowDuration;
+    hoverShowDuration = _defaultHoverShowDuration;
     // triggerMode = widget.triggerMode ?? tooltipTheme.triggerMode ?? _defaultTriggerMode;
     triggerMode = widget.triggerMode ?? (PlatformExtended.isMobile
         ? (tooltipTheme.triggerMode ?? _defaultTriggerMode)
@@ -606,7 +611,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
               },
               onHover: (PointerHoverEvent event) {
                 _insideChildMouseRegion = true;
-                _onEnteredMouseRegion();
+                // _onEnteredMouseRegion();
               },
               onExit: (PointerExitEvent event) {
                 _insideChildMouseRegion = false;
@@ -672,7 +677,10 @@ class _TooltipPositionDelegate extends SingleChildLayoutDelegate {
   }
 }
 
-class _TooltipOverlay extends StatelessWidget {
+
+
+class _TooltipOverlay extends StatefulWidget {
+
   const _TooltipOverlay({
     Key? key,
     required this.message,
@@ -687,6 +695,9 @@ class _TooltipOverlay extends StatelessWidget {
     required this.preferBelow,
     this.onEnter,
     this.onExit,
+    this.maxWidth,
+    this.maxHeight,
+    this.onForceExit,
   }) : super(key: key);
 
   final String message;
@@ -701,50 +712,122 @@ class _TooltipOverlay extends StatelessWidget {
   final bool preferBelow;
   final PointerEnterEventListener? onEnter;
   final PointerExitEventListener? onExit;
+  final double? maxWidth;
+  final double? maxHeight;
+  final VoidCallback? onForceExit;
+
+  @override
+  State<_TooltipOverlay> createState() => _TooltipOverlayState();
+
+}
+
+class _TooltipOverlayState extends State<_TooltipOverlay> {
+
+  bool opaque = false;
+  bool forceOpaque = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Timer(_TooltipFromZeroState._defaultHoverOpaqueDuration, () {
+      if (mounted && !forceOpaque) {
+        setState(() {
+          opaque = true;
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final scrollController = ScrollController();
     Widget result = IgnorePointer(
+      ignoring: !opaque,
+      child: GestureDetector(
+        onTapDown: (details) {
+          setState(() {
+            forceOpaque = true;
+            opaque = false;
+          });
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+            widget.onForceExit?.call();
+          });
+        },
         child: FadeTransition(
-          opacity: animation,
+          opacity: widget.animation,
           child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: height),
+            constraints: BoxConstraints(
+              minHeight: widget.height,
+              maxWidth: widget.maxWidth ?? double.infinity,
+              maxHeight: widget.maxHeight ?? double.infinity,
+            ),
             child: DefaultTextStyle(
               style: Theme.of(context).textTheme.bodyText2!,
               child: Container(
-                decoration: decoration,
-                padding: padding,
-                margin: margin,
-                child: Center(
-                  widthFactor: 1.0,
-                  heightFactor: 1.0,
-                  child: Text(
-                    message,
-                    style: textStyle,
+                decoration: widget.decoration,
+                margin: widget.margin,
+                clipBehavior: Clip.hardEdge,
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    scrollbarTheme: Theme.of(context).scrollbarTheme.copyWith(
+                      crossAxisMargin: 4,
+                      trackColor: MaterialStateProperty.resolveWith((states) {
+                        return widget.textStyle?.color?.withOpacity(0.2);
+                      }),
+                      thumbColor: MaterialStateProperty.resolveWith((states) {
+                        if (states.contains(MaterialState.dragged)) {
+                          return widget.textStyle?.color?.withOpacity(0.6);
+                        }
+                        if (states.contains(MaterialState.hovered)) {
+                          return widget.textStyle?.color?.withOpacity(0.5);
+                        }
+                        return widget.textStyle?.color?.withOpacity(0.4);
+                      }),
+                    ),
+                  ),
+                  child: ScrollbarFromZero(
+                    controller: scrollController,
+
+                    child: Container(
+                      padding: widget.padding,
+                      child: Center(
+                        widthFactor: 1.0,
+                        heightFactor: 1.0,
+                        child: SingleChildScrollView(
+                          controller: scrollController,
+                          child: Text(
+                            widget.message,
+                            style: widget.textStyle,
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        )
+        ),
+      ),
     );
-    if (onEnter != null || onExit != null) {
+    if (widget.onEnter != null || widget.onExit != null) {
       result = MouseRegion(
-        opaque: false,
-        onEnter: onEnter,
-        onExit: onExit,
+        opaque: opaque,
+        onEnter: widget.onEnter,
+        onExit: widget.onExit,
         child: result,
       );
     }
     return Positioned.fill(
       child: CustomSingleChildLayout(
         delegate: _TooltipPositionDelegate(
-          target: target,
-          verticalOffset: verticalOffset,
-          preferBelow: preferBelow,
+          target: widget.target,
+          verticalOffset: widget.verticalOffset,
+          preferBelow: widget.preferBelow,
         ),
         child: result,
       ),
     );
   }
+
 }
