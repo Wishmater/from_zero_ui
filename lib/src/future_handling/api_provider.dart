@@ -575,21 +575,21 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
       stateNotifiers.add(stateNotifier);
       values.add(stateNotifier.state); // using stateNotifier.state instead of value because value is kept when realoading, so loading state is never shown
     }
+    final listenables = stateNotifiers.map((e) => e.wholePercentageNotifier);
+    final unifiedListenable = UnitedValueListenable(listenables, (values) {
+      double? percentage;
+      try {
+        final meaningfulValues = values.whereType<double>().toList();
+        percentage = meaningfulValues.isEmpty ? null
+            : meaningfulValues.reduce((v, e) => v+e) / meaningfulValues.length;
+      } catch (_) {}
+      return percentage;
+    });
     return AsyncValueMultiBuilder<T>(
       asyncValues: values,
       dataBuilder: dataBuilder,
       alignment: alignment,
       loadingBuilder: (context) {
-        final listenables = stateNotifiers.map((e) => e.wholePercentageNotifier);
-        final unifiedListenable = UnitedValueListenable(listenables, (values) {
-          double? percentage;
-          try {
-            final meaningfulValues = values.whereType<double>().toList();
-            percentage = meaningfulValues.isEmpty ? null
-                : meaningfulValues.reduce((v, e) => v+e) / meaningfulValues.length;
-          } catch (_) {}
-          return percentage;
-        });
         return loadingBuilder(context, unifiedListenable);
       },
       errorBuilder: (context, error, stackTrace) {
