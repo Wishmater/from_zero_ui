@@ -3,26 +3,20 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:animations/animations.dart';
-import 'package:flutter_excel/excel.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/my_arrow_page_indicator.dart' as my_arrow_page_indicator;
-import 'package:from_zero_ui/util/number_fromat.dart';
-import 'package:hive/hive.dart';
 import 'package:intl/intl.dart';
-import 'package:open_file/open_file.dart';
 import 'package:page_view_indicators/page_view_indicators.dart';
 import 'package:dartx/dartx.dart';
-import 'package:path_provider/path_provider.dart';
 import 'dart:ui' as ui;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:path/path.dart' as p;
 import 'package:flutter/rendering.dart' as rendering;
 
@@ -389,11 +383,15 @@ class ExportState extends State<Export> {
 
   Future<void> _executeExcelExport() async {
     final dateFormat = DateFormat("dd-MM-yyyy");
-    final numberFormat = ExtendedNumberFormat.doubleDecimalNumberFormatter;
     
     var excel = Excel.createExcel();
     widget.excelSheets!()!.forEach((key, value) {
       Sheet sheetObject = excel[key];
+      bool flexCalc = false;
+      bool widthSetted = false;
+      double flexMultiplier = 0;
+      final tableWidth = value.currentState!.widget.minWidthGetter!(value.currentState!.currentColumnKeys?.toList()
+          ?? (value.currentState!.widget.columns?.keys.where((e) => value.currentState!.widget.columns![e]!.flex!=0))?.toList() ?? []);
       for (var i = value.currentState!.widget.columns==null ? 0 : -1; i < value.currentState!.filtered.length; ++i) {
         RowModel row;
         if (i==-1) {
@@ -405,80 +403,106 @@ class ExportState extends State<Export> {
           row = value.currentState!.filtered[i];
         }
         if (row.alwaysOnTop==null){
-          final keys = (value.currentState!.widget.columns?.keys
-                          .where((e) => value.currentState!.widget.columns![e]!.flex!=0)
+          final keys = value.currentState!.currentColumnKeys 
+              ?? (value.currentState!.widget.columns?.keys.where((e) => value.currentState!.widget.columns![e]!.flex!=0)
               ?? row.values.keys).toList();
-          for (int j=0; j<keys.length; j++) {
-            final key = keys[j];
-            ColModel? col = value.currentState!.widget.columns==null ? null : value.currentState!.widget.columns![key];
-            double w = (((col?.width??(col?.flex??1.0)))/5).toDouble();
-            sheetObject.setColWidth(j, w);
-            Color? backgroundColor;
-            if (i==-1){
-              backgroundColor = col?.backgroundColor;
-              if (backgroundColor!=null){
-                backgroundColor = backgroundColor.withOpacity(backgroundColor.opacity*0.5);
+          for (int j=0; j<keys.length+1; j++) {
+            if(j<keys.length){
+              final key = keys[j];
+              ColModel? col = value.currentState!.widget.columns==null ? null : value.currentState!.widget.columns![key];
+              if(!flexCalc){
+                flexMultiplier += col?.width??(col?.flex??0);
+              } else if(!widthSetted) {
+                final percentage = (col?.width??(col?.flex??0)) * 100 / flexMultiplier;
+                double w = (tableWidth * percentage / 100).toDouble();
+                sheetObject.setColWidth(j, w/6.4);
+                if(j==keys.length-1){
+                  widthSetted = true;
+                }
               }
-            } else{
-              if (value.currentState!.widget.rowStyleTakesPriorityOverColumn){
-                backgroundColor = row.backgroundColor ?? col?.backgroundColor;
+              Color? backgroundColor;
+              if (i==-1){
+                backgroundColor = col?.backgroundColor;
+                if (backgroundColor!=null){
+                  backgroundColor = backgroundColor.withOpacity(backgroundColor.opacity*0.5);
+                }
               } else{
-                backgroundColor = col?.backgroundColor ?? row.backgroundColor;
+                if (value.currentState!.widget.rowStyleTakesPriorityOverColumn){
+                  backgroundColor = row.backgroundColor ?? col?.backgroundColor;
+                } else{
+                  backgroundColor = col?.backgroundColor ?? row.backgroundColor;
+                }
               }
-            }
-            if (backgroundColor!=null) {
-              backgroundColor = Color.alphaBlend(backgroundColor, Colors.white);
-            }
-            TextStyle? style;
-            if (value.currentState!.widget.rowStyleTakesPriorityOverColumn){
-              style = row.textStyle ?? col?.textStyle;
-            } else{
-              style = col?.textStyle ?? row.textStyle;
-            }
-            TextAlign? alignment = col!=null ? col.alignment : null;
-            CellStyle cellStyle = CellStyle();
-            var cell = sheetObject.cell(CellIndex.indexByColumnRow(rowIndex: i+1, columnIndex: j));
-            if (style!=null){
-              if (i!=-1){
-                cellStyle.isBold = FontWeight.values.indexOf(style.fontWeight??FontWeight.w100) > 4
-                    || (style.fontSize??1)>=16;
+              if (backgroundColor!=null) {
+                backgroundColor = Color.alphaBlend(backgroundColor, Colors.white);
               }
-              if (alignment==TextAlign.right||alignment==TextAlign.end){
-                cellStyle.horizontalAlignment = HorizontalAlign.Right;
+              TextStyle? style;
+              if (value.currentState!.widget.rowStyleTakesPriorityOverColumn){
+                style = row.textStyle ?? col?.textStyle;
+              } else{
+                style = col?.textStyle ?? row.textStyle;
               }
-            }
-            if (backgroundColor!=null){
-              cellStyle.backgroundColor = backgroundColor.toHex(includeAlpha: false);
-            }
-            cellStyle.fontSize = 12;
-            final cellValue;
-            if (col is DateColModel && row.values[key] is DateTime) {
-              final formatter = col.formatter;
-              cellValue = formatter != null ? formatter.format(row.values[key]) : dateFormat.format(row.values[key]);
-            } else if (col is NumColModel && row.values[key] is double){
-              final formatter = col.formatter;
-              cellValue = formatter != null ? formatter.format(row.values[key]) : numberFormat.format(row.values[key]);
-            } else if (row.values[key] is ValueStringNum){
-              cellValue = (row.values[key] as ValueStringNum).value;
-            } else if (row.values[key] is ValueString){
-              cellValue = (row.values[key] as ValueString).value==null ? null
-                  : (row.values[key] as ValueString).value is num
-                      ? (row.values[key] as ValueString).value
-                      : (row.values[key] as ValueString).string;
-            } else if (row.values[key] is NumGroupComparingBySum){
-              cellValue = (row.values[key] as NumGroupComparingBySum).value;
+              TextAlign? alignment = col!=null ? col.alignment : null;
+              CellStyle cellStyle = CellStyle();
+              Data cell = sheetObject.cell(CellIndex.indexByColumnRow(rowIndex: i+1, columnIndex: j));
+              if (style!=null){
+                if (i!=-1){
+                  cellStyle.isBold = FontWeight.values.indexOf(style.fontWeight??FontWeight.w100) > 4
+                      || (style.fontSize??1)>=16;
+                }
+                if (alignment==TextAlign.right||alignment==TextAlign.end){
+                  cellStyle.horizontalAlignment = HorizontalAlign.Right;
+                }
+              }
+              if (backgroundColor!=null){
+                cellStyle.backgroundColor = backgroundColor.toHex(includeAlpha: false);
+              }
+              cellStyle.fontSize = 12;
+              final cellValue;
+              if (col is DateColModel && row.values[key] is DateTime) {
+                final formatter = col.formatter;
+                cellValue = formatter != null ? formatter.format(row.values[key]) : dateFormat.format(row.values[key]);
+              } else if (col is NumColModel && row.values[key] is double){
+                cellValue = row.values[key];
+                final formatter = col.formatter;
+                if (formatter!=null) {
+                  final pattern = formatter.toString().split(',');
+                  pattern.removeAt(0);
+                  cellStyle.numFormat = pattern.join(',').replaceAll(')', '').trim();
+                } else {
+                  cellStyle.numFormat = "###,###,###,###,##0.00";
+                }
+                if (cellStyle.numFormat!=null) {
+                  if(!excel.numFormats.contains(cellStyle.numFormat!)){
+                    excel.addNumFormats(cellStyle.numFormat!);
+                  }
+                }
+              } else if (row.values[key] is ValueStringNum){
+                cellValue = (row.values[key] as ValueStringNum).value;
+              } else if (row.values[key] is ValueString){
+                cellValue = (row.values[key] as ValueString).value==null ? null
+                    : (row.values[key] as ValueString).value is num
+                        ? (row.values[key] as ValueString).value
+                        : (row.values[key] as ValueString).string;
+              } else if (row.values[key] is NumGroupComparingBySum){
+                cellValue = (row.values[key] as NumGroupComparingBySum).value;
+              } else {
+                cellValue = row.values[key]==null ? null
+                    : row.values[key];
+              }
+              if (cellValue==null || cellValue is num) {
+                cell.value = cellValue ?? '';
+              } else if (cellValue is List) {
+                cell.value = ListField.listToStringAll(cellValue);
+              } else {
+                cell.value = cellValue.toString();
+              }
+              cell.cellStyle = cellStyle;
             } else {
-              cellValue = row.values[key]==null ? null
-                  : row.values[key];
+              flexCalc = true;
+              Data cell = sheetObject.cell(CellIndex.indexByColumnRow(rowIndex: i+1, columnIndex: j));
+              cell.value = ' ';
             }
-            if (cellValue==null || cellValue is num) {
-              cell.value = cellValue ?? '';
-            } else if (cellValue is List) {
-              cell.value = ListField.listToStringAll(cellValue);
-            } else {
-              cell.value = cellValue.toString();
-            }
-            cell.cellStyle = cellStyle;
           }
         }
       }

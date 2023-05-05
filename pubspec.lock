@@ -197,6 +197,15 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.0.5"
+  excel:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: "9e78666f14f5068521fc7cd5952585e15e4b3b6a"
+      resolved-ref: "9e78666f14f5068521fc7cd5952585e15e4b3b6a"
+      url: "https://github.com/Z32D/excel"
+    source: git
+    version: "2.0.0-null-safety-4"
   extended_image:
     dependency: "direct main"
     description:

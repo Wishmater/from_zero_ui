@@ -24,6 +24,9 @@ class ExtendedNumberFormat extends MyNumberFormat{
   }
 
   @override
+  String toString() => _formatter.toString();
+
+  @override
   String format(number) {
     if (number==null) return '';
     if (number==-0) number = 0;

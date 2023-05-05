@@ -51,6 +51,10 @@ dependencies:
     git:
       url: https://github.com/Wishmater/dart_pdf
       path: pdf
+  excel:  
+    git:
+      url: https://github.com/Z32D/excel
+      ref: 9e78666f14f5068521fc7cd5952585e15e4b3b6a
   desktop_drop: ^0.3.3
   universal_html: ^2.0.8
   enough_convert: ^1.6.0 # ! replace with native converters if ever available on windows and web
