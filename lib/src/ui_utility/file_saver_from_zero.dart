@@ -227,6 +227,7 @@ Future<bool> saveFileFromZero ({
             SnackBarAction(
               label: 'COPIAR', // TODO 3 internationalize
               onPressed: () async {
+                await Process.run('cmd', ['/c', 'echo.|clip']); // clear windows clipboard, necessary because if a file is copied to clipboard, Pasteboard.writeFiles doesn't work
                 await Pasteboard.writeFiles([file!.absolute.path]);
               },
             ),

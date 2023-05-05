@@ -70,26 +70,26 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
 
   @override
   Widget build(BuildContext context) {
-    List<Widget> actions = this.widget.actions ?? [];
-    if (widget.controller.currentState?.widget.allowCustomization??false) {
-      actions = TableFromZeroState.addManageActions(context,
-        actions: actions,
-        controller: widget.controller,
-      );
-    }
-    if (widget.exportPathForExcel!=null) {
-      actions = TableFromZeroState.addExportExcelAction(context,
-        actions: actions,
-        tableController: widget.controller,
-        exportPathForExcel: widget.exportPathForExcel!,
-      );
-    }
-    if (widget.addSearchAction) {
-      actions.insert(0, buildSearchAction());
-    }
     Widget result = AnimatedBuilder(
       animation: widget.controller,
       builder: (context, child) {
+        List<Widget> actions = this.widget.actions ?? [];
+        if (widget.controller.currentState?.widget.allowCustomization??false) {
+          actions = TableFromZeroState.addManageActions(context,
+            actions: actions,
+            controller: widget.controller,
+          );
+        }
+        if (widget.exportPathForExcel!=null) {
+          actions = TableFromZeroState.addExportExcelAction(context,
+            actions: actions,
+            tableController: widget.controller,
+            exportPathForExcel: widget.exportPathForExcel!,
+          );
+        }
+        if (widget.addSearchAction) {
+          actions.insert(0, buildSearchAction());
+        }
         List<RowModel<T>>? filtered;
         try {
           filtered = widget.controller.filtered;

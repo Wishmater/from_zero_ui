@@ -1552,8 +1552,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                       message: FromZeroLocalizations.of(context).translate('filters'),
                       child: IconButton(
                         key: filterGlobalKeys[colKey],
-                        icon: Icon((filtersApplied[colKey]??false) ? MaterialCommunityIcons.filter : MaterialCommunityIcons.filter_outline,
-                          color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                        icon: SelectableIcon(
+                          selected: filtersApplied[colKey]??false,
+                          icon: MaterialCommunityIcons.filter_outline,
+                          selectedIcon: MaterialCommunityIcons.filter,
+                          selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                          unselectedColor: Theme.of(context).textTheme.caption!.color!,
+                          unselectedOffset: 0,
+                          selectedOffset: 0,
                         ),
                         splashRadius: 20,
                         onPressed: () => _showFilterPopup(colKey),
@@ -1807,9 +1813,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     dynamic colKey,
     ColModel? col,
   }) {
+    final clearFiltersAction = getClearAllFiltersAction(controller: controller);
     final manageActions = [
       if (colKey!=null && (col?.filterEnabled ?? true) && (!showFiltersLoading||availableFilters!=null))
         getOpenFilterPopupAction(context, controller: controller, col: col, colKey: colKey),
+      if (clearFiltersAction!=null)
+        clearFiltersAction,
       if (controller.currentColumnKeys!=null && controller.columns!=null)
         ActionFromZero(
           title: 'Personalizar Tabla...', // TODO 3 internationalize
@@ -1833,13 +1842,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     dynamic colKey,
     GlobalKey? globalKey,
     ValueChanged<bool>? onPopupResult,
-    bool updateStateIfModified = false,
+    bool updateStateIfModified = true,
   }) {
     return ActionFromZero(
       title: 'Filtros...', // TODO 3 internationalize
-      icon: Icon((controller.currentState?.filtersApplied[colKey]??false)
-          ? MaterialCommunityIcons.filter
-          : MaterialCommunityIcons.filter_outline),
+      icon: SelectableIcon(
+        selected: controller.currentState?.filtersApplied[colKey]??false,
+        icon: MaterialCommunityIcons.filter_outline,
+        selectedIcon: MaterialCommunityIcons.filter,
+        selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+        unselectedColor: Theme.of(context).textTheme.bodyText1!.color!,
+        unselectedOffset: 0,
+        selectedOffset: 0,
+      ),
       enabled: col?.filterEnabled ?? true,
       breakpoints: {0: ActionState.popup},
       onTap: (context) async {
@@ -1850,6 +1865,38 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         onPopupResult?.call(result);
       },
     );
+  }
+  static ActionFromZero? getClearAllFiltersAction({
+    required TableController controller,
+    bool skipConditions = false,
+    bool updateStateIfModified = true,
+    VoidCallback? onDidTap,
+  }) {
+    if (skipConditions || (controller.columns!=null && controller.columns!.any((key, value) => (value.filterEnabled??true)))) {
+      return ActionFromZero(
+        title: 'Limpiar todos los Filtros', // TODO 3 internationalize
+        icon: Icon(MaterialCommunityIcons.filter_remove),
+        breakpoints: {0: ActionState.popup},
+        onTap: !controller.currentState!.filtersApplied.any((k, v) => v) ? null : (context) {
+          for (final key in controller.currentState!.valueFilters.keys) {
+            for (final val in controller.currentState!.valueFilters[key]!.keys) {
+              controller.currentState!.valueFilters[key]![val] = false;
+            }
+          }
+          for (final key in controller.currentState!.conditionFilters.keys) {
+            controller.currentState!.conditionFilters[key] = [];
+          }
+          controller.currentState!._updateFiltersApplied();
+          if (updateStateIfModified) {
+            controller.currentState!.setState(() {
+              controller.currentState!.filter();
+            });
+          }
+          onDidTap?.call();
+        },
+      );
+    }
+    return null;
   }
   static List<Widget> addExportExcelAction(BuildContext context, {
     required List<Widget> actions,
