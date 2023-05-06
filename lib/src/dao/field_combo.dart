@@ -537,7 +537,7 @@ class ComboField<T extends DAO> extends Field<T> {
 
 
   @override
-  List<ActionFromZero<Function>> buildDefaultActions(BuildContext context, {FocusNode? focusNode}) {
+  List<ActionFromZero> buildDefaultActions(BuildContext context, {FocusNode? focusNode}) {
     return [
       ...super.buildDefaultActions(context, focusNode: focusNode,),
       if (possibleValuesProviderGetter!=null)
