@@ -637,21 +637,20 @@ class MultiValueListenable<T> extends ChangeNotifier {
   }
   List<T> get values => _listenables.map((e) => e.value).toList();
 }
-class UnitedValueListenable<T> extends ValueListenable<T> {
+class UnitedValueListenable<T> extends ChangeNotifier implements ValueListenable<T> {
   final Iterable<ValueListenable<T>> _listenables;
   final T Function(Iterable<T>) _unificator;
-  UnitedValueListenable(this._listenables, this._unificator);
-  @override
-  void addListener(VoidCallback listener) {
+  UnitedValueListenable(this._listenables, this._unificator) {
     for (final e in _listenables) {
-      e.addListener(listener);
+      e.addListener(notifyListeners);
     }
   }
   @override
-  void removeListener(VoidCallback listener) {
+  void dispose() {
     for (final e in _listenables) {
-      e.addListener(listener);
+      e.removeListener(notifyListeners);
     }
+    super.dispose();
   }
   T get value => _unificator(_listenables.map((e) => e.value));
 }
