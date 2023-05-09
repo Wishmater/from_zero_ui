@@ -632,8 +632,15 @@ class MultiValueListenable<T> extends ChangeNotifier {
   final Iterable<ValueListenable<T>> _listenables;
   MultiValueListenable(this._listenables) {
     for (final e in _listenables) {
-      e.addListener(() => notifyListeners());
+      e.addListener(notifyListeners);
     }
+  }
+  @override
+  void dispose() {
+    for (final e in _listenables) {
+      e.removeListener(notifyListeners);
+    }
+    super.dispose();
   }
   List<T> get values => _listenables.map((e) => e.value).toList();
 }
