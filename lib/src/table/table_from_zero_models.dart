@@ -308,7 +308,7 @@ class SimpleRowModel<T> extends RowModel<T> {
     super.expanded = false,
     super.depth = 0,
   });
-  SimpleRowModel copyWith({
+  SimpleRowModel<T> copyWith({
     T? id,
     Key? rowKey,
     Map? values,
