@@ -375,6 +375,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     }
     return Material(
       type: MaterialType.transparency,
+      color: Material.of(context)?.color ?? Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
           color: _backgroundColor.value,
