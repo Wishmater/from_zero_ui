@@ -1696,6 +1696,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       _updateFiltersApplied();
       if (updateStateIfModified) {
         setState(() {
+          widget.tableController?.notifyListeners();
           filter();
         });
       }
@@ -1710,6 +1711,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       );
       if ((result.modified || result.filtersModified) && mounted) {
         setState(() {
+          widget.tableController?.notifyListeners();
           if (result.filtersModified) {
             _updateFiltersApplied();
             filter();
