@@ -88,7 +88,7 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
     double strokeWidth = widget.size*0.1;
     if (widget.size < 36) {
       fontSize = 0;
-      strokeWidth *= 2;
+      strokeWidth = (strokeWidth*2).clamp(0, 3.6);
     }
     return AnimatedBuilder(
       animation: animation,

@@ -41,7 +41,7 @@ class ActionFromZero extends StatelessWidget {
 
   /// callback called when icon/button/overflowMenuItem is clicked
   /// if null and expandedWidget!= null, will switch expanded
-  ContextCallback? onTap; // made not final to support setting an instance method in APIActionFromZero
+  final ContextCallback? onTap;
   final String title;
   final Widget? icon;
   final bool enabled;
@@ -51,15 +51,15 @@ class ActionFromZero extends StatelessWidget {
   final Map<double, ActionState> breakpoints;
 
   /// optional callbacks to customize the look of the widget in its different states
-  OverflowActionBuilder overflowBuilder; // made not final to support setting an instance method in APIActionFromZero
+  final OverflowActionBuilder overflowBuilder;
   Widget buildOverflow(BuildContext context, {bool forceIconSpace=false}) => overflowBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, forceIconSpace: forceIconSpace);
 
-  ActionBuilder iconBuilder; // made not final to support setting an instance method in APIActionFromZero
+  final ActionBuilder iconBuilder;
   Widget buildIcon(BuildContext context, {
     Color? color,
   }) => iconBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color);
 
-  ActionBuilder buttonBuilder; // made not final to support setting an instance method in APIActionFromZero
+  final ActionBuilder buttonBuilder;
   Widget buildButton(BuildContext context, {
     Color? color,
   }) => buttonBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color);
@@ -334,6 +334,8 @@ class ActionFromZero extends StatelessWidget {
 
 
 
+
+
 typedef void ApiActionCallback(BuildContext context, List<dynamic> data);
 class APIActionFromZero extends ActionFromZero {
 
@@ -349,9 +351,16 @@ class APIActionFromZero extends ActionFromZero {
     super. breakpoints,
     required this.providersBuilder,
     this.dependedNotifiers = const [],
-  }) {
-    iconBuilder = apiIconBuilder;
-  }
+  });
+
+  @override
+  ActionBuilder get iconBuilder => apiIconBuilder;
+
+  @override
+  ActionBuilder get buttonBuilder => apiButtonBuilder;
+
+  @override
+  OverflowActionBuilder get overflowBuilder => apiOverflowBuilder;
 
   Widget apiIconBuilder({
     required BuildContext context,
@@ -366,6 +375,7 @@ class APIActionFromZero extends ActionFromZero {
       builder: (context, values, child) {
         return ApiProviderMultiBuilder(
           providers: providersBuilder(values),
+          transitionBuilder: (context, child, animation) => FadeTransition(child: child, opacity: animation),
           dataBuilder: (context, data) {
             onTap = onTapApi==null ? null : (context) {
               return onTapApi!(context, data);
@@ -394,6 +404,88 @@ class APIActionFromZero extends ActionFromZero {
     );
   }
 
-  // TODO 1 implement button and overflow
+  Widget apiButtonBuilder({
+    required BuildContext context,
+    required String title,
+    Widget? icon,
+    ContextCallback? onTap,
+    bool enabled = true,
+    Color? color,
+  }) {
+    return MultiValueListenableBuilder(
+      valueListenables: dependedNotifiers,
+      builder: (context, values, child) {
+        return ApiProviderMultiBuilder(
+          providers: providersBuilder(values),
+          transitionBuilder: (context, child, animation) => FadeTransition(child: child, opacity: animation),
+          dataBuilder: (context, data) {
+            onTap = onTapApi==null ? null : (context) {
+              return onTapApi!(context, data);
+            };
+            return ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color);
+          },
+          loadingBuilder: (context, progress) {
+            onTap = null;
+            return Stack(
+              children: [
+                ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: null, enabled: false, color: color),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: ApiProviderBuilder.defaultLoadingBuilder(context, progress, size: 34),
+                  ),
+                ),
+              ],
+            );
+          },
+          errorBuilder: (context, error, stackTrace, onRetry) {
+            onTap = null;
+            return ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: null, enabled: false, color: color);
+          },
+        );
+      },
+    );
+  }
+
+  Widget apiOverflowBuilder({
+    required BuildContext context,
+    required String title,
+    Widget? icon,
+    ContextCallback? onTap,
+    bool enabled = true,
+    bool forceIconSpace = false,
+  }) {
+    return MultiValueListenableBuilder(
+      valueListenables: dependedNotifiers,
+      builder: (context, values, child) {
+        return ApiProviderMultiBuilder(
+          providers: providersBuilder(values),
+          transitionBuilder: (context, child, animation) => FadeTransition(child: child, opacity: animation),
+          dataBuilder: (context, data) {
+            onTap = onTapApi==null ? null : (context) {
+              return onTapApi!(context, data);
+            };
+            return ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, forceIconSpace: forceIconSpace);
+          },
+          loadingBuilder: (context, progress) {
+            onTap = null;
+            return Stack(
+              children: [
+                ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: null, enabled: false, forceIconSpace: forceIconSpace),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: ApiProviderBuilder.defaultLoadingBuilder(context, progress, size: 32),
+                  ),
+                ),
+              ],
+            );
+          },
+          errorBuilder: (context, error, stackTrace, onRetry) {
+            onTap = null;
+            return ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: null, enabled: false, forceIconSpace: forceIconSpace);
+          },
+        );
+      },
+    );
+  }
 
 }
