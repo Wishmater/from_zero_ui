@@ -180,7 +180,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       widget.tableController!.currentColumnKeys = value;
     }
   }
-  late Map<dynamic, List<ConditionFilter>> _conditionFilters;
+  Map<dynamic, List<ConditionFilter>> _conditionFilters = {};
   Map<dynamic, List<ConditionFilter>> get conditionFilters => widget.tableController?.conditionFilters ?? _conditionFilters;
   set conditionFilters(Map<dynamic, List<ConditionFilter>> value) {
     if (widget.tableController == null) {
@@ -189,7 +189,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       widget.tableController!.conditionFilters = value;
     }
   }
-  late Map<dynamic, Map<Object?, bool>> _valueFilters;
+  Map<dynamic, Map<Object?, bool>> _valueFilters = {};
   Map<dynamic, Map<Object?, bool>> get valueFilters => widget.tableController?.valueFilters ?? _valueFilters;
   set valueFilters(Map<dynamic, Map<Object?, bool>> value) {
     if (widget.tableController==null) {
@@ -198,7 +198,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       widget.tableController!.valueFilters = value;
     }
   }
-  late Map<dynamic, bool> _valueFiltersApplied;
+  Map<dynamic, bool> _valueFiltersApplied = {};
   Map<dynamic, bool> get valueFiltersApplied => widget.tableController?.valueFiltersApplied ?? _valueFiltersApplied;
   set valueFiltersApplied(Map<dynamic, bool> value) {
     if (widget.tableController==null) {
@@ -207,7 +207,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       widget.tableController!.valueFiltersApplied = value;
     }
   }
-  late Map<dynamic, bool> _filtersApplied;
+  Map<dynamic, bool> _filtersApplied = {};
   Map<dynamic, bool> get filtersApplied => widget.tableController?.filtersApplied ?? _filtersApplied;
   set filtersApplied(Map<dynamic, bool> value) {
     if (widget.tableController==null) {
@@ -217,7 +217,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     }
   }
   ValueNotifier<Map<dynamic, List<dynamic>>?> availableFilters = ValueNotifier(null);
-  late Map<dynamic, GlobalKey> filterGlobalKeys = {};
+  Map<dynamic, GlobalKey> filterGlobalKeys = {};
 
   dynamic _sortedColumn;
   dynamic get sortedColumn => widget.tableController==null ? _sortedColumn : widget.tableController!.sortedColumn;
@@ -239,7 +239,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     }
   }
 
-  late TrackingScrollControllerFomZero sharedController;
+  final TrackingScrollControllerFomZero sharedController = TrackingScrollControllerFomZero();
   RowModel? headerRowModel;
 
   TableFromZeroState();
@@ -259,7 +259,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   @override
   void initState() {
     super.initState();
-    sharedController = TrackingScrollControllerFomZero();
     sharedController.addListener(() {
       if (!lockScrollUpdates){
         double? newPosition;
