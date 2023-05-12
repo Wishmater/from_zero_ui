@@ -459,6 +459,10 @@ class ExportState extends State<Export> {
               }
               cellStyle.fontSize = 12;
               final cellValue;
+              if(row.values[key] is NumField || row.values[key] is DateField){
+                row.values[key] = row.values[key].value;
+              }
+              print(row.values[key].runtimeType);
               if (col is DateColModel && row.values[key] is DateTime) {
                 final formatter = col.formatter;
                 cellValue = formatter != null ? formatter.format(row.values[key]) : dateFormat.format(row.values[key]);
