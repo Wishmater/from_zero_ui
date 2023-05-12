@@ -310,7 +310,7 @@ Widget _defaultLoadingBuilder(context){
 
 @deprecated
 Widget defaultErrorBuilder(context, error, stackTrace){
-  // log(error, stackTrace: stackTrace);
+  log(error, stackTrace: stackTrace);
   return ErrorSign(
     icon: Icon(Icons.error_outline), //size: 64, color: Theme.of(context).errorColor,
     title: FromZeroLocalizations.of(context).translate("error"),
