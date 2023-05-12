@@ -450,24 +450,22 @@ class ExportState extends State<Export> {
                   cellStyle.isBold = FontWeight.values.indexOf(style.fontWeight??FontWeight.w100) > 4
                       || (style.fontSize??1)>=16;
                 }
-                if (alignment==TextAlign.right||alignment==TextAlign.end){
-                  cellStyle.horizontalAlignment = HorizontalAlign.Right;
-                }
+              }
+              if (alignment==TextAlign.right||alignment==TextAlign.end){
+                cellStyle.horizontalAlignment = HorizontalAlign.Right;
               }
               if (backgroundColor!=null){
                 cellStyle.backgroundColor = backgroundColor.toHex(includeAlpha: false);
               }
               cellStyle.fontSize = 12;
               final cellValue;
-              if(row.values[key] is NumField || row.values[key] is DateField){
-                row.values[key] = row.values[key].value;
-              }
-              print(row.values[key].runtimeType);
-              if (col is DateColModel && row.values[key] is DateTime) {
+              if (col is DateColModel && (row.values[key] is DateTime || row.values[key] is ContainsValue<DateTime>)) {
                 final formatter = col.formatter;
-                cellValue = formatter != null ? formatter.format(row.values[key]) : dateFormat.format(row.values[key]);
-              } else if (col is NumColModel && row.values[key] is double){
-                cellValue = row.values[key];
+                final DateTime dateTime = row.values[key] is DateTime ? row.values[key] : (row.values[key] as ContainsValue<DateTime>).value;
+                cellValue = formatter != null ? formatter.format(dateTime) : dateFormat.format(dateTime);
+              } else if (col is NumColModel && (row.values[key] is double
+                  || (row.values[key] is ContainsValue<num> && ((row.values[key] as ContainsValue<num>).value is double)))) {
+                cellValue = row.values[key] is double ? row.values[key] : (row.values[key] as ContainsValue<num>).value;
                 final formatter = col.formatter;
                 if (formatter!=null) {
                   final pattern = formatter.toString().split(',');
