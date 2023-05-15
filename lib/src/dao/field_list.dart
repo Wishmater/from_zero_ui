@@ -2156,7 +2156,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                     ),
                   ),
                 ),
-          tableHeader: !showTableHeaderAddon ? null : _buildTableHeader(context,
+          headerWidgetAddon: !showTableHeaderAddon ? null : _buildTableHeader(context,
             actions: actions,
             focusNode: focusNode!,
             collapsed: collapsed,

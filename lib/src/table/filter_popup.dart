@@ -216,7 +216,7 @@ abstract class TableFromZeroFilterPopup {
                                 );
                                 return result;
                               },
-                              tableHeader: Container(
+                              headerWidgetAddon: Container(
                                 padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
                                 color: Theme.of(context).cardColor,
                                 child: Column(
