@@ -708,7 +708,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
     }
 
-    Widget? header = widget.showHeaders
+    final showHeaders = widget.showHeaders
+        && (allFiltered.isNotEmpty || filtersApplied.values.any((e) => e));
+    Widget? header = showHeaders
         ? headerRowModel!=null
             ? headerRowModel!.values.isEmpty && headerRowModel!.rowAddon!=null
                 ? headerRowModel!.rowAddon!
