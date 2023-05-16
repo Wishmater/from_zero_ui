@@ -98,8 +98,8 @@ abstract class RowModel<T> {
   });
   @override
   bool operator == (dynamic other) => other is RowModel && this.id==other.id;
-  // @override
-  // int get hashCode => id.hashCode;
+  @override
+  int get hashCode => Object.hashAll([RowModel, id]);
 
   bool get isExpandable => children.isNotEmpty || (rowAddon!=null && rowAddonIsExpandable);
   List<RowModel<T>> get visibleRows => [this, if (expanded) ...children.map((e) => e.visibleRows).flatten()];
