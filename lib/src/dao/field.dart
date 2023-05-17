@@ -450,7 +450,6 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                           if (subtitle!=null)
                             Text(subtitle,
                               style: Theme.of(context).textTheme.caption!.copyWith(
-                                height: 1,
                                 wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
                               ),
                             ),
