@@ -1521,6 +1521,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                             sortedAscending
                                 ? MaterialCommunityIcons.sort_ascending
                                 : MaterialCommunityIcons.sort_descending,
+                            size: 20,
                             key: ValueKey(sortedAscending),
                             // color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
                             color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
