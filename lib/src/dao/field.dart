@@ -389,6 +389,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool showViewButtons=false,
     bool dense = false,
     bool? hidden,
+    String? subtitle,
   }) {
     if (hidden ?? field.hiddenInView) {
       return SizedBox.shrink();
@@ -421,27 +422,40 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
               Expanded(
                 child: dense
                     ? AutoSizeText(message,
-                      style: Theme.of(context).textTheme.subtitle1,
-                      textAlign: field.getColModel().alignment,
-                      maxLines: 1,
-                      minFontSize: 14,
-                      overflowReplacement: TooltipFromZero(
-                        message: message,
-                        waitDuration: Duration(milliseconds: 0),
-                        verticalOffset: -16,
-                        child: AutoSizeText(message,
-                          style: Theme.of(context).textTheme.subtitle1,
-                          textAlign: field.getColModel().alignment,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.fade,
+                        style: Theme.of(context).textTheme.subtitle1,
+                        textAlign: field.getColModel().alignment,
+                        maxLines: 1,
+                        minFontSize: 14,
+                        overflowReplacement: TooltipFromZero(
+                          message: message,
+                          waitDuration: Duration(milliseconds: 0),
+                          verticalOffset: -16,
+                          child: AutoSizeText(message,
+                            style: Theme.of(context).textTheme.subtitle1,
+                            textAlign: field.getColModel().alignment,
+                            maxLines: 1,
+                            softWrap: false,
+                            overflow: TextOverflow.fade,
+                          ),
                         ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SelectableText(message,
+                            style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                              wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
+                            ),
+                          ),
+                          if (subtitle!=null)
+                            Text(subtitle,
+                              style: Theme.of(context).textTheme.caption!.copyWith(
+                                height: 1,
+                                wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
+                              ),
+                            ),
+                        ],
                       ),
-                    ) : SelectableText(message,
-                      style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                        wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
-                      ),
-                    ),
               ),
               if (linkToInnerDAOs && showViewButtons)
                 Padding(
