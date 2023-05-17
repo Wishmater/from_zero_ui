@@ -70,6 +70,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   late bool viewDialogLinksToInnerDAOs;
   late bool viewDialogShowsViewButtons;
   bool? viewDialogShowsEditButton;
+  bool? viewDialogShowsDeleteButton;
   late bool wantsLinkToSelfFromOtherDAOs;
   late bool enableUndoRedoMechanism;
   late bool showConfirmDialogWithBlockingErrors;
@@ -103,6 +104,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.viewDialogLinksToInnerDAOs = true,
     this.viewDialogShowsViewButtons = false,
     this.viewDialogShowsEditButton,
+    this.viewDialogShowsDeleteButton,
     this.wantsLinkToSelfFromOtherDAOs = true,
     List<List<Field>>? undoRecord,
     List<List<Field>>? redoRecord,
@@ -160,6 +162,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? viewDialogLinksToInnerDAOs,
     bool? viewDialogShowsViewButtons,
     bool? viewDialogShowsEditButton,
+    bool? viewDialogShowsDeleteButton,
     List<List<Field>>? undoRecord,
     List<List<Field>>? redoRecord,
     bool? showConfirmDialogWithBlockingErrors,
@@ -193,6 +196,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       viewDialogLinksToInnerDAOs: viewDialogLinksToInnerDAOs??this.viewDialogLinksToInnerDAOs,
       viewDialogShowsViewButtons: viewDialogShowsViewButtons??this.viewDialogShowsViewButtons,
       viewDialogShowsEditButton: viewDialogShowsEditButton??this.viewDialogShowsEditButton,
+      viewDialogShowsDeleteButton: viewDialogShowsDeleteButton??this.viewDialogShowsDeleteButton,
       wantsLinkToSelfFromOtherDAOs: wantsLinkToSelfFromOtherDAOs??this.wantsLinkToSelfFromOtherDAOs,
       undoRecord: undoRecord??this._undoRecord,
       redoRecord: redoRecord??this._redoRecord,
@@ -1505,6 +1509,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
   Future<dynamic> pushViewDialog(BuildContext mainContext, {
     bool? showEditButton,
+    bool? showDeleteButton,
     bool? useIntrinsicWidth,
     bool? useIntrinsicHeight,
     bool showDefaultSnackBars = true,
@@ -1565,6 +1570,18 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                 value.value = tempProps[key]!.value;
                               }
                             });
+                            Navigator.of(context).pop();
+                          }
+                        },
+                      ),
+                    if (showDeleteButton ?? viewDialogShowsDeleteButton ?? false) // always default false for now, to avoid breaking existing DAOs, should be ?? canDelete
+                      ActionFromZero(
+                        title: FromZeroLocalizations.of(context).translate('delete'),
+                        icon: Icon(Icons.delete_forever),
+                        breakpoints: {0: ActionState.overflow},
+                        onTap: (context) async {
+                          final result = await maybeDelete(mainContext);
+                          if (result) {
                             Navigator.of(context).pop();
                           }
                         },

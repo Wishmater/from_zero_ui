@@ -63,6 +63,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     bool viewDialogLinksToInnerDAOs = true,
     bool viewDialogShowsViewButtons = false,
     bool? viewDialogShowsEditButton,
+    bool? viewDialogShowsDeleteButton,
     bool wantsLinkToSelfFromOtherDAOs = true,
     List<List<Field>>? undoRecord,
     List<List<Field>>? redoRecord,
@@ -98,6 +99,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     this.viewDialogLinksToInnerDAOs = viewDialogLinksToInnerDAOs;
     this.viewDialogShowsViewButtons = viewDialogShowsViewButtons;
     this.viewDialogShowsEditButton = viewDialogShowsEditButton;
+    this.viewDialogShowsDeleteButton = viewDialogShowsDeleteButton;
     this.wantsLinkToSelfFromOtherDAOs = wantsLinkToSelfFromOtherDAOs;
     this.enableUndoRedoMechanism = enableUndoRedoMechanism;
     this.showConfirmDialogWithBlockingErrors = showConfirmDialogWithBlockingErrors;
@@ -152,6 +154,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     bool? viewDialogLinksToInnerDAOs,
     bool? viewDialogShowsViewButtons,
     bool? viewDialogShowsEditButton,
+    bool? viewDialogShowsDeleteButton,
     List<List<Field>>? undoRecord,
     List<List<Field>>? redoRecord,
     bool? showConfirmDialogWithBlockingErrors,
@@ -186,6 +189,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
         || viewDialogLinksToInnerDAOs!=null
         || viewDialogShowsViewButtons!=null
         || viewDialogShowsEditButton!=null
+        || viewDialogShowsDeleteButton!=null
         || undoRecord!=null
         || redoRecord!=null
         || showConfirmDialogWithBlockingErrors!=null
@@ -221,6 +225,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
         viewDialogLinksToInnerDAOs: viewDialogLinksToInnerDAOs??this.viewDialogLinksToInnerDAOs,
         viewDialogShowsViewButtons: viewDialogShowsViewButtons??this.viewDialogShowsViewButtons,
         viewDialogShowsEditButton: viewDialogShowsEditButton??this.viewDialogShowsEditButton,
+        viewDialogShowsDeleteButton: viewDialogShowsDeleteButton??this.viewDialogShowsDeleteButton,
         wantsLinkToSelfFromOtherDAOs: wantsLinkToSelfFromOtherDAOs??this.wantsLinkToSelfFromOtherDAOs,
         // undoRecord: undoRecord??this._undoRecord, // cannot reach _undoRecord and _redoRecord since they're private, surely its fine :)
         // redoRecord: redoRecord??this._redoRecord,
@@ -625,6 +630,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   }
   Future pushViewDialog(BuildContext mainContext, {
     bool? showEditButton,
+    bool? showDeleteButton,
     bool? useIntrinsicWidth,
     bool? useIntrinsicHeight,
     bool showDefaultSnackBars = true,
@@ -635,6 +641,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
       useIntrinsicWidth: useIntrinsicWidth,
       useIntrinsicHeight: useIntrinsicHeight,
       showEditButton: showEditButton,
+      showDeleteButton: showDeleteButton,
     );
   }
   Future<ModelType?> maybeSave(BuildContext context, {
