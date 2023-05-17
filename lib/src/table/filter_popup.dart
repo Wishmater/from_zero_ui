@@ -414,7 +414,7 @@ abstract class TableFromZeroFilterPopup {
     FilterTextContains(),
     FilterTextStartsWith(),
     FilterTextEndsWith(),
-    // FilterNumberEqualTo(),
+    FilterNumberEqualTo(),
     FilterNumberGreaterThan(),
     FilterNumberLessThan(),
     // FilterDateExactDay(),

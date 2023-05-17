@@ -306,24 +306,27 @@ abstract class FilterNumber extends ConditionFilter {
 }
 
 
-// class FilterNumberEqualTo extends FilterNumber {
-//   FilterNumberEqualTo({
-//     bool inverse = false,
-//     num? query,
-//   }) : super(inverse: inverse, query: query,);
-//   @override
-//   String getUiName(BuildContext context) => 'Número igual a'; //Number equal to
-//   @override
-//   String getExtraUiName(BuildContext context) => 'Invertir'; //Reverse
-//   @override
-//   bool isAllowed(value) {
-//     if (query==null) return true;
-//     if (!(value is num)) return false;
-//     bool result = value==query;
-//     if (extra) result = !result;
-//     return result;
-//   }
-// }
+class FilterNumberEqualTo extends FilterNumber {
+  FilterNumberEqualTo({
+    bool inverse = false,
+    num? query,
+  }) : super(extra: inverse, query: query,);
+  @override
+  String getUiName(BuildContext context) => 'Número igual a'; //Number equal to // TODO 2 internationalize
+  @override
+  String getExtraUiName(BuildContext context) => 'Invertir'; //Reverse // TODO 2 internationalize
+  @override
+  String getExtraUiTooltipFromZero(BuildContext context) => 'Incluir valores distintos al valor especificado'; // TODO 2 internationalize
+  @override
+  bool isAllowed(row, key, col) {
+    if (query==null) return true;
+    final v = col!=null ? col.getValue(row, key) : row.values[key];
+    final value = (v is ContainsValue) ? v.value : v;
+    if (!(value is num)) return false;
+    bool result = extra ? value!=query : value==query;
+    return result;
+  }
+}
 
 
 class FilterNumberGreaterThan extends FilterNumber {

@@ -567,7 +567,7 @@ class NumColModel<T> extends SimpleColModel<T> {
   @override
   List<ConditionFilter> getAvailableConditionFilters() => [
     // FilterIsEmpty(),
-    // FilterNumberEqualTo(),
+    FilterNumberEqualTo(),
     FilterNumberGreaterThan(),
     FilterNumberLessThan(),
   ];
