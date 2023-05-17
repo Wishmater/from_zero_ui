@@ -44,6 +44,7 @@ class TableFromZero<T> extends StatefulWidget {
   final bool enabled;
   final WidthGetter? minWidthGetter;
   final WidthGetter? maxWidthGetter;
+  final bool ignoreWidthGettersIfEmpty;
   final bool enableFixedHeightForListRows;
   final bool showHeaders;
   final RowModel? headerRowModel;
@@ -87,6 +88,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.enabled = true,
     this.minWidthGetter,
     this.maxWidthGetter,
+    this.ignoreWidthGettersIfEmpty = true,
     this.enableFixedHeightForListRows = true,
     this.showHeaders = true,
     this.headerRowModel,
@@ -654,10 +656,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     int childCount = allFiltered.length.coerceIn(1);
     final showHeaders = widget.showHeaders
         && (allFiltered.isNotEmpty || filtersApplied.values.any((e) => e));
-    final minWidth = allFiltered.isEmpty&&!showHeaders ? null
+    final minWidth = widget.ignoreWidthGettersIfEmpty&&allFiltered.isEmpty&&!showHeaders ? null
         : currentColumnKeys==null ? null
         : widget.minWidthGetter?.call(currentColumnKeys!);
-    final maxWidth = allFiltered.isEmpty&&!showHeaders ? 640.0
+    final maxWidth = widget.ignoreWidthGettersIfEmpty&&allFiltered.isEmpty&&!showHeaders ? 640.0
         : currentColumnKeys==null ? null
         : widget.maxWidthGetter?.call(currentColumnKeys!);
     Widget result;

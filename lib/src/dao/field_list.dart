@@ -2021,6 +2021,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           enableFixedHeightForListRows: rowAddonField==null,
           cellPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
           backgroundColor: backgroundColor?.call(context, this, dao),
+          ignoreWidthGettersIfEmpty: !addCard,
           cellBuilder: tableCellsEditable ? (context, row, colKey) {
             final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
               expandToFillContainer: false,
