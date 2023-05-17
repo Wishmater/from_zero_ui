@@ -348,6 +348,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
           return const Icon(Icons.do_disturb_on_outlined);
         } else if (error.response!.statusCode==403) {
           return const Icon(Icons.do_disturb_on_outlined);
+        } else if (error.response!.statusCode==515) {
+          return const Icon(Icons.timer_off_outlined);
         } else {
           return const Icon(Icons.report_problem_outlined);
         }
@@ -363,15 +365,17 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     if (error is DioError) {
       if (error.type==DioErrorType.response) {
         if (error.response!.statusCode==404) {
-          return 'Recurso no Encontrado';
+          return 'Recurso no encontrado';
         } else if (error.response!.statusCode==400) {
           return error.response!.data is String
               ? error.response!.data.toString()
               : utf8.decode(error.response!.data);
         } else if (error.response!.statusCode==403) {
           return 'Error de Autorización';
+        } else if (error.response!.statusCode==515) {
+          return 'Tiempo de espera agotado';
         } else {
-          return 'Error Interno del Servidor';
+          return 'Error interno del servidor';
         }
       } else {
         return FromZeroLocalizations.of(context).translate("error_connection");
@@ -390,6 +394,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
           return null;
         } else if (error.response!.statusCode==403) {
           return 'Usted no tiene permiso para acceder al recurso solicitado';
+        } else if (error.response!.statusCode==515) {
+          return 'El procesamiento de la solucitud demoró demasiado\nIntente de nuevo más tarde o notifique a su administrador de sistema';
         } else {
           return 'Por favor, notifique a su administrador de sistema';
         }
@@ -409,6 +415,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
           return false;
         } else if (error.response!.statusCode==403) {
           return false;
+        } else if (error.response!.statusCode==515) {
+          return false;
         } else {
           return false;
         }
@@ -427,6 +435,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
         } else if (error.response!.statusCode==400) {
           return false;
         } else if (error.response!.statusCode==403) {
+          return false;
+        } else if (error.response!.statusCode==515) {
           return false;
         } else {
           return false;
