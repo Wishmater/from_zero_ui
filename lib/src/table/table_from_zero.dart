@@ -652,8 +652,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       return SliverToBoxAdapter(child: SizedBox.shrink(),);
     }
     int childCount = allFiltered.length.coerceIn(1);
-    final minWidth = currentColumnKeys==null ? null : widget.minWidthGetter?.call(currentColumnKeys!);
-    final maxWidth = currentColumnKeys==null ? null : widget.maxWidthGetter?.call(currentColumnKeys!);
+    final showHeaders = widget.showHeaders
+        && (allFiltered.isNotEmpty || filtersApplied.values.any((e) => e));
+    final minWidth = allFiltered.isEmpty&&!showHeaders ? null
+        : currentColumnKeys==null ? null
+        : widget.minWidthGetter?.call(currentColumnKeys!);
+    final maxWidth = allFiltered.isEmpty&&!showHeaders ? 640.0
+        : currentColumnKeys==null ? null
+        : widget.maxWidthGetter?.call(currentColumnKeys!);
     Widget result;
 
     if (true) {
@@ -708,8 +714,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
     }
 
-    final showHeaders = widget.showHeaders
-        && (allFiltered.isNotEmpty || filtersApplied.values.any((e) => e));
     Widget? header = showHeaders
         ? headerRowModel!=null
             ? headerRowModel!.values.isEmpty && headerRowModel!.rowAddon!=null
