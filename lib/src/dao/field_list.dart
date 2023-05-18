@@ -102,6 +102,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   String? rowAddonField;
   double? separateScrollableBreakpoint;
   FieldValueGetter<List<ListField<T, U>>, ListField<T, U>>? proxiedListFields; // objects from these fields will also show here
+  String? Function(RowModel<T> row)? rowDisabledValidator;
+  String? Function(RowModel<T> row)? rowTooltipGetter;
 
   T get objectTemplate => objectTemplateGetter(this, dao)..parentDAO = dao;
   List<T> get objects {
@@ -298,6 +300,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.pageNotifier,
     this.separateScrollableBreakpoint = 30,
     this.proxiedListFields,
+    this.rowDisabledValidator,
+    this.rowTooltipGetter,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         this.tableFilterable = tableFilterable ?? false,
         this.showEditDialogOnAdd = showEditDialogOnAdd ?? (displayType==ListFieldDisplayType.table && !tableCellsEditable),
@@ -539,6 +543,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     ValueNotifier<int>? pageNotifier,
     double? separateScrollableBreakpoint,
     FieldValueGetter<List<ListField<T, U>>, ListField<T, U>>? proxiedListFields,
+    String? Function(RowModel<T> row)? rowDisabledValidator,
+    String? Function(RowModel<T> row)? rowTooltipGetter,
   }) {
     return ListField<T, U>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -617,6 +623,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       pageNotifier: pageNotifier ?? this.pageNotifier,
       separateScrollableBreakpoint: separateScrollableBreakpoint ?? this.separateScrollableBreakpoint,
       proxiedListFields: proxiedListFields ?? this.proxiedListFields,
+      rowDisabledValidator: rowDisabledValidator ?? this.rowDisabledValidator,
+      rowTooltipGetter: rowTooltipGetter ?? this.rowTooltipGetter,
     );
   }
 
@@ -2027,6 +2035,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           cellPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
           backgroundColor: backgroundColor?.call(context, this, dao),
           ignoreWidthGettersIfEmpty: !addCard,
+          rowDisabledValidator: rowDisabledValidator,
+          rowTooltipGetter: rowTooltipGetter,
           cellBuilder: tableCellsEditable ? (context, row, colKey) {
             final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
               expandToFillContainer: false,
