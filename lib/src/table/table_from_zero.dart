@@ -811,7 +811,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         },
         child: Container(
           color: _getMaterialColor(),
-          padding: EdgeInsets.only(top: 4, bottom: 12),
+          padding: EdgeInsets.only(top: 4, bottom: 4),
           child: widget.emptyWidget ?? ErrorSign(
             icon: Icon(MaterialCommunityIcons.clipboard_alert_outline, size: 64, color: Theme.of(context).disabledColor,),
             title: FromZeroLocalizations.of(context).translate('no_data'),
