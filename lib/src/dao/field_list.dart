@@ -70,7 +70,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   Map<double, ActionState> actionDuplicateBreakpoints;
   Map<double, ActionState> actionDeleteBreakpoints;
   Map<String, ColModel> Function(DAO dao, ListField<T, U> listField, T objectTemplate)? tableColumnsBuilder;
-  RowModel<T> Function(T element, BuildContext context, ListField<T, U> field, DAO dao, Map<String, ColModel> columns, ValueChanged<RowModel<T>>? onRowTap)? tableRowBuilder;
+  RowModel<T> Function(T element, BuildContext context, ListField<T, U> field, DAO dao, Map<String, ColModel> columns, ValueChanged<RowModel<T>>? onRowTap, Widget? rowAddonWidget)? tableRowBuilder;
+  Widget? Function(BuildContext context, RowModel<T> row, int index, double? minWidth, Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder)? tableRowWidgetBuilder;
   /// this means that save() will be called on the object when adding a row
   /// and delete() will be called when removing a row, default false
   bool? _skipDeleteConfirmation;
@@ -247,6 +248,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     Map<double, ActionState>? actionDeleteBreakpoints,
     this.tableColumnsBuilder,
     this.tableRowBuilder,
+    this.tableRowWidgetBuilder,
     this.showTableHeaders = true,
     this.showTableHeaderAddon = true,
     this.showElementCount = true,
@@ -481,7 +483,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     Map<double, ActionState>? actionDuplicateBreakpoints,
     Map<double, ActionState>? actionDeleteBreakpoints,
     Map<String, ColModel> Function(DAO dao, ListField<T, U> listField, T objectTemplate)? tableColumnsBuilder,
-    RowModel<T> Function(T element, BuildContext context, ListField<T, U> field, DAO dao, Map<String, ColModel> columns, ValueChanged<RowModel<T>>? onRowTap)? tableRowBuilder,
+    RowModel<T> Function(T element, BuildContext context, ListField<T, U> field, DAO dao, Map<String, ColModel> columns, ValueChanged<RowModel<T>>? onRowTap, Widget? rowAddonWidget)? tableRowBuilder,
+    Widget? Function(BuildContext context, RowModel<T> row, int index, double? minWidth, Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder)? tableRowWidgetBuilder,
     bool? skipDeleteConfirmation,
     bool? showTableHeaders,
     bool? showTableHeaderAddon,
@@ -606,6 +609,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       rowTapType: rowTapType ?? this.rowTapType,
       tableColumnsBuilder: tableColumnsBuilder ?? this.tableColumnsBuilder,
       tableRowBuilder: tableRowBuilder ?? this.tableRowBuilder,
+      tableRowWidgetBuilder: tableRowWidgetBuilder ?? this.tableRowWidgetBuilder,
       tableFooterStickyOffset: tableFooterStickyOffset ?? this.tableFooterStickyOffset,
       tableHorizontalPadding: tableHorizontalPadding ?? this.tableHorizontalPadding,
       rowAddonField: rowAddonField ?? this.rowAddonField,
@@ -1932,7 +1936,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             });
           };
           if (tableRowBuilder!=null) {
-            _builtRows[e] = tableRowBuilder!(e, context, this, dao, columns, onRowTapFocused);
+            _builtRows[e] = tableRowBuilder!(e, context, this, dao, columns, onRowTapFocused, rowAddonWidget);
           } else {
             _builtRows[e] = SimpleRowModel<T>(
               id: e,
@@ -2018,6 +2022,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           footerStickyOffset: tableFooterStickyOffset,
           tableHorizontalPadding: tableHorizontalPadding,
           rows: _builtRows.values.toList(),
+          rowBuilder: tableRowWidgetBuilder,
           enableFixedHeightForListRows: rowAddonField==null,
           cellPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
           backgroundColor: backgroundColor?.call(context, this, dao),
