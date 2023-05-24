@@ -717,12 +717,12 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                               width: 26.0, //(widget.depth+1)*20.0
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(16)),
-                                color: Color.alphaBlend(theme.dividerColor.withOpacity(theme.dividerColor.opacity*0.5), Material.of(context)?.color ?? theme.cardColor),
+                                color: Color.alphaBlend(theme.dividerColor.withOpacity(theme.dividerColor.opacity*0.5), theme.cardColor),
                                 // color: Color.alphaBlend(
                                 //   selected!=i
                                 //       ? theme.dividerColor
                                 //       : Color.lerp(theme.indicatorColor, Colors.white, 0.33)!,
-                                //   Material.of(context)?.color ?? theme.cardColor,
+                                //   theme.cardColor,
                                 // ),
                               ),
                             ),
@@ -854,7 +854,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                       width: 20, height: double.infinity,
                       child: VerticalDivider(
                         thickness: 2, width: 2,
-                        color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Material.of(context)?.color??Theme.of(context).cardColor),
+                        color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Theme.of(context).cardColor),
                       ),
                     ),
                   );
@@ -870,7 +870,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   width: (tabs[i].children==null || tabs[i].children!.isEmpty) ? 24: 12,
                   child: Divider(
                     thickness: 2, height: 2,
-                    color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Material.of(context)?.color??Theme.of(context).cardColor),
+                    color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Theme.of(context).cardColor),
                   ),
                 ),
               ),
@@ -933,7 +933,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final selectedColor = !widget.selected ? Colors.transparent
-        : Color.lerp((widget.selectedColor ?? theme.indicatorColor), Material.of(context)?.color ?? theme.cardColor, 0.77);
+        : Color.lerp((widget.selectedColor ?? theme.indicatorColor), theme.cardColor, 0.77);
     final selectedTextColor = !widget.selected ? Colors.transparent
         : widget.selectedColor ?? Color.lerp(theme.textTheme.bodyText1!.color, theme.indicatorColor, 0.7)!;
     return Material(

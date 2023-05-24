@@ -271,7 +271,6 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
 
   Widget _buildChildren(BuildContext context, Widget? child) {
     // final Color borderSideColor = _borderColor.value;
-
     Widget title = InkWell(
       onTap: !widget.enabled ? null : _handleTap,
       child: Stack(
@@ -316,7 +315,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
                   alignment: Alignment.bottomLeft,
                   child: VerticalDivider(
                     thickness: 2, width: 2,
-                    color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Material.of(context)!.color??Theme.of(context).cardColor),
+                    color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Theme.of(context).cardColor),
                   ),
                 ),
               ),
