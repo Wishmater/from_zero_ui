@@ -282,46 +282,47 @@ abstract class TableFromZeroFilterPopup {
                                       ),
                                     ),
                                     SizedBox(height: 6,),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: TextButton(
-                                            child: Text(FromZeroLocalizations.of(context).translate('select_all')),
-                                            onPressed: () {
-                                              modified.value = true;
-                                              filterPopupSetState(() {
-                                                filterTableController.filtered.forEach((initialRow) {
-                                                  for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
-                                                    if (row.onCheckBoxSelected!=null) {
-                                                      newValueFilters[colKey]![row.id] = true;
-                                                      (row as SimpleRowModel).selected = true;
+                                    if (filterTableController.currentState==null || filterTableController.filtered.isNotEmpty)
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextButton(
+                                              child: Text(FromZeroLocalizations.of(context).translate('select_all')),
+                                              onPressed: () {
+                                                modified.value = true;
+                                                filterPopupSetState(() {
+                                                  filterTableController.filtered.forEach((initialRow) {
+                                                    for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
+                                                      if (row.onCheckBoxSelected!=null) {
+                                                        newValueFilters[colKey]![row.id] = true;
+                                                        (row as SimpleRowModel).selected = true;
+                                                      }
                                                     }
-                                                  }
+                                                  });
                                                 });
-                                              });
-                                            },
+                                              },
+                                            ),
                                           ),
-                                        ),
-                                        Expanded(
-                                          child: TextButton(
-                                            child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
-                                            onPressed: () {
-                                              modified.value = true;
-                                              filterPopupSetState(() {
-                                                filterTableController.filtered.forEach((initialRow) {
-                                                  for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
-                                                    if (row.onCheckBoxSelected!=null) {
-                                                      newValueFilters[colKey]![row.id] = false;
-                                                      (row as SimpleRowModel).selected = false;
+                                          Expanded(
+                                            child: TextButton(
+                                              child: Text(FromZeroLocalizations.of(context).translate('clear_selection')),
+                                              onPressed: () {
+                                                modified.value = true;
+                                                filterPopupSetState(() {
+                                                  filterTableController.filtered.forEach((initialRow) {
+                                                    for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
+                                                      if (row.onCheckBoxSelected!=null) {
+                                                        newValueFilters[colKey]![row.id] = false;
+                                                        (row as SimpleRowModel).selected = false;
+                                                      }
                                                     }
-                                                  }
+                                                  });
                                                 });
-                                              });
-                                            },
+                                              },
+                                            ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
+                                        ],
+                                      ),
                                   ],
                                 ),
                               ),

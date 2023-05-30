@@ -787,12 +787,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       );
     }
 
-    if (maxWidth!=null) {
+    // if (maxWidth!=null) { // this needs to be always added, otherwise it will force rebuild of inner widgets when added/removed
       result = SliverCrossAxisConstrained(
-        maxCrossAxisExtent: maxWidth,
+        maxCrossAxisExtent: maxWidth ?? double.infinity,
         child: result,
       );
-    }
+    // }
     result = FocusTraversalGroup(
       policy: ReadingOrderTraversalPolicy(),
       child: result,
