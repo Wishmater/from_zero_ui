@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:animations/animations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:from_zero_ui/src/table/empty_widget.dart';
 import 'package:from_zero_ui/src/table/table_header.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
@@ -2145,31 +2146,22 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             notifyListeners();
           } : null,
           emptyWidget: tableErrorWidget
-              ?? ContextMenuFromZero(
-                  actions: actions,
-                  onShowMenu: () => _errorWidgetFocusNode.requestFocus(),
-                  child: Focus(
-                    focusNode: _errorWidgetFocusNode,
-                    skipTraversal: true,
-                    child: Material(
-                      color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
-                      child: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
-                          ? buildAddAddon(context: context, collapsed: collapsed)
-                          : InkWell(
-                            onTap: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty ? () {
-                              userInteracted = true;
-                              maybeAddRow(dao.contextForValidation ?? context);
-                            } : null,
-                            child: ErrorSign(
-                              title: FromZeroLocalizations.of(context).translate('no_data'),
-                              subtitle: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
-                                  ? FromZeroLocalizations.of(context).translate('no_data_add')
-                                  : objects.isEmpty
-                                      ? FromZeroLocalizations.of(context).translate('no_data_desc')
-                                      : FromZeroLocalizations.of(context).translate('no_data_filters'),
-                            ),
+             ?? Focus(
+                  focusNode: _errorWidgetFocusNode,
+                  skipTraversal: true,
+                  child: Material(
+                    color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
+                    child: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
+                        ? ContextMenuFromZero(
+                            actions: actions,
+                            onShowMenu: () => _errorWidgetFocusNode.requestFocus(),
+                            child: buildAddAddon(context: context, collapsed: collapsed),
+                          )
+                        : TableEmptyWidget(
+                            tableController: tableController,
+                            actions: actions,
+                            onShowMenu: () => _errorWidgetFocusNode.requestFocus(),
                           ),
-                    ),
                   ),
                 ),
           headerWidgetAddon: !showTableHeaderAddon ? null : _buildTableHeader(context,

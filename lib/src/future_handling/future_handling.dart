@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/animations/exposed_transitions.dart';
 import 'package:intl/intl.dart';
+import 'package:dartx/dartx.dart';
 
 
 class LoadingCard extends StatelessWidget {
@@ -246,9 +247,9 @@ class ErrorSign extends StatelessWidget {
           style: Theme.of(context).textTheme.headline6,
           textAlign: TextAlign.center,
         ),
-        if (subtitle!=null)
+        if (subtitle.isNotNullOrBlank)
           SizedBox(height: 8,),
-        if (subtitle!=null)
+        if (subtitle.isNotNullOrBlank)
           Text(
             subtitle!,
             style: Theme.of(context).textTheme.bodyText1,

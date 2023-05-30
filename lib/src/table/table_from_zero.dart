@@ -9,6 +9,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/table/empty_widget.dart';
 import 'package:from_zero_ui/src/table/filter_popup.dart';
 import 'package:from_zero_ui/src/table/manage_popup.dart';
 import 'package:from_zero_ui/src/ui_utility/notification_relayer.dart';
@@ -814,12 +815,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         child: Container(
           color: _getMaterialColor(),
           padding: EdgeInsets.only(top: 4, bottom: 4),
-          child: widget.emptyWidget ?? ErrorSign(
-            icon: Icon(MaterialCommunityIcons.clipboard_alert_outline, size: 64, color: Theme.of(context).disabledColor,),
-            title: FromZeroLocalizations.of(context).translate('no_data'),
-            subtitle: filtersApplied.values.firstOrNullWhere((e) => e==true)!=null
-                ? FromZeroLocalizations.of(context).translate('no_data_filters')
-                : FromZeroLocalizations.of(context).translate('no_data_desc'),
+          child: widget.emptyWidget ?? TableEmptyWidget(
+            tableController: widget.tableController ?? TableController()
+              ..currentState = this
+              ..valueFilters = valueFilters
+              ..conditionFilters = conditionFilters,
           ),
         ),
       );
@@ -1896,25 +1896,32 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         icon: Icon(MaterialCommunityIcons.filter_remove),
         breakpoints: {0: ActionState.popup},
         onTap: !controller.currentState!.filtersApplied.any((k, v) => v) ? null : (context) {
-          for (final key in controller.currentState!.valueFilters.keys) {
-            for (final val in controller.currentState!.valueFilters[key]!.keys) {
-              controller.currentState!.valueFilters[key]![val] = false;
-            }
-          }
-          for (final key in controller.currentState!.conditionFilters.keys) {
-            controller.currentState!.conditionFilters[key] = [];
-          }
-          controller.currentState!._updateFiltersApplied();
-          if (updateStateIfModified) {
-            controller.currentState!.setState(() {
-              controller.currentState!.filter();
-            });
-          }
+          controller.currentState!.clearAllFilters(
+            updateStateIfModified: updateStateIfModified,
+          );
           onDidTap?.call();
         },
       );
     }
     return null;
+  }
+  void clearAllFilters({
+    bool updateStateIfModified = true,
+  }) {
+    for (final key in valueFilters.keys) {
+      for (final val in valueFilters[key]!.keys) {
+        valueFilters[key]![val] = false;
+      }
+    }
+    for (final key in conditionFilters.keys) {
+      conditionFilters[key] = [];
+    }
+    _updateFiltersApplied();
+    if (updateStateIfModified) {
+      setState(() {
+        filter();
+      });
+    }
   }
   static List<Widget> addExportExcelAction(BuildContext context, {
     required List<Widget> actions,

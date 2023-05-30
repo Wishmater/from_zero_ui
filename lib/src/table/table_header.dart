@@ -80,11 +80,12 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
             controller: widget.controller,
           );
         }
-        if (widget.exportPathForExcel!=null) {
+        final exportPathForExcel = widget.exportPathForExcel ?? widget.controller.currentState?.widget.exportPathForExcel;
+        if (exportPathForExcel!=null) {
           actions = TableFromZeroState.addExportExcelAction(context,
             actions: actions,
             tableController: widget.controller,
-            exportPathForExcel: widget.exportPathForExcel!,
+            exportPathForExcel: exportPathForExcel,
           );
         }
         if (widget.addSearchAction) {
