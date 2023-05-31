@@ -44,7 +44,7 @@ class TableEmptyWidget<T> extends StatelessWidget {
         exportPathForExcel: exportPathForExcel,
       );
     }
-    final filtersApplied = state?.filtersApplied.values.firstOrNullWhere((e) => e==true)!=null ?? false;
+    final filtersApplied = state!=null && state.filtersApplied.values.firstOrNullWhere((e) => e==true)!=null;
     return ContextMenuFromZero(
       actions: actions.whereType<ActionFromZero>().toList(),
       onShowMenu: onShowMenu,
