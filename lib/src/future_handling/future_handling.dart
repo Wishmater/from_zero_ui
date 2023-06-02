@@ -264,17 +264,21 @@ class ErrorSign extends StatelessWidget {
                   ? Colors.blue.shade500
                   : Colors.blue.shade400
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(width: 8,),
-                Icon(Icons.refresh),
-                SizedBox(width: 4,),
-                Text(FromZeroLocalizations.of(context).translate("retry"),
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
-                ),
-                SizedBox(width: 8,),
-              ],
+            child: IntrinsicWidth(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(width: 8,),
+                  Icon(Icons.refresh),
+                  SizedBox(width: 4,),
+                  Expanded(
+                    child: Text(FromZeroLocalizations.of(context).translate("retry"),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
+                    ),
+                  ),
+                  SizedBox(width: 8,),
+                ],
+              ),
             ),
             onPressed: onRetry,
           ),

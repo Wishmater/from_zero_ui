@@ -68,17 +68,21 @@ class TableEmptyWidget<T> extends StatelessWidget {
                     onPressed: () {
                       state?.clearAllFilters();
                     },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(width: 8,),
-                        Icon(Icons.filter_alt_off),
-                        SizedBox(width: 4,),
-                        Text('Limpiar todos los Filtros', // TODO 3 internationalize
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
-                        ),
-                        SizedBox(width: 8,),
-                      ],
+                    child: IntrinsicWidth(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          SizedBox(width: 8,),
+                          Icon(Icons.filter_alt_off),
+                          SizedBox(width: 4,),
+                          Expanded(
+                            child: Text('Limpiar todos los Filtros', // TODO 3 internationalize
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
+                            ),
+                          ),
+                          SizedBox(width: 8,),
+                        ],
+                      ),
                     ),
                   )),
           ),
