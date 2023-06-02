@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/util/expansion_tile_from_zero.dart';
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:go_router/src/match.dart';
@@ -717,12 +716,12 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                               width: 26.0, //(widget.depth+1)*20.0
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(16)),
-                                color: Color.alphaBlend(theme.dividerColor.withOpacity(theme.dividerColor.opacity*0.5), theme.cardColor),
+                                color: Color.alphaBlend(theme.dividerColor.withOpacity(theme.dividerColor.opacity*0.5), Material.of(context)?.color ?? theme.cardColor),
                                 // color: Color.alphaBlend(
                                 //   selected!=i
                                 //       ? theme.dividerColor
                                 //       : Color.lerp(theme.indicatorColor, Colors.white, 0.33)!,
-                                //   theme.cardColor,
+                                //   Material.of(context)?.color ?? theme.cardColor,
                                 // ),
                               ),
                             ),
