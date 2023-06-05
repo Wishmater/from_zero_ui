@@ -62,8 +62,8 @@ class DateField extends Field<DateTime> {
         this.formatterDense = formatterDense ?? formatter ?? (type==DateTimePickerType.time ? defaultTimeFormatter : defaultDenseFormatter),
         super(
           uiNameGetter: uiNameGetter,
-          value: type==DateTimePickerType.date ? value?.date : value,
-          dbValue: type==DateTimePickerType.date ? dbValue?.date : dbValue,
+          value: type==DateTimePickerType.date ? value?.toUtc().date : value,
+          dbValue: type==DateTimePickerType.date ? dbValue?.toUtc().date : dbValue,
           clearableGetter: clearableGetter,
           maxWidth: maxWidth,
           minWidth: minWidth,
@@ -124,8 +124,8 @@ class DateField extends Field<DateTime> {
   }) {
     return DateField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
-      value: type==DateTimePickerType.date ? (value??this.value)?.date : value??this.value,
-      dbValue: type==DateTimePickerType.date ? (dbValue??this.dbValue)?.date : dbValue??this.dbValue,
+      value: type==DateTimePickerType.date ? (value??this.value)?.toUtc().date : value??this.value,
+      dbValue: type==DateTimePickerType.date ? (dbValue??this.dbValue)?.toUtc().date : dbValue??this.dbValue,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
       minWidth: minWidth??this.minWidth,
@@ -158,14 +158,14 @@ class DateField extends Field<DateTime> {
   @override
   set value(DateTime? v) {
     super.value = type==DateTimePickerType.date
-        ? v?.date
+        ? v?.toUtc().date
         : v;
   }
 
   @override
   set dbValue(DateTime? v) {
     super.dbValue = type==DateTimePickerType.date
-        ? v?.date
+        ? v?.toUtc().date
         : v;
   }
 
