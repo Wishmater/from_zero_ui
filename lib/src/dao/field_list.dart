@@ -2289,20 +2289,22 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             child: Padding(
               padding: const EdgeInsets.only(top: 10, bottom: 10,),
               child: Center(
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.add, color: Colors.blue),
-                    SizedBox(width: 8,),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 2),
-                        child: Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}', style: TextStyle(fontSize: 16),),
+                child: IntrinsicWidth(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.add, color: Colors.blue),
+                      SizedBox(width: 8,),
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}', style: TextStyle(fontSize: 16),),
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 8,),
-                  ],
+                      SizedBox(width: 8,),
+                    ],
+                  ),
                 ),
               ),
             ),
