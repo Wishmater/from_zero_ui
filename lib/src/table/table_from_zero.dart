@@ -322,11 +322,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       for (int i=0; i<columnKeys!.length; i++) {
         if (!widget.columns!.keys.contains(columnKeys![i])) {
           columnKeys!.removeAt(i);
+          i--;
         }
       }
       for (int i=0; i<currentColumnKeys!.length; i++) {
         if (!widget.columns!.keys.contains(currentColumnKeys![i])) {
           currentColumnKeys!.removeAt(i);
+          i--;
         }
       }
       final newKeys = widget.columns!.keys.toList();
