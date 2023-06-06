@@ -1,14 +1,38 @@
+import 'package:collection/collection.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:dartx/dartx.dart';
 
 
-class ComparableList<T extends Comparable> with Comparable, ContainsValue<List<T>> {
+/// for passing lists into a provider familiy and maintaining equality of arguments
+class DeepEqualityList<T> extends ComparableListBase<T> {
 
-  final List<T> list;
-  List<T>? get value => list;
+  DeepEqualityList({
+    super.list,
+  });
+
+  @override
+  bool operator == (dynamic other) => other is DeepEqualityList<T>
+      && DeepCollectionEquality().equals(this.list, other.list);
+
+  @override
+  int get hashCode => Object.hashAll(list);
+
+  @override
+  int compareTo(other) {
+    if (other is! DeepEqualityList) return -1;
+    return DeepCollectionEquality().equals(this.list, other.list) ? 0
+        : list.length.compareTo(other.list.length);
+  }
+
+}
+
+
+/// for use in ListField, elements have to also be Comparable
+class ComparableList<T extends Comparable> extends ComparableListBase<T> {
 
   ComparableList({
-    List<T>? list,
-  })  : this.list = list ?? [];
+    super.list,
+  });
 
   ComparableList<T> copyWith({
     List<T>? list,
@@ -37,6 +61,23 @@ class ComparableList<T extends Comparable> with Comparable, ContainsValue<List<T
   int compareTo(other) {
     if (other is! ComparableList) return -1;
     return list.length.compareTo(other.list.length);
+  }
+
+}
+
+
+abstract class ComparableListBase<T> with Comparable, ContainsValue<List<T>> {
+
+  final List<T> list;
+  List<T>? get value => list;
+
+  ComparableListBase({
+    List<T>? list,
+  })  : this.list = list ?? [];
+
+  @override
+  String toString() {
+    return '${this.runtimeType}: $list';
   }
 
   T get first => list.first;
