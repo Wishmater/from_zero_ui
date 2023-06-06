@@ -648,4 +648,11 @@ class BoolField extends Field<BoolComparable> {
     return result;
   }
 
+  static SimpleColModel numFieldDefaultGetColumn(Field field, DAO dao) {
+    return BoolColModel(
+      name: field.uiName,
+      flex: field.tableColumnWidth?.round() ?? 192,
+    );
+  }
+
 }
