@@ -56,10 +56,12 @@ class NumField extends Field<num> {
     syncTextEditingController();
   }
 
-  void syncTextEditingController() {
+  void syncTextEditingController({
+    FocusNode? focusNode,
+  }) {
     final textVal = getTextVal(controller.text);
-    if (value != textVal) {
-      final string = toString();
+    final string = toString();
+    if (value!=textVal || (!(focusNode??this.focusNode).hasFocus && string!=controller.text)) {
       controller.text = string;
       controller.selection = TextSelection.collapsed(offset: string.length);
     }
@@ -273,6 +275,8 @@ class NumField extends Field<num> {
         final textVal = getTextVal(controller.text);
         if (textVal != value) {
           super.value = textVal;
+        } else {
+          syncTextEditingController(focusNode: focusNode);
         }
         if (!passedFirstEdit) {
           passedFirstEdit = true;
