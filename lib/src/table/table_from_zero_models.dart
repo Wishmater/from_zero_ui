@@ -595,7 +595,7 @@ class BoolColModel<T> extends SimpleColModel<T> {
     super.showFilterPopupCallback,
     this.trueValue = 'SÍ', // TODO 3 internationalize
     this.falseValue = 'NO', // TODO 3 internationalize
-    super.defaultSortAscending = true,
+    super.defaultSortAscending = false,
     super.alignment = TextAlign.center,
   });
   @override
