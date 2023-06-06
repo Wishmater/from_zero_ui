@@ -146,7 +146,7 @@ abstract class TableFromZeroFilterPopup {
                                   ],
                                 ),
                               ),),
-                            if ((newConditionFilters[colKey] ?? []).isEmpty)
+                            if (possibleConditionFilters.isNotEmpty && (newConditionFilters[colKey] ?? []).isEmpty)
                               SliverToBoxAdapter(child: Padding(
                                 padding: EdgeInsets.only(left: 24, bottom: 8,),
                                 child: Text (FromZeroLocalizations.of(context).translate('none'),
@@ -175,8 +175,10 @@ abstract class TableFromZeroFilterPopup {
                                 }).toList(),
                               ),
                             ),
-                            SliverToBoxAdapter(child: SizedBox(height: (newConditionFilters[colKey] ?? []).isEmpty ? 6 : 12,)),
-                            SliverToBoxAdapter(child: Divider(height: 32,)),
+                            if (possibleConditionFilters.isNotEmpty)
+                              SliverToBoxAdapter(child: SizedBox(height: (newConditionFilters[colKey] ?? []).isEmpty ? 6 : 12,)),
+                            if (possibleConditionFilters.isNotEmpty)
+                              SliverToBoxAdapter(child: Divider(height: 32,)),
                             TableFromZero(
                               tableController: filterTableController,
                               columns: col==null ? null : {colKey: col},

@@ -575,6 +575,90 @@ class NumColModel<T> extends SimpleColModel<T> {
 
 
 
+class BoolColModel<T> extends SimpleColModel<T> {
+  String trueValue;
+  String falseValue;
+  BoolColModel({
+    required super.name,
+    super.compactName,
+    super.backgroundColor,
+    super.textStyle,
+    super.flex,
+    super.width,
+    super.onHeaderTap,
+    super.onHeaderDoubleTap,
+    super.onHeaderLongPress,
+    super.onHeaderHover,
+    super.sortEnabled = true,
+    super.filterEnabled,
+    super.rowCountSelector,
+    super.showFilterPopupCallback,
+    this.trueValue = 'SÍ', // TODO 3 internationalize
+    this.falseValue = 'NO', // TODO 3 internationalize
+    super.defaultSortAscending = true,
+    super.alignment = TextAlign.center,
+  });
+  @override
+  BoolColModel<T> copyWith({
+    String? name,
+    Color? backgroundColor,
+    TextStyle? textStyle,
+    TextAlign? alignment,
+    int? flex,
+    double? width,
+    ValueChanged<int>? onHeaderTap,
+    ValueChanged<int>? onHeaderDoubleTap,
+    ValueChanged<int>? onHeaderLongPress,
+    OnHeaderHoverCallback? onHeaderHover,
+    bool? defaultSortAscending,
+    bool? sortEnabled,
+    bool? filterEnabled,
+    bool Function(RowModel<T> row)? rowCountSelector,
+    ShowFilterPopupCallback? showFilterPopupCallback,
+    String? trueValue,
+    String? falseValue,
+  }){
+    return BoolColModel<T>(
+      name: name ?? this.name,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      textStyle: textStyle ?? this.textStyle,
+      alignment: alignment ?? this.alignment,
+      flex: flex ?? this.flex,
+      width: width ?? this.width,
+      onHeaderTap: onHeaderTap ?? this.onHeaderTap,
+      onHeaderDoubleTap: onHeaderDoubleTap ?? this.onHeaderDoubleTap,
+      onHeaderLongPress: onHeaderLongPress ?? this.onHeaderLongPress,
+      onHeaderHover: onHeaderHover ?? this.onHeaderHover,
+      defaultSortAscending: defaultSortAscending ?? this.defaultSortAscending,
+      sortEnabled: sortEnabled ?? this.sortEnabled,
+      filterEnabled: filterEnabled ?? this.filterEnabled,
+      rowCountSelector: rowCountSelector ?? this.rowCountSelector,
+      showFilterPopupCallback: showFilterPopupCallback ?? this.showFilterPopupCallback,
+      trueValue: trueValue ?? this.trueValue,
+      falseValue: falseValue ?? this.falseValue,
+    );
+  }
+  @override
+  String getValueString(RowModel row, dynamic key) {
+    final value = getValue(row, key);
+    if (value is bool) {
+      return value ? trueValue : falseValue;
+    } else {
+      return value==null ? '' : value.toString();
+    }
+  }
+  @override
+  String getMetadataText(BuildContext context, List<RowModel<T>>? filtered, dynamic key, {
+    List<RowModel<T>>? reFiltered,
+  }) {
+    return '';
+  }
+  @override
+  List<ConditionFilter> getAvailableConditionFilters() => [];
+}
+
+
+
 class DateColModel<T> extends SimpleColModel<T> {
   DateFormat? formatter;
   DateColModel({
