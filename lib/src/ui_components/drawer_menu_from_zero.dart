@@ -57,7 +57,7 @@ class ResponsiveDrawerMenuItem{
     this.defaultExpanded = false,
     this.customExpansionTileTrailing,
     this.dense = false,
-    this.titleHorizontalOffset = 0,
+    this.titleHorizontalOffset = -4,
     this.subtitleRight,
     this.itemKey,
     this.contextMenuActions = const [],
@@ -72,7 +72,7 @@ class ResponsiveDrawerMenuItem{
     Object? extra,
     bool dense = false,
     bool forcePopup = false,
-    double titleHorizontalOffset = 0,
+    double titleHorizontalOffset = -4,
   }) {
     return routes.mapIndexed((i, e) {
       final children = fromGoRoutes(
@@ -683,8 +683,8 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               titleBuilder: (context, expanded) {
                 return Padding (
                   padding: expanded
-                      ? EdgeInsets.only(top: widget.style==DrawerMenuFromZero.styleTree ? 2 : 6)
-                      : EdgeInsets.symmetric(vertical: widget.style==DrawerMenuFromZero.styleTree ? 2 : 6),
+                      ? EdgeInsets.only(top: widget.style==DrawerMenuFromZero.styleTree ? 4 : 6)
+                      : EdgeInsets.symmetric(vertical: widget.style==DrawerMenuFromZero.styleTree ? 4 : 6),
                   child: getTreeOverlay(
                     DrawerMenuButtonFromZero(
                       key: tabs[i].itemKey,
@@ -921,7 +921,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
     this.selectedColor,
     this.dense=false,
     this.contentPadding = const EdgeInsets.only(left: 0),
-    this.titleHorizontalOffset=0,
+    this.titleHorizontalOffset = -4,
     this.subtitleRight,
     this.mouseCursor = SystemMouseCursors.click,
     this.showAnimatedShadowIfSelected = true,
@@ -955,8 +955,9 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
         dense: dense,
         mouseCursor: widget.mouseCursor,
         minVerticalPadding: 3, // default is 4
-        visualDensity: VisualDensity.compact,
-        horizontalTitleGap: 16 + widget.titleHorizontalOffset + (widget.dense ? 4 : 0),
+        visualDensity: VisualDensity(horizontal: -2, vertical: -4), // compact is -2
+        horizontalTitleGap: 16 + widget.titleHorizontalOffset + (widget.dense ? 5 :2),
+        onTap: widget.onTap,
         title: AnimatedDefaultTextStyle(
           duration: Duration(milliseconds: 100),
           style: TextStyle(
@@ -973,7 +974,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
               Expanded(
                 child: widget.titleWidget ?? Text(dense ? (widget.denseTitle??widget.title) : widget.title,
                   maxLines: dense ? 1 : null,
-                  softWrap: !dense,
+                  softWrap: false,
                   overflow: TextOverflow.fade,
                 ),
               ),
@@ -982,6 +983,9 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                   padding: const EdgeInsets.only(left: 6),
                   child: Text(widget.subtitleRight!,
                     textAlign: TextAlign.right,
+                    maxLines: dense ? 1 : null,
+                    softWrap: false,
+                    overflow: TextOverflow.fade,
                   ),
                 ),
               SizedBox(width: 12,),
@@ -998,81 +1002,88 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(widget.subtitle!,),
+                    child: Text(widget.subtitle!,
+                      maxLines: dense ? 1 : null,
+                      softWrap: false,
+                      overflow: TextOverflow.fade,
+                    ),
                   ),
                   if (widget.subtitleRight!=null)
                     Padding(
                       padding: const EdgeInsets.only(left: 6),
                       child: Text(widget.subtitleRight!,
                         textAlign: TextAlign.right,
+                        softWrap: false,
+                        overflow: TextOverflow.fade,
                       ),
                     ),
                   SizedBox(width: 12,),
                 ],
               ),
             ),
-        leading: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            if (widget.selected && widget.showAnimatedShadowIfSelected)
-              InitiallyAnimatedWidget(
-                duration: Duration(milliseconds: 600),
-                curve: Curves.easeOut,
-                builder: (animation, child) {
-                  return Positioned(
-                    top: 4, bottom: 4,
-                    right: -2 + 96*(1 - animation.value) - (widget.titleHorizontalOffset/2) - (dense ? 4 : 0),
-                    left: -widget.contentPadding.left,
-                    child: Opacity(
-                      opacity: (animation.value*2).coerceIn(0, 1),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: selectedColor,
-                          borderRadius: BorderRadius.only(
-                            topRight: Radius.circular(16),
-                            bottomRight: Radius.circular(16),
+        leading: SizedBox(
+          height: double.infinity,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              if (widget.selected && widget.showAnimatedShadowIfSelected)
+                InitiallyAnimatedWidget(
+                  duration: Duration(milliseconds: 600),
+                  curve: Curves.easeOut,
+                  builder: (animation, child) {
+                    return Positioned(
+                      top: 2, bottom: 2,
+                      right: -4 + 96*(1 - animation.value) - (widget.titleHorizontalOffset/2),
+                      left: -widget.contentPadding.left,
+                      child: Opacity(
+                        opacity: (animation.value*2).coerceIn(0, 1),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: selectedColor,
+                            borderRadius: BorderRadius.only(
+                              topRight: Radius.circular(12),
+                              bottomRight: Radius.circular(12),
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            Padding(
-              padding: EdgeInsets.only(left: dense ? 4 : 0),
-              child: AspectRatio(
-                aspectRatio: 1,
-                child: Builder(
-                  builder: (context) {
-                    Widget result = SizedBox.expand(
-                      child: widget.compact ? TooltipFromZero(
-                        message: widget.title,
-                        child: Padding(
+                    );
+                  },
+                ),
+              Padding(
+                padding: EdgeInsets.only(left: dense ? 9 : 4),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Builder(
+                    builder: (context) {
+                      Widget result = SizedBox.expand(
+                        child: widget.compact ? TooltipFromZero(
+                          message: widget.title,
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 6),
+                            child: widget.icon,
+                          ),
+                        ) : Padding(
                           padding: const EdgeInsets.only(left: 6),
                           child: widget.icon,
                         ),
-                      ) : Padding(
-                        padding: const EdgeInsets.only(left: 6),
-                        child: widget.icon,
-                      ),
-                    );
-                    result = IconTheme(
-                      data: theme.iconTheme.copyWith(
-                        color: widget.selected ? selectedTextColor
-                            : theme.brightness==Brightness.light? Colors.black45 : null,
-                        size: dense ? 20 : null,
-                      ),
-                      child: result,
-                    );
-                    return result;
-                  }
+                      );
+                      result = IconTheme(
+                        data: theme.iconTheme.copyWith(
+                          color: widget.selected ? selectedTextColor
+                              : theme.brightness==Brightness.light? Colors.black45 : null,
+                          size: dense ? 18 : null,
+                        ),
+                        child: result,
+                      );
+                      return result;
+                    }
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-//      leading: SizedBox(width: 1, height: 1,),
-        onTap: widget.onTap,
       ),
     );
   }

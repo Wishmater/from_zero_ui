@@ -306,7 +306,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
             ),
           if (widget.style==DrawerMenuFromZero.styleTree && _isExpanded) // && widget.trailing==null
             Positioned(
-              left: 10, right: 0, bottom: -1, top: -1,
+              left: 10, right: 0, bottom: -1, top: this.context.findAncestorWidgetOfExactType<ExpansionTileFromZero>()==null ? -20 : -1,
               child: FractionallySizedBox(
                 heightFactor: 0.5,
                 alignment: Alignment.bottomLeft,
