@@ -280,8 +280,8 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
             duration: Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
             child: Container(
-                key: ValueKey(_isExpanded),
-                child: widget.titleBuilder?.call(context, _isExpanded) ?? widget.title,
+              key: ValueKey(_isExpanded),
+              child: widget.titleBuilder?.call(context, _isExpanded) ?? widget.title,
             ),
           ),
           if (!(widget.trailing is SizedBox) && widget.children.isNotEmpty)

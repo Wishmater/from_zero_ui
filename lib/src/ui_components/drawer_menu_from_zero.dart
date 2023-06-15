@@ -19,6 +19,7 @@ class ResponsiveDrawerMenuDivider extends ResponsiveDrawerMenuItem{
 class ResponsiveDrawerMenuItem{
 
   final String title;
+  final String? denseTitle;
   final String? subtitle;
   final String? subtitleRight;
   final String? route;
@@ -41,6 +42,7 @@ class ResponsiveDrawerMenuItem{
 
   ResponsiveDrawerMenuItem({
     required this.title,
+    this.denseTitle,
     this.subtitle,
     this.icon,
     this.route,
@@ -155,6 +157,7 @@ class ResponsiveDrawerMenuItem{
     Key? itemKey,
     List<ActionFromZero>? contextMenuActions,
     Widget Function(String title)? titleBuilder,
+    String? denseTitle,
   }){
     return ResponsiveDrawerMenuItem(
       title: title ?? this.title,
@@ -177,10 +180,11 @@ class ResponsiveDrawerMenuItem{
       itemKey: itemKey ?? this.itemKey,
       contextMenuActions: contextMenuActions ?? this.contextMenuActions,
       titleBuilder: titleBuilder ?? this.titleBuilder,
+      denseTitle: denseTitle ?? this.denseTitle,
     );
   }
 
-  String get uniqueId => title.toString()+subtitle.toString()+(icon?.toStringShort()).toString()+route.toString();
+  String get uniqueId => title.toString()+subtitle.toString()+(icon?.toStringShort()).toString()+route.toString(); // TODO 3 this should be a hash, for efficiency
 
 }
 
@@ -679,12 +683,13 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               titleBuilder: (context, expanded) {
                 return Padding (
                   padding: expanded
-                      ? const EdgeInsets.only(top: 6)
-                      : const EdgeInsets.symmetric(vertical: 6),
+                      ? EdgeInsets.only(top: widget.style==DrawerMenuFromZero.styleTree ? 2 : 6)
+                      : EdgeInsets.symmetric(vertical: widget.style==DrawerMenuFromZero.styleTree ? 2 : 6),
                   child: getTreeOverlay(
                     DrawerMenuButtonFromZero(
                       key: tabs[i].itemKey,
                       title: tabs[i].title,
+                      denseTitle: tabs[i].denseTitle,
                       titleWidget: tabs[i].titleBuilder?.call(tabs[i].title),
                       subtitle: tabs[i].subtitle,
                       subtitleRight: tabs[i].subtitleRight,
@@ -799,6 +804,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             DrawerMenuButtonFromZero(
               key: tabs[i].itemKey,
               title: tabs[i].title,
+              denseTitle: tabs[i].denseTitle,
               titleWidget: tabs[i].titleBuilder?.call(tabs[i].title),
               subtitle: tabs[i].subtitle,
               subtitleRight: tabs[i].subtitleRight,
@@ -889,6 +895,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
   final bool selected;
   final bool compact;
   final String title;
+  final String? denseTitle;
   final Widget? titleWidget;
   final String? subtitle;
   final String? subtitleRight;
@@ -906,6 +913,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
     this.selected=false,
     this.compact=false,
     required this.title,
+    this.denseTitle,
     this.titleWidget,
     this.subtitle,
     this.icon,
@@ -935,6 +943,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
         : Color.lerp((widget.selectedColor ?? theme.indicatorColor), theme.cardColor, 0.77);
     final selectedTextColor = !widget.selected ? Colors.transparent
         : widget.selectedColor ?? Color.lerp(theme.textTheme.bodyText1!.color, theme.indicatorColor, 0.7)!;
+    final dense = widget.dense && !widget.selected;
     return Material(
       type: MaterialType.transparency,
       color: widget.selected
@@ -942,44 +951,66 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
           : Colors.transparent,
       child: ListTile(
         selected: widget.selected,
-        title: Transform.translate(
-          offset: Offset(widget.titleHorizontalOffset, 0),
-          child: AnimatedDefaultTextStyle(
-            duration: Duration(milliseconds: 100),
-            style: TextStyle(
-              fontSize: widget.selected ? 17 : 16,
-              color: widget.selected ? selectedTextColor : theme.textTheme.bodyText1!.color,
-              fontWeight: widget.selected ? FontWeight.w700 : null,
-            ),
-            child: widget.titleWidget ?? Text(widget.title,),
+        contentPadding: widget.contentPadding,
+        dense: dense,
+        mouseCursor: widget.mouseCursor,
+        minVerticalPadding: 3, // default is 4
+        visualDensity: VisualDensity.compact,
+        horizontalTitleGap: 16 + widget.titleHorizontalOffset + (widget.dense ? 4 : 0),
+        title: AnimatedDefaultTextStyle(
+          duration: Duration(milliseconds: 100),
+          style: TextStyle(
+            fontSize: dense
+                ? widget.selected ? 17 : 14
+                : widget.selected ? 17 : 16,
+            color: dense
+                ? widget.selected ? selectedTextColor.withOpacity(0.75) : theme.textTheme.caption!.color
+                : widget.selected ? selectedTextColor : theme.textTheme.bodyText1!.color,
+            fontWeight: widget.selected ? FontWeight.w700 : null,
           ),
-        ),
-        subtitle: widget.subtitle==null||widget.compact ? null
-            : Transform.translate(
-              offset: Offset(widget.titleHorizontalOffset, 0),
-              child: AnimatedDefaultTextStyle(
-                duration: Duration(milliseconds: 100),
-                style: TextStyle(
-                  color: widget.selected ? selectedTextColor.withOpacity(0.75)
-                      : theme.textTheme.caption!.color,
-                  fontWeight: widget.selected ? FontWeight.w600 : null,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(widget.subtitle!,),
-                    ),
-                    if (widget.subtitleRight!=null)
-                      Text(widget.subtitleRight!,
-                        textAlign: TextAlign.right,
-                      ),
-                  ],
+          child: Row(
+            children: [
+              Expanded(
+                child: widget.titleWidget ?? Text(dense ? (widget.denseTitle??widget.title) : widget.title,
+                  maxLines: dense ? 1 : null,
+                  softWrap: !dense,
+                  overflow: TextOverflow.fade,
                 ),
               ),
+              if (dense && widget.subtitleRight!=null)
+                Padding(
+                  padding: const EdgeInsets.only(left: 6),
+                  child: Text(widget.subtitleRight!,
+                    textAlign: TextAlign.right,
+                  ),
+                ),
+              SizedBox(width: 12,),
+            ],
+          ),
+        ),
+        subtitle: dense||widget.subtitle==null||widget.compact ? null
+            : AnimatedDefaultTextStyle(
+              duration: Duration(milliseconds: 100),
+              style: TextStyle(
+                color: widget.selected ? selectedTextColor.withOpacity(0.75) : theme.textTheme.caption!.color,
+                fontWeight: widget.selected ? FontWeight.w600 : null,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(widget.subtitle!,),
+                  ),
+                  if (widget.subtitleRight!=null)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Text(widget.subtitleRight!,
+                        textAlign: TextAlign.right,
+                      ),
+                    ),
+                  SizedBox(width: 12,),
+                ],
+              ),
             ),
-        contentPadding: widget.contentPadding,
-        dense: widget.dense,
-        mouseCursor: widget.mouseCursor,
         leading: Stack(
           clipBehavior: Clip.none,
           children: [
@@ -990,7 +1021,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 builder: (animation, child) {
                   return Positioned(
                     top: 4, bottom: 4,
-                    right: -2 + 96*(1 - animation.value) - (widget.titleHorizontalOffset/2),
+                    right: -2 + 96*(1 - animation.value) - (widget.titleHorizontalOffset/2) - (dense ? 4 : 0),
                     left: -widget.contentPadding.left,
                     child: Opacity(
                       opacity: (animation.value*2).coerceIn(0, 1),
@@ -1008,7 +1039,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 },
               ),
             Padding(
-              padding: EdgeInsets.only(left: widget.dense ? 4 : 0),
+              padding: EdgeInsets.only(left: dense ? 4 : 0),
               child: AspectRatio(
                 aspectRatio: 1,
                 child: Builder(
@@ -1029,6 +1060,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                       data: theme.iconTheme.copyWith(
                         color: widget.selected ? selectedTextColor
                             : theme.brightness==Brightness.light? Colors.black45 : null,
+                        size: dense ? 20 : null,
                       ),
                       child: result,
                     );
