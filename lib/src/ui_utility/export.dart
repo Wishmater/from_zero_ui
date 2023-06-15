@@ -475,19 +475,18 @@ class ExportState extends State<Export> {
                   cellStyle.numFormat = "###,###,###,###,##0.00";
                 }
                 if (cellStyle.numFormat!=null) {
-                  if(!excel.numFormats.contains(cellStyle.numFormat!)){
+                  if(!excel.numFormats.contains(cellStyle.numFormat!)) {
                     excel.addNumFormats(cellStyle.numFormat!);
                   }
                 }
-              } else if (row.values[key] is ValueStringNum){
-                cellValue = (row.values[key] as ValueStringNum).value;
-              } else if (row.values[key] is ValueString){
-                cellValue = (row.values[key] as ValueString).value==null ? null
-                    : (row.values[key] as ValueString).value is num
-                        ? (row.values[key] as ValueString).value
-                        : (row.values[key] as ValueString).string;
-              } else if (row.values[key] is NumGroupComparingBySum){
-                cellValue = (row.values[key] as NumGroupComparingBySum).value;
+              } else if (col is BoolColModel && (row.values[key] is bool || row.values[key] is ContainsValue<bool>)) {
+                cellValue = col.getValueString(row, key);
+              }  else if (row.values[key] is ContainsValue){
+                cellValue = (row.values[key] as ValueString).value==null
+                    ? null
+                    : (row.values[key] as ContainsValue).value is num
+                        ? (row.values[key] as ContainsValue).value
+                        : row.values[key].toString();
               } else {
                 cellValue = row.values[key]==null ? null
                     : row.values[key];
