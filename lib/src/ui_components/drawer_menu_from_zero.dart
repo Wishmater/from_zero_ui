@@ -698,6 +698,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                       dense: tabs[i].dense,
                       titleHorizontalOffset: tabs[i].titleHorizontalOffset,
                       icon: tabs[i].icon ?? SizedBox.shrink(),
+                      softWrap: widget.style!=DrawerMenuFromZero.styleTree,
                       contentPadding: EdgeInsets.only(
                         left: widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
                         right: widget.paddingRight + (widget.style==DrawerMenuFromZero.styleDrawerMenu ? 42 : 0),
@@ -814,6 +815,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               onTap: onTap,
               dense: tabs[i].dense,
               titleHorizontalOffset: tabs[i].titleHorizontalOffset,
+              softWrap: widget.style!=DrawerMenuFromZero.styleTree,
               contentPadding: EdgeInsets.only(
                 left: widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
                 right: widget.paddingRight,
@@ -907,6 +909,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
   final double titleHorizontalOffset;
   final MouseCursor? mouseCursor;
   final bool showAnimatedShadowIfSelected;
+  final bool softWrap;
 
   DrawerMenuButtonFromZero({
     Key? key,
@@ -925,6 +928,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
     this.subtitleRight,
     this.mouseCursor = SystemMouseCursors.click,
     this.showAnimatedShadowIfSelected = true,
+    this.softWrap = true,
   }) : super(key: key);
 
   @override
@@ -974,7 +978,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
               Expanded(
                 child: widget.titleWidget ?? Text(dense ? (widget.denseTitle??widget.title) : widget.title,
                   maxLines: dense ? 1 : null,
-                  softWrap: false,
+                  softWrap: !dense&&widget.softWrap,
                   overflow: TextOverflow.fade,
                 ),
               ),
@@ -984,7 +988,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                   child: Text(widget.subtitleRight!,
                     textAlign: TextAlign.right,
                     maxLines: dense ? 1 : null,
-                    softWrap: false,
+                    softWrap: !dense&&widget.softWrap,
                     overflow: TextOverflow.fade,
                   ),
                 ),
@@ -1003,8 +1007,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 children: [
                   Expanded(
                     child: Text(widget.subtitle!,
-                      maxLines: dense ? 1 : null,
-                      softWrap: false,
+                      softWrap: widget.softWrap,
                       overflow: TextOverflow.fade,
                     ),
                   ),
@@ -1013,7 +1016,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                       padding: const EdgeInsets.only(left: 6),
                       child: Text(widget.subtitleRight!,
                         textAlign: TextAlign.right,
-                        softWrap: false,
+                        softWrap: widget.softWrap,
                         overflow: TextOverflow.fade,
                       ),
                     ),
