@@ -434,7 +434,6 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
           } else{
             state = 0;
             result = widget.loadingBuilder(context);
-            print ('LOADING ${snapshot.hasData} ${_previousBuildData} ${widget.initialData} ${hashCode}');
           }
         }
         if (state==1) {
