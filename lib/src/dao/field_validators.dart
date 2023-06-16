@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao/dao.dart';
 import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
+import 'package:from_zero_ui/util/comparable_list.dart';
 
 
 enum ValidationErrorSeverity {
@@ -173,10 +174,23 @@ ValidationError? fieldValidatorRequired<T extends Comparable>(BuildContext conte
 }) {
   return field.value==null||field.value!.toString().trim().isEmpty
       ? ValidationError(
-        field: field,
-        error: errorMessage ?? (field.uiName + ' ' + FromZeroLocalizations.of(context).translate("validation_error_required")),
-        severity: severity,
-      )
+          field: field,
+          error: errorMessage ?? (field.uiName + ' ' + FromZeroLocalizations.of(context).translate("validation_error_required")),
+          severity: severity,
+        )
+      : null;
+}
+
+ValidationError? fieldValidatorListNotEmpty<T extends Comparable>(BuildContext context, DAO dao, Field<T> field, {
+  String? errorMessage,
+  ValidationErrorSeverity severity = ValidationErrorSeverity.error,
+}) {
+  return field is ListField && (field.value as ComparableList).list.length==0
+      ? ValidationError(
+          field: field,
+          error: errorMessage ?? 'At least one ${(field as ListField).objectTemplate.classUiName} required', // TODO 2 internationalize
+          severity: severity,
+        )
       : null;
 }
 
