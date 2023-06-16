@@ -951,10 +951,12 @@ class _AnimatedIconFromZeroState extends State<AnimatedIconFromZero> with Single
   @override
   void didUpdateWidget(covariant AnimatedIconFromZero oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.value) {
-      controller.reverse();
-    } else {
-      controller.forward();
+    if (mounted) {
+      if (widget.value) {
+        controller.reverse();
+      } else {
+        controller.forward();
+      }
     }
   }
 
