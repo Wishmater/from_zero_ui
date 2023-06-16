@@ -337,10 +337,10 @@ Widget _noneTransitionBuilder(Widget child, Animation<double> animation){
 }
 
 
-@deprecated
+
 class FutureBuilderFromZero<T> extends StatefulWidget {
 
-  final initialData;
+  final T? initialData;
   final Future future;
   final SuccessBuilder<T> successBuilder;
   final Duration duration;
@@ -349,6 +349,8 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
   final FutureErrorBuilder errorBuilder;
   final FutureLoadingBuilder loadingBuilder;
   final AnimatedSwitcherTransitionBuilder transitionBuilder;
+  final bool applyDefaultTransition;
+  final bool enableSkipFrame; // when transitioning from having data to not having it, delay the transition by 1 frame, to not show loading unnecessarily
 
   FutureBuilderFromZero({
     Key? key,
@@ -359,9 +361,10 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
     this.initialData,
     AnimatedSwitcherTransitionBuilder? transitionBuilder,
     this.keepPreviousDataWhileLoading = false,
-    bool applyDefaultTransition = true,
+    this.applyDefaultTransition = true,
     Duration? duration,
     this.applyAnimatedContainerFromChildSize = false,
+    this.enableSkipFrame = true,
   }) :  transitionBuilder = transitionBuilder ?? (applyDefaultTransition ? _defaultTransitionBuilder : _noneTransitionBuilder),
         duration = duration ?? (applyDefaultTransition ? const Duration(milliseconds: 300) : Duration.zero),
         super(key: key);
@@ -387,19 +390,29 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
     super.didUpdateWidget(oldWidget);
   }
 
+  dynamic _previousBuildData;
+  dynamic _currentBuildData;
+  void updatePreviousData() {
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
       future: widget.future,
-      initialData: widget.initialData,
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
         Widget result;
         int state = 0;
-        if (snapshot.connectionState == ConnectionState.done || (widget.keepPreviousDataWhileLoading&&snapshot.hasData)){
-          skipFrame = true;
+        if (snapshot.connectionState==ConnectionState.done
+            || (snapshot.hasData && (_currentBuildData==null || _currentBuildData==widget.future || widget.keepPreviousDataWhileLoading))
+            || (_previousBuildData==null && widget.initialData!=null)){
+          if (widget.enableSkipFrame) skipFrame = true;
           if (snapshot.hasData){
             state = 1;
             result = widget.successBuilder(context, snapshot.data);
+          } else if (_previousBuildData==null && widget.initialData!=null) {
+            state = 1;
+            result = widget.successBuilder(context, widget.initialData!);
           } else {
             state = -1;
             result = widget.errorBuilder(context, snapshot.hasError ? snapshot.error : "Forever Loading", snapshot.hasError ? snapshot.stackTrace : '',);
@@ -421,34 +434,40 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
           } else{
             state = 0;
             result = widget.loadingBuilder(context);
+            print ('LOADING ${snapshot.hasData} ${_previousBuildData} ${widget.initialData} ${hashCode}');
           }
         }
-        int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds).toInt();
-        result = AnimatedSwitcher(
-          transitionBuilder: widget.transitionBuilder,
-          child: Container(
-            key: ValueKey(state),
-            child: result,
-          ),
-          duration: Duration(milliseconds: milliseconds),
-          layoutBuilder: (currentChild, previousChildren) {
-            return Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                Positioned.fill(
-                  child: OverflowBox(
-                    child: Stack(
-                      children: previousChildren,
+        if (state==1) {
+          updatePreviousData();
+        }
+        if (widget.applyDefaultTransition) {
+          int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds).toInt();
+          result = AnimatedSwitcher(
+            transitionBuilder: widget.transitionBuilder,
+            child: Container(
+              key: ValueKey(state),
+              child: result,
+            ),
+            duration: Duration(milliseconds: milliseconds),
+            layoutBuilder: (currentChild, previousChildren) {
+              return Stack(
+                clipBehavior: Clip.none,
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: OverflowBox(
+                      child: Stack(
+                        children: previousChildren,
+                      ),
                     ),
                   ),
-                ),
-                if (currentChild!=null)
-                  currentChild,
-              ],
-            );
-          },
-        );
+                  if (currentChild!=null)
+                    currentChild,
+                ],
+              );
+            },
+          );
+          }
         if (widget.applyAnimatedContainerFromChildSize){
           result = AnimatedContainerFromChildSize(
             duration: widget.duration,
