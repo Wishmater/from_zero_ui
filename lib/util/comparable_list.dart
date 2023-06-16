@@ -63,6 +63,10 @@ class ComparableList<T extends Comparable> extends ComparableListBase<T> {
     return list.length.compareTo(other.list.length);
   }
 
+  ComparableList<T> clone() {
+    return ComparableList<T>(list: List.from(list));
+  }
+
 }
 
 
