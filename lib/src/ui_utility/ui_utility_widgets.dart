@@ -909,6 +909,69 @@ class IconButtonBackground extends StatelessWidget {
 
 
 
+class AnimatedIconFromZero extends StatefulWidget {
+
+  final AnimatedIconData icon;
+  final bool value;
+  final Duration duration;
+  final Curve curve;
+  final Curve reverseCurve;
+  final Color? color;
+  final double? size;
+
+
+  const AnimatedIconFromZero({
+    required this.icon,
+    required this.value,
+    this.duration = const Duration(milliseconds: 250),
+    this.curve = Curves.easeOutCubic,
+    this.reverseCurve = Curves.easeInCubic,
+    this.color,
+    this.size,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  State<AnimatedIconFromZero> createState() => _AnimatedIconFromZeroState();
+
+}
+class _AnimatedIconFromZeroState extends State<AnimatedIconFromZero> with SingleTickerProviderStateMixin {
+
+  late final controller = AnimationController(
+    vsync: this,
+    value: widget.value ? 0 : 1,
+    duration: widget.duration,
+  );
+  late final animation = CurvedAnimation(
+    parent: controller,
+    curve: widget.curve,
+    reverseCurve: widget.reverseCurve,
+  );
+
+  @override
+  void didUpdateWidget(covariant AnimatedIconFromZero oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.value) {
+      controller.reverse();
+    } else {
+      controller.forward();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedIcon(
+      icon: widget.icon,
+      progress: animation,
+      color: widget.color,
+      size: widget.size,
+    );
+  }
+
+}
+
+
+
 class SkipFrameWidget extends StatefulWidget {
 
   final int frameSkipCount;
