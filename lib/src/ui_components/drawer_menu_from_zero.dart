@@ -702,6 +702,8 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                       contentPadding: EdgeInsets.only(
                         left: widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
                         right: widget.paddingRight + (widget.style==DrawerMenuFromZero.styleDrawerMenu ? 42 : 0),
+                        top: widget.style!=DrawerMenuFromZero.styleTree ? 2 : 0,
+                        bottom: widget.style!=DrawerMenuFromZero.styleTree ? 2 : 0,
                       ),
                     ), tabs, i,
                   ),
@@ -819,6 +821,8 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               contentPadding: EdgeInsets.only(
                 left: widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
                 right: widget.paddingRight,
+                top: widget.style!=DrawerMenuFromZero.styleTree ? 2 : 0,
+                bottom: widget.style!=DrawerMenuFromZero.styleTree ? 2 : 0,
               ),
             ), tabs, i,
           );
@@ -923,7 +927,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
     this.onTap,
     this.selectedColor,
     this.dense=false,
-    this.contentPadding = const EdgeInsets.only(left: 0),
+    this.contentPadding = const EdgeInsets.only(left: 0, top: 3, bottom: 3),
     this.titleHorizontalOffset = -4,
     this.subtitleRight,
     this.mouseCursor = SystemMouseCursors.click,
