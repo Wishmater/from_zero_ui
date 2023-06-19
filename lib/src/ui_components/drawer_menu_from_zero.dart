@@ -1003,25 +1003,28 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 color: widget.selected ? selectedTextColor.withOpacity(0.75) : theme.textTheme.caption!.color,
                 fontWeight: widget.selected ? FontWeight.w600 : null,
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(widget.subtitle!,
-                      softWrap: widget.softWrap,
-                      overflow: TextOverflow.fade,
-                    ),
-                  ),
-                  if (widget.subtitleRight!=null)
-                    Padding(
-                      padding: const EdgeInsets.only(left: 6),
-                      child: Text(widget.subtitleRight!,
-                        textAlign: TextAlign.right,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(widget.subtitle!,
                         softWrap: widget.softWrap,
                         overflow: TextOverflow.fade,
                       ),
                     ),
-                  SizedBox(width: 12,),
-                ],
+                    if (widget.subtitleRight!=null)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: Text(widget.subtitleRight!,
+                          textAlign: TextAlign.right,
+                          softWrap: widget.softWrap,
+                          overflow: TextOverflow.fade,
+                        ),
+                      ),
+                    SizedBox(width: 12,),
+                  ],
+                ),
               ),
             ),
         leading: SizedBox(
