@@ -1705,6 +1705,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       context: context,
       controller: widget.tableController
           ?? TableController()
+              ..currentState = this
               ..valueFilters = valueFilters
               ..conditionFilters = conditionFilters,
       colKey: colKey,
