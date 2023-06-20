@@ -57,7 +57,7 @@ class ResponsiveDrawerMenuItem{
     this.defaultExpanded = false,
     this.customExpansionTileTrailing,
     this.dense = false,
-    this.titleHorizontalOffset = -4,
+    this.titleHorizontalOffset = 0,
     this.subtitleRight,
     this.itemKey,
     this.contextMenuActions = const [],
@@ -72,7 +72,7 @@ class ResponsiveDrawerMenuItem{
     Object? extra,
     bool dense = false,
     bool forcePopup = false,
-    double titleHorizontalOffset = -4,
+    double titleHorizontalOffset = 0,
   }) {
     return routes.mapIndexed((i, e) {
       final children = fromGoRoutes(
@@ -928,7 +928,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
     this.selectedColor,
     this.dense=false,
     this.contentPadding = const EdgeInsets.only(left: 0, top: 3, bottom: 3),
-    this.titleHorizontalOffset = -4,
+    this.titleHorizontalOffset = 0,
     this.subtitleRight,
     this.mouseCursor = SystemMouseCursors.click,
     this.showAnimatedShadowIfSelected = true,
@@ -964,7 +964,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
         mouseCursor: widget.mouseCursor,
         minVerticalPadding: 3, // default is 4
         visualDensity: VisualDensity(horizontal: -2, vertical: -4), // compact is -2
-        horizontalTitleGap: 16 + widget.titleHorizontalOffset + (widget.dense ? 5 :2),
+        horizontalTitleGap: 16 + widget.titleHorizontalOffset + (widget.dense ? 5 : 2),
         onTap: widget.onTap,
         title: AnimatedDefaultTextStyle(
           duration: Duration(milliseconds: 100),
