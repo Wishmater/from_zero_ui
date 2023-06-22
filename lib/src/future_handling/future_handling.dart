@@ -490,6 +490,7 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
   final Alignment alignment;
   final Clip clipBehavior;
   final ValueNotifier<Size?>? sizeNotifier;
+  final Listenable? notifyResize;
 
   AnimatedContainerFromChildSize({
     required this.child,
@@ -498,6 +499,7 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
     this.curve = Curves.easeOutCubic,
     this.clipBehavior = Clip.none,
     this.sizeNotifier,
+    this.notifyResize,
     Key? key,
   })  : super(key: key);
 
@@ -534,8 +536,17 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
     _addCallback(oldWidget);
     super.didUpdateWidget(oldWidget);
   }
+  @override
+  void dispose() {
+    super.dispose();
+    widget.notifyResize?.removeListener(_setState);
+  }
 
   void _addCallback(AnimatedContainerFromChildSize? oldWidget) {
+    if (widget.notifyResize != oldWidget?.notifyResize){
+      oldWidget?.notifyResize?.removeListener(_setState);
+      widget.notifyResize?.addListener(_setState);
+    }
     if (widget.child != oldWidget?.child){
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         try {
@@ -549,6 +560,11 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
           }
         } catch (_, __) { }
       });
+    }
+  }
+  void _setState() {
+    if (mounted) {
+      setState((){});
     }
   }
 

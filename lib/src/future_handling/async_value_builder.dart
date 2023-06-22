@@ -64,6 +64,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
         );
       },
     );
+    final notifyResize = applyAnimatedContainerFromChildSize ? ChangeNotifier() : null;
     if (transitionDuration!=Duration.zero) {
       result = AnimatedSwitcher(
         child: result,
@@ -82,6 +83,9 @@ class AsyncValueBuilder<T> extends StatelessWidget {
               }
             }
           }
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+            notifyResize?.notifyListeners(); // notify possible size change when adding/removing children
+          });
           return Stack(
             alignment: alignment ?? Alignment.center,
             children: <Widget>[
@@ -97,6 +101,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
       result = AnimatedContainerFromChildSize(
         duration: transitionDuration,
         alignment: alignment ?? Alignment.topLeft,
+        notifyResize: notifyResize,
         child: result,
       );
     }
@@ -217,6 +222,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
         child: result,
       );
     }
+    final notifyResize = applyAnimatedContainerFromChildSize ? ChangeNotifier() : null;
     if (transitionDuration!=Duration.zero) {
       result = AnimatedSwitcher(
         child: result,
@@ -235,6 +241,9 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
               }
             }
           }
+          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+            notifyResize?.notifyListeners(); // notify possible size change when adding/removing children
+          });
           return Stack(
             alignment: alignment ?? Alignment.center,
             children: <Widget>[
@@ -250,6 +259,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
       result = AnimatedContainerFromChildSize(
         duration: transitionDuration,
         alignment: alignment ?? Alignment.topLeft,
+        notifyResize: notifyResize,
         child: result,
       );
     }
