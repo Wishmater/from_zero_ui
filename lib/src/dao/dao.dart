@@ -1438,12 +1438,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       future: initialValidation,
       successBuilder: (context, data) => content,
       loadingBuilder: (context) {
-        return Card(
-          child: Container(
-            width: formDialogWidth,
-            height: 256,
-            alignment: Alignment.center,
-            child: ApiProviderBuilder.defaultLoadingBuilder(context, null),
+        return Center(
+          child: Card(
+            child: SizedBox(
+              width: formDialogWidth,
+              height: 256,
+              child: ApiProviderBuilder.defaultLoadingBuilder(context, null),
+            ),
           ),
         );
       },
