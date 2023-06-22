@@ -486,6 +486,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                         padding: EdgeInsets.only(
                           top: showSearchBox ? 8.0 : 0,
                           bottom: widget.extraWidget!=null ? 4 : !showSearchBox ? 12 : 0,
+                          left: 8, right: 8,
                         ),
                         alignment: Alignment.center,
                         child: Transform.translate(
