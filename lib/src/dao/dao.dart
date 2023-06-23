@@ -38,8 +38,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   dynamic id; // TODO 3 id type should be declared as <>
   late DAOValueGetter<String, ModelType> classUiNameGetter;
   String get classUiName => classUiNameGetter(this);
-  late DAOValueGetter<String, ModelType> classUiNamePluralGetter;
-  String get classUiNamePlural => classUiNamePluralGetter(this);
+  DAOValueGetter<String, ModelType>? classUiNamePluralGetter;
+  String get classUiNamePlural => classUiNamePluralGetter?.call(this) ?? classUiName;
   late DAOValueGetter<String, ModelType> uiNameGetter;
   String get uiName => uiNameGetter(this);
   DAOValueGetter<String, ModelType>? uiNameDenseGetter; /// used in table, or whenever build is called with dense=true
@@ -84,7 +84,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
   DAO({
     required this.classUiNameGetter,
-    DAOValueGetter<String, ModelType>? classUiNamePluralGetter,
+    this.classUiNamePluralGetter,
     required this.uiNameGetter,
     this.uiNameDenseGetter,
     this.id,
@@ -118,8 +118,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.saveButtonTitle,
     this.saveConfirmationDialogDescription,
   }) :  this._undoRecord = undoRecord ?? [],
-        this._redoRecord = redoRecord ?? [],
-        this.classUiNamePluralGetter = classUiNamePluralGetter ?? classUiNameGetter
+        this._redoRecord = redoRecord ?? []
         {
           this.props.forEach((key, value) {
             value.dao = this;
