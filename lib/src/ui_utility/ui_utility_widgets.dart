@@ -1049,7 +1049,7 @@ class InitiallyAnimatedWidget extends StatefulWidget {
   final Duration duration;
   final Curve curve;
   final Widget? child;
-  final bool repeat;
+  final bool? repeat; /// false: don't repeat, null: repeat once, true: repeate forever
   final bool reverse;
 
   InitiallyAnimatedWidget({
@@ -1085,7 +1085,11 @@ class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with 
     startAnimation();
   }
   void startAnimation() {
-    if (widget.repeat) {
+    if (widget.repeat==null) {
+      animationController.forward().then((value) {
+        return animationController.reverse();
+      });
+    } else if (widget.repeat!) {
       animationController.repeat(
         reverse: widget.reverse,
       );
