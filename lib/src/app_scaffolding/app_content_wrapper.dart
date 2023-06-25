@@ -574,10 +574,12 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
   double getCurrentDrawerWidth(String pageScaffoldId) {
     if (!_currentDrawerWidths.containsKey(pageScaffoldId)) {
       _currentDrawerWidths[pageScaffoldId] =
-          drawerOpenByDefaultOnDesktop  ? expandedDrawerWidths[pageScaffoldId]!
-                                        : collapsedDrawerWidths[pageScaffoldId]!;
+          drawerOpenByDefaultOnDesktop  ? expandedDrawerWidths[pageScaffoldId] ?? 304
+                                        : collapsedDrawerWidths[pageScaffoldId] ?? 56;
       _blockNotify = true;
-      _updateDrawerWidths(_previousWidth!<ScaffoldFromZero.screenSizeMedium, _previousWidth!);
+      if (_previousWidth!=null) {
+        _updateDrawerWidths(_previousWidth!<ScaffoldFromZero.screenSizeMedium, _previousWidth!);
+      }
       _blockNotify = false;
     }
     return _currentDrawerWidths[pageScaffoldId] ?? 0;
