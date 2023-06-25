@@ -593,11 +593,11 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
   }
   void collapseDrawer([String? pageScaffoldId]){
     pageScaffoldId ??= currentRouteState!.pageScaffoldId;
-    setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId]!);
+    setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId] ?? 56);
   }
   void expandDrawer([String? pageScaffoldId]){
     pageScaffoldId ??= currentRouteState!.pageScaffoldId;
-    setCurrentDrawerWidth(pageScaffoldId, expandedDrawerWidths[pageScaffoldId]!);
+    setCurrentDrawerWidth(pageScaffoldId, expandedDrawerWidths[pageScaffoldId] ?? 304);
   }
   bool get isCurrentDrawerExpanded => isDrawerExpanded();
   bool isDrawerExpanded([String? pageScaffoldId]) {
@@ -617,11 +617,11 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     if (width < ScaffoldFromZero.screenSizeMedium) {
       setCurrentDrawerWidth(pageScaffoldId, 0);
     } else if (PlatformExtended.isDesktop && _previousWidth!=null && _previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
-      setCurrentDrawerWidth(pageScaffoldId, expandedDrawerWidths[pageScaffoldId]!);
+      setCurrentDrawerWidth(pageScaffoldId, expandedDrawerWidths[pageScaffoldId] ?? 304);
     } else if (PlatformExtended.isDesktop && _previousWidth!=null && _previousWidth!>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
-      setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId]!);
-    } else if (getCurrentDrawerWidth(pageScaffoldId) < collapsedDrawerWidths[pageScaffoldId]!){
-      setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId]!);
+      setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId] ?? 56);
+    } else if (getCurrentDrawerWidth(pageScaffoldId) < (collapsedDrawerWidths[pageScaffoldId] ?? 56)){
+      setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId] ?? 56);
     }
   }
 
