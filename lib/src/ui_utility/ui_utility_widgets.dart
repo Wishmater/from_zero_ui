@@ -727,6 +727,7 @@ class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
 
   @override
   Widget build(BuildContext context) {
+    // TODO 3 this should only show if using a tactile device
     bool show = false;
     try {
       show = widget.scrollController.position.pixels > 256;
