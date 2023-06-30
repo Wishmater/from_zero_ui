@@ -80,6 +80,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   DAOValueGetter<String, ModelType>? saveButtonTitle;
   DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle;
   DAOValueGetter<String, ModelType>? saveConfirmationDialogDescription;
+  FutureOr<String>? get defaultExportPath => null;
 
 
   DAO({

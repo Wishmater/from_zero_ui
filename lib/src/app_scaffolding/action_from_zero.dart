@@ -50,6 +50,8 @@ class ActionFromZero extends StatelessWidget {
   /// defaults to overflow
   final Map<double, ActionState> breakpoints;
 
+  int get uniqueId => Object.hashAll([title, icon]);
+
   /// optional callbacks to customize the look of the widget in its different states
   final OverflowActionBuilder overflowBuilder;
   Widget buildOverflow(BuildContext context, {bool forceIconSpace=false}) => overflowBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, forceIconSpace: forceIconSpace);

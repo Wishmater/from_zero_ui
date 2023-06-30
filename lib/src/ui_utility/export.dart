@@ -482,7 +482,7 @@ class ExportState extends State<Export> {
               } else if (col is BoolColModel && (row.values[key] is bool || row.values[key] is ContainsValue<bool>)) {
                 cellValue = col.getValueString(row, key);
               }  else if (row.values[key] is ContainsValue){
-                cellValue = (row.values[key] as ValueString).value==null
+                cellValue = (row.values[key] as ContainsValue).value==null
                     ? null
                     : (row.values[key] as ContainsValue).value is num
                         ? (row.values[key] as ContainsValue).value

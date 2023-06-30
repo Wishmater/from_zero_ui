@@ -114,9 +114,10 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
 
   void onTapDown(details) => tapDownDetails = details;
   void showContextMenu() {
-    if (widget.enabled && (widget.contextMenuWidget!=null || widget.actions.isNotEmpty)) {
+    final actions = widget.contextMenuWidget==null ? getAllContextActions() : widget.actions;
+    if (widget.enabled && (widget.contextMenuWidget!=null || actions.isNotEmpty)) {
       showContextMenuFromZero(context,
-        actions: widget.actions,
+        actions: actions,
         anchorKey: anchorKey,
         contextMenuWidth: widget.contextMenuWidth,
         popupAlignment: widget.popupAlignment,
@@ -129,6 +130,25 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
         useCursorLocation: widget.useCursorLocation,
       );
     }
+  }
+
+
+  List<ActionFromZero> getAllContextActions() {
+    final previousContextMenu = context.findAncestorStateOfType<ContextMenuFromZeroState>();
+    final result = List<ActionFromZero>.from(widget.actions);
+    if (previousContextMenu!=null) {
+      final newActions = <ActionFromZero>[];
+      for (final e in previousContextMenu.getAllContextActions()) {
+        if (!result.any((f) => e.uniqueId==f.uniqueId)) {
+          newActions.add(e);
+        }
+      }
+      if (newActions.isNotEmpty) {
+        result.add(ActionFromZero.divider());
+        result.addAll(newActions);
+      }
+    }
+    return result;
   }
 
 
