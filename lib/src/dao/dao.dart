@@ -473,8 +473,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   void focusFirstBlockingError() {
     final validationErrors = this.validationErrors;
     validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
-    ValidationError error = validationErrors.first;
-    focusError(error);
+    final error = validationErrors.firstOrNull;
+    if (error!=null) {
+      focusError(error);
+    }
   }
   void focusError(ValidationError error) {
     error.field.requestFocus();
