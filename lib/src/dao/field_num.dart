@@ -366,16 +366,18 @@ class NumField extends Field<num> {
                                 v = v.substring(0, commaIndex) + '.' + v.substring(commaIndex);
                                 update = true;
                               }
-                              if (v.length+1 - commaIndex > digitsAfterComma) {
+                              if (v.length-1 - commaIndex > digitsAfterComma) {
                                 v = v.substring(0, min(commaIndex+digitsAfterComma+1, v.length));
                                 update = true;
                               }
                             }
                             if (update) {
+                              final previousBase = controller.selection.baseOffset;
+                              final previousExtent = controller.selection.extentOffset;
                               controller.text = v;
                               controller.selection = TextSelection(
-                                baseOffset: v.length,
-                                extentOffset: v.length,
+                                baseOffset: previousBase.clamp(0, v.length),
+                                extentOffset: previousExtent.clamp(0, v.length),
                               );
                             }
                           }
