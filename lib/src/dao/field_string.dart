@@ -367,6 +367,9 @@ class StringField extends Field<String> {
                           value = v;
                         },
                         inputFormatters: inputFormatters,
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                        ),
                         decoration: inputDecoration??InputDecoration(
                           border: InputBorder.none,
                           alignLabelWithHint: dense,

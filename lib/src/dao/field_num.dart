@@ -391,6 +391,9 @@ class NumField extends Field<num> {
                         },
                         keyboardType: TextInputType.number,
                         inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9${digitsAfterComma==0 ? '' : '.'}${allowNegative ? '-' : ''}]')),],
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                        ),
                         decoration: inputDecoration??InputDecoration(
                           border: InputBorder.none,
                           alignLabelWithHint: dense,
