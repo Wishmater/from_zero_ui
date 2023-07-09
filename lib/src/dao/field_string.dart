@@ -187,6 +187,8 @@ class StringField extends Field<String> {
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actionsGetter,
     ViewWidgetBuilder<String>? viewWidgetBuilder,
     OnFieldValueChanged<String?>? onValueChanged,
+    bool? obfuscate,
+    bool? showObfuscationToggleButton,
   }) {
     return StringField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -219,6 +221,8 @@ class StringField extends Field<String> {
       viewWidgetBuilder: viewWidgetBuilder ?? this.viewWidgetBuilder,
       onValueChanged: onValueChanged ?? this.onValueChanged,
       trimOnSave: trimOnSave ?? this.trimOnSave,
+      obfuscate: obfuscate ?? this.obfuscate,
+      showObfuscationToggleButton: showObfuscationToggleButton ?? this.showObfuscationToggleButton,
     );
   }
 

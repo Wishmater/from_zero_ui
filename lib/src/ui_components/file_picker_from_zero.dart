@@ -15,6 +15,7 @@ class FilePickerFromZero extends StatefulWidget {
   final FocusNode? focusNode;
   final bool enableDragAndDrop;
   final bool allowDragAndDropInWholeScreen;
+  final bool onlyForDragAndDrop;
   final bool pickDirectory;
   final String? initialDirectory;
   final bool enabled;
@@ -30,6 +31,7 @@ class FilePickerFromZero extends StatefulWidget {
     this.focusNode,
     this.enableDragAndDrop = true,
     this.allowDragAndDropInWholeScreen = false,
+    this.onlyForDragAndDrop = false,
     this.initialDirectory,
     this.enabled = true,
     Key? key,
@@ -70,35 +72,27 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
 
   @override
   Widget build(BuildContext context) {
-    Widget result = InkWell(
-      child: widget.child,
-      focusNode: widget.focusNode,
-      onTap: !widget.enabled ? null : () async {
-        if (!widget.pickDirectory) {
-          FilePickerResult? result = await FilePicker.platform.pickFiles(
+    Widget result;
+    if (widget.onlyForDragAndDrop) {
+      result = widget.child;
+    } else {
+      result = InkWell(
+        child: widget.child,
+        focusNode: widget.focusNode,
+        onTap: !widget.enabled ? null : () async {
+          final result = await pickFileFromZero(
             dialogTitle: widget.dialogTitle,
-            allowMultiple: true,
-            type: widget.fileType,
+            pickDirectory: widget.pickDirectory,
+            fileType: widget.fileType,
             allowedExtensions: widget.allowedExtensions,
             initialDirectory: widget.initialDirectory,
-            lockParentWindow: true,
           );
-          if (result != null) {
-            widget.onSelected(result.files.map((e) => File(e.path!)).toList());
+          if (result!=null) {
+            widget.onSelected(result);
           }
-        } else {
-
-          String? result = await FilePicker.platform.getDirectoryPath(
-            dialogTitle: widget.dialogTitle,
-            initialDirectory: widget.initialDirectory,
-            lockParentWindow: true,
-          );
-          if (result != null) {
-            widget.onSelected([File(result)]);
-          }
-        }
-      },
-    );
+        },
+      );
+    }
     if (widget.enableDragAndDrop) {
       result = AnimatedContainer(
         duration: Duration(milliseconds: 250),
@@ -175,4 +169,39 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
     return accepted;
   }
 
+}
+
+
+
+Future<List<File>?> pickFileFromZero({
+  String? dialogTitle,
+  bool pickDirectory = false,
+  bool allowMultiple = false,
+  FileType fileType = FileType.any,
+  List<String>? allowedExtensions,
+  String? initialDirectory,
+}) async {
+  if (!pickDirectory) {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      dialogTitle: dialogTitle,
+      allowMultiple: allowMultiple,
+      type: fileType,
+      allowedExtensions: allowedExtensions,
+      initialDirectory: initialDirectory,
+      lockParentWindow: true,
+    );
+    if (result != null) {
+      return result.files.map((e) => File(e.path!)).toList();
+    }
+  } else {
+    String? result = await FilePicker.platform.getDirectoryPath(
+      dialogTitle: dialogTitle,
+      initialDirectory: initialDirectory,
+      lockParentWindow: true,
+    );
+    if (result != null) {
+      return [File(result)];
+    }
+  }
+  return null;
 }

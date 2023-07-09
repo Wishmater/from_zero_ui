@@ -12,13 +12,14 @@ import 'package:from_zero_ui/src/dao/field_validators.dart';
 import 'package:path/path.dart' as path;
 
 
-class FileField extends Field<String> {
+class FileField extends StringField {
 
   final FileType fileType;
   final List<String>? allowedExtensions;
   final bool enableDragAndDrop;
   final bool allowDragAndDropInWholeScreen;
   final bool pickDirectory;
+  final bool allowTyping;
   final String? initialDirectory;
 
 
@@ -40,7 +41,6 @@ class FileField extends Field<String> {
     double flex = 0,
     FieldValueGetter<String?, Field>? hintGetter,
     FieldValueGetter<String?, Field>? tooltipGetter,
-    bool? showObfuscationToggleButton,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -64,6 +64,7 @@ class FileField extends Field<String> {
     this.enableDragAndDrop = true,
     this.allowDragAndDropInWholeScreen = false,
     this.pickDirectory = false,
+    this.allowTyping = false,
     this.initialDirectory,
   }) :  super(
           uiNameGetter: uiNameGetter,
@@ -106,7 +107,6 @@ class FileField extends Field<String> {
     double? maxWidth,
     double? minWidth,
     double? flex,
-    StringFieldType? type,
     double? tableColumnWidth,
     FieldValueGetter<bool, Field>? hiddenGetter,
     FieldValueGetter<bool, Field>? hiddenInTableGetter,
@@ -128,7 +128,17 @@ class FileField extends Field<String> {
     bool? enableDragAndDrop,
     bool? allowDragAndDropInWholeScreen,
     bool? pickDirectory,
+    bool? allowTyping,
     String? initialDirectory,
+    // StringField fields
+    bool? obfuscate,
+    bool? showObfuscationToggleButton,
+    bool? trimOnSave,
+    StringFieldType? type,
+    int? minLines,
+    int? maxLines,
+    InputDecoration? inputDecoration,
+    List<TextInputFormatter>? inputFormatters,
   }) {
     return FileField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -160,7 +170,12 @@ class FileField extends Field<String> {
       enableDragAndDrop: enableDragAndDrop ?? this.enableDragAndDrop,
       allowDragAndDropInWholeScreen: allowDragAndDropInWholeScreen ?? this.allowDragAndDropInWholeScreen,
       pickDirectory: pickDirectory ?? this.pickDirectory,
+      allowTyping: allowTyping ?? this.allowTyping,
       initialDirectory: initialDirectory ?? this.initialDirectory,
+      // StringField fields
+      // obfuscate: obfuscate ?? this.obfuscate,
+      // showObfuscationToggleButton: showObfuscationToggleButton ?? this.showObfuscationToggleButton,
+      // trimOnSave: trimOnSave ?? this.trimOnSave,
     );
   }
 
@@ -174,6 +189,40 @@ class FileField extends Field<String> {
     FocusNode? focusNode,
     ScrollController? mainScrollController,
   }) {
+    if (allowTyping) {
+      bool addedFilePicker = !enableDragAndDrop;
+      return super.buildFieldEditorWidgets(context,
+        addCard: addCard,
+        asSliver: asSliver,
+        expandToFillContainer: expandToFillContainer,
+        dense: dense,
+        focusNode: focusNode,
+        ignoreHidden: ignoreHidden,
+        mainScrollController: mainScrollController,
+      ).map((e) {
+        if (!addedFilePicker) {
+          addedFilePicker = true;
+          return FilePickerFromZero(
+            allowMultiple: false,
+            dialogTitle: hint ?? uiName,
+            fileType: fileType,
+            allowedExtensions: allowedExtensions,
+            enableDragAndDrop: enableDragAndDrop,
+            allowDragAndDropInWholeScreen: allowDragAndDropInWholeScreen,
+            onlyForDragAndDrop: true,
+            pickDirectory: pickDirectory,
+            initialDirectory: initialDirectory,
+            enabled: enabled,
+            onSelected: (value) {
+              userInteracted = true;
+              commitValue(value.first.absolute.path);
+            },
+            child: e,
+          );
+        }
+        return e;
+      }).toList();
+    }
     if (focusNode==null) {
       focusNode = this.focusNode;
     }
@@ -252,7 +301,7 @@ class FileField extends Field<String> {
                   enabled: enabled,
                   onSelected: (value) {
                     userInteracted = true;
-                    this.value = value.first.absolute.path;
+                    commitValue(value.first.absolute.path);
                   },
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -345,6 +394,32 @@ class FileField extends Field<String> {
         ),
       ),
     );
+  }
+
+  @override
+  List<ActionFromZero> buildDefaultActions(BuildContext context, {FocusNode? focusNode}) {
+    return [
+      if (allowTyping)
+        ActionFromZero(
+          icon: Icon(Icons.file_open),
+          title: 'Load from File', // TODO 2 internationalize
+          breakpoints: {0: ActionState.icon},
+          onTap: (context) async {
+            final result = await pickFileFromZero(
+              dialogTitle: hint ?? uiName,
+              fileType: fileType,
+              allowedExtensions: allowedExtensions,
+              pickDirectory: pickDirectory,
+              initialDirectory: initialDirectory,
+            );
+            if (result!=null && result.isNotEmpty) {
+              userInteracted = true;
+              commitValue(result.first.absolute.path);
+            }
+          },
+        ),
+      ...super.buildDefaultActions(context, focusNode: focusNode),
+    ];
   }
 
 }

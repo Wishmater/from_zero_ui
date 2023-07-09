@@ -311,6 +311,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     if (progress==null) {
       return LoadingSign(
         color: color,
+        size: size ?? 48,
       );
     } else {
       return ValueListenableBuilder<double?>(
