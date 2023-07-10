@@ -513,9 +513,9 @@ class ExportState extends State<Export> {
       if (value.columns!=null){
         for (var i = 0; i < value.columns!.length; ++i) {
           ColModel? col = value.columns![i];
-          print(value.columns![i]);
+          log(value.columns![i]);
           double w = ((col?.width??(col?.flex??1.0))*flexMultiplier).toDouble();
-          //print(w);
+          //log(w);
           sheetObject.setColWidth(i, w);
         }
       }*/

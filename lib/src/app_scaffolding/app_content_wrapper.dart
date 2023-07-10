@@ -49,9 +49,14 @@ void Function(Object? message, {
   Object? stackTrace,
   bool? isError,
 }) {
-  isError ??= stackTrace!=null;
-  print(message);
-  print(stackTrace);
+  isError ??= stackTrace!=null || message is Exception;
+  if (!isError) {
+    stdout.writeln(message);
+    if (stackTrace!=null) stdout.writeln(stackTrace);
+  } else {
+    stderr.writeln(message);
+    if (stackTrace!=null) stderr.writeln(stackTrace);
+  }
 };
 
 
