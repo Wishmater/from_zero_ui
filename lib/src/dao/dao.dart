@@ -637,7 +637,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                       key: timerGlobalKey,
                                       duration: validationErrors.isEmpty || !validation
                                           ? Duration.zero
-                                          : Duration(milliseconds: (1250 + 750*Set.from(validationErrors.where((e) => e.isVisibleAsSaveConfirmation).map((e) => e.error)).length).clamp(0, 10000)),
+                                          : Duration(milliseconds: (1000 + 500*Set.from(validationErrors.where((e) => e.isVisibleAsSaveConfirmation).map((e) => e.error)).length).clamp(0, 10000)),
                                       builder: (context, elapsed, remaining) {
                                         return FlatButton(
                                           child: Padding(
