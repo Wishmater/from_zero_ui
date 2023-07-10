@@ -271,7 +271,7 @@ class _ComplicatedTableState extends State<ComplicatedTable> {
 //       rowStyles: [null, null, null, null, Theme.of(context).textTheme.headline6],
 //       columnFlexes: [2, 1, 1, 1, 1],
 //       onRowTap: (RowModel row) {
-//         print("Row ${row.values[0]} tapped");
+//         log("Row ${row.values[0]} tapped");
 //       },
 //       onCheckBoxSelected: (row, focused) {
 //         Future.delayed(Duration(seconds: 2)).then((value) {

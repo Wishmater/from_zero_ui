@@ -123,7 +123,7 @@ import 'package:flutter/material.dart';
 ///                 ),
 ///                 recognizer: TapGestureRecognizer()
 ///                   ..onTap = () {
-///                   print('Label has been tapped.');
+///                   log('Label has been tapped.');
 ///                 },
 ///               ),
 ///             ),

@@ -125,7 +125,7 @@ enum _SwitchListTileType { material, adaptive }
 ///                 ),
 ///                 recognizer: TapGestureRecognizer()
 ///                   ..onTap = () {
-///                   print('Label has been tapped.');
+///                   log('Label has been tapped.');
 ///                 },
 ///               ),
 ///             ),
