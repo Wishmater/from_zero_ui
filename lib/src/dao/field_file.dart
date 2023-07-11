@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:dartx/dartx.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:from_zero_ui/src/ui_components/file_picker_from_zero.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
@@ -23,11 +24,12 @@ class FileField extends StringField {
   final String? initialDirectory;
 
 
-  File? get file => value==null ? null : File(value!);
+  File? get file => value.isNullOrEmpty ? null : File(value!);
   String? get filename {
-    return pickDirectory
-        ? value==null ? null : '$value${path.separator}'
-        : value?.split('/').last.split('\\').last;
+    return value.isNullOrEmpty ? null
+        : pickDirectory
+            ? '$value${path.separator}'
+            : value?.split('/').last.split('\\').last;
   }
 
 
@@ -276,7 +278,7 @@ class FileField extends StringField {
     String? initialDirectory;
     if (this.initialDirectory!=null) {
       initialDirectory = this.initialDirectory;
-    } else if (value!=null) {
+    } else if (value.isNotNullOrEmpty) {
       try { initialDirectory = File(value!).parent.path; } catch (_) {}
     }
     Widget result = NotificationListener(

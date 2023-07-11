@@ -302,28 +302,18 @@ class ErrorSign extends StatelessWidget {
 
 }
 
-@deprecated
 typedef SuccessBuilder<T> = Widget Function(BuildContext context, T data);
-@deprecated
 typedef FutureErrorBuilder = Widget Function(BuildContext context, Object? error, Object? stackTrace);
-@deprecated
 typedef FutureLoadingBuilder = Widget Function(BuildContext context);
-@deprecated
 Widget _defaultLoadingBuilder(context){
   return ApiProviderBuilder.defaultLoadingBuilder(context, null);
 }
 
-@deprecated
 Widget defaultErrorBuilder(context, error, stackTrace){
   // log(error, stackTrace: stackTrace);
-  return ErrorSign(
-    icon: Icon(Icons.error_outline), //size: 64, color: Theme.of(context).errorColor,
-    title: FromZeroLocalizations.of(context).translate("error"),
-    subtitle: FromZeroLocalizations.of(context).translate("error_details"),
-  );
+  return ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, null);
 }
 
-@deprecated
 Widget _defaultTransitionBuilder(Widget child, Animation<double> animation){
   return ZoomedFadeInFadeOutTransition(
     animation: animation,
@@ -331,7 +321,6 @@ Widget _defaultTransitionBuilder(Widget child, Animation<double> animation){
   );
 }
 
-@deprecated
 Widget _noneTransitionBuilder(Widget child, Animation<double> animation){
   return child;
 }
