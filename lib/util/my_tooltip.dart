@@ -357,9 +357,11 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     }
     final bool mouseIsConnected = RendererBinding.instance.mouseTracker.mouseIsConnected;
     if (mouseIsConnected != _mouseIsConnected) {
-      setState(() {
-        _mouseIsConnected = mouseIsConnected;
-      });
+      if (mounted) {
+        setState(() {
+          _mouseIsConnected = mouseIsConnected;
+        });
+      }
     }
   }
 
