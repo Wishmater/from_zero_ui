@@ -377,7 +377,11 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
       return;
     } else {
       final showDuration = _pressActivated ? this.showDuration : hoverShowDuration;
-      _hideTimer ??= Timer(showDuration, _controller.reverse);
+      _hideTimer ??= Timer(showDuration, () {
+        if (mounted) {
+          _controller.reverse();
+        }
+      });
       _removeAfterHideTimer ??= Timer(showDuration+_fadeOutDuration, _removeEntry);
     }
     _pressActivated = false;
@@ -525,6 +529,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     RendererBinding.instance.mouseTracker.removeListener(_handleMouseTrackerChange);
     _removeEntry();
     _controller.dispose();
+    _hideTimer?.cancel();
     super.dispose();
   }
 
