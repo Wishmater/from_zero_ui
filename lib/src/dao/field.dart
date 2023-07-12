@@ -291,11 +291,11 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     if (currentValidationId!=dao.validationCallCount) return false;
     validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
     final result = validationErrors.where((e) => e.isBlocking).isEmpty;
-    if (value==null || (value is String && (value as String).isBlank)) {
+    if (value==null || (value is String && (value as String).isBlank) || (value is ComparableList && (value as ComparableList).isEmpty)) {
       isRequired = !result;
     } else {
       isRequired = false;
-      // TODO 3 find a way to know if it's required once
+      // TODO 3 find a way to know if it's required once it has a value
       // final emptyValidationErrors = await _getValidationErrors(context, dao, currentValidationId);
       // isRequired = emptyValidationErrors.where((e) => e.isBlocking).isNotEmpty;
     }
