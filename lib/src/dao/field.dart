@@ -296,8 +296,8 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     } else {
       isRequired = false;
       // TODO 3 find a way to know if it's required once
-      final emptyValidationErrors = await _getValidationErrors(context, dao, currentValidationId);
-      isRequired = emptyValidationErrors.where((e) => e.isBlocking).isNotEmpty;
+      // final emptyValidationErrors = await _getValidationErrors(context, dao, currentValidationId);
+      // isRequired = emptyValidationErrors.where((e) => e.isBlocking).isNotEmpty;
     }
     return result;
   }
