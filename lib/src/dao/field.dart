@@ -42,6 +42,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   bool validateOnlyOnConfirm;
   bool passedFirstEdit = false;
   bool userInteracted = false;
+  bool isRequired = false;
   List<ValidationError> validationErrors = [];
   FieldValueGetter<SimpleColModel, Field> colModelBuilder;
   bool invalidateNonEmptyValuesIfHiddenInForm;
@@ -286,21 +287,42 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     if (validateIfNotEdited) {
       passedFirstEdit = true;
     }
+    validationErrors = await _getValidationErrors(context, dao, currentValidationId);
+    if (currentValidationId!=dao.validationCallCount) return false;
+    validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
+    final result = validationErrors.where((e) => e.isBlocking).isEmpty;
+    if (value==null || (value is String && (value as String).isBlank)) {
+      isRequired = !result;
+    } else {
+      isRequired = false;
+      // TODO 3 find a way to know if it's required once
+      final emptyValidationErrors = await _getValidationErrors(context, dao, currentValidationId);
+      isRequired = emptyValidationErrors.where((e) => e.isBlocking).isNotEmpty;
+    }
+    return result;
+  }
+  Future<List<ValidationError>> _getValidationErrors(BuildContext context, DAO dao, int currentValidationId) async {
     final List<FutureOr<ValidationError?>> futureErrors = [];
     for (final e in validators) {
-      if (currentValidationId!=dao.validationCallCount) return false;
       futureErrors.add(e(context, dao, this));
     }
-    if (currentValidationId!=dao.validationCallCount) return false;
+    final result = <ValidationError>[];
     for (final e in futureErrors) {
-      final error = await e; // TODO 2 this probably needs a try/catch in case the future throws
-      if (currentValidationId!=dao.validationCallCount) return false;
-      if (error!=null && (error.isBeforeEditing || passedFirstEdit || validateIfNotEdited)) {
-        validationErrors.add(error);
+      ValidationError? error;
+      try {
+        error = await e;
+      } catch (e, st) {
+        log (e, stackTrace: st);
+        result.add(ValidationError(field: this,
+          error: 'Error al ejecutar validación: ${ApiProviderBuilder.getErrorTitle(context, e, st)}\n${ApiProviderBuilder.getErrorSubtitle(context, error, st)}',
+        ));
+      }
+      if (currentValidationId!=dao.validationCallCount) return [];
+      if (error!=null) {
+        result.add(error);
       }
     }
-    validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
-    return validationErrors.where((e) => e.isBlocking).isEmpty;
+    return result;
   }
 
   void requestFocus() {
@@ -596,3 +618,7 @@ class HiddenValueField<T> extends Field<BoolComparable> {
     return HiddenValueField(hiddenValue);
   }
 }
+
+
+
+

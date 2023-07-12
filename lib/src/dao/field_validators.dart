@@ -344,6 +344,7 @@ class ValidationMessage extends StatefulWidget {
   static const int animationCount = 5;
   static const double animationCountRate = 1/animationCount;
   final List<ValidationError> errors;
+  final bool passedFirstEdit;
   final TextStyle? errorTextStyle;
   final bool animate;
   final bool hideNotVisibleAsHintMessage;
@@ -351,6 +352,7 @@ class ValidationMessage extends StatefulWidget {
   ValidationMessage({
     Key? key,
     required this.errors,
+    required this.passedFirstEdit,
     this.animate = true,
     this.errorTextStyle,
     this.hideNotVisibleAsHintMessage = true,
@@ -368,7 +370,8 @@ class _ValidationMessageState extends State<ValidationMessage> with SingleTicker
     final children = <Widget>[];
     final seenStrings = <String>[];
     for (final e in widget.errors) {
-      if ((!widget.hideNotVisibleAsHintMessage || e.isVisibleAsHintMessage) && !seenStrings.contains(e.error)) {
+      if ((e.isBeforeEditing || widget.passedFirstEdit)
+          && (!widget.hideNotVisibleAsHintMessage || e.isVisibleAsHintMessage) && !seenStrings.contains(e.error)) {
         seenStrings.add(e.error);
         children.add(InitiallyAnimatedWidget(
           duration: Duration(milliseconds: widget.animate ? 300 : 0),

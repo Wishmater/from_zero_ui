@@ -478,7 +478,7 @@ class StringField extends Field<String> {
                 child: result,
               ),
               if (!dense)
-                ValidationMessage(errors: validationErrors),
+                ValidationMessage(errors: validationErrors, passedFirstEdit: passedFirstEdit,),
             ],
           ),
         ),

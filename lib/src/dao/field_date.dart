@@ -335,7 +335,7 @@ class DateField extends Field<DateTime> {
                 child: result,
               ),
               if (!dense)
-                ValidationMessage(errors: validationErrors),
+                ValidationMessage(errors: validationErrors, passedFirstEdit: passedFirstEdit,),
             ],
           ),
         ),

@@ -460,7 +460,7 @@ class ComboField<T extends DAO> extends Field<T> {
                 child: result,
               ),
               if (!dense)
-                ValidationMessage(errors: validationErrors),
+                ValidationMessage(errors: validationErrors, passedFirstEdit: passedFirstEdit,),
             ],
           ),
         ),

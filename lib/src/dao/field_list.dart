@@ -1533,7 +1533,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 child: result,
               ),
               if (!dense)
-                ValidationMessage(errors: listFieldValidationErrors),
+                ValidationMessage(errors: listFieldValidationErrors, passedFirstEdit: passedFirstEdit,),
             ],
           ),
         ),
@@ -1824,7 +1824,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           children: [
             result,
             if (!dense)
-              ValidationMessage(errors: listFieldValidationErrors),
+              ValidationMessage(errors: listFieldValidationErrors, passedFirstEdit: passedFirstEdit,),
           ],
         ),
       ),
@@ -2264,7 +2264,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           collapsed: collapsed,
         ),
       if (!dense)
-        ValidationMessage(errors: listFieldValidationErrors),
+        ValidationMessage(errors: listFieldValidationErrors, passedFirstEdit: passedFirstEdit,),
     ];
     if (asSliver) {
       resultList = resultList.map((e) => (e==result) ? e : SliverToBoxAdapter(child: e,)).toList();

@@ -639,7 +639,7 @@ class BoolField extends Field<BoolComparable> {
                 child: result,
               ),
               if (!dense)
-                ValidationMessage(errors: validationErrors),
+                ValidationMessage(errors: validationErrors, passedFirstEdit: passedFirstEdit,),
             ],
           ),
         ),

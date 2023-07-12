@@ -1335,6 +1335,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                             SizedBox(height: 6,),
                                             ValidationMessage(
                                               errors: invalidatingErrors.keys.toList(),
+                                              passedFirstEdit: true,
                                               errorTextStyle: Theme.of(context).textTheme.bodyText1,
                                               animate: false,
                                             ),

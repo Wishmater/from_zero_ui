@@ -390,7 +390,7 @@ class FileField extends StringField {
                 child: result,
               ),
               if (!dense)
-                ValidationMessage(errors: validationErrors),
+                ValidationMessage(errors: validationErrors, passedFirstEdit: passedFirstEdit,),
             ],
           ),
         ),
