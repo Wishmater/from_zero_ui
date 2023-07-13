@@ -322,6 +322,7 @@ class ComboField<T extends DAO> extends Field<T> {
     Widget result = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
+        final enabled = this.enabled;
         Widget result = ComboFromZero<T>(
           focusNode: focusNode,
           enabled: enabled,
@@ -410,7 +411,6 @@ class ComboField<T extends DAO> extends Field<T> {
         if (!dense) {
           final actions = buildActions(context, focusNode);
           final defaultActions = buildDefaultActions(context);
-          // TODO 2 implement rendering actions in an AppbarFromZero in other fields (StringField, NumField,)
           result = AppbarFromZero(
             addContextMenu: enabled,
             onShowContextMenu: () => focusNode.requestFocus(),
@@ -432,6 +432,12 @@ class ComboField<T extends DAO> extends Field<T> {
               enabled: enabled,
             )).toList(),
             title: SizedBox(height: 56, child: result),
+          );
+          result = ValidationRequiredOverlay(
+            isRequired: isRequired,
+            isEmpty: enabled && value==null,
+            errors: validationErrors,
+            child: result,
           );
         }
         return result;

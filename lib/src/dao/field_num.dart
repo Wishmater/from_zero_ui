@@ -290,6 +290,7 @@ class NumField extends Field<num> {
       child: AnimatedBuilder(
         animation: this,
         builder: (context, child) {
+          final enabled = this.enabled;
           Widget result = Stack(
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [
@@ -478,6 +479,12 @@ class NumField extends Field<num> {
                 enabled: enabled,
               )).toList(),
               title: SizedBox(height: largeVertically ? null : 56, child: result),
+            );
+            result = ValidationRequiredOverlay(
+              isRequired: isRequired,
+              isEmpty: enabled && value==null,
+              errors: validationErrors,
+              child: result,
             );
           }
           return result;

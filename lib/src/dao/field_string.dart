@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/gestures.dart';
 import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
 import 'package:flutter/cupertino.dart';
@@ -8,6 +7,8 @@ import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao/dao.dart';
 import 'package:from_zero_ui/src/dao/field_validators.dart';
+import 'package:dartx/dartx.dart';
+
 
 enum StringFieldType {
   short,
@@ -307,6 +308,7 @@ class StringField extends Field<String> {
       child: AnimatedBuilder(
         animation: this,
         builder: (context, child) {
+          final enabled = this.enabled;
           Widget result = Stack(
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [
@@ -449,6 +451,12 @@ class StringField extends Field<String> {
                 enabled: enabled,
               )).toList(),
               title: SizedBox(height: largeVertically ? null : 56, child: result),
+            );
+            result = ValidationRequiredOverlay(
+              isRequired: isRequired,
+              isEmpty: enabled && value.isNullOrBlank,
+              errors: validationErrors,
+              child: result,
             );
           }
           return result;

@@ -238,6 +238,7 @@ class DateField extends Field<DateTime> {
     Widget result = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
+        final enabled = this.enabled;
         Widget result = DatePickerFromZero(
           focusNode: focusNode,
           enabled: enabled,
@@ -307,6 +308,12 @@ class DateField extends Field<DateTime> {
               enabled: enabled,
             )).toList(),
             title: SizedBox(height: 56, child: result),
+          );
+          result = ValidationRequiredOverlay(
+            isRequired: isRequired,
+            isEmpty: enabled && value==null,
+            errors: validationErrors,
+            child: result,
           );
         }
         return result;

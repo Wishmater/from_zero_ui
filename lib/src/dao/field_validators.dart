@@ -1,6 +1,7 @@
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao/dao.dart';
 import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
@@ -642,4 +643,47 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
     );
   }
 
+}
+
+
+
+class ValidationRequiredOverlay extends StatelessWidget {
+  final bool isRequired;
+  final bool isEmpty;
+  final List<ValidationError> errors;
+  final Widget child;
+
+  const ValidationRequiredOverlay({
+    required this.isRequired,
+    required this.isEmpty,
+    required this.errors,
+    required this.child,
+    Key? key,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        child,
+        if (isRequired)
+          Positioned(
+            top: isEmpty ? 5 : 10,
+            left: isEmpty ? 4 : 5,
+            child: TooltipFromZero(
+              message: errors.isEmpty ? ''
+                  : errors.where((e) => e.isBlocking).map((e) => e.error).reduce((v, e) => '$v, $e'),
+              child: IgnorePointer(
+                child: Icon(MaterialCommunityIcons.asterisk,
+                  size: isEmpty ? 15 : 8,
+                  color: isEmpty
+                      ? Theme.of(context).errorColor
+                      : Theme.of(context).textTheme.caption!.color,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
