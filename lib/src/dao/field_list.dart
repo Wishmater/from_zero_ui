@@ -463,6 +463,14 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }
 
   @override
+  Future<bool> validateRequired(BuildContext context, DAO dao, int currentValidationId, bool normalValidationResult, {
+    ComparableList<T>? emptyValue,
+  }) async => super.validateRequired(context, dao, currentValidationId, normalValidationResult,
+    emptyValue: emptyValue ?? ComparableList<T>(),
+  );
+
+
+  @override
   ListField<T, U> copyWith({
     FieldValueGetter<String, Field>? uiNameGetter,
     ComparableList<T>? value,

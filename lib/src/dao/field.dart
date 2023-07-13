@@ -287,24 +287,39 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     if (validateIfNotEdited) {
       passedFirstEdit = true;
     }
-    validationErrors = await _getValidationErrors(context, dao, currentValidationId);
+    validationErrors = await _getValidationErrors<T>(context, dao, this, currentValidationId);
     if (currentValidationId!=dao.validationCallCount) return false;
     validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
     final result = validationErrors.where((e) => e.isBlocking).isEmpty;
-    if (value==null || (value is String && (value as String).isBlank) || (value is ComparableList && (value as ComparableList).isEmpty)) {
-      isRequired = !result;
-    } else {
-      // isRequired = false;
-      // TODO 3 find a way to know if it's required once it has a value
-      // final emptyValidationErrors = await _getValidationErrors(context, dao, currentValidationId);
-      // isRequired = emptyValidationErrors.where((e) => e.isBlocking).isNotEmpty;
-    }
+    await validateRequired(context, dao, currentValidationId, result);
     return result;
   }
-  Future<List<ValidationError>> _getValidationErrors(BuildContext context, DAO dao, int currentValidationId) async {
+  Future<bool> validateRequired(BuildContext context, DAO dao, int currentValidationId, bool normalValidationResult, {
+    T? emptyValue,
+  }) async {
+    bool isRequired = false;
+    if (value==null || (value is String && (value as String).isBlank) || (value is ComparableList && (value as ComparableList).isEmpty)) {
+      isRequired = !normalValidationResult;
+    } else {
+      try {
+        final emptyField = this.copyWith().._value = emptyValue;
+        emptyField.dao = dao;
+        final emptyValidationErrors = await _getValidationErrors<T>(context, dao, emptyField, currentValidationId);
+        isRequired = emptyValidationErrors.where((e) => e.isBlocking).isNotEmpty;
+      } catch (e, st) {
+        isRequired = false;
+        log ('Error while trying to evaluate if field is required: ${dao.classUiName} - ${dao.uiName}  --  $uiName');
+        log(e, stackTrace: st);
+      }
+    }
+    this.isRequired = isRequired;
+    return isRequired;
+  }
+  static Future<List<ValidationError>> _getValidationErrors<T extends Comparable>
+      (BuildContext context, DAO dao, Field<T> field, int currentValidationId) async {
     final List<FutureOr<ValidationError?>> futureErrors = [];
-    for (final e in validators) {
-      futureErrors.add(e(context, dao, this));
+    for (final e in field.validators) {
+      futureErrors.add(e(context, dao, field));
     }
     final result = <ValidationError>[];
     for (final e in futureErrors) {
@@ -313,7 +328,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
         error = await e;
       } catch (e, st) {
         log (e, stackTrace: st);
-        result.add(ValidationError(field: this,
+        result.add(ValidationError(field: field,
           error: 'Error al ejecutar validación: ${ApiProviderBuilder.getErrorTitle(context, e, st)}\n${ApiProviderBuilder.getErrorSubtitle(context, error, st)}',
         ));
       }

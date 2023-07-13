@@ -226,6 +226,11 @@ class BoolField extends Field<BoolComparable> {
     return showBothNeutralAndSpecificUiName ? '$uiName: $uiNameValue' : '$uiNameValue';
   }
 
+  @override
+  Future<bool> validateRequired(BuildContext context, DAO dao, int currentValidationId, bool normalValidationResult, {
+    BoolComparable? emptyValue,
+  }) async => false; // BoolField is never nullable
+
 
   static Widget defaultViewWidgetBuilder
   (BuildContext context, Field<BoolComparable> fieldParam, {

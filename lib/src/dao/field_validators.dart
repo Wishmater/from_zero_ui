@@ -667,11 +667,14 @@ class ValidationRequiredOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showAsterisk = isRequired && (!dense || isEmpty);
+    final visibleErrors = !showAsterisk ? <ValidationError>[]
+        : errors.where((e) => e.isBlocking);
     return Stack(
       clipBehavior: Clip.none,
       children: [
         child,
-        if (isRequired && (!dense || isEmpty))
+        if (showAsterisk)
           Positioned(
             top: dense ? 7
                 : isEmpty ? 5 : 10,
@@ -682,11 +685,11 @@ class ValidationRequiredOverlay extends StatelessWidget {
                 : dense ? -5
                 : isEmpty ? 4 : 5,
             child: TooltipFromZero(
-              message: errors.isEmpty ? ''
-                  : errors.where((e) => e.isBlocking).map((e) => e.error).reduce((v, e) => '$v, $e'),
+              message: visibleErrors.isEmpty ? ''
+                  : visibleErrors.map((e) => e.error).reduce((v, e) => '$v, $e'),
               child: IgnorePointer(
                 child: Icon(MaterialCommunityIcons.asterisk,
-                  size: dense ? 11 : isEmpty ? 15 : 8,
+                  size: dense ? 11 : isEmpty ? 14 : 8,
                   color: isEmpty
                       ? Theme.of(context).errorColor
                       : Theme.of(context).textTheme.caption!.color,
