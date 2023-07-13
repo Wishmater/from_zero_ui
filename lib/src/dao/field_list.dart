@@ -1476,10 +1476,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             );
           },
         );
+        final visibleListFieldValidationErrors = passedFirstEdit
+            ? listFieldValidationErrors
+            : listFieldValidationErrors.where((e) => e.isBeforeEditing);
         result = AnimatedContainer(
           duration: Duration(milliseconds: 300),
-          color: dense && listFieldValidationErrors.isNotEmpty
-              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![listFieldValidationErrors.first.severity]!.withOpacity(0.2)
+          color: dense && visibleListFieldValidationErrors.isNotEmpty
+              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleListFieldValidationErrors.first.severity]!.withOpacity(0.2)
               : backgroundColor?.call(context, this, dao),
           curve: Curves.easeOut,
           child: result,
@@ -1798,14 +1801,17 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             result,
           ],
         );
+        final visibleListFieldValidationErrors = passedFirstEdit
+            ? listFieldValidationErrors
+            : listFieldValidationErrors.where((e) => e.isBeforeEditing);
         result = DefaultTabController(
           length: objects.length,
           child: result,
         );
         result = AnimatedContainer(
           duration: Duration(milliseconds: 300),
-          color: dense && listFieldValidationErrors.isNotEmpty
-              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![listFieldValidationErrors.first.severity]!.withOpacity(0.2)
+          color: dense && visibleListFieldValidationErrors.isNotEmpty
+              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleListFieldValidationErrors.first.severity]!.withOpacity(0.2)
               : backgroundColor?.call(context, this, dao),
           curve: Curves.easeOut,
           child: result,
@@ -2447,7 +2453,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     collapsible ??= this.collapsible;
     collapsed ??= this.collapsed;
     return EnsureVisibleWhenFocused(
-      key: ValueKey(actions.map((e) => e is ActionFromZero ? e.title : 'widget')),
+      key: ValueKey(actions.map((e) => e.title)),
       focusNode: focusNode,
       child: Focus(
         focusNode: focusNode,
@@ -2456,58 +2462,63 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         canRequestFocus: true,
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: (tableHorizontalPadding-8).coerceAtLeast(0)),
-          child: Stack(
-            children: [
-              TableHeaderFromZero<T>(
-                controller: tableController,
-                title: Text(uiName),
-                actions: actions,
-                onShowAppbarContextMenu: () => focusNode.requestFocus(),
-                exportPathForExcel: exportPathForExcel ?? dao.defaultExportPath,
-                addSearchAction: addSearchAction,
-                backgroundColor: backgroundColor?.call(context, this, dao),
-                showColumnMetadata: showTableHeaders,
-                leading: !collapsible ? icon : IconButton(
-                  icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
-                  onPressed: () {
-                    focusNode.requestFocus();
-                    this.collapsed = !this.collapsed;
-                    notifyListeners();
-                  },
-                ),
-              ),
-              if (availableObjectsPoolProvider!=null)
-                Positioned(
-                  left: 3, top: 3,
-                  child: ApiProviderBuilder(
-                    provider: availableObjectsPoolProvider!.call(context, this, dao),
-                    dataBuilder: (context, data) {
-                      return SizedBox.shrink();
-                    },
-                    loadingBuilder: (context, progress) {
-                      return SizedBox(
-                        height: 10, width: 10,
-                        child: LoadingSign(
-                          value: null,
-                          padding: EdgeInsets.zero,
-                          size: 12,
-                          color: Theme.of(context).splashColor.withOpacity(1),
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace, onRetry) {
-                      return SizedBox(
-                        height: 10, width: 10,
-                        child: Icon(
-                          Icons.error_outlined,
-                          color: Colors.red,
-                          size: 12,
-                        ),
-                      );
+          child: ValidationRequiredOverlay(
+            isRequired: isRequired,
+            isEmpty: enabled && value==null || value!.isEmpty,
+            errors: validationErrors,
+            child: Stack(
+              children: [
+                TableHeaderFromZero<T>(
+                  controller: tableController,
+                  title: Text(uiName),
+                  actions: actions,
+                  onShowAppbarContextMenu: () => focusNode.requestFocus(),
+                  exportPathForExcel: exportPathForExcel ?? dao.defaultExportPath,
+                  addSearchAction: addSearchAction,
+                  backgroundColor: backgroundColor?.call(context, this, dao),
+                  showColumnMetadata: showTableHeaders,
+                  leading: !collapsible ? icon : IconButton(
+                    icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
+                    onPressed: () {
+                      focusNode.requestFocus();
+                      this.collapsed = !this.collapsed;
+                      notifyListeners();
                     },
                   ),
                 ),
-            ],
+                if (availableObjectsPoolProvider!=null)
+                  Positioned(
+                    left: 3, top: 3,
+                    child: ApiProviderBuilder(
+                      provider: availableObjectsPoolProvider!.call(context, this, dao),
+                      dataBuilder: (context, data) {
+                        return SizedBox.shrink();
+                      },
+                      loadingBuilder: (context, progress) {
+                        return SizedBox(
+                          height: 10, width: 10,
+                          child: LoadingSign(
+                            value: null,
+                            padding: EdgeInsets.zero,
+                            size: 12,
+                            color: Theme.of(context).splashColor.withOpacity(1),
+                          ),
+                        );
+                      },
+                      errorBuilder: (context, error, stackTrace, onRetry) {
+                        return SizedBox(
+                          height: 10, width: 10,
+                          child: Icon(
+                            Icons.error_outlined,
+                            color: Colors.red,
+                            size: 12,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

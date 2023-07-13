@@ -309,6 +309,9 @@ class StringField extends Field<String> {
         animation: this,
         builder: (context, child) {
           final enabled = this.enabled;
+          final visibleValidationErrors = passedFirstEdit
+              ? validationErrors
+              : validationErrors.where((e) => e.isBeforeEditing);
           Widget result = Stack(
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [
@@ -320,8 +323,8 @@ class StringField extends Field<String> {
                     final focusColor = Theme.of(context).focusColor.withOpacity(Theme.of(context).focusColor.opacity*0.6);
                     return AnimatedContainer(
                       duration: Duration(milliseconds: 250),
-                      color: dense && validationErrors.isNotEmpty
-                          ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+                      color: dense && visibleValidationErrors.isNotEmpty
+                          ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                           : focusNode.hasFocus  ? backgroundColor!=null ? Color.alphaBlend(focusColor, backgroundColor)
                                                                         : focusColor
                                                 : focusColor.withOpacity(0),

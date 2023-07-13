@@ -239,6 +239,9 @@ class DateField extends Field<DateTime> {
       animation: this,
       builder: (context, child) {
         final enabled = this.enabled;
+        final visibleValidationErrors = passedFirstEdit
+            ? validationErrors
+            : validationErrors.where((e) => e.isBeforeEditing);
         Widget result = DatePickerFromZero(
           focusNode: focusNode,
           enabled: enabled,
@@ -269,8 +272,8 @@ class DateField extends Field<DateTime> {
         );
         result = AnimatedContainer(
           duration: Duration(milliseconds: 300),
-          color: dense && validationErrors.isNotEmpty
-              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+          color: dense && visibleValidationErrors.isNotEmpty
+              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
               : backgroundColor?.call(context, this, dao),
           curve: Curves.easeOut,
           child: result,

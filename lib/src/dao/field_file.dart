@@ -363,6 +363,12 @@ class FileField extends StringField {
               )).toList(),
               title: SizedBox(height: 56, child: result),
             );
+            result = ValidationRequiredOverlay(
+              isRequired: isRequired,
+              isEmpty: enabled && value==null,
+              errors: validationErrors,
+              child: result,
+            );
           }
           return result;
         },

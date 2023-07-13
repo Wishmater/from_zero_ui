@@ -366,6 +366,9 @@ class BoolField extends Field<BoolComparable> {
     Widget result = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
+        final visibleValidationErrors = passedFirstEdit
+            ? validationErrors
+            : validationErrors.where((e) => e.isBeforeEditing);
         Widget result;
         switch(displayType) {
           case BoolFieldDisplayType.checkBoxTile:
@@ -375,8 +378,8 @@ class BoolField extends Field<BoolComparable> {
               dense: true,
               controlAffinity: listTileControlAffinity,
               contentPadding: EdgeInsets.only(left: dense ? 0 : 12, right: dense ? 0 : 12, bottom: dense ? 16 : 7),
-              tileColor: dense && validationErrors.isNotEmpty
-                  ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+              tileColor: dense && visibleValidationErrors.isNotEmpty
+                  ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                   : backgroundColor?.call(context, this, dao),
               checkColor: selectedColor?.call(context, this, dao),
               onChanged: !enabled ? null : (value) {
@@ -417,8 +420,8 @@ class BoolField extends Field<BoolComparable> {
               dense: true,
               controlAffinity: listTileControlAffinity,
               contentPadding: EdgeInsets.only(left: dense ? 0 : 8, right: dense ? 0 : 8, bottom: dense ? 16 : 7),
-              tileColor: dense && validationErrors.isNotEmpty
-                  ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+              tileColor: dense && visibleValidationErrors.isNotEmpty
+                  ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                   : backgroundColor?.call(context, this, dao),
               activeColor: selectedColor?.call(context, this, dao),
               activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
@@ -463,8 +466,8 @@ class BoolField extends Field<BoolComparable> {
                   subtitle: SizedBox.shrink(),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.only(left: (maxWidth/2)-20, top: dense ? 8 : 14),
-                  tileColor: dense && validationErrors.isNotEmpty
-                      ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+                  tileColor: dense && visibleValidationErrors.isNotEmpty
+                      ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                       : backgroundColor?.call(context, this, dao),
                   checkColor: selectedColor?.call(context, this, dao),
                   onChanged: !enabled ? null : (value) {
@@ -512,8 +515,8 @@ class BoolField extends Field<BoolComparable> {
                   subtitle: SizedBox.shrink(),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.only(left: (maxWidth/2)-32, top: dense ? 8 : 14),
-                  tileColor: dense && validationErrors.isNotEmpty
-                      ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![validationErrors.first.severity]!.withOpacity(0.2)
+                  tileColor: dense && visibleValidationErrors.isNotEmpty
+                      ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                       : backgroundColor?.call(context, this, dao),
                   activeColor: selectedColor?.call(context, this, dao),
                   activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
