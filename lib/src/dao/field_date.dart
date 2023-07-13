@@ -279,7 +279,7 @@ class DateField extends Field<DateTime> {
           child: result,
         );
         result = TooltipFromZero(
-          message: validationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+          message: (dense ? visibleValidationErrors : visibleValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling)).fold('', (a, b) {
             return a.toString().trim().isEmpty ? b.toString()
                 : b.toString().trim().isEmpty ? a.toString()
                 : '$a\n$b';
@@ -312,13 +312,14 @@ class DateField extends Field<DateTime> {
             )).toList(),
             title: SizedBox(height: 56, child: result),
           );
-          result = ValidationRequiredOverlay(
-            isRequired: isRequired,
-            isEmpty: enabled && value==null,
-            errors: validationErrors,
-            child: result,
-          );
         }
+        result = ValidationRequiredOverlay(
+          isRequired: isRequired,
+          isEmpty: enabled && value==null,
+          errors: validationErrors,
+          dense: dense,
+          child: result,
+        );
         return result;
       },
     );

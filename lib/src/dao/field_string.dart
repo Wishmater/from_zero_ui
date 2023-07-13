@@ -422,7 +422,7 @@ class StringField extends Field<String> {
             ],
           );
           result = TooltipFromZero(
-            message: validationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+            message: (dense ? visibleValidationErrors : visibleValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling)).fold('', (a, b) {
               return a.toString().trim().isEmpty ? b.toString()
                   : b.toString().trim().isEmpty ? a.toString()
                   : '$a\n$b';
@@ -455,13 +455,14 @@ class StringField extends Field<String> {
               )).toList(),
               title: SizedBox(height: largeVertically ? null : 56, child: result),
             );
-            result = ValidationRequiredOverlay(
-              isRequired: isRequired,
-              isEmpty: enabled && value.isNullOrBlank,
-              errors: validationErrors,
-              child: result,
-            );
           }
+          result = ValidationRequiredOverlay(
+            isRequired: isRequired,
+            isEmpty: enabled && value.isNullOrBlank,
+            errors: validationErrors,
+            dense: dense,
+            child: result,
+          );
           return result;
         },
       ),

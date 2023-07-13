@@ -450,7 +450,7 @@ class NumField extends Field<num> {
             ],
           );
           result = TooltipFromZero(
-            message: validationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+            message: (dense ? visibleValidationErrors : visibleValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling)).fold('', (a, b) {
               return a.toString().trim().isEmpty ? b.toString()
                   : b.toString().trim().isEmpty ? a.toString()
                   : '$a\n$b';
@@ -483,13 +483,15 @@ class NumField extends Field<num> {
               )).toList(),
               title: SizedBox(height: largeVertically ? null : 56, child: result),
             );
-            result = ValidationRequiredOverlay(
-              isRequired: isRequired,
-              isEmpty: enabled && value==null,
-              errors: validationErrors,
-              child: result,
-            );
           }
+          result = ValidationRequiredOverlay(
+            isRequired: isRequired,
+            isEmpty: enabled && value==null,
+            errors: validationErrors,
+            dense: dense,
+            textAlign: dense ? TextAlign.right : TextAlign.left,
+            child: result,
+          );
           return result;
         },
       ),

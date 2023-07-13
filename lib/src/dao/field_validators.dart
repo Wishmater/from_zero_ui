@@ -650,6 +650,8 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
 class ValidationRequiredOverlay extends StatelessWidget {
   final bool isRequired;
   final bool isEmpty;
+  final bool dense;
+  final TextAlign textAlign;
   final List<ValidationError> errors;
   final Widget child;
 
@@ -658,24 +660,33 @@ class ValidationRequiredOverlay extends StatelessWidget {
     required this.isEmpty,
     required this.errors,
     required this.child,
+    required this.dense,
+    this.textAlign = TextAlign.left,
     Key? key,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Stack(
+      clipBehavior: Clip.none,
       children: [
         child,
-        if (isRequired)
+        if (isRequired && (!dense || isEmpty))
           Positioned(
-            top: isEmpty ? 5 : 10,
-            left: isEmpty ? 4 : 5,
+            top: dense ? 7
+                : isEmpty ? 5 : 10,
+            left: textAlign==TextAlign.right ? null
+                : dense ? -5
+                : isEmpty ? 4 : 5,
+            right: textAlign!=TextAlign.right ? null
+                : dense ? -5
+                : isEmpty ? 4 : 5,
             child: TooltipFromZero(
               message: errors.isEmpty ? ''
                   : errors.where((e) => e.isBlocking).map((e) => e.error).reduce((v, e) => '$v, $e'),
               child: IgnorePointer(
                 child: Icon(MaterialCommunityIcons.asterisk,
-                  size: isEmpty ? 15 : 8,
+                  size: dense ? 11 : isEmpty ? 15 : 8,
                   color: isEmpty
                       ? Theme.of(context).errorColor
                       : Theme.of(context).textTheme.caption!.color,

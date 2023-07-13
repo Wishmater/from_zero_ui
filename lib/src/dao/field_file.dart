@@ -286,6 +286,9 @@ class FileField extends StringField {
       child: AnimatedBuilder(
         animation: this,
         builder: (context, child) {
+          final visibleValidationErrors = passedFirstEdit
+              ? validationErrors
+              : validationErrors.where((e) => e.isBeforeEditing);
           Widget result = Stack(
             children: [
               Material(
@@ -330,7 +333,7 @@ class FileField extends StringField {
             ],
           );
           result = TooltipFromZero(
-            message: validationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+            message: (dense ? visibleValidationErrors : visibleValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling)).fold('', (a, b) {
               return a.toString().trim().isEmpty ? b.toString()
                   : b.toString().trim().isEmpty ? a.toString()
                   : '$a\n$b';
@@ -363,13 +366,14 @@ class FileField extends StringField {
               )).toList(),
               title: SizedBox(height: 56, child: result),
             );
-            result = ValidationRequiredOverlay(
-              isRequired: isRequired,
-              isEmpty: enabled && value==null,
-              errors: validationErrors,
-              child: result,
-            );
           }
+          result = ValidationRequiredOverlay(
+            isRequired: isRequired,
+            isEmpty: enabled && value==null,
+            errors: validationErrors,
+            dense: dense,
+            child: result,
+          );
           return result;
         },
       ),

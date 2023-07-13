@@ -1488,7 +1488,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           child: result,
         );
         result = TooltipFromZero(
-          message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+          message: (dense ? visibleListFieldValidationErrors : visibleListFieldValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling)).fold('', (a, b) {
             return a.toString().trim().isEmpty ? b.toString()
                 : b.toString().trim().isEmpty ? a.toString()
                 : '$a\n$b';
@@ -1569,11 +1569,14 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             ActionFromZero.divider(),
           ...defaultActions,
         ];
+        final visibleListFieldValidationErrors = passedFirstEdit
+            ? listFieldValidationErrors
+            : listFieldValidationErrors.where((e) => e.isBeforeEditing);
         Widget result = Column(
           children: [
             ExcludeFocus(
               child: TooltipFromZero(
-                message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+                message: (dense ? visibleListFieldValidationErrors : visibleListFieldValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling)).fold('', (a, b) {
                   return a.toString().trim().isEmpty ? b.toString()
                       : b.toString().trim().isEmpty ? a.toString()
                       : '$a\n$b';
@@ -1801,9 +1804,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             result,
           ],
         );
-        final visibleListFieldValidationErrors = passedFirstEdit
-            ? listFieldValidationErrors
-            : listFieldValidationErrors.where((e) => e.isBeforeEditing);
         result = DefaultTabController(
           length: objects.length,
           child: result,
@@ -2178,6 +2178,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             asSliver: asSliver,
           ),
         );
+        final visibleListFieldValidationErrors = passedFirstEdit
+            ? listFieldValidationErrors
+            : listFieldValidationErrors.where((e) => e.isBeforeEditing);
         if (asSliver) {
           if (!enabled) {
             result = SliverStack(
@@ -2185,7 +2188,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 SliverIgnorePointer(sliver: result),
                 SliverPositioned.fill(
                   child: TooltipFromZero(
-                    message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+                    message: (dense ? visibleListFieldValidationErrors : visibleListFieldValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling)).fold('', (a, b) {
                       return a.toString().trim().isEmpty ? b.toString()
                           : b.toString().trim().isEmpty ? a.toString()
                           : '$a\n$b';
@@ -2234,7 +2237,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             );
           }
           result = TooltipFromZero(
-            message: listFieldValidationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {
+            message: (dense ? visibleListFieldValidationErrors : visibleListFieldValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling)).fold('', (a, b) {
               return a.toString().trim().isEmpty ? b.toString()
                   : b.toString().trim().isEmpty ? a.toString()
                   : '$a\n$b';
@@ -2465,6 +2468,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           child: ValidationRequiredOverlay(
             isRequired: isRequired,
             isEmpty: enabled && value==null || value!.isEmpty,
+            dense: false,
             errors: validationErrors,
             child: Stack(
               children: [
