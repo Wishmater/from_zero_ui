@@ -775,17 +775,26 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                       builder: (context, ref, child) {
                                         final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
                                         double currentWidth = changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId);
-                                        return  AnimatedOpacity(
-                                          opacity: 1-currentWidth/56<0 ? 0 : 1-currentWidth/56,
-                                          duration: widget.drawerAnimationDuration,
-                                          curve: widget.drawerAnimationCurve,
-                                          child: AnimatedContainer(
-                                            width: currentWidth>(56-4-widget.titleSpacing) ? 4+widget.titleSpacing : 56-currentWidth,
-                                            height: widget.appbarHeight,
-                                            duration: widget.drawerAnimationDuration,
-                                            curve: Curves.easeOutCubic,
-                                            alignment: Alignment.centerLeft,
-                                            child: child,
+                                        final breakSpace = (56-4-widget.titleSpacing);
+                                        return  IgnorePointer(
+                                          ignoring: currentWidth>breakSpace,
+                                          child: ExcludeFocus(
+                                            excluding: currentWidth>breakSpace,
+                                            child: Focus(
+                                              child: AnimatedOpacity(
+                                                opacity: 1-currentWidth/breakSpace<0 ? 0 : 1-currentWidth/breakSpace,
+                                                duration: widget.drawerAnimationDuration,
+                                                curve: widget.drawerAnimationCurve,
+                                                child: AnimatedContainer(
+                                                  width: currentWidth>breakSpace ? 4+widget.titleSpacing : 56-currentWidth,
+                                                  height: widget.appbarHeight,
+                                                  duration: widget.drawerAnimationDuration,
+                                                  curve: Curves.easeOutCubic,
+                                                  alignment: Alignment.centerLeft,
+                                                  child: child,
+                                                ),
+                                              ),
+                                            ),
                                           ),
                                         );
                                       }
