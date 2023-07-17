@@ -186,6 +186,14 @@ class ResponsiveDrawerMenuItem{
 
   String get uniqueId => title.toString()+subtitle.toString()+(icon?.toStringShort()).toString()+route.toString(); // TODO 3 this should be a hash, for efficiency
 
+  BottomNavigationBarItem asBottomNavigationBarItem() {
+    return BottomNavigationBarItem(
+      icon: icon ?? Icon(Icons.pages),
+      label: title,
+      tooltip: subtitle,
+    );
+  }
+
 }
 
 class DrawerMenuFromZero extends ConsumerStatefulWidget {
