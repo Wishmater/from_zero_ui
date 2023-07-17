@@ -780,7 +780,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                           duration: widget.drawerAnimationDuration,
                                           curve: widget.drawerAnimationCurve,
                                           child: AnimatedContainer(
-                                            width: currentWidth>56 ? 0 : 56-currentWidth,
+                                            width: currentWidth>(56-4-widget.titleSpacing) ? 4+widget.titleSpacing : 56-currentWidth,
                                             height: widget.appbarHeight,
                                             duration: widget.drawerAnimationDuration,
                                             curve: Curves.easeOutCubic,
