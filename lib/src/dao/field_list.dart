@@ -694,9 +694,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   void duplicateRows(Iterable<T> elements) {
     final newValue = value!.copyWith();
     elements.forEach((e) {
-      e.parentDAO = dao;
       int index = newValue.indexOf(e);
-      final newItem = (e.copyWith()..id = null) as T;
+      final newItem = e.copyWith() as T;
+      newItem.id = null;
+      newItem.parentDAO = dao;
       if (index<0) {
         newValue.add(newItem);
       } else {
