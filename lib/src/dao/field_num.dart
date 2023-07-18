@@ -322,13 +322,16 @@ class NumField extends Field<num> {
                 ),
                 child: KeyboardListener(
                   includeSemantics: false,
-                  focusNode: focusNode..skipTraversal=true,
+                  focusNode: FocusNode()..skipTraversal=true,
                   onKeyEvent: (value) {
                     if (value is KeyDownEvent) {
-                      if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
-                        focusNode.focusInDirection(TraversalDirection.down);
-                      } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
-                        focusNode.focusInDirection(TraversalDirection.up);
+                      final selectionStart = controller.selection.start;
+                      if (value.logicalKey==LogicalKeyboardKey.arrowDown && selectionStart==controller.text.length) {
+                        // focusNode.focusInDirection(TraversalDirection.down);
+                        focusNode.nextFocus(); // because directional focus is REALLY buggy
+                      } else if (value.logicalKey==LogicalKeyboardKey.arrowUp && selectionStart==0) {
+                        // focusNode.focusInDirection(TraversalDirection.up);
+                        focusNode.previousFocus(); // because directional focus is REALLY buggy
                       }
                     }
                   },
@@ -337,7 +340,7 @@ class NumField extends Field<num> {
                       return TextFormField(
                         controller: controller,
                         enabled: enabled,
-                        // focusNode: focusNode,
+                        focusNode: focusNode,
                         textAlign: dense ? TextAlign.right : TextAlign.left,
                         toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
                           copy: false, cut: false, paste: false, selectAll: false,
@@ -460,7 +463,7 @@ class NumField extends Field<num> {
           );
           if (!dense) {
             final actions = buildActions(context, focusNode);
-            final defaultActions = buildDefaultActions(context);
+            final defaultActions = buildDefaultActions(context, focusNode: focusNode);
             result = AppbarFromZero(
               addContextMenu: enabled,
               onShowContextMenu: () => focusNode.requestFocus(),

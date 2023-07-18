@@ -337,11 +337,14 @@ class StringField extends Field<String> {
                 includeSemantics: false,
                 focusNode: FocusNode()..skipTraversal=true,
                 onKeyEvent: (value) {
-                  if (value is KeyDownEvent && type==StringFieldType.short) {
-                    if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
-                      focusNode.focusInDirection(TraversalDirection.down);
-                    } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
-                      focusNode.focusInDirection(TraversalDirection.up);
+                  if (value is KeyDownEvent) {
+                    final selectionStart = controller.selection.start;
+                    if (value.logicalKey==LogicalKeyboardKey.arrowDown && selectionStart==controller.text.length) {
+                      // focusNode.focusInDirection(TraversalDirection.down);
+                      focusNode.nextFocus(); // because directional focus is REALLY buggy
+                    } else if (value.logicalKey==LogicalKeyboardKey.arrowUp && selectionStart==0) {
+                      // focusNode.focusInDirection(TraversalDirection.up);
+                      focusNode.previousFocus(); // because directional focus is REALLY buggy
                     }
                   }
                 },
@@ -432,7 +435,7 @@ class StringField extends Field<String> {
           );
           if (!dense) {
             final actions = buildActions(context, focusNode);
-            final defaultActions = buildDefaultActions(context);
+            final defaultActions = buildDefaultActions(context, focusNode: focusNode);
             result = AppbarFromZero(
               addContextMenu: enabled,
               onShowContextMenu: () => focusNode.requestFocus(),
