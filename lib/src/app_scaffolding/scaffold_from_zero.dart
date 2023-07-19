@@ -82,6 +82,8 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
   final double drawerAppbarElevation;
   final TransitionBuilder? drawerBackground;
   final bool useCompactDrawerInsteadOfClose;
+  final WidgetBuilder? bottomNavigationBarBuilder;
+  final double bottomNavigationBarBreakpoint; // onlyShown when screen is smaller than this breakpoint
   final bool constraintBodyOnXLargeScreens;
   final bool centerTitle;
   final double drawerPaddingTop;
@@ -129,6 +131,8 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
     this.applyHeroToDrawerTitle = true,
     this.rememberDrawerScrollOffset = true,
     this.alwaysShowHamburgerButtonOnMobile = false,
+    this.bottomNavigationBarBuilder,
+    this.bottomNavigationBarBreakpoint = screenSizeMedium, // mobile only
     this.centerDrawerTitle = false,
     this.appbarAddContextMenu = true,
     ScaffoldFromZeroTransitionBuilder? titleTransitionBuilder,
@@ -838,6 +842,21 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         mainScrollbar: true,
         applyOpacityGradientToChildren: false,
         child: result,
+      );
+    }
+    if (widget.bottomNavigationBarBuilder!=null) {
+      result = Column(
+        children: [
+          Expanded(child: result),
+          Consumer(
+            builder: (context, ref, child) {
+              if (ref.watch(fromZeroScreenProvider.select((value) => value.breakpoint<widget.bottomNavigationBarBreakpoint))) {
+                return widget.bottomNavigationBarBuilder!(context);
+              }
+              return SizedBox.shrink();
+            },
+          ),
+        ],
       );
     }
     return result;
