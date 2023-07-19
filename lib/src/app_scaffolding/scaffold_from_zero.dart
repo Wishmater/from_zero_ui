@@ -57,6 +57,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
 
   final Widget? title;
   final double titleSpacing;
+  final Color? backgroundColor;
   final List<Widget>? actions;
   final ActionFromZero? initialExpandedAction;
   final double appbarHeight;
@@ -98,9 +99,10 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
 
 
   ScaffoldFromZero({
+    required this.body,
     this.title,
     this.actions,
-    required this.body,
+    this.backgroundColor,
     this.floatingActionButton,
     this.drawerContentBuilder,
     this.drawerFooterBuilder,
@@ -402,6 +404,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
               builder: (context, ref, child) {
                 final isMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
                 return Scaffold(
+                  backgroundColor: widget.backgroundColor,
                   floatingActionButton: Consumer(
                     builder: (context, ref, child) {
                       final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
