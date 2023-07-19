@@ -851,7 +851,20 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
           Consumer(
             builder: (context, ref, child) {
               if (ref.watch(fromZeroScreenProvider.select((value) => value.breakpoint<widget.bottomNavigationBarBreakpoint))) {
-                return widget.bottomNavigationBarBuilder!(context);
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    widget.bottomNavigationBarBuilder!(context),
+                    Positioned(
+                      left: 0, right: 0,
+                      top: -widget.appbarElevation*0.7,
+                      height: widget.appbarElevation*0.7,
+                      child: const CustomPaint(
+                        painter: const SimpleShadowPainter(direction: SimpleShadowPainter.up, shadowOpacity: 0.4),
+                      ),
+                    ),
+                  ],
+                );
               }
               return SizedBox.shrink();
             },
