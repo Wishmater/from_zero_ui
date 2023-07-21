@@ -639,6 +639,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   void addRow (T element, [int? insertIndex]) => addRows([element], insertIndex);
   void addRows (Iterable<T> elements, [int? insertIndex]) {
+    if (elements.isEmpty) return;
     for (final e in elements) {
       e.addListener(notifyListeners);
       e.parentDAO = dao;
@@ -658,6 +659,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   bool replaceRow(T oldRow, T newRow) => replaceRows({oldRow: newRow});
   bool replaceRows(Map<T, T> elements) {
+    if (elements.isEmpty) return false;
     bool result = true;
     final newValue = value!.copyWith();
     elements.forEach((key, value) {
@@ -692,6 +694,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   void duplicateRow(T element) => duplicateRows([element]);
   void duplicateRows(Iterable<T> elements) {
+    if (elements.isEmpty) return;
     final newValue = value!.copyWith();
     elements.forEach((e) {
       int index = newValue.indexOf(e);
@@ -710,6 +713,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   bool removeRow(T element) => removeRows([element]);
   bool removeRows(Iterable<T> elements) {
+    if (elements.isEmpty) return false;
     bool result = false;
     final newValue = value!.copyWith();
     elements.forEach((e) {
