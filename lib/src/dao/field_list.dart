@@ -638,7 +638,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }
 
   void addRow (T element, [int? insertIndex]) => addRows([element], insertIndex);
-  void addRows (Iterable<T> elements, [int? insertIndex]) {
+  void addRows (Iterable<T> elements, [int? insertIndex, bool focusAdded = true]) {
     if (elements.isEmpty) return;
     for (final e in elements) {
       e.addListener(notifyListeners);
@@ -654,11 +654,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       }
     }
     value = newValue;
-    focusObject(elements.first);
+    if (focusAdded) {
+      focusObject(elements.first);
+    }
   }
 
   bool replaceRow(T oldRow, T newRow) => replaceRows({oldRow: newRow});
-  bool replaceRows(Map<T, T> elements) {
+  bool replaceRows(Map<T, T> elements, [bool focusAdded = true]) {
     if (elements.isEmpty) return false;
     bool result = true;
     final newValue = value!.copyWith();
@@ -688,12 +690,14 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       }
     });
     value = newValue;
-    focusObject(elements.values.first);
+    if (focusAdded) {
+      focusObject(elements.values.first);
+    }
     return result;
   }
 
   void duplicateRow(T element) => duplicateRows([element]);
-  void duplicateRows(Iterable<T> elements) {
+  void duplicateRows(Iterable<T> elements, [bool focusAdded = true]) {
     if (elements.isEmpty) return;
     final newValue = value!.copyWith();
     elements.forEach((e) {
@@ -708,7 +712,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       }
     });
     value = newValue;
-    focusObject(elements.first);
+    if (focusAdded) {
+      focusObject(elements.first);
+    }
   }
 
   bool removeRow(T element) => removeRows([element]);
