@@ -53,9 +53,11 @@ class ContextMenuFromZero extends StatefulWidget {
 
 }
 
+
 class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
 
   final GlobalKey anchorKey = GlobalKey();
+  static bool didShowContextMenuThisFrame = false;
 
   static void showContextMenuFromZero(BuildContext context, {
     required List<ActionFromZero> actions,
@@ -114,21 +116,27 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
 
   void onTapDown(details) => tapDownDetails = details;
   void showContextMenu() {
-    final actions = widget.contextMenuWidget==null ? getAllContextActions() : widget.actions;
-    if (widget.enabled && (widget.contextMenuWidget!=null || actions.isNotEmpty)) {
-      showContextMenuFromZero(context,
-        actions: actions,
-        anchorKey: anchorKey,
-        contextMenuWidth: widget.contextMenuWidth,
-        popupAlignment: widget.popupAlignment,
-        anchorAlignment: widget.anchorAlignment,
-        offsetCorrection: widget.offsetCorrection,
-        barrierColor: widget.barrierColor,
-        contextMenuWidget: widget.contextMenuWidget,
-        onShowMenu: widget.onShowMenu,
-        tapDownDetails: tapDownDetails,
-        useCursorLocation: widget.useCursorLocation,
-      );
+    if (!didShowContextMenuThisFrame) {
+      didShowContextMenuThisFrame = true;
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        didShowContextMenuThisFrame = false;
+      });
+      final actions = widget.contextMenuWidget==null ? getAllContextActions() : widget.actions;
+      if (widget.enabled && (widget.contextMenuWidget!=null || actions.isNotEmpty)) {
+        showContextMenuFromZero(context,
+          actions: actions,
+          anchorKey: anchorKey,
+          contextMenuWidth: widget.contextMenuWidth,
+          popupAlignment: widget.popupAlignment,
+          anchorAlignment: widget.anchorAlignment,
+          offsetCorrection: widget.offsetCorrection,
+          barrierColor: widget.barrierColor,
+          contextMenuWidget: widget.contextMenuWidget,
+          onShowMenu: widget.onShowMenu,
+          tapDownDetails: tapDownDetails,
+          useCursorLocation: widget.useCursorLocation,
+        );
+      }
     }
   }
 
