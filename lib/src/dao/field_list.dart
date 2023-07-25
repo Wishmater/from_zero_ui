@@ -2327,7 +2327,12 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                       Expanded(
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 2),
-                          child: Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}', style: TextStyle(fontSize: 16),),
+                          child: Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: Colors.blue,
+                            ),
+                          ),
                         ),
                       ),
                       SizedBox(width: 8,),
