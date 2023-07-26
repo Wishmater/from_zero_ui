@@ -10,8 +10,14 @@ class SimpleShadowPainter extends CustomPainter {
   final int direction;
   final double shadowOpacity;
   final double spreadPercentage;
+  final Color color;
 
-  const SimpleShadowPainter({this.shadowOpacity = 1, this.direction = down, this.spreadPercentage = 1});
+  const SimpleShadowPainter({
+    this.color = Colors.black,
+    this.shadowOpacity = 1,
+    this.direction = down,
+    this.spreadPercentage = 1,
+  });
 
 
   @override
@@ -28,7 +34,7 @@ class SimpleShadowPainter extends CustomPainter {
 //        ..addOval(Rect.fromPoints(Offset(0, 0), Offset(size.width, size.height)))
 //        ..fillType = PathFillType.evenOdd,
 //      Paint()
-//        ..color = Colors.black.withOpacity(shadowOpacity)
+//        ..color = color.withOpacity(shadowOpacity)
 //        ..maskFilter = MaskFilter.blur(BlurStyle.normal, convertRadiusToSigma(3)),
 //    );
 
@@ -64,7 +70,7 @@ class SimpleShadowPainter extends CustomPainter {
         )
         ..fillType = PathFillType.evenOdd,
       Paint()
-        ..color = Colors.black.withOpacity(shadowOpacity)
+        ..color = color.withOpacity(shadowOpacity)
         ..maskFilter = MaskFilter.blur(BlurStyle.normal, convertRadiusToSigma(spread)),
     );
 
@@ -73,7 +79,7 @@ class SimpleShadowPainter extends CustomPainter {
 //        ..addRect(Rect.fromPoints(Offset(0, 0), Offset(size.width, size.height)))
 ////        ..addOval(Rect.fromPoints(Offset(0, 0), Offset(size.width, size.height)))
 //        ..fillType = PathFillType.evenOdd,
-//      Colors.black.withOpacity(shadowOpacity),
+//      color.withOpacity(shadowOpacity),
 //      elevation,
 //      true,
 //    );
