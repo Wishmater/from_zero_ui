@@ -855,9 +855,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   Widget _defaultRowBuilder(BuildContext context, RowModel row, int index, double? minWidth) {
 
     int maxFlex = 0;
+    double flexibleMinWidth = minWidth ?? 0;
     for (final key in currentColumnKeys??row.values.keys) {
-      maxFlex += _getFlex(key);
+      if (widget.columns?[key]?.width!=null) {
+        flexibleMinWidth -= widget.columns![key]!.width!;
+      } else {
+        maxFlex += _getFlex(key);
+      }
     }
+    flexibleMinWidth = flexibleMinWidth.coerceAtLeast(0);
     int cols = (((currentColumnKeys??row.values.keys).length) + (_showLeadingControls ? 1 : 0))
         * (widget.verticalDivider==null ? 1 : 2)
         + (widget.verticalDivider==null ? 0 : 1);
@@ -981,7 +987,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             result = SizedBox(width: col!.width, child: result,);
           } else {
             if (constraints!=null && minWidth!=null && constraints.maxWidth<minWidth) {
-              return SizedBox(width: minWidth * (_getFlex(colKey)/maxFlex), child: result,);
+              return SizedBox(width: flexibleMinWidth * (_getFlex(colKey)/maxFlex), child: result,);
             } else {
               return Expanded(flex: _getFlex(colKey), child: result,);
             }
@@ -1135,7 +1141,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           return SizedBox(width: col!.width, child: result,);
         } else {
           if (constraints!=null && minWidth!=null && constraints.maxWidth<minWidth) {
-            return SizedBox(width: (minWidth * (_getFlex(colKey)/maxFlex)), child: result,);
+            return SizedBox(width: (flexibleMinWidth * (_getFlex(colKey)/maxFlex)), child: result,);
           } else {
             return Flexible(flex: _getFlex(colKey), child: result,);
           }

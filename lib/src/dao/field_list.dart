@@ -2000,7 +2000,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           double width = 0;
           for (final key in currentColumnKeys) {
             final value = columns[key];
-            width += value?.flex ?? 192;
+            width += value?.width==null
+                ? (value?.flex ?? 192)
+                : (value!.width! * (1 + (1/columns.length))) ; // fixed widths weigh more because they wont shrink, this is an estimate, ideally it would be increase be the percentage this width represents of the total minWidth
           }
           return width;
         };
