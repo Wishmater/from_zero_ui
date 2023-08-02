@@ -1933,8 +1933,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           }
           Widget? rowAddonWidget;
           if (rowAddonField!=null) {
-            final rowAddonField = e.props[this.rowAddonField!]!;
-            if (rowAddonField.value!=null && rowAddonField.value.toString().isNotBlank) {
+            final rowAddonField = e.props[this.rowAddonField!];
+            if (rowAddonField!=null && rowAddonField.value!=null && rowAddonField.value.toString().isNotBlank) {
               rowAddonWidget = Theme(
                 data: Theme.of(context).copyWith(
                   textTheme: Theme.of(context).textTheme.copyWith(
