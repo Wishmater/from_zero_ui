@@ -161,7 +161,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
 
   void cancel() {
     for (final c in _cancelTokens) {
-      try { c.cancel(); } catch (_) {}
+      try { c.cancel('PROVIDER CANCELLED'); } catch (_) {}
     }
     _cancelTokens.clear();
   }
