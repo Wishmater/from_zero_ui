@@ -62,6 +62,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool tableCellsEditable;
   bool collapsible;
   bool allowTableCustomization;
+  bool? ignoreWidthGettersIfEmpty;
   RowTapType rowTapType;
   ListFieldDisplayType displayType;
   bool validateChildren;
@@ -234,6 +235,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, /// Unused in table
     this.tableCellsEditable = false,
     bool? allowTableCustomization,
+    this.ignoreWidthGettersIfEmpty,
     double maxWidth = double.infinity,
     double minWidth = 512,
     double flex = 0,
@@ -516,6 +518,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     int? initialSortColumn,
     bool? tableCellsEditable,
     bool? allowTableCustomization,
+    bool? ignoreWidthGettersIfEmpty,
     bool? allowMultipleSelection,
     bool? selectionDefault,
     ValueChanged<RowModel>? onRowTap,
@@ -591,6 +594,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       initialSortedColumn: initialSortColumn ?? this.initialSortedColumn,
       tableCellsEditable: tableCellsEditable ?? this.tableCellsEditable,
       allowTableCustomization: allowTableCustomization ?? this.allowTableCustomization,
+      ignoreWidthGettersIfEmpty: ignoreWidthGettersIfEmpty ?? this.ignoreWidthGettersIfEmpty,
       allowMultipleSelection: allowMultipleSelection ?? this.allowMultipleSelection,
       selectionDefault: selectionDefault ?? this.selectionDefault,
       onRowTap: onRowTap ?? this.onRowTap,
@@ -1033,6 +1037,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       selectedObjects: selectedObjects,
       selectionDefault: selectionDefault,
       rowTapType: RowTapType.none,
+      ignoreWidthGettersIfEmpty: false,
       onRowTap: allowAddMultipleFromAvailablePool ? null : (value) {
         Navigator.of(context).pop(value.id);
       },
@@ -2062,7 +2067,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           enableFixedHeightForListRows: rowAddonField==null,
           cellPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
           backgroundColor: backgroundColor?.call(context, this, dao),
-          ignoreWidthGettersIfEmpty: !addCard,
+          ignoreWidthGettersIfEmpty: ignoreWidthGettersIfEmpty ?? !addCard,
           rowDisabledValidator: rowDisabledValidator,
           rowTooltipGetter: rowTooltipGetter,
           cellBuilder: tableCellsEditable ? (context, row, colKey) {
