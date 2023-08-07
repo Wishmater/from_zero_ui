@@ -315,36 +315,43 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
   final GlobalKey appbarGlobalKey = GlobalKey();
 
 
-  late ScaffoldFromZeroChangeNotifier _changeNotifier;
   bool lockListenToDrawerScroll = false;
   GoRouterStateFromZero? route;
+  late ScaffoldFromZeroChangeNotifier _changeNotifier;
   @override
   void initState() {
     super.initState();
-    route = context.findAncestorStateOfType<OnlyOnActiveBuilderState>()!.state;
     _changeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
-    _changeNotifier.expandedDrawerWidths[route!.pageScaffoldId] = widget.drawerWidth;
-    _changeNotifier.collapsedDrawerWidths[route!.pageScaffoldId] = widget.compactDrawerWidth;
+    route = context.findAncestorStateOfType<OnlyOnActiveBuilderState>()?.state;
+    _changeNotifier.expandedDrawerWidths[pageScaffoldId] = widget.drawerWidth;
+    _changeNotifier.collapsedDrawerWidths[pageScaffoldId] = widget.compactDrawerWidth;
     widget.mainScrollController?.addListener(_handleScroll);
-    if (widget.rememberDrawerScrollOffset) {
-      if (_changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]==null){
-        _changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId] = ValueNotifier(0);
+    if (route!=null && widget.rememberDrawerScrollOffset) {
+      if (_changeNotifier.drawerContentScrollOffsets[pageScaffoldId]==null){
+        _changeNotifier.drawerContentScrollOffsets[pageScaffoldId] = ValueNotifier(0);
       }
-      _changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.addListener(_onDrawerScrollOffsetChanged);
+      _changeNotifier.drawerContentScrollOffsets[pageScaffoldId]?.addListener(_onDrawerScrollOffsetChanged);
     }
   }
 
   void _onDrawerScroll() {
     if (mounted && drawerContentScrollController.hasClients){
       lockListenToDrawerScroll = true;
-      _changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.value
-          = drawerContentScrollController.position.pixels;
+      _changeNotifier.drawerContentScrollOffsets[pageScaffoldId]?.value = drawerContentScrollController.position.pixels;
     }
   }
   void _onDrawerScrollOffsetChanged() {
     if (!lockListenToDrawerScroll && mounted && drawerContentScrollController.hasClients){
-      drawerContentScrollController.jumpTo(_changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.value ?? 0);
+      drawerContentScrollController.jumpTo(_changeNotifier.drawerContentScrollOffsets[pageScaffoldId]?.value ?? 0);
       lockListenToDrawerScroll = false;
+    }
+  }
+  
+  String get pageScaffoldId {
+    if (route!=null) {
+      return route!.pageScaffoldId;
+    } else {
+      return 'temp';
     }
   }
 
@@ -365,7 +372,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
   @override
   void dispose() {
     super.dispose();
-    _changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.removeListener(_onDrawerScrollOffsetChanged);
+    _changeNotifier.drawerContentScrollOffsets[pageScaffoldId]?.removeListener(_onDrawerScrollOffsetChanged);
     widget.mainScrollController?.removeListener(_handleScroll);
   }
 
@@ -414,7 +421,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                             padding: EdgeInsets.only(
                               bottom: isMobileLayout ? 0 : 12,
                               right: isMobileLayout ? 0
-                                  : 12 + ((constraints.maxWidth-changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId)-ScaffoldFromZero.screenSizeXLarge)/2).coerceIn(0),
+                                  : 12 + ((constraints.maxWidth-changeNotifier.getCurrentDrawerWidth(pageScaffoldId)-ScaffoldFromZero.screenSizeXLarge)/2).coerceIn(0),
                             ),
                             duration: widget.drawerAnimationDuration,
                             curve: widget.drawerAnimationCurve,
@@ -503,7 +510,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
             AnimatedPositioned(
               duration: widget.drawerAnimationDuration,
               curve: widget.drawerAnimationCurve,
-              left: changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId),
+              left: changeNotifier.getCurrentDrawerWidth(pageScaffoldId),
               right: 0, top: 0, bottom: 0,
               child: _getBody(context),
             ),
@@ -515,7 +522,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                 if (!screen.isMobileLayout && widget.drawerContentBuilder!=null){
                   return AnimatedContainer(
                     alignment: Alignment.centerLeft,
-                    padding: EdgeInsets.only(top: appbarChangeNotifier.currentAppbarHeight, left: changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId)),
+                    padding: EdgeInsets.only(top: appbarChangeNotifier.currentAppbarHeight, left: changeNotifier.getCurrentDrawerWidth(pageScaffoldId)),
                     duration: widget.drawerAnimationDuration,
                     curve: widget.drawerAnimationCurve,
                     child: SizedBox(
@@ -539,13 +546,13 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                     ? AnimatedContainer(
                       duration: widget.drawerAnimationDuration,
                       curve: widget.drawerAnimationCurve,
-                      width: changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId),
+                      width: changeNotifier.getCurrentDrawerWidth(pageScaffoldId),
                       child: _getResponsiveDrawerContent(context),
                     )
                     : AnimatedPositioned(
                       duration: widget.drawerAnimationDuration,
                       curve: widget.drawerAnimationCurve,
-                      left: changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId)-widget.drawerWidth,
+                      left: changeNotifier.getCurrentDrawerWidth(pageScaffoldId)-widget.drawerWidth,
                       width: widget.drawerWidth,
                       top: 0, bottom: 0,
                       child: _getResponsiveDrawerContent(context),
@@ -556,7 +563,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
             screen.isMobileLayout || widget.drawerContentBuilder==null || PlatformExtended.isDesktop // this should be if no mouse, instead of platform based
                 ? Positioned(top: 0, bottom: 0, width: 0, child: Container(),)
                 : Positioned(
-                  top: 0, bottom: 0, left: 0, width: changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId)+18,
+                  top: 0, bottom: 0, left: 0, width: changeNotifier.getCurrentDrawerWidth(pageScaffoldId)+18,
                   child: GestureDetector(
                     onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
                     onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
@@ -781,7 +788,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                       child: result,
                                       builder: (context, ref, child) {
                                         final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-                                        double currentWidth = changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId);
+                                        double currentWidth = changeNotifier.getCurrentDrawerWidth(pageScaffoldId);
                                         final breakSpace = (56-4-widget.titleSpacing);
                                         return  IgnorePointer(
                                           ignoring: currentWidth>breakSpace,
@@ -885,7 +892,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         final changeNotifierNotListen = ref.read(fromZeroScaffoldChangeNotifierProvider); // ! this used to be watch, might bring problems with drawer
         drawerContentScrollController = ScrollController(
           initialScrollOffset: widget.rememberDrawerScrollOffset
-              ? _changeNotifier.drawerContentScrollOffsets[route!.pageScaffoldId]?.value ?? 0
+              ? _changeNotifier.drawerContentScrollOffsets[pageScaffoldId]?.value ?? 0
               : 0,
         );
         drawerContentScrollController.addListener(_onDrawerScroll);
@@ -980,7 +987,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                         child: GestureDetector(
                           onDoubleTap: onTap,
                           child: TooltipFromZero(
-                            message: changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId)>widget.compactDrawerWidth||isMobileLayout
+                            message: changeNotifier.getCurrentDrawerWidth(pageScaffoldId)>widget.compactDrawerWidth||isMobileLayout
                                 ? FromZeroLocalizations.of(context).translate("menu_close") : FromZeroLocalizations.of(context).translate("menu_open"),
                             child: IconButton(
                               icon: Icon(Icons.menu),
@@ -1037,7 +1044,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                   child: Consumer(
                                     builder: (context, ref, child) {
                                       final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-                                      final currentDrawerWidth = changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId);
+                                      final currentDrawerWidth = changeNotifier.getCurrentDrawerWidth(pageScaffoldId);
                                       Widget result = _getUserDrawerContent(context, currentDrawerWidth==widget.compactDrawerWidth);
                                       result = widget.drawerContentTransitionBuilder(
                                         child: result,
@@ -1091,11 +1098,11 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                                 children: <Widget>[
                                                   Divider(height: 3, thickness: 3, color: Theme.of(context).brightness==Brightness.light ? Colors.grey : Colors.grey.shade900,),
                                                   SizedBox(height: 8,),
-                                                  _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId)==widget.compactDrawerWidth),
+                                                  _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(pageScaffoldId)==widget.compactDrawerWidth),
                                                   SizedBox(height: 12,),
                                                 ],
                                               ),
-                                            ) : _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId)==widget.compactDrawerWidth);
+                                            ) : _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(pageScaffoldId)==widget.compactDrawerWidth);
                                       },
                                     ) : SizedBox.shrink(),
                               ],
@@ -1153,30 +1160,30 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         scaffold.openDrawer();
       }
     } else{
-      if (changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId) > widget.compactDrawerWidth){
-        changeNotifier.setCurrentDrawerWidth(route!.pageScaffoldId, widget.compactDrawerWidth);
+      if (changeNotifier.getCurrentDrawerWidth(pageScaffoldId) > widget.compactDrawerWidth){
+        changeNotifier.setCurrentDrawerWidth(pageScaffoldId, widget.compactDrawerWidth);
       } else{
-        changeNotifier.setCurrentDrawerWidth(route!.pageScaffoldId, widget.drawerWidth);
+        changeNotifier.setCurrentDrawerWidth(pageScaffoldId, widget.drawerWidth);
       }
     }
   }
 
   void onHorizontalDragUpdate (DragUpdateDetails details, ScaffoldFromZeroChangeNotifier changeNotifier) {
-    double jump = changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId) + details.delta.dx;
+    double jump = changeNotifier.getCurrentDrawerWidth(pageScaffoldId) + details.delta.dx;
     if (jump<widget.compactDrawerWidth) jump = widget.compactDrawerWidth;
     if (jump>widget.drawerWidth) jump = widget.drawerWidth;
-    changeNotifier.setCurrentDrawerWidth(route!.pageScaffoldId, jump);
+    changeNotifier.setCurrentDrawerWidth(pageScaffoldId, jump);
   }
   static const double _kMinFlingVelocity = 365.0;
   void onHorizontalDragEnd (DragEndDetails details, ScaffoldFromZeroChangeNotifier changeNotifier) {
-    double jump = changeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId);
+    double jump = changeNotifier.getCurrentDrawerWidth(pageScaffoldId);
     if (details.velocity.pixelsPerSecond.dx.abs() >= _kMinFlingVelocity){
       if (details.velocity.pixelsPerSecond.dx>0) jump = widget.drawerWidth;
       else jump = widget.compactDrawerWidth;
     }
     else if (jump<widget.drawerWidth/2) jump = widget.compactDrawerWidth;
     else jump = widget.drawerWidth;
-    changeNotifier.setCurrentDrawerWidth(route!.pageScaffoldId, jump);
+    changeNotifier.setCurrentDrawerWidth(pageScaffoldId, jump);
   }
 
 }
