@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/future_handling/future_handling.dart';
 
 
@@ -11,6 +12,7 @@ Future<T?> showPopupFromZero<T>({
   GlobalKey? anchorKey,
   Offset? referencePosition,
   Size? referenceSize,
+  EdgeInsets? padding,
   double? width,
   Alignment anchorAlignment = Alignment.topCenter,
   Alignment popupAlignment = Alignment.bottomCenter,
@@ -29,6 +31,7 @@ Future<T?> showPopupFromZero<T>({
         anchorKey: anchorKey,
         referencePosition: referencePosition,
         referenceSize: referenceSize,
+        padding: padding,
         builder: builder,
         width: width,
         anchorAlignment: anchorAlignment,
@@ -44,6 +47,7 @@ class PopupFromZero extends StatefulWidget {
   final GlobalKey? anchorKey;
   final Offset? referencePosition;
   final Size? referenceSize;
+  final EdgeInsets? padding;
   final WidgetBuilder builder;
   final double? width;
   final Alignment anchorAlignment;
@@ -55,6 +59,7 @@ class PopupFromZero extends StatefulWidget {
     this.anchorKey,
     this.referencePosition,
     this.referenceSize,
+    this.padding,
     this.width,
     this.anchorAlignment = Alignment.topCenter,
     this.popupAlignment = Alignment.bottomCenter,
@@ -95,11 +100,20 @@ class _PopupFromZeroState extends State<PopupFromZero> {
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
-    final padding = mediaQuery.padding + mediaQuery.viewInsets; // padding has the permanent padding (notch), viewInsets has the keyboard inset
+    final mediaQueryPadding = mediaQuery.padding + mediaQuery.viewInsets; // padding has the permanent padding (notch), viewInsets has the keyboard inset
     return LayoutBuilder(
       builder: (context, constraints) {
+        final mqMaxWidth = constraints.maxWidth - mediaQueryPadding.horizontal;
+        final mqMaxHeight = constraints.maxHeight - mediaQueryPadding.vertical;
+        final extraPadding = widget.padding ?? EdgeInsets.symmetric(
+          horizontal: mqMaxWidth>ScaffoldFromZero.screenSizeLarge ? 24 : mqMaxWidth>ScaffoldFromZero.screenSizeMedium ? 16 : 0,
+          vertical: mqMaxHeight>ScaffoldFromZero.screenSizeLarge ? 24 : mqMaxHeight>ScaffoldFromZero.screenSizeMedium ? 16 : 0,
+        );
+        final padding = mediaQueryPadding + extraPadding;
         final maxWidth = constraints.maxWidth - padding.horizontal;
+        final maxWidthWithPaddingLeft = maxWidth + padding.left;
         final maxHeight = constraints.maxHeight - padding.vertical;
+        final maxHeightWithPaddingTop = maxHeight + padding.top;
         final animation = CurvedAnimation(
           parent: ModalRoute.of(context)!.animation!,
           curve: Curves.easeInOutCubic,
@@ -142,17 +156,19 @@ class _PopupFromZeroState extends State<PopupFromZero> {
             if (referencePosition!=null && referenceSize!=null) {
               x = referencePosition.dx
                   + referenceSize.width*((widget.anchorAlignment.x+1)/2)
-                  - popupWidth*((widget.popupAlignment.x-1)/-2);
+                  - popupWidth*((widget.popupAlignment.x-1)/-2)
+                  + widget.offsetCorrection.dx;
               y = referencePosition.dy
                   + referenceSize.height*((widget.anchorAlignment.y+1)/2)
-                  - childSize.height*((widget.popupAlignment.y-1)/-2);
-              x = x.clamp(padding.left, maxWidth);
-              y = y.clamp(padding.top, maxHeight);
+                  - childSize.height*((widget.popupAlignment.y-1)/-2)
+                  + widget.offsetCorrection.dy;
+              x = x.clamp(padding.left, maxWidthWithPaddingLeft);
+              y = y.clamp(padding.top, maxHeightWithPaddingTop);
               if (maxWidth-x < popupWidth) {
-                x = maxWidth - popupWidth;
+                x = maxWidthWithPaddingLeft - popupWidth;
               }
               if (maxHeight-y < childSize.height) {
-                y = maxHeight - childSize.height;
+                y = maxHeightWithPaddingTop - childSize.height;
               }
               double overlappingWidth = Rectangle(referencePosition.dx, 0, referenceSize.width, 1)
                   .intersection(Rectangle(x, 0, popupWidth, 1))?.width.toDouble() ?? 0;
@@ -174,17 +190,17 @@ class _PopupFromZeroState extends State<PopupFromZero> {
               } else {
                 y = referencePosition.dy - ((currentChildHeight-overlappingHeight) * ((popupAlignment.y-1)/-2));
               }
-              x = x.clamp(padding.left, maxWidth);
-              y = y.clamp(padding.top, maxHeight);
+              x = x.clamp(padding.left, maxWidthWithPaddingLeft);
+              y = y.clamp(padding.top, maxHeightWithPaddingTop);
               if (maxWidth-x < currentChildWidth) {
-                x = (maxWidth - currentChildWidth).clamp(padding.left, maxWidth);
+                x = (maxWidthWithPaddingLeft - currentChildWidth).clamp(padding.left, maxWidthWithPaddingLeft);
               }
               if (maxHeight-y < currentChildHeight) {
-                y = (maxHeight - currentChildHeight).clamp(padding.top, maxHeight);
+                y = (maxHeightWithPaddingTop - currentChildHeight).clamp(padding.top, maxHeightWithPaddingTop);
               }
             } else {
-              x = maxWidth/2-currentChildWidth/2;
-              y = maxHeight/2-currentChildHeight/2;
+              x = maxWidth/2-currentChildWidth/2 + widget.offsetCorrection.dx;
+              y = maxHeight/2-currentChildHeight/2 + widget.offsetCorrection.dy;
             }
             return Stack(
               fit: StackFit.expand,
@@ -194,8 +210,8 @@ class _PopupFromZeroState extends State<PopupFromZero> {
                       ? Duration(milliseconds: 250)
                       : Duration.zero,
                   curve: Curves.easeOutCubic,
-                  left: x + widget.offsetCorrection.dx,
-                  top: y + widget.offsetCorrection.dy,
+                  left: x,
+                  top: y,
                   width: currentChildWidth,
                   height: currentChildHeight,
                   child: Card(
