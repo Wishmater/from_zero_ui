@@ -96,6 +96,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
   final ScaffoldFromZeroTransitionBuilder drawerContentTransitionBuilder;
   final ScaffoldFromZeroTransitionBuilder bodyTransitionBuilder;
   final bool appbarAddContextMenu;
+  final bool isPrimaryScaffold; // don't show windowBar if false
 
 
   ScaffoldFromZero({
@@ -137,6 +138,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
     this.bottomNavigationBarBreakpoint = screenSizeMedium, // mobile only
     this.centerDrawerTitle = false,
     this.appbarAddContextMenu = true,
+    this.isPrimaryScaffold = true,
     ScaffoldFromZeroTransitionBuilder? titleTransitionBuilder,
     ScaffoldFromZeroTransitionBuilder? drawerContentTransitionBuilder,
     ScaffoldFromZeroTransitionBuilder? bodyTransitionBuilder,
@@ -614,7 +616,9 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         child: body,
       );
     }
-    if (widget.appbarType==ScaffoldFromZero.appbarTypeNone && changeNotifierNotListen.showWindowBarOnDesktop && !kIsWeb && Platform.isWindows && windowsDesktopBitsdojoWorking) {
+    if (widget.isPrimaryScaffold && widget.appbarType==ScaffoldFromZero.appbarTypeNone
+        && changeNotifierNotListen.showWindowBarOnDesktop && !kIsWeb
+        && Platform.isWindows && windowsDesktopBitsdojoWorking) {
       body = Column(
         children: [
           WindowBar(backgroundColor: Theme.of(context).cardColor,),
@@ -688,7 +692,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                     Positioned.fill(child: AbsorbPointer()),
                     AppbarFromZero(
                       key: appbarGlobalKey,
-                      mainAppbar: changeNotifierNotListen.showWindowBarOnDesktop,
+                      mainAppbar: widget.isPrimaryScaffold && changeNotifierNotListen.showWindowBarOnDesktop,
                       controller: widget.appbarController,
                       onExpanded: widget.onAppbarActionExpanded,
                       onUnexpanded: widget.onAppbarActionUnexpanded,
