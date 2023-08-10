@@ -1052,6 +1052,7 @@ class InitiallyAnimatedWidget extends StatefulWidget {
   final Widget? child;
   final bool? repeat; /// false: don't repeat, null: repeat once, true: repeate forever
   final bool reverse;
+  final VoidCallback? onFinish;
 
   InitiallyAnimatedWidget({
     Key? key,
@@ -1061,7 +1062,9 @@ class InitiallyAnimatedWidget extends StatefulWidget {
     this.child,
     this.repeat = false,
     this.reverse = true,
-  }) : super(key: key);
+    this.onFinish,
+  })  : assert(!(repeat==true && onFinish!=null), "Can't specify onFinish callbacks for an infinite loop"),
+        super(key: key);
 
   @override
   _InitiallyAnimatedWidgetState createState() => _InitiallyAnimatedWidgetState();
@@ -1085,18 +1088,18 @@ class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with 
     );
     startAnimation();
   }
-  void startAnimation() {
+  Future<void> startAnimation() async {
     if (widget.repeat==null) {
-      animationController.forward().then((value) {
-        return animationController.reverse();
-      });
+      await animationController.forward();
+      await animationController.reverse();
     } else if (widget.repeat!) {
-      animationController.repeat(
+      await animationController.repeat(
         reverse: widget.reverse,
       );
     } else {
-      animationController.forward();
+      await animationController.forward();
     }
+    widget.onFinish?.call();
   }
 
   void dispose() {
