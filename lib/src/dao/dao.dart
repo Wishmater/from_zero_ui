@@ -479,6 +479,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
   }
   void focusError(ValidationError error) {
+    print ('focusError');
     error.field.requestFocus();
     try {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
@@ -500,172 +501,115 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         : validate(context,
             validateNonEditedFields: true,
           );
-    final scrollController = ScrollController();
     bool? confirm = await showModalFromZero(
       context: context,
       builder: (context) {
         final GlobalKey timerGlobalKey = GlobalKey();
-        return IntrinsicWidth(
-          child: IntrinsicHeight(
-            child: Center(
-              child: SizedBox(
-                width: formDialogWidth-32,
-                child: Dialog(
-                  clipBehavior: Clip.hardEdge,
-                  child: FutureBuilderFromZero<bool>(
-                    future: validationFuture,
-                    applyAnimatedContainerFromChildSize: true,
-                    loadingBuilder: (context) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        child: IntrinsicHeight(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: 18,),
-                              Text('Validando Datos...',
-                                style: Theme.of(context).textTheme.headline6,
-                              ), // TODO 3 internationaliza
-                              Expanded(
-                                child: Container(
-                                  height: 200,
-                                  child: ApiProviderBuilder.defaultLoadingBuilder(context, null),
-                                ),
-                              ),
-                            ],
+        return SizedBox(
+          width: formDialogWidth-32,
+          child: Dialog(
+            clipBehavior: Clip.hardEdge,
+            child: FutureBuilderFromZero<bool>(
+              future: validationFuture,
+              applyAnimatedContainerFromChildSize: true,
+              loadingBuilder: (context) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 18,),
+                        Text('Validando Datos...',
+                          style: Theme.of(context).textTheme.headline6,
+                        ), // TODO 3 internationaliza
+                        Expanded(
+                          child: Container(
+                            height: 200,
+                            child: ApiProviderBuilder.defaultLoadingBuilder(context, null),
                           ),
                         ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 18,),
-                            ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace as StackTrace?, null),
-                            SizedBox(height: 12,),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: [
-                                FlatButton(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
-                                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                    ),
-                                  ),
-                                  textColor: Theme.of(context).textTheme.caption!.color,
-                                  onPressed: () {
-                                    Navigator.of(context).pop(false); // Dismiss alert dialog
-                                  },
-                                ),
-                                SizedBox(width: 2,),
-                              ],
-                            ),
-                            SizedBox(height: 12,),
-                          ],
-                        ),
-                      );
-                    },
-                    successBuilder: (context, validation) {
-                      validation = skipValidation
-                          ? true
-                          : validation && validationErrors.firstOrNullWhere((e) => e.isBlocking)==null;
-                      if (!showConfirmDialogWithBlockingErrors && !validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
-                        Navigator.of(context).pop(null);
-                      }
-                      if (!askForSaveConfirmation && validationErrors.where((e) => e.isBlocking || e.isVisibleAsSaveConfirmation).isEmpty) {
-                        Navigator.of(context).pop(true);
-                      }
-                      String shownName = uiName;
-                      if (shownName.isNullOrEmpty) shownName = classUiName;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        child: IntrinsicHeight(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: 18,),
-                              Text(validation
-                                  ? (saveConfirmationDialogTitle?.call(this) ?? FromZeroLocalizations.of(context).translate("confirm_save_title"))
-                                  : 'Error de Validación', // TODO 3 internationaliza
-                                style: Theme.of(context).textTheme.headline6,
-                              ),
-                              SizedBox(height: 12,),
-                              Expanded(
-                                child: ScrollbarFromZero(
-                                  controller: scrollController,
-                                  child: SingleChildScrollView(
-                                    controller: scrollController,
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(validation
-                                            ? (saveConfirmationDialogDescription?.call(this) ?? (FromZeroLocalizations.of(context).translate("confirm_save_desc") + "\r\n" + shownName))
-                                            : 'Debe resolver los siguientes errores de validación:'), // TODO 3 internationalize
-                                        SaveConfirmationValidationMessage(allErrors: validationErrors),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              SizedBox(height: 12,),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  FlatButton(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                      ),
-                                    ),
-                                    textColor: Theme.of(context).textTheme.caption!.color,
-                                    onPressed: () {
-                                      Navigator.of(context).pop(null); // Dismiss alert dialog
-                                    },
-                                  ),
-                                  TooltipFromZero(
-                                    message: validation ? null : 'No se puede guardar hasta resolver los errores de validación', // TODO 3 internationalize
-                                    child: TimedOverlay(
-                                      key: timerGlobalKey,
-                                      duration: validationErrors.isEmpty || !validation
-                                          ? Duration.zero
-                                          : Duration(milliseconds: (1000 + 500*Set.from(validationErrors.where((e) => e.isVisibleAsSaveConfirmation).map((e) => e.error)).length).clamp(0, 10000)),
-                                      builder: (context, elapsed, remaining) {
-                                        return FlatButton(
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text((saveButtonTitle?.call(this).toUpperCase() ?? FromZeroLocalizations.of(context).translate("save_caps")),
-                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                            ),
-                                          ),
-                                          textColor: Colors.blue,
-                                          onPressed: !ignoreBlockingErrors && (remaining!=Duration.zero || !validation) ? null : () {
-                                            Navigator.of(context).pop(true); // Dismiss alert dialog
-                                          },
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  SizedBox(width: 2,),
-                                ],
-                              ),
-                              SizedBox(height: 12,),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+                      ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
+              errorBuilder: (context, error, stackTrace) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 18,),
+                      ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace as StackTrace?, null),
+                      SizedBox(height: 12,),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          DialogButton.cancel(
+                            child: Text(FromZeroLocalizations.of(context).translate("close_caps")),
+                          ),
+                          SizedBox(width: 2,),
+                        ],
+                      ),
+                      SizedBox(height: 12,),
+                    ],
+                  ),
+                );
+              },
+              successBuilder: (context, validation) {
+                validation = skipValidation
+                    ? true
+                    : validation && validationErrors.firstOrNullWhere((e) => e.isBlocking)==null;
+                if (!showConfirmDialogWithBlockingErrors && !validation) {  // TODO 3 implement a parameter for always allowing to save, even on error
+                  Navigator.of(context).pop(null);
+                }
+                if (!askForSaveConfirmation && validationErrors.where((e) => e.isBlocking || e.isVisibleAsSaveConfirmation).isEmpty) {
+                  Navigator.of(context).pop(true);
+                }
+                String shownName = uiName;
+                if (shownName.isNullOrEmpty) shownName = classUiName;
+                return DialogFromZero(
+                  includeDialogWidget: false,
+                  appBar: AppbarFromZero(
+                    title: Text(validation
+                        ? (saveConfirmationDialogTitle?.call(this) ?? FromZeroLocalizations.of(context).translate("confirm_save_title"))
+                        : 'Error de Validación', // TODO 3 internationaliza
+                      style: Theme.of(context).textTheme.headline6,
+                    ),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(validation
+                          ? (saveConfirmationDialogDescription?.call(this) ?? (FromZeroLocalizations.of(context).translate("confirm_save_desc") + "\r\n" + shownName))
+                          : 'Debe resolver los siguientes errores de validación:'), // TODO 3 internationalize
+                      SaveConfirmationValidationMessage(allErrors: validationErrors),
+                    ],
+                  ),
+                  dialogActions: [
+                    DialogButton.cancel(),
+                    TimedOverlay(
+                      key: timerGlobalKey,
+                      duration: validationErrors.isEmpty || !validation
+                          ? Duration.zero
+                          : Duration(milliseconds: (1000 + 500*Set.from(validationErrors.where((e) => e.isVisibleAsSaveConfirmation).map((e) => e.error)).length).clamp(0, 10000)),
+                      builder: (context, elapsed, remaining) {
+                        return DialogButton.accept(
+                          child: Text((saveButtonTitle?.call(this).toUpperCase() ?? FromZeroLocalizations.of(context).translate("save_caps"))),
+                          tooltip: validation ? null : 'No se puede guardar hasta resolver los errores de validación', // TODO 3 internationalize
+                          onPressed: !ignoreBlockingErrors && (remaining!=Duration.zero || !validation) ? null : () {
+                            Navigator.of(context).pop(true); // Dismiss alert dialog
+                          },
+                        );
+                      },
+                    ),
+                  ],
+                );
+              },
             ),
           ),
         );
