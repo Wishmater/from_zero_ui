@@ -171,7 +171,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
     final double titleBarHeight = !showWindowButtons ? 0
         : appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight;
     double? toolbarHeight = widget.toolbarHeight ?? (widget.useFlutterAppbar
-                                                      ? 48 + (showWindowButtons ? titleBarHeight : 0)
+                                                      ? (AppBarTheme.of(context).toolbarHeight??56)-8 + (showWindowButtons ? titleBarHeight : 0)
                                                       : null);
     actions = [];
     final actionsColor = widget.backgroundColor==null
@@ -421,7 +421,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
         titleSpacing: widget.titleSpacing,
         toolbarOpacity: widget.toolbarOpacity,
         bottomOpacity: widget.bottomOpacity,
-        toolbarHeight: (toolbarHeight??56)+widget.topSafePadding,
+        toolbarHeight: (toolbarHeight??AppBarTheme.of(context).toolbarHeight??56)+widget.topSafePadding,
       );
     } else {
       Widget content;
