@@ -455,7 +455,7 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
               );
             },
           );
-          }
+        }
         if (widget.applyAnimatedContainerFromChildSize){
           result = AnimatedContainerFromChildSize(
             duration: widget.duration,
