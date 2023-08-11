@@ -580,11 +580,11 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
           double height = max(size!.height, constraints.minHeight);
           double width = max(size!.width, constraints.minWidth);
           double durationMult = 1;
-          if (previousSize != null){
-            double previousHeight = max(previousSize!.height, constraints.minHeight);
-            double previousWidth = max(previousSize!.width, constraints.minWidth);
-//            durationMult = ((max((previousHeight-height).abs(), (previousWidth-width).abs()))/64).clamp(0.0, 1.0); TODO 3 make this work right when called multiple times in succesion by LayoutBuilder
-          }
+          // if (previousSize != null){
+          //   double previousHeight = max(previousSize!.height, constraints.minHeight);
+          //   double previousWidth = max(previousSize!.width, constraints.minWidth);
+          //   durationMult = ((max((previousHeight-height).abs(), (previousWidth-width).abs()))/64).clamp(0.0, 1.0); TODO 3 make this work right when called multiple times in succesion by LayoutBuilder
+          // }
           int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds*durationMult).toInt();
 
           Widget result = OverflowBox(
