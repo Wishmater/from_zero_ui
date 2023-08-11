@@ -8,6 +8,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/src/app_scaffolding/api_snackbar.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
+import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -479,11 +480,16 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
   }
   void focusError(ValidationError error) {
-    print ('focusError');
     error.field.requestFocus();
     try {
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         error.animationController?.forward(from: 0);
+        // if the field is disabled, it can't be focused, so we need to manually scroll to it
+        if (!error.field.enabled && error.field.fieldGlobalKey.currentContext!=null) {
+          EnsureVisibleWhenFocusedState.ensureVisibleForContext(
+            context: error.field.fieldGlobalKey.currentContext!,
+          );
+        }
       });
     } catch(_) {}
   }
