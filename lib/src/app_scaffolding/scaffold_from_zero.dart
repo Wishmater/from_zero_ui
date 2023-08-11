@@ -442,7 +442,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                 return Future.value(true);
                               }
                             } catch(_) {}
-                            return ((await showModal<bool?>(context: context, builder: (context) => CloseConfirmDialog(),)) ?? false);
+                            return ((await showModalFromZero<bool?>(context: context, builder: (context) => CloseConfirmDialog(),)) ?? false);
                           },
                           child: result,
                         );

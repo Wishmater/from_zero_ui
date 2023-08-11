@@ -45,7 +45,7 @@ class _PageHeroesState extends State<PageHeroes> {
           //   title: "Exportar",
           //   icon: Icon(Icons.file_download),
           //   onTap: () {
-          //     showModal(
+          //     showModalFromZero(
           //       context: context,
           //       builder: (scaffoldContext) => Export(
           //         scaffoldContext: scaffoldContext,

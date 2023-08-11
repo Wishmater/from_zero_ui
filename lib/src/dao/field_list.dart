@@ -1117,7 +1117,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   Future<bool> maybeDelete(BuildContext context, List<T> elements,) async {
     if (elements.isEmpty) return false;
-    bool? delete = skipDeleteConfirmation || hasAvailableObjectsPool || (await showModal(
+    bool? delete = skipDeleteConfirmation || hasAvailableObjectsPool || (await showModalFromZero(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -1189,13 +1189,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     // discard undo stack
     dao.beginUndoTransaction(); dao.commitUndoTransaction();
     ScrollController scrollController = ScrollController();
-    bool? confirm = await showModal(
+    bool? confirm = await showModalFromZero(
       context: context,
       builder: (context) {
         return WillPopScope(
           onWillPop: () async {
             if (!dao.isEdited) return true;
-            bool? pop = await showModal(
+            bool? pop = await showModalFromZero(
               context: context,
               builder: (context) {
                 return AlertDialog(
@@ -1302,7 +1302,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                 ),
                                 textColor: Colors.blue,
                                 onPressed: dao.isEdited ? () async {
-                                  bool? edit = await showModal(
+                                  bool? edit = await showModalFromZero(
                                     context: context,
                                     builder: (context) {
                                       return AlertDialog(

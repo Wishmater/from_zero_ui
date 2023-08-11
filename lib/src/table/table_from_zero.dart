@@ -1953,7 +1953,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             final route = GoRouteFromZero.of(context);
             routeTitle = route.title ?? route.path;
           } catch (_) {}
-          showModal(
+          showModalFromZero(
             context: appbarContext,
             builder: (context) => Export.excelOnly(
               scaffoldContext: appbarContext,

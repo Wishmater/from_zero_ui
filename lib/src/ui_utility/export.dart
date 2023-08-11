@@ -560,7 +560,7 @@ class ExportState extends State<Export> {
     }
     export = () async {
       if (!Platform.isAndroid || (await Permission.storage.request().isGranted)){
-        showModal(
+        showModalFromZero(
           context: context,
           configuration: FadeScaleTransitionConfiguration(
             barrierDismissible: false
@@ -892,7 +892,7 @@ class ExportState extends State<Export> {
                           ),
                           textColor: Colors.blue,
                           onPressed: () async{
-                            showModal(
+                            showModalFromZero(
                               context: context,
                               builder: (context) {
                                 int index = currentPageNotifier.value;

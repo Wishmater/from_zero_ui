@@ -501,7 +501,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             validateNonEditedFields: true,
           );
     final scrollController = ScrollController();
-    bool? confirm = await showModal(
+    bool? confirm = await showModalFromZero(
       context: context,
       builder: (context) {
         final GlobalKey timerGlobalKey = GlobalKey();
@@ -784,7 +784,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool confirm = true;
     bool askForDeleteConfirmation = true;
     if (askForDeleteConfirmation) {
-      confirm = await showModal(
+      confirm = await showModalFromZero(
         context: context,
         builder: (context) {
           return SizedBox(
@@ -921,7 +921,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
 
   void maybeRevertChanges(BuildContext context) async {
-    bool? revert = await showModal(
+    bool? revert = await showModalFromZero(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -1491,7 +1491,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? askForSaveConfirmation,
     bool showUndoRedo = true,
   }) async {
-    ModelType? confirm = await showModal(
+    ModelType? confirm = await showModalFromZero(
       context: context,
       builder: (modalContext) {
         return Consumer(
@@ -1648,7 +1648,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         );
       },
     );
-    return showModal(context: mainContext,
+    return showModalFromZero(context: mainContext,
       builder: (context) {
         return Center(
           child: ResponsiveInsetsDialog(
@@ -2119,7 +2119,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         child: WillPopScope(
           onWillPop: () async {
             if (!userInteracted || !isEdited) return true;
-            bool? pop = (await showModal(
+            bool? pop = (await showModalFromZero(
               context: context,
               builder: (modalContext) {
                 return AlertDialog(

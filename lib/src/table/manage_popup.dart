@@ -23,7 +23,7 @@ abstract class TableFromZeroManagePopup {
     };
     bool modified = false;
     bool modifiedFilters = false;
-    final confirm = await showModal(
+    final confirm = await showModalFromZero(
       context: context,
       builder: (context) {
         ScrollController scrollController = ScrollController();

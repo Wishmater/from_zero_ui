@@ -94,7 +94,7 @@ class UpdateFromZero{
 
   Future<bool> promptUpdate(BuildContext context) async {
     if (updateAvailable==true){
-      return (await showModal<bool>(
+      return (await showModalFromZero<bool>(
         context: context,
         builder: (context) => _UpdateWidget(this),
         configuration: FadeScaleTransitionConfiguration(

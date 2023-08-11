@@ -500,7 +500,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     return result;
   }
   static void showErrorDetailsDialog(BuildContext context, Object? error, StackTrace? stackTrace) {
-    showModal(
+    showModalFromZero(
       context: context,
       builder: (context) {
         return AlertDialog(
