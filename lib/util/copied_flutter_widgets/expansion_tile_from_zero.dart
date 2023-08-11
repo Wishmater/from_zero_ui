@@ -8,7 +8,7 @@ import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
 import 'package:from_zero_ui/src/future_handling/future_handling.dart';
 import 'package:from_zero_ui/src/ui_components/drawer_menu_from_zero.dart';
 import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
-import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
+import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 
 
 

@@ -9,7 +9,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/util/my_arrow_page_indicator.dart' as my_arrow_page_indicator;
+import 'package:from_zero_ui/util/copied_flutter_widgets/my_arrow_page_indicator.dart' as my_arrow_page_indicator;
 import 'package:intl/intl.dart';
 import 'package:page_view_indicators/page_view_indicators.dart';
 import 'package:dartx/dartx.dart';

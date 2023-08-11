@@ -16,7 +16,7 @@ import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
 import 'package:from_zero_ui/src/ui_utility/custom_painters.dart';
 import 'package:from_zero_ui/src/app_scaffolding/scrollbar_from_zero.dart';
 
-import 'package:from_zero_ui/util/no_fading_shared_axis_transition.dart' as no_fading_shared_axis_transition;
+import 'package:from_zero_ui/util/no_fading_transitions/no_fading_shared_axis_transition.dart' as no_fading_shared_axis_transition;
 import 'package:dartx/dartx.dart';
 import 'package:go_router/go_router.dart';
 

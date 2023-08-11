@@ -5,7 +5,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:extended_image/extended_image.dart';
 import 'dart:math';
 
-import 'package:from_zero_ui/src/ui_utility/web_compile_file.dart';
+import 'package:from_zero_ui/util/web_compile_file/web_compile_file.dart';
 import 'package:url_launcher/link.dart';
 import 'package:url_launcher/url_launcher.dart';
 

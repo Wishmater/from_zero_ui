@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:intl/intl.dart';
-import 'package:from_zero_ui/util/time_picker_dialog_from_zero.dart' as timePickerDialogFromZero;
+import 'package:from_zero_ui/util/copied_flutter_widgets/time_picker_dialog_from_zero.dart' as timePickerDialogFromZero;
 
 typedef Widget DatePickerButtonChildBuilder<T>(BuildContext context, String? title, String? hint, DateTime? value, DateFormat formatter, bool enabled, bool clearable,);
 /// returns true if navigator should pop after (default true)

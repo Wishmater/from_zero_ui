@@ -12,7 +12,7 @@ import 'package:from_zero_ui/src/app_scaffolding/app_content_wrapper.dart';
 import 'package:from_zero_ui/src/animations/exposed_transitions.dart';
 import 'package:from_zero_ui/src/app_scaffolding/scaffold_from_zero.dart';
 import 'package:flutter/foundation.dart';
-import 'package:from_zero_ui/util/platform_web_impl.dart';
+import 'package:from_zero_ui/util/web_platform_impl/platform_web_impl.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart' as bitsdojo;
 import 'package:bitsdojo_window_platform_interface/window.dart' as bitsdojo_window;
 import 'package:dartx/dartx.dart';

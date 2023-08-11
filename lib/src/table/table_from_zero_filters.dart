@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/util/my_tooltip.dart';
+import 'package:from_zero_ui/util/copied_flutter_widgets/my_tooltip.dart';
 import 'package:intl/intl.dart';
 
 

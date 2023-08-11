@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/src/table/empty_widget.dart';
 import 'package:from_zero_ui/src/table/table_header.dart';
 import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
-import 'package:from_zero_ui/util/my_ensure_visible_when_focused.dart';
+import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';

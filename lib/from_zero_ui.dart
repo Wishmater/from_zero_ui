@@ -45,15 +45,15 @@ export 'package:from_zero_ui/src/animations/heroes_from_zero.dart';
 export 'package:from_zero_ui/src/ui_utility/export.dart';
 export 'package:from_zero_ui/src/ui_utility/gesture_relayer.dart';
 export 'package:from_zero_ui/src/ui_utility/notification_relayer.dart';
-export 'package:from_zero_ui/util/my_tooltip.dart';
+export 'package:from_zero_ui/util/copied_flutter_widgets/my_tooltip.dart';
 
 export 'package:from_zero_ui/src/animations/exposed_transitions.dart';
-export 'package:from_zero_ui/util/no_fading_material_transitions.dart';
+export 'package:from_zero_ui/util/no_fading_transitions/no_fading_material_transitions.dart';
 //export 'package:from_zero_ui/util/no_fading_fade_through_transition.dart'; //conflicts with original namespace
 //export 'package:from_zero_ui/util/no_fading_shared_axis_transition.dart'; //conflicts with original namespace
 export 'package:from_zero_ui/src/ui_utility/custom_painters.dart';
 // export 'package:from_zero_ui/src/fluro_router_from_zero.dart'; //deprecated
 // export 'package:from_zero_ui/util/my_popup_menu.dart'; //conflicts with original namespace
 // export 'package:from_zero_ui/util/my_arrow_page_indicator.dart'; //conflicts with original namespace
-export 'package:from_zero_ui/util/expansion_tile_from_zero.dart';
+export 'package:from_zero_ui/util/copied_flutter_widgets/expansion_tile_from_zero.dart';
 export 'package:from_zero_ui/src/ui_utility/util.dart';
