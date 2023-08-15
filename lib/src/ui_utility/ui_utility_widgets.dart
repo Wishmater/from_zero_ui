@@ -495,17 +495,23 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
         newSize2 = 0;
       }
       if (newSize1!=size1 || newSize2!=size2) {
-        setState(() {});
+        setState(() {
+          size1 = newSize1;
+          size2 = newSize2;
+        });
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final child = NotificationListener<ScrollMetricsNotification>(
+    final child = NotificationListener(
       child: widget.child,
       onNotification: (notification) {
-        _updateScroll();
+        if (notification is ScrollMetricsNotification
+            || notification is ScrollNotification) {
+          _updateScroll();
+        }
         return false;
       },
     );
@@ -599,13 +605,10 @@ class _OverflowScrollState extends State<OverflowScroll> {
   @override
   Widget build(BuildContext context) {
     Widget result;
-    result = NotificationListener(
-      onNotification: (notification) => widget.consumeScrollNotifications,
-      child: SingleChildScrollView(
-        controller: scrollController,
-        scrollDirection: widget.scrollDirection,
-        child: widget.child,
-      ),
+    result = SingleChildScrollView(
+      controller: scrollController,
+      scrollDirection: widget.scrollDirection,
+      child: widget.child,
     );
     if (widget.opacityGradientSize>0) {
       result = ScrollOpacityGradient(
@@ -615,6 +618,10 @@ class _OverflowScrollState extends State<OverflowScroll> {
         child: result,
       );
     }
+    result = NotificationListener(
+      onNotification: (notification) => widget.consumeScrollNotifications,
+      child: result,
+    );
     return result;
   }
 
