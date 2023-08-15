@@ -93,7 +93,6 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     this.viewWidgetBuilder = viewWidgetBuilder;
     this.viewDialogExtraActions = viewDialogExtraActions;
     this.formDialogExtraActions = formDialogExtraActions;
-    this.useIntrinsicHeightForViewDialog = useIntrinsicHeightForViewDialog;
     this.viewDialogWidth = viewDialogWidth;
     this.formDialogWidth = formDialogWidth;
     this.viewDialogLinksToInnerDAOs = viewDialogLinksToInnerDAOs;
@@ -219,7 +218,6 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
         viewWidgetBuilder: viewWidgetBuilder??this.viewWidgetBuilder,
         viewDialogExtraActions: viewDialogExtraActions??this.viewDialogExtraActions,
         formDialogExtraActions: formDialogExtraActions??this.formDialogExtraActions,
-        useIntrinsicHeightForViewDialog: useIntrinsicHeightForViewDialog??this.useIntrinsicHeightForViewDialog,
         viewDialogWidth: viewDialogWidth??this.viewDialogWidth,
         formDialogWidth: formDialogWidth??this.formDialogWidth,
         viewDialogLinksToInnerDAOs: viewDialogLinksToInnerDAOs??this.viewDialogLinksToInnerDAOs,
@@ -609,7 +607,6 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
       fieldGroups: fieldGroups,
       titleFlex: titleFlex,
       titleMaxWidth: titleMaxWidth,
-      useIntrinsicHeight: useIntrinsicHeight,
       useIntrinsicWidth: useIntrinsicWidth,
       valueFlex: valueFlex,
     );
@@ -639,7 +636,6 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     return super.pushViewDialog(mainContext,
       showDefaultSnackBars: showDefaultSnackBars,
       useIntrinsicWidth: useIntrinsicWidth,
-      useIntrinsicHeight: useIntrinsicHeight,
       showEditButton: showEditButton,
       showDeleteButton: showDeleteButton,
     );

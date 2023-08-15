@@ -1,10 +1,14 @@
 import 'dart:io';
+import 'dart:math';
 import 'dart:ui' as ui;
 import 'package:animations/animations.dart';
+import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:dartx/dartx.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:multi_value_listenable_builder/multi_value_listenable_builder.dart';
+import 'package:window_manager/window_manager.dart';
 
 
 
@@ -45,13 +49,39 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
       Animation<double> secondaryAnimation,
       Widget child,
       ) {
+    bool didSetIsMouseOverWindowBar = false;
     return FadeUpwardsFadeTransition(
       routeAnimation: animation,
       child: Column(
         children: [
-          if (showWindowBarOnDesktop && !kIsWeb
-              && Platform.isWindows && windowsDesktopBitsdojoWorking)
-            WindowBar(backgroundColor: Theme.of(context).cardColor),
+          if (showWindowBarOnDesktop && !kIsWeb && Platform.isWindows
+              && windowsDesktopBitsdojoWorking)
+            Builder(
+              builder: (context) {
+                MediaQuery.of(context); // listen to windows size changes
+                if (appWindow.isMaximized) {
+                  if (isMouseOverWindowBar.value && didSetIsMouseOverWindowBar) {
+                    // weird hack, but otherwise it's stuck on true
+                    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                      isMouseOverWindowBar.value = false;
+                    });
+                  }
+                  return SizedBox.shrink();
+                } else {
+                  return MouseRegion(
+                    opaque: false,
+                    onEnter: (event) {
+                      didSetIsMouseOverWindowBar = true;
+                      isMouseOverWindowBar.value = true;
+                    },
+                    onExit: (event) {
+                      isMouseOverWindowBar.value = false;
+                    },
+                    child: WindowBar(backgroundColor: Theme.of(context).cardColor),
+                  );
+                }
+              },
+            ),
           Expanded(
             child: FadeUpwardsSlideTransition(
               routeAnimation: animation,
@@ -68,9 +98,10 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
 
 class DialogFromZero extends StatefulWidget {
 
-  final Widget? appBar;
+  final Widget? title;
   final Widget content;
   final List<Widget> dialogActions;
+  final List<Widget>? appBarActions;
   /// if this is passed, we assume scrolling is handled outside
   /// if null, a SingleChildScrollView is built around the content
   final ScrollController? scrollController;
@@ -78,18 +109,29 @@ class DialogFromZero extends StatefulWidget {
   /// set to false is useful to include AnimatedSwitcher below Dialog
   final bool includeDialogWidget;
   final EdgeInsets contentPadding;
+  final double? maxWidth;
+  /// only use if need to replace the whole AppBat, prefer using title and appBarActions
+  final Widget? appBar;
   // TODO 1 add necessary Dialog fields
 
   const DialogFromZero({
-    this.appBar,
+    this.title,
     required this.content,
     this.dialogActions = const [],
+    this.appBarActions,
     this.contentPadding = const EdgeInsets.symmetric(horizontal: 16),
     this.scrollController,
     this.useReponsiveInsets = true,
     this.includeDialogWidget = true,
+    this.maxWidth,
+    this.appBar,
     super.key,
-  });
+  }) :  assert(appBar==null || (title==null && appBarActions==null),
+          'Setting appBar overrides title and appBarActions, no need to specify both',
+        ),
+        assert(appBarActions==null || title!=null,
+          'If setting appBarActions, a title must also be specified',
+        );
 
   @override
   State<DialogFromZero> createState() => _DialogFromZeroState();
@@ -99,7 +141,31 @@ class DialogFromZero extends StatefulWidget {
 class _DialogFromZeroState extends State<DialogFromZero> {
 
   late final appBarSizeNotifier = ValueNotifier<Size>(Size(0, widget.appBar==null ? 0 : 56));
+  late final appBarTitleSizeNotifier = ValueNotifier<Size>(Size(0, 0));
   late final actionsSizeNotifier = ValueNotifier<Size>(Size(0, widget.dialogActions.isEmpty ? 0 : 61));
+  late final individualActionsSizeNotifiers = <ValueNotifier<Size>>[];
+  late final appBarGlobalKey = GlobalKey<AppbarFromZeroState>();
+
+  @override
+  void initState() {
+    super.initState();
+    updateIndividualActionsSizeNotifier();
+  }
+
+  @override
+  void didUpdateWidget(covariant DialogFromZero oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    updateIndividualActionsSizeNotifier();
+  }
+
+  void updateIndividualActionsSizeNotifier() {
+    if (widget.dialogActions.length < individualActionsSizeNotifiers.length) {
+      individualActionsSizeNotifiers.removeRange(widget.dialogActions.length, individualActionsSizeNotifiers.length);
+    } else if (widget.dialogActions.length > individualActionsSizeNotifiers.length) {
+      final diff = widget.dialogActions.length - individualActionsSizeNotifiers.length;
+      individualActionsSizeNotifiers.addAll(List.generate(diff, (i) => ValueNotifier(Size(0, 0))));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -114,18 +180,52 @@ class _DialogFromZeroState extends State<DialogFromZero> {
         child: content,
       );
     }
+    Widget? appBar;
+    if (widget.appBar!=null) {
+      appBar = widget.appBar;
+    } else if (widget.title!=null) {
+      appBar = AppbarFromZero(
+        key: appBarGlobalKey,
+        title: OverflowScroll(
+          child: FillerRelayer(
+            notifier: appBarTitleSizeNotifier,
+            child: widget.title!,
+          ),
+        ),
+        actions: widget.appBarActions,
+      );
+    }
+    final dialogActions = widget.dialogActions.mapIndexed((i, e) {
+      return FillerRelayer(
+        notifier: individualActionsSizeNotifiers[i],
+        child: e,
+      );
+    }).toList();
     Widget result = Stack(
       children: [
         MultiValueListenableBuilder(
           valueListenables: [
             appBarSizeNotifier,
             actionsSizeNotifier,
+            appBarTitleSizeNotifier,
+            ...individualActionsSizeNotifiers,
           ],
           builder: (context, values, child) {
-            return Padding(
+            final appBarSize = values[0] as Size;
+            final actionsSize = values[1] as Size;
+            final appBarTitleSize = values[2] as Size;
+            final individualActionsSizeNotifiers = values.sublist(3).cast<Size>();
+            final minSizeFromAppbar = appBarTitleSize.width + 48
+                + ((appBarGlobalKey.currentState?.actions.length??0)*40);
+            final minSizeFromDialogActions = individualActionsSizeNotifiers
+                .sumBy((e) => e.width) + 48;
+            return Container(
+              constraints: BoxConstraints(
+                minWidth: max(minSizeFromAppbar, minSizeFromDialogActions),
+              ),
               padding: EdgeInsets.only(
-                top: (values[0] as Size).height,
-                bottom: (values[1] as Size).height,
+                top: appBarSize.height,
+                bottom: actionsSize.height,
               ),
               child: child!,
             );
@@ -135,7 +235,7 @@ class _DialogFromZeroState extends State<DialogFromZero> {
             child: content,
           ),
         ),
-        if (widget.dialogActions.isNotEmpty)
+        if (dialogActions.isNotEmpty)
           Positioned(
             bottom: 0, left: 0, right: 0,
             child: FillerRelayer(
@@ -145,12 +245,12 @@ class _DialogFromZeroState extends State<DialogFromZero> {
                 child: Wrap(
                   runAlignment: WrapAlignment.end,
                   alignment: WrapAlignment.end,
-                  children: widget.dialogActions,
+                  children: dialogActions,
                 ),
               ),
             ),
           ),
-        if (widget.appBar!=null)
+        if (appBar!=null)
           Positioned(
             top: 0, left: 0, right: 0,
             child: Theme(
@@ -163,7 +263,7 @@ class _DialogFromZeroState extends State<DialogFromZero> {
               ),
               child: FillerRelayer(
                 notifier: appBarSizeNotifier,
-                child: widget.appBar!,
+                child: appBar,
               ),
             ),
           ),
@@ -179,6 +279,12 @@ class _DialogFromZeroState extends State<DialogFromZero> {
           child: result,
         );
       }
+    }
+    if (widget.maxWidth!=null) {
+      result = SizedBox(
+        width: widget.maxWidth!,
+        child: result,
+      );
     }
     result = MediaQuery.removeViewPadding(
       context: context,
@@ -323,16 +429,43 @@ class DialogButton extends StatelessWidget {
 
 class RelayedFiller extends StatelessWidget {
   final ValueNotifier<Size?> notifier;
+  final Widget? child;
+  final bool applyWidth;
+  final bool applyHeight;
+  final Duration? duration; /// if null, no animation is apllied
+  final Curve curve;
+  final bool animateFromZero;
   const RelayedFiller({
     required this.notifier,
+    this.applyWidth = true,
+    this.applyHeight = true,
+    this.duration,
+    this.curve = Curves.easeOutCubic,
+    this.animateFromZero = false,
+    this.child,
     super.key,
   });
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Size?>(
       valueListenable: notifier,
+      child: child,
       builder: (context, value, child) {
-        return SizedBox.fromSize(size: value);
+        if (duration==null || value==Size.zero) {
+          return SizedBox(
+            width: applyWidth ? value?.width : null,
+            height: applyHeight ? value?.height : null,
+            child: child,
+          );
+        } else {
+          return AnimatedContainer(
+            duration: duration!,
+            curve: curve,
+            width: applyWidth ? value?.width : null,
+            height: applyHeight ? value?.height : null,
+            child: child,
+          );
+        }
       },
     );
   }
@@ -348,7 +481,11 @@ class FillerRelayer extends StatelessWidget {
   });
   void _addCallback(BuildContext context) {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      notifier.value = context.size;
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        try {
+          notifier.value = context.size;
+        } catch (_) {}
+      });
     });
   }
   @override
@@ -369,3 +506,27 @@ class FillerRelayer extends StatelessWidget {
 }
 
 
+
+class DialogTitle extends StatelessWidget {
+
+  final Widget child;
+  final EdgeInsets padding;
+
+  const DialogTitle({
+    required this.child,
+    this.padding = const EdgeInsets.all(8.0),
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: padding,
+      child: DefaultTextStyle(
+        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        child: child,
+      ),
+    );
+  }
+
+}

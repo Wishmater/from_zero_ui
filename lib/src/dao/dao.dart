@@ -65,7 +65,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   DAOWidgetBuilder<ModelType>? viewWidgetBuilder;
   List<Widget> Function(BuildContext context, DAO dao)? viewDialogExtraActions;
   List<Widget> Function(BuildContext context, DAO dao)? formDialogExtraActions;
-  late bool useIntrinsicHeightForViewDialog;
   late double viewDialogWidth;
   late double formDialogWidth;
   late bool viewDialogLinksToInnerDAOs;
@@ -100,7 +99,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.viewWidgetBuilder,
     this.viewDialogExtraActions,
     this.formDialogExtraActions,
-    this.useIntrinsicHeightForViewDialog = true,
     this.viewDialogWidth = 512,
     this.formDialogWidth = 512,
     this.viewDialogLinksToInnerDAOs = true,
@@ -156,7 +154,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     DAOWidgetBuilder<ModelType>? viewWidgetBuilder,
     List<Widget> Function(BuildContext context, DAO dao)? viewDialogExtraActions,
     List<Widget> Function(BuildContext context, DAO dao)? formDialogExtraActions,
-    bool? useIntrinsicHeightForViewDialog,
     bool? wantsLinkToSelfFromOtherDAOs,
     double? viewDialogWidth,
     double? formDialogWidth,
@@ -191,7 +188,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       viewWidgetBuilder: viewWidgetBuilder??this.viewWidgetBuilder,
       viewDialogExtraActions: viewDialogExtraActions??this.viewDialogExtraActions,
       formDialogExtraActions: formDialogExtraActions??this.formDialogExtraActions,
-      useIntrinsicHeightForViewDialog: useIntrinsicHeightForViewDialog??this.useIntrinsicHeightForViewDialog,
       viewDialogWidth: viewDialogWidth??this.viewDialogWidth,
       formDialogWidth: formDialogWidth??this.formDialogWidth,
       viewDialogLinksToInnerDAOs: viewDialogLinksToInnerDAOs??this.viewDialogLinksToInnerDAOs,
@@ -513,7 +509,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         final GlobalKey timerGlobalKey = GlobalKey();
         return SizedBox(
           width: formDialogWidth-32,
-          child: Dialog(
+          child: ResponsiveInsetsDialog(
             clipBehavior: Clip.hardEdge,
             child: FutureBuilderFromZero<bool>(
               future: validationFuture,
@@ -527,9 +523,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: 18,),
-                        Text('Validando Datos...',
+                        Text('Validando Datos...', // TODO 3 internationalize
                           style: Theme.of(context).textTheme.headline6,
-                        ), // TODO 3 internationaliza
+                        ),
                         Expanded(
                           child: Container(
                             height: 200,
@@ -737,39 +733,22 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       confirm = await showModalFromZero(
         context: context,
         builder: (context) {
-          return SizedBox(
-            width: formDialogWidth-32,
-            child: AlertDialog(
+          return DialogFromZero(
+            maxWidth: formDialogWidth-32,
+            appBar: AppbarFromZero(
               title: Text(FromZeroLocalizations.of(context).translate('confirm_delete_title')),
-              content: Text('${FromZeroLocalizations.of(context).translate('confirm_delete_desc')} $uiName?'),
-              actions: [
-                FlatButton(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  textColor: Theme.of(context).textTheme.caption!.color,
-                  onPressed: () {
-                    Navigator.of(context).pop(false); // Dismiss alert dialog
-                  },
-                ),
-                FlatButton(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text(FromZeroLocalizations.of(context).translate('delete_caps'),
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                  textColor: Colors.red,
-                  onPressed: () {
-                    Navigator.of(context).pop(true); // Dismiss alert dialog
-                  },
-                ),
-                SizedBox(width: 2,),
-              ],
             ),
+            content: Text('${FromZeroLocalizations.of(context).translate('confirm_delete_desc')} $uiName?'),
+            dialogActions: [
+              DialogButton.cancel(),
+              DialogButton(
+                child: Text(FromZeroLocalizations.of(context).translate('delete_caps')),
+                color: Colors.red,
+                onPressed: () {
+                  Navigator.of(context).pop(true); // Dismiss alert dialog
+                },
+              ),
+            ],
           );
         },
       ) ?? false;
@@ -874,35 +853,20 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? revert = await showModalFromZero(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: Text(FromZeroLocalizations.of(context).translate("confirm_reverse_title")),
+        return DialogFromZero(
+          appBar: AppbarFromZero(
+            title: Text(FromZeroLocalizations.of(context).translate("confirm_reverse_title")),
+          ),
           content: Text(FromZeroLocalizations.of(context).translate("confirm_reverse_desc")),
-          actions: [
-            FlatButton(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
-              textColor: Theme.of(context).textTheme.caption!.color,
-              onPressed: () {
-                Navigator.of(context).pop(false); // Dismiss alert dialog
-              },
-            ),
-            FlatButton(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(FromZeroLocalizations.of(context).translate("reverse_caps"),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
-              textColor: Colors.red,
+          dialogActions: [
+            DialogButton.cancel(),
+            DialogButton(
+              child: Text(FromZeroLocalizations.of(context).translate("reverse_caps")),
+              color: Colors.red,
               onPressed: () {
                 Navigator.of(context).pop(true); // Dismiss alert dialog
               },
             ),
-            SizedBox(width: 2,),
           ],
         );
       },
@@ -931,6 +895,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     _undoRecord.clear();
     _redoRecord.clear();
     _contextForValidation = _contextForValidation ?? context;
+    Map<String, ValueNotifier<Size?>> secondarySizeNotifiers = {}; // this needs to persist between rebuilds
     final initialValidation = validate(context,
       validateNonEditedFields: false,
     );
@@ -944,12 +909,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             final doubleColumnLayoutType = this.doubleColumnLayoutType?.call(this)??DoubleColumnLayoutType.tabbed;
             bool widescreen = doubleColumnLayoutType!=DoubleColumnLayoutType.none
                 && constraints.maxWidth>=widescreenDialogWidth;
-            bool expandToFillContainer = false;
-            if (props.values.where((e) => !e.hiddenInForm && (e is ListField)).isNotEmpty) {
-              expandToFillContainer = true;
-            } else if (widescreen && fieldGroups.where((e) => !e.primary && e.props.values.where((e) => !e.hiddenInForm).isNotEmpty).isNotEmpty) {
-              expandToFillContainer = true;
-            }
             ScrollController primaryScrollController = ScrollController();
             ScrollController tabBarScrollController = ScrollController();
             Map<String, ScrollController> secondaryScrollControllers = {};
@@ -969,7 +928,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   group: e,
                   mainScrollController: scrollController,
                   showCancelActionToPop: true,
-                  expandToFillContainer: expandToFillContainer,
                   focusNode: firstIteration ? focusNode : null,
                   showDefaultSnackBars: showDefaultSnackBars,
                   showRevertChanges: showRevertChanges,
@@ -981,15 +939,15 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 if (asPrimary) {
                   primaryFormWidgets.add(groupWidget);
                 } else {
+                  secondaryScrollControllers[name] = scrollController;
+                  secondarySizeNotifiers[name] ??= ValueNotifier(Size(0, 0));
                   if (doubleColumnLayoutType==DoubleColumnLayoutType.tabbed) {
-                    secondaryScrollControllers[name] = scrollController;
                     secondaryFormWidgets[name] = FocusTraversalOrder(
                       order: NumericFocusOrder(i.toDouble()),
                       child: groupWidget,
                     );
                     i++;
                   } else {
-                    secondaryScrollControllers[name] = scrollController;
                     secondaryFormWidgets[name] = FocusTraversalOrder(
                       order: NumericFocusOrder(i.toDouble()),
                       child: Column(
@@ -1008,65 +966,63 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               showDefaultSnackBars: showDefaultSnackBars,
               showRevertChanges: showRevertChanges,
               askForSaveConfirmation: askForSaveConfirmation!,
+              topSpace: 0,
+              bottomSpace: 12,
             );
             final pageController = PreloadPageController();
             String shownName = uiName;
             if (shownName.isNullOrEmpty) shownName = classUiName;
-            Widget result = Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 6, left: 16, right: 0, bottom: 0,),
-                  child: AppbarFromZero(
-                    constraints: constraints,
-                    backgroundColor: Theme.of(context).canvasColor,
-                    elevation: 0,
-                    toolbarHeight: 56 + 12,
-                    paddingRight: 18,
-                    title: OverflowScroll(
-                      child: Text(editDialogTitle?.call(this) ?? '${id==null
-                          ? FromZeroLocalizations.of(context).translate("add")
-                          : FromZeroLocalizations.of(context).translate("edit")} $shownName',
-                        style: Theme.of(context).textTheme.headline6,
-                      ),
+            Widget result = DialogFromZero( // take advantage of DialogFromZero layout, to always have intrinsic height (without using the IntrinsicHeight widget)
+              includeDialogWidget: false,
+              contentPadding: EdgeInsets.zero,
+              scrollController: ScrollController(), // disable default DialogFromZero scrolling
+              appBar: Padding(
+                padding: const EdgeInsets.only(left: 16),
+                child: AppbarFromZero(
+                  constraints: constraints,
+                  backgroundColor: Theme.of(context).canvasColor,
+                  elevation: 0,
+                  toolbarHeight: 56 + 12,
+                  paddingRight: 18,
+                  title: OverflowScroll(
+                    child: Text(editDialogTitle?.call(this) ?? '${id==null
+                        ? FromZeroLocalizations.of(context).translate("add")
+                        : FromZeroLocalizations.of(context).translate("edit")} $shownName',
+                      style: Theme.of(context).textTheme.headline6,
                     ),
-                    actions: [
-                      ...(formDialogExtraActions?.call(contextForValidation??context, this) ?? []),
-                      ...buildFormDialogDefaultActions(context, showUndoRedo: showUndoRedo),
-                    ],
                   ),
+                  actions: [
+                    ...(formDialogExtraActions?.call(contextForValidation??context, this) ?? []),
+                    ...buildFormDialogDefaultActions(context, showUndoRedo: showUndoRedo),
+                  ],
                 ),
-                Expanded(
-                  child: FocusScope(
-                    child: FocusTraversalGroup(
-                      policy: OrderedTraversalPolicy(),
-                      child: DefaultTabController(
-                        length: secondaryFormWidgets.keys.length,
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
+              ),
+              content: FocusScope(
+                child: FocusTraversalGroup(
+                  policy: OrderedTraversalPolicy(),
+                  child: DefaultTabController(
+                    length: secondaryFormWidgets.keys.length,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Container(
+                            width: secondaryFormWidgets.keys.isNotEmpty ? formDialogWidth : null,
+                            padding: EdgeInsets.only(left: secondaryFormWidgets.keys.isNotEmpty ? 12 : 0),
+                            child: ScrollbarFromZero(
+                              controller: primaryScrollController,
                               child: Container(
-                                alignment: secondaryFormWidgets.keys.isNotEmpty ? Alignment.topLeft : null,
-                                width: secondaryFormWidgets.keys.isNotEmpty ? formDialogWidth : null,
-                                padding: EdgeInsets.only(left: secondaryFormWidgets.keys.isNotEmpty ? 12 : 0),
-                                child: ScrollbarFromZero(
+                                padding: const EdgeInsets.symmetric(horizontal: 12,),
+                                child: SingleChildScrollView(
                                   controller: primaryScrollController,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12,),
-                                    child: SingleChildScrollView(
-                                      controller: primaryScrollController,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(bottom: 16),
-                                        child: FocusTraversalOrder(
-                                          order: NumericFocusOrder(1),
-                                          child: FocusTraversalGroup(
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: primaryFormWidgets,
-                                            ),
-                                          ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: FocusTraversalOrder(
+                                      order: NumericFocusOrder(1),
+                                      child: FocusTraversalGroup(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: primaryFormWidgets,
                                         ),
                                       ),
                                     ),
@@ -1074,116 +1030,134 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                 ),
                               ),
                             ),
-                            if (secondaryFormWidgets.keys.isNotEmpty)
-                              Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.only(right: 24),
-                                  alignment: Alignment.centerRight,
-                                  child: SizedBox(
-                                    width: formDialogWidth+12+16,
-                                    child: Column(
-                                      children: [
-                                        if (secondaryFormWidgets.length>1 || secondaryFormWidgets.keys.first!='Grupo 1') // TODO 3 internationalize
-                                          ExcludeFocus(
-                                            child: ScrollbarFromZero(
-                                              controller: tabBarScrollController,
-                                              opacityGradientDirection: OpacityGradient.horizontal,
-                                              child: Padding(
-                                                padding: EdgeInsets.only(right: 12, bottom: PlatformExtended.isDesktop ? 8 : 0,),
-                                                child: SingleChildScrollView(
-                                                  scrollDirection: Axis.horizontal,
-                                                  controller: tabBarScrollController,
-                                                  child: IntrinsicWidth(
-                                                    child: Card(
-                                                      clipBehavior: Clip.hardEdge,
-                                                      child: TabBar( // TODO 3 replace this with an actual widget: PageIndicatorFromzero. Allow to have an indicator + building children dinamically according to selected
-                                                        isScrollable: true,
-                                                        indicatorWeight: 3,
-                                                        tabs: secondaryFormWidgets.keys.map((e) {
-                                                          return Container(
-                                                            height: 32,
-                                                            alignment: Alignment.center,
-                                                            child: Text(e, style: Theme.of(context).textTheme.subtitle1,),
-                                                          );
-                                                        }).toList(),
-                                                        onTap: (value) {
-                                                          pageController.animateToPage(value,
-                                                            duration: kTabScrollDuration,
-                                                            curve: Curves.ease,
-                                                          );
-                                                        },
-                                                      ),
+                          ),
+                        ),
+                        if (secondaryFormWidgets.keys.isNotEmpty)
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 24),
+                              child: SizedBox(
+                                width: formDialogWidth+12+16,
+                                child: DialogFromZero( // take advantage of DialogFromZero layout, to always have intrinsic height (without using the IntrinsicHeight widget)
+                                  includeDialogWidget: false,
+                                  contentPadding: EdgeInsets.zero,
+                                  scrollController: ScrollController(), // disable default DialogFromZero scrolling
+                                  appBar: Column(
+                                    children: [
+                                      if (secondaryFormWidgets.length>1 || secondaryFormWidgets.keys.first!='Grupo 1') // TODO 3 internationalize
+                                        ExcludeFocus(
+                                          child: ScrollbarFromZero(
+                                            controller: tabBarScrollController,
+                                            opacityGradientDirection: OpacityGradient.horizontal,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(right: 12, bottom: PlatformExtended.isDesktop ? 8 : 0,),
+                                              child: SingleChildScrollView(
+                                                scrollDirection: Axis.horizontal,
+                                                controller: tabBarScrollController,
+                                                child: IntrinsicWidth(
+                                                  child: Card(
+                                                    clipBehavior: Clip.hardEdge,
+                                                    child: Builder(
+                                                      builder: (context) {
+                                                        return TabBar( // TODO 3 replace this with an actual widget: PageIndicatorFromzero. Allow to have an indicator + building children dinamically according to selected
+                                                          isScrollable: true,
+                                                          indicatorWeight: 3,
+                                                          tabs: secondaryFormWidgets.keys.map((e) {
+                                                            return Container(
+                                                              height: 32,
+                                                              alignment: Alignment.center,
+                                                              child: Text(e, style: Theme.of(context).textTheme.subtitle1,),
+                                                            );
+                                                          }).toList(),
+                                                          onTap: (value) {
+                                                            DefaultTabController.of(context)!.index = value;
+                                                            pageController.animateToPage(value,
+                                                              duration: kTabScrollDuration,
+                                                              curve: Curves.ease,
+                                                            );
+                                                          },
+                                                        );
+                                                      }
                                                     ),
                                                   ),
                                                 ),
                                               ),
                                             ),
                                           ),
-                                        SizedBox(
-                                          height: 0,
-                                          child: TabBarView(
-                                            children: List.filled(secondaryFormWidgets.keys.length, Container()),
-                                          ),
                                         ),
-                                        Expanded(
-                                          child: Builder(
-                                              builder: (context) {
-                                                return PreloadPageView(
-                                                  controller: pageController,
-                                                  preloadPagesCount: 999,
-                                                  onPageChanged: (value) {
-                                                    DefaultTabController.of(context)?.animateTo(value);
-                                                  },
-                                                  children: secondaryFormWidgets.keys.map((e) {
-                                                    return ScrollbarFromZero(
-                                                      controller: secondaryScrollControllers[e],
+                                      SizedBox(
+                                        height: 0,
+                                        child: TabBarView(
+                                          children: List.filled(secondaryFormWidgets.keys.length, Container()),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  content: Builder(
+                                    builder: (context) {
+                                      final tabController = DefaultTabController.of(context)!;
+                                      return AnimatedBuilder(
+                                        animation: tabController,
+                                        builder: (context, child) {
+                                          final currentIndex = tabController.index;
+                                          final currentKey = secondaryFormWidgets.keys.toList()[currentIndex];
+                                          return RelayedFiller(
+                                            duration: kTabScrollDuration,
+                                            notifier: secondarySizeNotifiers[currentKey]!,
+                                            applyWidth: false,
+                                            child: child,
+                                          );
+                                        },
+                                        child: PreloadPageView(
+                                          controller: pageController,
+                                          preloadPagesCount: 999,
+                                          onPageChanged: (value) {
+                                            if (!tabController.indexIsChanging) { // breaks if the pageview is scrolled sideways very fast on mobile, but it's the best alternative to prevent flickering
+                                              tabController.animateTo(value);
+                                            }
+                                          },
+                                          children: secondaryFormWidgets.keys.map((e) {
+                                            return ScrollbarFromZero(
+                                              controller: secondaryScrollControllers[e],
+                                              child: Padding(
+                                                padding: const EdgeInsets.only(right: 12),
+                                                child: FocusTraversalGroup(
+                                                  child: SingleChildScrollView(
+                                                    controller: secondaryScrollControllers[e],
+                                                    child: FillerRelayer(
+                                                      notifier: secondarySizeNotifiers[e]!,
                                                       child: Padding(
-                                                        padding: const EdgeInsets.only(right: 12),
-                                                        child: FocusTraversalGroup(
-                                                          child: SingleChildScrollView(
-                                                            controller: secondaryScrollControllers[e],
-                                                            child: Padding(
-                                                              padding: EdgeInsets.only(
-                                                                top: secondaryFormWidgets.length==1 && secondaryFormWidgets.keys.first=='Grupo 1'
-                                                                    ? 12 : 0,
-                                                                bottom: 28,
-                                                              ),
-                                                              child: secondaryFormWidgets[e]!,
-                                                            ),
-                                                          ),
+                                                        padding: EdgeInsets.only(
+                                                          top: secondaryFormWidgets.length==1 && secondaryFormWidgets.keys.first=='Grupo 1'
+                                                              ? 12 : 0,
+                                                          bottom: 28,
                                                         ),
+                                                        child: secondaryFormWidgets[e]!,
                                                       ),
-                                                    );
-                                                  }).toList(),
-                                                );
-                                              }
-                                          ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            );
+                                          }).toList(),
                                         ),
-                                      ],
-                                    ),
+                                      );
+                                    },
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
-                      ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: formActions,
-                  ),
-                ),
-              ],
+              ),
+              dialogActions: [Column(
+                mainAxisSize: MainAxisSize.min,
+                children: formActions,
+              )],
             );
-            if (!expandToFillContainer) {
-              result = IntrinsicHeight(
-                child: result,
-              );
-            }
             Map<InvalidatingError, Field> invalidatingErrors = {};
             List<InvalidatingError> autoResolveInvalidatingErrors = [];
             bool allowSetInvalidatingFieldsToDefaultValues = true;
@@ -1315,14 +1289,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       if (allowUndoInvalidatingChanges)
-                                        FlatButton(
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                            ),
-                                          ),
-                                          textColor: Theme.of(context).textTheme.caption!.color,
+                                        DialogButton.cancel(
                                           onPressed: () {
                                             beginRedoTransaction();
                                             undo();
@@ -1330,13 +1297,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                           },
                                         ),
                                       if (allowSetInvalidatingFieldsToDefaultValues)
-                                        FlatButton(
-                                          child: Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: Text(FromZeroLocalizations.of(context).translate("accept_caps"),
-                                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                            ),
-                                          ),
+                                        DialogButton.accept(
                                           onPressed: () {
                                             applyDefaultValues(invalidatingErrors.keys.toList());
                                           },
@@ -1465,13 +1426,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? showEditButton,
     bool? showDeleteButton,
     bool? useIntrinsicWidth,
-    bool? useIntrinsicHeight,
     bool showDefaultSnackBars = true,
   }) {
     ScrollController scrollController = ScrollController();
-    if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
-        && props.values.where((e) => e is ListField && !e.hiddenInView && (e.buildViewWidgetAsTable || e.objects.length>50)).isNotEmpty) {
-      useIntrinsicHeight = false;
+    if (useIntrinsicWidth==null && props.values.where((e) => e is ListField && !e.hiddenInView && (e.buildViewWidgetAsTable || e.objects.length>50)).isNotEmpty) {
       useIntrinsicWidth = false;
     }
     Widget content = AnimatedBuilder(
@@ -1479,100 +1437,79 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       builder: (context, child) {
         return LayoutBuilder(
           builder: (context, constraints) {
-            Widget result = Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppbarFromZero(
-                  constraints: constraints,
-                  useFlutterAppbar: false,
-                  primary: false,
-                  paddingRight: 16,
-                  toolbarHeight: 68,
-                  title: OverflowScroll(
-                    child: Padding(
-                      padding: const EdgeInsets.only(left: 24),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SelectableText(uiName,
-                            style: Theme.of(context).textTheme.headline6,
-                          ),
-                          if (uiName!=classUiName)
-                            SelectableText(classUiName,
-                              style: Theme.of(context).textTheme.subtitle2,
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  actions: [
-                    if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
-                      ActionFromZero(
-                        title: FromZeroLocalizations.of(context).translate('edit'),
-                        icon: Icon(Icons.edit_outlined),
-                        onTap: (context) async {
-                          final tempDao = copyWith();
-                          final result = await tempDao.maybeEdit(mainContext,
-                            showDefaultSnackBars: showDefaultSnackBars,
-                          );
-                          if (result != null) {
-                            final tempProps = tempDao.props;
-                            props.forEach((key, value) {
-                              if (value.value != tempProps[key]!.value) {
-                                value.value = tempProps[key]!.value;
-                              }
-                            });
-                            Navigator.of(context).pop();
-                          }
-                        },
-                      ),
-                    if (showDeleteButton ?? viewDialogShowsDeleteButton ?? false) // always default false for now, to avoid breaking existing DAOs, should be ?? canDelete
-                      ActionFromZero(
-                        title: FromZeroLocalizations.of(context).translate('delete'),
-                        icon: Icon(Icons.delete_forever),
-                        breakpoints: {0: ActionState.overflow},
-                        onTap: (context) async {
-                          final result = await maybeDelete(mainContext);
-                          if (result) {
-                            Navigator.of(context).pop();
-                          }
-                        },
-                      ),
-                    ...(viewDialogExtraActions?.call(mainContext, this) ?? []),
-                  ],
-                ),
-                Expanded(
-                  child: ScrollbarFromZero(
-                    controller: scrollController,
-                    child: SingleChildScrollView(
-                      controller: scrollController,
-                      child: buildViewWidget(mainContext,
-                          mainScrollController: scrollController
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12, right: 12, left: 12, top: 8,),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      FlatButton(
-                        child: Padding(
-                          padding: const EdgeInsets.all(6.0),
-                          child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                          ),
+            Widget result = DialogFromZero(
+              includeDialogWidget: false,
+              contentPadding: EdgeInsets.zero,
+              scrollController: scrollController,
+              appBar: AppbarFromZero(
+                constraints: constraints,
+                useFlutterAppbar: false,
+                primary: false,
+                paddingRight: 16,
+                toolbarHeight: 68,
+                title: OverflowScroll(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SelectableText(uiName,
+                          style: Theme.of(context).textTheme.headline6,
                         ),
-                        textColor: Theme.of(context).textTheme.caption!.color,
-                        onPressed: () {
-                          Navigator.of(context).pop(); // Dismiss alert dialog
-                        },
-                      ),
-                    ],
+                        if (uiName!=classUiName)
+                          SelectableText(classUiName,
+                            style: Theme.of(context).textTheme.subtitle2,
+                          ),
+                      ],
+                    ),
                   ),
+                ),
+                actions: [
+                  if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
+                    ActionFromZero(
+                      title: FromZeroLocalizations.of(context).translate('edit'),
+                      icon: Icon(Icons.edit_outlined),
+                      onTap: (context) async {
+                        final tempDao = copyWith();
+                        final result = await tempDao.maybeEdit(mainContext,
+                          showDefaultSnackBars: showDefaultSnackBars,
+                        );
+                        if (result != null) {
+                          final tempProps = tempDao.props;
+                          props.forEach((key, value) {
+                            if (value.value != tempProps[key]!.value) {
+                              value.value = tempProps[key]!.value;
+                            }
+                          });
+                          Navigator.of(context).pop();
+                        }
+                      },
+                    ),
+                  if (showDeleteButton ?? viewDialogShowsDeleteButton ?? false) // always default false for now, to avoid breaking existing DAOs, should be ?? canDelete
+                    ActionFromZero(
+                      title: FromZeroLocalizations.of(context).translate('delete'),
+                      icon: Icon(Icons.delete_forever),
+                      breakpoints: {0: ActionState.overflow},
+                      onTap: (context) async {
+                        final result = await maybeDelete(mainContext);
+                        if (result) {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                    ),
+                  ...(viewDialogExtraActions?.call(mainContext, this) ?? []),
+                ],
+              ),
+              content: SingleChildScrollView(
+                controller: scrollController,
+                child: buildViewWidget(mainContext,
+                  mainScrollController: scrollController,
+                ),
+              ),
+              dialogActions: [
+                DialogButton.cancel(
+                  child: Text(FromZeroLocalizations.of(context).translate("close_caps")),
                 ),
               ],
             );
@@ -1589,9 +1526,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 width: viewDialogWidth,
                 child: result,
               );
-            }
-            if (useIntrinsicHeight ?? useIntrinsicHeightForViewDialog) {
-              result = IntrinsicHeight(child: result,);
             }
             return result;
           },
@@ -1613,7 +1547,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     List<FieldGroup>? fieldGroups,
     ScrollController? mainScrollController,
     bool? useIntrinsicWidth,
-    bool? useIntrinsicHeight,
     int titleFlex = 1000000,
     int valueFlex = 1618034,
     double? titleMaxWidth,
@@ -1627,7 +1560,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         fieldGroups: fieldGroups,
         mainScrollController: mainScrollController,
         useIntrinsicWidth: useIntrinsicWidth,
-        useIntrinsicHeight: useIntrinsicHeight,
         titleFlex: titleFlex,
         valueFlex: valueFlex,
         titleMaxWidth: titleMaxWidth,
@@ -1640,17 +1572,14 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     List<FieldGroup>? fieldGroups,
     ScrollController? mainScrollController,
     bool? useIntrinsicWidth,
-    bool? useIntrinsicHeight,
     int titleFlex = 1000000,
     int valueFlex = 1618034,
     double? titleMaxWidth,
     bool applyAlternateBackground = true,
     bool initialAlternateBackground = false,
   }) {
-    if ((useIntrinsicHeight==null || useIntrinsicWidth==null)
-        && (titleMaxWidth!=null
-            || dao.props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty)) {
-      useIntrinsicHeight ??= false;
+    if (useIntrinsicWidth==null && (titleMaxWidth!=null
+        || dao.props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty)) {
       useIntrinsicWidth ??= false;
     }
     fieldGroups ??= dao.fieldGroups;
@@ -2062,9 +1991,11 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool showCancelActionToPop=false,
     bool showDefaultSnackBars=true,
     bool askForSaveConfirmation=true,
+    double topSpace = 6,
+    double bottomSpace = 24,
   }) {
     return [
-      SizedBox(height: 6,),
+      SizedBox(height: topSpace,),
       Center(
         child: WillPopScope(
           onWillPop: () async {
@@ -2072,35 +2003,18 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             bool? pop = (await showModalFromZero(
               context: context,
               builder: (modalContext) {
-                return AlertDialog(
+                return DialogFromZero(
                   title: Text(FromZeroLocalizations.of(context).translate("confirm_close_title")),
                   content: Text(FromZeroLocalizations.of(context).translate("confirm_close_desc")),
-                  actions: [
-                    FlatButton(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      textColor: Theme.of(context).textTheme.caption!.color,
-                      onPressed: () {
-                        Navigator.of(modalContext).pop(false); // Dismiss alert dialog
-                      },
-                    ),
-                    FlatButton(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(FromZeroLocalizations.of(context).translate("close_caps"),
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      textColor: Colors.red,
+                  dialogActions: [
+                    DialogButton.cancel(),
+                    DialogButton(
+                      child: Text(FromZeroLocalizations.of(context).translate("close_caps")),
+                      color: Colors.red,
                       onPressed: () {
                         Navigator.of(modalContext).pop(true); // Dismiss alert dialog
                       },
-                    ),
-                    SizedBox(width: 2,),
+                    )
                   ],
                 );
               },
@@ -2117,14 +2031,18 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 children: [
                   if (showCancelActionToPop)
                     Expanded(
-                      child: FlatButton(
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          primary: Theme.of(context).textTheme.caption!.color,
+                        ),
                         child: Padding(
                           padding: const EdgeInsets.all(6.0),
                           child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600,
+                              color: Theme.of(context).textTheme.caption!.color,
+                            ),
                           ),
                         ),
-                        textColor: Theme.of(context).textTheme.caption!.color,
                         onPressed: () {
                           Navigator.of(context).maybePop(null);
                         },
@@ -2182,7 +2100,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           ),
         ),
       ),
-      SizedBox(height: 24,),
+      SizedBox(height: bottomSpace,),
     ];
   }
   
