@@ -34,14 +34,16 @@ Future<T?> showModalFromZero<T>({
 }
 class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
   final bool showWindowBarOnDesktop;
+  final Color _myBarrierColor; /// hack to handle coloring barrier myself
   const FromZeroModalConfiguration({
-    super.barrierColor = Colors.black54,
+    Color barrierColor = Colors.black54,
     super.barrierDismissible = true,
     super.transitionDuration = const Duration(milliseconds: 150),
     super.reverseTransitionDuration = const Duration(milliseconds: 75),
     super.barrierLabel = 'Dismiss',
     this.showWindowBarOnDesktop = true,
-  });
+  })  : _myBarrierColor = barrierColor,
+        super(barrierColor: Colors.transparent);
   @override
   Widget transitionBuilder(
       BuildContext context,
@@ -49,48 +51,75 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
       Animation<double> secondaryAnimation,
       Widget child,
       ) {
-    bool didSetIsMouseOverWindowBar = false;
-    return FadeUpwardsFadeTransition(
-      routeAnimation: animation,
-      child: Column(
-        children: [
-          if (showWindowBarOnDesktop && !kIsWeb && Platform.isWindows
-              && windowsDesktopBitsdojoWorking)
-            Builder(
-              builder: (context) {
-                MediaQuery.of(context); // listen to windows size changes
-                if (appWindow.isMaximized) {
-                  if (isMouseOverWindowBar.value && didSetIsMouseOverWindowBar) {
-                    // weird hack, but otherwise it's stuck on true
-                    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-                      isMouseOverWindowBar.value = false;
-                    });
-                  }
-                  return SizedBox.shrink();
-                } else {
-                  return MouseRegion(
-                    opaque: false,
-                    onEnter: (event) {
-                      didSetIsMouseOverWindowBar = true;
-                      isMouseOverWindowBar.value = true;
-                    },
-                    onExit: (event) {
-                      isMouseOverWindowBar.value = false;
-                    },
-                    child: WindowBar(backgroundColor: Theme.of(context).cardColor),
-                  );
-                }
-              },
-            ),
-          Expanded(
-            child: FadeUpwardsSlideTransition(
-              routeAnimation: animation,
-              child: child,
+    Widget result = Stack(
+      children: [
+        Positioned.fill(
+          child: IgnorePointer(
+            child: ColoredBox(
+              color: _myBarrierColor,
             ),
           ),
-        ],
-      ),
+        ),
+        ScaleTransition(
+          scale: TweenSequence<double>([
+            TweenSequenceItem(
+              tween: Tween(begin: 0.8, end: 1.02).chain(CurveTween(curve: Curves.easeOutQuad)),
+              weight: 0.8,
+            ),
+            TweenSequenceItem(
+              tween: Tween(begin: 1.02, end: 1.0).chain(CurveTween(curve: Curves.easeInOutQuad)),
+              weight: 0.2,
+            ),
+          ]).animate(animation),
+          child: FadeUpwardsSlideTransition(
+            routeAnimation: animation,
+            child: child,
+          ),
+        )
+      ],
     );
+    if (showWindowBarOnDesktop && !kIsWeb && Platform.isWindows
+        && windowsDesktopBitsdojoWorking) {
+      bool didSetIsMouseOverWindowBar = false;
+      result = Column(
+        children: [
+          Builder(
+            builder: (context) {
+              MediaQuery.of(context); // listen to windows size changes
+              if (appWindow.isMaximized) {
+                if (isMouseOverWindowBar.value && didSetIsMouseOverWindowBar) {
+                  // weird hack, but otherwise it's stuck on true
+                  WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                    isMouseOverWindowBar.value = false;
+                  });
+                }
+                return SizedBox.shrink();
+              } else {
+                return MouseRegion(
+                  opaque: false,
+                  onEnter: (event) {
+                    didSetIsMouseOverWindowBar = true;
+                    isMouseOverWindowBar.value = true;
+                  },
+                  onExit: (event) {
+                    isMouseOverWindowBar.value = false;
+                  },
+                  child: WindowBar(backgroundColor: Theme.of(context).cardColor),
+                );
+              }
+            },
+          ),
+          Expanded(
+            child: result,
+          ),
+        ],
+      );
+    }
+    result = FadeUpwardsFadeTransition(
+      routeAnimation: animation,
+      child: result,
+    );
+    return result;
   }
 }
 
