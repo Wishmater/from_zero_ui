@@ -449,6 +449,9 @@ class ScrollOpacityGradient extends StatefulWidget {
 }
 class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
 
+  double size1 = 0;
+  double size2 = 0;
+
   @override
   void initState() {
     super.initState();
@@ -461,8 +464,10 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
   @override
   void didUpdateWidget(ScrollOpacityGradient oldWidget) {
     super.didUpdateWidget(oldWidget);
-    _removeListener(oldWidget.scrollController);
-    _addListener(widget.scrollController);
+    if (oldWidget.scrollController!=widget.scrollController) {
+      _removeListener(oldWidget.scrollController);
+      _addListener(widget.scrollController);
+    }
   }
 
   @override
@@ -481,18 +486,29 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
 
   void _updateScroll(){
     if (mounted){
-      setState(() {});
+      double newSize1, newSize2;
+      try{
+        newSize1 = widget.scrollController.position.pixels.clamp(0, widget.maxSize);
+        newSize2 = (widget.scrollController.position.maxScrollExtent-widget.scrollController.position.pixels).clamp(0, widget.maxSize);
+      } catch (e){
+        newSize1 = 0;
+        newSize2 = 0;
+      }
+      if (newSize1!=size1 || newSize2!=size2) {
+        setState(() {});
+      }
     }
   }
 
-  double size1 = 0;
-  double size2 = 0;
   @override
   Widget build(BuildContext context) {
-    try{
-      size1 = widget.scrollController.position.pixels.clamp(0, widget.maxSize);
-      size2 = (widget.scrollController.position.maxScrollExtent-widget.scrollController.position.pixels).clamp(0, widget.maxSize);
-    } catch(e){ }
+    final child = NotificationListener<ScrollMetricsNotification>(
+      child: widget.child,
+      onNotification: (notification) {
+        _updateScroll();
+        return false;
+      },
+    );
     if (widget.direction==OpacityGradient.horizontal || widget.direction==OpacityGradient.vertical) {
       return OpacityGradient(
         size: widget.applyAtStart ? size1 : 0,
@@ -500,7 +516,7 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
         child: OpacityGradient(
           size: widget.applyAtEnd ? size2 : 0,
           direction: widget.direction==OpacityGradient.horizontal ? OpacityGradient.right : OpacityGradient.bottom,
-          child: widget.child,
+          child: child,
         ),
       );
     } else {
@@ -508,7 +524,7 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
         size: widget.direction==OpacityGradient.left || widget.direction==OpacityGradient.top
             ? size1 : size2,
         direction: widget.direction,
-        child: widget.child,
+        child: child,
       );
     }
   }
