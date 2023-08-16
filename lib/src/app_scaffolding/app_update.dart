@@ -250,7 +250,7 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return DialogFromZero(
       title: !started ? Text(FromZeroLocalizations.of(context).translate('update_available'))
           : progress==1 ? Text(FromZeroLocalizations.of(context).translate('processing_update'))
           : Text(FromZeroLocalizations.of(context).translate('downloading_update')),
@@ -292,7 +292,7 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
               ),
         ),
       ),
-      actions: <Widget>[
+      dialogActions: <Widget>[
         if (!started)
           DialogButton.cancel(),
         if (!started)

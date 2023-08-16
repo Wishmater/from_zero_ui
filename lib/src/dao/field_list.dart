@@ -1091,11 +1091,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool? delete = skipDeleteConfirmation || hasAvailableObjectsPool || (await showModalFromZero(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return DialogFromZero(
           title: Text(FromZeroLocalizations.of(context).translate('confirm_delete_title')),
           content: Text('${FromZeroLocalizations.of(context).translate('confirm_delete_desc')} ${elements.length} ${elements.length>1 ? FromZeroLocalizations.of(context).translate('element_plur') : FromZeroLocalizations.of(context).translate('element_sing')}?'),
           // TODO 2 show more details about elements to be deleted
-          actions: [
+          dialogActions: [
             DialogButton.cancel(),
             DialogButton(
               child: Text(FromZeroLocalizations.of(context).translate('delete_caps'),),
@@ -1104,7 +1104,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 Navigator.of(context).pop(true); // Dismiss alert dialog
               },
             ),
-            SizedBox(width: 2,),
           ],
         );
       },
@@ -1153,10 +1152,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             bool? pop = await showModalFromZero(
               context: context,
               builder: (context) {
-                return AlertDialog(
+                return DialogFromZero(
                   title: Text(FromZeroLocalizations.of(context).translate('confirm_close_title')),
                   content: Text(FromZeroLocalizations.of(context).translate('confirm_close_desc')),
-                  actions: [
+                  dialogActions: [
                     DialogButton.cancel(),
                     AnimatedBuilder(
                       animation:  dao,
@@ -1170,7 +1169,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                         );
                       },
                     ),
-                    SizedBox(width: 2,),
                   ],
                 );
               },
@@ -1230,19 +1228,18 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                   bool? edit = await showModalFromZero(
                                     context: context,
                                     builder: (context) {
-                                      return AlertDialog(
+                                      return DialogFromZero(
                                         title: Text(FromZeroLocalizations.of(context).translate('confirm_save_title')),
                                         content: Text('${FromZeroLocalizations.of(context).translate('edit_multiple_confirm')} ${elements.length} ${elements.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
                                             : FromZeroLocalizations.of(context).translate('element_sing')}?'),
                                         // TODO 3 show all details about each field about to change
-                                        actions: [
+                                        dialogActions: [
                                           DialogButton.cancel(),
                                           DialogButton.accept(
                                             onPressed: () {
                                               Navigator.of(context).pop(true); // Dismiss alert dialog
                                             },
                                           ),
-                                          SizedBox(width: 2,),
                                         ],
                                       );
                                     },

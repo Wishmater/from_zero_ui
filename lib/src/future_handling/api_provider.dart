@@ -503,16 +503,12 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     showModalFromZero(
       context: context,
       builder: (context) {
-        return AlertDialog(
+        return DialogFromZero(
           title: Text('Detalles del Error'),
           content: SelectableText("$error\r\n\r\n$stackTrace}"),
-          insetPadding: EdgeInsets.all(16),
-          actions: [
-            TextButton(
-              child: Text('Cerrar'), // TODO 3 internationalize
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+          dialogActions: [
+            DialogButton.cancel(
+              child: Text('CERRAR'), // TODO 3 internationalize
             ),
           ],
         );

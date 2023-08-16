@@ -791,9 +791,9 @@ class CloseConfirmDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return DialogFromZero(
       title: Text("¿Seguro que quiere cerrar ${FromZeroAppContentWrapper.appNameForCloseConfirmation ?? 'la aplicación'}?"), // TODO 3 internationalize
-      actions: <Widget>[
+      dialogActions: <Widget>[
         DialogButton.cancel(),
         DialogButton(
           child: Text("CERRAR"),

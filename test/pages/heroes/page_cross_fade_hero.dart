@@ -34,19 +34,21 @@ class _PageHeroesState extends State<PageCrossFadeHero> {
 
   Widget _getPage(context){
     return WillPopScope(
-      onWillPop: () async => await showModalFromZero(context: context, builder: (context) => AlertDialog(
-        title: Text("Sure?"),
-        actions: [
-          SimpleDialogOption(
-            child: Text("Cancel"),
-            onPressed: () => Navigator.pop(context, false),
-          ),
-          SimpleDialogOption(
-            child: Text("OK"),
-            onPressed: () => Navigator.pop(context, true),
-          ),
-        ],
-      ),),
+      onWillPop: () async => await showModalFromZero(context: context, builder: (context) {
+        return DialogFromZero(
+          title: Text("Sure?"),
+          dialogActions: [
+            SimpleDialogOption(
+              child: Text("Cancel"),
+              onPressed: () => Navigator.pop(context, false),
+            ),
+            SimpleDialogOption(
+              child: Text("OK"),
+              onPressed: () => Navigator.pop(context, true),
+            ),
+          ],
+        );
+      },),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Card(
