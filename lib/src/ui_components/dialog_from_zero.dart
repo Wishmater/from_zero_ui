@@ -407,6 +407,7 @@ class DialogButton extends StatelessWidget {
     Widget child = this.child ?? _defaultChild(context);
     if (leading!=null) {
       child = Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
           leading!,
           SizedBox(width: 6,),
