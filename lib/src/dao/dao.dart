@@ -575,12 +575,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 if (shownName.isNullOrEmpty) shownName = classUiName;
                 return DialogFromZero(
                   includeDialogWidget: false,
-                  appBar: AppbarFromZero(
-                    title: Text(validation
-                        ? (saveConfirmationDialogTitle?.call(this) ?? FromZeroLocalizations.of(context).translate("confirm_save_title"))
-                        : 'Error de Validación', // TODO 3 internationaliza
-                      style: Theme.of(context).textTheme.headline6,
-                    ),
+                  title: Text(validation
+                      ? (saveConfirmationDialogTitle?.call(this) ?? FromZeroLocalizations.of(context).translate("confirm_save_title"))
+                      : 'Error de Validación', // TODO 3 internationalize
                   ),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -735,9 +732,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         builder: (context) {
           return DialogFromZero(
             maxWidth: formDialogWidth-32,
-            appBar: AppbarFromZero(
-              title: Text(FromZeroLocalizations.of(context).translate('confirm_delete_title')),
-            ),
+            title: Text(FromZeroLocalizations.of(context).translate('confirm_delete_title')),
             content: Text('${FromZeroLocalizations.of(context).translate('confirm_delete_desc')} $uiName?'),
             dialogActions: [
               DialogButton.cancel(),
@@ -854,9 +849,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       context: context,
       builder: (context) {
         return DialogFromZero(
-          appBar: AppbarFromZero(
-            title: Text(FromZeroLocalizations.of(context).translate("confirm_reverse_title")),
-          ),
+          title: Text(FromZeroLocalizations.of(context).translate("confirm_reverse_title")),
           content: Text(FromZeroLocalizations.of(context).translate("confirm_reverse_desc")),
           dialogActions: [
             DialogButton.cancel(),

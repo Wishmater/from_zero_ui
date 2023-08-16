@@ -211,14 +211,36 @@ class _DialogFromZeroState extends State<DialogFromZero> {
     }
     Widget? appBar;
     if (widget.appBar!=null) {
-      appBar = widget.appBar;
+      appBar = Theme(
+        data: Theme.of(context).copyWith(
+          appBarTheme: AppBarTheme(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            toolbarHeight: 68,
+          ),
+        ),
+        child: widget.appBar!,
+      );
     } else if (widget.title!=null) {
       appBar = AppbarFromZero(
         key: appBarGlobalKey,
-        title: OverflowScroll(
-          child: FillerRelayer(
-            notifier: appBarTitleSizeNotifier,
-            child: widget.title!,
+        useFlutterAppbar: false,
+        title: DefaultTextStyle(
+          style: Theme.of(context).textTheme.headline6!,
+          child: Container(
+            constraints: BoxConstraints(minHeight: 60),
+            padding: const EdgeInsets.only(top: 12, bottom: 12, left: 16,),
+            alignment: Alignment.centerLeft,
+            child: FillerRelayer(
+              notifier: appBarTitleSizeNotifier,
+              child: widget.title!,
+            ),
+            // child: OverflowScroll( // prefer letting the title appbar take more height, but height could be easily bound with an OverflowScroll
+            //   child: FillerRelayer(
+            //     notifier: appBarTitleSizeNotifier,
+            //     child: widget.title!,
+            //   ),
+            // ),
           ),
         ),
         actions: widget.appBarActions,
@@ -248,9 +270,11 @@ class _DialogFromZeroState extends State<DialogFromZero> {
                 + ((appBarGlobalKey.currentState?.actions.length??0)*40);
             final minSizeFromDialogActions = individualActionsSizeNotifiers
                 .sumBy((e) => e.width) + 48;
+            final minSize = max(minSizeFromAppbar, minSizeFromDialogActions);
             return Container(
               constraints: BoxConstraints(
-                minWidth: max(minSizeFromAppbar, minSizeFromDialogActions),
+                minWidth: min(minSize, (widget.maxWidth??double.infinity)),
+                maxWidth: widget.maxWidth ?? double.infinity,
               ),
               padding: EdgeInsets.only(
                 top: appBarSize.height,
@@ -282,18 +306,9 @@ class _DialogFromZeroState extends State<DialogFromZero> {
         if (appBar!=null)
           Positioned(
             top: 0, left: 0, right: 0,
-            child: Theme(
-              data: Theme.of(context).copyWith(
-                appBarTheme: AppBarTheme(
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  toolbarHeight: 68,
-                ),
-              ),
-              child: FillerRelayer(
-                notifier: appBarSizeNotifier,
-                child: appBar,
-              ),
+            child: FillerRelayer(
+              notifier: appBarSizeNotifier,
+              child: appBar,
             ),
           ),
       ],
@@ -308,12 +323,6 @@ class _DialogFromZeroState extends State<DialogFromZero> {
           child: result,
         );
       }
-    }
-    if (widget.maxWidth!=null) {
-      result = SizedBox(
-        width: widget.maxWidth!,
-        child: result,
-      );
     }
     result = MediaQuery.removeViewPadding(
       context: context,
