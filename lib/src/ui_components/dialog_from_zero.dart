@@ -52,12 +52,12 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
       Widget child,
       ) {
     Widget result = Stack(
+      alignment: Alignment.center,
       children: [
-        Positioned.fill(
-          child: IgnorePointer(
-            child: ColoredBox(
-              color: _myBarrierColor,
-            ),
+        IgnorePointer(
+          child: ColoredBox(
+            color: _myBarrierColor,
+            child: SizedBox.expand(),
           ),
         ),
         ScaleTransition(
