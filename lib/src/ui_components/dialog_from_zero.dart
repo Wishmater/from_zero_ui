@@ -128,7 +128,7 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
 class DialogFromZero extends StatefulWidget {
 
   final Widget? title;
-  final Widget content;
+  final Widget? content;
   final List<Widget> dialogActions;
   final List<Widget>? appBarActions;
   /// if this is passed, we assume scrolling is handled outside
@@ -145,7 +145,7 @@ class DialogFromZero extends StatefulWidget {
 
   const DialogFromZero({
     this.title,
-    required this.content,
+    this.content,
     this.dialogActions = const [],
     this.appBarActions,
     this.contentPadding = const EdgeInsets.symmetric(horizontal: 16),
@@ -178,6 +178,9 @@ class _DialogFromZeroState extends State<DialogFromZero> {
   @override
   void initState() {
     super.initState();
+    assert(widget.title!=null || widget.content!=null || widget.dialogActions.isNotEmpty,
+      'Dialog can\'t be completely empty...',
+    );
     updateIndividualActionsSizeNotifier();
   }
 
@@ -231,9 +234,19 @@ class _DialogFromZeroState extends State<DialogFromZero> {
             constraints: BoxConstraints(minHeight: 60),
             padding: const EdgeInsets.only(top: 12, bottom: 12, left: 16,),
             alignment: Alignment.centerLeft,
-            child: FillerRelayer(
-              notifier: appBarTitleSizeNotifier,
-              child: widget.title!,
+            child: ValueListenableBuilder<Size>(
+              valueListenable: appBarTitleSizeNotifier,
+              builder: (context, value, child) {
+                if (value.width==0) { // Hack to messure full size of Text in the first frame
+                  return OverflowScroll(child: child!);
+                } else {
+                  return child!;
+                }
+              },
+              child: FillerRelayer(
+                notifier: appBarTitleSizeNotifier,
+                child: widget.title!,
+              ),
             ),
             // child: OverflowScroll( // prefer letting the title appbar take more height, but height could be easily bound with an OverflowScroll
             //   child: FillerRelayer(
