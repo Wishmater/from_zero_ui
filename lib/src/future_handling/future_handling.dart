@@ -509,7 +509,6 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
     widget.sizeNotifier?.value = value;
   }
 
-  bool skipNextCalculation = false;
   late int initialTimestamp;
 
   late bool export;
@@ -543,9 +542,7 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
           previousSize = size;
           size = renderBox.size;
           if (size!=previousSize) {
-            setState(() {
-              skipNextCalculation = true;
-            });
+            setState(() {});
           }
         } catch (_, __) { }
       });
@@ -563,12 +560,17 @@ class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromCh
     return LayoutBuilder(
       builder: (context, constraints) {
         _addCallback(null);
-        Widget child = NotificationListener<ScrollMetricsNotification>(
+        Widget child = NotificationListener(
           onNotification: (notification) {
-            setState((){});
+            if (notification is ScrollMetricsNotification
+                || notification is SizeChangedLayoutNotification) {
+              _addCallback(null);
+            }
             return false;
           },
-          child: Container(key: globalKey, child: widget.child,),
+          child: SizeChangedLayoutNotifier(
+            child: Container(key: globalKey, child: widget.child,),
+          ),
         );
         if (size == null){
           return AnimatedContainer(
