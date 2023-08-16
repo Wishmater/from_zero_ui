@@ -249,35 +249,15 @@ abstract class TableFromZeroManagePopup {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  FlatButton(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                      ),
-                                    ),
-                                    textColor: Theme.of(context).textTheme.caption!.color,
-                                    onPressed: () {
-                                      Navigator.of(context).pop(false);
-                                    },
-                                  ),
-                                  TooltipFromZero(
-                                    message: visibleColumns.isEmpty
+                                  DialogButton.cancel(),
+                                  DialogButton.accept(
+                                    tooltip: visibleColumns.isEmpty
                                         ? 'Debe haber al menos 1 columna visible'
                                         : null,
-                                    child: FlatButton(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(8.0),
-                                        child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
-                                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                        ),
-                                      ),
-                                      textColor: Colors.blue,
-                                      onPressed: visibleColumns.isEmpty ? null : () {
-                                        Navigator.of(context).pop(true);
-                                      },
-                                    ),
-                                  ),
+                                    onPressed: visibleColumns.isEmpty ? null : () {
+                                      Navigator.of(context).pop(true);
+                                    },
+                                  )
                                 ],
                               ),
                             ),

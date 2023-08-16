@@ -206,24 +206,20 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
                 children: [
                   SizedBox(height: 6,),
                   Expanded(
-                    child: FlatButton(
+                    child: TextButton(
                       onPressed: () {
                         widget.stateNotifier.cancel();
                         widget.onCancel?.call();
                         widget.dismiss();
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Text(FromZeroLocalizations.of(context).translate("cancel").toUpperCase(),
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                        ),
+                      child: Text(FromZeroLocalizations.of(context).translate("cancel").toUpperCase(),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
                       ),
-                      textColor: errorColor,
-                      disabledTextColor: Theme.of(context).disabledColor,
-                      hoverColor: errorColor.withOpacity(0.1),
-                      highlightColor: errorColor.withOpacity(0.1),
-                      splashColor: errorColor.withOpacity(0.3),
-                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      style: TextButton.styleFrom(
+                        primary: errorColor,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
                     ),
                   ),
                   SizedBox(height: 6,),
@@ -298,45 +294,35 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
     final actions = [
       if (showAcceptInsteadOfClose)
         Expanded(
-          child: FlatButton(
+          child: TextButton(
             onPressed: () {
               widget.onCancel?.call();
               widget.dismiss();
             },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(FromZeroLocalizations.of(context).translate("accept_caps").toUpperCase(),
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center,
-              ),
+            child: Text(FromZeroLocalizations.of(context).translate("accept_caps").toUpperCase(),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
             ),
-            textColor: splashColor,
-            disabledTextColor: Theme.of(context).disabledColor,
-            hoverColor: splashColor.withOpacity(0.1),
-            highlightColor: splashColor.withOpacity(0.1),
-            splashColor: splashColor.withOpacity(0.3),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            style: TextButton.styleFrom(
+              primary: splashColor,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
           ),
         ),
       if (showRetry)
         Expanded(
-          child: FlatButton(
+          child: TextButton(
             onPressed: () {
               widget.stateNotifier.refresh(null);
             },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(FromZeroLocalizations.of(context).translate("retry").toUpperCase(),
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center,
-              ),
+            child: Text(FromZeroLocalizations.of(context).translate("retry").toUpperCase(),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
             ),
-            textColor: splashColor,
-            disabledTextColor: Theme.of(context).disabledColor,
-            hoverColor: splashColor.withOpacity(0.1),
-            highlightColor: splashColor.withOpacity(0.1),
-            splashColor: splashColor.withOpacity(0.3),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            style: TextButton.styleFrom(
+              primary: splashColor,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
           ),
         ),
       if (showErrorDetails)
@@ -346,15 +332,13 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               widget.dismiss();
               ApiProviderBuilder.showErrorDetailsDialog(widget.context, error, stackTrace);
             },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text('Detalles del Error',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center,
-              ),
+            child: Text('Detalles del Error',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              textAlign: TextAlign.center,
             ),
             style: TextButton.styleFrom(
               primary: Theme.of(context).textTheme.bodyText1!.color!,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
         ),
@@ -411,13 +395,16 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
         if (!showAcceptInsteadOfClose && (error==null||(widget.cancelable??true)))
           SizedBox(
             width: 42, height: double.infinity,
-            child: FlatButton(
-              padding: EdgeInsets.only(right: 16),
-              child: Icon(Icons.close, size: 24,),
+            child: TextButton(
               onPressed: () {
                 widget.onCancel?.call();
                 widget.dismiss();
               },
+              child: Icon(Icons.close, size: 24,),
+              style: TextButton.styleFrom(
+                primary: Theme.of(context).textTheme.bodyText1!.color,
+                padding: EdgeInsets.only(right: 10),
+              ),
             ),
           ),
       ],

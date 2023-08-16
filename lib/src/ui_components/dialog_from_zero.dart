@@ -382,7 +382,16 @@ class DialogButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final child = this.child ?? _defaultChild(context);
+    Widget child = this.child ?? _defaultChild(context);
+    if (leading!=null) {
+      child = Row(
+        children: [
+          leading!,
+          SizedBox(width: 6,),
+          child,
+        ],
+      );
+    }
     final onPressed = this.onPressed ?? _defaultOnPressed(context);
     Color? color = onPressed==null
         ? Theme.of(context).disabledColor
@@ -397,7 +406,7 @@ class DialogButton extends StatelessWidget {
         ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: child, // TODO 1 add leading
+          child: child,
         ),
       ),
       focusNode: focusNode,

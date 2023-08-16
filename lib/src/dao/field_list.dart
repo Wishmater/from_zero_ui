@@ -835,18 +835,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            FlatButton(
-                              child: Padding(
-                                padding: const EdgeInsets.all(6.0),
-                                child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                              textColor: Theme.of(context).textTheme.caption!.color,
-                              onPressed: () {
-                                Navigator.of(context).pop(); // Dismiss alert dialog
-                              },
-                            ),
+                            DialogButton.cancel(),
                             if (allowAddMultipleFromAvailablePool)
                               MultiValueListenableBuilder(
                                 valueListenables: [
@@ -859,14 +848,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                   final selected = availableData==null ? [] : availableData.where((e) {
                                     return selectedObjects[e] ?? selectionDefault;
                                   }).toList();
-                                  return FlatButton(
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                      ),
-                                    ),
-                                    textColor: Colors.blue,
+                                  return DialogButton.accept(
                                     onPressed: selected.isEmpty ? null : () {
                                       Navigator.of(context).pop(selected);
                                     },
@@ -943,18 +925,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            FlatButton(
-                              child: Padding(
-                                padding: const EdgeInsets.all(6.0),
-                                child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
-                                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                              textColor: Theme.of(context).textTheme.caption!.color,
-                              onPressed: () {
-                                Navigator.of(context).pop(); // Dismiss alert dialog
-                              },
-                            ),
+                            DialogButton.cancel(),
                           ],
                         ),
                       ),
@@ -1125,26 +1096,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           content: Text('${FromZeroLocalizations.of(context).translate('confirm_delete_desc')} ${elements.length} ${elements.length>1 ? FromZeroLocalizations.of(context).translate('element_plur') : FromZeroLocalizations.of(context).translate('element_sing')}?'),
           // TODO 2 show more details about elements to be deleted
           actions: [
-            FlatButton(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
-              textColor: Theme.of(context).textTheme.caption!.color,
-              onPressed: () {
-                Navigator.of(context).pop(false); // Dismiss alert dialog
-              },
-            ),
-            FlatButton(
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Text(FromZeroLocalizations.of(context).translate('delete_caps'),
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-              ),
-              textColor: Colors.red,
+            DialogButton.cancel(),
+            DialogButton(
+              child: Text(FromZeroLocalizations.of(context).translate('delete_caps'),),
+              color: Colors.red,
               onPressed: () {
                 Navigator.of(context).pop(true); // Dismiss alert dialog
               },
@@ -1202,29 +1157,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   title: Text(FromZeroLocalizations.of(context).translate('confirm_close_title')),
                   content: Text(FromZeroLocalizations.of(context).translate('confirm_close_desc')),
                   actions: [
-                    FlatButton(
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      textColor: Theme.of(context).textTheme.caption!.color,
-                      onPressed: () {
-                        Navigator.of(context).pop(false); // Dismiss alert dialog
-                      },
-                    ),
+                    DialogButton.cancel(),
                     AnimatedBuilder(
                       animation:  dao,
                       builder: (context, child) {
-                        return FlatButton(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(FromZeroLocalizations.of(context).translate('close_caps'),
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                            ),
-                          ),
-                          textColor: Colors.red,
+                        return DialogButton(
+                          child: Text(FromZeroLocalizations.of(context).translate('close_caps'),),
+                          color: Colors.red,
                           onPressed: () {
                             Navigator.of(context).pop(true); // Dismiss alert dialog
                           },
@@ -1278,29 +1217,15 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          FlatButton(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                            textColor: Theme.of(context).textTheme.caption!.color,
+                          DialogButton.cancel(
                             onPressed: () {
-                              Navigator.of(context).maybePop(); // Dismiss alert dialog
+                              Navigator.of(context).maybePop();
                             },
                           ),
                           AnimatedBuilder(
                             animation:  dao,
                             builder: (context, child) {
-                              return FlatButton(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                  ),
-                                ),
-                                textColor: Colors.blue,
+                              return DialogButton.accept(
                                 onPressed: dao.isEdited ? () async {
                                   bool? edit = await showModalFromZero(
                                     context: context,
@@ -1311,26 +1236,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                             : FromZeroLocalizations.of(context).translate('element_sing')}?'),
                                         // TODO 3 show all details about each field about to change
                                         actions: [
-                                          FlatButton(
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
-                                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                              ),
-                                            ),
-                                            textColor: Theme.of(context).textTheme.caption!.color,
-                                            onPressed: () {
-                                              Navigator.of(context).pop(false); // Dismiss alert dialog
-                                            },
-                                          ),
-                                          FlatButton(
-                                            child: Padding(
-                                              padding: const EdgeInsets.all(8.0),
-                                              child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
-                                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                              ),
-                                            ),
-                                            textColor: Colors.blue,
+                                          DialogButton.cancel(),
+                                          DialogButton.accept(
                                             onPressed: () {
                                               Navigator.of(context).pop(true); // Dismiss alert dialog
                                             },

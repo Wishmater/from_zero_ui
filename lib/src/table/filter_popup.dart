@@ -360,29 +360,11 @@ abstract class TableFromZeroFilterPopup {
                               children: [
                                 SizedBox(
                                   width: 120,
-                                  child: FlatButton(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                      child: Text(FromZeroLocalizations.of(context).translate('cancel_caps'),
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                      ),
-                                    ),
-                                    textColor: Theme.of(context).textTheme.caption!.color,
-                                    onPressed: () {
-                                      Navigator.of(context).pop(false);
-                                    },
-                                  ),
+                                  child: DialogButton.cancel(),
                                 ),
                                 SizedBox(
                                   width: 120,
-                                  child: FlatButton(
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                      child: Text(FromZeroLocalizations.of(context).translate('accept_caps'),
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                                      ),
-                                    ),
-                                    textColor: Colors.blue,
+                                  child: DialogButton.accept(
                                     onPressed: () {
                                       Navigator.of(context).pop(true);
                                     },

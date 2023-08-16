@@ -855,42 +855,21 @@ class ExportState extends State<Export> {
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           SizedBox(width: 6,),
-                          FlatButton(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text("EXPORTAR", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
-                            ),
-                            textColor: Colors.blue,
+                          DialogButton(
+                            child: Text("EXPORTAR"),
+                            color: Colors.blue,
                             onPressed: _onExportButtonPressed,
                           ),
                           SizedBox(width: 6,),
-                          FlatButton(
-                            child: Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Text("CANCELAR", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
-                            ),
-                            textColor: Theme.of(context).textTheme.caption!.color,
-                            onPressed: () {
-                              Navigator.of(context).pop();
-                            },
-                          ),
+                          DialogButton.cancel(),
                         ],
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 6),
-                        child: FlatButton(
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text("VISTA PREVIA", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
-                                SizedBox(width: 6,),
-                                Icon(MaterialCommunityIcons.presentation_play, color: Colors.blue,),
-                              ],
-                            ),
-                          ),
-                          textColor: Colors.blue,
+                        child: DialogButton(
+                          child: Text("VISTA PREVIA"),
+                          leading: Icon(MaterialCommunityIcons.presentation_play, color: Colors.blue,),
+                          color: Colors.blue,
                           onPressed: () async{
                             showModalFromZero(
                               context: context,

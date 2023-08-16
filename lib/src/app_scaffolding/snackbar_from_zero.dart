@@ -197,24 +197,19 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
                       if (e is SnackBarAction){
                         SnackBarAction action = e;
                         return Expanded(
-                          child: FlatButton(
+                          child: TextButton(
                             onPressed: () {
                               widget.dismiss();
                               action.onPressed();
                             },
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
-                              child: Text(action.label.toUpperCase(),
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                                textAlign: TextAlign.center,
-                              ),
+                            child: Text(action.label.toUpperCase(),
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                              textAlign: TextAlign.center,
                             ),
-                            textColor: action.textColor ?? actionColor,
-                            disabledTextColor: action.disabledTextColor ?? Theme.of(context).disabledColor,
-                            hoverColor: (action.textColor ?? actionColor).withOpacity(0.1),
-                            highlightColor: (action.textColor ?? actionColor).withOpacity(0.1),
-                            splashColor: (action.textColor ?? actionColor).withOpacity(0.3),
-                            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            style: TextButton.styleFrom(
+                              primary: action.textColor ?? actionColor,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
                           ),
                         );
                       }
@@ -230,13 +225,16 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
         if (widget.dismissable)
           SizedBox(
             width: 42, height: double.infinity,
-            child: FlatButton(
-              padding: EdgeInsets.only(right: 16),
-              child: Icon(Icons.close, size: 24,),
+            child: TextButton(
               onPressed: () {
                 widget.onCancel?.call();
                 widget.dismiss();
               },
+              child: Icon(Icons.close, size: 24,),
+              style: TextButton.styleFrom(
+                primary: Theme.of(context).textTheme.bodyText1!.color,
+                padding: EdgeInsets.only(right: 10),
+              ),
             ),
           ),
       ],

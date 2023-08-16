@@ -794,22 +794,10 @@ class CloseConfirmDialog extends StatelessWidget {
     return AlertDialog(
       title: Text("¿Seguro que quiere cerrar ${FromZeroAppContentWrapper.appNameForCloseConfirmation ?? 'la aplicación'}?"), // TODO 3 internationalize
       actions: <Widget>[
-        FlatButton(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text("CANCELAR", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),), // TODO 3 internationalize
-          ),
-          textColor: Theme.of(context).textTheme.caption!.color,
-          onPressed: () {
-            Navigator.of(context).pop(false);
-          },
-        ),
-        FlatButton(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text("CERRAR", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),), // TODO 3 internationalize
-          ),
-          textColor: Colors.red,
+        DialogButton.cancel(),
+        DialogButton(
+          child: Text("CERRAR"),
+          color: Colors.red,
           onPressed: () {
             if (forceExitApp ?? PlatformExtended.isDesktop) {
               FromZeroAppContentWrapper.exitApp(0);

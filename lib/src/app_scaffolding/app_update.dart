@@ -250,69 +250,55 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
 
   @override
   Widget build(BuildContext context) {
-      return AlertDialog(
-        title: !started ? Text(FromZeroLocalizations.of(context).translate('update_available'))
-            : progress==1 ? Text(FromZeroLocalizations.of(context).translate('processing_update'))
-            : Text(FromZeroLocalizations.of(context).translate('downloading_update')),
-        content: Container(
-          width: 384,
-          child: PageTransitionSwitcher(
-            transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
-              return FadeThroughTransition(
-                animation: primaryAnimation,
-                secondaryAnimation: secondaryAnimation,
-                child: child,
-                fillColor: Colors.transparent,
-              );
-            },
-            child: !started ? Text(FromZeroLocalizations.of(context).translate('update_available_desc'))
-                : Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    LinearProgressIndicator(
-                      value: progress==1 ? null : progress,
+    return AlertDialog(
+      title: !started ? Text(FromZeroLocalizations.of(context).translate('update_available'))
+          : progress==1 ? Text(FromZeroLocalizations.of(context).translate('processing_update'))
+          : Text(FromZeroLocalizations.of(context).translate('downloading_update')),
+      content: Container(
+        width: 384,
+        child: PageTransitionSwitcher(
+          transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
+            return FadeThroughTransition(
+              animation: primaryAnimation,
+              secondaryAnimation: secondaryAnimation,
+              child: child,
+              fillColor: Colors.transparent,
+            );
+          },
+          child: !started ? Text(FromZeroLocalizations.of(context).translate('update_available_desc'))
+              : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  LinearProgressIndicator(
+                    value: progress==1 ? null : progress,
+                  ),
+                  SizedBox(height: 6,),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(percentFormatter.format(progress)),
+                      if (count!=-1 && total!=-1)
+                        Text('${doubleDecimalFormatter.format(count)}MB / ${doubleDecimalFormatter.format(total)}MB'),
+                    ],
+                  ),
+                  SizedBox(height: 18,),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(FromZeroLocalizations.of(context).translate('restart_warning'),
+                      style: Theme.of(context).textTheme.caption,
                     ),
-                    SizedBox(height: 6,),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(percentFormatter.format(progress)),
-                        if (count!=-1 && total!=-1)
-                          Text('${doubleDecimalFormatter.format(count)}MB / ${doubleDecimalFormatter.format(total)}MB'),
-                      ],
-                    ),
-                    SizedBox(height: 18,),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(FromZeroLocalizations.of(context).translate('restart_warning'),
-                        style: Theme.of(context).textTheme.caption,
-                      ),
-                    ),
-                  ],
-                ),
-          ),
+                  ),
+                ],
+              ),
         ),
-        actions: <Widget>[
-          if (!started)
-          FlatButton(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(FromZeroLocalizations.of(context).translate('cancel').toUpperCase()
-                , style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
-            ),
-            textColor: Theme.of(context).textTheme.caption!.color,
-            onPressed: () {
-              Navigator.of(context).pop(false);
-            },
-          ),
-          if (!started)
-          FlatButton(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(FromZeroLocalizations.of(context).translate('update').toUpperCase()
-                , style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
-            ),
-            textColor: Colors.blue,
+      ),
+      actions: <Widget>[
+        if (!started)
+          DialogButton.cancel(),
+        if (!started)
+          DialogButton(
+            child: Text(FromZeroLocalizations.of(context).translate('update').toUpperCase()),
+            color: Colors.blue,
             onPressed: () async {
               setState(() {
                 started = true;
@@ -329,9 +315,9 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
               Navigator.of(context).pop();
             },
           ),
-          SizedBox(width: 6,),
-        ],
-      );
+        SizedBox(width: 6,),
+      ],
+    );
   }
 
 }
