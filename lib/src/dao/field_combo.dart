@@ -215,7 +215,7 @@ class ComboField<T extends DAO> extends Field<T> {
   List<Widget> buildFieldEditorWidgets(BuildContext context, {
     bool addCard=false,
     bool asSliver = true,
-    expandToFillContainer: true,
+    expandToFillContainer = true,
     bool dense = false,
     bool ignoreHidden = false,
     FocusNode? focusNode,
@@ -507,14 +507,14 @@ class ComboField<T extends DAO> extends Field<T> {
                         style: Theme.of(context).textTheme.subtitle1!.copyWith(
                           height: 1,
                           color: value==null||value.toString().isEmpty ? Theme.of(context).textTheme.caption!.color!
-                              : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                              : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                         ),
                       )
                 : value==null&&hint==null&&title!=null
                     ? Text(title,
                         maxLines: 2,
                         style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                         ),
                       )
                     : MaterialKeyValuePair(
@@ -522,14 +522,14 @@ class ComboField<T extends DAO> extends Field<T> {
                       title: title,
                       titleMaxLines: 1,
                       titleStyle: Theme.of(context).textTheme.caption!.copyWith(
-                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                       ),
                       value: value==null||value.toString().isEmpty ? (hint ?? '') : value.toString(),
                       valueMaxLines: 2,
                       valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
                         height: 1,
                         color: value==null||value.toString().isEmpty ? Theme.of(context).textTheme.caption!.color!
-                            : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                            : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                       ),
                     ),
                 SizedBox(height: 4,),
@@ -538,7 +538,7 @@ class ComboField<T extends DAO> extends Field<T> {
           ),
           SizedBox(width: dense ? 0 : 4,),
           if (!dense && showDropdownIcon && enabled && !clearable)
-            Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyText1!.color,),
+            Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyLarge!.color,),
           SizedBox(width: dense ? 0 : 4,),
         ],
       ),

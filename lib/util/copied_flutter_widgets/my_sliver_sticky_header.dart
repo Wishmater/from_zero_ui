@@ -156,7 +156,7 @@ class SliverStickyHeader extends RenderObjectWidget {
     Key? key,
     this.header,
     this.sliver,
-    this.overlapsContent: false,
+    this.overlapsContent = false,
     this.sticky = true,
     this.controller,
     this.scrollController,
@@ -175,7 +175,7 @@ class SliverStickyHeader extends RenderObjectWidget {
     Key? key,
     required SliverStickyHeaderWidgetBuilder builder,
     Widget? sliver,
-    bool overlapsContent: false,
+    bool overlapsContent = false,
     bool sticky = true,
     StickyHeaderController? controller,
     ScrollController? scrollController,
@@ -328,8 +328,8 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
   RenderSliverStickyHeader({
     RenderObject? header,
     RenderSliver? child,
-    bool overlapsContent: false,
-    bool sticky: true,
+    bool overlapsContent = false,
+    bool sticky = true,
     StickyHeaderController? controller,
     ScrollController? scrollController,
     double stickOffset = 0,
@@ -641,8 +641,8 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
         if (_oldState != state) {
           _oldState = state;
           header!.layout(
-            BoxValueConstraints<SliverStickyHeaderState?>(
-              value: _oldState,
+            BoxValueConstraints<SliverStickyHeaderState>(
+              value: state,
               constraints: constraints.asBoxConstraints(),
             ),
             parentUsesSize: true,
@@ -701,8 +701,8 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
     try {
       final scrollPosition = scrollController!.position;
 
-      var previousViewport = RenderAbstractViewport.of(_header)!;
-      AbstractNode temp = previousViewport;
+      var previousViewport = RenderAbstractViewport.of(_header);
+      RenderObject temp = previousViewport;
       do {
         temp = temp.parent!;
       }  while (temp is! RenderAbstractViewport);

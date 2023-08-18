@@ -23,8 +23,8 @@ class ResponsiveDrawerMenuItem{
   final String? subtitle;
   final String? subtitleRight;
   final String? route;
-  final Map<String, String>? params;
-  final Map<String, String>? queryParams;
+  final Map<String, String>? pathParameters;
+  final Map<String, String>? queryParameters;
   final Object? extra;
   final Widget? icon;
   final List<ResponsiveDrawerMenuItem>? children;
@@ -46,8 +46,8 @@ class ResponsiveDrawerMenuItem{
     this.subtitle,
     this.icon,
     this.route,
-    this.params,
-    this.queryParams,
+    this.pathParameters,
+    this.queryParameters,
     this.extra,
     this.children,
     this.selectedChild = -1,
@@ -67,8 +67,8 @@ class ResponsiveDrawerMenuItem{
   static List<ResponsiveDrawerMenuItem> fromGoRoutes({
     required List<GoRouteFromZero> routes,
     bool excludeRoutesThatDontWantToShow = false,
-    Map<String, String> params = const {},
-    Map<String, String> queryParams = const {},
+    Map<String, String> pathParameters = const {},
+    Map<String, String> queryParameters = const {},
     Object? extra,
     bool dense = false,
     bool forcePopup = false,
@@ -77,8 +77,8 @@ class ResponsiveDrawerMenuItem{
     return routes.mapIndexed((i, e) {
       final children = fromGoRoutes(
         routes: e.routes,
-        params: params,
-        queryParams: queryParams,
+        pathParameters: pathParameters,
+        queryParameters: queryParameters,
         extra: extra,
         dense: dense,
         forcePopup: forcePopup,
@@ -122,8 +122,8 @@ class ResponsiveDrawerMenuItem{
             icon: e.icon,
             route: e.name,
             children: e.childrenAsDropdownInDrawerNavigation ? children : [],
-            params: e.getParams(params),
-            queryParams: e.getQueryParams(queryParams),
+            pathParameters: e.getPathParameters(pathParameters),
+            queryParameters: e.getQueryParameters(queryParameters),
             extra: e.getExtra(extra),
             dense: dense,
             forcePopup: forcePopup,
@@ -164,8 +164,8 @@ class ResponsiveDrawerMenuItem{
       subtitle: subtitle ?? this.subtitle,
       subtitleRight: subtitleRight ?? this.subtitleRight,
       route: route ?? this.route,
-      params: params ?? this.params,
-      queryParams: queryParams ?? this.queryParams,
+      pathParameters: params ?? this.pathParameters,
+      queryParameters: queryParams ?? this.queryParameters,
       extra: extra ?? this.extra,
       icon: icon ?? this.icon,
       children: children ?? this.children,
@@ -184,7 +184,7 @@ class ResponsiveDrawerMenuItem{
     );
   }
 
-  String get uniqueId => title.toString()+subtitle.toString()+(icon?.toStringShort()).toString()+route.toString(); // TODO 3 this should be a hash, for efficiency
+  int get uniqueId => Object.hashAll([title, subtitle, icon?.toStringShort(), route.toString()]);
 
   BottomNavigationBarItem asBottomNavigationBarItem() {
     return BottomNavigationBarItem(
@@ -300,8 +300,8 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
         if (useNamesToUpdateTabsWithGoRouter) {
 
           final goRouter = GoRouter.of(context);
-          final matches = goRouter.routerDelegate.matches;
-          final currentRouteName = matches.last.route.name?.replaceAll('_', '');
+          final matches = goRouter.routerDelegate.currentConfiguration;
+          final currentRouteName = (matches.last.route as GoRoute).name?.replaceAll('_', '');
           final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
           int Function(List<ResponsiveDrawerMenuItem>, RouteMatch)? getSelectedIndex;
           getSelectedIndex = (tabs, match) {
@@ -344,12 +344,13 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
           // old deprecated method of comparing using computed paths
           final goRouter = GoRouter.of(context);
-          String location = goRouter.location;
+          final goRouterState = GoRouterState.of(context);
+          String location = goRouterState.uri.toString();
           int queryParamsIndex = location.indexOf('?');
           if (queryParamsIndex>=0) {
             location = location.substring(0, queryParamsIndex);
           }
-          final matches = goRouter.routerDelegate.matches;
+          final matches = goRouter.routerDelegate.currentConfiguration;
           final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
           Map<ResponsiveDrawerMenuItem, String> computedNames = {};
           int Function(List<ResponsiveDrawerMenuItem>, RouteMatch)? getSelectedIndex;
@@ -359,7 +360,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               if (e.route!=null) {
                 if (!computedNames.containsKey(e)) {
                   computedNames[e] = goRouter.namedLocation(e.route!,
-                    params: e.params ?? {},
+                    pathParameters: e.pathParameters ?? {},
                   );
                 }
                 final computedName = computedNames[e]!;
@@ -401,7 +402,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
         // old deprecated way of inferring the selected route
         try {
           String location = widget.pushType == DrawerMenuFromZero.go
-              ? GoRouter.of(context).location
+              ? GoRouterState.of(context).uri.toString()
               : ModalRoute.of(context)!.settings.name!;
           List<String> paths = location.split('/')..removeWhere((e) => e.isEmpty);
           String cumulativePath = '';
@@ -514,9 +515,9 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   }
                   GoRouter.of(context).goNamed(
                     tabs[i].route!,
-                    params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
-                    queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
-                    extra: tabs[i].extra,
+                    // pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                    // queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                    // extra: tabs[i].extra,
                   );
                 }
                 return result;
@@ -547,13 +548,13 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   if (goRouter==null) {
                     navigator.pushNamed(
                       tabs[i].route!,
-                      arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
+                      arguments: {...(tabs[i].pathParameters??{}), ...(tabs[i].queryParameters??{})},
                     );
                   } else {
                     goRouter.pushNamed(
                       tabs[i].route!,
-                      params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
-                      queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
+                      pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                      queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
                       extra: tabs[i].extra,
                     );
                   }
@@ -564,7 +565,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                         navigator.popUntil(ModalRoute.withName(widget.homeRoute!));
                       }
                     } else {
-                      goRouter.maybePopUntil(context, (match) => match.route.name==widget.homeRoute);
+                      goRouter.maybePopUntil(context, (match) => (match.route as GoRoute).name==widget.homeRoute);
                     }
                   } else{
                     if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
@@ -572,16 +573,16 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                         navigator.pushNamedAndRemoveUntil(
                           tabs[i].route!,
                           ModalRoute.withName(widget.homeRoute!),
-                          arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
+                          arguments: {...(tabs[i].pathParameters??{}), ...(tabs[i].queryParameters??{})},
                         );
                       } else {
                         navigator.popUntil(ModalRoute.withName(widget.homeRoute!));
                         // TODO 2 make this a maybe pop (This causes routes to first be popped, and then new one pushed, which might bring some visual issues)
                         goRouter.pushNamedAndRemoveUntil(
                           tabs[i].route!,
-                          (match) => match.route.name==widget.homeRoute,
-                          params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
-                          queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
+                          (match) => (match.route as GoRoute).name==widget.homeRoute,
+                          pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                          queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
                           extra: tabs[i].extra,
                         );
                       }
@@ -592,13 +593,13 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 if (goRouter==null) {
                   navigator.pushNamed(
                     tabs[i].route!,
-                    arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
+                    arguments: {...(tabs[i].pathParameters??{}), ...(tabs[i].queryParameters??{})},
                   );
                 } else {
                   goRouter.pushNamed(
                     tabs[i].route!,
-                    params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
-                    queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
+                    pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                    queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
                     extra: tabs[i].extra,
                   );
                 }
@@ -629,21 +630,21 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                         }
                         return false;
                       },
-                      arguments: {...(tabs[i].params??{}), ...(tabs[i].queryParams??{})},
+                      arguments: {...(tabs[i].pathParameters??{}), ...(tabs[i].queryParameters??{})},
                     );
                   } else {
                     // TODO 3 can I make this a maybe pop
                     goRouter.pushNamedAndRemoveUntil(
                       tabs[i].route!,
-                      (route) {
+                      (match) {
                         if (passed) return true;
-                        if (routes.contains(route.route.name)){
+                        if (routes.contains((match.route as GoRoute).name)){
                           passed = true;
                         }
                         return false;
                       },
-                      params: (tabs[i].params??{}).map((key, value) => MapEntry(key, value.toString())),
-                      queryParams: (tabs[i].queryParams??{}).map((key, value) => MapEntry(key, value.toString())),
+                      pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                      queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
                       extra: tabs[i].extra,
                     );
                   }
@@ -732,7 +733,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                               width: 26.0, //(widget.depth+1)*20.0
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.only(topRight: Radius.circular(16)),
-                                color: Color.alphaBlend(theme.dividerColor.withOpacity(theme.dividerColor.opacity*0.5), Material.of(context)?.color ?? theme.cardColor),
+                                color: Color.alphaBlend(theme.dividerColor.withOpacity(theme.dividerColor.opacity*0.5), Material.maybeOf(context)?.color ?? theme.cardColor),
                                 // color: Color.alphaBlend(
                                 //   selected!=i
                                 //       ? theme.dividerColor
@@ -958,7 +959,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
     final selectedColor = !widget.selected ? Colors.transparent
         : Color.lerp((widget.selectedColor ?? theme.indicatorColor), theme.cardColor, 0.77);
     final selectedTextColor = !widget.selected ? Colors.transparent
-        : widget.selectedColor ?? Color.lerp(theme.textTheme.bodyText1!.color, theme.indicatorColor, 0.7)!;
+        : widget.selectedColor ?? Color.lerp(theme.textTheme.bodyLarge!.color, theme.indicatorColor, 0.7)!;
     final dense = widget.dense && !widget.selected;
     return Material(
       type: MaterialType.transparency,
@@ -982,7 +983,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 : widget.selected ? 17 : 16,
             color: dense
                 ? widget.selected ? selectedTextColor.withOpacity(0.75) : theme.textTheme.caption!.color
-                : widget.selected ? selectedTextColor : theme.textTheme.bodyText1!.color,
+                : widget.selected ? selectedTextColor : theme.textTheme.bodyLarge!.color,
             fontWeight: widget.selected ? FontWeight.w700 : null,
           ),
           child: Row(

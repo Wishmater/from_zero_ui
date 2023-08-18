@@ -20,7 +20,6 @@ import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:sliver_tools/sliver_tools.dart';
-import 'package:dartx/dartx.dart';
 import 'package:multi_value_listenable_builder/multi_value_listenable_builder.dart';
 
 
@@ -1194,7 +1193,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                           SizedBox(height: 12,),
                           Text('${FromZeroLocalizations.of(context).translate('edit_multiple_desc1')} ${elements.length} ${elements.length>1  ? FromZeroLocalizations.of(context).translate('element_plur')
                               : FromZeroLocalizations.of(context).translate('element_sing')} ${FromZeroLocalizations.of(context).translate('edit_multiple_desc2')}',
-                            style: Theme.of(context).textTheme.bodyText1,
+                            style: Theme.of(context).textTheme.bodyLarge,
                           ),
                         ],
                       ),
@@ -1663,7 +1662,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   }
                   return SizedBox.shrink();
                 }
-                if (page != tabController!.index) {
+                if (page != tabController.index) {
                   WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                     if (page != tabController.index) {
                       tabController.animateTo(page);
@@ -1724,7 +1723,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   borderRadius: BorderRadius.all(Radius.circular(8)),
                   border: Border.all(
                     width: 2,
-                    color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.3),
+                    color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.3),
                   ),
                 ),
               ),
@@ -1847,7 +1846,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               rowAddonWidget = Theme(
                 data: Theme.of(context).copyWith(
                   textTheme: Theme.of(context).textTheme.copyWith(
-                    subtitle1: Theme.of(context).textTheme.bodyText1!.copyWith(fontWeight: FontWeight.w400),
+                    subtitle1: Theme.of(context).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
                   ),
                 ),
                 child: Padding(
@@ -1887,7 +1886,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               height: rowHeight,
               onRowTap: onRowTapFocused,
               selected: allowMultipleSelection ? (selectedObjects.value[e] ?? selectionDefault) : null,
-              // backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).accentColor.withOpacity(0.2) : null,
+              // backgroundColor: selectedObjects.value[e]??false ? Theme.of(context).colorScheme.secondary.withOpacity(0.2) : null,
               onCheckBoxSelected: allowMultipleSelection ? (row, focused) {
                 selectedObjects.value[row.id] = focused??false;
                 (row as SimpleRowModel).selected = focused??false;
@@ -1936,7 +1935,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   duration: Duration(milliseconds: 300),
                   builder: (animationController, child) {
                     return Container(
-                      color: backgroundColor?.call(context, this, dao) ?? Material.of(context)!.color ?? Theme.of(context).cardColor,
+                      color: backgroundColor?.call(context, this, dao) ?? Material.of(context).color ?? Theme.of(context).cardColor,
                       height: 128*CurveTween(curve: Curves.easeInCubic).chain(Tween(begin: 1.0, end: 0.0,)).evaluate(animationController),
                     );
                   },
@@ -2223,7 +2222,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           return SizedBox.shrink();
         }
         return Container(
-          color: backgroundColor?.call(context, this, dao) ?? Material.of(context)!.color ?? Theme.of(context).cardColor,
+          color: backgroundColor?.call(context, this, dao) ?? Material.of(context).color ?? Theme.of(context).cardColor,
           child: TextButton(
             child: Padding(
               padding: const EdgeInsets.only(top: 10, bottom: 10,),

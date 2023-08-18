@@ -96,16 +96,7 @@ class _PageScaffoldState extends State<PageScaffold> {
             ScaffoldFromZero.screenSizeMedium: ActionState.button,
           },
           onTap: (appbarContext){
-            Scaffold.of(context).showSnackBar(SnackBar(
-              content: Text("pepeg"),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(8))),
-              width: 512,
-              behavior: SnackBarBehavior.floating,
-              action: SnackBarAction(label: "Do something", onPressed: (){},),
-//              margin: EdgeInsets.all(0),
-              padding: EdgeInsets.all(0),
 
-            ));
           },
         ),),
 
@@ -144,7 +135,7 @@ class _PageScaffoldState extends State<PageScaffold> {
                         SizedBox(height: 32,),
                         Padding(
                           padding: const EdgeInsets.only(left: 16),
-                          child: RaisedButton(
+                          child: ElevatedButton(
                             child: Text("Page With Same ID and Same Depth"),
                             onPressed: () => GoRouter.of(context).pushNamed("scaffold_same"),
                           ),
@@ -152,7 +143,7 @@ class _PageScaffoldState extends State<PageScaffold> {
                         SizedBox(height: 16,),
                         Padding(
                           padding: const EdgeInsets.only(left: 16),
-                          child: RaisedButton(
+                          child: ElevatedButton(
                             child: Text("Page With Same ID and Higher Depth"),
                             onPressed: () => GoRouter.of(context).pushNamed("scaffold_inner"),
                           ),
@@ -160,7 +151,7 @@ class _PageScaffoldState extends State<PageScaffold> {
                         SizedBox(height: 16,),
                         Padding(
                           padding: const EdgeInsets.only(left: 16),
-                          child: RaisedButton(
+                          child: ElevatedButton(
                             child: Text("Page With Different ID"),
                             onPressed: () => GoRouter.of(context).pushNamed("scaffold_other"),
                           ),

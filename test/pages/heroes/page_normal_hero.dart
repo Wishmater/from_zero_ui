@@ -38,7 +38,7 @@ class _PageHeroesState extends State<PageNormalHero> {
           child: Hero(
             tag: "hero_test",
             child: Container(
-              color: Theme.of(context).accentColor,
+              color: Theme.of(context).colorScheme.secondary,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,

@@ -145,10 +145,10 @@ class _PageHomeState extends State<PageHome> {
                             );
                           }),
                         ],
-                        child: RaisedButton(
+                        child: ElevatedButton(
                           child: Text("SCAFFOLD"),
                           onPressed: () {
-                            Navigator.of(context).pushNamed("/scaffold");
+                            GoRouter.of(context).goNamed("scaffold");
                           },
                         ),
                       ),

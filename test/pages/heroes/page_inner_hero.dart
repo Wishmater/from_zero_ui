@@ -40,7 +40,7 @@ class _PageHeroesState extends State<PageInnerHero> {
             tag: "hero_test",
             flightShuttleBuilder: HeroesFromZero.fadeThroughFlightShuttleBuilder,
             child: Container(
-              color: Theme.of(context).accentColor,
+              color: Theme.of(context).colorScheme.secondary,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.start,

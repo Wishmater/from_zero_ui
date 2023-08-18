@@ -22,10 +22,8 @@ class AppbarFromZero extends StatefulWidget {
   final Color? shadowColor;
   final ShapeBorder? shape;
   final Color? backgroundColor;
-  final Brightness? brightness;
   final IconThemeData? iconTheme;
   final IconThemeData? actionsIconTheme;
-  final TextTheme? textTheme;
   final bool primary;
   final bool? centerTitle;
   final bool excludeHeaderSemantics;
@@ -67,10 +65,8 @@ class AppbarFromZero extends StatefulWidget {
     this.shadowColor,
     this.shape,
     this.backgroundColor,
-    this.brightness,
     this.iconTheme,
     this.actionsIconTheme,
-    this.textTheme,
     this.primary = true,
     this.centerTitle,
     this.excludeHeaderSemantics = false,
@@ -178,7 +174,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
     final actionsColor = widget.backgroundColor==null
         ? null
         : widget.backgroundColor!.opacity<0.3
-            ? Theme.of(context).textTheme.bodyText1!.color
+            ? Theme.of(context).textTheme.bodyLarge!.color
             : ThemeData.estimateBrightnessForColor(widget.backgroundColor!)==Brightness.light
                 ? Colors.black : Colors.white;
     List<ActionFromZero> overflows = [];
@@ -256,7 +252,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
       }
       if (overflows.isNotEmpty) {
         final iconButtonColor = Theme.of(context).appBarTheme.toolbarTextStyle?.color
-            ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+            ?? Theme.of(context).textTheme.bodyLarge!.color!;
         final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
         final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
         actions.add(
@@ -412,10 +408,8 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
         shadowColor: widget.shadowColor,
         shape: widget.shape,
         backgroundColor: widget.backgroundColor,
-        brightness: widget.brightness,
         iconTheme: widget.iconTheme,
         actionsIconTheme: widget.actionsIconTheme,
-        textTheme: widget.textTheme,
         primary: widget.primary,
         centerTitle: widget.centerTitle,
         excludeHeaderSemantics: widget.excludeHeaderSemantics,

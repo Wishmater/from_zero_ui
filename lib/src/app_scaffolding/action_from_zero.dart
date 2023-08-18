@@ -177,7 +177,7 @@ class ActionFromZero extends StatelessWidget {
     Color? color,
   }) {
     color ??= Theme.of(context).appBarTheme.toolbarTextStyle?.color
-        ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+        ?? Theme.of(context).textTheme.bodyLarge!.color!;
     final transparentColor = color.withOpacity(0.05);
     final semiTransparentColor = color.withOpacity(0.1);
     return defaultAnimatedSwitcherBuilder(
@@ -207,7 +207,7 @@ class ActionFromZero extends StatelessWidget {
     Color? color,
   }) {
     color ??= Theme.of(context).appBarTheme.toolbarTextStyle?.color
-        ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+        ?? Theme.of(context).textTheme.bodyLarge!.color!;
     return defaultAnimatedSwitcherBuilder(
       child: SizedBox(
         height: 64,
@@ -282,7 +282,7 @@ class ActionFromZero extends StatelessWidget {
                   fontSize: 16,
                   color: !enabled || onTap==null
                       ? Theme.of(context).textTheme.caption!.color
-                      : Theme.of(context).textTheme.bodyText1!.color,
+                      : Theme.of(context).textTheme.bodyLarge!.color,
                 ),
               ),
             ),
@@ -303,7 +303,7 @@ class ActionFromZero extends StatelessWidget {
         padding: EdgeInsets.zero,
         primary: !enabled || onTap==null
             ? Theme.of(context).textTheme.caption!.color
-            : Theme.of(context).textTheme.bodyText1!.color,
+            : Theme.of(context).textTheme.bodyLarge!.color,
       ),
       child: result,
     );

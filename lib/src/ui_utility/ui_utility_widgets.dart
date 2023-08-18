@@ -18,7 +18,6 @@ import 'package:bitsdojo_window_platform_interface/window.dart' as bitsdojo_wind
 import 'package:dartx/dartx.dart';
 
 
-import 'package:dartx/dartx.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
 
@@ -687,7 +686,7 @@ class _ExpandIconButtonState extends State<ExpandIconButton> with SingleTickerPr
             return Icon(Icons.expand_more,
               color: ColorTween(
                 end: Theme.of(context).splashColor.withOpacity(1),
-                begin: Theme.of(context).textTheme.bodyText1!.color!,
+                begin: Theme.of(context).textTheme.bodyLarge!.color!,
               ).evaluate(controlPanelAnimationController),
               size: 32,
             );
@@ -777,7 +776,7 @@ class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
               child: FloatingActionButton(
                 heroTag: null,
                 child: widget.icon ?? Icon(Icons.arrow_upward,
-                  color: Theme.of(context).textTheme.bodyText1!.color!,
+                  color: Theme.of(context).textTheme.bodyLarge!.color!,
                 ),
                 backgroundColor: Theme.of(context).cardColor,
                 onPressed: widget.onTap ?? () {
@@ -822,7 +821,7 @@ class TextIcon extends StatelessWidget {
         child: Center(
           child: Text(
             text.toUpperCase(),
-            style: Theme.of(context).textTheme.bodyText1!.copyWith(color: Theme.of(context).cardColor),
+            style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: Theme.of(context).cardColor),
           ),
         ),
       ),

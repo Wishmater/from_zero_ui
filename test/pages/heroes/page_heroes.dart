@@ -79,7 +79,7 @@ class _PageHeroesState extends State<PageHeroes> {
                 SizedBox(height: 8,),
                 Padding(
                   padding: const EdgeInsets.only(left: 16),
-                  child: RaisedButton(
+                  child: ElevatedButton(
                     child: Text("Normal Hero"),
                     onPressed: () {
                       setState(() {
@@ -94,7 +94,7 @@ class _PageHeroesState extends State<PageHeroes> {
                 SizedBox(height: 16,),
                 Padding(
                   padding: const EdgeInsets.only(left: 16),
-                  child: RaisedButton(
+                  child: ElevatedButton(
                     child: Text("CrossFade Hero"),
                     onPressed: () {
                       setState(() {
@@ -109,7 +109,7 @@ class _PageHeroesState extends State<PageHeroes> {
                 SizedBox(height: 16,),
                 Padding(
                   padding: const EdgeInsets.only(left: 16),
-                  child: RaisedButton( //TODO 3- implement custom trransitionBuilderHero
+                  child: ElevatedButton( //TODO 3- implement custom trransitionBuilderHero
                     child: Text("Custom transionBuilder Hero"),
                     onPressed: () {
                       setState(() {
@@ -124,7 +124,7 @@ class _PageHeroesState extends State<PageHeroes> {
                 SizedBox(height: 16,),
                 Padding(
                   padding: const EdgeInsets.only(left: 16),
-                  child: RaisedButton(
+                  child: ElevatedButton(
                     child: Text("CrossFade in a Page with Higher Depth"),
                     onPressed: () {
                       setState(() {
@@ -144,7 +144,7 @@ class _PageHeroesState extends State<PageHeroes> {
               tag: "hero_test",
               flightShuttleBuilder: shuttleBuilder,
               child: Container(
-                color: Theme.of(context).accentColor,
+                color: Theme.of(context).colorScheme.secondary,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.start,

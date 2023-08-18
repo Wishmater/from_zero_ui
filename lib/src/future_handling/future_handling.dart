@@ -158,12 +158,12 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
                             Text((value*100).round().toString(),
                               style: TextStyle(
                                 fontSize: fontSize,
-                                color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                                color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                               ),
                             ),
                             Text('%', style: TextStyle(
                               fontSize: fontSize,
-                              color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                              color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                             ),),
                           ],
                         ),
@@ -252,7 +252,7 @@ class ErrorSign extends StatelessWidget {
         if (subtitle.isNotNullOrBlank)
           Text(
             subtitle!,
-            style: Theme.of(context).textTheme.bodyText1,
+            style: Theme.of(context).textTheme.bodyLarge,
             textAlign: TextAlign.center,
           ),
         if (retryButton!=null || onRetry!=null)
@@ -345,8 +345,8 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
     Key? key,
     required this.future,
     required this.successBuilder,
-    this.errorBuilder: defaultErrorBuilder,
-    this.loadingBuilder: _defaultLoadingBuilder,
+    this.errorBuilder = defaultErrorBuilder,
+    this.loadingBuilder = _defaultLoadingBuilder,
     this.initialData,
     AnimatedSwitcherTransitionBuilder? transitionBuilder,
     this.keepPreviousDataWhileLoading = false,

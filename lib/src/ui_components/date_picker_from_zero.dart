@@ -73,7 +73,7 @@ class DatePickerFromZero extends StatefulWidget {
               Expanded(
                 child: value==null&&hint==null&&title!=null
                     ? Text(title, style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                     ),)
                     : MaterialKeyValuePair(
                       title: title,
@@ -81,7 +81,7 @@ class DatePickerFromZero extends StatefulWidget {
                       valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
                         height: 1,
                         color: value==null ? Theme.of(context).textTheme.caption!.color!
-                            : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                            : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                       ),
                     ),
                   ),

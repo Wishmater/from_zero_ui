@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
+import 'package:from_zero_ui/util/web_initial_config/web_initial_config.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'change_notifiers/theme_parameters.dart';
@@ -12,6 +13,7 @@ import 'router.dart';
 
 
 void main() async{
+  initAppConfigWebSensitive();
   WidgetsFlutterBinding.ensureInitialized();
   await initHive();
   fromZeroThemeParametersProvider = ChangeNotifierProvider((ref) {
@@ -34,20 +36,24 @@ final initChangeNotifier = DefaultInitChangeNotifier();
 class MyApp extends StatelessWidget {
 
   final _router = GoRouter(
-    urlPathStrategy: UrlPathStrategy.path,
     routes: GoRouteFromZero.getCleanRoutes([
       initRoute,
       ...mainRoutes,
     ]),
     refreshListenable: initChangeNotifier,
     // debugLogDiagnostics: true,
-    redirect: (state) {
+    redirect: (context, state) {
+      print ('REDIRECT');
       final initialized = initChangeNotifier.initialized;
-      final goingToInitScreen = state.subloc == '/login';
+      final goingToInitScreen = state.matchedLocation == '/login';
+      print (state.matchedLocation);
+      print (initialized);
+      print (goingToInitScreen);
+      print ('END REDIRECT');
       // the user is not logged in and not headed to /login, they need to login
-      if (!initialized && !goingToInitScreen) return '/login?from=${state.subloc}';
+      if (!initialized && !goingToInitScreen) return '/login?from=${state.uri.toString()}';
       // the user is logged in and headed to /login, no need to login again
-      if (initialized && goingToInitScreen) return state.queryParams['from'] ?? '/';
+      if (initialized && goingToInitScreen) return state.uri.queryParameters['from'] ?? '/';
       // no need to redirect at all
       return null;
     },
@@ -66,7 +72,7 @@ class MyApp extends StatelessWidget {
             theme: themeParameters.lightTheme,
             darkTheme: themeParameters.darkTheme,
             locale: Locale('ES'), //themeParameters.appLocale
-            supportedLocales: List.from(themeParameters.supportedLocales)..remove(null),
+            supportedLocales: List.from(themeParameters.supportedLocales.where((e) => e!=null)),
             localizationsDelegates: [
               FromZeroLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
@@ -82,9 +88,7 @@ class MyApp extends StatelessWidget {
                 goRouter: _router,
               );
             },
-            routeInformationParser: _router.routeInformationParser,
-            routerDelegate: _router.routerDelegate,
-            routeInformationProvider: _router.routeInformationProvider,
+            routerConfig: _router,
           );
         },
       ),

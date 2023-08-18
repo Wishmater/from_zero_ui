@@ -1063,7 +1063,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                                             );
                                                           }).toList(),
                                                           onTap: (value) {
-                                                            DefaultTabController.of(context)!.index = value;
+                                                            DefaultTabController.of(context).index = value;
                                                             pageController.animateToPage(value,
                                                               duration: kTabScrollDuration,
                                                               curve: Curves.ease,
@@ -1088,7 +1088,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                   ),
                                   content: Builder(
                                     builder: (context) {
-                                      final tabController = DefaultTabController.of(context)!;
+                                      final tabController = DefaultTabController.of(context);
                                       return AnimatedBuilder(
                                         animation: tabController,
                                         builder: (context, child) {
@@ -1253,7 +1253,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                             ValidationMessage(
                                               errors: invalidatingErrors.keys.toList(),
                                               passedFirstEdit: true,
-                                              errorTextStyle: Theme.of(context).textTheme.bodyText1,
+                                              errorTextStyle: Theme.of(context).textTheme.bodyLarge,
                                               animate: false,
                                             ),
                                             if (allowSetInvalidatingFieldsToDefaultValues)
@@ -1637,7 +1637,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 // alignment: Alignment.centerRight,
                 child: SelectableText(e.uiName,
                   style: Theme.of(context).textTheme.subtitle2!.copyWith(
-                    color: Theme.of(context).textTheme.bodyText1!.color!
+                    color: Theme.of(context).textTheme.bodyLarge!.color!
                         .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
                     wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
                   ),
@@ -1847,7 +1847,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   borderRadius: BorderRadius.all(Radius.circular(8)),
                   border: Border.all(
                     width: 2,
-                    color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.3),
+                    color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.3),
                   ),
                 ),
               ),

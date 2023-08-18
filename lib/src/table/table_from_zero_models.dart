@@ -561,7 +561,7 @@ class NumColModel<T> extends SimpleColModel<T> {
           : MaterialCommunityIcons.sort_numeric_descending,
       key: ValueKey(ascending),
       size: 20,
-      color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+      color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).colorScheme.secondary,
     );
   }
   @override

@@ -145,4 +145,13 @@ abstract class MyNumberFormat implements NumberFormat{
   @override
   void turnOffGrouping() {}
 
+  @override
+  int? maximumSignificantDigits;
+
+  @override
+  int? minimumSignificantDigits;
+
+  @override
+  bool minimumSignificantDigitsStrict = false;
+
 }

@@ -179,7 +179,7 @@ class DateField extends Field<DateTime> {
   List<Widget> buildFieldEditorWidgets(BuildContext context, {
     bool addCard=false,
     bool asSliver = true,
-    expandToFillContainer: true,
+    expandToFillContainer = true,
     bool dense = false,
     FocusNode? focusNode,
     bool ignoreHidden = false,
@@ -377,23 +377,23 @@ class DateField extends Field<DateTime> {
                     ? Text(value==null ? (hint ?? title ?? '') : formattedValue, style: Theme.of(context).textTheme.subtitle1!.copyWith(
                         height: 0.8,
                         color: value==null ? Theme.of(context).textTheme.caption!.color!
-                            : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                            : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                       ))
                 : value==null&&hint==null&&title!=null
                     ? Text(title, style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                      color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                     ),)
                     : MaterialKeyValuePair(
                       padding: 6,
                       title: title,
                       titleStyle: Theme.of(context).textTheme.caption!.copyWith(
-                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                        color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                       ),
                       value: value==null ? (hint ?? '') : formattedValue,
                       valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
                         height: 1,
                         color: value==null ? Theme.of(context).textTheme.caption!.color!
-                            : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                            : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                       ),
                     ),
                 SizedBox(height: 4,),

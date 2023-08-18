@@ -148,7 +148,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
     Color actionColor = type==null
         ? Theme.of(context).brightness==Brightness.light
             ? Theme.of(context).primaryColor
-            : Theme.of(context).accentColor
+            : Theme.of(context).colorScheme.secondary
         : SnackBarFromZero.colors[type];
     Widget result = Row(
       children: [
@@ -170,7 +170,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
               SizedBox(height: 2,),
               if (widget.message!=null)
                 DefaultTextStyle(
-                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12),
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12),
                   child: widget.message!,
                 ),
               SizedBox(height: 8,),
@@ -232,7 +232,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
               },
               child: Icon(Icons.close, size: 24,),
               style: TextButton.styleFrom(
-                primary: Theme.of(context).textTheme.bodyText1!.color,
+                primary: Theme.of(context).textTheme.bodyLarge!.color,
                 padding: EdgeInsets.only(right: 10),
               ),
             ),

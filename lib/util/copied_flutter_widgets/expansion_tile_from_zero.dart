@@ -209,7 +209,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     _iconColor = _controller.drive<Color?>(_iconColorTween.chain(_easeInTween));
     _backgroundColor = _controller.drive<Color?>(_backgroundColorTween.chain(_easeOutTween));
 
-    _isExpanded = widget.expanded ?? (PageStorage.of(context)?.readState(context) ?? widget.initiallyExpanded);
+    _isExpanded = widget.expanded ?? (PageStorage.maybeOf(context)?.readState(context) ?? widget.initiallyExpanded);
     if (_isExpanded)
       _controller.value = 1.0;
     _controller.addListener(() {
@@ -263,7 +263,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
             });
           });
         }
-        PageStorage.of(context)?.writeState(context, _isExpanded);
+        PageStorage.maybeOf(context)?.writeState(context, _isExpanded);
         widget.onPostExpansionChanged?.call(expanded);
       });
     }
@@ -374,7 +374,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     }
     return Material(
       type: MaterialType.transparency,
-      color: Material.of(context)?.color ?? Colors.transparent,
+      color: Material.maybeOf(context)?.color ?? Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
           color: _backgroundColor.value,

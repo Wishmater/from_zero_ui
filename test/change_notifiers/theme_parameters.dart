@@ -17,11 +17,14 @@ class ThemeParameters extends ThemeParametersFromZero {
   List<ThemeData?> get themes => [
     null,
     ThemeData( // TODO 3 make static const ThemeData definitions on settings, meant to be used with .copyWith
+      useMaterial3: true,
       canvasColor: Colors.grey.shade300,
       primaryColor: Color.fromRGBO(0, 0, 100, 1),
       primaryColorDark: Color.fromRGBO(0, 0, 60, 1),
       primaryColorLight: Color.fromRGBO(0, 0, 140, 1),
-      accentColor: Colors.orangeAccent.shade700,
+      colorScheme: ColorScheme.fromSwatch().copyWith(
+        secondary: Colors.orangeAccent.shade700,
+      ),
       visualDensity: VisualDensity.compact,
       focusColor: Colors.blue.withOpacity(0.1),
       hoverColor: Colors.blue.withOpacity(0.05), // lighter
@@ -53,8 +56,8 @@ class ThemeParameters extends ThemeParametersFromZero {
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(
-        isAlwaysShown: PlatformExtended.isDesktop,
-        showTrackOnHover: true,
+        // isAlwaysShown: PlatformExtended.isDesktop,
+        // showTrackOnHover: true,
         crossAxisMargin: 0,
         mainAxisMargin: 0,
         thumbColor: MaterialStateProperty.resolveWith((states) {
@@ -67,14 +70,16 @@ class ThemeParameters extends ThemeParametersFromZero {
           return Colors.black38;
         }),
       ),
-      primaryColorBrightness: Brightness.light,
     ),
     ThemeData(
+      useMaterial3: true,
       canvasColor: Colors.grey.shade300,
       primaryColor: Color.fromRGBO(0, 0, 100, 1),
       primaryColorDark: Color.fromRGBO(0, 0, 60, 1),
       primaryColorLight: Color.fromRGBO(0, 0, 140, 1),
-      accentColor: Colors.orangeAccent.shade700,
+      colorScheme: ColorScheme.fromSwatch().copyWith(
+        secondary: Colors.orangeAccent.shade700,
+      ),
       visualDensity: VisualDensity.compact,
       appBarTheme: AppBarTheme(
         color: Colors.white,
@@ -102,8 +107,8 @@ class ThemeParameters extends ThemeParametersFromZero {
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(
-        isAlwaysShown: PlatformExtended.isDesktop,
-        showTrackOnHover: true,
+        // isAlwaysShown: PlatformExtended.isDesktop,
+        // showTrackOnHover: true,
         crossAxisMargin: 0,
         mainAxisMargin: 0,
         thumbColor: MaterialStateProperty.resolveWith((states) {
@@ -118,8 +123,13 @@ class ThemeParameters extends ThemeParametersFromZero {
       ),
     ),
     ThemeData(
+      useMaterial3: true,
       brightness: Brightness.dark,
-      accentColor: Colors.orangeAccent.shade700,
+      colorScheme: ColorScheme.fromSwatch(
+        brightness: Brightness.dark,
+      ).copyWith(
+        secondary: Colors.orangeAccent.shade700,
+      ),
       visualDensity: VisualDensity.compact,
       focusColor: Colors.blue.withOpacity(0.1),
       hoverColor: Colors.blue.withOpacity(0.05),
@@ -137,8 +147,8 @@ class ThemeParameters extends ThemeParametersFromZero {
         ),
       ),
       scrollbarTheme: ScrollbarThemeData(
-        isAlwaysShown: PlatformExtended.isDesktop,
-        showTrackOnHover: true,
+        // isAlwaysShown: PlatformExtended.isDesktop,
+        // showTrackOnHover: true,
         crossAxisMargin: 0,
         mainAxisMargin: 0,
       ),

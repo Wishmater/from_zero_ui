@@ -70,7 +70,7 @@ class ComparableList<T extends Comparable> extends ComparableListBase<T> {
 }
 
 
-abstract class ComparableListBase<T> with Comparable, ContainsValue<List<T>> {
+abstract class ComparableListBase<T> implements Comparable, ContainsValue<List<T>> {
 
   final List<T> list;
   List<T>? get value => list;

@@ -431,7 +431,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     final OverlayState overlayState = Overlay.of(
       context,
       debugRequiredFor: widget,
-    )!;
+    );
 
     final RenderBox box = context.findRenderObject()! as RenderBox;
     final Offset target = box.localToGlobal(

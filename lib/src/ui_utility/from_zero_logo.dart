@@ -110,7 +110,7 @@ class FromZeroLogo extends StatelessWidget {
                   overflow: TextOverflow.visible,
                   style: GoogleFonts.libreCaslonDisplay(
                     fontSize: fontSize,
-                    color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.6),
+                    color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.6),
                     height: 0.78,
                     fontWeight: FontWeight.normal,
                   ),
@@ -121,7 +121,7 @@ class FromZeroLogo extends StatelessWidget {
                   overflow: TextOverflow.visible,
                   style: GoogleFonts.libreCaslonDisplay(
                     fontSize: fontSize,
-                    color: Theme.of(context).textTheme.bodyText1!.color,
+                    color: Theme.of(context).textTheme.bodyLarge!.color,
                     height: 0.78,
                       fontWeight: FontWeight.bold,
                   ),

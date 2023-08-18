@@ -380,7 +380,7 @@ class StringField extends Field<String> {
                         },
                         inputFormatters: inputFormatters,
                         style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                          color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                         ),
                         decoration: inputDecoration??InputDecoration(
                           border: InputBorder.none,
@@ -401,7 +401,7 @@ class StringField extends Field<String> {
                               : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
                           labelStyle: TextStyle(
                             height: dense ? 0 : largeVertically ? 0.5 : hint!=null ? 1 : 0.7,
-                            color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                            color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                           ),
                           hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
                           contentPadding: EdgeInsets.only(

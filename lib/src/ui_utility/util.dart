@@ -37,7 +37,7 @@ class SimpleValueString<T> implements ContainsValue<T> {
 
 
 
-class ValueString<T> with Comparable implements ContainsValue<T> {
+class ValueString<T> implements Comparable, ContainsValue<T> {
 
   T? value;
   Object string;
@@ -104,7 +104,7 @@ class ValueStringReference<T> extends ValueString<T> {
 
 
 
-class NumGroupComparingBySum with Comparable implements ValueString<num>  {
+class NumGroupComparingBySum implements ValueString<num>  {
 
   num? value = 0;
   List<num?> values;
@@ -163,7 +163,7 @@ class NumGroupComparingByAverage extends NumGroupComparingBySum {
 
 bool isVisibleInScrollable(BuildContext currentContext, double currentScrollPixels){
   var renderObject = currentContext.findRenderObject()!;
-  RenderAbstractViewport viewport = RenderAbstractViewport.of(renderObject)!;
+  RenderAbstractViewport viewport = RenderAbstractViewport.of(renderObject);
   var offsetToRevealBottom = viewport.getOffsetToReveal(renderObject, 1.0);
   var offsetToRevealTop = viewport.getOffsetToReveal(renderObject, 0.0);
   if (offsetToRevealBottom.offset > currentScrollPixels ||

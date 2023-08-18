@@ -242,7 +242,7 @@ class ExportState extends State<Export> {
             if (element.currentContext!=null) {
               final object = element.currentContext!.findRenderObject();
               final viewport = RenderAbstractViewport.of(object);
-              significantWidgetVisibleAtStartOffsets.add(viewport!.getOffsetToReveal(object!, 0.0).offset);
+              significantWidgetVisibleAtStartOffsets.add(viewport.getOffsetToReveal(object!, 0.0).offset);
             }
           });
           significantWidgetVisibleAtStartOffsets.add(position.maxScrollExtent + position.viewportDimension);
@@ -670,7 +670,7 @@ class ExportState extends State<Export> {
                           size: 10,
                           selectedSize: 12,
                           dotColor: Colors.grey.shade600,
-                          selectedDotColor: Theme.of(context).accentColor,
+                          selectedDotColor: Theme.of(context).colorScheme.secondary,
                         ),
                     ],
                   ),
@@ -697,7 +697,7 @@ class ExportState extends State<Export> {
                                 controller: textEditingControllers[value],
                                 decoration: InputDecoration(
                                   labelText: "Título", // TODO 3 internationalize
-                                  labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75)),
+                                  labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75)),
                                   border: OutlineInputBorder(),
                                   contentPadding: EdgeInsets.only(left: 12, right: 34, top: 17, bottom: 18),
                                 ),

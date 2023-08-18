@@ -44,9 +44,6 @@ class ScrollbarFromZero extends StatefulWidget {
   final Widget child;
   final ScrollNotificationPredicate? notificationPredicate;
   final Radius? radius;
-  final double? thickness;
-  final double? hoverThickness;
-  final bool? showTrackOnHover;
   final bool? isAlwaysShown;
   final bool? applyOpacityGradientToChildren;
   final int? opacityGradientDirection;
@@ -66,9 +63,6 @@ class ScrollbarFromZero extends StatefulWidget {
     this.notificationPredicate,
     this.isAlwaysShown,
     this.radius,
-    this.thickness,
-    this.hoverThickness,
-    this.showTrackOnHover,
     this.ignoreDevicePadding = true,
     this.mainScrollbar = false,
     // this.addPaddingOnDesktop = false,
@@ -113,7 +107,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     }
 
     Widget child = widget.child;
-    bool wantsAlwaysShown = Theme.of(context).scrollbarTheme.isAlwaysShown ?? PlatformExtended.isDesktop;
+    bool wantsAlwaysShown = Theme.of(context).scrollbarTheme.thumbVisibility?.resolve({}) ?? PlatformExtended.isDesktop;
     bool supportsAlwaysShown = widget.controller!=null && (widget.controller!.hasClients || alwaysAttachedScrollController.lastPosition!=null);
     if (widget.controller!=null && !supportsAlwaysShown) {
       // Listen until the controller has clients
@@ -215,12 +209,9 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     return Scrollbar(
       key: key,
       controller: widget.controller==null ? null : alwaysAttachedScrollController,
-      isAlwaysShown: wantsAlwaysShown && supportsAlwaysShown,
+      thumbVisibility: !supportsAlwaysShown ? false : null,
       notificationPredicate: widget.notificationPredicate,
       radius: widget.radius,
-      thickness: widget.thickness,
-      hoverThickness: widget.hoverThickness,
-      showTrackOnHover: widget.showTrackOnHover,
       child: child,
     );
   }
@@ -273,6 +264,9 @@ class DummyScrollContext extends ScrollContext {
 
   @override
   void setSemanticsActions(Set<SemanticsAction> actions) {}
+
+  @override
+  double get devicePixelRatio => 1;
 
 }
 
@@ -392,6 +386,12 @@ class AlwaysAttachedScrollController implements ScrollController {
   void removeListener(VoidCallback listener) {
     parent?.removeListener(listener);
   }
+
+  @override
+  ScrollControllerCallback? get onAttach => parent?.onAttach;
+
+  @override
+  ScrollControllerCallback? get onDetach => parent?.onDetach;
 
 }
 

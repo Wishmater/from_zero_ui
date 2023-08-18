@@ -36,7 +36,7 @@ class StickyHeader extends MultiChildRenderObjectWidget {
     Key? key,
     required this.header,
     required this.content,
-    this.overlapHeaders: false,
+    this.overlapHeaders = false,
     this.controller,
     this.callback,
     this.stickOffset = 0,
@@ -73,7 +73,7 @@ class StickyHeader extends MultiChildRenderObjectWidget {
 //    assert(scrollPosition != null);
     return RenderStickyHeader(
       scrollController: controller,
-      scrollPosition: controller!=null ? null : Scrollable.of(context)?.position,
+      scrollPosition: controller!=null ? null : Scrollable.maybeOf(context)?.position,
       callback: this.callback,
       overlapHeaders: this.overlapHeaders,
       stickOffset: stickOffset,
@@ -87,7 +87,7 @@ class StickyHeader extends MultiChildRenderObjectWidget {
 //    assert(scrollPosition != null);
     renderObject
       ..scrollController = controller
-      ..scrollPosition = controller!=null ? null : Scrollable.of(context)?.position
+      ..scrollPosition = controller!=null ? null : Scrollable.maybeOf(context)?.position
       ..callback = this.callback
       ..overlapHeaders = this.overlapHeaders
       ..stickOffset = this.stickOffset;
@@ -107,7 +107,7 @@ class StickyHeaderBuilder extends StatefulWidget {
     Key? key,
     required this.builder,
     required this.content,
-    this.overlapHeaders: false,
+    this.overlapHeaders = false,
     this.controller,
     this.stickOffset = 0,
     this.footer = false,
@@ -193,7 +193,7 @@ class RenderStickyHeader extends RenderBox
     ScrollPosition? scrollPosition,
     ScrollController? scrollController,
     RenderStickyHeaderCallback? callback,
-    bool overlapHeaders: false,
+    bool overlapHeaders = false,
     RenderBox? header,
     RenderBox? content,
     this.stickOffset = 0,

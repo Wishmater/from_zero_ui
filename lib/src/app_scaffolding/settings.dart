@@ -212,7 +212,7 @@ class ThemeSwitcher extends StatelessWidget {
                   ),
                 ),
                 SizedBox(width: 4,),
-                Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyText1!.color,),
+                Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyLarge!.color,),
                 SizedBox(width: 4,),
               ],
             ),

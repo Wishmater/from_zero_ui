@@ -64,7 +64,7 @@ abstract class FilterText extends ConditionFilter {
               labelStyle: TextStyle(height: 0.75,),
               contentPadding: EdgeInsets.only(top: 30, left: 12, right: 80),
               focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Theme.of(context).accentColor, width: 1,),
+                borderSide: BorderSide(color: Theme.of(context).colorScheme.secondary, width: 1,),
               ),
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Theme.of(context).disabledColor, width: 1,),
@@ -243,7 +243,7 @@ abstract class FilterNumber extends ConditionFilter {
               labelStyle: TextStyle(height: 0.75,),
               contentPadding: EdgeInsets.only(top: 30, left: 12, right: 80),
               focusedBorder: OutlineInputBorder(
-                borderSide: BorderSide(color: Theme.of(context).accentColor, width: 1,),
+                borderSide: BorderSide(color: Theme.of(context).colorScheme.secondary, width: 1,),
               ),
               enabledBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Theme.of(context).disabledColor, width: 1,),

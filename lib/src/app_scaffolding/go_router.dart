@@ -5,39 +5,43 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:go_router/src/configuration.dart';
-import 'package:go_router/src/typedefs.dart';
 import 'package:go_router/src/match.dart';
 
 
 
-bool skipFirstRenderWhenPushing = true;
+bool skipFirstRenderWhenPushing = false; // disabled because it breaks heroes, and the actual performance gain is doubtful
 
 
 extension Replace on GoRouter {
 
+  void removeLast() {
+    routerDelegate.currentConfiguration.remove(routerDelegate.currentConfiguration.last); // removeLast()
+    // routerDelegate.pop(); // removeLast()
+  }
+
   void pushReplacementNamed(String name, {
-    Map<String, String> params = const {},
-    Map<String, String> queryParams = const {},
+    Map<String, String> pathParameters = const {},
+    Map<String, String> queryParameters = const {},
     Object? extra,
   }) async {
-    routerDelegate.matches.pop(); // removeLast()
+    removeLast();
     pushNamed(name,
-      params: params,
-      queryParams: queryParams,
+      pathParameters: pathParameters,
+      queryParameters: queryParameters,
       extra: extra,
     );
   }
 
   void pushNamedAndRemoveUntil(String name,
       bool Function(RouteMatch match) stop, {
-    Map<String, String> params = const {},
-    Map<String, String> queryParams = const {},
+    Map<String, String> pathParameters = const {},
+    Map<String, String> queryParameters = const {},
     Object? extra,
   }) {
     popUntil(stop);
     pushNamed(name,
-      params: params,
-      queryParams: queryParams,
+      pathParameters: pathParameters,
+      queryParameters: queryParameters,
       extra: extra,
     );
   }
@@ -47,49 +51,47 @@ extension Replace on GoRouter {
       BuildContext context,
       String name,
       bool Function(RouteMatch match) stop, {
-        Map<String, String> params = const {},
-        Map<String, String> queryParams = const {},
+        Map<String, String> pathParameters = const {},
+        Map<String, String> queryParameters = const {},
         Object? extra,
       }) {
     maybePopUntil(context, stop);
     pushNamed(name,
-      params: params,
-      queryParams: queryParams,
+      pathParameters: pathParameters,
+      queryParameters: queryParameters,
       extra: extra,
     );
   }
 
   void popUntil(bool Function(RouteMatch match) stop) {
-    bool remove = true;
+    bool shouldRemove;
     do {
-      final last = routerDelegate.matches.last;
-      remove = routerDelegate.matches.canPop() && !stop(last);
-      if (remove) {
-        routerDelegate.matches.pop(); // removeLast()
+      final last = routerDelegate.currentConfiguration.last;
+      shouldRemove = routerDelegate.canPop() && !stop(last);
+      if (shouldRemove) {
+        removeLast();
       }
-    } while (remove);
+    } while (shouldRemove);
     _safeNotifyListeners();
   }
 
   /// returns true if successfully popped until wanted
   Future<bool> maybePopUntil(context, bool Function(RouteMatch match) stop) async {
-    bool remove = true;
+    bool shouldRemove;
     bool blocked = false;
     do {
-      final last = routerDelegate.matches.last;
-      remove = routerDelegate.matches.canPop() && !stop(last);
-      if (remove) {
+      final last = routerDelegate.currentConfiguration.last;
+      shouldRemove = routerDelegate.canPop() && !stop(last);
+      if (shouldRemove) {
         blocked = !(await Navigator.of(context).maybePop());
       }
-    } while (remove && !blocked);
+    } while (shouldRemove && !blocked);
     _safeNotifyListeners();
     return !blocked;
   }
 
   void _safeNotifyListeners() {
-    WidgetsBinding.instance == null
-        ? routerDelegate.notifyListeners()
-        : scheduleMicrotask(routerDelegate.notifyListeners);
+    scheduleMicrotask(routerDelegate.notifyListeners);
   }
 
 }
@@ -98,19 +100,19 @@ extension Replace on GoRouter {
 class GoRouteFromZero extends GoRoute {
 
   /// Name shown in the UI
-  String? title;
+  final String? title;
   /// Subtitle shown in the UI
-  String? subtitle;
+  final String? subtitle;
   /// Icon shown in drawer menu, etc
-  Widget icon;
+  final Widget icon;
   /// Different page IDs will perform an animation in the whole Scaffold, instead of just the body
-  String pageScaffoldId;
+  final String pageScaffoldId;
   /// Scaffold will perform a SharedZAxisTransition if the depth is different (and not -1)
-  int pageScaffoldDepth;
+  final int pageScaffoldDepth;
   /// If false will draw children in DrawerMenu in the same depth as this route, instead of the default expansion tile
-  bool childrenAsDropdownInDrawerNavigation;
+  final bool childrenAsDropdownInDrawerNavigation;
   /// used in DrawerFromZero
-  Widget Function(String title)? titleBuilder;
+  final Widget Function(String title)? titleBuilder;
 
 
   GoRouteFromZero({
@@ -119,8 +121,8 @@ class GoRouteFromZero extends GoRoute {
     this.title,
     this.subtitle,
     this.icon = const SizedBox.shrink(),
-    GoRouterWidgetBuilder builder = emptyBuilder,
-    GoRouterRedirect redirect = emptyRedirect,
+    GoRouterWidgetBuilder? builder,
+    GoRouterRedirect? redirect,
     Widget Function(BuildContext context, Animation<double> animation,
         Animation<double> secondaryAnimation, Widget child)? transitionBuilder,
     List<GoRouteFromZero> routes = const [],
@@ -130,22 +132,27 @@ class GoRouteFromZero extends GoRoute {
     GoRouterPageBuilder? pageBuilder,
     LocalKey Function(BuildContext context, GoRouterState state,)? pageKeyGetter,
     this.titleBuilder,
-  }) :  assert((builder==emptyBuilder && transitionBuilder==null) || pageBuilder==null),
+  }) :  assert((builder==null && transitionBuilder==null) || pageBuilder==null,
+            'If specifying pageBuilder; builder and transitionBuilder will be overriden, so they should be null'),
         super(
           path: path,
           name: name ?? path,
-          builder: emptyBuilder,
+          builder: null,
           redirect: redirect,
           routes: routes,
           pageBuilder: pageBuilder ?? (context, state) {
             return CustomTransitionPage<void>(
-              key: (pageKeyGetter?.call(context, state)) ?? ValueKey(state.location),
-              child: OnlyOnActiveBuilder(builder: builder, state: state,),
+              key: state.pageKey,
+              // key: (pageKeyGetter?.call(context, state)) ?? ValueKey(state.uri.toString()),
+              child: OnlyOnActiveBuilder(builder: builder!, state: state,),
               transitionsBuilder: transitionBuilder
                   ?? (context, animation, secondaryAnimation, child) => child,
             );
           },
-        );
+        ) {
+    assert(this is GoRouteGroupFromZero || builder!=null || pageBuilder!=null,
+        'One of builder or pageBuilder must be specified');
+  }
 
   GoRouteFromZero copyWith({
     String? path,
@@ -181,49 +188,49 @@ class GoRouteFromZero extends GoRoute {
   List<GoRouteFromZero> get routes => super.routes.cast<GoRouteFromZero>();
 
   static GoRouteFromZero of(BuildContext context) {
-    return GoRouter.of(context).routerDelegate.matches.last.route as GoRouteFromZero;
+    return GoRouter.of(context).routerDelegate.currentConfiguration.last.route as GoRouteFromZero;
   }
 
   void go(BuildContext context, {
-    Map<String, String> params = const {},
-    Map<String, String> queryParams = const {},
+    Map<String, String> pathParameters = const {},
+    Map<String, String> queryParameters = const {},
     Object? extra,
   }) {
     GoRouter.of(context).goNamed(name!,
-      params: getParams(params),
-      queryParams: getQueryParams(queryParams),
+      pathParameters: getPathParameters(pathParameters),
+      queryParameters: getQueryParameters(queryParameters),
       extra: getExtra(extra),
     );
   }
 
   void push(BuildContext context, {
-    Map<String, String> params = const {},
-    Map<String, String> queryParams = const {},
+    Map<String, String> pathParameters = const {},
+    Map<String, String> queryParameters = const {},
     Object? extra,
   }) {
     GoRouter.of(context).pushNamed(name!,
-      params: getParams(params),
-      queryParams: getQueryParams(queryParams),
+      pathParameters: getPathParameters(pathParameters),
+      queryParameters: getQueryParameters(queryParameters),
       extra: getExtra(extra),
     );
   }
 
   void pushReplacement(BuildContext context, {
-    Map<String, String> params = const {},
-    Map<String, String> queryParams = const {},
+    Map<String, String> pathParameters = const {},
+    Map<String, String> queryParameters = const {},
     Object? extra,
   }) {
     GoRouter.of(context).pushReplacementNamed(name!,
-      params: getParams(params),
-      queryParams: getQueryParams(queryParams),
+      pathParameters: getPathParameters(pathParameters),
+      queryParameters: getQueryParameters(queryParameters),
       extra: getExtra(extra),
     );
   }
 
-  Map<String, String> getParams(Map<String, String> params)
-      => {...defaultParams, ...params};
-  Map<String, String> getQueryParams(Map<String, String> queryParams)
-      => {...defaultQueryParams, ...queryParams};
+  Map<String, String> getPathParameters(Map<String, String> pathParameters)
+      => {...defaultPathParameters, ...pathParameters};
+  Map<String, String> getQueryParameters(Map<String, String> queryParameters)
+      => {...defaultQueryParameters, ...queryParameters};
   Object? getExtra(Object? extra) {
     if ((extra==null || extra is Map) && defaultExtra is Map ) {
       return {
@@ -235,9 +242,9 @@ class GoRouteFromZero extends GoRoute {
       return extra;
     }
   }
-  // these can be overriden to add default params to route pushes
-  Map<String, String> get defaultParams => {};
-  Map<String, String> get defaultQueryParams => {};
+  // these can be overriden to add default pathParameters to route pushes
+  Map<String, String> get defaultPathParameters => {};
+  Map<String, String> get defaultQueryParameters => {};
   Object? get defaultExtra => null;
 
 
@@ -263,18 +270,12 @@ class GoRouteFromZero extends GoRoute {
     return result;
   }
 
-  static String? emptyRedirect(GoRouterState state) => null;
-
-  static Widget emptyBuilder(BuildContext context, GoRouterState state) =>
-      throw Exception('GoRoute builder parameter not set\n'
-          'See gorouter.dev/redirection#considerations for details');
-
   // taken from go_router
-  static String addQueryParams(String loc, Map<String, String> queryParams) {
+  static String addQueryParameters(String loc, Map<String, String> queryParameters) {
     final uri = Uri.parse(loc);
     assert(uri.queryParameters.isEmpty);
     return _canonicalUri(
-        Uri(path: uri.path, queryParameters: queryParams).toString());
+        Uri(path: uri.path, queryParameters: queryParameters).toString());
   }
   static String _canonicalUri(String loc) {
     var canon = Uri.parse(loc).toString();
@@ -299,8 +300,8 @@ class GoRouteFromZero extends GoRoute {
 
 class GoRouteGroupFromZero extends GoRouteFromZero {
 
-  bool showInDrawerNavigation;
-  bool showAsDropdown;
+  final bool showInDrawerNavigation;
+  final bool showAsDropdown;
 
   GoRouteGroupFromZero({
     String? title,
@@ -318,7 +319,7 @@ class GoRouteGroupFromZero extends GoRouteFromZero {
   );
 
   @override
-  GoRouteFromZero copyWith({
+  GoRouteGroupFromZero copyWith({
     String? path,
     String? name,
     String? title,
@@ -346,35 +347,23 @@ class GoRouteGroupFromZero extends GoRouteFromZero {
 
 class GoRouterStateFromZero extends GoRouterState {
 
-  GoRouteFromZero route;
-  int pageScaffoldDepth;
+  final GoRouteFromZero route;
+  final int pageScaffoldDepth;
   String get pageScaffoldId => route.pageScaffoldId;
 
-  GoRouterStateFromZero(RouteConfiguration configuration, {
+  GoRouterStateFromZero(super._configuration, {
     required this.route,
     required this.pageScaffoldDepth,
-    required String location,
-    required String subloc,
-    required String? name,
-    String? path,
-    String? fullpath,
-    Map<String, String> params = const {},
-    Map<String, String> queryParams = const {},
-    Object? extra,
-    Exception? error,
-    ValueKey<String>? pageKey,
-  }) :  super(configuration,
-          location: location,
-          subloc: subloc,
-          name: name,
-          path: path,
-          fullpath: fullpath,
-          params: params,
-          queryParams: queryParams,
-          extra: extra,
-          error: error,
-          pageKey: pageKey,
-        );
+    required super.uri,
+    required super.matchedLocation,
+    super.name,
+    super.path,
+    required super.fullPath,
+    required super.pathParameters,
+    super.extra,
+    super.error,
+    required super.pageKey,
+  });
 
 }
 
@@ -411,11 +400,7 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
     final inherited = context.getElementForInheritedWidgetOfExactType<InheritedGoRouter>();
     assert(inherited != null, 'No GoRouter found in context');
     final router = (inherited!.widget as InheritedGoRouter).goRouter;
-    final location = GoRouteFromZero.addQueryParams(widget.state.subloc, widget.state.queryParams);
-    // route = router.routerDelegate.matches.lastWhere((e) {
-    //   return GoRouteFromZero.addQueryParams(e.subloc, e.queryParams) == location;
-    // }).route as GoRouteFromZero;
-    final matches = router.routerDelegate.matches.matches;
+    final matches = router.routerDelegate.currentConfiguration.matches;
     late GoRouteFromZero currentRoute;
     int currentDepth = 0;
     int accumulatedDepth = 0;
@@ -423,24 +408,27 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
       final match = matches[i];
       final route = widget.route ?? (match.route as GoRouteFromZero);
       accumulatedDepth += route.pageScaffoldDepth;
-      if (GoRouteFromZero.addQueryParams(match.subloc, match.queryParams) == location) {
+      if (match.pageKey.value == widget.state.pageKey.value) {
         currentRoute = route;
         currentDepth = accumulatedDepth;
       }
+      // if (GoRouteFromZero.addQueryParameters(match.matchedLocation, match.queryParameters) == location) {
+      //   currentRoute = route;
+      //   currentDepth = accumulatedDepth;
+      // }
     }
-    state = GoRouterStateFromZero(router.routeConfiguration,
+    state = GoRouterStateFromZero(router.configuration,
       route: currentRoute,
       pageScaffoldDepth: currentDepth,
-      subloc: widget.state.subloc,
-      location: widget.state.location,
+      fullPath: widget.state.fullPath,
       name: widget.state.name,
-      queryParams: widget.state.queryParams,
       path: widget.state.path,
       error: widget.state.error,
       extra: widget.state.extra,
-      fullpath: widget.state.fullpath,
       pageKey: widget.state.pageKey,
-      params: widget.state.params,
+      pathParameters: widget.state.pathParameters,
+      matchedLocation: widget.state.matchedLocation,
+      uri: widget.state.uri,
     );
   }
 
@@ -459,8 +447,7 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
         scaffoldChangeNotifier.setCurrentRouteState(state!);
       }
 
-      // if (built || !skipFirstRenderWhenPushing) { // disabled because it breaks heroes
-      if (true) {
+      if (built || !skipFirstRenderWhenPushing) {
 
         built = true;
         return widget.builder(context, state!);
@@ -483,9 +470,7 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
 
   }
 
-  bool isActiveRoute(context) =>
-      GoRouteFromZero.addQueryParams(widget.state.subloc, widget.state.queryParams)
-          == GoRouter.of(context).location;
+  bool isActiveRoute(context) => widget.state.pageKey.value==GoRouterState.of(context).pageKey.value;
 
 }
 

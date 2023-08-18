@@ -25,8 +25,6 @@ import 'package:from_zero_ui/util/copied_flutter_widgets/small_splash_popup_menu
 import 'dart:async';
 import 'package:dartx/dartx.dart';
 import 'package:intl/intl.dart';
-import 'package:implicitly_animated_reorderable_list/implicitly_animated_reorderable_list.dart';
-import 'package:implicitly_animated_reorderable_list/transitions.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:cancelable_compute/cancelable_compute.dart' as cancelable_compute;
 
@@ -669,7 +667,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         : widget.maxWidthGetter?.call(currentColumnKeys!);
     Widget result;
 
-    if (true) {
     // if (!(widget.implicitlyAnimated ?? allFiltered.length<10)) {
 
       if (widget.enableFixedHeightForListRows && allFiltered.isNotEmpty) {
@@ -689,37 +686,37 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         );
       }
 
-      // TODO 2 fix fatal error in animated list, seems to be a problem with row id equality
-    } else {
-
-      result = SliverImplicitlyAnimatedList<RowModel<T>>(
-        items: allFiltered.isEmpty ? [] : allFiltered,
-        areItemsTheSame: (a, b) => a==b,
-        insertDuration: Duration(milliseconds: 400),
-        updateDuration: Duration(milliseconds: 400),
-        itemBuilder: (context, animation, item, index) {
-          return SlideTransition(
-            position: Tween<Offset>(begin: Offset(-0.33, 0), end: Offset(0, 0)).animate(animation),
-            child: SizeFadeTransition(
-              sizeFraction: 0.7,
-              curve: Curves.easeOutCubic,
-              animation: animation,
-              child: _getRow(context, item, index, minWidth),
-            ),
-          );
-        },
-        updateItemBuilder: (context, animation, item) {
-          return SlideTransition(
-            position: Tween<Offset>(begin: Offset(-0.10, 0), end: Offset(0, 0)).animate(animation),
-            child: FadeTransition(
-              opacity: animation,
-              child: _getRow(context, item, -1, minWidth),
-            ),
-          );
-        },
-      );
-
-    }
+    // }  else {
+    //
+    //   TODO 3 re-implement implicit animation with animated_list_plus
+    //   result = SliverImplicitlyAnimatedList<RowModel<T>>(
+    //     items: allFiltered.isEmpty ? [] : allFiltered,
+    //     areItemsTheSame: (a, b) => a==b,
+    //     insertDuration: Duration(milliseconds: 400),
+    //     updateDuration: Duration(milliseconds: 400),
+    //     itemBuilder: (context, animation, item, index) {
+    //       return SlideTransition(
+    //         position: Tween<Offset>(begin: Offset(-0.33, 0), end: Offset(0, 0)).animate(animation),
+    //         child: SizeFadeTransition(
+    //           sizeFraction: 0.7,
+    //           curve: Curves.easeOutCubic,
+    //           animation: animation,
+    //           child: _getRow(context, item, index, minWidth),
+    //         ),
+    //       );
+    //     },
+    //     updateItemBuilder: (context, animation, item) {
+    //       return SlideTransition(
+    //         position: Tween<Offset>(begin: Offset(-0.10, 0), end: Offset(0, 0)).animate(animation),
+    //         child: FadeTransition(
+    //           opacity: animation,
+    //           child: _getRow(context, item, -1, minWidth),
+    //         ),
+    //       );
+    //     },
+    //   );
+    //
+    // }
 
     Widget? header = showHeaders
         ? headerRowModel!=null
@@ -809,20 +806,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   Widget _getRow(BuildContext context, RowModel? row, int index, double? minWidth){
     if (row==null){
 
-      return InitiallyAnimatedWidget(
-        duration: Duration(milliseconds: 500,),
-        builder: (animation, child) {
-          return SizeFadeTransition(animation: animation, child: child, sizeFraction: 0.7, curve: Curves.easeOutCubic,);
-        },
-        child: Container(
-          color: _getMaterialColor(),
-          padding: EdgeInsets.only(top: 4, bottom: 4),
-          child: widget.emptyWidget ?? TableEmptyWidget(
-            tableController: widget.tableController ?? TableController()
-              ..currentState = this
-              ..valueFilters = valueFilters
-              ..conditionFilters = conditionFilters,
-          ),
+      return Container(
+        color: _getMaterialColor(),
+        padding: EdgeInsets.only(top: 4, bottom: 4),
+        child: widget.emptyWidget ?? TableEmptyWidget(
+          tableController: widget.tableController ?? TableController()
+            ..currentState = this
+            ..valueFilters = valueFilters
+            ..conditionFilters = conditionFilters,
         ),
       );
 
@@ -1505,7 +1496,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             child: AutoSizeText(
               compactName,
               style: Theme.of(context).textTheme.subtitle2!.copyWith(
-                color: Theme.of(context).textTheme.bodyText1!.color!
+                color: Theme.of(context).textTheme.bodyLarge!.color!
                     .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
               ),
               textAlign: _getAlignment(colKey),
@@ -1518,7 +1509,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                 child: AutoSizeText(
                   name,
                   style: Theme.of(context).textTheme.subtitle2!.copyWith(
-                    color: Theme.of(context).textTheme.bodyText1!.color!
+                    color: Theme.of(context).textTheme.bodyLarge!.color!
                         .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
                   ),
                   textAlign: _getAlignment(colKey),
@@ -1546,7 +1537,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                             size: 20,
                             key: ValueKey(sortedAscending),
                             // color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
-                            color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                            color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).colorScheme.secondary,
                           )
                     : SizedBox(height: 24,),
                 transitionBuilder: (child, animation) => ScaleTransition(
@@ -1580,7 +1571,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                           selected: filtersApplied[colKey]??false,
                           icon: MaterialCommunityIcons.filter_outline,
                           selectedIcon: MaterialCommunityIcons.filter,
-                          selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
+                          selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).colorScheme.secondary,
                           unselectedColor: Theme.of(context).textTheme.caption!.color!,
                           unselectedOffset: 0,
                           selectedOffset: 0,
@@ -1787,7 +1778,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     }
     return backgroundColor==null ? null : BoxDecoration(color: backgroundColor);
   }
-  Color _getMaterialColor() => widget.backgroundColor ?? Material.of(context)!.color ?? Theme.of(context).cardColor;
+  Color _getMaterialColor() => widget.backgroundColor ?? Material.of(context).color ?? Theme.of(context).cardColor;
   Color? _getBackgroundColor(RowModel row, dynamic colKey, bool isHeader){
     Color? backgroundColor;
     if (isHeader){
@@ -1877,8 +1868,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         selected: controller.currentState?.filtersApplied[colKey]??false,
         icon: MaterialCommunityIcons.filter_outline,
         selectedIcon: MaterialCommunityIcons.filter,
-        selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).accentColor,
-        unselectedColor: Theme.of(context).textTheme.bodyText1!.color!,
+        selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).colorScheme.secondary,
+        unselectedColor: Theme.of(context).textTheme.bodyLarge!.color!,
         unselectedOffset: 0,
         selectedOffset: 0,
       ),

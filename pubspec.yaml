@@ -4,7 +4,7 @@ version: 0.0.7
 #homepage:
 
 environment:
-  sdk: ">=2.17.0 <3.0.0"
+  sdk: "^3.0.0"
 
 dependencies:
   flutter:
@@ -13,76 +13,70 @@ dependencies:
     sdk: flutter
 
   # * Language Extensions
-  dartx: ^1.1.0
-  collection: ^1.16.0
-  email_validator: ^2.0.1
+  dartx: ^1.2.0
+  collection: ^1.17.2 # pinned to 1.17.2 by flutter ver.3.13.0
+  email_validator: ^2.1.17
   cancelable_compute: ^1.3.0
 
   # * State Management
-  go_router: 4.2.2
-  flutter_riverpod: 2.0.0-dev.9
-  hive: ^2.2.2
+  go_router: 10.0.0
+  flutter_riverpod: 2.0.0-dev.9 # can't update until cacheTime is re-added, lots of potential bugs to be fixed with this update
+  hive: ^2.2.3
   hive_flutter: ^1.1.0
 
   # * Widgets / UI
   auto_size_text: ^3.0.0
   page_view_indicators: ^2.0.0
-  implicitly_animated_reorderable_list: ^0.4.2
+#  implicitly_animated_reorderable_list: ^0.4.2 # discontinued and unused for now, use animated_list_plus if needed again
   flutter_font_icons : ^2.2.5
-  animations: ^2.0.3
-  extended_image: ^6.2.1
-  google_fonts: ^3.0.1
-  sliver_tools: ^0.2.7
-  flutter_sticky_header: ^0.6.3
-  humanizer: ^2.0.0
-#  keframe: ^3.0.0
-  preload_page_view: ^0.1.6
+  animations: ^2.0.7
+  extended_image: ^8.1.0
+  google_fonts: ^5.1.0 # used in from_zero_logo
+  sliver_tools: ^0.2.12
+  flutter_sticky_header: ^0.6.5 # ideally, we would always use sliver_tools and get rid of this dependency + our hacky copied code
+  humanizer: ^2.2.0
+#  keframe: ^3.0.0 # unused for now, but very interesting package...
+  preload_page_view: ^0.2.0
   multi_value_listenable_builder: ^0.0.2
 
   # * Plugins
-  url_launcher: ^6.1.3
-  path_provider: ^2.0.11
+  url_launcher: ^6.1.12
+  path_provider: ^2.1.0
   platform_detect: ^2.0.7
-  permission_handler: ^8.1.4+2  # ^10.0.0 throws error on windows (^8.1.4+2 works)
-#  permission_handler: ^10.2.0  # <10.0.0 throws error on Android
-  open_file: ^3.2.1
-  file_picker: ^5.2.2
-  pdf: # 3.8.4
-    git:
-      url: https://github.com/Wishmater/dart_pdf
-      path: pdf
-  excel:  
+  permission_handler: ^10.4.3  # if build window throws error, check https://github.com/Baseflow/flutter-permission-handler/issues/819#issuecomment-1673271795
+  open_file: ^3.3.2
+  file_picker: ^5.3.3
+  desktop_drop: ^0.4.1
+  universal_html: ^2.2.3 # used for file_saver_from_zero download on web
+  enough_convert: ^1.6.0 # used for reading window events on windows # ! replace with native converters if ever available on windows and web
+  bitsdojo_window: ^0.1.5
+  window_manager: ^0.3.5
+  pasteboard: ^0.2.0
+  r_upgrade: ^0.4.2 # used to programatically install de apk file in Android
+
+  # * Specific Utility
+  dio: ^5.3.2
+  dio_smart_retry: ^5.0.0
+  flutter_excel: ^1.0.1
+  archive: ^3.3.7 # used to unzip the update on Windows
+  excel:
     git:
       url: https://github.com/Z32D/excel
       ref: 9e78666f14f5068521fc7cd5952585e15e4b3b6a
-  desktop_drop: ^0.3.3
-  universal_html: ^2.0.8
-  enough_convert: ^1.6.0 # ! replace with native converters if ever available on windows and web
-  bitsdojo_window: ^0.1.5
-  window_manager: ^0.2.7
-  pasteboard: ^0.2.0
-
-  # * Update
-  r_upgrade: ^0.4.1
-  archive: ^3.3.0
-
-  # * Specific Utility
-  dio: ^4.0.6
-  dio_smart_retry: ^1.2.0
-  flutter_excel: ^1.0.1
+  pdf: 3.10.4
+#    git:
+#      url: https://github.com/Wishmater/dart_pdf
+#      path: pdf
 
 
 
 dependency_overrides:
-  platform: ^3.1.0  # fixes fatal error from path_provider 2.0.11 dependency
-  meta: ^1.8.0      # flutter 3.0.0 dependes on meta 1.7.0, clashing with newer plugins, probably fixed in new flutter version
-  open_file:        # open_file 3.2.1 doesn't support ffi 2.0
-    git:
-      url: https://github.com/crazecoder/open_file
+  win32: ^5.0.2 # force older plugins (bitsdojo_window 0.1.5) to use a newer version, required by other plugins (file_picker>=5.3.2)
+  file: ^7.0.0  # file <7.0.0 throws compile-time errors with dart 3
+
 
 
 flutter:
   uses-material-design: true
-
   assets:
     - assets/i18n/

@@ -115,11 +115,11 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
     );
     table2 = TableFromZero(
       scrollController: tableScrollController,
-      enableStickyHeaders: true,
+      enableStickyHeaders: false,
       minWidthGetter: (currentColumnKeys) => 640,
       alternateRowBackgroundBrightness: true,
       rows: List.generate(100, (index) => ["Dummy data " + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",]).map((e) {
-        return SimpleRowModel(
+        return SimpleRowModel<dynamic>(
           id: e,
           values: e.asMap(),
           rowAddon: Text('ADDON ASDFG fsgfad gadfsgkadfs glasdnfgklanfsgAFSG DAFG AFSD GADSF GADFGA DFSG'),
@@ -198,7 +198,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
         width: e=="Col 1" ? 128 : null,
         alignment: e=="Col 3" ? TextAlign.right : null,
       )).toList().asMap(),
-      rows: List.generate(100, (index) => SimpleRowModel(
+      rows: List.generate(100, (index) => SimpleRowModel<dynamic>(
         id: index,
         height: 36,
         rowKey: rowKeys![index],
@@ -209,8 +209,6 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: CustomScrollView(
         controller: controller,
-        cacheExtent: double.infinity,
-        physics: NeverScrollableScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(
             child: Padding(

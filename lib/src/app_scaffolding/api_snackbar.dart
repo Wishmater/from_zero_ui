@@ -185,7 +185,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               SizedBox(height: 2,),
               // if (message!=null)
               //   DefaultTextStyle(
-              //     style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12),
+              //     style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12),
               //     child: Text(message),
               //   ),
               SizedBox(height: 8,),
@@ -337,7 +337,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               textAlign: TextAlign.center,
             ),
             style: TextButton.styleFrom(
-              primary: Theme.of(context).textTheme.bodyText1!.color!,
+              primary: Theme.of(context).textTheme.bodyLarge!.color!,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ),
@@ -362,7 +362,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               SizedBox(height: 2,),
               if (message!=null)
                 DefaultTextStyle(
-                  style: Theme.of(context).textTheme.bodyText1!.copyWith(fontSize: 12),
+                  style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12),
                   child: Text(message),
                 ),
               SizedBox(height: 8,),
@@ -402,7 +402,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               },
               child: Icon(Icons.close, size: 24,),
               style: TextButton.styleFrom(
-                primary: Theme.of(context).textTheme.bodyText1!.color,
+                primary: Theme.of(context).textTheme.bodyLarge!.color,
                 padding: EdgeInsets.only(right: 10),
               ),
             ),

@@ -733,7 +733,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                     }
                                   };
                                   final iconButtonColor = Theme.of(context).appBarTheme.toolbarTextStyle?.color
-                                      ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+                                      ?? (Theme.of(context).textTheme.bodyLarge!.color!);
                                   final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
                                   final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
                                   result = GestureDetector(
@@ -753,7 +753,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                   );
                                 } else{
                                   final iconButtonColor = Theme.of(context).appBarTheme.toolbarTextStyle?.color
-                                      ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+                                      ?? (Theme.of(context).textTheme.bodyLarge!.color!);
                                   final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
                                   final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
                                   result = AnimatedBuilder(
@@ -927,7 +927,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                       }
                     };
                     final iconButtonColor = Theme.of(context).appBarTheme.toolbarTextStyle?.color
-                        ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+                        ?? (Theme.of(context).textTheme.bodyLarge!.color!);
                     final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
                     final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
                     return Stack(
@@ -983,7 +983,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                           _toggleDrawer(context, changeNotifier);
                       };
                       final iconButtonColor = Theme.of(context).appBarTheme.toolbarTextStyle?.color
-                          ?? (Theme.of(context).primaryColorBrightness==Brightness.light ? Colors.black : Colors.white);
+                          ?? (Theme.of(context).textTheme.bodyLarge!.color!);
                       final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
                       final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
                       return Padding(

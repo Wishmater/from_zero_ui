@@ -280,7 +280,7 @@ class FieldDiffMessage<T extends Comparable> extends StatelessWidget {
           borderRadius: BorderRadius.all(Radius.circular(8)),
           border: Border.all(
             width: 2,
-            color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.3),
+            color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.3),
           ),
         ),
         child: IntrinsicHeight(
@@ -595,7 +595,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
                 SizedBox(width: 6,),
                 Expanded(
                   child: Text(e.error,
-                    // style: Theme.of(context).textTheme.bodyText1!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
+                    // style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
                   ),
                 ),
               ],

@@ -341,8 +341,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     );
   }
   static Widget getErrorIcon(BuildContext context, Object? error, StackTrace? stackTrace) {
-    if (error is DioError) {
-      if (error.type==DioErrorType.response) {
+    if (error is DioException) {
+      if (error.response!=null) {
         if (error.response!.statusCode==404) {
           return const Icon(Icons.error_outline);
         } else if (error.response!.statusCode==400) {
@@ -363,8 +363,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   }
   static String getErrorTitle(BuildContext context, Object? error, StackTrace? stackTrace) {
     // TODO 3 internationalize
-    if (error is DioError) {
-      if (error.type==DioErrorType.response) {
+    if (error is DioException) {
+      if (error.response!=null) {
         if (error.response!.statusCode==404) {
           return 'Recurso no encontrado';
         } else if (error.response!.statusCode==400) {
@@ -387,8 +387,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   }
   static String? getErrorSubtitle(BuildContext context, Object? error, StackTrace? stackTrace) {
     // TODO 3 internationalize
-    if (error is DioError) {
-      if (error.type==DioErrorType.response) {
+    if (error is DioException) {
+      if (error.response!=null) {
         if (error.response!.statusCode==404) {
           return 'Por favor, notifique a su administrador de sistema';
         } else if (error.response!.statusCode==400) {
@@ -408,8 +408,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     }
   }
   static bool isErrorRetryable(BuildContext context, Object? error, StackTrace? stackTrace) {
-    if (error is DioError) {
-      if (error.type==DioErrorType.response) {
+    if (error is DioException) {
+      if (error.response!=null) {
         if (error.response!.statusCode==404) {
           return false;
         } else if (error.response!.statusCode==400) {
@@ -429,8 +429,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     }
   }
   static bool shouldShowErrorDetails(BuildContext context, Object? error, StackTrace? stackTrace) {
-    if (error is DioError) {
-      if (error.type==DioErrorType.response) {
+    if (error is DioException) {
+      if (error.response!=null) {
         if (error.response!.statusCode==404) {
           return false;
         } else if (error.response!.statusCode==400) {
@@ -452,7 +452,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   static Widget buildErrorDetailsButton(BuildContext context, Object? error, StackTrace? stackTrace, [VoidCallback? onRetry]) {
     Widget result = TextButton(
       style: TextButton.styleFrom(
-          primary: Theme.of(context).textTheme.bodyText1!.color!,
+          primary: Theme.of(context).textTheme.bodyLarge!.color!,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

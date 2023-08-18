@@ -28,7 +28,7 @@ class _PageScaffoldInnerState extends State<PageScaffoldInner> {
       body: Center(
         child: Card(child: InkWell(
           onTap: () {
-            GoRouter.of(context).pushNamed('scaffold_inner', queryParams: {
+            GoRouter.of(context).pushNamed('scaffold_inner', queryParameters: {
               'rand': Random().nextDouble().toString(),
             });
           },

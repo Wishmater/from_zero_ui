@@ -10,7 +10,7 @@ import 'package:from_zero_ui/util/copied_flutter_widgets/my_checkbox_list_tile.d
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_switch_list_tile.dart' as my_switch_list_tile;
 
 
-class BoolComparable with Comparable {
+class BoolComparable implements Comparable {
 
   final bool value;
 
@@ -316,7 +316,7 @@ class BoolField extends Field<BoolComparable> {
   List<Widget> buildFieldEditorWidgets(BuildContext context, {
     bool addCard=false,
     bool asSliver = true,
-    expandToFillContainer: true,
+    expandToFillContainer = true,
     bool dense = false,
     bool ignoreHidden = false,
     FocusNode? focusNode,
@@ -404,12 +404,12 @@ class BoolField extends Field<BoolComparable> {
                     if (!dense && showBothNeutralAndSpecificUiName)
                       Text(uiName,
                         style: Theme.of(context).textTheme.caption!.copyWith(
-                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                         ),
                       ),
                     Text(uiNameValue,
                       style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                        color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                        color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                         height: 1.2,
                       ),
                     ),
@@ -442,12 +442,12 @@ class BoolField extends Field<BoolComparable> {
                     if (!dense && showBothNeutralAndSpecificUiName)
                       Text(uiName,
                         style: Theme.of(context).textTheme.caption!.copyWith(
-                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyText1!.color!.withOpacity(0.75),
+                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                         ),
                       ),
                     Text(uiNameValue,
                       style: Theme.of(context).textTheme.subtitle1!.copyWith(
-                        color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                        color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                         height: 1.2,
                       ),
                     ),
@@ -492,14 +492,14 @@ class BoolField extends Field<BoolComparable> {
                           softWrap: false,
                           style: TextStyle(
                             height: 1,
-                            color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                            color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                           ),
                           overflowReplacement: AutoSizeText(uiNameValue,
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             style: TextStyle(
                               height: 1,
-                              color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                              color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                             ),
                           ),
                         ),
@@ -542,14 +542,14 @@ class BoolField extends Field<BoolComparable> {
                           softWrap: false,
                           style: TextStyle(
                             height: 1,
-                            color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                            color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                           ),
                           overflowReplacement: AutoSizeText(uiNameValue,
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             style: TextStyle(
                               height: 1,
-                              color: Theme.of(context).textTheme.bodyText1!.color!.withOpacity(enabled ? 1 : 0.75),
+                              color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                             ),
                           ),
                         ),

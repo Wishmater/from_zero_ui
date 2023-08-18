@@ -58,7 +58,7 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
               child: _buildDragAndDrop(context, SizedBox.shrink()),
             ),
           );
-          Overlay.of(context)!.insert(overlayEntry!);
+          Overlay.of(context).insert(overlayEntry!);
         }
       });
     }

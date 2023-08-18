@@ -5,7 +5,7 @@ import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:dartx/dartx.dart';
-import 'package:enough_convert/enough_convert.dart';
+import 'package:enough_convert/windows.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -442,11 +442,11 @@ class WindowBar extends StatelessWidget {
     final navigator = goRouter.routerDelegate.navigatorKey.currentState!;
     while (true) {
 
-      final goRoute = goRouter.routerDelegate.matches.last.route;
-      log ('Trying to pop ${goRouter.routerDelegate.matches.last.subloc}');
+      final goRoute = goRouter.routerDelegate.currentConfiguration.last.route;
+      log ('Trying to pop ${goRouter.routerDelegate.currentConfiguration.last.matchedLocation}');
       if (await navigator.maybePop()) {
         final previousGoRouteFromZero = goRoute is GoRouteFromZero ? goRoute : null;
-        final newGoRoute = goRouter.routerDelegate.matches.last.route;
+        final newGoRoute = goRouter.routerDelegate.currentConfiguration.last.route;
         final newGoRouteFromZero = newGoRoute is GoRouteFromZero ? newGoRoute : null;
         if (newGoRoute==goRoute) {
           // if route refused to pop, or popped route was a modal, stop iteration
@@ -568,7 +568,7 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
   // DRAWER RELATED STUFF
 
   final Map<String, ValueNotifier<double>> drawerContentScrollOffsets = {};
-  final Map<String, bool> isTreeNodeExpanded = {};
+  final Map<int, bool> isTreeNodeExpanded = {};
 
   final Map<String, double> _currentDrawerWidths = {};
   // remember the width of the scaffold for each id.
@@ -681,32 +681,7 @@ class WindowEventListenerWindowManagerPackage with WindowListener {
   static WindowEventListenerWindowManagerPackage? listener;
   static initListener(GoRouter Function() routerGetter) {
     listener = WindowEventListenerWindowManagerPackage._(routerGetter);
-    listener!.readEventsTxt();
-  }
-
-  void readEventsTxt() async { // we still need to do this once to know if we are running in windowed mode
-    String scriptPath = Platform.script.path.substring(1, Platform.script.path.indexOf(Platform.script.pathSegments.last))
-        .replaceAll('%20', ' ');
-    File file = File(p.join(scriptPath, 'events.txt'));
-    final bytes8 = await file.readAsBytes();
-    final bytes = <int>[];
-    for (int i=0; i<bytes8.length; i+=2) {
-      bytes.add(bytes8[i]); // hack for utf16 encoding
-    }
-    String wholeString = (const Windows1252Codec(allowInvalid: true,)).decode(bytes);
-    List<String> events = wholeString.split("\r\n")..removeLast();
-    for (int i = 0; i<events.length; i++){
-      log ("Window event handled: ${events[i]}");
-      switch(events[i]){
-        case 'WM_CLOSE':
-          final goRouter = routerGetter();
-          WindowBar.smartMultiPop(goRouter);
-          break;
-        case 'WINDOW_INIT_ERROR':
-          windowsDesktopBitsdojoWorking = false;
-          break;
-      }
-    }
+    // listener!.readEventsTxt();
   }
 
   @override
@@ -715,69 +690,40 @@ class WindowEventListenerWindowManagerPackage with WindowListener {
     WindowBar.smartMultiPop(goRouter);
   }
 
-  // @override
-  // void onWindowEvent(String eventName) { // not needed
-  //   // log ("Window event handled: $eventName");
-  //   switch (eventName) {
-  //     case 'WINDOW_INIT_ERROR':
-  //       windowsDesktopBitsdojoWorking = false;
-  //       break;
+  // // as of version 3.2.2, windowed mode is no loger shipped, since bitsdojo seems to work on all PCs
+  // void readEventsTxt() async { // we still need to do this once to know if we are running in windowed mode
+  //   String scriptPath = Platform.script.path.substring(1, Platform.script.path.indexOf(Platform.script.pathSegments.last))
+  //       .replaceAll('%20', ' ');
+  //   File file = File(p.join(scriptPath, 'events.txt'));
+  //   final bytes8 = await file.readAsBytes();
+  //   final bytes = <int>[];
+  //   for (int i=0; i<bytes8.length; i+=2) {
+  //     bytes.add(bytes8[i]); // hack for utf16 encoding
   //   }
+  //   String wholeString = (const Windows1252Codec(allowInvalid: true,)).decode(bytes);
+  //   List<String> events = wholeString.split("\r\n")..removeLast();
+  //   for (int i = 0; i<events.length; i++){
+  //     log ("Window event handled: ${events[i]}");
+  //     switch(events[i]){
+  //       case 'WM_CLOSE':
+  //         final goRouter = routerGetter();
+  //         WindowBar.smartMultiPop(goRouter);
+  //         break;
+  //       case 'WINDOW_INIT_ERROR':
+  //         windowsDesktopBitsdojoWorking = false;
+  //         break;
+  //     }
+  //   }
+  // }
+
+  // @override
+  // void onWindowEvent(String eventName) {
+  //   log ("Window event handled: $eventName");
   // }
 
 }
 
 
-
-
-@deprecated /// old way to listen to window events via a .txt file
-class WindowEventListener{
-
-  static int listeningCount = 0;
-
-  int currentIndex = 0;
-
-  listen(GoRouter Function() routerGetter) async {
-    String scriptPath = Platform.script.path.substring(1, Platform.script.path.indexOf(Platform.script.pathSegments.last))
-        .replaceAll('%20', ' ');
-    File file = File(p.join(scriptPath, 'events.txt'));
-    listeningCount++;
-    while(true){
-      try{
-        // String wholeString = await file.readAsString(); // encoding: Encoding.
-        // final bytes = await file.readAsBytes();
-        final bytes8 = await file.readAsBytes();
-        final bytes = <int>[];
-        for (int i=0; i<bytes8.length; i+=2) {
-          bytes.add(bytes8[i]); // hack for utf16 encoding
-        }
-        // String wholeString = Utf16leBytesToCodeUnitsDecoder(bytes).decodeRest();
-        String wholeString = (const Windows1252Codec(allowInvalid: true,)).decode(bytes);
-        // String wholeString = (const Latin16Decoder(allowInvalid: true,)).convert(bytes);
-        // String wholeString = utf8.decode(bytes, allowMalformed: true);
-        // String wholeString = String.fromCharCodes(bytes);
-        List<String> events = wholeString.split("\r\n")..removeLast();
-        // log('String: $wholeString');log(events);
-        for (int i = currentIndex; i<events.length; i++){
-          log ("Window event handled: ${events[i]}");
-          switch(events[i]){
-            case 'WM_CLOSE':
-              final goRouter = routerGetter();
-              WindowBar.smartMultiPop(goRouter);
-              break;
-            case 'WINDOW_INIT_ERROR':
-              windowsDesktopBitsdojoWorking = false;
-              break;
-          }
-        }
-        currentIndex = events.length;
-      } catch (_){}
-      await Future.delayed(Duration(milliseconds: 50));
-    }
-    listeningCount--;
-  }
-
-}
 
 
 class CloseConfirmDialog extends StatelessWidget {
