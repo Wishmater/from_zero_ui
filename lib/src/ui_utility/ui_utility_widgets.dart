@@ -707,13 +707,17 @@ class ReturnToTopButton extends ConsumerStatefulWidget {
   final Widget? icon;
   final Duration? duration;
   final VoidCallback? onTap;
+  final double minThresholdFromTop;
+  final bool showOnlyWhenScrollingUp;
 
   ReturnToTopButton({
     required this.scrollController,
     required this.child,
     this.onTap,
     this.icon,
-    this.duration=const Duration(milliseconds: 300)
+    this.minThresholdFromTop = 256,
+    this.showOnlyWhenScrollingUp = true,
+    this.duration = const Duration(milliseconds: 300),
   });
 
   @override
@@ -721,6 +725,11 @@ class ReturnToTopButton extends ConsumerStatefulWidget {
 
 }
 class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
+
+  double? lastScrollControllerOffset;
+  double currentScrollingAmount = 0;
+  bool isScrollingUp = false;
+  ValueNotifier<bool> showButton = ValueNotifier(false);
 
   @override
   void initState() {
@@ -743,17 +752,31 @@ class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
 
   void update(){
     if (mounted) {
-      setState(() {});
+      bool show = false;
+      try {
+        final offset = widget.scrollController.position.pixels;
+        show = offset > widget.minThresholdFromTop;
+        if (widget.showOnlyWhenScrollingUp) {
+          if (lastScrollControllerOffset!=null) {
+            final diff = offset - lastScrollControllerOffset!;
+            if (diff!=0) {
+              if (currentScrollingAmount.isNegative != diff.isNegative) {
+                currentScrollingAmount = 0; // reset scroll direction
+              }
+              currentScrollingAmount += diff;
+              isScrollingUp = currentScrollingAmount < -48;
+            }
+          }
+          show = show && isScrollingUp;
+          lastScrollControllerOffset = offset;
+        }
+      } catch(_){}
+      showButton.value = show;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    // TODO 3 this should only show if using a tactile device
-    bool show = false;
-    try {
-      show = widget.scrollController.position.pixels > 256;
-    } catch(_){}
     double space = 16;
     try{
       space = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout)) ? 16 : 32;
@@ -764,32 +787,43 @@ class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
         widget.child,
         Positioned(
           bottom: space, right: space,
-          child: AnimatedSwitcher(
-            duration: Duration(milliseconds: 300),
-            switchInCurve: Curves.easeOutCubic,
-            transitionBuilder: (child, animation) => SlideTransition(
-              position: Tween(begin: Offset(0, 1), end: Offset.zero,).animate(animation),
-              child: ZoomedFadeInTransition(animation: animation, child: child,),
-            ),
-            child: !show ? SizedBox.shrink() : TooltipFromZero(
-              message: FromZeroLocalizations.of(context).translate('return_to_top'),
-              child: FloatingActionButton(
-                heroTag: null,
-                child: widget.icon ?? Icon(Icons.arrow_upward,
-                  color: Theme.of(context).textTheme.bodyLarge!.color!,
+          child: ValueListenableBuilder(
+            valueListenable: showButton,
+            builder: (context, showButton, child) {
+              Widget result;
+              if (!showButton) {
+                result = SizedBox.shrink();
+              } else {
+                result = TooltipFromZero(
+                  message: FromZeroLocalizations.of(context).translate('return_to_top'),
+                  child: FloatingActionButton(
+                    heroTag: null,
+                    child: widget.icon ?? Icon(Icons.arrow_upward,
+                      color: Theme.of(context).textTheme.bodyLarge!.color!,
+                    ),
+                    backgroundColor: Theme.of(context).cardColor,
+                    onPressed: widget.onTap ?? () {
+                      if (widget.duration==null){
+                        widget.scrollController.jumpTo(0);
+                      } else{
+                        widget.scrollController.animateTo(0, duration: widget.duration!, curve: Curves.easeOutCubic);
+                      }
+                    },
+                  ),
+                );
+                }
+              return AnimatedSwitcher(
+                duration: Duration(milliseconds: 300),
+                switchInCurve: Curves.easeOutCubic,
+                transitionBuilder: (child, animation) => SlideTransition(
+                  position: Tween(begin: Offset(0, 1), end: Offset.zero,).animate(animation),
+                  child: ZoomedFadeInTransition(animation: animation, child: child,),
                 ),
-                backgroundColor: Theme.of(context).cardColor,
-                onPressed: widget.onTap ?? () {
-                  if (widget.duration==null){
-                    widget.scrollController.jumpTo(0);
-                  } else{
-                    widget.scrollController.animateTo(0, duration: widget.duration!, curve: Curves.easeOutCubic);
-                  }
-                },
-              ),
-            ),
+                child: result,
+              );
+            }
           ),
-        )
+        ),
       ],
     );
   }
