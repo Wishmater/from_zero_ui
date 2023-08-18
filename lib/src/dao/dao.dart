@@ -1059,7 +1059,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                                             return Container(
                                                               height: 32,
                                                               alignment: Alignment.center,
-                                                              child: Text(e, style: Theme.of(context).textTheme.subtitle1,),
+                                                              child: Text(e, style: Theme.of(context).textTheme.titleMedium,),
                                                             );
                                                           }).toList(),
                                                           onTap: (value) {
@@ -1452,7 +1452,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                         ),
                         if (uiName!=classUiName)
                           SelectableText(classUiName,
-                            style: Theme.of(context).textTheme.subtitle2,
+                            style: Theme.of(context).textTheme.titleSmall,
                           ),
                       ],
                     ),
@@ -1636,7 +1636,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 padding: const EdgeInsets.only(bottom: 6, top: 8, left: 12, right: 12,),
                 // alignment: Alignment.centerRight,
                 child: SelectableText(e.uiName,
-                  style: Theme.of(context).textTheme.subtitle2!.copyWith(
+                  style: Theme.of(context).textTheme.titleSmall!.copyWith(
                     color: Theme.of(context).textTheme.bodyLarge!.color!
                         .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
                     wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
@@ -1719,7 +1719,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 12),
                   child: Text(group.name!,
-                    style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                    style: Theme.of(context).textTheme.titleMedium!.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),

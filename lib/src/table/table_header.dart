@@ -147,10 +147,10 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
               actionsIconTheme: widget.defaultActionsColor==null
                   ? Theme.of(context).iconTheme
                   : Theme.of(context).iconTheme.copyWith(color: widget.defaultActionsColor),
-              titleTextStyle: Theme.of(context).textTheme.subtitle1,
+              titleTextStyle: Theme.of(context).textTheme.titleMedium,
               toolbarTextStyle: widget.defaultActionsColor==null
-                  ? Theme.of(context).textTheme.subtitle1
-                  : Theme.of(context).textTheme.subtitle1!.copyWith(color: widget.defaultActionsColor),
+                  ? Theme.of(context).textTheme.titleMedium
+                  : Theme.of(context).textTheme.titleMedium!.copyWith(color: widget.defaultActionsColor),
             ),
           ),
           child: AppbarFromZero(

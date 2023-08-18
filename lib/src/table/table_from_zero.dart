@@ -1007,26 +1007,22 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                     if (row.isExpandable)
                       SizedBox(
                         width: _dropdownButtonWidth,
-                        child: OverflowBox(
-                          alignment: Alignment.center,
-                          maxWidth: double.infinity, maxHeight: double.infinity,
-                          child: IconButton(
-                            splashRadius: 24,
-                            onPressed: row.isFilteredInBecauseOfChildren ? null : () {
-                              toggleRowExpanded(row as RowModel<T>, index);
-                            },
-                            icon: OverflowBox(
-                              alignment: Alignment.center,
-                              maxHeight: double.infinity, maxWidth: double.infinity,
-                              child: SelectableIcon(
-                                selected: row.expanded || row.isFilteredInBecauseOfChildren,
-                                icon: Icons.expand_less,
-                                selectedColor: row.isFilteredInBecauseOfChildren
-                                    ? Theme.of(context).disabledColor
-                                    : Theme.of(context).splashColor.withOpacity(1),
-                                unselectedOffset: 0.25,
-                                selectedOffset: 0.5,
-                              ),
+                        child: IconButton(
+                          splashRadius: 24,
+                          onPressed: row.isFilteredInBecauseOfChildren ? null : () {
+                            toggleRowExpanded(row as RowModel<T>, index);
+                          },
+                          icon: OverflowBox(
+                            alignment: Alignment.center,
+                            maxHeight: double.infinity, maxWidth: double.infinity,
+                            child: SelectableIcon(
+                              selected: row.expanded || row.isFilteredInBecauseOfChildren,
+                              icon: Icons.expand_less,
+                              selectedColor: row.isFilteredInBecauseOfChildren
+                                  ? Theme.of(context).disabledColor
+                                  : Theme.of(context).colorScheme.secondary,
+                              unselectedOffset: 0.25,
+                              selectedOffset: 0.5,
                             ),
                           ),
                         ),
@@ -1477,6 +1473,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     if (!filterGlobalKeys.containsKey(colKey)) {
       filterGlobalKeys[colKey] = GlobalKey();
     }
+    final textStyle = Theme.of(context).textTheme.titleSmall!.copyWith(
+      color: Theme.of(context).textTheme.bodyLarge!.color!
+          .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.7 : 0.8),
+    );
     Widget result = Align(
       alignment: _getAlignment(colKey)==TextAlign.center ? Alignment.center
           : _getAlignment(colKey)==TextAlign.left||_getAlignment(colKey)==TextAlign.start ? Alignment.centerLeft
@@ -1495,10 +1495,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             ),
             child: AutoSizeText(
               compactName,
-              style: Theme.of(context).textTheme.subtitle2!.copyWith(
-                color: Theme.of(context).textTheme.bodyLarge!.color!
-                    .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
-              ),
+              style: textStyle,
               textAlign: _getAlignment(colKey),
               maxLines: autoSizeTextMaxLines,
               minFontSize: 14,
@@ -1508,11 +1505,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                 verticalOffset: -16,
                 child: AutoSizeText(
                   name,
-                  style: Theme.of(context).textTheme.subtitle2!.copyWith(
-                    color: Theme.of(context).textTheme.bodyLarge!.color!
-                        .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
-                  ),
+                  style: textStyle,
                   textAlign: _getAlignment(colKey),
+                  minFontSize: 13,
                   maxLines: autoSizeTextMaxLines,
                   softWrap: autoSizeTextMaxLines>1,
                   overflow: autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,
@@ -1536,8 +1531,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                 : MaterialCommunityIcons.sort_descending,
                             size: 20,
                             key: ValueKey(sortedAscending),
-                            // color: Theme.of(context).brightness==Brightness.light ? Colors.blue.shade700 : Colors.blue.shade400,
-                            color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).colorScheme.secondary,
+                            color: Theme.of(context).colorScheme.secondary,
                           )
                     : SizedBox(height: 24,),
                 transitionBuilder: (child, animation) => ScaleTransition(
@@ -1754,6 +1748,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           message,
           style: style,
           textAlign: alignment,
+          minFontSize: 13,
           maxLines: autoSizeTextMaxLines,
           softWrap: autoSizeTextMaxLines>1,
           overflow: autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,

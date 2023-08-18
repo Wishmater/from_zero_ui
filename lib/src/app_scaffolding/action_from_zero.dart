@@ -44,6 +44,7 @@ class ActionFromZero extends StatelessWidget {
   final ContextCallback? onTap;
   final String title;
   final Widget? icon;
+  final Color? color;
   final bool enabled;
 
   /// from each breakpoint up, the selected widget will be used
@@ -59,23 +60,24 @@ class ActionFromZero extends StatelessWidget {
   final ActionBuilder iconBuilder;
   Widget buildIcon(BuildContext context, {
     Color? color,
-  }) => iconBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color);
+  }) => iconBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color);
 
   final ActionBuilder buttonBuilder;
   Widget buildButton(BuildContext context, {
     Color? color,
-  }) => buttonBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color);
+  }) => buttonBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color);
 
   final ActionBuilder? expandedBuilder;
   Widget buildExpanded(BuildContext context, {
     Color? color,
-  }) => expandedBuilder!(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color);
+  }) => expandedBuilder!(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color);
   final bool centerExpanded;
 
   ActionFromZero({
     this.onTap,
     required this.title,
     this.icon,
+    this.color,
     this.enabled = true,
     Map<double, ActionState>? breakpoints,
     this.overflowBuilder = defaultOverflowBuilder,
@@ -95,6 +97,7 @@ class ActionFromZero extends StatelessWidget {
     this.buttonBuilder = dividerIconBuilder,
   }) :  title = '',
         icon = null,
+        color = null,
         onTap = null,
         expandedBuilder = null,
         centerExpanded = true,
@@ -109,6 +112,7 @@ class ActionFromZero extends StatelessWidget {
     void Function(BuildContext context)? onTap,
     String? title,
     Widget? icon,
+    Color? color,
     Map<double, ActionState>? breakpoints,
     OverflowActionBuilder? overflowBuilder,
     ActionBuilder? iconBuilder,
@@ -121,6 +125,7 @@ class ActionFromZero extends StatelessWidget {
       onTap: onTap==nullOnTap ? null : (onTap ?? this.onTap),
       title: title ?? this.title,
       icon: icon ?? this.icon,
+      color: color ?? this.color,
       breakpoints: breakpoints ?? this.breakpoints,
       overflowBuilder: overflowBuilder ?? this.overflowBuilder,
       iconBuilder: iconBuilder ?? this.iconBuilder,

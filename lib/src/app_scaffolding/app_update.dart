@@ -296,9 +296,8 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
         if (!started)
           DialogButton.cancel(),
         if (!started)
-          DialogButton(
+          DialogButton.accept(
             child: Text(FromZeroLocalizations.of(context).translate('update').toUpperCase()),
-            color: Colors.blue,
             onPressed: () async {
               setState(() {
                 started = true;

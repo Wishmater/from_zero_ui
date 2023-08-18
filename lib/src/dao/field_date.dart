@@ -374,13 +374,13 @@ class DateField extends Field<DateTime> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 dense
-                    ? Text(value==null ? (hint ?? title ?? '') : formattedValue, style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                    ? Text(value==null ? (hint ?? title ?? '') : formattedValue, style: Theme.of(context).textTheme.titleMedium!.copyWith(
                         height: 0.8,
                         color: value==null ? Theme.of(context).textTheme.caption!.color!
                             : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                       ))
                 : value==null&&hint==null&&title!=null
-                    ? Text(title, style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                    ? Text(title, style: Theme.of(context).textTheme.titleMedium!.copyWith(
                       color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                     ),)
                     : MaterialKeyValuePair(
@@ -390,7 +390,7 @@ class DateField extends Field<DateTime> {
                         color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                       ),
                       value: value==null ? (hint ?? '') : formattedValue,
-                      valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      valueStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
                         height: 1,
                         color: value==null ? Theme.of(context).textTheme.caption!.color!
                             : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),

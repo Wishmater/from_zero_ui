@@ -72,13 +72,13 @@ class DatePickerFromZero extends StatefulWidget {
               SizedBox(width: 8,),
               Expanded(
                 child: value==null&&hint==null&&title!=null
-                    ? Text(title, style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                    ? Text(title, style: Theme.of(context).textTheme.titleMedium!.copyWith(
                       color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                     ),)
                     : MaterialKeyValuePair(
                       title: title,
                       value: value==null ? (hint ?? '') : formattedValue,
-                      valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      valueStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
                         height: 1,
                         color: value==null ? Theme.of(context).textTheme.caption!.color!
                             : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
@@ -232,7 +232,7 @@ class _DatePickerFromZeroPopupState extends State<DatePickerFromZeroPopup> {
                 padding: const EdgeInsets.only(top: 4.0),
                 child: Center(
                   child: Text(widget.title!,
-                    style: Theme.of(context).textTheme.subtitle1,
+                    style: Theme.of(context).textTheme.titleMedium,
                     textAlign: TextAlign.center,
                   ),
                 ),

@@ -1019,14 +1019,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         controller: scrollController,
         shrinkWrap: true,
         slivers: [
-          // SliverToBoxAdapter(
-          //   child: Padding(
-          //     padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
-          //     child: Text('${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
-          //       style: Theme.of(context).textTheme.headline6,
-          //     ),
-          //   ),
-          // ),
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
@@ -1071,7 +1063,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     SizedBox(width: 6),
-                    Icon(Icons.add, color: Colors.blue),
+                    Icon(Icons.add),
                     SizedBox(width: 6,),
                     Text('${FromZeroLocalizations.of(context).translate("add")} ${emptyDAO.classUiName}', style: TextStyle(fontSize: 16),),
                     SizedBox(width: 6),
@@ -1161,7 +1153,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                       builder: (context, child) {
                         return DialogButton(
                           child: Text(FromZeroLocalizations.of(context).translate('close_caps'),),
-                          color: Colors.red,
+                          color: Theme.of(context).colorScheme.error,
                           onPressed: () {
                             Navigator.of(context).pop(true); // Dismiss alert dialog
                           },
@@ -1571,7 +1563,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                   if ((allowAddNew||hasAvailableObjectsPool))
                                     ActionFromZero(
                                       title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
-                                      icon: Icon(Icons.add, color: Colors.blue),
+                                      icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
                                       breakpoints: {0: ActionState.popup,},
                                       onTap: (context) async {
                                         final result = await maybeAddRow(dao.contextForValidation ?? context, i);
@@ -1627,7 +1619,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                   height: 38,
                                   padding: EdgeInsets.only(bottom: 6),
                                   alignment: Alignment.center,
-                                  child: Text(name, style: Theme.of(context).textTheme.subtitle1,),
+                                  child: Text(name, style: Theme.of(context).textTheme.titleMedium,),
                                 ),
                               );
                             }).toList(),
@@ -1846,7 +1838,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               rowAddonWidget = Theme(
                 data: Theme.of(context).copyWith(
                   textTheme: Theme.of(context).textTheme.copyWith(
-                    subtitle1: Theme.of(context).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
+                    titleMedium: Theme.of(context).textTheme.bodyLarge!.copyWith(fontWeight: FontWeight.w400),
                   ),
                 ),
                 child: Padding(
@@ -2007,7 +1999,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             if ((allowAddNew||hasAvailableObjectsPool))
               RowAction<T>(
                 title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
-                icon: Icon(Icons.add, color: Colors.blue),
+                icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
                 breakpoints: {0: ActionState.popup,},
                 onRowTap: (context, row) async {
                   row.focusNode.requestFocus();
@@ -2223,41 +2215,23 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         }
         return Container(
           color: backgroundColor?.call(context, this, dao) ?? Material.of(context).color ?? Theme.of(context).cardColor,
-          child: TextButton(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 10, bottom: 10,),
-              child: Center(
-                child: IntrinsicWidth(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.add, color: Colors.blue),
-                      SizedBox(width: 8,),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 2),
-                          child: Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.blue,
-                            ),
-                          ),
-                        ),
-                      ),
-                      SizedBox(width: 8,),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            style: TextButton.styleFrom(
-              backgroundColor: Colors.blue.withOpacity(0.2),
-            ),
+          child: FilledButton.tonalIcon(
             onPressed: () {
               userInteracted = true;
               maybeAddRow(dao.contextForValidation ?? context);
             },
+            icon: Icon(Icons.add),
+            label: Padding(
+              padding: const EdgeInsets.only(top: 10, bottom: 10,),
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
+                  style: TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ),
           ),
         );
       },
@@ -2351,9 +2325,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               Expanded(
                 child: dense
                     ? Text(uiName,
-                  style: Theme.of(context).textTheme.subtitle1,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ) : SelectableText(uiName,
-                  style: Theme.of(context).textTheme.subtitle1,
+                  style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
               if (showViewButtons && onTap!=null)
@@ -2439,7 +2413,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                             value: null,
                             padding: EdgeInsets.zero,
                             size: 12,
-                            color: Theme.of(context).splashColor.withOpacity(1),
+                            color: Theme.of(context).colorScheme.secondary,
                           ),
                         );
                       },
@@ -2448,7 +2422,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                           height: 10, width: 10,
                           child: Icon(
                             Icons.error_outlined,
-                            color: Colors.red,
+                            color: Theme.of(context).colorScheme.error,
                             size: 12,
                           ),
                         );
@@ -2522,7 +2496,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       if ((allowAddNew||hasAvailableObjectsPool) && !collapsed && currentSelected.length==0)
         ActionFromZero(
           title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
-          icon: Icon(Icons.add, color: Colors.blue),
+          icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
           onTap: (context) async {
             focusNode?.requestFocus();
             final result = await maybeAddRow(dao.contextForValidation ?? context);

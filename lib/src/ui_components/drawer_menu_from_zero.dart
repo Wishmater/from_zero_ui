@@ -963,9 +963,6 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
     final dense = widget.dense && !widget.selected;
     return Material(
       type: MaterialType.transparency,
-      color: widget.selected
-          ? theme.splashColor
-          : Colors.transparent,
       child: ListTile(
         selected: widget.selected,
         contentPadding: widget.contentPadding,
@@ -977,7 +974,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
         onTap: widget.onTap,
         title: AnimatedDefaultTextStyle(
           duration: Duration(milliseconds: 100),
-          style: TextStyle(
+          style: Theme.of(context).textTheme.titleSmall!.copyWith(
             fontSize: dense
                 ? widget.selected ? 17 : 14
                 : widget.selected ? 17 : 16,

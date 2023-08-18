@@ -376,7 +376,7 @@ class ComboField<T extends DAO> extends Field<T> {
                       value: null,
                       padding: EdgeInsets.zero,
                       size: 12,
-                      color: Theme.of(context).splashColor.withOpacity(1),
+                      color: Theme.of(context).colorScheme.secondary,
                     ),
                   );
                 },
@@ -504,7 +504,7 @@ class ComboField<T extends DAO> extends Field<T> {
                 dense
                     ? Text(value==null||value.toString().isEmpty ? (hint ?? title ?? '') : value.toString(),
                         maxLines: 2,
-                        style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
                           height: 1,
                           color: value==null||value.toString().isEmpty ? Theme.of(context).textTheme.caption!.color!
                               : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
@@ -513,7 +513,7 @@ class ComboField<T extends DAO> extends Field<T> {
                 : value==null&&hint==null&&title!=null
                     ? Text(title,
                         maxLines: 2,
-                        style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
                           color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                         ),
                       )
@@ -526,7 +526,7 @@ class ComboField<T extends DAO> extends Field<T> {
                       ),
                       value: value==null||value.toString().isEmpty ? (hint ?? '') : value.toString(),
                       valueMaxLines: 2,
-                      valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      valueStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
                         height: 1,
                         color: value==null||value.toString().isEmpty ? Theme.of(context).textTheme.caption!.color!
                             : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),

@@ -179,7 +179,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
             children: [
               SizedBox(height: 6,),
               DefaultTextStyle(
-                style: Theme.of(context).textTheme.subtitle1!,
+                style: Theme.of(context).textTheme.titleMedium!,
                 child: Text('Procesando...'),
               ),
               SizedBox(height: 2,),
@@ -270,7 +270,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
   Widget resultBuilder(BuildContext context, Object? error, StackTrace? stackTrace) {
     final type = error==null ? SnackBarFromZero.success : SnackBarFromZero.error;
     final actionColor = SnackBarFromZero.colors[type];
-    final splashColor = Theme.of(context).splashColor.withOpacity(1);
+    final splashColor = Theme.of(context).colorScheme.secondary;
     bool showRetry = true, showErrorDetails = false;
     Widget? icon;
     String? title, message;
@@ -356,7 +356,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               SizedBox(height: 6,),
               if (title!=null)
                 DefaultTextStyle(
-                  style: Theme.of(context).textTheme.subtitle1!.copyWith(fontSize: 16),
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 16),
                   child: Text(title),
                 ),
               SizedBox(height: 2,),

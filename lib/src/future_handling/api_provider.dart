@@ -307,10 +307,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   static Widget defaultLoadingBuilder(BuildContext context, ValueListenable<double?>? progress, {
     double? size,
   }) {
-    final color = Theme.of(context).splashColor.withOpacity(1);
     if (progress==null) {
       return LoadingSign(
-        color: color,
         size: size ?? 48,
       );
     } else {
@@ -319,7 +317,6 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
         builder: (context, progress, child) {
           return LoadingSign(
             value: progress,
-            color: Theme.of(context).splashColor.withOpacity(1),
             size: size ?? 48,
           );
         },

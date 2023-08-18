@@ -685,7 +685,7 @@ class _ExpandIconButtonState extends State<ExpandIconButton> with SingleTickerPr
           builder: (context, child) {
             return Icon(Icons.expand_more,
               color: ColorTween(
-                end: Theme.of(context).splashColor.withOpacity(1),
+                end: Theme.of(context).colorScheme.secondary,
                 begin: Theme.of(context).textTheme.bodyLarge!.color!,
               ).evaluate(controlPanelAnimationController),
               size: 32,

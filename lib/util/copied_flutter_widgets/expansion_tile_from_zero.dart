@@ -422,11 +422,11 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     final ThemeData theme = Theme.of(context);
     _borderColorTween.end = theme.dividerColor;
     _headerColorTween
-      ..begin = theme.textTheme.subtitle1!.color
+      ..begin = theme.textTheme.titleMedium!.color
       ..end = theme.indicatorColor;
     _iconColorTween
       ..begin = theme.unselectedWidgetColor
-      ..end = theme.splashColor.withOpacity(1);
+      ..end = theme.indicatorColor;
     _backgroundColorTween.end = widget.backgroundColor;
     super.didChangeDependencies();
   }

@@ -208,7 +208,7 @@ class ThemeSwitcher extends StatelessWidget {
                   child: MaterialKeyValuePair(
                     title: title,
                     value: themeParameters.themeNames(context)[themeParameters.selectedTheme],
-                    valueStyle: Theme.of(context).textTheme.subtitle1,
+                    valueStyle: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
                 SizedBox(width: 4,),
@@ -229,7 +229,7 @@ class ThemeSwitcher extends StatelessWidget {
             SizedBox(width: 12,),
             Expanded(
               child: Text(themeParameters.themeNames(context)[value],
-                style: Theme.of(context).textTheme.subtitle1,
+                style: Theme.of(context).textTheme.titleMedium,
               ),
             ),
           ],

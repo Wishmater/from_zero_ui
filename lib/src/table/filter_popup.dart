@@ -86,7 +86,7 @@ abstract class TableFromZeroFilterPopup {
                               padding: const EdgeInsets.only(top: 4.0),
                               child: Center(
                                 child: Text(FromZeroLocalizations.of(context).translate('filters'),
-                                  style: Theme.of(context).textTheme.subtitle1,
+                                  style: Theme.of(context).textTheme.titleMedium,
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -101,7 +101,7 @@ abstract class TableFromZeroFilterPopup {
                                     Padding(
                                       padding: const EdgeInsets.only(left: 4,),
                                       child: Text(FromZeroLocalizations.of(context).translate('condition_filters'),
-                                        style: Theme.of(context).textTheme.subtitle1,
+                                        style: Theme.of(context).textTheme.titleMedium,
                                       ),
                                     ),
                                     TooltipFromZero(
@@ -116,7 +116,7 @@ abstract class TableFromZeroFilterPopup {
                                               Icon(Icons.add, color: Colors.blue,),
                                               SizedBox(width: 6,),
                                               Text(FromZeroLocalizations.of(context).translate('add'),
-                                                style: Theme.of(context).textTheme.subtitle1!.copyWith(color: Colors.blue,),
+                                                style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.blue,),
                                               ),
                                             ],
                                           ),
@@ -359,11 +359,11 @@ abstract class TableFromZeroFilterPopup {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 SizedBox(
-                                  width: 120,
+                                  width: 128,
                                   child: DialogButton.cancel(),
                                 ),
                                 SizedBox(
-                                  width: 120,
+                                  width: 128,
                                   child: DialogButton.accept(
                                     onPressed: () {
                                       Navigator.of(context).pop(true);

@@ -459,7 +459,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
               Expanded(
                 child: dense
                     ? AutoSizeText(message,
-                        style: Theme.of(context).textTheme.subtitle1,
+                        style: Theme.of(context).textTheme.titleMedium,
                         textAlign: field.getColModel().alignment,
                         maxLines: 1,
                         minFontSize: 14,
@@ -468,7 +468,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                           waitDuration: Duration(milliseconds: 0),
                           verticalOffset: -16,
                           child: AutoSizeText(message,
-                            style: Theme.of(context).textTheme.subtitle1,
+                            style: Theme.of(context).textTheme.titleMedium,
                             textAlign: field.getColModel().alignment,
                             maxLines: 1,
                             softWrap: false,
@@ -480,7 +480,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           SelectableText(message,
-                            style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
                               wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
                             ),
                           ),

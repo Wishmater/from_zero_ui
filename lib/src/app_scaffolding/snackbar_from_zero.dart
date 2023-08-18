@@ -164,7 +164,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
               SizedBox(height: 6,),
               if (widget.title!=null)
                 DefaultTextStyle(
-                  style: Theme.of(context).textTheme.subtitle1!.copyWith(fontSize: 16),
+                  style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 16),
                   child: widget.title!,
                 ),
               SizedBox(height: 2,),

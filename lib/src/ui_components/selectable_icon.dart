@@ -63,7 +63,7 @@ class _SelectableIconState extends State<SelectableIcon> with SingleTickerProvid
       begin: widget.unselectedColor 
           ?? Theme.of(context).textTheme.caption!.color,
       end: widget.selectedColor 
-          ?? Theme.of(context).splashColor.withOpacity(1),
+          ?? Theme.of(context).colorScheme.secondary,
     ));
   }
 

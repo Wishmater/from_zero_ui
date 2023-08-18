@@ -286,7 +286,7 @@ class BoolField extends Field<BoolComparable> {
             Expanded(
               child: dense
                   ? AutoSizeText(valueName,
-                    style: Theme.of(context).textTheme.subtitle1,
+                    style: Theme.of(context).textTheme.titleMedium,
                     textAlign: field.getColModel().alignment,
                     maxLines: 1,
                     minFontSize: 14,
@@ -295,7 +295,7 @@ class BoolField extends Field<BoolComparable> {
                       waitDuration: Duration(milliseconds: 0),
                       verticalOffset: -16,
                       child: AutoSizeText(valueName,
-                        style: Theme.of(context).textTheme.subtitle1,
+                        style: Theme.of(context).textTheme.titleMedium,
                         textAlign: field.getColModel().alignment,
                         maxLines: 1,
                         softWrap: false,
@@ -304,7 +304,7 @@ class BoolField extends Field<BoolComparable> {
                     ),
                   )
                   : SelectableText(valueName,
-                    style: Theme.of(context).textTheme.subtitle1,
+                    style: Theme.of(context).textTheme.titleMedium,
                   ),
             ),
         ],
@@ -408,7 +408,7 @@ class BoolField extends Field<BoolComparable> {
                         ),
                       ),
                     Text(uiNameValue,
-                      style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
                         color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                         height: 1.2,
                       ),
@@ -446,7 +446,7 @@ class BoolField extends Field<BoolComparable> {
                         ),
                       ),
                     Text(uiNameValue,
-                      style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
                         color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                         height: 1.2,
                       ),

@@ -91,13 +91,13 @@ class ComboFromZero<T> extends StatefulWidget {
               SizedBox(width: 8,),
               Expanded(
                 child: value==null&&hint==null&&title!=null
-                    ? Text(title, style: Theme.of(context).textTheme.subtitle1!.copyWith(
+                    ? Text(title, style: Theme.of(context).textTheme.titleMedium!.copyWith(
                       color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                     ),)
                     : MaterialKeyValuePair(
                       title: title,
                       value: value==null ? (hint ?? '') : value.toString(),
-                      valueStyle: Theme.of(context).textTheme.subtitle1!.copyWith(
+                      valueStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
                         height: 1,
                         color: value==null ? Theme.of(context).textTheme.caption!.color!
                             : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
@@ -407,7 +407,6 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
         id: e,
         values: {0: e.toString()},
         height: widget.useFixedRowHeight ? widget.rowHeight : null,
-        // backgroundColor: widget.value==e ? Theme.of(context).splashColor.withOpacity(0.2) : null,
         onRowTap: (value) {
           _select(e);
         },
@@ -419,7 +418,6 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
         values: {0: (widget.showHintAsNullInSelection ? widget.hint : null) ?? '< Vacío >'}, // TODO 3 internationalize
         height: widget.useFixedRowHeight ? widget.rowHeight : null,
         alwaysOnTop: true,
-        // backgroundColor: widget.value==e ? Theme.of(context).splashColor.withOpacity(0.2) : null,
         onRowTap: (value) {
           _select(null);
         },
@@ -492,7 +490,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                         child: Transform.translate(
                           offset: Offset(0, widget.extraWidget==null&&showSearchBox ? 4 : 0),
                           child: Text(widget.title!,
-                            style: Theme.of(context).textTheme.subtitle1,
+                            style: Theme.of(context).textTheme.titleMedium,
                             textAlign: TextAlign.center,
                           ),
                         ),

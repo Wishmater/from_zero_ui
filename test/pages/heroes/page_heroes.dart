@@ -152,7 +152,7 @@ class _PageHeroesState extends State<PageHeroes> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                      child: Text("Heroes Test", style: Theme.of(context).textTheme.subtitle1,),
+                      child: Text("Heroes Test", style: Theme.of(context).textTheme.titleMedium,),
                     ),
                     FlutterLogo(size: 192,),
                   ],

@@ -81,7 +81,7 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
 
   @override
   Widget build(BuildContext context) {
-    Color color = this.widget.color ?? Theme.of(context).primaryColor;
+    Color color = this.widget.color ?? Theme.of(context).colorScheme.primary;
     Color colorMedium = color.withOpacity(0.8);
     Color colorMild = color.withOpacity(0.2);
     Color colorTransparent = color.withOpacity(0);

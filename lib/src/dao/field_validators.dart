@@ -476,7 +476,7 @@ class _SingleValidationMessageState extends State<SingleValidationMessage> with 
                   : Colors.transparent,
             ),
             child: Text(widget.error.toString(),
-              style: (widget.errorTextStyle ?? Theme.of(context).textTheme.subtitle1!).copyWith(
+              style: (widget.errorTextStyle ?? Theme.of(context).textTheme.titleMedium!).copyWith(
                 color: widget.error.isBlocking
                     ? Colors.white
                     : color,
@@ -629,7 +629,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
                     child: Text(name!,
                       style: isBlocking
                           ? Theme.of(context).textTheme.headline6
-                          : Theme.of(context).textTheme.subtitle1,
+                          : Theme.of(context).textTheme.titleMedium,
                     ),
                   ),
                 ],
