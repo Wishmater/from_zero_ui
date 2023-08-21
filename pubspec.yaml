@@ -71,8 +71,7 @@ dependencies:
 
 
 dependency_overrides:
-  win32: ^5.0.2 # force older plugins (bitsdojo_window 0.1.5) to use a newer version, required by other plugins (file_picker>=5.3.2)
-  file: ^7.0.0  # file <7.0.0 throws compile-time errors with dart 3
+  win32: ^5.0.6 # force older plugins (bitsdojo_window 0.1.5) to use a newer version, required by other plugins (file_picker>=5.3.2)
 
 
 
