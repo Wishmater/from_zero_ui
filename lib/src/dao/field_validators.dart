@@ -692,7 +692,7 @@ class ValidationRequiredOverlay extends StatelessWidget {
                   size: dense ? 11 : isEmpty ? 14 : 8,
                   color: isEmpty
                       ? Theme.of(context).errorColor
-                      : Theme.of(context).textTheme.caption!.color,
+                      : Theme.of(context).textTheme.bodySmall!.color,
                 ),
               ),
             ),

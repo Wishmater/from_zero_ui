@@ -265,7 +265,7 @@ class _ComplicatedTableState extends State<ComplicatedTable> {
 //       rowBackgroundColors: [null, null, null, null, Colors.indigo.withOpacity(0.4)],
 //       rowTakesPriorityOverColumn: false,
 //       columnAlignments: [null, null, null, null, TextAlign.right],
-//       colStyles: [null, null, null, null, Theme.of(context).textTheme.caption],
+//       colStyles: [null, null, null, null, Theme.of(context).textTheme.bodySmall],
 //       rowStyles: [null, null, null, null, Theme.of(context).textTheme.headline6],
 //       columnFlexes: [2, 1, 1, 1, 1],
 //       onRowTap: (RowModel row) {

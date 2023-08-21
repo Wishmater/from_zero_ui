@@ -221,7 +221,7 @@ class ActionFromZero extends StatelessWidget {
           child: TextButton(
             style: TextButton.styleFrom(
               padding: EdgeInsets.zero,
-              primary: color,
+              foregroundColor: color,
             ),
             onPressed: (!enabled || onTap==null) ? null : (){
               onTap.call(context);
@@ -272,7 +272,7 @@ class ActionFromZero extends StatelessWidget {
           if (icon!=null) IconTheme(
             data: Theme.of(context).iconTheme.copyWith(
               color: !enabled || onTap==null
-                  ? Theme.of(context).textTheme.caption!.color
+                  ? Theme.of(context).textTheme.bodySmall!.color
                   : Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white,
             ),
             child: icon,
@@ -286,7 +286,7 @@ class ActionFromZero extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   color: !enabled || onTap==null
-                      ? Theme.of(context).textTheme.caption!.color
+                      ? Theme.of(context).textTheme.bodySmall!.color
                       : Theme.of(context).textTheme.bodyLarge!.color,
                 ),
               ),
@@ -307,7 +307,7 @@ class ActionFromZero extends StatelessWidget {
       style: TextButton.styleFrom(
         padding: EdgeInsets.zero,
         primary: !enabled || onTap==null
-            ? Theme.of(context).textTheme.caption!.color
+            ? Theme.of(context).textTheme.bodySmall!.color
             : Theme.of(context).textTheme.bodyLarge!.color,
       ),
       child: result,

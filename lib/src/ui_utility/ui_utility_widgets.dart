@@ -274,7 +274,7 @@ class MaterialKeyValuePair extends StatelessWidget {
               if (title!=null)
                 Text(title!,
                   maxLines: titleMaxLines,
-                  style: titleStyle ?? Theme.of(context).textTheme.caption,
+                  style: titleStyle ?? Theme.of(context).textTheme.bodySmall,
                 ),
               Stack(
                 fit: StackFit.passthrough,
@@ -321,7 +321,7 @@ class MaterialKeyValuePair extends StatelessWidget {
           Text(
             title!,
             maxLines: titleMaxLines,
-            style: titleStyle ?? Theme.of(context).textTheme.caption,
+            style: titleStyle ?? Theme.of(context).textTheme.bodySmall,
           ),
         SizedBox(height: padding,),
         if (value!=null)

@@ -1530,7 +1530,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                     Text(objects.length==0 ? FromZeroLocalizations.of(context).translate('no_elements')
                                         : '${objects.length} ${objects.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
                                         : FromZeroLocalizations.of(context).translate('element_sing')}',
-                                      style: Theme.of(context).textTheme.caption,
+                                      style: Theme.of(context).textTheme.bodySmall,
                                     )
                                   ],
                                 ),

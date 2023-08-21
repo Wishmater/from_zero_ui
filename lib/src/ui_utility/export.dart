@@ -660,7 +660,7 @@ class ExportState extends State<Export> {
                       ),
 //                      Text(
 //                        "Vista Previa", //(Página ${controller.page}/${pages.length})
-//                        style: Theme.of(context).textTheme.caption.copyWith(color: Colors.black),
+//                        style: Theme.of(context).textTheme.bodySmall.copyWith(color: Colors.black),
 //                      ),
                       if((widget.childrenCount?.call(currentSize, portrait, scale, format,)??1) > 1)
                         CirclePageIndicator(
@@ -720,7 +720,7 @@ class ExportState extends State<Export> {
                                         child: empty ? SizedBox.shrink()
                                             : IconButton(
                                           icon: Icon(MaterialCommunityIcons.close_circle,
-                                            color: Theme.of(context).textTheme.caption!.color,
+                                            color: Theme.of(context).textTheme.bodySmall!.color,
                                           ),
                                           onPressed: (){
                                             textEditingControllers[value].clear();
@@ -819,7 +819,7 @@ class ExportState extends State<Export> {
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(left: 8.0),
-                            child: Text("Zoom:", style: Theme.of(context).textTheme.caption,),
+                            child: Text("Zoom:", style: Theme.of(context).textTheme.bodySmall,),
                           ),
                           Expanded(
                             child: Slider(

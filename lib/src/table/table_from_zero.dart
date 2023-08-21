@@ -1566,7 +1566,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                           icon: MaterialCommunityIcons.filter_outline,
                           selectedIcon: MaterialCommunityIcons.filter,
                           selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).colorScheme.secondary,
-                          unselectedColor: Theme.of(context).textTheme.caption!.color!,
+                          unselectedColor: Theme.of(context).textTheme.bodySmall!.color!,
                           unselectedOffset: 0,
                           selectedOffset: 0,
                         ),

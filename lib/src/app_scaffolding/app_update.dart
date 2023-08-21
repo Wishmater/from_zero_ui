@@ -285,7 +285,7 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(FromZeroLocalizations.of(context).translate('restart_warning'),
-                      style: Theme.of(context).textTheme.caption,
+                      style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
                 ],

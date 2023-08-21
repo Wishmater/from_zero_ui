@@ -150,7 +150,7 @@ abstract class TableFromZeroFilterPopup {
                               SliverToBoxAdapter(child: Padding(
                                 padding: EdgeInsets.only(left: 24, bottom: 8,),
                                 child: Text (FromZeroLocalizations.of(context).translate('none'),
-                                  style: Theme.of(context).textTheme.caption,
+                                  style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ),),
                             SliverList(
@@ -193,7 +193,7 @@ abstract class TableFromZeroFilterPopup {
                                 var textStyle = TextStyle(fontSize: 16);
                                 if (message.isBlank) {
                                   message = '< vacío >'; // TODO 3 internacionalize
-                                  textStyle = TextStyle(fontSize: 16, color: Theme.of(context).textTheme.caption!.color);
+                                  textStyle = TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodySmall!.color);
                                 }
                                 final autoSizeTextMaxLines = 1;
                                 Widget result = AutoSizeText(
@@ -279,7 +279,7 @@ abstract class TableFromZeroFilterPopup {
                                           labelText: FromZeroLocalizations.of(context).translate('search...'),
                                           contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
                                           labelStyle: TextStyle(height: 0.2),
-                                          suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.caption!.color!,),
+                                          suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.bodySmall!.color!,),
                                         ),
                                       ),
                                     ),

@@ -315,7 +315,6 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
                   alignment: Alignment.bottomLeft,
                   child: VerticalDivider(
                     thickness: 2, width: 2,
-                    color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Theme.of(context).cardColor),
                   ),
                 ),
               ),

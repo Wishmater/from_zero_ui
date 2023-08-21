@@ -83,7 +83,7 @@ abstract class FilterText extends ConditionFilter {
                       top: 0, left: -32, right: -32,
                       child: Center(
                         child: Text(getExtraUiName(context),
-                          style: Theme.of(context).textTheme.caption!.copyWith(height: 1.2),
+                          style: Theme.of(context).textTheme.bodySmall!.copyWith(height: 1.2),
                         ),
                       ),
                     ),
@@ -262,7 +262,7 @@ abstract class FilterNumber extends ConditionFilter {
                       top: 0, left: -32, right: -32,
                       child: Center(
                         child: Text(getExtraUiName(context),
-                          style: Theme.of(context).textTheme.caption!.copyWith(height: 1.2),
+                          style: Theme.of(context).textTheme.bodySmall!.copyWith(height: 1.2),
                         ),
                       ),
                     ),
@@ -417,7 +417,7 @@ abstract class FilterDate extends ConditionFilter {
                         Expanded(
                           child: MaterialKeyValuePair(
                             title: title,
-                            titleStyle: Theme.of(context).textTheme.caption!.copyWith(height: 0.8),
+                            titleStyle: Theme.of(context).textTheme.bodySmall!.copyWith(height: 0.8),
                             value: value==null ? '' : formatter.format(value),
                             valueStyle: TextStyle(fontSize: 15,),
                           ),
@@ -442,7 +442,7 @@ abstract class FilterDate extends ConditionFilter {
                       top: 0, left: -32, right: -32,
                       child: Center(
                         child: Text(getExtraUiName(context),
-                          style: Theme.of(context).textTheme.caption!.copyWith(height: 1.2),
+                          style: Theme.of(context).textTheme.bodySmall!.copyWith(height: 1.2),
                         ),
                       ),
                     ),

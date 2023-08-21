@@ -125,7 +125,7 @@ abstract class TableFromZeroManagePopup {
                                                       selectedIcon: Icons.visibility,
                                                       icon: Icons.visibility_off,
                                                       selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).colorScheme.secondary,
-                                                      unselectedColor: Theme.of(context).textTheme.caption!.color!,
+                                                      unselectedColor: Theme.of(context).textTheme.bodySmall!.color!,
                                                       unselectedOffset: 0,
                                                       selectedOffset: 0,
                                                     ),

@@ -481,7 +481,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                     Divider(height: 1,),
                     tabs[i].title.isEmpty ? SizedBox(height: 4,) : Padding(
                       padding: const EdgeInsets.only(left: 64),
-                      child: Text(tabs[i].title, style: theme.textTheme.caption,),
+                      child: Text(tabs[i].title, style: theme.textTheme.bodySmall,),
                     )
                   ],
                 ),
@@ -874,7 +874,6 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                       width: 20, height: double.infinity,
                       child: VerticalDivider(
                         thickness: 2, width: 2,
-                        color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Theme.of(context).cardColor),
                       ),
                     ),
                   );
@@ -890,7 +889,6 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   width: (tabs[i].children==null || tabs[i].children!.isEmpty) ? 24: 12,
                   child: Divider(
                     thickness: 2, height: 2,
-                    color: Color.alphaBlend(Theme.of(context).dividerColor.withOpacity(Theme.of(context).dividerColor.opacity*3), Theme.of(context).cardColor),
                   ),
                 ),
               ),
@@ -979,7 +977,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 ? widget.selected ? 17 : 14
                 : widget.selected ? 17 : 16,
             color: dense
-                ? widget.selected ? selectedTextColor.withOpacity(0.75) : theme.textTheme.caption!.color
+                ? widget.selected ? selectedTextColor.withOpacity(0.75) : theme.textTheme.bodySmall!.color
                 : widget.selected ? selectedTextColor : theme.textTheme.bodyLarge!.color,
             fontWeight: widget.selected ? FontWeight.w700 : null,
           ),
@@ -1010,7 +1008,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
             : AnimatedDefaultTextStyle(
               duration: Duration(milliseconds: 100),
               style: TextStyle(
-                color: widget.selected ? selectedTextColor.withOpacity(0.75) : theme.textTheme.caption!.color,
+                color: widget.selected ? selectedTextColor.withOpacity(0.75) : theme.textTheme.bodySmall!.color,
                 fontWeight: widget.selected ? FontWeight.w600 : null,
               ),
               child: Padding(

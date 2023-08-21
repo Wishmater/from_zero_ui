@@ -114,7 +114,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
             }
             subtitle = Text(subtitleText,
               // key: ValueKey('normal'),
-              style: Theme.of(context).textTheme.caption,
+              style: Theme.of(context).textTheme.bodySmall,
             );
           } else {
             subtitle = SizedBox.shrink();
@@ -124,7 +124,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
           subtitle = Text('$selectedCount/$count ${selectedCount>1 ? FromZeroLocalizations.of(context).translate('selected_plur')
               : FromZeroLocalizations.of(context).translate('selected_sing')}',
             // key: ValueKey('selected'),
-            style: Theme.of(context).textTheme.caption,
+            style: Theme.of(context).textTheme.bodySmall,
           );
         }
         subtitle = AnimatedSwitcher(

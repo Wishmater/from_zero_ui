@@ -2026,13 +2026,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     Expanded(
                       child: TextButton(
                         style: TextButton.styleFrom(
-                          primary: Theme.of(context).textTheme.caption!.color,
+                          primary: Theme.of(context).textTheme.bodySmall!.color,
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(6.0),
                           child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600,
-                              color: Theme.of(context).textTheme.caption!.color,
+                              color: Theme.of(context).textTheme.bodySmall!.color,
                             ),
                           ),
                         ),
@@ -2066,7 +2066,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     child: ElevatedButton(
                       style: userInteracted ? null : ElevatedButton.styleFrom(
                         primary: Theme.of(context).canvasColor,
-                        onPrimary: Theme.of(context).textTheme.caption!.color,
+                        onPrimary: Theme.of(context).textTheme.bodySmall!.color,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),

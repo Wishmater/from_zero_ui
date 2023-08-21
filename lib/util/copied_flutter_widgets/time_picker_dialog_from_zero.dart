@@ -1475,7 +1475,7 @@ class _TimePickerInputState extends State<_TimePickerInput> with RestorationMixi
                             ExcludeSemantics(
                               child: Text(
                                 widget.hourLabelText ?? MaterialLocalizations.of(context).timePickerHourLabel,
-                                style: theme.textTheme.caption,
+                                style: theme.textTheme.bodySmall,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
@@ -1507,7 +1507,7 @@ class _TimePickerInputState extends State<_TimePickerInput> with RestorationMixi
                             ExcludeSemantics(
                               child: Text(
                                 widget.minuteLabelText ?? MaterialLocalizations.of(context).timePickerMinuteLabel,
-                                style: theme.textTheme.caption,
+                                style: theme.textTheme.bodySmall,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),

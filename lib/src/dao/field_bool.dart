@@ -403,8 +403,8 @@ class BoolField extends Field<BoolComparable> {
                   children: [
                     if (!dense && showBothNeutralAndSpecificUiName)
                       Text(uiName,
-                        style: Theme.of(context).textTheme.caption!.copyWith(
-                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                         ),
                       ),
                     Text(uiNameValue,
@@ -441,8 +441,8 @@ class BoolField extends Field<BoolComparable> {
                   children: [
                     if (!dense && showBothNeutralAndSpecificUiName)
                       Text(uiName,
-                        style: Theme.of(context).textTheme.caption!.copyWith(
-                          color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                         ),
                       ),
                     Text(uiNameValue,
