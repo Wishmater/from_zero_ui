@@ -216,38 +216,35 @@ class ActionFromZero extends StatelessWidget {
     return defaultAnimatedSwitcherBuilder(
       child: SizedBox(
         height: 64,
-        child: GestureDetector(
-          onDoubleTap: () => (!enabled || onTap==null) ? null : onTap.call(context),
-          child: TextButton(
-            style: TextButton.styleFrom(
-              padding: EdgeInsets.zero,
-              foregroundColor: color,
+        child: TextButton(
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            foregroundColor: color,
+          ),
+          onPressed: (!enabled || onTap==null) ? null : (){
+            onTap.call(context);
+          },
+          // onLongPress: () => null,
+          child: IconTheme(
+            data: IconThemeData(
+              color: color,
             ),
-            onPressed: (!enabled || onTap==null) ? null : (){
-              onTap.call(context);
-            },
-            // onLongPress: () => null,
-            child: IconTheme(
-              data: IconThemeData(
-                color: color,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  SizedBox(width: 8),
-                  if (icon!=null)
-                    icon,
-                  if (icon!=null)
-                    SizedBox(width: 6,),
-                  Text(title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: color,
-                    ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                SizedBox(width: 8),
+                if (icon!=null)
+                  icon,
+                if (icon!=null)
+                  SizedBox(width: 6,),
+                Text(title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: color,
                   ),
-                  SizedBox(width: 8),
-                ],
-              ),
+                ),
+                SizedBox(width: 8),
+              ],
             ),
           ),
         ),
@@ -264,7 +261,7 @@ class ActionFromZero extends StatelessWidget {
     bool forceIconSpace = false,
   }) {
     Widget result = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -285,6 +282,7 @@ class ActionFromZero extends StatelessWidget {
               child: Text(title,
                 style: TextStyle(
                   fontSize: 16,
+                  height: 1.1,
                   color: !enabled || onTap==null
                       ? Theme.of(context).textTheme.bodySmall!.color
                       : Theme.of(context).textTheme.bodyLarge!.color,

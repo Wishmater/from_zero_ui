@@ -727,6 +727,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                 Widget result;
                                 if (canPop&&(widget.drawerContentBuilder==null||(!widget.alwaysShowHamburgerButtonOnMobile&&isMobileLayout))){
                                   final onPressed = () async{
+                                    print ('PRESSED');
                                     var navigator = Navigator.of(context);
                                     if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
                                       navigator.pop();
@@ -736,19 +737,16 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                       ?? (Theme.of(context).textTheme.bodyLarge!.color!);
                                   final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
                                   final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
-                                  result = GestureDetector(
-                                    onDoubleTap: () => onPressed,
-                                    child: TooltipFromZero(
-                                      message: FromZeroLocalizations.of(context).translate("back"),
-                                      child: IconButton(
-                                        icon: Icon(Icons.arrow_back),
-                                        color: iconButtonColor,
-                                        hoverColor: iconButtonTransparentColor,
-                                        highlightColor: iconButtonSemiTransparentColor,
-                                        focusColor: iconButtonSemiTransparentColor,
-                                        splashColor: iconButtonSemiTransparentColor,
-                                        onPressed: onPressed,
-                                      ),
+                                  result = TooltipFromZero(
+                                    message: FromZeroLocalizations.of(context).translate("back"),
+                                    child: IconButton(
+                                      icon: Icon(Icons.arrow_back),
+                                      color: iconButtonColor,
+                                      hoverColor: iconButtonTransparentColor,
+                                      highlightColor: iconButtonSemiTransparentColor,
+                                      focusColor: iconButtonSemiTransparentColor,
+                                      splashColor: iconButtonSemiTransparentColor,
+                                      onPressed: onPressed,
                                     ),
                                   );
                                 } else{
@@ -758,23 +756,20 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                   final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
                                   result = AnimatedBuilder(
                                     animation: ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation,
-                                    builder: (context, child) => GestureDetector(
-                                      onDoubleTap: () => _toggleDrawer(context, changeNotifierNotListen),
-                                      child: TooltipFromZero(
-                                        message: FromZeroLocalizations.of(context).translate("menu_open"),
-                                        child: IconButton(
-                                          color: iconButtonColor,
-                                          hoverColor: iconButtonTransparentColor,
-                                          highlightColor: iconButtonSemiTransparentColor,
-                                          focusColor: iconButtonSemiTransparentColor,
-                                          splashColor: iconButtonSemiTransparentColor,
-                                          onPressed: () => _toggleDrawer(context, changeNotifierNotListen),
-                                          icon: AnimatedIcon(
-                                            progress: widget.alwaysShowHamburgerButtonOnMobile
-                                                ? kAlwaysDismissedAnimation
-                                                : (ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation),
-                                            icon: AnimatedIcons.menu_arrow,
-                                          ),
+                                    builder: (context, child) => TooltipFromZero(
+                                      message: FromZeroLocalizations.of(context).translate("menu_open"),
+                                      child: IconButton(
+                                        color: iconButtonColor,
+                                        hoverColor: iconButtonTransparentColor,
+                                        highlightColor: iconButtonSemiTransparentColor,
+                                        focusColor: iconButtonSemiTransparentColor,
+                                        splashColor: iconButtonSemiTransparentColor,
+                                        onPressed: () => _toggleDrawer(context, changeNotifierNotListen),
+                                        icon: AnimatedIcon(
+                                          progress: widget.alwaysShowHamburgerButtonOnMobile
+                                              ? kAlwaysDismissedAnimation
+                                              : (ModalRoute.of(context)?.secondaryAnimation ?? kAlwaysDismissedAnimation),
+                                          icon: AnimatedIcons.menu_arrow,
                                         ),
                                       ),
                                     ),
@@ -937,19 +932,16 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                         if (!isMobileLayout && canPop)
                           Positioned(
                             left: -8,
-                            child: GestureDetector(
-                              onDoubleTap: onBackPressed,
-                              child: TooltipFromZero(
-                                message: FromZeroLocalizations.of(context).translate("back"),
-                                child: IconButton(
-                                  icon: Icon(Icons.arrow_back),
-                                  color: iconButtonColor,
-                                  hoverColor: iconButtonTransparentColor,
-                                  highlightColor: iconButtonSemiTransparentColor,
-                                  focusColor: iconButtonSemiTransparentColor,
-                                  splashColor: iconButtonSemiTransparentColor,
-                                  onPressed: onBackPressed,
-                                ),
+                            child: TooltipFromZero(
+                              message: FromZeroLocalizations.of(context).translate("back"),
+                              child: IconButton(
+                                icon: Icon(Icons.arrow_back),
+                                color: iconButtonColor,
+                                hoverColor: iconButtonTransparentColor,
+                                highlightColor: iconButtonSemiTransparentColor,
+                                focusColor: iconButtonSemiTransparentColor,
+                                splashColor: iconButtonSemiTransparentColor,
+                                onPressed: onBackPressed,
                               ),
                             ),
                           ),
@@ -988,20 +980,17 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                       final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
                       return Padding(
                         padding: EdgeInsets.only(right: 8),
-                        child: GestureDetector(
-                          onDoubleTap: onTap,
-                          child: TooltipFromZero(
-                            message: changeNotifier.getCurrentDrawerWidth(pageScaffoldId)>widget.compactDrawerWidth||isMobileLayout
-                                ? FromZeroLocalizations.of(context).translate("menu_close") : FromZeroLocalizations.of(context).translate("menu_open"),
-                            child: IconButton(
-                              icon: Icon(Icons.menu),
-                              color: iconButtonColor,
-                              hoverColor: iconButtonTransparentColor,
-                              highlightColor: iconButtonSemiTransparentColor,
-                              focusColor: iconButtonSemiTransparentColor,
-                              splashColor: iconButtonSemiTransparentColor,
-                              onPressed: onTap,
-                            ),
+                        child: TooltipFromZero(
+                          message: changeNotifier.getCurrentDrawerWidth(pageScaffoldId)>widget.compactDrawerWidth||isMobileLayout
+                              ? FromZeroLocalizations.of(context).translate("menu_close") : FromZeroLocalizations.of(context).translate("menu_open"),
+                          child: IconButton(
+                            icon: Icon(Icons.menu),
+                            color: iconButtonColor,
+                            hoverColor: iconButtonTransparentColor,
+                            highlightColor: iconButtonSemiTransparentColor,
+                            focusColor: iconButtonSemiTransparentColor,
+                            splashColor: iconButtonSemiTransparentColor,
+                            onPressed: onTap,
                           ),
                         ),
                       );
