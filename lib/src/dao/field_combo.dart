@@ -342,9 +342,7 @@ class ComboField<T extends DAO> extends Field<T> {
           showSearchBox: showSearchBox,
           onSelected: (v) => _onSelected(v, focusNode),
           // popupWidth: maxWidth,
-          buttonStyle: TextButton.styleFrom(
-            padding: dense ? EdgeInsets.zero : null,
-          ),
+          buttonStyle: addCard||dense ? null : TextButton.styleFrom(padding: EdgeInsets.zero),
           buttonChildBuilder: (context, title, hint, value, enabled, clearable, {showDropdownIcon=false}) {
             return Padding(
               padding: EdgeInsets.only(right: dense ? 0 : context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40),
@@ -486,7 +484,7 @@ class ComboField<T extends DAO> extends Field<T> {
   }
 
   static Widget buttonContentBuilder(BuildContext context, String? title, String? hint, dynamic value, bool enabled, bool clearable, {
-    bool showDropdownIcon = true,
+    bool showDropdownIcon = false,
     dense = false,
   }) {
     return Padding(
@@ -495,7 +493,7 @@ class ComboField<T extends DAO> extends Field<T> {
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(width: dense ? 0 : 8,),
+          SizedBox(width: dense ? 0 : 15,),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -511,35 +509,43 @@ class ComboField<T extends DAO> extends Field<T> {
                         ),
                       )
                 : value==null&&hint==null&&title!=null
-                    ? Text(title,
-                        maxLines: 2,
-                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                          color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(title,
+                          maxLines: 2,
+                          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                            fontWeight: FontWeight.w400,
+                            height: 1.1,
+                            color: enabled
+                                ? Theme.of(context).textTheme.bodySmall!.color
+                                : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                          ),
                         ),
                       )
                     : MaterialKeyValuePair(
-                      padding: 6,
-                      title: title,
-                      titleMaxLines: 1,
-                      titleStyle: Theme.of(context).textTheme.bodySmall!.copyWith(
-                        color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                        padding: 4,
+                        title: title,
+                        titleMaxLines: 1,
+                        titleStyle: Theme.of(context).textTheme.bodySmall!.copyWith(
+                          height: 1,
+                          color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                        ),
+                        value: value==null||value.toString().isEmpty ? (hint ?? '') : value.toString(),
+                        valueMaxLines: 2,
+                        valueStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
+                          height: 1,
+                          color: value==null||value.toString().isEmpty ? Theme.of(context).textTheme.bodySmall!.color!
+                              : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                        ),
                       ),
-                      value: value==null||value.toString().isEmpty ? (hint ?? '') : value.toString(),
-                      valueMaxLines: 2,
-                      valueStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        height: 1,
-                        color: value==null||value.toString().isEmpty ? Theme.of(context).textTheme.bodySmall!.color!
-                            : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                      ),
-                    ),
                 SizedBox(height: 4,),
               ],
             ),
           ),
-          SizedBox(width: dense ? 0 : 4,),
+          SizedBox(width: dense ? 0 : 6,),
           if (!dense && showDropdownIcon && enabled && !clearable)
             Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyLarge!.color,),
-          SizedBox(width: dense ? 0 : 4,),
+          SizedBox(width: dense ? 0 : 6,),
         ],
       ),
     );

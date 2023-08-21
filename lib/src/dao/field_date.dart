@@ -259,7 +259,7 @@ class DateField extends Field<DateTime> {
             return true;
           },
           popupWidth: maxWidth,
-          buttonPadding: dense ? EdgeInsets.zero : null,
+          buttonStyle: addCard||dense ? null : TextButton.styleFrom(padding: EdgeInsets.zero),
           formatter: dense ? formatterDense : formatter,
           buttonChildBuilder: (context, title, hint, value, formatter, enabled, clearable) {
             return Padding(
@@ -361,51 +361,8 @@ class DateField extends Field<DateTime> {
     final formattedValue = value==null ? null : type==DateTimePickerType.time
         ? TimeOfDay.fromDateTime(value).format(context)
         : formatter.format(value);
-    return Padding(
-      padding: EdgeInsets.only(right: enabled&&clearable ? 40 : 0),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          SizedBox(width: dense ? 0 : 8,),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                dense
-                    ? Text(value==null ? (hint ?? title ?? '') : formattedValue, style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        height: 0.8,
-                        color: value==null ? Theme.of(context).textTheme.bodySmall!.color!
-                            : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                      ))
-                : value==null&&hint==null&&title!=null
-                    ? Text(title, style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
-                    ),)
-                    : MaterialKeyValuePair(
-                      padding: 6,
-                      title: title,
-                      titleStyle: Theme.of(context).textTheme.bodySmall!.copyWith(
-                        color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
-                      ),
-                      value: value==null ? (hint ?? '') : formattedValue,
-                      valueStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        height: 1,
-                        color: value==null ? Theme.of(context).textTheme.bodySmall!.color!
-                            : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                      ),
-                    ),
-                SizedBox(height: 4,),
-              ],
-            ),
-          ),
-          // SizedBox(width: dense ? 0 : 4,),
-          // if (!dense && enabled && !clearable)
-          //   Icon(Icons.arrow_drop_down),
-          SizedBox(width: dense ? 0 : 4,),
-        ],
-      ),
+    return ComboField.buttonContentBuilder(context, title, hint, formattedValue, enabled, clearable,
+      dense: dense,
     );
   }
 

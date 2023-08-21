@@ -382,7 +382,7 @@ class BoolField extends Field<BoolComparable> {
               value: value!.value,
               dense: true,
               controlAffinity: listTileControlAffinity,
-              contentPadding: EdgeInsets.only(left: dense ? 0 : 12, right: dense ? 0 : 12, bottom: dense ? 16 : 7),
+              contentPadding: EdgeInsets.only(left: dense ? 0 : 12, right: dense ? 0 : 12, bottom: dense ? 16 : 16),
               tileColor: dense && visibleValidationErrors.isNotEmpty
                   ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                   : backgroundColor?.call(context, this, dao),
@@ -424,7 +424,7 @@ class BoolField extends Field<BoolComparable> {
               value: value!.value,
               dense: true,
               controlAffinity: listTileControlAffinity,
-              contentPadding: EdgeInsets.only(left: dense ? 0 : 8, right: dense ? 0 : 8, bottom: dense ? 16 : 7),
+              contentPadding: EdgeInsets.only(left: dense ? 0 : 8, right: dense ? 0 : 8, bottom: dense ? 16 : 16),
               tileColor: dense && visibleValidationErrors.isNotEmpty
                   ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                   : backgroundColor?.call(context, this, dao),
@@ -484,7 +484,7 @@ class BoolField extends Field<BoolComparable> {
                 Positioned.fill(
                   child: IgnorePointer(
                     child: Padding(
-                      padding: EdgeInsets.only(left: 2, right: 2, top: 4, bottom: dense ? 30 : 22),
+                      padding: EdgeInsets.only(left: 2, right: 2, top: 2, bottom: dense ? 30 : 22),
                       child: Center(
                         child: AutoSizeText(uiNameValue,
                           textAlign: TextAlign.center,
@@ -534,7 +534,7 @@ class BoolField extends Field<BoolComparable> {
                 Positioned.fill(
                   child: IgnorePointer(
                     child: Padding(
-                      padding: EdgeInsets.only(left: 2, right: 2, top: 4, bottom: dense ? 30 : 22),
+                      padding: EdgeInsets.only(left: 2, right: 2, top: 2, bottom: dense ? 30 : 22),
                       child: Center(
                         child: AutoSizeText(uiNameValue,
                           textAlign: TextAlign.center,

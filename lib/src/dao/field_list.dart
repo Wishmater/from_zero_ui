@@ -990,7 +990,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       data = data.where((e) => !objects.contains(e)).toList();
     }
     final listField = ListField<T, U>(
-      uiNameGetter: (field, dao) => uiName,
+      uiNameGetter: (field, dao) => emptyDAO.classUiName,
       objectTemplateGetter: (field, dao) => emptyDAO,
       tableCellsEditable: false,
       collapsible: false,
@@ -1022,7 +1022,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
-              child: Text('${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
+              child: Text('${FromZeroLocalizations.of(context).translate("add_add")} ${emptyDAO.classUiName}',
                 style: Theme.of(context).textTheme.headline6,
               ),
             ),
@@ -1043,7 +1043,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     return ComboFromZeroPopup<T>(
       possibleValues: data,
       showSearchBox: true,
-      title: '${FromZeroLocalizations.of(context).translate("add_add")} $uiName',
+      title: '${FromZeroLocalizations.of(context).translate("add_add")} ${emptyDAO.classUiName}',
       extraWidget: allowAddNew ? (context, onSelected) {
         return Align(
           alignment: Alignment.centerRight,
@@ -2215,7 +2215,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         }
         return Container(
           color: backgroundColor?.call(context, this, dao) ?? Material.of(context).color ?? Theme.of(context).cardColor,
-          child: FilledButton.tonalIcon(
+          child: TextButton.icon(
+            style: TextButton.styleFrom(
+              backgroundColor: Color.alphaBlend(Theme.of(context).colorScheme.secondary.withOpacity(0.1), Theme.of(context).cardColor),
+            ),
             onPressed: () {
               userInteracted = true;
               maybeAddRow(dao.contextForValidation ?? context);

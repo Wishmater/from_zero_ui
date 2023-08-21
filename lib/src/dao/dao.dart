@@ -893,6 +893,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       validateNonEditedFields: false,
     );
     final focusNode = FocusNode();
+    final pageController = PreloadPageController();
     Widget content = LayoutBuilder(
       builder: (context, constraints) {
         Widget result = AnimatedBuilder(
@@ -962,7 +963,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               topSpace: 0,
               bottomSpace: 12,
             );
-            final pageController = PreloadPageController();
             String shownName = uiName;
             if (shownName.isNullOrEmpty) shownName = classUiName;
             Widget result = DialogFromZero( // take advantage of DialogFromZero layout, to always have intrinsic height (without using the IntrinsicHeight widget)
@@ -1836,7 +1836,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
     if (addBorder) {
       result = Padding(
-        padding: EdgeInsets.only(top: group.name!.isNotEmpty ? 4 : 0),
+        padding: EdgeInsets.only(
+          top: 3 + (group.name!.isNotEmpty ? 4 : 0),
+          bottom: 3,
+        ),
         child: Stack(
           children: [
             Positioned(
@@ -1844,10 +1847,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               left: 2, right: 2,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(8)),
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
                   border: Border.all(
                     width: 2,
-                    color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.3),
+                    color: Theme.of(context).dividerColor,
                   ),
                 ),
               ),
@@ -1908,29 +1911,30 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         );
         first = false;
         final hidden = e.hiddenInForm;
+        const fieldVerticalPadding = 3.0;
         if (asSlivers) {
           result = result.mapIndexed((i, w) {
             return hidden
                 ? SizedBox.shrink()
                 : SliverPadding(
-                  padding: EdgeInsets.only(
-                    top: i == 0 ? 6 : 0,
-                    bottom: i == result.lastIndex ? 6 : 0,
-                  ),
-                  sliver: w,
-                );
+                    padding: EdgeInsets.only(
+                      top: i == 0 ? fieldVerticalPadding : 0,
+                      bottom: i == result.lastIndex ? fieldVerticalPadding : 0,
+                    ),
+                    sliver: w,
+                  );
           }).toList();
         } else {
           result = result.mapIndexed((i, w) {
             return hidden
                 ? SizedBox.shrink()
                 : Padding(
-                  padding: EdgeInsets.only(
-                    top: i==0 ? 6 : 0,
-                    bottom: i==result.lastIndex ? 6 : 0,
-                  ),
-                  child: w,
-                );
+                    padding: EdgeInsets.only(
+                      top: i==0 ? fieldVerticalPadding : 0,
+                      bottom: i==result.lastIndex ? fieldVerticalPadding : 0,
+                    ),
+                    child: w,
+                  );
               }).toList();
           if (wrapInLayoutFromZeroItem) {
             result = [
@@ -2064,9 +2068,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     SizedBox(width: 12,),
                   Expanded(
                     child: ElevatedButton(
-                      style: userInteracted ? null : ElevatedButton.styleFrom(
-                        primary: Theme.of(context).canvasColor,
-                        onPrimary: Theme.of(context).textTheme.bodySmall!.color,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: userInteracted
+                            ? Color.alphaBlend(Theme.of(context).colorScheme.secondary.withOpacity(0.2), Theme.of(context).cardColor)
+                            : Theme.of(context).canvasColor,
+                        foregroundColor: userInteracted
+                            ? Theme.of(context).textTheme.bodyLarge!.color
+                            : Theme.of(context).textTheme.bodySmall!.color,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),

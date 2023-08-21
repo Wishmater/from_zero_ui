@@ -25,7 +25,7 @@ class StringField extends Field<String> {
   List<TextInputFormatter>? inputFormatters;
   bool obfuscate;
   bool trimOnSave;
-  bool showObfuscationToggleButton; // TODO 2 implement obfuscation toggle button
+  bool showObfuscationToggleButton; // TODO 3 implement obfuscation toggle button
   Timer? valUpdateTimer;
 
   @override
@@ -312,6 +312,16 @@ class StringField extends Field<String> {
           final visibleValidationErrors = passedFirstEdit
               ? validationErrors
               : validationErrors.where((e) => e.isBeforeEditing);
+          final actions = buildActions(context, focusNode);
+          final defaultActions = buildDefaultActions(context, focusNode: focusNode);
+          final allActions = [
+            ...actions,
+            if (actions.isNotEmpty && defaultActions.isNotEmpty)
+              ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
+            ...defaultActions,
+          ].map((e) => e.copyWith(
+            enabled: enabled,
+          )).toList();
           Widget result = Stack(
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [
@@ -361,67 +371,33 @@ class StringField extends Field<String> {
                   },
                   child: Builder(
                     builder: (context) {
-                      return TextFormField(
+                      return buildDaoTextFormField(context,
+                        uiName: uiName,
+                        value: value,
+                        dense: dense,
                         controller: controller,
                         enabled: enabled,
                         focusNode: focusNode,
-                        toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
-                          copy: false, cut: false, paste: false, selectAll: false,
-                        ),
-                        onEditingComplete: () {
-                          focusNode.nextFocus();
-                        },
+                        hint: hint,
+                        inputDecoration: inputDecoration,
+                        inputFormatters: inputFormatters,
                         minLines: minLines,
-                        maxLines: minLines==null||minLines!<=(maxLines??0) ? maxLines : minLines,
-                        obscureText: obfuscate,
+                        maxLines: maxLines,
+                        largeVertically: largeVertically,
+                        obfuscate: obfuscate,
                         onChanged: (v) {
                           userInteracted = true;
                           value = v;
                         },
-                        inputFormatters: inputFormatters,
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                        ),
-                        decoration: inputDecoration??InputDecoration(
-                          border: InputBorder.none,
-                          alignLabelWithHint: dense,
-                          label: Padding(
-                            padding: EdgeInsets.only(
-                              top: !dense&&hint!=null ? 12 : largeVertically ? 0 : 8,
-                              bottom: !dense&&hint!=null ? 12 : largeVertically ? 6 : 0,
-                            ),
-                            child: Text(uiName,
-                              softWrap: false,
-                              overflow: TextOverflow.fade,
-                            ),
-                          ),
-                          hintText: hint,
-                          floatingLabelBehavior: dense ? FloatingLabelBehavior.never
-                              : !enabled ? (value==null||value!.isEmpty) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
-                              : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
-                          labelStyle: TextStyle(
-                            height: dense ? 0 : largeVertically ? 0.5 : hint!=null ? 1 : 0.7,
-                            color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
-                          ),
-                          hintStyle: TextStyle(color: Theme.of(context).textTheme.bodySmall!.color),
-                          contentPadding: EdgeInsets.only(
-                            left: dense ? 0 : 16,
-                            right: dense ? 0 : (16 + (context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40)),
-                            bottom: largeVertically ? 16 : dense ? 10 : 0,
-                            top: largeVertically ? 16 : dense ? 0 : 6,
-                          ),
-                        ),
+                        onEditingComplete: () {
+                          focusNode.nextFocus();
+                        },
+                        actions: allActions,
                       );
                     }
                   ),
                 ),
               ),
-              // if (!enabled)
-              //   Positioned.fill(
-              //     child: MouseRegion(
-              //       cursor: SystemMouseCursors.forbidden,
-              //     ),
-              //   ),
             ],
           );
           result = TooltipFromZero(
@@ -434,11 +410,8 @@ class StringField extends Field<String> {
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
           if (!dense) {
-            final actions = buildActions(context, focusNode);
-            final defaultActions = buildDefaultActions(context, focusNode: focusNode);
             result = AppbarFromZero(
-              addContextMenu: enabled,
-              onShowContextMenu: () => focusNode.requestFocus(),
+              addContextMenu: false, // shown in TextField contextMenuBuilder instead
               backgroundColor: Colors.transparent,
               elevation: 0,
               useFlutterAppbar: false,
@@ -448,14 +421,7 @@ class StringField extends Field<String> {
               actionPadding: 0,
               skipTraversalForActions: true,
               constraints: BoxConstraints(),
-              actions: [
-                ...actions,
-                if (actions.isNotEmpty && defaultActions.isNotEmpty)
-                  ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
-                ...defaultActions,
-              ].map((e) => e.copyWith(
-                enabled: enabled,
-              )).toList(),
+              actions: allActions,
               title: SizedBox(height: largeVertically ? null : 56, child: result),
             );
           }
@@ -498,6 +464,91 @@ class StringField extends Field<String> {
           ),
         ),
       ),
+    );
+  }
+
+  static Widget buildDaoTextFormField(BuildContext context, {
+    required String uiName,
+    String? value,
+    TextEditingController? controller,
+    bool enabled = true,
+    FocusNode? focusNode,
+    VoidCallback? onEditingComplete,
+    int? minLines,
+    int? maxLines,
+    bool obfuscate = false,
+    ValueChanged<String>? onChanged,
+    List<TextInputFormatter>? inputFormatters,
+    InputDecoration? inputDecoration,
+    String? hint,
+    bool largeVertically = false,
+    bool dense = false,
+    TextAlign textAlign = TextAlign.start,
+    TextInputType? keyboardType,
+    List<ActionFromZero> actions = const [],
+  }) {
+    return TextFormField(
+      controller: controller,
+      enabled: enabled,
+      focusNode: focusNode,
+      onEditingComplete: onEditingComplete,
+      obscureText: obfuscate,
+      onChanged: onChanged,
+      inputFormatters: inputFormatters,
+      minLines: minLines,
+      textAlign: textAlign,
+      keyboardType: keyboardType,
+      maxLines: minLines==null||minLines<=(maxLines??0) ? maxLines : minLines,
+      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+        height: largeVertically ? 1.2 : 1.05,
+        color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+        fontWeight: largeVertically ? FontWeight.w500 : FontWeight.w600,
+      ),
+      decoration: inputDecoration??InputDecoration(
+        hintText: hint,
+        border: InputBorder.none,
+        alignLabelWithHint: dense,
+        hintStyle: TextStyle(color: Theme.of(context).textTheme.bodySmall!.color),
+        labelStyle: TextStyle(
+          height: dense ? 0 : largeVertically ? 0.2 : 0.6,
+          color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+        ),
+        label: Padding(
+          padding: EdgeInsets.only(
+            top: !dense&&hint!=null ? 12 : largeVertically ? 0 : 8,
+            bottom: !dense&&hint!=null ? 12 : largeVertically ? 6 : 0,
+          ),
+          child: Text(uiName,
+            softWrap: false,
+            overflow: TextOverflow.fade,
+          ),
+        ),
+        floatingLabelBehavior: dense ? FloatingLabelBehavior.never
+            : !enabled ? (value==null||value.isEmpty) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
+            : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
+        contentPadding: EdgeInsets.only(
+          left: dense ? 0 : 16,
+          right: dense ? 0 : (16 + (context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40)),
+          bottom: largeVertically ? 16 : dense ? 10 : 0,
+          top: largeVertically ? 16 : dense ? 0 : 6,
+        ),
+      ),
+      contextMenuBuilder: (context, editableTextState) {
+        focusNode?.requestFocus();
+        return AdaptiveTextSelectionToolbar.buttonItems(
+          buttonItems: [
+            ...editableTextState.contextMenuButtonItems,
+            ...actions.where((e) => e.getStateForMaxWidth(0)!=ActionState.none).map((e) {
+              return ContextMenuButtonItem(
+                label: e.title,
+                onPressed: e.onTap==null ? null : () => e.onTap?.call(context),
+                type: ContextMenuButtonType.custom,
+              );
+            })
+          ],
+          anchors: editableTextState.contextMenuAnchors,
+        );
+      },
     );
   }
 

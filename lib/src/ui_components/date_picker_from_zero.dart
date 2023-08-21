@@ -30,7 +30,7 @@ class DatePickerFromZero extends StatefulWidget {
   final double? popupWidth;
   final bool clearable;
   final FocusNode? focusNode;
-  final EdgeInsets? buttonPadding;
+  final ButtonStyle? buttonStyle; /// if null, an InkWell will be used instead
   final DateTimePickerType type;
 
   DatePickerFromZero({
@@ -47,7 +47,9 @@ class DatePickerFromZero extends StatefulWidget {
     this.clearable = true,
     this.popupWidth,
     this.focusNode,
-    this.buttonPadding,
+    this.buttonStyle = const ButtonStyle(
+      padding: MaterialStatePropertyAll(EdgeInsets.zero),
+    ),
     this.type = DateTimePickerType.date,
   }) :  this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY);
 
@@ -111,36 +113,45 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
     } else {
       child = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.formatter, widget.enabled, widget.clearable);
     }
+    final onPressed = widget.enabled ? () async {
+      buttonFocusNode.requestFocus();
+      bool? accepted = await showPopupFromZero<bool>(
+        context: context,
+        anchorKey: buttonKey,
+        builder: (context) {
+          return DatePickerFromZeroPopup(
+            title: widget.title,
+            value: widget.value,
+            firstDate: widget.firstDate,
+            lastDate: widget.lastDate,
+            onSelected: widget.onSelected,
+            type: widget.type,
+          );
+        },
+      );
+      if (accepted!=true) {
+        widget.onCanceled?.call();
+      }
+    } : null;
+    if (widget.buttonStyle!=null) {
+      child = TextButton(
+        key: buttonKey,
+        style: widget.buttonStyle,
+        child: child,
+        focusNode: buttonFocusNode,
+        onPressed: onPressed,
+      );
+    } else {
+      child = InkWell(
+        key: buttonKey,
+        child: child,
+        focusNode: buttonFocusNode,
+        onTap: onPressed,
+      );
+    }
     return Stack(
       children: [
-        TextButton(
-          key: buttonKey,
-          style: TextButton.styleFrom(
-            padding: widget.buttonPadding,
-          ),
-          child: child,
-          focusNode: buttonFocusNode,
-          onPressed: widget.enabled ? () async {
-            buttonFocusNode.requestFocus();
-            bool? accepted = await showPopupFromZero<bool>(
-              context: context,
-              anchorKey: buttonKey,
-              builder: (context) {
-                return DatePickerFromZeroPopup(
-                  title: widget.title,
-                  value: widget.value,
-                  firstDate: widget.firstDate,
-                  lastDate: widget.lastDate,
-                  onSelected: widget.onSelected,
-                  type: widget.type,
-                );
-              },
-            );
-            if (accepted!=true) {
-              widget.onCanceled?.call();
-            }
-          } : null,
-        ),
+        child,
         if (widget.enabled && widget.clearable)
           Positioned(
             right: 8, top: 0, bottom: 0,

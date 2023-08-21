@@ -1477,9 +1477,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       color: Theme.of(context).textTheme.bodyLarge!.color!
           .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.7 : 0.8),
     );
+    final alignment = _getAlignment(colKey);
     Widget result = Align(
-      alignment: _getAlignment(colKey)==TextAlign.center ? Alignment.center
-          : _getAlignment(colKey)==TextAlign.left||_getAlignment(colKey)==TextAlign.start ? Alignment.centerLeft
+      alignment: alignment==TextAlign.center ? Alignment.center
+          : alignment==TextAlign.left||alignment==TextAlign.start ? Alignment.centerLeft
           : Alignment.centerRight,
       child: Stack(
         clipBehavior: Clip.none,
@@ -1496,18 +1497,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             child: AutoSizeText(
               compactName,
               style: textStyle,
-              textAlign: _getAlignment(colKey),
+              textAlign: alignment,
               maxLines: autoSizeTextMaxLines,
-              minFontSize: 14,
+              minFontSize: 15,
               overflowReplacement: name!=compactName ? null : TooltipFromZero(
                 message: name,
                 waitDuration: Duration(milliseconds: 0),
                 verticalOffset: -16,
-                child: AutoSizeText(
+                child: Text(
                   name,
-                  style: textStyle,
-                  textAlign: _getAlignment(colKey),
-                  minFontSize: 13,
+                  textAlign: alignment,
+                  style: textStyle.copyWith(
+                    fontSize: 15,
+                  ),
                   maxLines: autoSizeTextMaxLines,
                   softWrap: autoSizeTextMaxLines>1,
                   overflow: autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,
@@ -1739,16 +1741,17 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       style: style,
       textAlign: alignment,
       maxLines: autoSizeTextMaxLines,
-      minFontSize: 14,
+      minFontSize: 15,
       overflowReplacement: TooltipFromZero(
         message: message,
         waitDuration: Duration(milliseconds: 0),
         verticalOffset: -16,
-        child: AutoSizeText(
+        child: Text(
           message,
-          style: style,
+          style: (style ?? TextStyle()).copyWith(
+            fontSize: 15,
+          ),
           textAlign: alignment,
-          minFontSize: 13,
           maxLines: autoSizeTextMaxLines,
           softWrap: autoSizeTextMaxLines>1,
           overflow: autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,

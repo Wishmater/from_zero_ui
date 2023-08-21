@@ -294,6 +294,16 @@ class NumField extends Field<num> {
           final visibleValidationErrors = passedFirstEdit
               ? validationErrors
               : validationErrors.where((e) => e.isBeforeEditing);
+          final actions = buildActions(context, focusNode);
+          final defaultActions = buildDefaultActions(context, focusNode: focusNode);
+          final allActions = [
+            ...actions,
+            if (actions.isNotEmpty && defaultActions.isNotEmpty)
+              ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
+            ...defaultActions,
+          ].map((e) => e.copyWith(
+            enabled: enabled,
+          )).toList();
           Widget result = Stack(
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [
@@ -337,17 +347,23 @@ class NumField extends Field<num> {
                   },
                   child: Builder(
                     builder: (context) {
-                      return TextFormField(
+                      return StringField.buildDaoTextFormField(context,
+                        uiName: uiName,
+                        value: value?.toString(),
+                        dense: dense,
                         controller: controller,
                         enabled: enabled,
                         focusNode: focusNode,
+                        hint: hint,
+                        inputDecoration: inputDecoration,
+                        minLines: 1,
+                        maxLines: 1,
+                        largeVertically: largeVertically,
+                        obfuscate: false,
                         textAlign: dense ? TextAlign.right : TextAlign.left,
-                        toolbarOptions: ToolbarOptions( // TODO 2 this might be really bad on Android
-                          copy: false, cut: false, paste: false, selectAll: false,
-                        ),
-                        onEditingComplete: () {
-                          focusNode.nextFocus();
-                        },
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9${digitsAfterComma==0 ? '' : '.'}${allowNegative ? '-' : ''}]')),],
+                        actions: allActions,
                         onChanged: (v) {
                           userInteracted = true;
                           valUpdateTimer?.cancel();
@@ -398,58 +414,14 @@ class NumField extends Field<num> {
                             value = textVal;
                           });
                         },
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9${digitsAfterComma==0 ? '' : '.'}${allowNegative ? '-' : ''}]')),],
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                        ),
-                        decoration: inputDecoration??InputDecoration(
-                          border: InputBorder.none,
-                          alignLabelWithHint: dense,
-                          label: Padding(
-                            padding: EdgeInsets.only(
-                              top: !dense&&hint!=null ? 12 : largeVertically ? 0 : 5,
-                              bottom: !dense&&hint!=null ? 12 : largeVertically ? 6 : 0,
-                            ),
-                            child: dense
-                                ? Align(
-                                  alignment: Alignment.centerRight,
-                                  child: Text(uiName,
-                                    softWrap: false,
-                                    overflow: TextOverflow.fade,
-                                  ),
-                                ) : Text(uiName,
-                                  softWrap: false,
-                                  overflow: TextOverflow.fade,
-                                ),
-                          ),
-                          hintText: hint,
-                          floatingLabelBehavior: dense ? FloatingLabelBehavior.never
-                              : !enabled ? (value==null) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
-                              : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
-                          labelStyle: TextStyle(
-                            height: dense ? 0 : largeVertically ? 0.5 : hint!=null ? 1 : 1,
-                            color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
-                          ),
-                          hintStyle: TextStyle(color: Theme.of(context).textTheme.bodySmall!.color),
-                          contentPadding: EdgeInsets.only(
-                            left: dense ? 0 : 16,
-                            right: dense ? 0 : (16 + (context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40)),
-                            bottom: largeVertically ? 16 : dense ? 10 : 0,
-                            top: largeVertically ? 16 : dense ? 0 : 3,
-                          ),
-                        ),
+                        onEditingComplete: () {
+                          focusNode.nextFocus();
+                        },
                       );
                     }
                   ),
                 ),
               ),
-              // if (!enabled)
-              //   Positioned.fill(
-              //     child: MouseRegion(
-              //       cursor: SystemMouseCursors.forbidden,
-              //     ),
-              //   ),
             ],
           );
           result = TooltipFromZero(
@@ -462,11 +434,8 @@ class NumField extends Field<num> {
             waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
           if (!dense) {
-            final actions = buildActions(context, focusNode);
-            final defaultActions = buildDefaultActions(context, focusNode: focusNode);
             result = AppbarFromZero(
-              addContextMenu: enabled,
-              onShowContextMenu: () => focusNode.requestFocus(),
+              addContextMenu: false, // shown in TextField contextMenuBuilder instead
               backgroundColor: Colors.transparent,
               elevation: 0,
               useFlutterAppbar: false,
@@ -476,14 +445,7 @@ class NumField extends Field<num> {
               actionPadding: 0,
               skipTraversalForActions: true,
               constraints: BoxConstraints(),
-              actions: [
-                ...actions,
-                if (actions.isNotEmpty && defaultActions.isNotEmpty)
-                  ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
-                ...defaultActions,
-              ].map((e) => e.copyWith(
-                enabled: enabled,
-              )).toList(),
+              actions: allActions,
               title: SizedBox(height: largeVertically ? null : 56, child: result),
             );
           }
@@ -501,6 +463,7 @@ class NumField extends Field<num> {
     );
     if (addCard) {
       result = Card(
+        clipBehavior: Clip.hardEdge,
         color: enabled ? null : Theme.of(context).canvasColor,
         child: result,
       );

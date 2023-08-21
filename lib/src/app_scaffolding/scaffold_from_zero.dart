@@ -727,7 +727,6 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                 Widget result;
                                 if (canPop&&(widget.drawerContentBuilder==null||(!widget.alwaysShowHamburgerButtonOnMobile&&isMobileLayout))){
                                   final onPressed = () async{
-                                    print ('PRESSED');
                                     var navigator = Navigator.of(context);
                                     if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
                                       navigator.pop();
@@ -1089,7 +1088,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                               color: Theme.of(context).cardColor,
                                               child: Column(
                                                 children: <Widget>[
-                                                  Divider(height: 3, thickness: 3, color: Theme.of(context).brightness==Brightness.light ? Colors.grey : Colors.grey.shade900,),
+                                                  Divider(height: 3, thickness: 3,),
                                                   SizedBox(height: 8,),
                                                   _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(pageScaffoldId)==widget.compactDrawerWidth),
                                                   SizedBox(height: 12,),

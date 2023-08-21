@@ -36,7 +36,7 @@ class ComboFromZero<T> extends StatefulWidget {
   final ExtraWidgetBuilder<T>? extraWidget;
   final FocusNode? focusNode;
   final Widget Function(T value)? popupWidgetBuilder;
-  final ButtonStyle? buttonStyle;
+  final ButtonStyle? buttonStyle; /// if null, an InkWell will be used instead
   final double popupRowHeight;
   final bool useFixedPopupRowHeight;
   final bool showNullInSelection;
@@ -63,7 +63,9 @@ class ComboFromZero<T> extends StatefulWidget {
     this.extraWidget,
     this.focusNode,
     this.popupWidgetBuilder,
-    this.buttonStyle,
+    this.buttonStyle = const ButtonStyle(
+      padding: MaterialStatePropertyAll(EdgeInsets.zero),
+    ),
     this.popupRowHeight = 38,
     this.useFixedPopupRowHeight = true,
     this.blockComboWhilePossibleValuesLoad = false,
@@ -180,11 +182,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
       maxHeight: 64,
       child: Stack(
         children: [
-          Padding(
-            padding: widget.buttonStyle?.padding?.resolve({})
-                ?? EdgeInsets.symmetric(horizontal: 8),
-            child: result,
-          ),
+          result,
           Positioned.fill(
             child: Container(
               alignment: Alignment.center,
@@ -208,63 +206,80 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
         showDropdownIcon: widget.showDropdownIcon,
       );
     }
+    final onPressed = widget.enabled ? () async {
+      buttonFocusNode.requestFocus();
+      T? selected = await showPopupFromZero<T>(
+        context: context,
+        anchorKey: buttonKey,
+        width: widget.popupWidth,
+        builder: (context) {
+          Widget result;
+          if (possibleValues!=null) {
+            result = _buildPopup(context, possibleValues);
+          } else {
+            if (widget.possibleValuesProvider!=null) {
+              result = ApiProviderBuilder<List<T>>(
+                provider: widget.possibleValuesProvider!,
+                dataBuilder: _buildPopup,
+                loadingBuilder: _buildPopupLoading,
+                errorBuilder: _buildPopupError,
+              );
+            } else if (widget.possibleValuesFuture!=null) {
+              result = FutureBuilderFromZero<List<T>>(
+                future: widget.possibleValuesFuture!,
+                successBuilder: _buildPopup,
+                loadingBuilder: _buildPopupLoading,
+                errorBuilder: (context, error, stackTrace) => _buildPopupError(context, error, stackTrace is StackTrace ? stackTrace : null),
+              );
+            } else if (widget.possibleValuesAsync!=null) {
+              result = AsyncValueBuilder<List<T>>(
+                asyncValue: widget.possibleValuesAsync!,
+                dataBuilder: _buildPopup,
+                loadingBuilder: _buildPopupLoading,
+                errorBuilder: _buildPopupError,
+              );
+            } else {
+              result = _buildPopup(context, widget.possibleValues!);
+            }
+          }
+          return result;
+        },
+      );
+      if (selected==null) {
+        widget.onCanceled?.call();
+      }
+    } : null;
+    if (widget.buttonStyle!=null) {
+      result = TextButton(
+        key: buttonKey,
+        style: widget.buttonStyle,
+        child: Center(
+          child: OverflowScroll(
+            child: result,
+            scrollDirection: Axis.vertical,
+            autoscrollSpeed: null,
+          ),
+        ),
+        focusNode: buttonFocusNode,
+        onPressed: onPressed,
+      );
+    } else {
+      result = InkWell(
+        key: buttonKey,
+        child: Center(
+          child: OverflowScroll(
+            child: result,
+            scrollDirection: Axis.vertical,
+            autoscrollSpeed: null,
+          ),
+        ),
+        focusNode: buttonFocusNode,
+        onTap: onPressed,
+      );
+    }
     result = Stack(
       children: [
-        TextButton(
-          key: buttonKey,
-          style: widget.buttonStyle,
-          child: Center(
-            child: OverflowScroll(
-              child: result,
-              scrollDirection: Axis.vertical,
-              autoscrollSpeed: null,
-            ),
-          ),
-          focusNode: buttonFocusNode,
-          onPressed: widget.enabled ? () async {
-            buttonFocusNode.requestFocus();
-            T? selected = await showPopupFromZero<T>(
-              context: context,
-              anchorKey: buttonKey,
-              width: widget.popupWidth,
-              builder: (context) {
-                Widget result;
-                if (possibleValues!=null) {
-                  result = _buildPopup(context, possibleValues);
-                } else {
-                  if (widget.possibleValuesProvider!=null) {
-                    result = ApiProviderBuilder<List<T>>(
-                      provider: widget.possibleValuesProvider!,
-                      dataBuilder: _buildPopup,
-                      loadingBuilder: _buildPopupLoading,
-                      errorBuilder: _buildPopupError,
-                    );
-                  } else if (widget.possibleValuesFuture!=null) {
-                    result = FutureBuilderFromZero<List<T>>(
-                      future: widget.possibleValuesFuture!,
-                      successBuilder: _buildPopup,
-                      loadingBuilder: _buildPopupLoading,
-                      errorBuilder: (context, error, stackTrace) => _buildPopupError(context, error, stackTrace is StackTrace ? stackTrace : null),
-                    );
-                  } else if (widget.possibleValuesAsync!=null) {
-                    result = AsyncValueBuilder<List<T>>(
-                      asyncValue: widget.possibleValuesAsync!,
-                      dataBuilder: _buildPopup,
-                      loadingBuilder: _buildPopupLoading,
-                      errorBuilder: _buildPopupError,
-                    );
-                  } else {
-                    result = _buildPopup(context, widget.possibleValues!);
-                  }
-                }
-                return result;
-              },
-            );
-            if (selected==null) {
-              widget.onCanceled?.call();
-            }
-          } : null,
-        ),
+        result,
         if (widget.enabled && widget.clearable)
           Positioned(
             right: 8, top: 0, bottom: 0,
@@ -402,11 +417,15 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final defaultTextStyle = Theme.of(context).textTheme.titleMedium!.copyWith(
+      fontWeight: FontWeight.w500,
+    );
     final rows = widget.possibleValues.map((e) {
       return SimpleRowModel<T?>(
         id: e,
         values: {0: e.toString()},
         height: widget.useFixedRowHeight ? widget.rowHeight : null,
+        textStyle: defaultTextStyle,
         onRowTap: (value) {
           _select(e);
         },
@@ -418,6 +437,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
         values: {0: (widget.showHintAsNullInSelection ? widget.hint : null) ?? '< Vacío >'}, // TODO 3 internationalize
         height: widget.useFixedRowHeight ? widget.rowHeight : null,
         alwaysOnTop: true,
+        textStyle: defaultTextStyle,
         onRowTap: (value) {
           _select(null);
         },
