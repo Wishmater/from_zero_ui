@@ -47,7 +47,7 @@ class StringField extends Field<String> {
     }
   }
   void commitValue(String? v) {
-    super.value = v;
+    super.value = v ?? '';
     syncTextEditingController();
   }
 
@@ -401,9 +401,9 @@ class StringField extends Field<String> {
                               : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,
                           labelStyle: TextStyle(
                             height: dense ? 0 : largeVertically ? 0.5 : hint!=null ? 1 : 0.7,
-                            color: enabled ? Theme.of(context).textTheme.caption!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                            color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                           ),
-                          hintStyle: TextStyle(color: Theme.of(context).textTheme.caption!.color),
+                          hintStyle: TextStyle(color: Theme.of(context).textTheme.bodySmall!.color),
                           contentPadding: EdgeInsets.only(
                             left: dense ? 0 : 16,
                             right: dense ? 0 : (16 + (context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40)),
