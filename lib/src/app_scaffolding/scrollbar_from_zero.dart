@@ -43,7 +43,6 @@ class ScrollbarFromZero extends StatefulWidget {
   final ScrollController? controller;
   final Widget child;
   final ScrollNotificationPredicate? notificationPredicate;
-  final Radius? radius;
   final bool? isAlwaysShown;
   final bool? applyOpacityGradientToChildren;
   final int? opacityGradientDirection;
@@ -62,7 +61,6 @@ class ScrollbarFromZero extends StatefulWidget {
     this.opacityGradientSize = 16,
     this.notificationPredicate,
     this.isAlwaysShown,
-    this.radius,
     this.ignoreDevicePadding = true,
     this.mainScrollbar = false,
     // this.addPaddingOnDesktop = false,
@@ -109,7 +107,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     Widget child = widget.child;
     bool wantsAlwaysShown = Theme.of(context).scrollbarTheme.thumbVisibility?.resolve({}) ?? PlatformExtended.isDesktop;
     bool supportsAlwaysShown = widget.controller!=null && (widget.controller!.hasClients || alwaysAttachedScrollController.lastPosition!=null);
-    if (widget.controller!=null && !supportsAlwaysShown) {
+    if (widget.controller!=null && wantsAlwaysShown && !supportsAlwaysShown) {
       // Listen until the controller has clients
       final controller = widget.controller!;
       Future.doWhile(() async {
@@ -166,8 +164,6 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
         ),
         child: buildScrollbar(
           context: context,
-          wantsAlwaysShown: wantsAlwaysShown,
-          supportsAlwaysShown: supportsAlwaysShown,
           child: Theme(
             data: theme,
             child: child,
@@ -185,8 +181,6 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
       result = buildScrollbar(
         context: context,
-        wantsAlwaysShown: wantsAlwaysShown,
-        supportsAlwaysShown: supportsAlwaysShown,
         child: child,
       );
 
@@ -202,16 +196,12 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   Widget buildScrollbar({
     Key? key,
     required BuildContext context,
-    required bool wantsAlwaysShown,
-    required bool supportsAlwaysShown,
     required Widget child,
   }) {
     return Scrollbar(
       key: key,
       controller: widget.controller==null ? null : alwaysAttachedScrollController,
-      thumbVisibility: !supportsAlwaysShown ? false : null,
       notificationPredicate: widget.notificationPredicate,
-      radius: widget.radius,
       child: child,
     );
   }
