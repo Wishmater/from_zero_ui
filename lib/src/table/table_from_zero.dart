@@ -754,6 +754,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     }
 
     if (minWidth!=null) {
+      final theme = Theme.of(context);
       result = SliverStickyHeader(
         sliver: SliverPadding(
           padding: EdgeInsets.only(bottom: 8),
@@ -764,24 +765,35 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         footer: true,
         overlapsContent: true,
         stickOffset: widget.footerStickyOffset,
-        header: LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth < minWidth) {
-              return ScrollbarFromZero(
-                controller: sharedController,
-                opacityGradientDirection: OpacityGradient.horizontal,
-                child: SizedBox(
-                  height: 12,
-                  child: NotificationRelayer(
-                    controller: notificationRelayController,
-                    child: Container(),
-                  ),
-                ),
-              );
-            } else {
-              return SizedBox.shrink();
-            }
-          },
+        header: Theme(
+          data: theme.copyWith(
+            scrollbarTheme: theme.scrollbarTheme.copyWith(
+              crossAxisMargin: theme.scrollbarTheme.crossAxisMargin
+                  ?.clamp(widget.footerStickyOffset, double.infinity),
+            ),
+          ),
+          child: Transform.translate(
+            offset: Offset(0, widget.footerStickyOffset),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                if (constraints.maxWidth < minWidth) {
+                  return ScrollbarFromZero(
+                    controller: sharedController,
+                    opacityGradientDirection: OpacityGradient.horizontal,
+                    child: SizedBox(
+                      height: 12 + 4 + widget.footerStickyOffset,
+                      child: NotificationRelayer(
+                        controller: notificationRelayController,
+                        child: Container(),
+                      ),
+                    ),
+                  );
+                } else {
+                  return SizedBox.shrink();
+                }
+              },
+            ),
+          ),
         ),
       );
     }
