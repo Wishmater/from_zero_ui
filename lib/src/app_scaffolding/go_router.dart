@@ -15,8 +15,9 @@ bool skipFirstRenderWhenPushing = false; // disabled because it breaks heroes, a
 extension Replace on GoRouter {
 
   void removeLast() {
-    routerDelegate.currentConfiguration.remove(routerDelegate.currentConfiguration.last); // removeLast()
-    // routerDelegate.pop(); // removeLast()
+    print ('removeLast()');
+    // routerDelegate.currentConfiguration.remove(routerDelegate.currentConfiguration.last); // removeLast()
+    routerDelegate.pop(); // removeLast()
   }
 
   void pushReplacementNamed(String name, {
@@ -392,10 +393,13 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
 
   bool built = false;
   GoRouterStateFromZero? state;
+  GoRouterStateFromZero? previousState;
+  late final ScaffoldFromZeroChangeNotifier scaffoldChangeNotifier;
 
   @override
   void initState() {
     super.initState();
+    scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
     // for some reason, GoRouter doesn't allow of(context, listen: false) ...
     final inherited = context.getElementForInheritedWidgetOfExactType<InheritedGoRouter>();
     assert(inherited != null, 'No GoRouter found in context');
@@ -419,7 +423,7 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
     }
     state = GoRouterStateFromZero(router.configuration,
       route: currentRoute,
-      pageScaffoldDepth: currentDepth,
+      pageScaffoldDepth: currentRoute.pageScaffoldDepth, // accumulatedDepth disabled, because most of the time it doesn't make sense
       fullPath: widget.state.fullPath,
       name: widget.state.name,
       path: widget.state.path,
@@ -435,6 +439,9 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
   @override
   void dispose() {
     super.dispose();
+    if (previousState!=null && scaffoldChangeNotifier.currentRouteState!=state!) {
+      scaffoldChangeNotifier.setCurrentRouteState(previousState!);
+    }
   }
 
   @override
@@ -442,8 +449,8 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
 
     if (built || isActiveRoute(context)) {
 
-      final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
       if (isActiveRoute(context) && scaffoldChangeNotifier.currentRouteState!=state!) {
+        previousState = scaffoldChangeNotifier.currentRouteState;
         scaffoldChangeNotifier.setCurrentRouteState(state!);
       }
 

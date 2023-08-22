@@ -370,7 +370,7 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
   set scrollController(ScrollController? value) {
     if (_scrollController == value) return;
     _scrollController = value;
-    scrollController?.addListener(markNeedsLayout);
+    scrollController?.addListener(markNeedsLayoutFromScrollController);
     markNeedsLayout();
   }
 
@@ -433,7 +433,7 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
     super.attach(owner);
     if (_header != null) _header!.attach(owner);
     if (_child != null) _child!.attach(owner);
-    scrollController?.addListener(markNeedsLayout);
+    scrollController?.addListener(markNeedsLayoutFromScrollController);
   }
 
   @override
@@ -441,7 +441,7 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
     super.detach();
     if (_header != null) _header!.detach();
     if (_child != null) _child!.detach();
-    scrollController?.removeListener(markNeedsLayout);
+    scrollController?.removeListener(markNeedsLayoutFromScrollController);
   }
 
   @override
@@ -466,6 +466,10 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
       result.add(child!.toDiagnosticsNode(name: 'child'));
     }
     return result;
+  }
+
+  void markNeedsLayoutFromScrollController() {
+    markNeedsLayout();
   }
 
   double computeHeaderExtent() {

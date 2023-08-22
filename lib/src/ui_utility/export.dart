@@ -614,7 +614,7 @@ class ExportState extends State<Export> {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                child: Text("Exportar", style: Theme.of(context).textTheme.headline5,),
+                child: Text("Exportar", style: Theme.of(context).textTheme.headlineSmall,),
               ),
               Expanded(
                 child: Container(
@@ -987,7 +987,7 @@ class _PageWrapper extends StatelessWidget {
                                   Padding(
                                     padding: EdgeInsets.only(top: 16),
                                     child: Text(title!,
-                                      style: Theme.of(context).textTheme.headline4,
+                                      style: Theme.of(context).textTheme.headlineMedium,
                                       textAlign: TextAlign.center,
                                     ),
                                   ),

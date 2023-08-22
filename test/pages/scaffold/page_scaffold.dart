@@ -131,7 +131,7 @@ class _PageScaffoldState extends State<PageScaffold> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("Page Transitions", style: Theme.of(context).textTheme.headline4,),
+                        Text("Page Transitions", style: Theme.of(context).textTheme.headlineMedium,),
                         SizedBox(height: 32,),
                         Padding(
                           padding: const EdgeInsets.only(left: 16),

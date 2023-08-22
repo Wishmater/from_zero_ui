@@ -1638,7 +1638,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 child: SelectableText(e.uiName,
                   style: Theme.of(context).textTheme.titleSmall!.copyWith(
                     color: Theme.of(context).textTheme.bodyLarge!.color!
-                        .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.66 : 0.8),
+                        .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.7 : 0.8),
                     wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
                   ),
                   textAlign: TextAlign.right,

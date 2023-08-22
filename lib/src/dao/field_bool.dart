@@ -248,6 +248,7 @@ class BoolField extends Field<BoolComparable> {
         || !value&&fieldParam.showViewCheckmark==BoolFieldShowViewCheckmark.whenTrue) {
       return SizedBox.shrink();
     }
+    final theme = Theme.of(context);
     final valueName = value
         ? field.uiNameTrueGetter==null ? null : field.uiNameTrue
         : field.uiNameFalseGetter==null ? null : field.uiNameFalse;
@@ -286,7 +287,7 @@ class BoolField extends Field<BoolComparable> {
             Expanded(
               child: dense
                   ? AutoSizeText(valueName,
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: theme.textTheme.titleMedium,
                     textAlign: field.getColModel().alignment,
                     maxLines: 1,
                     minFontSize: 14,
@@ -295,7 +296,7 @@ class BoolField extends Field<BoolComparable> {
                       waitDuration: Duration(milliseconds: 0),
                       verticalOffset: -16,
                       child: AutoSizeText(valueName,
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: theme.textTheme.titleMedium,
                         textAlign: field.getColModel().alignment,
                         maxLines: 1,
                         softWrap: false,
@@ -304,7 +305,7 @@ class BoolField extends Field<BoolComparable> {
                     ),
                   )
                   : SelectableText(valueName,
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: theme.textTheme.titleMedium,
                   ),
             ),
         ],
@@ -368,6 +369,7 @@ class BoolField extends Field<BoolComparable> {
     bool dense = false,
     required FocusNode focusNode,
   }) {
+    final theme = Theme.of(context);
     Widget result = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
@@ -377,43 +379,44 @@ class BoolField extends Field<BoolComparable> {
         Widget result;
         switch(displayType) {
           case BoolFieldDisplayType.checkBoxTile:
-            result = my_checkbox_list_tile.CheckboxListTile(
-              focusNode: focusNode,
-              value: value!.value,
-              dense: true,
-              controlAffinity: listTileControlAffinity,
-              contentPadding: EdgeInsets.only(
-                left: dense ? 0 : 12,
-                right: dense ? 0 : 12,
-                bottom: dense ? 16 : addCard ? 16 : 12,
-              ),
-              tileColor: dense && visibleValidationErrors.isNotEmpty
-                  ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
-                  : backgroundColor?.call(context, this, dao),
-              checkColor: selectedColor?.call(context, this, dao),
-              onChanged: !enabled ? null : (value) {
-                focusNode.requestFocus();
-                userInteracted = true;
-                this.value = value!.comparable;
-              },
-              title: Transform.translate(
-                offset: Offset(
-                  listTileControlAffinity==ListTileControlAffinity.leading ? -12 : 3,
-                  -1,
+            result = Theme(
+              data: theme.copyWith(
+                listTileTheme: theme.listTileTheme.copyWith(
+                  horizontalTitleGap: 10, // for some reason SwitchListTile take horizontalTitleGap from the Theme, but you can't specify it directly as a parameter... really stupid
                 ),
-                child: Column(
+              ),
+              child: my_checkbox_list_tile.CheckboxListTile(
+                focusNode: focusNode,
+                value: value!.value,
+                dense: true,
+                controlAffinity: listTileControlAffinity,
+                contentPadding: EdgeInsets.only(
+                  left: dense ? 0 : 12,
+                  right: dense ? 0 : 12,
+                  bottom: dense ? 16 : addCard ? 16 : 12,
+                ),
+                tileColor: dense && visibleValidationErrors.isNotEmpty
+                    ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
+                    : backgroundColor?.call(context, this, dao),
+                checkColor: selectedColor?.call(context, this, dao),
+                onChanged: !enabled ? null : (value) {
+                  focusNode.requestFocus();
+                  userInteracted = true;
+                  this.value = value!.comparable;
+                },
+                title: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (!dense && showBothNeutralAndSpecificUiName)
                       Text(uiName,
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                        style: theme.textTheme.bodySmall!.copyWith(
+                          color: enabled ? theme.textTheme.bodySmall!.color : theme.textTheme.bodyLarge!.color!.withOpacity(0.75),
                         ),
                       ),
                     Text(uiNameValue,
-                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                      style: theme.textTheme.titleMedium!.copyWith(
+                        color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                         height: 1.2,
                       ),
                     ),
@@ -423,50 +426,51 @@ class BoolField extends Field<BoolComparable> {
             );
             break;
           case BoolFieldDisplayType.switchTile:
-            result = my_switch_list_tile.SwitchListTile(
-              focusNode: focusNode,
-              value: value!.value,
-              dense: true,
-              controlAffinity: listTileControlAffinity,
-              contentPadding: EdgeInsets.only(
-                left: dense ? 0 : 8,
-                right: dense ? 0 : 8,
-                bottom: dense ? 16 : addCard ? 16 : 12,
-              ),
-              tileColor: dense && visibleValidationErrors.isNotEmpty
-                  ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
-                  : backgroundColor?.call(context, this, dao),
-              activeColor: selectedColor?.call(context, this, dao),
-              activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
-              title: Transform.translate(
-                offset: Offset(
-                  listTileControlAffinity==ListTileControlAffinity.leading ? -6 : 3,
-                  -1,
+            result = Theme(
+              data: theme.copyWith(
+                listTileTheme: theme.listTileTheme.copyWith(
+                  horizontalTitleGap: 10, // for some reason SwitchListTile take horizontalTitleGap from the Theme, but you can't specify it directly as a parameter... really stupid
                 ),
-                child: Column(
+              ),
+              child: my_switch_list_tile.SwitchListTile(
+                focusNode: focusNode,
+                value: value!.value,
+                dense: true,
+                controlAffinity: listTileControlAffinity,
+                contentPadding: EdgeInsets.only(
+                  left: dense ? 0 : 8,
+                  right: dense ? 0 : 8,
+                  bottom: dense ? 16 : addCard ? 16 : 12,
+                ),
+                tileColor: dense && visibleValidationErrors.isNotEmpty
+                    ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
+                    : backgroundColor?.call(context, this, dao),
+                activeColor: selectedColor?.call(context, this, dao),
+                activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
+                title: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (!dense && showBothNeutralAndSpecificUiName)
                       Text(uiName,
-                        style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                          color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                        style: theme.textTheme.bodySmall!.copyWith(
+                          color: enabled ? theme.textTheme.bodySmall!.color : theme.textTheme.bodyLarge!.color!.withOpacity(0.75),
                         ),
                       ),
                     Text(uiNameValue,
-                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                      style: theme.textTheme.titleMedium!.copyWith(
+                        color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                         height: 1.2,
                       ),
                     ),
                   ],
                 ),
+                onChanged: !enabled ? null : (value) {
+                  focusNode.requestFocus();
+                  userInteracted = true;
+                  this.value = value.comparable;
+                },
               ),
-              onChanged: !enabled ? null : (value) {
-                focusNode.requestFocus();
-                userInteracted = true;
-                this.value = value.comparable;
-              },
             );
             break;
           case BoolFieldDisplayType.compactCheckBox:
@@ -480,7 +484,7 @@ class BoolField extends Field<BoolComparable> {
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.only(left: (maxWidth/2)-20, top: dense ? 8 : 14),
                   tileColor: dense && visibleValidationErrors.isNotEmpty
-                      ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
+                      ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                       : backgroundColor?.call(context, this, dao),
                   checkColor: selectedColor?.call(context, this, dao),
                   onChanged: !enabled ? null : (value) {
@@ -500,14 +504,14 @@ class BoolField extends Field<BoolComparable> {
                           softWrap: false,
                           style: TextStyle(
                             height: 1,
-                            color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                            color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                           ),
                           overflowReplacement: AutoSizeText(uiNameValue,
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             style: TextStyle(
                               height: 1,
-                              color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                              color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                             ),
                           ),
                         ),
@@ -529,7 +533,7 @@ class BoolField extends Field<BoolComparable> {
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.only(left: (maxWidth/2)-32, top: dense ? 8 : 14),
                   tileColor: dense && visibleValidationErrors.isNotEmpty
-                      ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
+                      ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                       : backgroundColor?.call(context, this, dao),
                   activeColor: selectedColor?.call(context, this, dao),
                   activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
@@ -550,14 +554,14 @@ class BoolField extends Field<BoolComparable> {
                           softWrap: false,
                           style: TextStyle(
                             height: 1,
-                            color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                            color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                           ),
                           overflowReplacement: AutoSizeText(uiNameValue,
                             textAlign: TextAlign.center,
                             maxLines: 2,
                             style: TextStyle(
                               height: 1,
-                              color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                              color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                             ),
                           ),
                         ),
@@ -624,7 +628,7 @@ class BoolField extends Field<BoolComparable> {
     if (addCard) {
       result = Card(
         clipBehavior: Clip.hardEdge,
-        color: enabled ? null : Theme.of(context).canvasColor,
+        color: enabled ? null : theme.canvasColor,
         child: Stack(
           children: [
             result,

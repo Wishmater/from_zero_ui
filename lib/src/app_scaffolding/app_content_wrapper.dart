@@ -640,10 +640,17 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
   bool fadeAnim = false;
   bool sharedAnim = false;
   bool titleAnimation = false;
+  bool _isSetCurrentRouteStateLocked = false;
   void setCurrentRouteState(GoRouterStateFromZero route) {
-    _previousRouteState = currentRouteState;
-    _currentRouteState = route;
-    updateAnimationTypes();
+    if (!_isSetCurrentRouteStateLocked) {
+      _isSetCurrentRouteStateLocked = true;
+      _previousRouteState = currentRouteState;
+      _currentRouteState = route;
+      updateAnimationTypes();
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        _isSetCurrentRouteStateLocked = false;
+      });
+    }
   }
   void updateAnimationTypes(){
     if (currentRouteState==null || previousRouteState==null || currentRouteState!.pageScaffoldId!=previousRouteState!.pageScaffoldId) {

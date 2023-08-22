@@ -459,7 +459,9 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
               Expanded(
                 child: dense
                     ? AutoSizeText(message,
-                        style: Theme.of(context).textTheme.titleMedium,
+                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                          height: 1.1,
+                        ),
                         textAlign: field.getColModel().alignment,
                         maxLines: 1,
                         minFontSize: 15,
@@ -469,6 +471,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                           verticalOffset: -16,
                           child: Text(message,
                             style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                              height: 1.1,
                               fontSize: 15,
                             ),
                             textAlign: field.getColModel().alignment,
@@ -483,12 +486,14 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                         children: [
                           SelectableText(message,
                             style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                              height: 1.1,
                               wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
                             ),
                           ),
                           if (subtitle!=null)
                             Text(subtitle,
                               style: Theme.of(context).textTheme.bodySmall!.copyWith(
+                                height: 1.1,
                                 wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
                               ),
                             ),

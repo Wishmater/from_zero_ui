@@ -74,6 +74,10 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
           child: FadeUpwardsSlideTransition(
             routeAnimation: animation,
             child: child,
+            movementTween: Tween<Offset>(
+              begin: const Offset(0.0, 0.18),
+              end: Offset.zero,
+            ),
           ),
         )
       ],

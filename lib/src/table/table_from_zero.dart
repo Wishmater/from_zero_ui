@@ -18,7 +18,6 @@ import 'package:from_zero_ui/src/table/table_from_zero_filters.dart';
 import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
-import 'package:from_zero_ui/util/copied_flutter_widgets/my_sticky_header.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_sliver_sticky_header.dart';
 import 'package:from_zero_ui/util/no_ensure_visible_traversal_policy.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/small_splash_popup_menu_button.dart' as small_popup;
@@ -997,6 +996,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         if (_showLeadingControls) {
           if (j==0) {
             // return SizedBox(width: _leadingControlsWidth,);
+            final theme = Theme.of(context);
             return Transform.translate(
               offset: Offset(row.depth*_depthPadding, 0),
               child: SizedBox(
@@ -1019,8 +1019,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                               selected: row.expanded || row.isFilteredInBecauseOfChildren,
                               icon: Icons.expand_less,
                               selectedColor: row.isFilteredInBecauseOfChildren
-                                  ? Theme.of(context).disabledColor
-                                  : Theme.of(context).colorScheme.secondary,
+                                  ? theme.disabledColor
+                                  : theme.colorScheme.secondary,
                               unselectedOffset: 0.25,
                               selectedOffset: 0.5,
                             ),
@@ -1265,13 +1265,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           bottom = addon;
         }
         if (row.rowAddonIsSticky ?? widget.enableStickyHeaders){
-          result = StickyHeader( // TODO 1 fix addon stickyHeader, use SliverStickyHeader instead
-            controller: widget.scrollController,
-            header: top,
-            content: bottom,
-            stickOffset: row is! RowModel<T> ? 0
-                : index==0 ? 0
-                : widget.stickyOffset + (row.height??0),
+          result = CustomScrollView(
+            shrinkWrap: true,
+            physics: NeverScrollableScrollPhysics(),
+            slivers: [
+              SliverStickyHeader(
+                scrollController: widget.scrollController,
+                header: top,
+                sliver: SliverToBoxAdapter(child: bottom),
+                stickOffset: row is! RowModel<T> ? 0
+                    : index==0 ? 0
+                    : widget.stickyOffset + (row.height??0),
+              ),
+            ],
           );
         } else{
           result = Column(
@@ -1473,9 +1479,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     if (!filterGlobalKeys.containsKey(colKey)) {
       filterGlobalKeys[colKey] = GlobalKey();
     }
-    final textStyle = Theme.of(context).textTheme.titleSmall!.copyWith(
-      color: Theme.of(context).textTheme.bodyLarge!.color!
-          .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.7 : 0.8),
+    final theme = Theme.of(context);
+    final textStyle = theme.textTheme.titleSmall!.copyWith(
+      color: theme.textTheme.bodyLarge!.color!
+          .withOpacity(theme.brightness==Brightness.light ? 0.7 : 0.8),
     );
     final alignment = _getAlignment(colKey);
     Widget result = Align(
@@ -1533,7 +1540,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                                 : MaterialCommunityIcons.sort_descending,
                             size: 20,
                             key: ValueKey(sortedAscending),
-                            color: Theme.of(context).colorScheme.secondary,
+                            color: theme.colorScheme.secondary,
                           )
                     : SizedBox(height: 24,),
                 transitionBuilder: (child, animation) => ScaleTransition(
@@ -1567,8 +1574,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                           selected: filtersApplied[colKey]??false,
                           icon: MaterialCommunityIcons.filter_outline,
                           selectedIcon: MaterialCommunityIcons.filter,
-                          selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).colorScheme.secondary,
-                          unselectedColor: Theme.of(context).textTheme.bodySmall!.color!,
+                          selectedColor: theme.colorScheme.secondary,
+                          unselectedColor: theme.textTheme.bodyLarge!.color!
+                            .withOpacity(theme.brightness==Brightness.light ? 0.7 : 0.8),
                           unselectedOffset: 0,
                           selectedOffset: 0,
                         ),
@@ -1860,14 +1868,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     ValueChanged<bool>? onPopupResult,
     bool updateStateIfModified = true,
   }) {
+    final theme = Theme.of(context);
     return ActionFromZero(
       title: 'Filtros...', // TODO 3 internationalize
       icon: SelectableIcon(
         selected: controller.currentState?.filtersApplied[colKey]??false,
         icon: MaterialCommunityIcons.filter_outline,
         selectedIcon: MaterialCommunityIcons.filter,
-        selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).colorScheme.secondary,
-        unselectedColor: Theme.of(context).textTheme.bodyLarge!.color!,
+        selectedColor: theme.brightness==Brightness.light ? theme.primaryColor : theme.colorScheme.secondary,
+        unselectedColor: theme.textTheme.bodyLarge!.color!,
         unselectedOffset: 0,
         selectedOffset: 0,
       ),
