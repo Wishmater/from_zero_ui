@@ -382,7 +382,11 @@ class BoolField extends Field<BoolComparable> {
               value: value!.value,
               dense: true,
               controlAffinity: listTileControlAffinity,
-              contentPadding: EdgeInsets.only(left: dense ? 0 : 12, right: dense ? 0 : 12, bottom: dense ? 16 : 16),
+              contentPadding: EdgeInsets.only(
+                left: dense ? 0 : 12,
+                right: dense ? 0 : 12,
+                bottom: dense ? 16 : addCard ? 16 : 12,
+              ),
               tileColor: dense && visibleValidationErrors.isNotEmpty
                   ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                   : backgroundColor?.call(context, this, dao),
@@ -424,7 +428,11 @@ class BoolField extends Field<BoolComparable> {
               value: value!.value,
               dense: true,
               controlAffinity: listTileControlAffinity,
-              contentPadding: EdgeInsets.only(left: dense ? 0 : 8, right: dense ? 0 : 8, bottom: dense ? 16 : 16),
+              contentPadding: EdgeInsets.only(
+                left: dense ? 0 : 8,
+                right: dense ? 0 : 8,
+                bottom: dense ? 16 : addCard ? 16 : 12,
+              ),
               tileColor: dense && visibleValidationErrors.isNotEmpty
                   ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                   : backgroundColor?.call(context, this, dao),
@@ -432,7 +440,7 @@ class BoolField extends Field<BoolComparable> {
               activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
               title: Transform.translate(
                 offset: Offset(
-                  listTileControlAffinity==ListTileControlAffinity.leading ? -12 : 3,
+                  listTileControlAffinity==ListTileControlAffinity.leading ? -6 : 3,
                   -1,
                 ),
                 child: Column(
