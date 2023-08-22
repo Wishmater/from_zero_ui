@@ -15,7 +15,6 @@ bool skipFirstRenderWhenPushing = false; // disabled because it breaks heroes, a
 extension Replace on GoRouter {
 
   void removeLast() {
-    print ('removeLast()');
     // routerDelegate.currentConfiguration.remove(routerDelegate.currentConfiguration.last); // removeLast()
     routerDelegate.pop(); // removeLast()
   }
