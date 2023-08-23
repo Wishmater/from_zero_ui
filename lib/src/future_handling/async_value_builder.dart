@@ -2,6 +2,7 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/animations/animated_switcher_image.dart';
 import 'package:humanizer/humanizer.dart';
 
 
@@ -66,35 +67,13 @@ class AsyncValueBuilder<T> extends StatelessWidget {
     );
     final notifyResize = applyAnimatedContainerFromChildSize ? ChangeNotifier() : null;
     if (transitionDuration!=Duration.zero) {
-      result = AnimatedSwitcher(
+      result = AnimatedSwitcherImage(
         child: result,
         duration: transitionDuration,
         switchInCurve: transitionInCurve,
         switchOutCurve: transitionOutCurve,
         transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
-        layoutBuilder: (currentChild, previousChildren) {
-          final knownKeys = <Key>[if (currentChild?.key!=null) currentChild!.key!];
-          final cleanPreviousChildren = [];
-          for (final e in previousChildren) {
-            if (e.key==null || !knownKeys.contains(e.key!)) {
-              cleanPreviousChildren.add(e);
-              if (e.key!=null) {
-                knownKeys.add(e.key!);
-              }
-            }
-          }
-          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-            notifyResize?.notifyListeners(); // notify possible size change when adding/removing children
-          });
-          return Stack(
-            alignment: alignment ?? Alignment.center,
-            children: <Widget>[
-              // ...cleanPreviousChildren, // TODO 1 implement a transition switcher that uses images for widgets fading out, to avoid conflicts with scrollControllers, etc.
-              if (cleanPreviousChildren.isNotEmpty) cleanPreviousChildren.last,
-              if (currentChild != null) currentChild,
-            ],
-          );
-        },
+        alignment: alignment ?? Alignment.center,
       );
     }
     if (applyAnimatedContainerFromChildSize) {
@@ -122,10 +101,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
   }
 
   static Widget defaultTransitionBuilder(BuildContext context, Widget child, Animation<double> animation){
-    return ZoomedFadeInFadeOutTransition(
-      animation: animation,
-      child: child,
-    );
+    return AnimatedSwitcherImage.defaultTransitionBuilder(child, animation);
   }
 
 }
@@ -135,13 +111,11 @@ class SliverAsyncValueBuilder<T> extends AsyncValueBuilder<T> {
   SliverAsyncValueBuilder({
     required super.asyncValue,
     required super.dataBuilder,
-    LoadingBuilder loadingBuilder = SliverAsyncValueBuilder.defaultLoadingBuilder,
-    ErrorBuilder errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
+    super.transitionDuration = const Duration(milliseconds: 300),
+    super.loadingBuilder = SliverAsyncValueBuilder.defaultLoadingBuilder,
+    super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
   }) : super(
-    transitionDuration: Duration.zero,
     applyAnimatedContainerFromChildSize: false,
-    loadingBuilder: loadingBuilder,
-    errorBuilder: errorBuilder,
   );
 
   static Widget defaultLoadingBuilder(BuildContext context){
@@ -212,7 +186,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
     } else if (data.length==asyncValues.length) {
       result = dataBuilder(context, data);
       result = Container(
-        key: result.key ?? ValueKey(asyncValues.isEmpty ? 'empty' : asyncValues.map((e) => e.hashCode).reduce((v, e) => v+e)),
+        key: result.key ?? ValueKey(asyncValues.isEmpty ? 'empty' : Object.hashAll(asyncValues)),
         child: result,
       );
     } else {
@@ -224,35 +198,13 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
     }
     final notifyResize = applyAnimatedContainerFromChildSize ? ChangeNotifier() : null;
     if (transitionDuration!=Duration.zero) {
-      result = AnimatedSwitcher(
+      result = AnimatedSwitcherImage(
         child: result,
         duration: transitionDuration,
         switchInCurve: transitionInCurve,
         switchOutCurve: transitionOutCurve,
         transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
-        layoutBuilder: (currentChild, previousChildren) {
-          final knownKeys = <Key>[if (currentChild?.key!=null) currentChild!.key!];
-          final cleanPreviousChildren = [];
-          for (final e in previousChildren) {
-            if (e.key==null || !knownKeys.contains(e.key!)) {
-              cleanPreviousChildren.add(e);
-              if (e.key!=null) {
-                knownKeys.add(e.key!);
-              }
-            }
-          }
-          WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-            notifyResize?.notifyListeners(); // notify possible size change when adding/removing children
-          });
-          return Stack(
-            alignment: alignment ?? Alignment.center,
-            children: <Widget>[
-              // ...cleanPreviousChildren, // TODO 1 implement a transition switcher that uses images for widgets fading out, to avoid conflicts with scrollControllers, etc.
-              if (cleanPreviousChildren.isNotEmpty) cleanPreviousChildren.last,
-              if (currentChild != null) currentChild,
-            ],
-          );
-        },
+        alignment: alignment ?? Alignment.center,
       );
     }
     if (applyAnimatedContainerFromChildSize) {
@@ -272,13 +224,11 @@ class SliverAsyncValueMultiBuilder<T> extends AsyncValueMultiBuilder<T> {
   SliverAsyncValueMultiBuilder({
     required super.asyncValues,
     required super.dataBuilder,
-    LoadingBuilder loadingBuilder = SliverAsyncValueBuilder.defaultLoadingBuilder,
-    ErrorBuilder errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
+    super.transitionDuration = const Duration(milliseconds: 300),
+    super.loadingBuilder = SliverAsyncValueBuilder.defaultLoadingBuilder,
+    super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
   }) : super(
-    transitionDuration: Duration.zero,
     applyAnimatedContainerFromChildSize: false,
-    loadingBuilder: loadingBuilder,
-    errorBuilder: errorBuilder,
   );
 }
 
@@ -333,13 +283,11 @@ class SliverFutureProviderBuilder<T> extends FutureProviderBuilder<T> {
   SliverFutureProviderBuilder({
     required super.provider,
     required super.dataBuilder,
-    LoadingBuilder loadingBuilder = SliverAsyncValueBuilder.defaultLoadingBuilder,
-    ErrorBuilder errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
+    super.transitionDuration = const Duration(milliseconds: 300),
+    super.loadingBuilder = SliverAsyncValueBuilder.defaultLoadingBuilder,
+    super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
   }) : super(
-    transitionDuration: Duration.zero,
     applyAnimatedContainerFromChildSize: false,
-    loadingBuilder: loadingBuilder,
-    errorBuilder: errorBuilder,
   );
 }
 

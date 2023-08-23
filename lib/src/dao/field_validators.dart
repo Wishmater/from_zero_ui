@@ -628,7 +628,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
                   Expanded(
                     child: Text(name!,
                       style: isBlocking
-                          ? Theme.of(context).textTheme.headline6
+                          ? Theme.of(context).textTheme.titleLarge
                           : Theme.of(context).textTheme.titleMedium,
                     ),
                   ),

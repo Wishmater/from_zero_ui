@@ -49,6 +49,7 @@ export 'package:from_zero_ui/src/ui_utility/notification_relayer.dart';
 export 'package:from_zero_ui/util/copied_flutter_widgets/my_tooltip.dart';
 
 export 'package:from_zero_ui/src/animations/exposed_transitions.dart';
+export 'package:from_zero_ui/src/animations/animated_switcher_image.dart';
 export 'package:from_zero_ui/util/no_fading_transitions/no_fading_material_transitions.dart';
 //export 'package:from_zero_ui/util/no_fading_fade_through_transition.dart'; //conflicts with original namespace
 //export 'package:from_zero_ui/util/no_fading_shared_axis_transition.dart'; //conflicts with original namespace

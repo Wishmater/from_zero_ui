@@ -266,7 +266,7 @@ class _ComplicatedTableState extends State<ComplicatedTable> {
 //       rowTakesPriorityOverColumn: false,
 //       columnAlignments: [null, null, null, null, TextAlign.right],
 //       colStyles: [null, null, null, null, Theme.of(context).textTheme.bodySmall],
-//       rowStyles: [null, null, null, null, Theme.of(context).textTheme.headline6],
+//       rowStyles: [null, null, null, null, Theme.of(context).textTheme.titleLarge],
 //       columnFlexes: [2, 1, 1, 1, 1],
 //       onRowTap: (RowModel row) {
 //         log("Row ${row.values[0]} tapped");

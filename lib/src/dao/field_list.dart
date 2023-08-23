@@ -1023,7 +1023,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             child: Padding(
               padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
               child: Text('${FromZeroLocalizations.of(context).translate("add_add")} ${emptyDAO.classUiName}',
-                style: Theme.of(context).textTheme.headline6,
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
           ),
@@ -1180,7 +1180,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(FromZeroLocalizations.of(context).translate('edit_multiple_title'),
-                            style: Theme.of(context).textTheme.headline6,
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
                           SizedBox(height: 12,),
                           Text('${FromZeroLocalizations.of(context).translate('edit_multiple_desc1')} ${elements.length} ${elements.length>1  ? FromZeroLocalizations.of(context).translate('element_plur')
@@ -1523,8 +1523,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Text(uiName,
-                                      style: Theme.of(context).textTheme.headline6!.copyWith(
-                                        fontSize: Theme.of(context).textTheme.headline6!.fontSize!*0.85,
+                                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                                        fontSize: Theme.of(context).textTheme.titleLarge!.fontSize!*0.85,
                                       ),
                                     ),
                                     Text(objects.length==0 ? FromZeroLocalizations.of(context).translate('no_elements')

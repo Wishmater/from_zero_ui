@@ -193,7 +193,7 @@ abstract class TableFromZeroManagePopup {
                         top: 0, left: 0, right: 0,
                         child: AppbarFromZero(
                           title: Text('Personalizar Tabla',
-                            style: Theme.of(context).textTheme.headline6,
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
                           backgroundColor: Theme.of(context).cardColor,
                           elevation: 6,

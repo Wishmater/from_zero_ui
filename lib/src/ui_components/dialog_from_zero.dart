@@ -233,7 +233,7 @@ class _DialogFromZeroState extends State<DialogFromZero> {
         key: appBarGlobalKey,
         useFlutterAppbar: false,
         title: DefaultTextStyle(
-          style: Theme.of(context).textTheme.headline6!,
+          style: Theme.of(context).textTheme.titleLarge!,
           child: Container(
             constraints: BoxConstraints(minHeight: 60),
             padding: const EdgeInsets.only(top: 12, bottom: 12, left: 16,),

@@ -309,7 +309,7 @@ class LoadingApp extends StatelessWidget {
 //                    SizedBox(width: 16,),
 //                    Text(
 //                      "Procesando...",
-//                      style: Theme.of(context).textTheme.headline6,
+//                      style: Theme.of(context).textTheme.titleLarge,
 //                    ),
 //                  ],
 //                ),
@@ -328,7 +328,7 @@ class LoadingApp extends StatelessWidget {
                   style: Theme
                       .of(context)
                       .textTheme
-                      .headline6,
+                      .titleLarge,
                   textAlign: TextAlign.center,
                 ),
               ),

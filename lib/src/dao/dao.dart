@@ -524,7 +524,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       children: [
                         SizedBox(height: 18,),
                         Text('Validando Datos...', // TODO 3 internationalize
-                          style: Theme.of(context).textTheme.headline6,
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
                         Expanded(
                           child: Container(
@@ -981,7 +981,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     child: Text(editDialogTitle?.call(this) ?? '${id==null
                         ? FromZeroLocalizations.of(context).translate("add")
                         : FromZeroLocalizations.of(context).translate("edit")} $shownName',
-                      style: Theme.of(context).textTheme.headline6,
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
                   actions: [
@@ -1223,7 +1223,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                   padding: const EdgeInsets.only(top: 24, left: 32, right: 32, bottom: 8,),
                                   child: OverflowScroll(
                                     child: Text(FromZeroLocalizations.of(context).translate("confirm_invalidating_change_title"),
-                                      style: Theme.of(context).textTheme.headline6,
+                                      style: Theme.of(context).textTheme.titleLarge,
                                     ),
                                   ),
                                 ),
@@ -1448,7 +1448,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SelectableText(uiName,
-                          style: Theme.of(context).textTheme.headline6,
+                          style: Theme.of(context).textTheme.titleLarge,
                         ),
                         if (uiName!=classUiName)
                           SelectableText(classUiName,
@@ -1711,9 +1711,11 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (!first)
-                Container(
-                  height: 8,
-                  color: Theme.of(context).dividerColor,
+                DAOViewDividerWidget(
+                  titleFlex: titleFlex,
+                  valueFlex: valueFlex,
+                  titleMaxWidth: titleMaxWidth,
+                  goBelow: false,
                 ),
               if (group.name!=null)
                 Padding(
@@ -2111,4 +2113,81 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
 
 
+class DAOViewDividerWidget extends StatelessWidget {
+  final int titleFlex;
+  final double? titleMaxWidth;
+  final int valueFlex;
+  final double height;
+  final bool goBelow;
+  const DAOViewDividerWidget({
+    this.titleFlex = 1000000,
+    this.valueFlex = 1618034,
+    this.titleMaxWidth,
+    this.height = 24,
+    this.goBelow = true,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (titleMaxWidth==null) {
+      return IntrinsicHeight(
+        child: Stack(
+          children: [
+            Divider(height: height),
+            Positioned.fill(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: titleFlex,
+                    child: SizedBox.expand(),
+                  ),
+                  Container(
+                    height: goBelow ? height : height/2,
+                    child: VerticalDivider(width: 0,),
+                  ),
+                  Expanded(
+                    flex: valueFlex,
+                    child: SizedBox.expand(),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else {
+      return Stack(
+        children: [
+          Divider(height: height),
+          Positioned.fill(
+            child: FlexibleLayoutFromZero(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              applyIntrinsicCrossAxis: true,
+              children: [
+                FlexibleLayoutItemFromZero(
+                  flex: titleFlex.toDouble(),
+                  maxSize: titleMaxWidth ?? double.infinity,
+                  child: SizedBox.expand(),
+                ),
+                FlexibleLayoutItemFromZero(
+                  minSize: 1, maxSize: 1,
+                  child: SizedBox(
+                    height: goBelow ? height : height/2,
+                    child: VerticalDivider(width: 0,),
+                  ),
+                ),
+                FlexibleLayoutItemFromZero(
+                  flex: valueFlex.toDouble(),
+                  child: SizedBox.expand(),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+  }
+}
 

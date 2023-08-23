@@ -8,28 +8,6 @@ import 'package:intl/intl.dart';
 import 'package:dartx/dartx.dart';
 
 
-class LoadingCard extends StatelessWidget {
-
-  final double? value;
-  final Color? color;
-
-  const LoadingCard({
-    this.value,
-    this.color,
-    Key? key,
-  }) :  super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: LoadingSign(
-        value: value,
-        color: color,
-      ),
-    );
-  }
-
-}
 
 class LoadingSign extends ImplicitlyAnimatedWidget {
 
@@ -95,7 +73,11 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
   @override
   Widget build(BuildContext context) {
     if (!passedInitialDelay) {
-      return SizedBox.shrink();
+      return LimitedBox(
+        maxWidth: 128,
+        maxHeight: 128,
+        child: SizedBox.expand(),
+      );
     }
     Color color = this.widget.color ?? Theme.of(context).colorScheme.primary;
     Color colorMedium = color.withOpacity(0.8);
@@ -196,38 +178,8 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
 
 }
 
-class ErrorCard extends StatelessWidget {
 
-  final String title;
-  final String? subtitle;
-  final Widget? icon;
-  final VoidCallback? onRetry;
-  final EdgeInsets padding;
 
-  ErrorCard({
-    required this.title,
-    this.subtitle,
-    this.onRetry,
-    this.icon,
-    this.padding = EdgeInsets.zero,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: padding,
-        child: ErrorSign(
-          title: title,
-          subtitle: subtitle,
-          onRetry: onRetry,
-          icon: icon,
-        ),
-      ),
-    );
-  }
-
-}
 
 class ErrorSign extends StatelessWidget {
 
@@ -260,7 +212,7 @@ class ErrorSign extends StatelessWidget {
           SizedBox(height: 4,),
         Text(
           title,
-          style: Theme.of(context).textTheme.headline6,
+          style: Theme.of(context).textTheme.titleLarge,
           textAlign: TextAlign.center,
         ),
         if (subtitle.isNotNullOrBlank)
@@ -318,6 +270,8 @@ class ErrorSign extends StatelessWidget {
 
 }
 
+
+
 typedef SuccessBuilder<T> = Widget Function(BuildContext context, T data);
 typedef FutureErrorBuilder = Widget Function(BuildContext context, Object? error, Object? stackTrace);
 typedef FutureLoadingBuilder = Widget Function(BuildContext context);
@@ -340,8 +294,6 @@ Widget _defaultTransitionBuilder(Widget child, Animation<double> animation){
 Widget _noneTransitionBuilder(Widget child, Animation<double> animation){
   return child;
 }
-
-
 
 class FutureBuilderFromZero<T> extends StatefulWidget {
 
@@ -446,30 +398,13 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
         }
         if (widget.applyDefaultTransition) {
           int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds).toInt();
-          result = AnimatedSwitcher(
+          result = AnimatedSwitcherImage(
             transitionBuilder: widget.transitionBuilder,
             child: Container(
               key: ValueKey(state),
               child: result,
             ),
             duration: Duration(milliseconds: milliseconds),
-            layoutBuilder: (currentChild, previousChildren) {
-              return Stack(
-                clipBehavior: Clip.none,
-                alignment: Alignment.center,
-                children: [
-                  Positioned.fill(
-                    child: OverflowBox(
-                      child: Stack(
-                        children: previousChildren,
-                      ),
-                    ),
-                  ),
-                  if (currentChild!=null)
-                    currentChild,
-                ],
-              );
-            },
           );
         }
         if (widget.applyAnimatedContainerFromChildSize){
@@ -487,6 +422,8 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
 
 
 
+
+// TODO 3 move this to animations
 class AnimatedContainerFromChildSize extends StatefulWidget {
 
   final Duration duration;
@@ -512,7 +449,6 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
   _AnimatedContainerFromChildSizeState createState() => _AnimatedContainerFromChildSizeState();
 
 }
-
 
 class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromChildSize> {
 
