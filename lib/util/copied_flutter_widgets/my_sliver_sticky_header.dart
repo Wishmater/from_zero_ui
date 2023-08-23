@@ -469,8 +469,28 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
   }
 
   void markNeedsLayoutFromScrollController() {
-    markNeedsLayout();
+    if (sticky && header!=null) {
+      final SliverPhysicalParentData? headerParentData =
+          header!.parentData as SliverPhysicalParentData?;
+      if (headerParentData!=null) {
+        externalStuckOffset = determineStuckOffsetFromExternalController();
+        switch (constraints.axisDirection) {
+          case AxisDirection.up:
+          case AxisDirection.down:
+            headerParentData.paintOffset = Offset(0, headerParentData.paintOffset.dy - (previousExternalStuckOffset??0) + externalStuckOffset);
+            break;
+          case AxisDirection.left:
+          case AxisDirection.right:
+            headerParentData.paintOffset = Offset(headerParentData.paintOffset.dx - (previousExternalStuckOffset??0) + externalStuckOffset, 0);
+            break;
+        }
+        previousExternalStuckOffset = externalStuckOffset;
+        markNeedsPaint();
+      }
+    }
   }
+
+
 
   double computeHeaderExtent() {
     if (header == null) return 0.0;
@@ -609,7 +629,7 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
 
     if (header != null) {
       final SliverPhysicalParentData? headerParentData =
-      header!.parentData as SliverPhysicalParentData?;
+          header!.parentData as SliverPhysicalParentData?;
       final double childScrollExtent = child?.geometry?.scrollExtent ?? 0.0;
       final double headerPosition = sticky
           ? math.min(
@@ -620,6 +640,7 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
           : -constraints.scrollOffset;
 
       externalStuckOffset = sticky ? determineStuckOffsetFromExternalController() : 0;
+      previousExternalStuckOffset = externalStuckOffset;
 
       _isPinned = sticky &&
           ((constraints.scrollOffset + constraints.overlap) > 0.0 ||
@@ -699,6 +720,7 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
   }
   double get childScrollExtent => child?.geometry?.scrollExtent ?? 0.0;
   double get fullScrollExtent => childScrollExtent + (headerLogicalExtent??0);
+  double? previousExternalStuckOffset;
   double externalStuckOffset = 0;
   double stickAddedOffset = 0;
   double determineStuckOffsetFromExternalController() {
