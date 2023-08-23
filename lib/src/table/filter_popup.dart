@@ -201,14 +201,16 @@ abstract class TableFromZeroFilterPopup {
                                   style: textStyle,
                                   textAlign: TextAlign.left,
                                   maxLines: autoSizeTextMaxLines,
-                                  minFontSize: 14,
+                                  minFontSize: 15,
                                   overflowReplacement: TooltipFromZero(
                                     message: message,
                                     waitDuration: Duration(milliseconds: 0),
                                     verticalOffset: -16,
-                                    child: AutoSizeText(
+                                    child: Text(
                                       message,
-                                      style: textStyle,
+                                      style: textStyle.copyWith(
+                                        fontSize: 15,
+                                      ),
                                       textAlign: TextAlign.left,
                                       maxLines: autoSizeTextMaxLines,
                                       softWrap: autoSizeTextMaxLines>1,

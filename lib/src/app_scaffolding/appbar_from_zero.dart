@@ -38,6 +38,7 @@ class AppbarFromZero extends StatefulWidget {
   final VoidCallback? onUnexpanded;
   /// is main window scaffold appbar
   final bool mainAppbar;
+  final bool mainAppbarShowButtons;
   final double paddingRight;
   final bool addContextMenu;
   final VoidCallback? onShowContextMenu;
@@ -80,6 +81,7 @@ class AppbarFromZero extends StatefulWidget {
     this.onExpanded,
     this.onUnexpanded,
     this.mainAppbar = false,
+    this.mainAppbarShowButtons = true,
     this.paddingRight = 8,
     this.addContextMenu = true,
     this.onShowContextMenu,
@@ -163,7 +165,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
   }
 
   Widget _buildWithConstraints(context, constraints) {
-    bool showWindowButtons = widget.mainAppbar && PlatformExtended.appWindow!=null;
+    bool showWindowButtons = widget.mainAppbar && widget.mainAppbarShowButtons && PlatformExtended.appWindow!=null;
     final double titleBarHeight = !showWindowButtons ? 0
         : appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight;
     double? toolbarHeight = widget.toolbarHeight

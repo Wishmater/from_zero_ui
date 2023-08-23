@@ -67,7 +67,7 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(milliseconds: 500)).then((value) {
+    Future.delayed(Duration(milliseconds: 250)).then((value) {
       if (mounted) {
         setState((){
           passedInitialDelay = true;
@@ -95,10 +95,8 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
   @override
   Widget build(BuildContext context) {
     if (!passedInitialDelay) {
-      print ('NO');
-      return SizedBox.expand();
+      return SizedBox.shrink();
     }
-    print ('YES');
     Color color = this.widget.color ?? Theme.of(context).colorScheme.primary;
     Color colorMedium = color.withOpacity(0.8);
     Color colorMild = color.withOpacity(0.2);

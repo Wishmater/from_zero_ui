@@ -283,7 +283,6 @@ class _DialogFromZeroState extends State<DialogFromZero> {
             final actionsSize = values[1] as Size;
             final appBarTitleSize = values[2] as Size;
             final individualActionsSizeNotifiers = values.sublist(3).cast<Size>();
-            print ('$appBarSize $appBarTitleSize');
             final minSizeFromAppbar = appBarTitleSize.width + 48
                 + ((appBarGlobalKey.currentState?.actions.length??0)*40);
             final minSizeFromDialogActions = individualActionsSizeNotifiers

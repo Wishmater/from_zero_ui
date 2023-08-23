@@ -902,11 +902,13 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
           alignment: Alignment.centerRight,
           child: MediaQuery(
             data: MediaQuery.of(context).copyWith(padding: EdgeInsets.only(top: appbarChangeNotifier.safeAreaOffset)),
-            child: AppBar(
+            child: AppbarFromZero(
               elevation: 0,
-              automaticallyImplyLeading: false,
               toolbarHeight: widget.appbarHeight,
               backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).primaryColor,
+              mainAppbar: true,
+              mainAppbarShowButtons: false,
+              paddingRight: 0,
               title: SizedBox(
                 height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
                 child: Consumer(
@@ -1001,11 +1003,6 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
             ),
           ),
         );
-        if (PlatformExtended.appWindow!=null) {
-          drawerAppbar = MoveWindowFromZero(
-            child: drawerAppbar,
-          );
-        }
         Widget result = Column(
           children: <Widget>[
 
