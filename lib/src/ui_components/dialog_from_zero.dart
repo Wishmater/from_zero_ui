@@ -283,6 +283,7 @@ class _DialogFromZeroState extends State<DialogFromZero> {
             final actionsSize = values[1] as Size;
             final appBarTitleSize = values[2] as Size;
             final individualActionsSizeNotifiers = values.sublist(3).cast<Size>();
+            print ('$appBarSize $appBarTitleSize');
             final minSizeFromAppbar = appBarTitleSize.width + 48
                 + ((appBarGlobalKey.currentState?.actions.length??0)*40);
             final minSizeFromDialogActions = individualActionsSizeNotifiers
@@ -555,17 +556,22 @@ class FillerRelayer extends StatelessWidget {
   }
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        _addCallback(context);
-        return NotificationListener<ScrollMetricsNotification>(
-          onNotification: (notification) {
-            _addCallback(context);
-            return false;
-          },
-          child: child,
-        );
+    return NotificationListener(
+      onNotification: (notification) {
+        if (notification is ScrollMetricsNotification
+            || notification is SizeChangedLayoutNotification) {
+          _addCallback(context);
+        }
+        return false;
       },
+      child: SizeChangedLayoutNotifier(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            _addCallback(context);
+            return child;
+          }
+        ),
+      ),
     );
   }
 }

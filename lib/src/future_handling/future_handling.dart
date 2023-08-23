@@ -62,6 +62,19 @@ class LoadingSign extends ImplicitlyAnimatedWidget {
 class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
 
   Tween<double>? _valueTween;
+  bool passedInitialDelay = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: 500)).then((value) {
+      if (mounted) {
+        setState((){
+          passedInitialDelay = true;
+        });
+      }
+    });
+  }
 
   @override
   void forEachTween(TweenVisitor<dynamic> visitor) {
@@ -81,6 +94,11 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
 
   @override
   Widget build(BuildContext context) {
+    if (!passedInitialDelay) {
+      print ('NO');
+      return SizedBox.expand();
+    }
+    print ('YES');
     Color color = this.widget.color ?? Theme.of(context).colorScheme.primary;
     Color colorMedium = color.withOpacity(0.8);
     Color colorMild = color.withOpacity(0.2);
