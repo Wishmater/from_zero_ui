@@ -7,6 +7,7 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/animations/fixed_slide_transition.dart';
 import 'package:multi_value_listenable_builder/multi_value_listenable_builder.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -71,13 +72,12 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
               weight: 0.2,
             ),
           ]).animate(animation),
-          child: FadeUpwardsSlideTransition(
-            routeAnimation: animation,
+          child: FixedSlideTransition( // flutter's default SlideTransition causes an assertion when scrolling in a ListView.builder inside it
             child: child,
-            movementTween: Tween<Offset>(
-              begin: const Offset(0.0, 0.18),
+            position: Tween<Offset>(
+              begin: const Offset(0.0, 192),
               end: Offset.zero,
-            ),
+            ).animate(animation),
           ),
         )
       ],
