@@ -493,69 +493,66 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                     )
                   ]
                 : [],
-            headerRowModel: SimpleRowModel(
-              id: 'header', values: {},
-              rowAddon: Container(
-                color: Theme.of(context).cardColor,
-                child: Column(
-                  children: [
-                    if (widget.title!=null)
-                      Container(
-                        padding: EdgeInsets.only(
-                          top: showSearchBox ? 8.0 : 0,
-                          bottom: widget.extraWidget!=null ? 4 : !showSearchBox ? 12 : 0,
-                          left: 8, right: 8,
-                        ),
-                        alignment: Alignment.center,
-                        child: Transform.translate(
-                          offset: Offset(0, widget.extraWidget==null&&showSearchBox ? 4 : 0),
-                          child: Text(widget.title!,
-                            style: Theme.of(context).textTheme.titleMedium,
-                            textAlign: TextAlign.center,
-                          ),
+            headerWidgetAddon:Container(
+              color: Theme.of(context).cardColor,
+              child: Column(
+                children: [
+                  if (widget.title!=null)
+                    Container(
+                      padding: EdgeInsets.only(
+                        top: showSearchBox ? 8.0 : 0,
+                        bottom: widget.extraWidget!=null ? 4 : !showSearchBox ? 12 : 0,
+                        left: 8, right: 8,
+                      ),
+                      alignment: Alignment.center,
+                      child: Transform.translate(
+                        offset: Offset(0, widget.extraWidget==null&&showSearchBox ? 4 : 0),
+                        child: Text(widget.title!,
+                          style: Theme.of(context).textTheme.titleMedium,
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                    if (widget.extraWidget!=null)
-                      widget.extraWidget!(context, widget.onSelected,),
-                    if (showSearchBox)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0, left: 12, right: 12,),
-                        child: KeyboardListener(
-                          includeSemantics: false,
-                          focusNode: FocusNode(),
-                          onKeyEvent: (value) {
-                            if (value is KeyDownEvent) {
-                              if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
-                                FocusScope.of(context).focusInDirection(TraversalDirection.down);
-                              } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
-                                FocusScope.of(context).focusInDirection(TraversalDirection.up);
-                              }
+                    ),
+                  if (widget.extraWidget!=null)
+                    widget.extraWidget!(context, widget.onSelected,),
+                  if (showSearchBox)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0, left: 12, right: 12,),
+                      child: KeyboardListener(
+                        includeSemantics: false,
+                        focusNode: FocusNode(),
+                        onKeyEvent: (value) {
+                          if (value is KeyDownEvent) {
+                            if (value.logicalKey==LogicalKeyboardKey.arrowDown) {
+                              FocusScope.of(context).focusInDirection(TraversalDirection.down);
+                            } else if (value.logicalKey==LogicalKeyboardKey.arrowUp) {
+                              FocusScope.of(context).focusInDirection(TraversalDirection.up);
+                            }
+                          }
+                        },
+                        child: TextFormField(
+                          initialValue: searchQuery,
+                          focusNode: initialFocus,
+                          decoration: InputDecoration(
+                            contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
+                            labelText: FromZeroLocalizations.of(context).translate('search...'),
+                            labelStyle: TextStyle(height: 1.5),
+                            suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.bodySmall!.color!,),
+                          ),
+                          onChanged: (value) {
+                            searchQuery = value;
+                            tableController.filter();
+                          },
+                          onFieldSubmitted: (value) {
+                            final filtered = tableController.filtered;
+                            if (filtered.length==1) {
+                              _select(filtered.first.id);
                             }
                           },
-                          child: TextFormField(
-                            initialValue: searchQuery,
-                            focusNode: initialFocus,
-                            decoration: InputDecoration(
-                              contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
-                              labelText: FromZeroLocalizations.of(context).translate('search...'),
-                              labelStyle: TextStyle(height: 1.5),
-                              suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.bodySmall!.color!,),
-                            ),
-                            onChanged: (value) {
-                              searchQuery = value;
-                              tableController.filter();
-                            },
-                            onFieldSubmitted: (value) {
-                              final filtered = tableController.filtered;
-                              if (filtered.length==1) {
-                                _select(filtered.first.id);
-                              }
-                            },
-                          ),
                         ),
                       ),
-                  ],
-                ),
+                    ),
+                ],
               ),
             ),
           ),

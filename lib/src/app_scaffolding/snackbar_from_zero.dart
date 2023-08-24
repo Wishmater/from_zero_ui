@@ -203,12 +203,13 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
                               action.onPressed();
                             },
                             child: Text(action.label.toUpperCase(),
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
                               textAlign: TextAlign.center,
                             ),
                             style: TextButton.styleFrom(
                               primary: action.textColor ?? actionColor,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              padding: EdgeInsets.symmetric(horizontal: 6),
                             ),
                           ),
                         );

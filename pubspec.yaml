@@ -57,16 +57,16 @@ dependencies:
   # * Specific Utility
   dio: ^5.3.2
   dio_smart_retry: ^5.0.0
-  flutter_excel: ^1.0.1
   archive: ^3.3.7 # used to unzip the update on Windows
   excel:
     git:
       url: https://github.com/Z32D/excel
       ref: 9e78666f14f5068521fc7cd5952585e15e4b3b6a
-  pdf: 3.10.4
-#    git:
-#      url: https://github.com/Wishmater/dart_pdf
-#      path: pdf
+  pdf: # 3.10.5
+    git:
+      url: https://github.com/Wishmater/dart_pdf
+      ref: 206d0671ac2a99b577f815353bf7ccb3873dca7f
+      path: pdf
 
 
 

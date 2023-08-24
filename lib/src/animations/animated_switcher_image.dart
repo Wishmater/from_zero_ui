@@ -269,18 +269,20 @@ class _AnimatedSwitcherImageState extends State<AnimatedSwitcherImage> with Tick
     final boundary = entry.boundaryKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
     final layer = boundary?.layer;
     // print ('start getting image ${entry.hashCode} $boundary $layer');
-    if (boundary!=null && layer!=null) {
-      final OffsetLayer offsetLayer = layer as OffsetLayer;
-      final image = await offsetLayer.toImage(Offset.zero & boundary.size, pixelRatio: 1);
-      if (!mounted) return null;
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      if (!mounted) return null;
-      // print ('got byte data ${entry.hashCode} $byteData');
-      if (byteData!=null) {
-        // print ('got image successfully ${entry.hashCode}');
-        return MemoryImage(byteData.buffer.asUint8List());
+    try {
+      if (boundary!=null && layer!=null) {
+        final OffsetLayer offsetLayer = layer as OffsetLayer;
+        final image = await offsetLayer.toImage(Offset.zero & boundary.size, pixelRatio: 1);
+        if (!mounted) return null;
+        final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+        if (!mounted) return null;
+        // print ('got byte data ${entry.hashCode} $byteData');
+        if (byteData!=null) {
+          // print ('got image successfully ${entry.hashCode}');
+          return MemoryImage(byteData.buffer.asUint8List());
+        }
       }
-    }
+    } catch(_) {}
     // print ('image returned null ${entry.hashCode}');
     return null;
   }

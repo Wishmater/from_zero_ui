@@ -213,12 +213,13 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
                         widget.dismiss();
                       },
                       child: Text(FromZeroLocalizations.of(context).translate("cancel").toUpperCase(),
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
                         textAlign: TextAlign.center,
                       ),
                       style: TextButton.styleFrom(
                         primary: errorColor,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        padding: EdgeInsets.symmetric(horizontal: 6),
                       ),
                     ),
                   ),
@@ -300,12 +301,13 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               widget.dismiss();
             },
             child: Text(FromZeroLocalizations.of(context).translate("accept_caps").toUpperCase(),
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
               textAlign: TextAlign.center,
             ),
             style: TextButton.styleFrom(
               primary: splashColor,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: EdgeInsets.symmetric(horizontal: 6),
             ),
           ),
         ),
@@ -316,12 +318,13 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               widget.stateNotifier.refresh(null);
             },
             child: Text(FromZeroLocalizations.of(context).translate("retry").toUpperCase(),
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
               textAlign: TextAlign.center,
             ),
             style: TextButton.styleFrom(
               primary: splashColor,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: EdgeInsets.symmetric(horizontal: 6),
             ),
           ),
         ),
@@ -333,12 +336,13 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               ApiProviderBuilder.showErrorDetailsDialog(widget.context, error, stackTrace);
             },
             child: Text('Detalles del Error',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
               textAlign: TextAlign.center,
             ),
             style: TextButton.styleFrom(
               primary: Theme.of(context).textTheme.bodyLarge!.color!,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: EdgeInsets.symmetric(horizontal: 6),
             ),
           ),
         ),
