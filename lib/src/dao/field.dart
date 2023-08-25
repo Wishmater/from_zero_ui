@@ -447,80 +447,72 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     } else {
       message = field.toString();
     }
-    return Stack(
-      children: [
-        Padding(
-          padding: dense
-              ? EdgeInsets.zero
-              : const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: dense
-                    ? AutoSizeText(message,
-                        style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                          height: 1.1,
+    return InkWellTranslucent(
+      onTap: onTap,
+      child: Padding(
+        padding: dense
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: dense
+                  ? AutoSizeText(message,
+                      style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                        height: 1.1,
+                      ),
+                      textAlign: field.getColModel().alignment,
+                      maxLines: 1,
+                      minFontSize: 15,
+                      overflowReplacement: TooltipFromZero(
+                        message: message,
+                        waitDuration: Duration(milliseconds: 0),
+                        verticalOffset: -16,
+                        child: Text(message,
+                          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                            height: 1.1,
+                            fontSize: 15,
+                          ),
+                          textAlign: field.getColModel().alignment,
+                          maxLines: 1,
+                          softWrap: false,
+                          overflow: TextOverflow.fade,
                         ),
-                        textAlign: field.getColModel().alignment,
-                        maxLines: 1,
-                        minFontSize: 15,
-                        overflowReplacement: TooltipFromZero(
-                          message: message,
-                          waitDuration: Duration(milliseconds: 0),
-                          verticalOffset: -16,
-                          child: Text(message,
-                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                              height: 1.1,
-                              fontSize: 15,
-                            ),
-                            textAlign: field.getColModel().alignment,
-                            maxLines: 1,
-                            softWrap: false,
-                            overflow: TextOverflow.fade,
+                      ),
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SelectableText(message,
+                          style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                            height: 1.1,
+                            wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
                           ),
                         ),
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SelectableText(message,
-                            style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                        if (subtitle!=null)
+                          Text(subtitle,
+                            style: Theme.of(context).textTheme.bodySmall!.copyWith(
                               height: 1.1,
                               wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
                             ),
                           ),
-                          if (subtitle!=null)
-                            Text(subtitle,
-                              style: Theme.of(context).textTheme.bodySmall!.copyWith(
-                                height: 1.1,
-                                wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
-                              ),
-                            ),
-                        ],
-                      ),
-              ),
-              if (linkToInnerDAOs && showViewButtons)
-                Padding(
-                  padding: EdgeInsets.only(left: 12),
-                  child: IconButton(
-                    icon: Icon(Icons.info_outline),
-                    padding: EdgeInsets.all(0),
-                    constraints: BoxConstraints(maxHeight: 32),
-                    onPressed: () => (field.value as DAO).pushViewDialog(context),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        if (onTap!=null)
-          Positioned.fill(
-            child: translucent.InkWell(
-              onTap: onTap,
-              // mouseCursor: SystemMouseCursors.text,
+                      ],
+                    ),
             ),
-          ),
-      ],
+            if (linkToInnerDAOs && showViewButtons)
+              Padding(
+                padding: EdgeInsets.only(left: 12),
+                child: IconButton(
+                  icon: Icon(Icons.info_outline),
+                  padding: EdgeInsets.all(0),
+                  constraints: BoxConstraints(maxHeight: 32),
+                  onPressed: () => (field.value as DAO).pushViewDialog(context),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 

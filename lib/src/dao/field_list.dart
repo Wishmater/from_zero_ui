@@ -17,7 +17,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/dao/dao.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
-import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
+import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 import 'package:multi_value_listenable_builder/multi_value_listenable_builder.dart';
@@ -2316,43 +2316,36 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         ? () => e.pushViewDialog(context)
         : null;
     final uiName = dense ? e.uiNameDense : e.toString();
-    return Stack(
-      children: [
-        Padding(
-          padding: dense
-              ? EdgeInsets.zero
-              : const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              Expanded(
-                child: dense
-                    ? Text(uiName,
-                  style: Theme.of(context).textTheme.titleMedium,
-                ) : SelectableText(uiName,
-                  style: Theme.of(context).textTheme.titleMedium,
+    return InkWellTranslucent(
+      onTap: onTap,
+      child: Padding(
+        padding: dense
+            ? EdgeInsets.zero
+            : const EdgeInsets.symmetric(vertical: 3, horizontal: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Expanded(
+              child: dense
+                  ? Text(uiName,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ) : SelectableText(uiName,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+            ),
+            if (showViewButtons && onTap!=null)
+              Padding(
+                padding: EdgeInsets.only(left: 12),
+                child: IconButton(
+                  icon: Icon(Icons.info_outline),
+                  padding: EdgeInsets.all(0),
+                  constraints: BoxConstraints(maxHeight: 32),
+                  onPressed: onTap,
                 ),
               ),
-              if (showViewButtons && onTap!=null)
-                Padding(
-                  padding: EdgeInsets.only(left: 12),
-                  child: IconButton(
-                    icon: Icon(Icons.info_outline),
-                    padding: EdgeInsets.all(0),
-                    constraints: BoxConstraints(maxHeight: 32),
-                    onPressed: onTap,
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
-        if (onTap!=null)
-          Positioned.fill(
-            child: translucent.InkWell(
-              onTap: onTap,
-            ),
-          ),
-      ],
+      ),
     );
   }
 

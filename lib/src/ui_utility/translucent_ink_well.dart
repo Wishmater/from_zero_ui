@@ -1,14 +1,9 @@
-// Copyright 2014 The Flutter Authors. All rights reserved.
-// Use of this source code is governed by a BSD-style license that can be
-// found in the LICENSE file.
-
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 
 import 'package:flutter/src/material/debug.dart';
 import 'package:flutter/src/material/feedback.dart';
@@ -19,23 +14,23 @@ import 'package:flutter/src/material/theme.dart';
 
 
 
-abstract class _ParentInkResponseState {
-  void markChildInkResponsePressed(_ParentInkResponseState childState, bool value);
+abstract class _ParentInkResponseTranslucentState {
+  void markChildInkResponseTranslucentPressed(_ParentInkResponseTranslucentState childState, bool value);
 }
 
-class _ParentInkResponseProvider extends InheritedWidget {
-  const _ParentInkResponseProvider({
+class _ParentInkResponseTranslucentProvider extends InheritedWidget {
+  const _ParentInkResponseTranslucentProvider({
     required this.state,
-    required Widget child,
-  }) : super(child: child);
+    required super.child,
+  });
 
-  final _ParentInkResponseState state;
+  final _ParentInkResponseTranslucentState state;
 
   @override
-  bool updateShouldNotify(_ParentInkResponseProvider oldWidget) => state != oldWidget.state;
+  bool updateShouldNotify(_ParentInkResponseTranslucentProvider oldWidget) => state != oldWidget.state;
 
-  static _ParentInkResponseState? of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<_ParentInkResponseProvider>()?.state;
+  static _ParentInkResponseTranslucentState? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<_ParentInkResponseTranslucentProvider>()?.state;
   }
 }
 
@@ -46,49 +41,49 @@ typedef _CheckContext = bool Function(BuildContext context);
 /// can be configured to clip splashes that extend outside its bounds or not.
 ///
 /// For a variant of this widget that is specialized for rectangular areas that
-/// always clip splashes, see [InkWell].
+/// always clip splashes, see [InkWellTranslucent].
 ///
-/// An [InkResponse] widget does two things when responding to a tap:
+/// An [InkResponseTranslucent] widget does two things when responding to a tap:
 ///
 ///  * It starts to animate a _highlight_. The shape of the highlight is
 ///    determined by [highlightShape]. If it is a [BoxShape.circle], the
 ///    default, then the highlight is a circle of fixed size centered in the
-///    [InkResponse]. If it is [BoxShape.rectangle], then the highlight is a box
-///    the size of the [InkResponse] itself, unless [getRectCallback] is
+///    [InkResponseTranslucent]. If it is [BoxShape.rectangle], then the highlight is a box
+///    the size of the [InkResponseTranslucent] itself, unless [getRectCallback] is
 ///    provided, in which case that callback defines the rectangle. The color of
 ///    the highlight is set by [highlightColor].
 ///
 ///  * Simultaneously, it starts to animate a _splash_. This is a growing circle
-///    initially centered on the tap location. If this is a [containedInkWell],
+///    initially centered on the tap location. If this is a [containedInkWellTranslucent],
 ///    the splash grows to the [radius] while remaining centered at the tap
 ///    location. Otherwise, the splash migrates to the center of the box as it
 ///    grows.
 ///
-/// The following two diagrams show how [InkResponse] looks when tapped if the
-/// [highlightShape] is [BoxShape.circle] (the default) and [containedInkWell]
+/// The following two diagrams show how [InkResponseTranslucent] looks when tapped if the
+/// [highlightShape] is [BoxShape.circle] (the default) and [containedInkWellTranslucent]
 /// is false (also the default).
 ///
-/// The first diagram shows how it looks if the [InkResponse] is relatively
+/// The first diagram shows how it looks if the [InkResponseTranslucent] is relatively
 /// large:
 ///
 /// ![The highlight is a disc centered in the box, smaller than the child widget.](https://flutter.github.io/assets-for-api-docs/assets/material/ink_response_large.png)
 ///
-/// The second diagram shows how it looks if the [InkResponse] is small:
+/// The second diagram shows how it looks if the [InkResponseTranslucent] is small:
 ///
 /// ![The highlight is a disc overflowing the box, centered on the child.](https://flutter.github.io/assets-for-api-docs/assets/material/ink_response_small.png)
 ///
 /// The main thing to notice from these diagrams is that the splashes happily
-/// exceed the bounds of the widget (because [containedInkWell] is false).
+/// exceed the bounds of the widget (because [containedInkWellTranslucent] is false).
 ///
-/// The following diagram shows the effect when the [InkResponse] has a
-/// [highlightShape] of [BoxShape.rectangle] with [containedInkWell] set to
-/// true. These are the values used by [InkWell].
+/// The following diagram shows the effect when the [InkResponseTranslucent] has a
+/// [highlightShape] of [BoxShape.rectangle] with [containedInkWellTranslucent] set to
+/// true. These are the values used by [InkWellTranslucent].
 ///
 /// ![The highlight is a rectangle the size of the box.](https://flutter.github.io/assets-for-api-docs/assets/material/ink_well.png)
 ///
-/// The [InkResponse] widget must have a [Material] widget as an ancestor. The
+/// The [InkResponseTranslucent] widget must have a [Material] widget as an ancestor. The
 /// [Material] widget is where the ink reactions are actually painted. This
-/// matches the material design premise wherein the [Material] is what is
+/// matches the Material Design premise wherein the [Material] is what is
 /// actually reacting to touches by spreading ink.
 ///
 /// If a Widget uses this class directly, it should include the following line
@@ -103,7 +98,7 @@ typedef _CheckContext = bool Function(BuildContext context);
 /// ### The ink splashes aren't visible!
 ///
 /// If there is an opaque graphic, e.g. painted using a [Container], [Image], or
-/// [DecoratedBox], between the [Material] widget and the [InkResponse] widget,
+/// [DecoratedBox], between the [Material] widget and the [InkResponseTranslucent] widget,
 /// then the splash won't be visible because it will be under the opaque graphic.
 /// This is because ink splashes draw on the underlying [Material] itself, as
 /// if the ink was spreading inside the material.
@@ -114,24 +109,24 @@ typedef _CheckContext = bool Function(BuildContext context);
 ///
 /// If this is not possible for some reason, e.g. because you are using an
 /// opaque [CustomPaint] widget, alternatively consider using a second
-/// [Material] above the opaque widget but below the [InkResponse] (as an
+/// [Material] above the opaque widget but below the [InkResponseTranslucent] (as an
 /// ancestor to the ink response). The [MaterialType.transparency] material
 /// kind can be used for this purpose.
 ///
 /// See also:
 ///
 ///  * [GestureDetector], for listening for gestures without ink splashes.
-///  * [ElevatedButton] and [TextButton], two kinds of buttons in material design.
-///  * [IconButton], which combines [InkResponse] with an [Icon].
-class InkResponse extends StatelessWidget {
+///  * [ElevatedButton] and [TextButton], two kinds of buttons in Material Design.
+///  * [IconButton], which combines [InkResponseTranslucent] with an [Icon].
+class InkResponseTranslucent extends StatelessWidget {
   /// Creates an area of a [Material] that responds to touch.
   ///
   /// Must have an ancestor [Material] widget in which to cause ink reactions.
   ///
-  /// The [containedInkWell], [highlightShape], [enableFeedback],
+  /// The [containedInkWellTranslucent], [highlightShape], [enableFeedback],
   /// and [excludeFromSemantics] arguments must not be null.
-  const InkResponse({
-    Key? key,
+  const InkResponseTranslucent({
+    super.key,
     this.child,
     this.onTap,
     this.onTapDown,
@@ -139,10 +134,14 @@ class InkResponse extends StatelessWidget {
     this.onTapCancel,
     this.onDoubleTap,
     this.onLongPress,
+    this.onSecondaryTap,
+    this.onSecondaryTapUp,
+    this.onSecondaryTapDown,
+    this.onSecondaryTapCancel,
     this.onHighlightChanged,
     this.onHover,
     this.mouseCursor,
-    this.containedInkWell = false,
+    this.containedInkWellTranslucent = false,
     this.highlightShape = BoxShape.circle,
     this.radius,
     this.borderRadius,
@@ -159,13 +158,8 @@ class InkResponse extends StatelessWidget {
     this.canRequestFocus = true,
     this.onFocusChange,
     this.autofocus = false,
-  }) : assert(containedInkWell != null),
-        assert(highlightShape != null),
-        assert(enableFeedback != null),
-        assert(excludeFromSemantics != null),
-        assert(autofocus != null),
-        assert(canRequestFocus != null),
-        super(key: key);
+    this.statesController,
+  });
 
   /// The widget below this widget in the tree.
   ///
@@ -191,6 +185,21 @@ class InkResponse extends StatelessWidget {
 
   /// Called when the user long-presses on this part of the material.
   final GestureLongPressCallback? onLongPress;
+
+  /// Called when the user taps this part of the material with a secondary button.
+  final GestureTapCallback? onSecondaryTap;
+
+  /// Called when the user taps down on this part of the material with a
+  /// secondary button.
+  final GestureTapDownCallback? onSecondaryTapDown;
+
+  /// Called when the user releases a secondary button tap that was started on
+  /// this part of the material. [onSecondaryTap] is called immediately after.
+  final GestureTapUpCallback? onSecondaryTapUp;
+
+  /// Called when the user cancels a secondary button tap that was started on
+  /// this part of the material.
+  final GestureTapCallback? onSecondaryTapCancel;
 
   /// Called when this part of the material either becomes highlighted or stops
   /// being highlighted.
@@ -229,9 +238,9 @@ class InkResponse extends StatelessWidget {
   /// Whether this ink response should be clipped its bounds.
   ///
   /// This flag also controls whether the splash migrates to the center of the
-  /// [InkResponse] or not. If [containedInkWell] is true, the splash remains
+  /// [InkResponseTranslucent] or not. If [containedInkWellTranslucent] is true, the splash remains
   /// centered around the tap location. If it is false, the splash migrates to
-  /// the center of the [InkResponse] as it grows.
+  /// the center of the [InkResponseTranslucent] as it grows.
   ///
   /// See also:
   ///
@@ -240,7 +249,7 @@ class InkResponse extends StatelessWidget {
   ///  * [borderRadius], which controls the corners when the box is a rectangle.
   ///  * [getRectCallback], which controls the size and position of the box when
   ///    it is a rectangle.
-  final bool containedInkWell;
+  final bool containedInkWellTranslucent;
 
   /// The shape (e.g., circle, rectangle) to use for the highlight drawn around
   /// this part of the material when pressed, hovered over, or focused.
@@ -250,13 +259,13 @@ class InkResponse extends StatelessWidget {
   /// [hoverColor]).
   ///
   /// If the shape is [BoxShape.circle], then the highlight is centered on the
-  /// [InkResponse]. If the shape is [BoxShape.rectangle], then the highlight
-  /// fills the [InkResponse], or the rectangle provided by [getRectCallback] if
+  /// [InkResponseTranslucent]. If the shape is [BoxShape.rectangle], then the highlight
+  /// fills the [InkResponseTranslucent], or the rectangle provided by [getRectCallback] if
   /// the callback is specified.
   ///
   /// See also:
   ///
-  ///  * [containedInkWell], which controls clipping behavior.
+  ///  * [containedInkWellTranslucent], which controls clipping behavior.
   ///  * [borderRadius], which controls the corners when the box is a rectangle.
   ///  * [highlightColor], the color of the highlight.
   ///  * [getRectCallback], which controls the size and position of the box when
@@ -267,7 +276,7 @@ class InkResponse extends StatelessWidget {
   ///
   /// Splashes grow up to this size. By default, this size is determined from
   /// the size of the rectangle provided by [getRectCallback], or the size of
-  /// the [InkResponse] itself.
+  /// the [InkResponseTranslucent] itself.
   ///
   /// See also:
   ///
@@ -275,13 +284,15 @@ class InkResponse extends StatelessWidget {
   ///  * [splashFactory], which defines the appearance of the splash.
   final double? radius;
 
-  /// The clipping radius of the containing rect. This is effective only if
-  /// [customBorder] is null.
+  /// The border radius of the containing rectangle. This is effective only if
+  /// [highlightShape] is [BoxShape.rectangle].
   ///
   /// If this is null, it is interpreted as [BorderRadius.zero].
   final BorderRadius? borderRadius;
 
-  /// The custom clip border which overrides [borderRadius].
+  /// The custom clip border.
+  ///
+  /// If this is null, the ink response will not clip its content.
   final ShapeBorder? customBorder;
 
   /// The color of the ink response when the parent widget is focused. If this
@@ -338,7 +349,7 @@ class InkResponse extends StatelessWidget {
   /// [MaterialState.pressed] triggers a ripple (an ink splash), per
   /// the current Material Design spec. The [overlayColor] doesn't map
   /// a state to [highlightColor] because a separate highlight is not
-  /// used by the current design guidelines.  See
+  /// used by the current design guidelines. See
   /// https://material.io/design/interaction/states.html#pressed
   ///
   /// If the overlay color is null or resolves to null, then [focusColor],
@@ -394,10 +405,12 @@ class InkResponse extends StatelessWidget {
   /// duplication of information.
   final bool excludeFromSemantics;
 
+  /// {@template flutter.material.InkWellTranslucent.onFocusChange}
   /// Handler called when the focus changes.
   ///
   /// Called with true if this widget's node gains focus, and false if it loses
   /// focus.
+  /// {@endtemplate}
   final ValueChanged<bool>? onFocusChange;
 
   /// {@macro flutter.widgets.Focus.autofocus}
@@ -410,11 +423,11 @@ class InkResponse extends StatelessWidget {
   final bool canRequestFocus;
 
   /// The rectangle to use for the highlight effect and for clipping
-  /// the splash effects if [containedInkWell] is true.
+  /// the splash effects if [containedInkWellTranslucent] is true.
   ///
   /// This method is intended to be overridden by descendants that
-  /// specialize [InkResponse] for unusual cases. For example,
-  /// [TableRowInkWell] implements this method to return the rectangle
+  /// specialize [InkResponseTranslucent] for unusual cases. For example,
+  /// [TableRowInkWellTranslucent] implements this method to return the rectangle
   /// corresponding to the row that the widget is in.
   ///
   /// The default behavior returns null, which is equivalent to
@@ -422,20 +435,37 @@ class InkResponse extends StatelessWidget {
   /// slightly more efficient).
   RectCallback? getRectCallback(RenderBox referenceBox) => null;
 
+  /// {@template flutter.material.InkWellTranslucent.statesController}
+  /// Represents the interactive "state" of this widget in terms of
+  /// a set of [MaterialState]s, like [MaterialState.pressed] and
+  /// [MaterialState.focused].
+  ///
+  /// Classes based on this one can provide their own
+  /// [MaterialStatesController] to which they've added listeners.
+  /// They can also update the controller's [MaterialStatesController.value]
+  /// however, this may only be done when it's safe to call
+  /// [State.setState], like in an event handler.
+  /// {@endtemplate}
+  final MaterialStatesController? statesController;
+
   @override
   Widget build(BuildContext context) {
-    final _ParentInkResponseState? parentState = _ParentInkResponseProvider.of(context);
-    return _InkResponseStateWidget(
+    final _ParentInkResponseTranslucentState? parentState = _ParentInkResponseTranslucentProvider.maybeOf(context);
+    return _InkResponseTranslucentStateWidget(
       onTap: onTap,
       onTapDown: onTapDown,
       onTapUp: onTapUp,
       onTapCancel: onTapCancel,
       onDoubleTap: onDoubleTap,
       onLongPress: onLongPress,
+      onSecondaryTap: onSecondaryTap,
+      onSecondaryTapUp: onSecondaryTapUp,
+      onSecondaryTapDown: onSecondaryTapDown,
+      onSecondaryTapCancel: onSecondaryTapCancel,
       onHighlightChanged: onHighlightChanged,
       onHover: onHover,
       mouseCursor: mouseCursor,
-      containedInkWell: containedInkWell,
+      containedInkWellTranslucent: containedInkWellTranslucent,
       highlightShape: highlightShape,
       radius: radius,
       borderRadius: borderRadius,
@@ -455,6 +485,7 @@ class InkResponse extends StatelessWidget {
       parentState: parentState,
       getRectCallback: getRectCallback,
       debugCheckContext: debugCheckContext,
+      statesController: statesController,
       child: child,
     );
   }
@@ -463,8 +494,8 @@ class InkResponse extends StatelessWidget {
   /// this class.
   ///
   /// This method is intended to be overridden by descendants that
-  /// specialize [InkResponse] for unusual cases. For example,
-  /// [TableRowInkWell] implements this method to verify that the widget is
+  /// specialize [InkResponseTranslucent] for unusual cases. For example,
+  /// [TableRowInkWellTranslucent] implements this method to verify that the widget is
   /// in a table.
   @mustCallSuper
   bool debugCheckContext(BuildContext context) {
@@ -474,8 +505,8 @@ class InkResponse extends StatelessWidget {
   }
 }
 
-class _InkResponseStateWidget extends StatefulWidget {
-  const _InkResponseStateWidget({
+class _InkResponseTranslucentStateWidget extends StatefulWidget {
+  const _InkResponseTranslucentStateWidget({
     this.child,
     this.onTap,
     this.onTapDown,
@@ -483,10 +514,14 @@ class _InkResponseStateWidget extends StatefulWidget {
     this.onTapCancel,
     this.onDoubleTap,
     this.onLongPress,
+    this.onSecondaryTap,
+    this.onSecondaryTapUp,
+    this.onSecondaryTapDown,
+    this.onSecondaryTapCancel,
     this.onHighlightChanged,
     this.onHover,
     this.mouseCursor,
-    this.containedInkWell = false,
+    this.containedInkWellTranslucent = false,
     this.highlightShape = BoxShape.circle,
     this.radius,
     this.borderRadius,
@@ -506,12 +541,8 @@ class _InkResponseStateWidget extends StatefulWidget {
     this.parentState,
     this.getRectCallback,
     required this.debugCheckContext,
-  }) : assert(containedInkWell != null),
-        assert(highlightShape != null),
-        assert(enableFeedback != null),
-        assert(excludeFromSemantics != null),
-        assert(autofocus != null),
-        assert(canRequestFocus != null);
+    this.statesController,
+  });
 
   final Widget? child;
   final GestureTapCallback? onTap;
@@ -520,10 +551,14 @@ class _InkResponseStateWidget extends StatefulWidget {
   final GestureTapCallback? onTapCancel;
   final GestureTapCallback? onDoubleTap;
   final GestureLongPressCallback? onLongPress;
+  final GestureTapCallback? onSecondaryTap;
+  final GestureTapUpCallback? onSecondaryTapUp;
+  final GestureTapDownCallback? onSecondaryTapDown;
+  final GestureTapCallback? onSecondaryTapCancel;
   final ValueChanged<bool>? onHighlightChanged;
   final ValueChanged<bool>? onHover;
   final MouseCursor? mouseCursor;
-  final bool containedInkWell;
+  final bool containedInkWellTranslucent;
   final BoxShape highlightShape;
   final double? radius;
   final BorderRadius? borderRadius;
@@ -540,12 +575,13 @@ class _InkResponseStateWidget extends StatefulWidget {
   final bool autofocus;
   final FocusNode? focusNode;
   final bool canRequestFocus;
-  final _ParentInkResponseState? parentState;
+  final _ParentInkResponseTranslucentState? parentState;
   final _GetRectCallback? getRectCallback;
   final _CheckContext debugCheckContext;
+  final MaterialStatesController? statesController;
 
   @override
-  _InkResponseState createState() => _InkResponseState();
+  _InkResponseTranslucentState createState() => _InkResponseTranslucentState();
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
@@ -557,115 +593,153 @@ class _InkResponseStateWidget extends StatefulWidget {
       if (onTapDown != null) 'tap down',
       if (onTapUp != null) 'tap up',
       if (onTapCancel != null) 'tap cancel',
+      if (onSecondaryTap != null) 'secondary tap',
+      if (onSecondaryTapUp != null) 'secondary tap up',
+      if (onSecondaryTapDown != null) 'secondary tap down',
+      if (onSecondaryTapCancel != null) 'secondary tap cancel'
     ];
     properties.add(IterableProperty<String>('gestures', gestures, ifEmpty: '<none>'));
     properties.add(DiagnosticsProperty<MouseCursor>('mouseCursor', mouseCursor));
-    properties.add(DiagnosticsProperty<bool>('containedInkWell', containedInkWell, level: DiagnosticLevel.fine));
+    properties.add(DiagnosticsProperty<bool>('containedInkWellTranslucent', containedInkWellTranslucent, level: DiagnosticLevel.fine));
     properties.add(DiagnosticsProperty<BoxShape>(
       'highlightShape',
       highlightShape,
-      description: '${containedInkWell ? "clipped to " : ""}$highlightShape',
+      description: '${containedInkWellTranslucent ? "clipped to " : ""}$highlightShape',
       showName: false,
     ));
   }
 }
 
 /// Used to index the allocated highlights for the different types of highlights
-/// in [_InkResponseState].
+/// in [_InkResponseTranslucentState].
 enum _HighlightType {
   pressed,
   hover,
   focus,
 }
 
-class _InkResponseState extends State<_InkResponseStateWidget>
-    with AutomaticKeepAliveClientMixin<_InkResponseStateWidget>
-    implements _ParentInkResponseState {
+class _InkResponseTranslucentState extends State<_InkResponseTranslucentStateWidget>
+    with AutomaticKeepAliveClientMixin<_InkResponseTranslucentStateWidget>
+    implements _ParentInkResponseTranslucentState
+{
   Set<InteractiveInkFeature>? _splashes;
   InteractiveInkFeature? _currentSplash;
   bool _hovering = false;
   final Map<_HighlightType, InkHighlight?> _highlights = <_HighlightType, InkHighlight?>{};
   late final Map<Type, Action<Intent>> _actionMap = <Type, Action<Intent>>{
-    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: _simulateTap),
-    ButtonActivateIntent: CallbackAction<ButtonActivateIntent>(onInvoke: _simulateTap),
+    ActivateIntent: CallbackAction<ActivateIntent>(onInvoke: simulateTap),
+    ButtonActivateIntent: CallbackAction<ButtonActivateIntent>(onInvoke: simulateTap),
   };
+  MaterialStatesController? internalStatesController;
 
   bool get highlightsExist => _highlights.values.where((InkHighlight? highlight) => highlight != null).isNotEmpty;
 
-  final ObserverList<_ParentInkResponseState> _activeChildren = ObserverList<_ParentInkResponseState>();
+  final ObserverList<_ParentInkResponseTranslucentState> _activeChildren = ObserverList<_ParentInkResponseTranslucentState>();
 
   @override
-  void markChildInkResponsePressed(_ParentInkResponseState childState, bool value) {
-    assert(childState != null);
-    final bool lastAnyPressed = _anyChildInkResponsePressed;
+  void markChildInkResponseTranslucentPressed(_ParentInkResponseTranslucentState childState, bool value) {
+    final bool lastAnyPressed = _anyChildInkResponseTranslucentPressed;
     if (value) {
       _activeChildren.add(childState);
     } else {
       _activeChildren.remove(childState);
     }
-    final bool nowAnyPressed = _anyChildInkResponsePressed;
+    final bool nowAnyPressed = _anyChildInkResponseTranslucentPressed;
     if (nowAnyPressed != lastAnyPressed) {
-      widget.parentState?.markChildInkResponsePressed(this, nowAnyPressed);
+      widget.parentState?.markChildInkResponseTranslucentPressed(this, nowAnyPressed);
     }
   }
-  bool get _anyChildInkResponsePressed => _activeChildren.isNotEmpty;
+  bool get _anyChildInkResponseTranslucentPressed => _activeChildren.isNotEmpty;
 
-  void _simulateTap([Intent? intent]) {
-    _startSplash(context: context);
-    _handleTap();
+  void simulateTap([Intent? intent]) {
+    _startNewSplash(context: context);
+    handleTap();
   }
 
-  void _simulateLongPress() {
-    _startSplash(context: context);
-    _handleLongPress();
+  void simulateLongPress() {
+    _startNewSplash(context: context);
+    handleLongPress();
+  }
+
+  void handleStatesControllerChange() {
+    // Force a rebuild to resolve widget.overlayColor, widget.mouseCursor
+    setState(() { });
+  }
+
+  MaterialStatesController get statesController => widget.statesController ?? internalStatesController!;
+
+  void initStatesController() {
+    if (widget.statesController == null) {
+      internalStatesController = MaterialStatesController();
+    }
+    statesController.update(MaterialState.disabled, !enabled);
+    statesController.addListener(handleStatesControllerChange);
   }
 
   @override
   void initState() {
     super.initState();
-    FocusManager.instance.addHighlightModeListener(_handleFocusHighlightModeChange);
+    initStatesController();
+    FocusManager.instance.addHighlightModeListener(handleFocusHighlightModeChange);
   }
 
   @override
-  void didUpdateWidget(_InkResponseStateWidget oldWidget) {
+  void didUpdateWidget(_InkResponseTranslucentStateWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (_isWidgetEnabled(widget) != _isWidgetEnabled(oldWidget)) {
-      if (enabled) {
-        // Don't call widget.onHover because many widgets, including the button
-        // widgets, apply setState to an ancestor context from onHover.
+    if (widget.statesController != oldWidget.statesController) {
+      oldWidget.statesController?.removeListener(handleStatesControllerChange);
+      if (widget.statesController != null) {
+        internalStatesController?.dispose();
+        internalStatesController = null;
+      }
+      initStatesController();
+    }
+    if (widget.radius != oldWidget.radius ||
+        widget.highlightShape != oldWidget.highlightShape ||
+        widget.borderRadius != oldWidget.borderRadius) {
+      final InkHighlight? hoverHighlight = _highlights[_HighlightType.hover];
+      if (hoverHighlight != null) {
+        hoverHighlight.dispose();
         updateHighlight(_HighlightType.hover, value: _hovering, callOnHover: false);
       }
-      _updateFocusHighlights();
+      final InkHighlight? focusHighlight = _highlights[_HighlightType.focus];
+      if (focusHighlight != null) {
+        focusHighlight.dispose();
+        // Do not call updateFocusHighlights() here because it is called below
+      }
     }
+    if (widget.customBorder != oldWidget.customBorder) {
+      _updateHighlightsAndSplashes();
+    }
+    if (enabled != isWidgetEnabled(oldWidget)) {
+      statesController.update(MaterialState.disabled, !enabled);
+      if (!enabled) {
+        statesController.update(MaterialState.pressed, false);
+        // Remove the existing hover highlight immediately when enabled is false.
+        // Do not rely on updateHighlight or InkHighlight.deactivate to not break
+        // the expected lifecycle which is updating _hovering when the mouse exit.
+        // Manually updating _hovering here or calling InkHighlight.deactivate
+        // will lead to onHover not being called or call when it is not allowed.
+        final InkHighlight? hoverHighlight = _highlights[_HighlightType.hover];
+        hoverHighlight?.dispose();
+      }
+      // Don't call widget.onHover because many widgets, including the button
+      // widgets, apply setState to an ancestor context from onHover.
+      updateHighlight(_HighlightType.hover, value: _hovering, callOnHover: false);
+    }
+    updateFocusHighlights();
   }
 
   @override
   void dispose() {
-    FocusManager.instance.removeHighlightModeListener(_handleFocusHighlightModeChange);
+    FocusManager.instance.removeHighlightModeListener(handleFocusHighlightModeChange);
+    statesController.removeListener(handleStatesControllerChange);
+    internalStatesController?.dispose();
     super.dispose();
   }
 
   @override
   bool get wantKeepAlive => highlightsExist || (_splashes != null && _splashes!.isNotEmpty);
-
-  Color getHighlightColorForType(_HighlightType type) {
-    const Set<MaterialState> pressed = <MaterialState>{MaterialState.pressed};
-    const Set<MaterialState> focused = <MaterialState>{MaterialState.focused};
-    const Set<MaterialState> hovered = <MaterialState>{MaterialState.hovered};
-
-    final ThemeData theme = Theme.of(context);
-    switch (type) {
-    // The pressed state triggers a ripple (ink splash), per the current
-    // Material Design spec. A separate highlight is no longer used.
-    // See https://material.io/design/interaction/states.html#pressed
-      case _HighlightType.pressed:
-        return widget.overlayColor?.resolve(pressed) ?? widget.highlightColor ?? theme.highlightColor;
-      case _HighlightType.focus:
-        return widget.overlayColor?.resolve(focused) ?? widget.focusColor ?? theme.focusColor;
-      case _HighlightType.hover:
-        return widget.overlayColor?.resolve(hovered) ?? widget.hoverColor ?? theme.hoverColor;
-    }
-  }
 
   Duration getFadeDurationForType(_HighlightType type) {
     switch (type) {
@@ -685,18 +759,45 @@ class _InkResponseState extends State<_InkResponseStateWidget>
       updateKeepAlive();
     }
 
-    if (type == _HighlightType.pressed) {
-      widget.parentState?.markChildInkResponsePressed(this, value);
+    switch (type) {
+      case _HighlightType.pressed:
+        statesController.update(MaterialState.pressed, value);
+      case _HighlightType.hover:
+        if (callOnHover) {
+          statesController.update(MaterialState.hovered, value);
+        }
+      case _HighlightType.focus:
+      // see handleFocusUpdate()
+        break;
     }
-    if (value == (highlight != null && highlight.active))
+
+    if (type == _HighlightType.pressed) {
+      widget.parentState?.markChildInkResponseTranslucentPressed(this, value);
+    }
+    if (value == (highlight != null && highlight.active)) {
       return;
+    }
+
     if (value) {
       if (highlight == null) {
+        Color? resolvedOverlayColor = widget.overlayColor?.resolve(statesController.value);
+        if (resolvedOverlayColor == null) {
+          // Use the backwards compatible defaults
+          final ThemeData theme = Theme.of(context);
+          switch (type) {
+            case _HighlightType.pressed:
+              resolvedOverlayColor = widget.highlightColor ?? theme.highlightColor;
+            case _HighlightType.focus:
+              resolvedOverlayColor = widget.focusColor ?? theme.focusColor;
+            case _HighlightType.hover:
+              resolvedOverlayColor = widget.hoverColor ?? theme.hoverColor;
+          }
+        }
         final RenderBox referenceBox = context.findRenderObject()! as RenderBox;
         _highlights[type] = InkHighlight(
           controller: Material.of(context),
           referenceBox: referenceBox,
-          color: getHighlightColorForType(type),
+          color: enabled ? resolvedOverlayColor : resolvedOverlayColor.withAlpha(0),
           shape: widget.highlightShape,
           radius: widget.radius,
           borderRadius: widget.borderRadius,
@@ -718,23 +819,37 @@ class _InkResponseState extends State<_InkResponseStateWidget>
     switch (type) {
       case _HighlightType.pressed:
         widget.onHighlightChanged?.call(value);
-        break;
       case _HighlightType.hover:
-        if (callOnHover)
+        if (callOnHover) {
           widget.onHover?.call(value);
-        break;
+        }
       case _HighlightType.focus:
         break;
     }
   }
 
-  InteractiveInkFeature _createInkFeature(Offset globalPosition) {
+  void _updateHighlightsAndSplashes() {
+    for (final InkHighlight? highlight in _highlights.values) {
+      if (highlight != null) {
+        highlight.customBorder = widget.customBorder;
+      }
+    }
+    if (_currentSplash != null) {
+      _currentSplash!.customBorder = widget.customBorder;
+    }
+    if (_splashes != null && _splashes!.isNotEmpty) {
+      for (final InteractiveInkFeature inkFeature in _splashes!) {
+        inkFeature.customBorder = widget.customBorder;
+      }
+    }
+  }
+
+  InteractiveInkFeature _createSplash(Offset globalPosition) {
     final MaterialInkController inkController = Material.of(context);
     final RenderBox referenceBox = context.findRenderObject()! as RenderBox;
     final Offset position = referenceBox.globalToLocal(globalPosition);
-    const Set<MaterialState> pressed = <MaterialState>{MaterialState.pressed};
-    final Color color =  widget.overlayColor?.resolve(pressed) ?? widget.splashColor ?? Theme.of(context).splashColor;
-    final RectCallback? rectCallback = widget.containedInkWell ? widget.getRectCallback!(referenceBox) : null;
+    final Color color =  widget.overlayColor?.resolve(statesController.value) ?? widget.splashColor ?? Theme.of(context).splashColor;
+    final RectCallback? rectCallback = widget.containedInkWellTranslucent ? widget.getRectCallback!(referenceBox) : null;
     final BorderRadius? borderRadius = widget.borderRadius;
     final ShapeBorder? customBorder = widget.customBorder;
 
@@ -743,8 +858,9 @@ class _InkResponseState extends State<_InkResponseStateWidget>
       if (_splashes != null) {
         assert(_splashes!.contains(splash));
         _splashes!.remove(splash);
-        if (_currentSplash == splash)
+        if (_currentSplash == splash) {
           _currentSplash = null;
+        }
         updateKeepAlive();
       } // else we're probably in deactivate()
     }
@@ -754,7 +870,7 @@ class _InkResponseState extends State<_InkResponseStateWidget>
       referenceBox: referenceBox,
       position: position,
       color: color,
-      containedInkWell: widget.containedInkWell,
+      containedInkWell: widget.containedInkWellTranslucent,
       rectCallback: rectCallback,
       radius: widget.radius,
       borderRadius: borderRadius,
@@ -766,17 +882,17 @@ class _InkResponseState extends State<_InkResponseStateWidget>
     return splash;
   }
 
-  void _handleFocusHighlightModeChange(FocusHighlightMode mode) {
+  void handleFocusHighlightModeChange(FocusHighlightMode mode) {
     if (!mounted) {
       return;
     }
     setState(() {
-      _updateFocusHighlights();
+      updateFocusHighlights();
     });
   }
 
   bool get _shouldShowFocus {
-    final NavigationMode mode = MediaQuery.maybeOf(context)?.navigationMode ?? NavigationMode.traditional;
+    final NavigationMode mode = MediaQuery.maybeNavigationModeOf(context) ?? NavigationMode.traditional;
     switch (mode) {
       case NavigationMode.traditional:
         return enabled && _hasFocus;
@@ -785,88 +901,124 @@ class _InkResponseState extends State<_InkResponseStateWidget>
     }
   }
 
-  void _updateFocusHighlights() {
+  void updateFocusHighlights() {
     final bool showFocus;
     switch (FocusManager.instance.highlightMode) {
       case FocusHighlightMode.touch:
         showFocus = false;
-        break;
       case FocusHighlightMode.traditional:
         showFocus = _shouldShowFocus;
-        break;
     }
     updateHighlight(_HighlightType.focus, value: showFocus);
   }
 
   bool _hasFocus = false;
-  void _handleFocusUpdate(bool hasFocus) {
+  void handleFocusUpdate(bool hasFocus) {
     _hasFocus = hasFocus;
-    _updateFocusHighlights();
+    // Set here rather than updateHighlight because this widget's
+    // (MaterialState) states include MaterialState.focused if
+    // the InkWellTranslucent _has_ the focus, rather than if it's showing
+    // the focus per FocusManager.instance.highlightMode.
+    statesController.update(MaterialState.focused, hasFocus);
+    updateFocusHighlights();
     widget.onFocusChange?.call(hasFocus);
   }
 
-  void _handleTapDown(TapDownDetails details) {
-    if (_anyChildInkResponsePressed)
+  void handleAnyTapDown(TapDownDetails details) {
+    if (_anyChildInkResponseTranslucentPressed) {
       return;
-    _startSplash(details: details);
+    }
+    _startNewSplash(details: details);
+  }
+
+  void handleTapDown(TapDownDetails details) {
+    handleAnyTapDown(details);
     widget.onTapDown?.call(details);
   }
 
-  void _handleTapUp(TapUpDetails details) {
+  void handleTapUp(TapUpDetails details) {
     widget.onTapUp?.call(details);
   }
 
-  void _startSplash({TapDownDetails? details, BuildContext? context}) {
+  void handleSecondaryTapDown(TapDownDetails details) {
+    handleAnyTapDown(details);
+    widget.onSecondaryTapDown?.call(details);
+  }
+
+  void handleSecondaryTapUp(TapUpDetails details) {
+    widget.onSecondaryTapUp?.call(details);
+  }
+
+  void _startNewSplash({TapDownDetails? details, BuildContext? context}) {
     assert(details != null || context != null);
 
     final Offset globalPosition;
     if (context != null) {
       final RenderBox referenceBox = context.findRenderObject()! as RenderBox;
-      assert(referenceBox.hasSize, 'InkResponse must be done with layout before starting a splash.');
+      assert(referenceBox.hasSize, 'InkResponseTranslucent must be done with layout before starting a splash.');
       globalPosition = referenceBox.localToGlobal(referenceBox.paintBounds.center);
     } else {
       globalPosition = details!.globalPosition;
     }
-    final InteractiveInkFeature splash = _createInkFeature(globalPosition);
+    statesController.update(MaterialState.pressed, true); // ... before creating the splash
+    final InteractiveInkFeature splash = _createSplash(globalPosition);
     _splashes ??= HashSet<InteractiveInkFeature>();
     _splashes!.add(splash);
+    _currentSplash?.cancel();
     _currentSplash = splash;
     updateKeepAlive();
     updateHighlight(_HighlightType.pressed, value: true);
   }
 
-  void _handleTap() {
+  void handleTap() {
     _currentSplash?.confirm();
     _currentSplash = null;
     updateHighlight(_HighlightType.pressed, value: false);
     if (widget.onTap != null) {
-      if (widget.enableFeedback)
+      if (widget.enableFeedback) {
         Feedback.forTap(context);
+      }
       widget.onTap?.call();
     }
   }
 
-  void _handleTapCancel() {
+  void handleTapCancel() {
     _currentSplash?.cancel();
     _currentSplash = null;
     widget.onTapCancel?.call();
     updateHighlight(_HighlightType.pressed, value: false);
   }
 
-  void _handleDoubleTap() {
+  void handleDoubleTap() {
     _currentSplash?.confirm();
     _currentSplash = null;
+    updateHighlight(_HighlightType.pressed, value: false);
     widget.onDoubleTap?.call();
   }
 
-  void _handleLongPress() {
+  void handleLongPress() {
     _currentSplash?.confirm();
     _currentSplash = null;
     if (widget.onLongPress != null) {
-      if (widget.enableFeedback)
+      if (widget.enableFeedback) {
         Feedback.forLongPress(context);
+      }
       widget.onLongPress!();
     }
+  }
+
+  void handleSecondaryTap() {
+    _currentSplash?.confirm();
+    _currentSplash = null;
+    updateHighlight(_HighlightType.pressed, value: false);
+    widget.onSecondaryTap?.call();
+  }
+
+  void handleSecondaryTapCancel() {
+    _currentSplash?.cancel();
+    _currentSplash = null;
+    widget.onSecondaryTapCancel?.call();
+    updateHighlight(_HighlightType.pressed, value: false);
   }
 
   @override
@@ -874,8 +1026,9 @@ class _InkResponseState extends State<_InkResponseStateWidget>
     if (_splashes != null) {
       final Set<InteractiveInkFeature> splashes = _splashes!;
       _splashes = null;
-      for (final InteractiveInkFeature splash in splashes)
+      for (final InteractiveInkFeature splash in splashes) {
         splash.dispose();
+      }
       _currentSplash = null;
     }
     assert(_currentSplash == null);
@@ -883,36 +1036,52 @@ class _InkResponseState extends State<_InkResponseStateWidget>
       _highlights[highlight]?.dispose();
       _highlights[highlight] = null;
     }
-    widget.parentState?.markChildInkResponsePressed(this, false);
+    widget.parentState?.markChildInkResponseTranslucentPressed(this, false);
     super.deactivate();
   }
 
-  bool _isWidgetEnabled(_InkResponseStateWidget widget) {
-    return widget.onTap != null || widget.onDoubleTap != null || widget.onLongPress != null || widget.onTapDown != null;
+  bool isWidgetEnabled(_InkResponseTranslucentStateWidget widget) {
+    return _primaryButtonEnabled(widget) || _secondaryButtonEnabled(widget);
   }
 
-  bool get enabled => _isWidgetEnabled(widget);
+  bool _primaryButtonEnabled(_InkResponseTranslucentStateWidget widget) {
+    return widget.onTap != null
+        || widget.onDoubleTap != null
+        || widget.onLongPress != null
+        || widget.onTapUp != null
+        || widget.onTapDown != null;
+  }
 
-  void _handleMouseEnter(PointerEnterEvent event) {
+  bool _secondaryButtonEnabled(_InkResponseTranslucentStateWidget widget) {
+    return widget.onSecondaryTap != null
+        || widget.onSecondaryTapUp != null
+        || widget.onSecondaryTapDown != null;
+  }
+
+  bool get enabled => isWidgetEnabled(widget);
+  bool get _primaryEnabled => _primaryButtonEnabled(widget);
+  bool get _secondaryEnabled => _secondaryButtonEnabled(widget);
+
+  void handleMouseEnter(PointerEnterEvent event) {
     _hovering = true;
     if (enabled) {
-      _handleHoverChange();
+      handleHoverChange();
     }
   }
 
-  void _handleMouseExit(PointerExitEvent event) {
+  void handleMouseExit(PointerExitEvent event) {
     _hovering = false;
     // If the exit occurs after we've been disabled, we still
     // want to take down the highlights and run widget.onHover.
-    _handleHoverChange();
+    handleHoverChange();
   }
 
-  void _handleHoverChange() {
+  void handleHoverChange() {
     updateHighlight(_HighlightType.hover, value: _hovering);
   }
 
   bool get _canRequestFocus {
-    final NavigationMode mode = MediaQuery.maybeOf(context)?.navigationMode ?? NavigationMode.traditional;
+    final NavigationMode mode = MediaQuery.maybeNavigationModeOf(context) ?? NavigationMode.traditional;
     switch (mode) {
       case NavigationMode.traditional:
         return enabled && widget.canRequestFocus;
@@ -925,48 +1094,76 @@ class _InkResponseState extends State<_InkResponseStateWidget>
   Widget build(BuildContext context) {
     assert(widget.debugCheckContext(context));
     super.build(context); // See AutomaticKeepAliveClientMixin.
+
+    Color getHighlightColorForType(_HighlightType type) {
+      const Set<MaterialState> pressed = <MaterialState>{MaterialState.pressed};
+      const Set<MaterialState> focused = <MaterialState>{MaterialState.focused};
+      const Set<MaterialState> hovered = <MaterialState>{MaterialState.hovered};
+
+      final ThemeData theme = Theme.of(context);
+      switch (type) {
+      // The pressed state triggers a ripple (ink splash), per the current
+      // Material Design spec. A separate highlight is no longer used.
+      // See https://material.io/design/interaction/states.html#pressed
+        case _HighlightType.pressed:
+          return widget.overlayColor?.resolve(pressed) ?? widget.highlightColor ?? theme.highlightColor;
+        case _HighlightType.focus:
+          return widget.overlayColor?.resolve(focused) ?? widget.focusColor ?? theme.focusColor;
+        case _HighlightType.hover:
+          return widget.overlayColor?.resolve(hovered) ?? widget.hoverColor ?? theme.hoverColor;
+      }
+    }
     for (final _HighlightType type in _highlights.keys) {
       _highlights[type]?.color = getHighlightColorForType(type);
     }
 
-    const Set<MaterialState> pressed = <MaterialState>{MaterialState.pressed};
-    _currentSplash?.color = widget.overlayColor?.resolve(pressed) ?? widget.splashColor ?? Theme.of(context).splashColor;
+    _currentSplash?.color = widget.overlayColor?.resolve(statesController.value) ?? widget.splashColor ?? Theme.of(context).splashColor;
 
     final MouseCursor effectiveMouseCursor = MaterialStateProperty.resolveAs<MouseCursor>(
       widget.mouseCursor ?? MaterialStateMouseCursor.clickable,
-      <MaterialState>{
-        if (!enabled) MaterialState.disabled,
-        if (_hovering && enabled) MaterialState.hovered,
-        if (_hasFocus) MaterialState.focused,
-      },
+      statesController.value,
     );
 
-    return _ParentInkResponseProvider(
+    return _ParentInkResponseTranslucentProvider(
       state: this,
       child: Actions(
         actions: _actionMap,
-        child: Focus(
+        child: Focus( // keep focus widget bellow the child
           focusNode: widget.focusNode,
           canRequestFocus: _canRequestFocus,
-          onFocusChange: _handleFocusUpdate,
+          onFocusChange: handleFocusUpdate,
           autofocus: widget.autofocus,
           child: MouseRegion(
             cursor: effectiveMouseCursor,
-            onEnter: _handleMouseEnter,
-            onExit: _handleMouseExit,
-            child: Semantics(
-              onTap: widget.excludeFromSemantics || widget.onTap == null ? null : _simulateTap,
-              onLongPress: widget.excludeFromSemantics || widget.onLongPress == null ? null : _simulateLongPress,
-              child: GestureDetector(
-                onTapDown: enabled ? _handleTapDown : null,
-                onTapUp: enabled ? _handleTapUp : null,
-                onTap: enabled ? _handleTap : null,
-                onTapCancel: enabled ? _handleTapCancel : null,
-                onDoubleTap: widget.onDoubleTap != null ? _handleDoubleTap : null,
-                onLongPress: widget.onLongPress != null ? _handleLongPress : null,
-                behavior: HitTestBehavior.translucent,
-                excludeFromSemantics: true,
-                child: widget.child,
+            onEnter: handleMouseEnter,
+            onExit: handleMouseExit,
+            child: DefaultSelectionStyle.merge(
+              mouseCursor: effectiveMouseCursor,
+              child: Semantics(
+                onTap: widget.excludeFromSemantics || widget.onTap == null ? null : simulateTap,
+                onLongPress: widget.excludeFromSemantics || widget.onLongPress == null ? null : simulateLongPress,
+                child: Stack( // CHANGE FROM FLUTTER ORIGINAL: separate the GestureDetector, if it is bellow the child, it absorbes pointer
+                  children: [
+                    widget.child ?? SizedBox.expand(),
+                    Positioned.fill(
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.translucent, // CHANGE FROM FLUTTER ORIGINAL: set this translucent
+                        onTapDown: _primaryEnabled ? handleTapDown : null,
+                        onTapUp: _primaryEnabled ? handleTapUp : null,
+                        onTap: _primaryEnabled ? handleTap : null,
+                        onTapCancel: _primaryEnabled ? handleTapCancel : null,
+                        onDoubleTap: widget.onDoubleTap != null ? handleDoubleTap : null,
+                        onLongPress: widget.onLongPress != null ? handleLongPress : null,
+                        onSecondaryTapDown: _secondaryEnabled ? handleSecondaryTapDown : null,
+                        onSecondaryTapUp: _secondaryEnabled ? handleSecondaryTapUp: null,
+                        onSecondaryTap: _secondaryEnabled ? handleSecondaryTap : null,
+                        onSecondaryTapCancel: _secondaryEnabled ? handleSecondaryTapCancel : null,
+                        excludeFromSemantics: true,
+                        child: SizedBox.expand(),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -978,16 +1175,16 @@ class _InkResponseState extends State<_InkResponseStateWidget>
 
 /// A rectangular area of a [Material] that responds to touch.
 ///
-/// For a variant of this widget that does not clip splashes, see [InkResponse].
+/// For a variant of this widget that does not clip splashes, see [InkResponseTranslucent].
 ///
-/// The following diagram shows how an [InkWell] looks when tapped, when using
+/// The following diagram shows how an [InkWellTranslucent] looks when tapped, when using
 /// default values.
 ///
 /// ![The highlight is a rectangle the size of the box.](https://flutter.github.io/assets-for-api-docs/assets/material/ink_well.png)
 ///
-/// The [InkWell] widget must have a [Material] widget as an ancestor. The
+/// The [InkWellTranslucent] widget must have a [Material] widget as an ancestor. The
 /// [Material] widget is where the ink reactions are actually painted. This
-/// matches the material design premise wherein the [Material] is what is
+/// matches the Material Design premise wherein the [Material] is what is
 /// actually reacting to touches by spreading ink.
 ///
 /// If a Widget uses this class directly, it should include the following line
@@ -1002,7 +1199,7 @@ class _InkResponseState extends State<_InkResponseStateWidget>
 /// ### The ink splashes aren't visible!
 ///
 /// If there is an opaque graphic, e.g. painted using a [Container], [Image], or
-/// [DecoratedBox], between the [Material] widget and the [InkWell] widget, then
+/// [DecoratedBox], between the [Material] widget and the [InkWellTranslucent] widget, then
 /// the splash won't be visible because it will be under the opaque graphic.
 /// This is because ink splashes draw on the underlying [Material] itself, as
 /// if the ink was spreading inside the material.
@@ -1013,13 +1210,13 @@ class _InkResponseState extends State<_InkResponseStateWidget>
 ///
 /// If this is not possible for some reason, e.g. because you are using an
 /// opaque [CustomPaint] widget, alternatively consider using a second
-/// [Material] above the opaque widget but below the [InkWell] (as an
+/// [Material] above the opaque widget but below the [InkWellTranslucent] (as an
 /// ancestor to the ink well). The [MaterialType.transparency] material
 /// kind can be used for this purpose.
 ///
-/// ### InkWell isn't clipping properly
+/// ### InkWellTranslucent isn't clipping properly
 ///
-/// If you want to clip an InkWell or any [Ink] widgets you need to keep in mind
+/// If you want to clip an InkWellTranslucent or any [Ink] widgets you need to keep in mind
 /// that the [Material] that the Ink will be printed on is responsible for clipping.
 /// This means you can't wrap the [Ink] widget in a clipping widget directly,
 /// since this will leave the [Material] not clipped (and by extension the printed
@@ -1030,7 +1227,7 @@ class _InkResponseState extends State<_InkResponseStateWidget>
 /// an example.
 ///
 /// ### The ink splashes don't track the size of an animated container
-/// If the size of an InkWell's [Material] ancestor changes while the InkWell's
+/// If the size of an InkWellTranslucent's [Material] ancestor changes while the InkWellTranslucent's
 /// splashes are expanding, you may notice that the splashes aren't clipped
 /// correctly. This can't be avoided.
 ///
@@ -1043,79 +1240,59 @@ class _InkResponseState extends State<_InkResponseStateWidget>
 /// ** See code in examples/api/lib/material/ink_well/ink_well.0.dart **
 /// {@end-tool}
 ///
-/// An InkWell's splashes will not properly update to conform to changes if the
+/// An InkWellTranslucent's splashes will not properly update to conform to changes if the
 /// size of its underlying [Material], where the splashes are rendered, changes
-/// during animation. You should avoid using InkWells within [Material] widgets
+/// during animation. You should avoid using InkWellTranslucents within [Material] widgets
 /// that are changing size.
 ///
 /// See also:
 ///
 ///  * [GestureDetector], for listening for gestures without ink splashes.
-///  * [ElevatedButton] and [TextButton], two kinds of buttons in material design.
-///  * [InkResponse], a variant of [InkWell] that doesn't force a rectangular
+///  * [ElevatedButton] and [TextButton], two kinds of buttons in Material Design.
+///  * [InkResponseTranslucent], a variant of [InkWellTranslucent] that doesn't force a rectangular
 ///    shape on the ink reaction.
-class InkWell extends InkResponse {
+class InkWellTranslucent extends InkResponseTranslucent {
   /// Creates an ink well.
   ///
   /// Must have an ancestor [Material] widget in which to cause ink reactions.
   ///
   /// The [enableFeedback], and [excludeFromSemantics] arguments
   /// must not be null.
-  const InkWell({
-    Key? key,
-    Widget? child,
-    GestureTapCallback? onTap,
-    GestureTapCallback? onDoubleTap,
-    GestureLongPressCallback? onLongPress,
-    GestureTapDownCallback? onTapDown,
-    GestureTapUpCallback? onTapUp,
-    GestureTapCancelCallback? onTapCancel,
-    ValueChanged<bool>? onHighlightChanged,
-    ValueChanged<bool>? onHover,
-    MouseCursor? mouseCursor,
-    Color? focusColor,
-    Color? hoverColor,
-    Color? highlightColor,
-    MaterialStateProperty<Color?>? overlayColor,
-    Color? splashColor,
-    InteractiveInkFeatureFactory? splashFactory,
-    double? radius,
-    BorderRadius? borderRadius,
-    ShapeBorder? customBorder,
+  const InkWellTranslucent({
+    super.key,
+    super.child,
+    super.onTap,
+    super.onDoubleTap,
+    super.onLongPress,
+    super.onTapDown,
+    super.onTapUp,
+    super.onTapCancel,
+    super.onSecondaryTap,
+    super.onSecondaryTapUp,
+    super.onSecondaryTapDown,
+    super.onSecondaryTapCancel,
+    super.onHighlightChanged,
+    super.onHover,
+    super.mouseCursor,
+    super.focusColor,
+    super.hoverColor,
+    super.highlightColor,
+    super.overlayColor,
+    super.splashColor,
+    super.splashFactory,
+    super.radius,
+    super.borderRadius,
+    super.customBorder,
     bool? enableFeedback = true,
-    bool excludeFromSemantics = false,
-    FocusNode? focusNode,
-    bool canRequestFocus = true,
-    ValueChanged<bool>? onFocusChange,
-    bool autofocus = false,
+    super.excludeFromSemantics,
+    super.focusNode,
+    super.canRequestFocus,
+    super.onFocusChange,
+    super.autofocus,
+    super.statesController,
   }) : super(
-    key: key,
-    child: child,
-    onTap: onTap,
-    onDoubleTap: onDoubleTap,
-    onLongPress: onLongPress,
-    onTapDown: onTapDown,
-    onTapUp: onTapUp,
-    onTapCancel: onTapCancel,
-    onHighlightChanged: onHighlightChanged,
-    onHover: onHover,
-    mouseCursor: mouseCursor,
-    containedInkWell: true,
+    containedInkWellTranslucent: true,
     highlightShape: BoxShape.rectangle,
-    focusColor: focusColor,
-    hoverColor: hoverColor,
-    highlightColor: highlightColor,
-    overlayColor: overlayColor,
-    splashColor: splashColor,
-    splashFactory: splashFactory,
-    radius: radius,
-    borderRadius: borderRadius,
-    customBorder: customBorder,
     enableFeedback: enableFeedback ?? true,
-    excludeFromSemantics: excludeFromSemantics,
-    focusNode: focusNode,
-    canRequestFocus: canRequestFocus,
-    onFocusChange: onFocusChange,
-    autofocus: autofocus,
   );
 }

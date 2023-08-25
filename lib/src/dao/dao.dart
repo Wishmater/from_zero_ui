@@ -12,7 +12,7 @@ import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart' as translucent;
+import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart';
 
 part 'field.dart';
 part 'lazy_dao.dart';
