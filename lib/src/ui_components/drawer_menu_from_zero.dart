@@ -515,9 +515,9 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   }
                   GoRouter.of(context).goNamed(
                     tabs[i].route!,
-                    // pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
-                    // queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
-                    // extra: tabs[i].extra,
+                    pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                    queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                    extra: tabs[i].extra,
                   );
                 }
                 return result;

@@ -1134,7 +1134,7 @@ class _InkResponseTranslucentState extends State<_InkResponseTranslucentStateWid
           onFocusChange: handleFocusUpdate,
           autofocus: widget.autofocus,
           child: MouseRegion(
-            cursor: effectiveMouseCursor,
+            cursor: _primaryEnabled || _secondaryEnabled ? effectiveMouseCursor : MouseCursor.defer, // CHANGE FROM FLUTTER ORIGINAL: don't interfere with underlying cursor if disabled
             onEnter: handleMouseEnter,
             onExit: handleMouseExit,
             child: DefaultSelectionStyle.merge(

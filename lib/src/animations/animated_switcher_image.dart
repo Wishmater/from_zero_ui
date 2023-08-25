@@ -7,6 +7,7 @@ import 'package:from_zero_ui/src/animations/exposed_transitions.dart';
 import 'dart:ui' as ui;
 
 import 'package:from_zero_ui/util/no_fading_transitions/no_fading_fade_through_transition.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 
 
 class _ChildEntry {
@@ -82,6 +83,14 @@ class AnimatedSwitcherImage extends StatefulWidget {
     );
   }
 
+  static Widget sliverTransitionBuilder(Widget child, Animation<double> animation) {
+    print (child.runtimeType);
+    return SliverFadeTransition(
+      opacity: animation,
+      sliver: child,
+    );
+  }
+
   static Widget defaultLayoutBuilder(Widget? currentChild, List<Widget> previousChildren, Alignment alignment, Clip clipBehaviour) {
     return Stack(
       alignment: alignment,
@@ -96,6 +105,17 @@ class AnimatedSwitcherImage extends StatefulWidget {
             ),
           );
         }),
+        if (currentChild != null) currentChild,
+      ],
+    );
+  }
+
+  static Widget sliverLayoutBuilder(Widget? currentChild, List<Widget> previousChildren, Alignment alignment, Clip clipBehaviour) {
+    print (currentChild);
+    return SliverStack(
+      positionedAlignment: alignment,
+      children: <Widget>[
+        ...previousChildren, // SliverPositioned expects a RenderBox (not a Sliver) so it can't be used
         if (currentChild != null) currentChild,
       ],
     );

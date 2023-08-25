@@ -24,6 +24,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
   final bool applyAnimatedContainerFromChildSize;
+  final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
   final Alignment? alignment; // used for animated switches
 
   const AsyncValueBuilder({
@@ -37,6 +38,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
     this.applyAnimatedContainerFromChildSize = false,
+    this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
     this.alignment,
   }) : super(key: key);
 
@@ -73,6 +75,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
         switchInCurve: transitionInCurve,
         switchOutCurve: transitionOutCurve,
         transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
+        layoutBuilder: layoutBuilder,
         alignment: alignment ?? Alignment.center,
       );
     }
@@ -114,22 +117,34 @@ class SliverAsyncValueBuilder<T> extends AsyncValueBuilder<T> {
     super.transitionDuration = const Duration(milliseconds: 300),
     super.loadingBuilder = SliverAsyncValueBuilder.defaultLoadingBuilder,
     super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
+    super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
+    super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
   );
 
   static Widget defaultLoadingBuilder(BuildContext context){
     return SliverToBoxAdapter(
-      child: AsyncValueBuilder.defaultLoadingBuilder(context),
+      child: SizedBox(
+        height: 256,
+        child: AsyncValueBuilder.defaultLoadingBuilder(context),
+      ),
     );
   }
 
   static Widget defaultErrorBuilder(BuildContext context, Object error, StackTrace? stackTrace){
-    return SliverToBoxAdapter(
-      child: AsyncValueBuilder.defaultErrorBuilder(context, error, stackTrace),
+    return SizedBox(
+      height: 256,
+      child: SliverToBoxAdapter(
+        child: AsyncValueBuilder.defaultErrorBuilder(context, error, stackTrace),
+      ),
     );
   }
 
+  static Widget defaultTransitionBuilder(BuildContext context, Widget child, Animation<double> animation){
+    return AnimatedSwitcherImage.sliverTransitionBuilder(child, animation);
+
+  }
 }
 
 
@@ -145,6 +160,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
   final bool applyAnimatedContainerFromChildSize;
+  final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
   final Alignment? alignment; // used for animated switches
 
   const AsyncValueMultiBuilder({
@@ -158,6 +174,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
     this.applyAnimatedContainerFromChildSize = false,
+    this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
     this.alignment,
   }) : super(key: key);
 
@@ -204,6 +221,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
         switchInCurve: transitionInCurve,
         switchOutCurve: transitionOutCurve,
         transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
+        layoutBuilder: layoutBuilder,
         alignment: alignment ?? Alignment.center,
       );
     }
@@ -227,6 +245,8 @@ class SliverAsyncValueMultiBuilder<T> extends AsyncValueMultiBuilder<T> {
     super.transitionDuration = const Duration(milliseconds: 300),
     super.loadingBuilder = SliverAsyncValueBuilder.defaultLoadingBuilder,
     super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
+    super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
+    super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
   );
@@ -245,6 +265,7 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
   final Curve transitionInCurve;
   final Curve transitionOutCurve;
   final bool applyAnimatedContainerFromChildSize;
+  final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
   final Alignment? alignment; // used for animated switches
 
   const FutureProviderBuilder({
@@ -258,7 +279,8 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
     this.transitionInCurve = Curves.easeOutCubic,
     this.transitionOutCurve = Curves.easeInCubic,
     this.applyAnimatedContainerFromChildSize = false,
-    this.alignment
+    this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
+    this.alignment,
   }) : super(key: key);
 
   @override
@@ -273,6 +295,7 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
       transitionInCurve: transitionInCurve,
       transitionOutCurve: transitionOutCurve,
       applyAnimatedContainerFromChildSize: applyAnimatedContainerFromChildSize,
+      layoutBuilder: layoutBuilder,
       alignment: alignment,
     );
   }
@@ -286,6 +309,8 @@ class SliverFutureProviderBuilder<T> extends FutureProviderBuilder<T> {
     super.transitionDuration = const Duration(milliseconds: 300),
     super.loadingBuilder = SliverAsyncValueBuilder.defaultLoadingBuilder,
     super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
+    super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
+    super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
   );
