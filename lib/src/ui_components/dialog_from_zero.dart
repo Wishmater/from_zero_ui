@@ -75,11 +75,11 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
           child: FixedSlideTransition( // flutter's default SlideTransition causes an assertion when scrolling in a ListView.builder inside it
             child: child,
             position: Tween<Offset>(
-              begin: const Offset(0.0, 192),
+              begin: const Offset(0.0, 128),
               end: Offset.zero,
             ).animate(animation),
           ),
-        )
+        ),
       ],
     );
     if (showWindowBarOnDesktop && !kIsWeb && Platform.isWindows
