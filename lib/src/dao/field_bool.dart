@@ -51,7 +51,7 @@ enum BoolFieldDisplayType {
   checkBoxTile,
   switchTile,
   compactCheckBox,
-  @deprecated compactSwitch,
+  compactSwitch,
   combo,
   radio,
 }
@@ -391,7 +391,7 @@ class BoolField extends Field<BoolComparable> {
                 contentPadding: EdgeInsets.only(
                   left: dense ? 0 : 12,
                   right: dense ? 0 : 12,
-                  bottom: dense ? 16 : addCard ? 16 : 12,
+                  bottom: dense ? 22 : addCard ? 16 : 12,
                 ),
                 tileColor: dense && visibleValidationErrors.isNotEmpty
                     ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
@@ -438,7 +438,7 @@ class BoolField extends Field<BoolComparable> {
                 contentPadding: EdgeInsets.only(
                   left: dense ? 0 : 8,
                   right: dense ? 0 : 8,
-                  bottom: dense ? 16 : addCard ? 16 : 12,
+                  bottom: dense ? 22 : addCard ? 16 : 12,
                 ),
                 tileColor: dense && visibleValidationErrors.isNotEmpty
                     ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)

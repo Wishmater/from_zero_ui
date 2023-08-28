@@ -530,7 +530,7 @@ class StringField extends Field<String> {
           left: dense ? 0 : 16,
           right: dense ? 0 : (16 + (context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40)),
           bottom: largeVertically ? 16 : dense ? 10 : 0,
-          top: largeVertically ? 16 : dense ? 0 : 6,
+          top: largeVertically ? 16 : dense ? 8 : 6,
         ),
       ),
       contextMenuBuilder: (context, editableTextState) {

@@ -308,19 +308,16 @@ class FileField extends StringField {
                     userInteracted = true;
                     commitValue(value.first.absolute.path);
                   },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Builder(
-                      builder: (context) {
-                        return Padding(
-                          padding: EdgeInsets.only(right: dense ? 0 : context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40),
-                          child: ComboField.buttonContentBuilder(context, uiName, hint, filename, enabled, false,
-                            dense: dense,
-                            showDropdownIcon: false,
-                          ),
-                        );
-                      }
-                    ),
+                  child: Builder(
+                    builder: (context) {
+                      return Padding(
+                        padding: EdgeInsets.only(right: dense ? 0 : context.findAncestorStateOfType<AppbarFromZeroState>()!.actions.length*40),
+                        child: ComboField.buttonContentBuilder(context, uiName, hint, filename, enabled, false,
+                          dense: dense,
+                          showDropdownIcon: false,
+                        ),
+                      );
+                    }
                   ),
                 ),
               ),

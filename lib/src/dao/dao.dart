@@ -965,6 +965,27 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             );
             String shownName = uiName;
             if (shownName.isNullOrEmpty) shownName = classUiName;
+            final primaryFormBuiltWidget = ScrollbarFromZero(
+              controller: primaryScrollController,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12,),
+                child: SingleChildScrollView(
+                  controller: primaryScrollController,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: FocusTraversalOrder(
+                      order: NumericFocusOrder(1),
+                      child: FocusTraversalGroup(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: primaryFormWidgets,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
             Widget result = DialogFromZero( // take advantage of DialogFromZero layout, to always have intrinsic height (without using the IntrinsicHeight widget)
               includeDialogWidget: false,
               contentPadding: EdgeInsets.zero,
@@ -993,42 +1014,23 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               content: FocusScope(
                 child: FocusTraversalGroup(
                   policy: OrderedTraversalPolicy(),
-                  child: DefaultTabController(
+                  child: secondaryFormWidgets.keys.isEmpty ? primaryFormBuiltWidget : DefaultTabController(
                     length: secondaryFormWidgets.keys.length,
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
+                        Padding(
                           padding: EdgeInsets.only(left: secondaryFormWidgets.keys.isNotEmpty ? 12 : 0),
                           child: SizedBox(
                             width: formDialogWidth+24,
-                            child: ScrollbarFromZero(
-                              controller: primaryScrollController,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12,),
-                                child: SingleChildScrollView(
-                                  controller: primaryScrollController,
-                                  child: Padding(
-                                    padding: const EdgeInsets.only(bottom: 16),
-                                    child: FocusTraversalOrder(
-                                      order: NumericFocusOrder(1),
-                                      child: FocusTraversalGroup(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: primaryFormWidgets,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
+                            child: primaryFormBuiltWidget,
                           ),
                         ),
                         if (secondaryFormWidgets.keys.isNotEmpty)
                           Expanded(child: SizedBox.shrink()),
                         if (secondaryFormWidgets.keys.isNotEmpty)
-                          Container(
+                          Padding(
                             padding: const EdgeInsets.only(right: 24),
                             child: SizedBox(
                               width: formDialogWidth+24+16,
@@ -1640,6 +1642,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     color: Theme.of(context).textTheme.bodyLarge!.color!
                         .withOpacity(Theme.of(context).brightness==Brightness.light ? 0.7 : 0.8),
                     wordSpacing: 0.4, // hack to fix soft-wrap bug with intrinsicHeight
+                    height: 1.1,
                   ),
                   textAlign: TextAlign.right,
                 ),
@@ -1809,8 +1812,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         result = FlexibleLayoutFromZero(
           children: getChildren(useLayoutFromZero: true)
               .cast<FlexibleLayoutItemFromZero>(),
-          relevantAxisMaxSize: min(formDialogWidth,
-              MediaQuery.of(context).size.width - 24)  - (groupBorderNestingCount.coerceIn(0)*16),
+          // relevantAxisMaxSize: min(formDialogWidth, // not needed anymore, because now we can use LayoutBuilders (yaay)
+          //     MediaQuery.of(context).size.width - 24)  - (groupBorderNestingCount.coerceIn(0)*16),
           crossAxisAlignment: group.primary ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         );
       } else {

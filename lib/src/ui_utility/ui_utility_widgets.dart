@@ -461,9 +461,7 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
   void initState() {
     super.initState();
     _addListener(widget.scrollController);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateScroll();
-    });
+    _updateScroll();
   }
 
   @override
@@ -490,22 +488,24 @@ class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
   }
 
   void _updateScroll(){
-    if (mounted){
-      double newSize1, newSize2;
-      try{
-        newSize1 = widget.scrollController.position.pixels.clamp(0, widget.maxSize);
-        newSize2 = (widget.scrollController.position.maxScrollExtent-widget.scrollController.position.pixels).clamp(0, widget.maxSize);
-      } catch (e){
-        newSize1 = 0;
-        newSize2 = 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted){
+        double newSize1, newSize2;
+        try{
+          newSize1 = widget.scrollController.position.pixels.clamp(0, widget.maxSize);
+          newSize2 = (widget.scrollController.position.maxScrollExtent-widget.scrollController.position.pixels).clamp(0, widget.maxSize);
+        } catch (e){
+          newSize1 = 0;
+          newSize2 = 0;
+        }
+        if (newSize1!=size1 || newSize2!=size2) {
+          setState(() {
+            size1 = newSize1;
+            size2 = newSize2;
+          });
+        }
       }
-      if (newSize1!=size1 || newSize2!=size2) {
-        setState(() {
-          size1 = newSize1;
-          size2 = newSize2;
-        });
-      }
-    }
+    });
   }
 
   @override

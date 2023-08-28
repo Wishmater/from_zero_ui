@@ -325,101 +325,95 @@ class NumField extends Field<num> {
                   },
                 ),
               ),
-              Padding(
-                padding: EdgeInsets.only(
-                  bottom: largeVertically ? 16 : 0,
-                  top: dense ? 0 : largeVertically ? 12 : 2,
-                ),
-                child: KeyboardListener(
-                  includeSemantics: false,
-                  focusNode: FocusNode()..skipTraversal=true,
-                  onKeyEvent: (value) {
-                    if (value is KeyDownEvent) {
-                      final selectionStart = controller.selection.start;
-                      if (value.logicalKey==LogicalKeyboardKey.arrowDown && selectionStart==controller.text.length) {
-                        // focusNode.focusInDirection(TraversalDirection.down);
-                        focusNode.nextFocus(); // because directional focus is REALLY buggy
-                      } else if (value.logicalKey==LogicalKeyboardKey.arrowUp && selectionStart==0) {
-                        // focusNode.focusInDirection(TraversalDirection.up);
-                        focusNode.previousFocus(); // because directional focus is REALLY buggy
-                      }
+              KeyboardListener(
+                includeSemantics: false,
+                focusNode: FocusNode()..skipTraversal=true,
+                onKeyEvent: (value) {
+                  if (value is KeyDownEvent) {
+                    final selectionStart = controller.selection.start;
+                    if (value.logicalKey==LogicalKeyboardKey.arrowDown && selectionStart==controller.text.length) {
+                      // focusNode.focusInDirection(TraversalDirection.down);
+                      focusNode.nextFocus(); // because directional focus is REALLY buggy
+                    } else if (value.logicalKey==LogicalKeyboardKey.arrowUp && selectionStart==0) {
+                      // focusNode.focusInDirection(TraversalDirection.up);
+                      focusNode.previousFocus(); // because directional focus is REALLY buggy
                     }
-                  },
-                  child: Builder(
-                    builder: (context) {
-                      return StringField.buildDaoTextFormField(context,
-                        uiName: uiName,
-                        value: value?.toString(),
-                        dense: dense,
-                        controller: controller,
-                        enabled: enabled,
-                        focusNode: focusNode,
-                        hint: hint,
-                        inputDecoration: inputDecoration,
-                        minLines: 1,
-                        maxLines: 1,
-                        largeVertically: largeVertically,
-                        obfuscate: false,
-                        textAlign: dense ? TextAlign.right : TextAlign.left,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9${digitsAfterComma==0 ? '' : '.'}${allowNegative ? '-' : ''}]')),],
-                        actions: allActions,
-                        onChanged: (v) {
-                          userInteracted = true;
-                          valUpdateTimer?.cancel();
-                          int? lastMinusIndex;
-                          do {
-                            lastMinusIndex = v.contains('-') ? v.lastIndexOf('-') : null;
-                            if (lastMinusIndex!=null && lastMinusIndex>0) {
-                              v = v.substring(0, lastMinusIndex) + v.substring(lastMinusIndex+1);
-                            }
-                          } while(lastMinusIndex!=null && lastMinusIndex>0);
-                          if (digitsAfterComma>0) {
-                            bool update = false;
-                            int commaIndex = v.indexOf('.');
-                            if (commaIndex==0 || (commaIndex==1 && v[0]=='-')) {
-                              v = v.substring(0, commaIndex) + '0' + v.substring(commaIndex);
-                              commaIndex++;
+                  }
+                },
+                child: Builder(
+                  builder: (context) {
+                    return StringField.buildDaoTextFormField(context,
+                      uiName: uiName,
+                      value: value?.toString(),
+                      dense: dense,
+                      controller: controller,
+                      enabled: enabled,
+                      focusNode: focusNode,
+                      hint: hint,
+                      inputDecoration: inputDecoration,
+                      minLines: 1,
+                      maxLines: 1,
+                      largeVertically: largeVertically,
+                      obfuscate: false,
+                      textAlign: dense ? TextAlign.right : TextAlign.left,
+                      keyboardType: TextInputType.number,
+                      inputFormatters: [FilteringTextInputFormatter.allow(RegExp('[0-9${digitsAfterComma==0 ? '' : '.'}${allowNegative ? '-' : ''}]')),],
+                      actions: allActions,
+                      onChanged: (v) {
+                        userInteracted = true;
+                        valUpdateTimer?.cancel();
+                        int? lastMinusIndex;
+                        do {
+                          lastMinusIndex = v.contains('-') ? v.lastIndexOf('-') : null;
+                          if (lastMinusIndex!=null && lastMinusIndex>0) {
+                            v = v.substring(0, lastMinusIndex) + v.substring(lastMinusIndex+1);
+                          }
+                        } while(lastMinusIndex!=null && lastMinusIndex>0);
+                        if (digitsAfterComma>0) {
+                          bool update = false;
+                          int commaIndex = v.indexOf('.');
+                          if (commaIndex==0 || (commaIndex==1 && v[0]=='-')) {
+                            v = v.substring(0, commaIndex) + '0' + v.substring(commaIndex);
+                            commaIndex++;
+                            update = true;
+                          }
+                          int lastCommaIndex = v.lastIndexOf('.');
+                          if (commaIndex>0) {
+                            if (commaIndex!=lastCommaIndex) {
+                              v = v.replaceAll('.', '');
+                              v = v.substring(0, commaIndex) + '.' + v.substring(commaIndex);
                               update = true;
                             }
-                            int lastCommaIndex = v.lastIndexOf('.');
-                            if (commaIndex>0) {
-                              if (commaIndex!=lastCommaIndex) {
-                                v = v.replaceAll('.', '');
-                                v = v.substring(0, commaIndex) + '.' + v.substring(commaIndex);
-                                update = true;
-                              }
-                              if (v.length-1 - commaIndex > digitsAfterComma) {
-                                v = v.substring(0, min(commaIndex+digitsAfterComma+1, v.length));
-                                update = true;
-                              }
-                            }
-                            if (update) {
-                              final previousBase = controller.selection.baseOffset;
-                              final previousExtent = controller.selection.extentOffset;
-                              controller.text = v;
-                              controller.selection = TextSelection(
-                                baseOffset: previousBase.clamp(0, v.length),
-                                extentOffset: previousExtent.clamp(0, v.length),
-                              );
+                            if (v.length-1 - commaIndex > digitsAfterComma) {
+                              v = v.substring(0, min(commaIndex+digitsAfterComma+1, v.length));
+                              update = true;
                             }
                           }
-                          final textVal = getTextVal(v);
-                          if (v.isEmpty || v.characters.last=='.' || v.characters.last==',' || !isEdited) {
-                            value = textVal;
-                          } else if (value!=textVal) {
-                            addUndoEntry(value);
+                          if (update) {
+                            final previousBase = controller.selection.baseOffset;
+                            final previousExtent = controller.selection.extentOffset;
+                            controller.text = v;
+                            controller.selection = TextSelection(
+                              baseOffset: previousBase.clamp(0, v.length),
+                              extentOffset: previousExtent.clamp(0, v.length),
+                            );
                           }
-                          valUpdateTimer = Timer(Duration(seconds: 2), () {
-                            value = textVal;
-                          });
-                        },
-                        onEditingComplete: () {
-                          focusNode.nextFocus();
-                        },
-                      );
-                    }
-                  ),
+                        }
+                        final textVal = getTextVal(v);
+                        if (v.isEmpty || v.characters.last=='.' || v.characters.last==',' || !isEdited) {
+                          value = textVal;
+                        } else if (value!=textVal) {
+                          addUndoEntry(value);
+                        }
+                        valUpdateTimer = Timer(Duration(seconds: 2), () {
+                          value = textVal;
+                        });
+                      },
+                      onEditingComplete: () {
+                        focusNode.nextFocus();
+                      },
+                    );
+                  }
                 ),
               ),
             ],
