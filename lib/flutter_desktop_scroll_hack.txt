@@ -1,0 +1,98 @@
+
+// replace this method in scroll_position_with_single_context.dart
+
+  @override
+  void pointerScroll(double delta) {
+    if (delta == 0.0) {
+      return;
+    }
+    final double targetPixels =
+        math.min(math.max(pixels + delta, minScrollExtent), maxScrollExtent);
+    if (this.activity is! PointerScrollActivity) {
+      final newActivity = PointerScrollActivity(this,
+        pixels: pixels,
+        duration: Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        vsync: context.vsync,
+      );
+      beginActivity(newActivity);
+    }
+    final activity = (this.activity as PointerScrollActivity);
+    activity.minScrollExtent = minScrollExtent;
+    activity.maxScrollExtent = maxScrollExtent;
+    activity.addDelta(delta);
+  }
+
+
+
+// add this class somewhere: in scroll_activity.dart or in the same file as above
+
+class PointerScrollActivity extends ScrollActivity {
+
+  double pixels;
+  late double minScrollExtent;
+  late double  maxScrollExtent;
+  final Duration duration;
+  final Curve curve;
+  final TickerProvider vsync;
+
+  PointerScrollActivity(super.delegate, {
+    required this.pixels,
+    required this.duration,
+    required this.curve,
+    required this.vsync,
+  })  : assert(duration > Duration.zero);
+
+  Map<AnimationController, double> controllers = {};
+
+  addDelta(double delta) {
+    final controller = AnimationController.unbounded(
+      value: 0,
+      debugLabel: objectRuntimeType(this, 'PointerScrollActivity'),
+      vsync: vsync,
+    );
+    controller.addListener(() => _tick(controller));
+    controller.animateTo(delta, duration: duration, curve: curve)
+        .then((value) {
+      controller.dispose();
+      controllers.remove(controller);
+    });
+
+  }
+
+  void _tick(AnimationController controller) {
+    final previousValue = controllers[controller]??0;
+    final currentDelta = controller.value - previousValue;
+    controllers[controller] = controller.value;
+    final  previousPixels =  pixels;
+    pixels = (pixels + currentDelta).clamp(minScrollExtent, maxScrollExtent);
+    if (pixels != previousPixels) {
+      if (delegate.setPixels(pixels) != 0.0) {
+        // delegate.goIdle(); // we want to keep the activity alive (I think)
+      }
+    }
+  }
+
+  @override
+  void dispatchOverscrollNotification(ScrollMetrics metrics, BuildContext context, double overscroll) {
+    OverscrollNotification(metrics: metrics, context: context, overscroll: overscroll, velocity: velocity).dispatch(context);
+  }
+
+  @override
+  bool get shouldIgnorePointer => false;
+
+  @override
+  bool get isScrolling => true;
+
+  @override
+  double get velocity => controllers.keys.firstOrNull?.velocity ?? 0;
+
+  @override
+  void dispose() {
+    for (final e in controllers.keys) {
+      e.dispose();
+    }
+    super.dispose();
+  }
+
+}
