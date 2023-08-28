@@ -322,14 +322,16 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
         ],
       ),
     );
-    if (widget.contextMenuActions.isNotEmpty || widget.addExpandCollapseContextMenuAction) {
+    // if (widget.contextMenuActions.isNotEmpty || widget.addExpandCollapseContextMenuAction) { // always add this, so child tree isn't rebuilt on compact/decompact drawer
       final prevTitle = title;
       VoidCallback onNextFrame = (){};
-      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-        if (mounted) {
-          onNextFrame();
-        }
-      });
+      if (widget.addExpandCollapseContextMenuAction) {
+        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+          if (mounted) {
+            onNextFrame();
+          }
+        });
+      }
       title = StatefulBuilder(
         builder: (context, setState) {
           onNextFrame = () {setState((){});};
@@ -370,7 +372,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
           );
         },
       );
-    }
+    // }
     return Material(
       type: MaterialType.transparency,
       color: Material.maybeOf(context)?.color ?? Colors.transparent,
