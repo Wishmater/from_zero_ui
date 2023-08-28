@@ -113,10 +113,10 @@ abstract class TableFromZeroFilterPopup {
                                           child: Row(
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
-                                              Icon(Icons.add, color: Colors.blue,),
+                                              Icon(Icons.add, color: Theme.of(context).colorScheme.secondary,),
                                               SizedBox(width: 6,),
                                               Text(FromZeroLocalizations.of(context).translate('add'),
-                                                style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Colors.blue,),
+                                                style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Theme.of(context).colorScheme.secondary,),
                                               ),
                                             ],
                                           ),
@@ -193,7 +193,7 @@ abstract class TableFromZeroFilterPopup {
                                 var textStyle = TextStyle(fontSize: 16);
                                 if (message.isBlank) {
                                   message = '< vacío >'; // TODO 3 internacionalize
-                                  textStyle = TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodySmall!.color);
+                                  textStyle = TextStyle(fontSize: 16, color: Theme.of(context).disabledColor);
                                 }
                                 final autoSizeTextMaxLines = 1;
                                 Widget result = AutoSizeText(
@@ -281,7 +281,7 @@ abstract class TableFromZeroFilterPopup {
                                           labelText: FromZeroLocalizations.of(context).translate('search...'),
                                           contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
                                           labelStyle: TextStyle(height: 0.2),
-                                          suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.bodySmall!.color!,),
+                                          suffixIcon: Icon(Icons.search, color: Theme.of(context).disabledColor,),
                                         ),
                                       ),
                                     ),

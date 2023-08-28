@@ -22,6 +22,7 @@ class AppbarFromZero extends StatefulWidget {
   final Color? shadowColor;
   final ShapeBorder? shape;
   final Color? backgroundColor;
+  final Color? surfaceTintColor;
   final IconThemeData? iconTheme;
   final IconThemeData? actionsIconTheme;
   final bool primary;
@@ -66,6 +67,7 @@ class AppbarFromZero extends StatefulWidget {
     this.shadowColor,
     this.shape,
     this.backgroundColor,
+    this.surfaceTintColor,
     this.iconTheme,
     this.actionsIconTheme,
     this.primary = true,
@@ -345,6 +347,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
       centerTitle: true,
       elevation: 0,
       backgroundColor: Colors.transparent,
+      surfaceTintColor: Colors.transparent,
       titleSpacing: 8,
       toolbarHeight: toolbarHeight,
       title: AnimatedSwitcher(
@@ -410,6 +413,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
         shadowColor: widget.shadowColor,
         shape: widget.shape,
         backgroundColor: widget.backgroundColor,
+        surfaceTintColor: widget.surfaceTintColor,
         iconTheme: widget.iconTheme,
         actionsIconTheme: widget.actionsIconTheme,
         primary: widget.primary,

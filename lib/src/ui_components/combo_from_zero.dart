@@ -79,6 +79,7 @@ class ComboFromZero<T> extends StatefulWidget {
   _ComboFromZeroState<T> createState() => _ComboFromZeroState<T>();
 
   static Widget defaultButtonChildBuilder(BuildContext context, String? title, String? hint, dynamic value, bool enabled, bool clearable, {bool showDropdownIcon=true}) {
+    final theme = Theme.of(context);
     return IntrinsicWidth(
       child: ConstrainedBox(
         constraints: BoxConstraints(
@@ -93,22 +94,21 @@ class ComboFromZero<T> extends StatefulWidget {
               SizedBox(width: 8,),
               Expanded(
                 child: value==null&&hint==null&&title!=null
-                    ? Text(title, style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
-                    ),)
+                    ? Text(title, style: theme.textTheme.titleMedium!.copyWith(
+                        color: enabled ? theme.textTheme.bodyLarge!.color : theme.disabledColor,
+                      ),)
                     : MaterialKeyValuePair(
-                      title: title,
-                      value: value==null ? (hint ?? '') : value.toString(),
-                      valueStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        height: 1,
-                        color: value==null ? Theme.of(context).textTheme.bodySmall!.color!
-                            : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                        title: title,
+                        value: value==null ? (hint ?? '') : value.toString(),
+                        valueStyle: theme.textTheme.titleMedium!.copyWith(
+                          height: 1,
+                          color: enabled&&value!=null ? theme.textTheme.bodyLarge!.color : theme.disabledColor,
+                        ),
                       ),
-                    ),
               ),
               SizedBox(width: 4,),
               if (showDropdownIcon && enabled && !clearable)
-                Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyLarge!.color,),
+                Icon(Icons.arrow_drop_down, color: theme.textTheme.bodyLarge!.color,),
               SizedBox(width: 4,),
             ],
           ),
@@ -493,7 +493,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                     )
                   ]
                 : [],
-            headerWidgetAddon:Container(
+            headerWidgetAddon: Container(
               color: Theme.of(context).cardColor,
               child: Column(
                 children: [
@@ -537,7 +537,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                             contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
                             labelText: FromZeroLocalizations.of(context).translate('search...'),
                             labelStyle: TextStyle(height: 1.5),
-                            suffixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.bodySmall!.color!,),
+                            suffixIcon: Icon(Icons.search, color: Theme.of(context).disabledColor,),
                           ),
                           onChanged: (value) {
                             searchQuery = value;

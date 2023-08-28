@@ -61,7 +61,7 @@ class _SelectableIconState extends State<SelectableIcon> with SingleTickerProvid
   void initColorAnimation() {
     _iconColor = _curvedAnimation!.drive(ColorTween(
       begin: widget.unselectedColor 
-          ?? Theme.of(context).textTheme.bodySmall!.color,
+          ?? Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
       end: widget.selectedColor 
           ?? Theme.of(context).colorScheme.secondary,
     ));

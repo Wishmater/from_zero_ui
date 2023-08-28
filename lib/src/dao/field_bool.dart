@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_tooltip.dart';
-import 'package:from_zero_ui/util/copied_flutter_widgets/my_checkbox_list_tile.dart' as my_checkbox_list_tile;
-import 'package:from_zero_ui/util/copied_flutter_widgets/my_switch_list_tile.dart' as my_switch_list_tile;
 
 
 class BoolComparable implements Comparable {
@@ -53,7 +51,7 @@ enum BoolFieldDisplayType {
   checkBoxTile,
   switchTile,
   compactCheckBox,
-  compactSwitch,
+  @deprecated compactSwitch,
   combo,
   radio,
 }
@@ -385,7 +383,7 @@ class BoolField extends Field<BoolComparable> {
                   horizontalTitleGap: 10, // for some reason SwitchListTile take horizontalTitleGap from the Theme, but you can't specify it directly as a parameter... really stupid
                 ),
               ),
-              child: my_checkbox_list_tile.CheckboxListTile(
+              child: CheckboxListTile(
                 focusNode: focusNode,
                 value: value!.value,
                 dense: true,
@@ -411,7 +409,7 @@ class BoolField extends Field<BoolComparable> {
                     if (!dense && showBothNeutralAndSpecificUiName)
                       Text(uiName,
                         style: theme.textTheme.bodySmall!.copyWith(
-                          color: enabled ? theme.textTheme.bodySmall!.color : theme.textTheme.bodyLarge!.color!.withOpacity(0.75),
+                          color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                         ),
                       ),
                     Text(uiNameValue,
@@ -432,7 +430,7 @@ class BoolField extends Field<BoolComparable> {
                   horizontalTitleGap: 10, // for some reason SwitchListTile take horizontalTitleGap from the Theme, but you can't specify it directly as a parameter... really stupid
                 ),
               ),
-              child: my_switch_list_tile.SwitchListTile(
+              child: SwitchListTile(
                 focusNode: focusNode,
                 value: value!.value,
                 dense: true,
@@ -454,7 +452,7 @@ class BoolField extends Field<BoolComparable> {
                     if (!dense && showBothNeutralAndSpecificUiName)
                       Text(uiName,
                         style: theme.textTheme.bodySmall!.copyWith(
-                          color: enabled ? theme.textTheme.bodySmall!.color : theme.textTheme.bodyLarge!.color!.withOpacity(0.75),
+                          color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                         ),
                       ),
                     Text(uiNameValue,
@@ -476,7 +474,7 @@ class BoolField extends Field<BoolComparable> {
           case BoolFieldDisplayType.compactCheckBox:
             result = Stack(
               children: [
-                my_checkbox_list_tile.CheckboxListTile(
+                CheckboxListTile(
                   focusNode: focusNode,
                   value: value!.value,
                   dense: true,
@@ -496,7 +494,7 @@ class BoolField extends Field<BoolComparable> {
                 Positioned.fill(
                   child: IgnorePointer(
                     child: Padding(
-                      padding: EdgeInsets.only(left: 2, right: 2, top: 2, bottom: dense ? 30 : 22),
+                      padding: EdgeInsets.only(left: 2, right: 2, top: 0, bottom: dense ? 30 : 22),
                       child: Center(
                         child: AutoSizeText(uiNameValue,
                           textAlign: TextAlign.center,
@@ -525,28 +523,45 @@ class BoolField extends Field<BoolComparable> {
           case BoolFieldDisplayType.compactSwitch:
             result = Stack(
               children: [
-                my_switch_list_tile.SwitchListTile(
-                  focusNode: focusNode,
-                  value: value!.value,
-                  dense: true,
-                  subtitle: SizedBox.shrink(),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.only(left: (maxWidth/2)-32, top: dense ? 8 : 14),
-                  tileColor: dense && visibleValidationErrors.isNotEmpty
+                Material(
+                  color: dense && visibleValidationErrors.isNotEmpty
                       ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                       : backgroundColor?.call(context, this, dao),
-                  activeColor: selectedColor?.call(context, this, dao),
-                  activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
-                  onChanged: !enabled ? null : (value) {
-                    focusNode.requestFocus();
-                    userInteracted = true;
-                    this.value = value.comparable;
-                  },
+                  child: InkWell(
+                    focusNode: focusNode,
+                    onTap: !enabled ? null : () {
+                      focusNode.requestFocus();
+                      userInteracted = true;
+                      this.value = (!(this.value?.value??false)).comparable;
+                    },
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: ExcludeFocusTraversal(
+                        child: FractionalTranslation(
+                          translation: Offset(0, 0.2),
+                          child: Transform.scale(
+                            scaleY: 0.7, scaleX: 0.8,
+                            filterQuality: FilterQuality.low,
+                            child: Switch(
+                              value: value!.value,
+                              activeColor: selectedColor?.call(context, this, dao),
+                              activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
+                              onChanged: !enabled ? null : (value) {
+                                focusNode.requestFocus();
+                                userInteracted = true;
+                                this.value = value!.comparable;
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: Padding(
-                      padding: EdgeInsets.only(left: 2, right: 2, top: 2, bottom: dense ? 30 : 22),
+                      padding: EdgeInsets.only(left: 2, right: 2, top: 0, bottom: dense ? 30 : 22),
                       child: Center(
                         child: AutoSizeText(uiNameValue,
                           textAlign: TextAlign.center,

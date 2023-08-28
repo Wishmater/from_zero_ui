@@ -20,7 +20,6 @@ import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_sliver_sticky_header.dart';
 import 'package:from_zero_ui/util/no_ensure_visible_traversal_policy.dart';
-import 'package:from_zero_ui/util/copied_flutter_widgets/small_splash_popup_menu_button.dart' as small_popup;
 import 'dart:async';
 import 'package:dartx/dartx.dart';
 import 'package:intl/intl.dart';
@@ -399,40 +398,36 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     sort(notifyListeners: notifyListeners);
   }
   void initHeaderRowModel() {
-    if (widget.columns==null && widget.showHeaders) {
-      headerRowModel = widget.headerRowModel;
-    } else {
-      if (widget.headerRowModel!=null) {
-        if (widget.headerRowModel is SimpleRowModel) {
-          headerRowModel = (widget.headerRowModel as SimpleRowModel).copyWith(
-            onCheckBoxSelected: widget.headerRowModel!.onCheckBoxSelected,
-            values: widget.columns==null || widget.columns!.length==widget.headerRowModel!.values.length
-                ? widget.headerRowModel!.values
-                : widget.columns!.map((key, value) => MapEntry(key, value.name)),
-            rowAddon: headerRowModel?.rowAddon ?? widget.headerWidgetAddon,
-            rowAddonIsAboveRow: widget.headerRowModel?.rowAddonIsAboveRow ?? true,
-            rowAddonIsCoveredByBackground: widget.headerRowModel?.rowAddonIsCoveredByBackground ?? widget.headerWidgetAddon==null,
-            rowAddonIsCoveredByScrollable: widget.headerRowModel?.rowAddonIsCoveredByScrollable ?? widget.headerWidgetAddon==null,
-            rowAddonIsCoveredByGestureDetector: widget.headerRowModel?.rowAddonIsCoveredByGestureDetector ?? true,
-            rowAddonIsSticky: widget.headerRowModel?.rowAddonIsSticky ?? false,
-          );
-        } else {
-          headerRowModel = widget.headerRowModel;
-        }
-      } else {
-        headerRowModel = SimpleRowModel(
-          id: "header_row",
-          values: widget.columns!.map((key, value) => MapEntry(key, value.name)),
-          selected: true,
-          height: widget.rows.isEmpty ? 36 : widget.rows.first.height,
-          rowAddon: widget.headerWidgetAddon,
-          rowAddonIsAboveRow: true,
-          rowAddonIsCoveredByScrollable: false,
-          rowAddonIsCoveredByBackground: false,
-          rowAddonIsCoveredByGestureDetector: true,
-          rowAddonIsSticky: false,
+    if (widget.headerRowModel!=null) {
+      if (widget.headerRowModel is SimpleRowModel) {
+        headerRowModel = (widget.headerRowModel as SimpleRowModel).copyWith(
+          onCheckBoxSelected: widget.headerRowModel!.onCheckBoxSelected,
+          values: widget.columns==null || widget.columns!.length==widget.headerRowModel!.values.length
+              ? widget.headerRowModel!.values
+              : widget.columns!.map((key, value) => MapEntry(key, value.name)),
+          rowAddon: headerRowModel?.rowAddon ?? widget.headerWidgetAddon,
+          rowAddonIsAboveRow: widget.headerRowModel?.rowAddonIsAboveRow ?? true,
+          rowAddonIsCoveredByBackground: widget.headerRowModel?.rowAddonIsCoveredByBackground ?? widget.headerWidgetAddon==null,
+          rowAddonIsCoveredByScrollable: widget.headerRowModel?.rowAddonIsCoveredByScrollable ?? widget.headerWidgetAddon==null,
+          rowAddonIsCoveredByGestureDetector: widget.headerRowModel?.rowAddonIsCoveredByGestureDetector ?? true,
+          rowAddonIsSticky: widget.headerRowModel?.rowAddonIsSticky ?? false,
         );
+      } else {
+        headerRowModel = widget.headerRowModel;
       }
+    } else {
+      headerRowModel = SimpleRowModel(
+        id: "header_row",
+        values: widget.columns?.map((key, value) => MapEntry(key, value.name)) ?? {},
+        selected: true,
+        height: widget.rows.isEmpty ? 36 : widget.rows.first.height,
+        rowAddon: widget.headerWidgetAddon,
+        rowAddonIsAboveRow: true,
+        rowAddonIsCoveredByScrollable: false,
+        rowAddonIsCoveredByBackground: false,
+        rowAddonIsCoveredByGestureDetector: true,
+        rowAddonIsSticky: false,
+      );
     }
   }
 

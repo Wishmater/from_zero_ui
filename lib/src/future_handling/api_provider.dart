@@ -450,22 +450,9 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     }
   }
   static Widget buildErrorDetailsButton(BuildContext context, Object? error, StackTrace? stackTrace, [VoidCallback? onRetry]) {
-    Widget result = TextButton(
-      style: TextButton.styleFrom(
-          primary: Theme.of(context).textTheme.bodyLarge!.color!,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(width: 8,),
-          Icon(Icons.info_outlined),
-          SizedBox(width: 4,),
-          Text('Detalles del Error', // TODO 3 internationalize
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
-          ),
-          SizedBox(width: 8,),
-        ],
-      ),
+    Widget result = DialogButton.cancel(
+      leading: Icon(Icons.info_outlined),
+      child: Text('Detalles del Error'), // TODO 3 internationalize
       onPressed: () => showErrorDetailsDialog(context, error, stackTrace),
     );
     if (!kReleaseMode && onRetry!=null) {
@@ -474,24 +461,9 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
         children: [
           result,
           SizedBox(height: 8,),
-          TextButton(
-            style: TextButton.styleFrom(
-                primary: Theme.of(context).brightness==Brightness.light
-                    ? Colors.blue.shade500
-                    : Colors.blue.shade400
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(width: 8,),
-                Icon(Icons.refresh),
-                SizedBox(width: 4,),
-                Text(FromZeroLocalizations.of(context).translate("retry"),
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
-                ),
-                SizedBox(width: 8,),
-              ],
-            ),
+          DialogButton.accept(
+            leading: Icon(Icons.refresh),
+            child: Text(FromZeroLocalizations.of(context).translate("retry")),
             onPressed: onRetry,
           )
         ],

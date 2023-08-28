@@ -216,8 +216,6 @@ class ErrorSign extends StatelessWidget {
           textAlign: TextAlign.center,
         ),
         if (subtitle.isNotNullOrBlank)
-          SizedBox(height: 8,),
-        if (subtitle.isNotNullOrBlank)
           Text(
             subtitle!,
             style: Theme.of(context).textTheme.bodyLarge,
@@ -226,28 +224,9 @@ class ErrorSign extends StatelessWidget {
         if (retryButton!=null || onRetry!=null)
           SizedBox(height: 16,),
         if (retryButton!=null || onRetry!=null)
-          retryButton ?? TextButton(
-            style: TextButton.styleFrom(
-              primary: Theme.of(context).brightness==Brightness.light
-                  ? Colors.blue.shade500
-                  : Colors.blue.shade400
-            ),
-            child: IntrinsicWidth(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(width: 8,),
-                  Icon(Icons.refresh),
-                  SizedBox(width: 4,),
-                  Expanded(
-                    child: Text(FromZeroLocalizations.of(context).translate("retry"),
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600, height: 1.1),
-                    ),
-                  ),
-                  SizedBox(width: 8,),
-                ],
-              ),
-            ),
+          retryButton ?? DialogButton.accept(
+            leading: Icon(Icons.refresh),
+            child: Text(FromZeroLocalizations.of(context).translate("retry")),
             onPressed: onRetry,
           ),
       ],

@@ -2385,6 +2385,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   addSearchAction: addSearchAction,
                   backgroundColor: backgroundColor?.call(context, this, dao),
                   showColumnMetadata: showTableHeaders,
+                  titleLeftPadding: 12,
                   leading: !collapsible ? icon : IconButton(
                     icon: Icon(collapsed ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_up),
                     onPressed: () {

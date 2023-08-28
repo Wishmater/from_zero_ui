@@ -96,6 +96,8 @@ class ResponsiveInsetsDialog extends StatelessWidget {
   final double? elevation;
   final Duration insetAnimationDuration;
   final Curve insetAnimationCurve;
+  final Color? shadowColor;
+  final Color? surfaceTintColor;
   final Clip clipBehavior;
   final ShapeBorder? shape;
   final AlignmentGeometry? alignment;
@@ -111,6 +113,8 @@ class ResponsiveInsetsDialog extends StatelessWidget {
     this.elevation,
     this.insetAnimationDuration = const Duration(milliseconds: 100),
     this.insetAnimationCurve = Curves.decelerate,
+    this.shadowColor,
+    this.surfaceTintColor,
     this.clipBehavior = Clip.none,
     this.shape,
     this.alignment,
@@ -139,6 +143,8 @@ class ResponsiveInsetsDialog extends StatelessWidget {
       elevation: elevation,
       insetAnimationDuration: insetAnimationDuration,
       insetAnimationCurve: insetAnimationCurve,
+      shadowColor: shadowColor,
+      surfaceTintColor: surfaceTintColor,
       clipBehavior: clipBehavior,
       shape: shape,
       alignment: alignment,

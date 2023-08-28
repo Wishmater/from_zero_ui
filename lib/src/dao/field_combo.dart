@@ -487,6 +487,8 @@ class ComboField<T extends DAO> extends Field<T> {
     bool showDropdownIcon = false,
     dense = false,
   }) {
+    final showHintOrTitleInsteadOfValue = value==null||value.toString().isEmpty;
+    final showHintInsteadOfValue = showHintOrTitleInsteadOfValue && hint!=null;
     return Padding(
       padding: EdgeInsets.only(right: enabled&&clearable ? 40 : 0, bottom: dense ? 4 : 0),
       child: Row(
@@ -500,12 +502,11 @@ class ComboField<T extends DAO> extends Field<T> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 dense
-                    ? Text(value==null||value.toString().isEmpty ? (hint ?? title ?? '') : value.toString(),
+                    ? Text(showHintOrTitleInsteadOfValue ? (hint ?? title ?? '') : value.toString(),
                         maxLines: 2,
                         style: Theme.of(context).textTheme.titleMedium!.copyWith(
                           height: 1,
-                          color: value==null||value.toString().isEmpty ? Theme.of(context).textTheme.bodySmall!.color!
-                              : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                          color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled&&!showHintInsteadOfValue ? 1 : 0.75),
                         ),
                       )
                 : value==null&&hint==null&&title!=null
@@ -516,9 +517,7 @@ class ComboField<T extends DAO> extends Field<T> {
                           style: Theme.of(context).textTheme.titleMedium!.copyWith(
                             fontWeight: FontWeight.w400,
                             height: 1.1,
-                            color: enabled
-                                ? Theme.of(context).textTheme.bodySmall!.color
-                                : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                            color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                           ),
                         ),
                       )
@@ -528,14 +527,13 @@ class ComboField<T extends DAO> extends Field<T> {
                         titleMaxLines: 1,
                         titleStyle: Theme.of(context).textTheme.bodySmall!.copyWith(
                           height: 1,
-                          color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                          color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                         ),
-                        value: value==null||value.toString().isEmpty ? (hint ?? '') : value.toString(),
+                        value: showHintOrTitleInsteadOfValue ? (hint ?? '') : value.toString(),
                         valueMaxLines: 2,
                         valueStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
                           height: 1,
-                          color: value==null||value.toString().isEmpty ? Theme.of(context).textTheme.bodySmall!.color!
-                              : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                          color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled&&!showHintInsteadOfValue ? 1 : 0.75),
                         ),
                       ),
                 SizedBox(height: 4,),

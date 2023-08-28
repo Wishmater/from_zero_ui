@@ -508,10 +508,10 @@ class StringField extends Field<String> {
         hintText: hint,
         border: InputBorder.none,
         alignLabelWithHint: dense,
-        hintStyle: TextStyle(color: Theme.of(context).textTheme.bodySmall!.color),
+        hintStyle: TextStyle(color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75)),
         labelStyle: TextStyle(
           height: dense ? 0 : largeVertically ? 0.2 : 0.6,
-          color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+          color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
         ),
         label: Padding(
           padding: EdgeInsets.only(

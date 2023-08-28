@@ -23,6 +23,7 @@ class TableHeaderFromZero<T> extends StatefulWidget {
   final bool? showColumnMetadata; /// defaults to Table.showHeaders
   final Color? defaultActionsColor;
   final Color? backgroundColor;
+  final double titleLeftPadding;
 
   const TableHeaderFromZero({
     required this.controller,
@@ -37,6 +38,7 @@ class TableHeaderFromZero<T> extends StatefulWidget {
     this.defaultActionsColor,
     this.backgroundColor,
     this.showColumnMetadata,
+    this.titleLeftPadding = 18,
     Key? key,
   })  : super(key: key);
 
@@ -159,10 +161,10 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
             title: Row(
               children: [
                 if (widget.leading==null)
-                  SizedBox(width: 24,),
+                  SizedBox(width: 4 + widget.titleLeftPadding,),
                 if (widget.leading!=null)
                   ... [
-                    SizedBox(width: 20,),
+                    SizedBox(width: widget.titleLeftPadding,),
                     widget.leading!,
                     SizedBox(width: 9,),
                   ],

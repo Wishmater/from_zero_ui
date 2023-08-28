@@ -57,6 +57,7 @@ class DatePickerFromZero extends StatefulWidget {
   _DatePickerFromZeroState createState() => _DatePickerFromZeroState();
 
   static Widget defaultButtonChildBuilder(BuildContext context, String? title, String? hint, dynamic value, DateTimePickerType type, DateFormat formatter, bool enabled, bool clearable) {
+    final theme = Theme.of(context);
     final formattedValue = value==null ? null : type==DateTimePickerType.time
         ? TimeOfDay.fromDateTime(value).format(context)
         : formatter.format(value);
@@ -74,18 +75,17 @@ class DatePickerFromZero extends StatefulWidget {
               SizedBox(width: 8,),
               Expanded(
                 child: value==null&&hint==null&&title!=null
-                    ? Text(title, style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      color: enabled ? Theme.of(context).textTheme.bodySmall!.color : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
-                    ),)
+                    ? Text(title, style: theme.textTheme.titleMedium!.copyWith(
+                        color: enabled&&value!=null ? theme.textTheme.bodyLarge!.color : theme.disabledColor,
+                      ),)
                     : MaterialKeyValuePair(
-                      title: title,
-                      value: value==null ? (hint ?? '') : formattedValue,
-                      valueStyle: Theme.of(context).textTheme.titleMedium!.copyWith(
-                        height: 1,
-                        color: value==null ? Theme.of(context).textTheme.bodySmall!.color!
-                            : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                        title: title,
+                        value: value==null ? (hint ?? '') : formattedValue,
+                        valueStyle: theme.textTheme.titleMedium!.copyWith(
+                          height: 1,
+                          color: enabled&&value!=null ? theme.textTheme.bodyLarge!.color : theme.disabledColor,
+                        ),
                       ),
-                    ),
                   ),
               SizedBox(width: 4,),
               if (enabled && !clearable)

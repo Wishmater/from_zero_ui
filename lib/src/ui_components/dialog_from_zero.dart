@@ -145,7 +145,20 @@ class DialogFromZero extends StatefulWidget {
   final double? maxWidth;
   /// only use if need to replace the whole AppBat, prefer using title and appBarActions
   final Widget? appBar;
-  // TODO 1 add necessary Dialog fields
+  /// forwarded to Dialog widget
+  final Color? backgroundColor;
+  /// forwarded to Dialog widget
+  final double? elevation;
+  /// forwarded to Dialog widget
+  final Color? shadowColor;
+  /// forwarded to Dialog widget
+  final Color? surfaceTintColor;
+  /// forwarded to Dialog widget
+  final Clip clipBehavior;
+  /// forwarded to Dialog widget
+  final ShapeBorder? shape;
+  /// forwarded to Dialog widget
+  final AlignmentGeometry? alignment;
 
   const DialogFromZero({
     this.title,
@@ -158,6 +171,13 @@ class DialogFromZero extends StatefulWidget {
     this.includeDialogWidget = true,
     this.maxWidth,
     this.appBar,
+    this.backgroundColor,
+    this.elevation,
+    this.shadowColor,
+    this.surfaceTintColor,
+    this.clipBehavior = Clip.none,
+    this.shape,
+    this.alignment,
     super.key,
   }) :  assert(appBar==null || (title==null && appBarActions==null),
           'Setting appBar overrides title and appBarActions, no need to specify both',
@@ -334,10 +354,22 @@ class _DialogFromZeroState extends State<DialogFromZero> {
       if (widget.useReponsiveInsets) {
         result = ResponsiveInsetsDialog(
           child: result,
+          elevation: widget.elevation,
+          shadowColor: widget.shadowColor,
+          surfaceTintColor: widget.surfaceTintColor,
+          clipBehavior: widget.clipBehavior,
+          shape: widget.shape,
+          alignment: widget.alignment,
         );
       } else {
         result = Dialog(
           child: result,
+          elevation: widget.elevation,
+          shadowColor: widget.shadowColor,
+          surfaceTintColor: widget.surfaceTintColor,
+          clipBehavior: widget.clipBehavior,
+          shape: widget.shape,
+          alignment: widget.alignment,
         );
       }
     }
@@ -465,7 +497,7 @@ class DialogButton extends StatelessWidget {
   Color? _defaultColor(BuildContext context) {
     switch(_dialogButtonType) {
       case DialogButtonType.cancel:
-        return Theme.of(context).textTheme.bodySmall!.color;
+        return (Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.8));
       case DialogButtonType.accept:
         return Colors.blue;
       case DialogButtonType.other:

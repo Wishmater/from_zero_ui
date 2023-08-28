@@ -998,10 +998,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Container(
-                            width: secondaryFormWidgets.keys.isNotEmpty ? formDialogWidth : null,
-                            padding: EdgeInsets.only(left: secondaryFormWidgets.keys.isNotEmpty ? 12 : 0),
+                        Container(
+                          padding: EdgeInsets.only(left: secondaryFormWidgets.keys.isNotEmpty ? 12 : 0),
+                          child: SizedBox(
+                            width: formDialogWidth+24,
                             child: ScrollbarFromZero(
                               controller: primaryScrollController,
                               child: Container(
@@ -1026,117 +1026,117 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                           ),
                         ),
                         if (secondaryFormWidgets.keys.isNotEmpty)
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 24),
-                              child: SizedBox(
-                                width: formDialogWidth+12+16,
-                                child: DialogFromZero( // take advantage of DialogFromZero layout, to always have intrinsic height (without using the IntrinsicHeight widget)
-                                  includeDialogWidget: false,
-                                  contentPadding: EdgeInsets.zero,
-                                  scrollController: ScrollController(), // disable default DialogFromZero scrolling
-                                  appBar: Column(
-                                    children: [
-                                      if (secondaryFormWidgets.length>1 || secondaryFormWidgets.keys.first!='Grupo 1') // TODO 3 internationalize
-                                        ExcludeFocus(
-                                          child: ScrollbarFromZero(
-                                            controller: tabBarScrollController,
-                                            opacityGradientDirection: OpacityGradient.horizontal,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(right: 12, bottom: PlatformExtended.isDesktop ? 8 : 0,),
-                                              child: SingleChildScrollView(
-                                                scrollDirection: Axis.horizontal,
-                                                controller: tabBarScrollController,
-                                                child: IntrinsicWidth(
-                                                  child: Card(
-                                                    clipBehavior: Clip.hardEdge,
-                                                    child: Builder(
-                                                      builder: (context) {
-                                                        return TabBar( // TODO 3 replace this with an actual widget: PageIndicatorFromzero. Allow to have an indicator + building children dinamically according to selected
-                                                          isScrollable: true,
-                                                          indicatorWeight: 3,
-                                                          tabs: secondaryFormWidgets.keys.map((e) {
-                                                            return Container(
-                                                              height: 32,
-                                                              alignment: Alignment.center,
-                                                              child: Text(e, style: Theme.of(context).textTheme.titleMedium,),
-                                                            );
-                                                          }).toList(),
-                                                          onTap: (value) {
-                                                            DefaultTabController.of(context).index = value;
-                                                            pageController.animateToPage(value,
-                                                              duration: kTabScrollDuration,
-                                                              curve: Curves.ease,
-                                                            );
-                                                          },
-                                                        );
-                                                      }
-                                                    ),
+                          Expanded(child: SizedBox.shrink()),
+                        if (secondaryFormWidgets.keys.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.only(right: 24),
+                            child: SizedBox(
+                              width: formDialogWidth+24+16,
+                              child: DialogFromZero( // take advantage of DialogFromZero layout, to always have intrinsic height (without using the IntrinsicHeight widget)
+                                includeDialogWidget: false,
+                                contentPadding: EdgeInsets.zero,
+                                scrollController: ScrollController(), // disable default DialogFromZero scrolling
+                                appBar: Column(
+                                  children: [
+                                    if (secondaryFormWidgets.length>1 || secondaryFormWidgets.keys.first!='Grupo 1') // TODO 3 internationalize
+                                      ExcludeFocus(
+                                        child: ScrollbarFromZero(
+                                          controller: tabBarScrollController,
+                                          opacityGradientDirection: OpacityGradient.horizontal,
+                                          child: Padding(
+                                            padding: EdgeInsets.only(right: 12, bottom: PlatformExtended.isDesktop ? 8 : 0,),
+                                            child: SingleChildScrollView(
+                                              scrollDirection: Axis.horizontal,
+                                              controller: tabBarScrollController,
+                                              child: IntrinsicWidth(
+                                                child: Card(
+                                                  clipBehavior: Clip.hardEdge,
+                                                  child: Builder(
+                                                    builder: (context) {
+                                                      return TabBar( // TODO 3 replace this with an actual widget: PageIndicatorFromzero. Allow to have an indicator + building children dinamically according to selected
+                                                        isScrollable: true,
+                                                        indicatorWeight: 3,
+                                                        tabs: secondaryFormWidgets.keys.map((e) {
+                                                          return Container(
+                                                            height: 32,
+                                                            alignment: Alignment.center,
+                                                            child: Text(e, style: Theme.of(context).textTheme.titleMedium,),
+                                                          );
+                                                        }).toList(),
+                                                        onTap: (value) {
+                                                          DefaultTabController.of(context).index = value;
+                                                          pageController.animateToPage(value,
+                                                            duration: kTabScrollDuration,
+                                                            curve: Curves.ease,
+                                                          );
+                                                        },
+                                                      );
+                                                    }
                                                   ),
                                                 ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      SizedBox(
-                                        height: 0,
-                                        child: TabBarView(
-                                          children: List.filled(secondaryFormWidgets.keys.length, Container()),
-                                        ),
                                       ),
-                                    ],
-                                  ),
-                                  content: Builder(
-                                    builder: (context) {
-                                      final tabController = DefaultTabController.of(context);
-                                      return AnimatedBuilder(
-                                        animation: tabController,
-                                        builder: (context, child) {
-                                          final currentIndex = tabController.index;
-                                          final currentKey = secondaryFormWidgets.keys.toList()[currentIndex];
-                                          return RelayedFiller(
-                                            duration: kTabScrollDuration,
-                                            notifier: secondarySizeNotifiers[currentKey]!,
-                                            applyWidth: false,
-                                            child: child,
-                                          );
+                                    SizedBox(
+                                      height: 0,
+                                      child: TabBarView(
+                                        children: List.filled(secondaryFormWidgets.keys.length, Container()),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                content: Builder(
+                                  builder: (context) {
+                                    final tabController = DefaultTabController.of(context);
+                                    return AnimatedBuilder(
+                                      animation: tabController,
+                                      builder: (context, child) {
+                                        final currentIndex = tabController.index;
+                                        final currentKey = secondaryFormWidgets.keys.toList()[currentIndex];
+                                        return RelayedFiller(
+                                          duration: kTabScrollDuration,
+                                          notifier: secondarySizeNotifiers[currentKey]!,
+                                          applyWidth: false,
+                                          child: child,
+                                        );
+                                      },
+                                      child: PreloadPageView(
+                                        controller: pageController,
+                                        preloadPagesCount: 999,
+                                        onPageChanged: (value) {
+                                          if (!tabController.indexIsChanging) { // breaks if the pageview is scrolled sideways very fast on mobile, but it's the best alternative to prevent flickering
+                                            tabController.animateTo(value);
+                                          }
                                         },
-                                        child: PreloadPageView(
-                                          controller: pageController,
-                                          preloadPagesCount: 999,
-                                          onPageChanged: (value) {
-                                            if (!tabController.indexIsChanging) { // breaks if the pageview is scrolled sideways very fast on mobile, but it's the best alternative to prevent flickering
-                                              tabController.animateTo(value);
-                                            }
-                                          },
-                                          children: secondaryFormWidgets.keys.map((e) {
-                                            return ScrollbarFromZero(
-                                              controller: secondaryScrollControllers[e],
-                                              child: Padding(
-                                                padding: const EdgeInsets.only(right: 12),
-                                                child: FocusTraversalGroup(
-                                                  child: SingleChildScrollView(
-                                                    controller: secondaryScrollControllers[e],
-                                                    child: FillerRelayer(
-                                                      notifier: secondarySizeNotifiers[e]!,
-                                                      child: Padding(
-                                                        padding: EdgeInsets.only(
-                                                          top: secondaryFormWidgets.length==1 && secondaryFormWidgets.keys.first=='Grupo 1'
-                                                              ? 12 : 0,
-                                                          bottom: 28,
-                                                        ),
-                                                        child: secondaryFormWidgets[e]!,
+                                        children: secondaryFormWidgets.keys.map((e) {
+                                          return ScrollbarFromZero(
+                                            controller: secondaryScrollControllers[e],
+                                            child: Padding(
+                                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                                              child: FocusTraversalGroup(
+                                                child: SingleChildScrollView(
+                                                  controller: secondaryScrollControllers[e],
+                                                  child: FillerRelayer(
+                                                    notifier: secondarySizeNotifiers[e]!,
+                                                    child: Padding(
+                                                      padding: EdgeInsets.only(
+                                                        top: secondaryFormWidgets.length==1 && secondaryFormWidgets.keys.first=='Grupo 1'
+                                                            ? 12 : 0,
+                                                        bottom: 28,
                                                       ),
+                                                      child: secondaryFormWidgets[e]!,
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                            );
-                                          }).toList(),
-                                        ),
-                                      );
-                                    },
-                                  ),
+                                            ),
+                                          );
+                                        }).toList(),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
                             ),
@@ -1849,9 +1849,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               left: 2, right: 2,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
                   border: Border.all(
-                    width: 2,
+                    width: 1,
                     color: Theme.of(context).dividerColor,
                   ),
                 ),
@@ -1862,7 +1862,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               child: Text(group.name!),
             ),
             Padding(
-              padding: const EdgeInsets.only(top: 22, bottom: 14, left: 8, right: 8,),
+              padding: const EdgeInsets.only(top: 24, bottom: 18, left: 8, right: 8,),
               child: result,
             ),
           ],
@@ -2032,13 +2032,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     Expanded(
                       child: TextButton(
                         style: TextButton.styleFrom(
-                          primary: Theme.of(context).textTheme.bodySmall!.color,
+                          primary: Theme.of(context).disabledColor,
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(6.0),
                           child: Text(FromZeroLocalizations.of(context).translate("cancel_caps"),
                             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600,
-                              color: Theme.of(context).textTheme.bodySmall!.color,
+                              color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.8),
                             ),
                           ),
                         ),
@@ -2076,7 +2076,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                             : Theme.of(context).canvasColor,
                         foregroundColor: userInteracted
                             ? Theme.of(context).textTheme.bodyLarge!.color
-                            : Theme.of(context).textTheme.bodySmall!.color,
+                            : Theme.of(context).disabledColor,
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),

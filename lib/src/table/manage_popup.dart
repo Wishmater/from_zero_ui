@@ -65,7 +65,7 @@ abstract class TableFromZeroManagePopup {
                                   Positioned.fill(
                                     child: FadeTransition(
                                       opacity: animation,
-                                      child: ColoredBox(color: Colors.blue.withOpacity(0.33)),
+                                      child: ColoredBox(color: Theme.of(context).colorScheme.primary.withOpacity(0.2)),
                                     ),
                                   ),
                                   child,
@@ -98,14 +98,13 @@ abstract class TableFromZeroManagePopup {
                                   }
                                   final subtitleText = col.getMetadataText(context, controller.filtered, key);
                                   final dividerColor = Color.alphaBlend(Theme.of(context).dividerColor, Theme.of(context).cardColor);
-                                  final dividerIndent = isDesktop ? 50.0 : 0.0;
+                                  final dividerIndent = isDesktop ? 48.0 : 0.0;
                                   Widget result = Column(
                                     children: [
                                       if (index==0)
                                         Divider(height: 1, color: dividerColor, indent: dividerIndent),
                                       Divider(height: 0, color: dividerColor, indent: dividerIndent),
                                       ListTile(
-                                        horizontalTitleGap: 8,
                                         title: Text(col.name),
                                         subtitle: subtitleText.isBlank ? null
                                             : Text(subtitleText),
@@ -125,7 +124,6 @@ abstract class TableFromZeroManagePopup {
                                                       selectedIcon: Icons.visibility,
                                                       icon: Icons.visibility_off,
                                                       selectedColor: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Theme.of(context).colorScheme.secondary,
-                                                      unselectedColor: Theme.of(context).textTheme.bodySmall!.color!,
                                                       unselectedOffset: 0,
                                                       selectedOffset: 0,
                                                     ),
@@ -196,6 +194,7 @@ abstract class TableFromZeroManagePopup {
                             style: Theme.of(context).textTheme.titleLarge,
                           ),
                           backgroundColor: Theme.of(context).cardColor,
+                          surfaceTintColor: Theme.of(context).cardColor,
                           elevation: 6,
                           toolbarHeight: 64,
                           actions: [

@@ -181,8 +181,12 @@ class ActionFromZero extends StatelessWidget {
     bool enabled = true,
     Color? color,
   }) {
-    color ??= Theme.of(context).appBarTheme.toolbarTextStyle?.color
-        ?? Theme.of(context).textTheme.bodyLarge!.color!;
+    if (!enabled || onTap==null) {
+      color = Theme.of(context).disabledColor;
+    } else {
+      color ??= Theme.of(context).appBarTheme.toolbarTextStyle?.color
+          ?? Theme.of(context).textTheme.bodyLarge!.color!;
+    }
     final transparentColor = color.withOpacity(0.05);
     final semiTransparentColor = color.withOpacity(0.1);
     return defaultAnimatedSwitcherBuilder(
@@ -211,8 +215,12 @@ class ActionFromZero extends StatelessWidget {
     bool enabled = true,
     Color? color,
   }) {
-    color ??= Theme.of(context).appBarTheme.toolbarTextStyle?.color
-        ?? Theme.of(context).textTheme.bodyLarge!.color!;
+    if (!enabled || onTap==null) {
+      color = Theme.of(context).disabledColor;
+    } else {
+      color ??= Theme.of(context).appBarTheme.toolbarTextStyle?.color
+          ?? Theme.of(context).textTheme.bodyLarge!.color!;
+    }
     return defaultAnimatedSwitcherBuilder(
       child: SizedBox(
         height: 64,
@@ -269,7 +277,7 @@ class ActionFromZero extends StatelessWidget {
           if (icon!=null) IconTheme(
             data: Theme.of(context).iconTheme.copyWith(
               color: !enabled || onTap==null
-                  ? Theme.of(context).textTheme.bodySmall!.color
+                  ? Theme.of(context).disabledColor
                   : Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white,
             ),
             child: icon,
@@ -284,7 +292,7 @@ class ActionFromZero extends StatelessWidget {
                   fontSize: 16,
                   height: 1.1,
                   color: !enabled || onTap==null
-                      ? Theme.of(context).textTheme.bodySmall!.color
+                      ? Theme.of(context).disabledColor
                       : Theme.of(context).textTheme.bodyLarge!.color,
                 ),
               ),
@@ -305,7 +313,7 @@ class ActionFromZero extends StatelessWidget {
       style: TextButton.styleFrom(
         padding: EdgeInsets.zero,
         primary: !enabled || onTap==null
-            ? Theme.of(context).textTheme.bodySmall!.color
+            ? Theme.of(context).disabledColor
             : Theme.of(context).textTheme.bodyLarge!.color,
       ),
       child: result,
