@@ -58,6 +58,8 @@ class AnimatedSwitcherImage extends StatefulWidget {
     this.layoutBuilder = defaultLayoutBuilder,
     this.alignment = Alignment.center,
     this.clipBehaviour = Clip.hardEdge,
+    this.takeImages = true,
+    this.rebuildOutgoingChildrenIfNoImageReady = false,
   });
 
   final Widget? child;
@@ -69,6 +71,8 @@ class AnimatedSwitcherImage extends StatefulWidget {
   final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
   final Alignment alignment;
   final Clip clipBehaviour;
+  final bool takeImages;
+  final bool rebuildOutgoingChildrenIfNoImageReady;
 
   @override
   State<AnimatedSwitcherImage> createState() => _AnimatedSwitcherImageState();
@@ -84,7 +88,6 @@ class AnimatedSwitcherImage extends StatefulWidget {
   }
 
   static Widget sliverTransitionBuilder(Widget child, Animation<double> animation) {
-    print (child.runtimeType);
     return SliverFadeTransition(
       opacity: animation,
       sliver: child,
@@ -111,7 +114,6 @@ class AnimatedSwitcherImage extends StatefulWidget {
   }
 
   static Widget sliverLayoutBuilder(Widget? currentChild, List<Widget> previousChildren, Alignment alignment, Clip clipBehaviour) {
-    print (currentChild);
     return SliverStack(
       positionedAlignment: alignment,
       children: <Widget>[
@@ -249,7 +251,7 @@ class _AnimatedSwitcherImageState extends State<AnimatedSwitcherImage> with Tick
 
   void _markEntryAsNeedingImageUpdateAfterFrame() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      if (mounted) {
+      if (mounted && widget.takeImages) {
         final entry = _currentEntry;
         // print ('AFTER FRAME ${entry.hashCode}');
         if (entry!=null) {
@@ -310,11 +312,15 @@ class _AnimatedSwitcherImageState extends State<AnimatedSwitcherImage> with Tick
   void _updateTransitionForEntry(_ChildEntry entry) {
     Widget child;
     if (entry.isCurrentEntry) {
-      // print ('build current child: ${entry.hashCode}');
-      child = RepaintBoundary(
-        key: entry.boundaryKey,
-        child: entry.widgetChild,
-      );
+      // print ('build current child ${widget.takeImages}: ${entry.hashCode}');
+      if (widget.takeImages) {
+        child = RepaintBoundary(
+          key: entry.boundaryKey,
+          child: entry.widgetChild,
+        );
+      } else {
+        child = entry.widgetChild;
+      }
     } else {
       if (entry.imageFuture!=null) {
         // print ('build outgouning child: ${entry.hashCode} IMAGE FUTURE ');
@@ -329,12 +335,16 @@ class _AnimatedSwitcherImageState extends State<AnimatedSwitcherImage> with Tick
               return Image(image: data);
             }
             // print ('build outgouning child: ${entry.hashCode} NO IMAGE ');
-            return SizedBox.shrink();
+            return widget.rebuildOutgoingChildrenIfNoImageReady
+                ? entry.widgetChild
+                : SizedBox.shrink();
           },
         );
       } else {
         // print ('build outgouning child: ${entry.hashCode} NO IMAGE FUTURE ');
-        child = SizedBox.shrink();
+        child = widget.rebuildOutgoingChildrenIfNoImageReady
+            ? entry.widgetChild
+            : SizedBox.shrink();
       }
     }
     entry.transition = KeyedSubtree(

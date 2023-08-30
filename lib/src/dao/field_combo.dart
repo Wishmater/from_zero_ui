@@ -357,41 +357,42 @@ class ComboField<T extends DAO> extends Field<T> {
           showDropdownIcon: showDropdownIcon,
         );
         if (provider!=null)
-        result = Stack(
-          children: [
-            result,
-            Positioned(
-              left: 3, top: 3,
-              child: ApiProviderBuilder(
-                provider: provider,
-                dataBuilder: (context, data) {
-                  return SizedBox.shrink();
-                },
-                loadingBuilder: (context, progress) {
-                  return SizedBox(
-                    height: 10, width: 10,
-                    child: LoadingSign(
-                      value: null,
-                      padding: EdgeInsets.zero,
-                      size: 12,
-                      color: Theme.of(context).colorScheme.secondary,
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace, onRetry) {
-                  return SizedBox(
-                    height: 10, width: 10,
-                    child: Icon(
-                      Icons.error_outlined,
-                      color: Colors.red,
-                      size: 12,
-                    ),
-                  );
-                },
+          result = Stack(
+            children: [
+              result,
+              Positioned(
+                left: 3, top: 3,
+                child: ApiProviderBuilder(
+                  provider: provider,
+                  animatedSwitcherType: AnimatedSwitcherType.normal,
+                  dataBuilder: (context, data) {
+                    return SizedBox.shrink();
+                  },
+                  loadingBuilder: (context, progress) {
+                    return SizedBox(
+                      height: 10, width: 10,
+                      child: LoadingSign(
+                        value: null,
+                        padding: EdgeInsets.zero,
+                        size: 12,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace, onRetry) {
+                    return SizedBox(
+                      height: 10, width: 10,
+                      child: Icon(
+                        Icons.error_outlined,
+                        color: Colors.red,
+                        size: 12,
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
-          ],
-        );
+            ],
+          );
         result = AnimatedContainer(
           duration: Duration(milliseconds: 300),
           color: dense && visibleValidationErrors.isNotEmpty

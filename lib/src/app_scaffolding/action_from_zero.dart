@@ -388,6 +388,7 @@ class APIActionFromZero extends ActionFromZero {
       builder: (context, values, child) {
         return ApiProviderMultiBuilder(
           providers: providersBuilder(values),
+          animatedSwitcherType: AnimatedSwitcherType.normal,
           transitionBuilder: (context, child, animation) => FadeTransition(child: child, opacity: animation),
           dataBuilder: (context, data) {
             onTap = onTapApi==null ? null : (context) {
@@ -430,6 +431,7 @@ class APIActionFromZero extends ActionFromZero {
       builder: (context, values, child) {
         return ApiProviderMultiBuilder(
           providers: providersBuilder(values),
+          animatedSwitcherType: AnimatedSwitcherType.normal,
           transitionBuilder: (context, child, animation) => FadeTransition(child: child, opacity: animation),
           dataBuilder: (context, data) {
             onTap = onTapApi==null ? null : (context) {
@@ -472,6 +474,7 @@ class APIActionFromZero extends ActionFromZero {
       builder: (context, values, child) {
         return ApiProviderMultiBuilder(
           providers: providersBuilder(values),
+          animatedSwitcherType: AnimatedSwitcherType.normal,
           transitionBuilder: (context, child, animation) => FadeTransition(child: child, opacity: animation),
           dataBuilder: (context, data) {
             onTap = onTapApi==null ? null : (context) {

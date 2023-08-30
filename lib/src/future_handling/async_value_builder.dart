@@ -13,6 +13,14 @@ typedef ErrorBuilder = Widget Function(BuildContext context, Object error, Stack
 typedef FutureTransitionBuilder = Widget Function (BuildContext context, Widget child, Animation<double> animation);
 
 
+enum AnimatedSwitcherType {
+  none,
+  normal,
+  image,
+  imageWithRebuild,
+  imageNoOutgoing,
+}
+
 class AsyncValueBuilder<T> extends StatelessWidget {
 
   final AsyncValue<T> asyncValue;
@@ -26,6 +34,9 @@ class AsyncValueBuilder<T> extends StatelessWidget {
   final bool applyAnimatedContainerFromChildSize;
   final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
   final Alignment? alignment; // used for animated switches
+  final Clip? clipBehaviour;
+  final AnimatedSwitcherType animatedSwitcherType;
+  final bool addLoadingStateAsValueKeys;
 
   const AsyncValueBuilder({
     Key? key,
@@ -40,54 +51,41 @@ class AsyncValueBuilder<T> extends StatelessWidget {
     this.applyAnimatedContainerFromChildSize = false,
     this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
     this.alignment,
+    this.clipBehaviour,
+    this.addLoadingStateAsValueKeys = true,
+    this.animatedSwitcherType = AnimatedSwitcherType.image,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    String? stateString;
     Widget result = asyncValue.when(
       data: (data) {
-        final result = dataBuilder(context, data);
-        return Container(
-          key: result.key ?? ValueKey(data.hashCode),
-          child: result,
-        );
+        stateString = 'Data-${data.hashCode}';
+        return dataBuilder(context, data);
       },
       error: (error, stackTrace) {
-        final result = errorBuilder(context, error, stackTrace);
-        return Container(
-        key: result.key ?? ValueKey(error.hashCode),
-          child: result,
-        );
+        stateString = 'Error-${error.hashCode}';
+        return errorBuilder(context, error, stackTrace);
       },
       loading: () {
-        final result = loadingBuilder(context);
-        return Container(
-          key: result.key ?? const ValueKey('loading'),
-          child: result,
-        );
+        stateString = 'loading';
+        return loadingBuilder(context);
       },
     );
-    final notifyResize = applyAnimatedContainerFromChildSize ? ChangeNotifier() : null;
-    if (transitionDuration!=Duration.zero) {
-      result = AnimatedSwitcherImage(
-        child: result,
-        duration: transitionDuration,
-        switchInCurve: transitionInCurve,
-        switchOutCurve: transitionOutCurve,
-        transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
-        layoutBuilder: layoutBuilder,
-        alignment: alignment ?? Alignment.center,
-      );
-    }
-    if (applyAnimatedContainerFromChildSize) {
-      result = AnimatedContainerFromChildSize(
-        duration: transitionDuration,
-        alignment: alignment ?? Alignment.topLeft,
-        notifyResize: notifyResize,
-        child: result,
-      );
-    }
-    return result;
+    return AsyncBuilderAnimationWrapper(
+      transitionBuilder: transitionBuilder,
+      transitionDuration: transitionDuration,
+      transitionInCurve: transitionInCurve,
+      transitionOutCurve: transitionOutCurve,
+      applyAnimatedContainerFromChildSize: applyAnimatedContainerFromChildSize,
+      layoutBuilder: layoutBuilder,
+      alignment: alignment,
+      animatedSwitcherType: animatedSwitcherType,
+      loadingState: addLoadingStateAsValueKeys ? stateString : null,
+      clipBehaviour: clipBehaviour,
+      child: result,
+    );
   }
 
   static Widget defaultLoadingBuilder(BuildContext context){
@@ -143,8 +141,8 @@ class SliverAsyncValueBuilder<T> extends AsyncValueBuilder<T> {
 
   static Widget defaultTransitionBuilder(BuildContext context, Widget child, Animation<double> animation){
     return AnimatedSwitcherImage.sliverTransitionBuilder(child, animation);
-
   }
+
 }
 
 
@@ -162,6 +160,9 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
   final bool applyAnimatedContainerFromChildSize;
   final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
   final Alignment? alignment; // used for animated switches
+  final Clip? clipBehaviour;
+  final AnimatedSwitcherType animatedSwitcherType;
+  final bool addLoadingStateAsValueKeys;
 
   const AsyncValueMultiBuilder({
     Key? key,
@@ -176,6 +177,9 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
     this.applyAnimatedContainerFromChildSize = false,
     this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
     this.alignment,
+    this.clipBehaviour,
+    this.addLoadingStateAsValueKeys = true,
+    this.animatedSwitcherType = AnimatedSwitcherType.image,
   }) : super(key: key);
 
   @override
@@ -194,46 +198,30 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
       );
     }
     Widget result;
+    String stateString;
     if (error!=null) {
+      stateString = 'Error-${error.hashCode}';
       result = errorBuilder(context, error!, stackTrace);
-      result = Container(
-        key: result.key ?? ValueKey(error.hashCode),
-        child: result,
-      );
     } else if (data.length==asyncValues.length) {
+      stateString = asyncValues.isEmpty ? 'empty' : 'Data-${Object.hashAll(asyncValues)}';
       result = dataBuilder(context, data);
-      result = Container(
-        key: result.key ?? ValueKey(asyncValues.isEmpty ? 'empty' : Object.hashAll(asyncValues)),
-        child: result,
-      );
     } else {
+      stateString = 'loading';
       result = loadingBuilder(context);
-      result = Container(
-        key: result.key ?? const ValueKey('loading'),
-        child: result,
-      );
     }
-    final notifyResize = applyAnimatedContainerFromChildSize ? ChangeNotifier() : null;
-    if (transitionDuration!=Duration.zero) {
-      result = AnimatedSwitcherImage(
-        child: result,
-        duration: transitionDuration,
-        switchInCurve: transitionInCurve,
-        switchOutCurve: transitionOutCurve,
-        transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
-        layoutBuilder: layoutBuilder,
-        alignment: alignment ?? Alignment.center,
-      );
-    }
-    if (applyAnimatedContainerFromChildSize) {
-      result = AnimatedContainerFromChildSize(
-        duration: transitionDuration,
-        alignment: alignment ?? Alignment.topLeft,
-        notifyResize: notifyResize,
-        child: result,
-      );
-    }
-    return result;
+    return AsyncBuilderAnimationWrapper(
+      transitionBuilder: transitionBuilder,
+      transitionDuration: transitionDuration,
+      transitionInCurve: transitionInCurve,
+      transitionOutCurve: transitionOutCurve,
+      applyAnimatedContainerFromChildSize: applyAnimatedContainerFromChildSize,
+      layoutBuilder: layoutBuilder,
+      alignment: alignment,
+      animatedSwitcherType: animatedSwitcherType,
+      loadingState: addLoadingStateAsValueKeys ? stateString : null,
+      clipBehaviour: clipBehaviour,
+      child: result,
+    );
   }
 
 }
@@ -317,3 +305,82 @@ class SliverFutureProviderBuilder<T> extends FutureProviderBuilder<T> {
 }
 
 
+
+class AsyncBuilderAnimationWrapper extends StatelessWidget {
+
+  final FutureTransitionBuilder transitionBuilder;
+  final Duration transitionDuration;
+  final Curve transitionInCurve;
+  final Curve transitionOutCurve;
+  final bool applyAnimatedContainerFromChildSize;
+  final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
+  final Alignment? alignment; // used for animated switches
+  final Clip? clipBehaviour;
+  final AnimatedSwitcherType animatedSwitcherType;
+  final String? loadingState;
+  final Widget child;
+
+  const AsyncBuilderAnimationWrapper({
+    this.transitionBuilder = AsyncValueBuilder.defaultTransitionBuilder,
+    this.transitionDuration = const Duration(milliseconds: 300),
+    this.transitionInCurve = Curves.easeOutCubic,
+    this.transitionOutCurve = Curves.easeInCubic,
+    this.applyAnimatedContainerFromChildSize = false,
+    this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
+    this.alignment,
+    this.clipBehaviour,
+    this.animatedSwitcherType = AnimatedSwitcherType.image,
+    this.loadingState,
+    required this.child,
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final notifyResize = applyAnimatedContainerFromChildSize ? ChangeNotifier() : null;
+    Widget result = child;
+    if (animatedSwitcherType!=AnimatedSwitcherType.none && transitionDuration!=Duration.zero) {
+      if (loadingState!=null) {
+        result = KeyedSubtree(
+          child: result,
+          key: child.key ?? ValueKey(loadingState),
+        );
+      }
+      if (animatedSwitcherType==AnimatedSwitcherType.normal) {
+        result = AnimatedSwitcher(
+          child: result,
+          duration: transitionDuration,
+          switchInCurve: transitionInCurve,
+          switchOutCurve: transitionOutCurve,
+          transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
+          layoutBuilder: (currentChild, previousChildren) {
+            return layoutBuilder(currentChild, previousChildren, alignment ?? Alignment.center, clipBehaviour ?? Clip.hardEdge);
+          },
+        );
+      } else {
+        result = AnimatedSwitcherImage(
+          child: result,
+          duration: transitionDuration,
+          switchInCurve: transitionInCurve,
+          switchOutCurve: transitionOutCurve,
+          transitionBuilder: (child, animation) => transitionBuilder(context, child, animation),
+          layoutBuilder: layoutBuilder,
+          alignment: alignment ?? Alignment.center,
+          clipBehaviour: clipBehaviour ?? Clip.hardEdge,
+          takeImages: animatedSwitcherType!=AnimatedSwitcherType.imageNoOutgoing,
+          rebuildOutgoingChildrenIfNoImageReady: animatedSwitcherType==AnimatedSwitcherType.imageWithRebuild,
+        );
+      }
+    }
+    if (applyAnimatedContainerFromChildSize) {
+      result = AnimatedContainerFromChildSize(
+        duration: transitionDuration,
+        alignment: alignment ?? Alignment.topLeft,
+        notifyResize: notifyResize,
+        child: result,
+      );
+    }
+    return result;
+  }
+
+}

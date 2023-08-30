@@ -2400,6 +2400,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                     left: 3, top: 3,
                     child: ApiProviderBuilder(
                       provider: availableObjectsPoolProvider!.call(context, this, dao),
+                      animatedSwitcherType: AnimatedSwitcherType.normal,
                       dataBuilder: (context, data) {
                         return SizedBox.shrink();
                       },

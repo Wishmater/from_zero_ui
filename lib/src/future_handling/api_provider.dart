@@ -261,6 +261,9 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   final bool applyAnimatedContainerFromChildSize;
   final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
   final Alignment? alignment; // used for animated switches
+  final Clip? clipBehaviour;
+  final AnimatedSwitcherType animatedSwitcherType;
+  final bool addLoadingStateAsValueKeys;
 
   const ApiProviderBuilder({
     Key? key,
@@ -275,6 +278,9 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     this.applyAnimatedContainerFromChildSize = false,
     this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
     this.alignment,
+    this.clipBehaviour,
+    this.addLoadingStateAsValueKeys = true,
+    this.animatedSwitcherType = AnimatedSwitcherType.image,
   }) : super(key: key);
 
   @override
@@ -304,6 +310,9 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
       transitionOutCurve: transitionOutCurve,
       applyAnimatedContainerFromChildSize: applyAnimatedContainerFromChildSize,
       layoutBuilder: layoutBuilder,
+      clipBehaviour: clipBehaviour,
+      addLoadingStateAsValueKeys: addLoadingStateAsValueKeys,
+      animatedSwitcherType: animatedSwitcherType,
     );
   }
 
@@ -539,6 +548,9 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
   final bool applyAnimatedContainerFromChildSize;
   final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
   final Alignment? alignment; // used for animated switches
+  final Clip? clipBehaviour;
+  final AnimatedSwitcherType animatedSwitcherType;
+  final bool addLoadingStateAsValueKeys;
 
   const ApiProviderMultiBuilder({
     Key? key,
@@ -553,6 +565,9 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
     this.applyAnimatedContainerFromChildSize = false,
     this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
     this.alignment,
+    this.clipBehaviour,
+    this.addLoadingStateAsValueKeys = true,
+    this.animatedSwitcherType = AnimatedSwitcherType.image,
   }) : super(key: key);
 
   @override
@@ -595,6 +610,9 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
       transitionOutCurve: transitionOutCurve,
       applyAnimatedContainerFromChildSize: applyAnimatedContainerFromChildSize,
       layoutBuilder: layoutBuilder,
+      clipBehaviour: clipBehaviour,
+      addLoadingStateAsValueKeys: addLoadingStateAsValueKeys,
+      animatedSwitcherType: animatedSwitcherType,
     );
   }
 
@@ -665,6 +683,9 @@ class ApiStateBuilder<T> extends ConsumerStatefulWidget {
   final bool applyAnimatedContainerFromChildSize;
   final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
   final Alignment? alignment; // used for animated switches
+  final Clip? clipBehaviour;
+  final AnimatedSwitcherType animatedSwitcherType;
+  final bool addLoadingStateAsValueKeys;
 
   const ApiStateBuilder({
     Key? key,
@@ -679,6 +700,9 @@ class ApiStateBuilder<T> extends ConsumerStatefulWidget {
     this.applyAnimatedContainerFromChildSize = false,
     this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
     this.alignment,
+    this.clipBehaviour,
+    this.addLoadingStateAsValueKeys = true,
+    this.animatedSwitcherType = AnimatedSwitcherType.image,
   }) : super(key: key);
 
   @override
@@ -721,6 +745,9 @@ class _ApiStateBuilderState<T> extends ConsumerState<ApiStateBuilder<T>> {
       transitionOutCurve: widget.transitionOutCurve,
       applyAnimatedContainerFromChildSize: widget.applyAnimatedContainerFromChildSize,
       layoutBuilder: widget.layoutBuilder,
+      clipBehaviour: widget.clipBehaviour,
+      addLoadingStateAsValueKeys: widget.addLoadingStateAsValueKeys,
+      animatedSwitcherType: widget.animatedSwitcherType,
     );
   }
 
