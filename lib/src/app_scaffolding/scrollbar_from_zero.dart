@@ -1,6 +1,5 @@
 import 'dart:ui';
 
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/scheduler/ticker.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
