@@ -2,8 +2,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:animations/animations.dart';
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -18,7 +16,6 @@ import 'package:from_zero_ui/src/app_scaffolding/scrollbar_from_zero.dart';
 
 import 'package:from_zero_ui/util/no_fading_transitions/no_fading_shared_axis_transition.dart' as no_fading_shared_axis_transition;
 import 'package:dartx/dartx.dart';
-import 'package:go_router/go_router.dart';
 
 
 typedef Widget DrawerContentBuilder(BuildContext context, bool compact,);
