@@ -1,9 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
-import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:dartx/dartx.dart';
 
 class ContextMenuFromZero extends StatefulWidget {
@@ -79,7 +76,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
       context: context,
       anchorKey: mousePosition==null ? anchorKey : null,
       referencePosition: mousePosition,
-      referenceSize: mousePosition==null ? null : Size(1, 1),
+      referenceSize: mousePosition==null ? null : const Size(1, 1),
       width: contextMenuWidth,
       popupAlignment: popupAlignment,
       anchorAlignment: anchorAlignment,
@@ -96,7 +93,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
               controller: scrollController,
               shrinkWrap: true,
               itemCount: actions.length,
-              padding: EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: 8),
               itemBuilder: (context, index) {
                 final action = actions[index];
                 return action.copyWith(
@@ -175,7 +172,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
         (TapGestureRecognizer instance) {
           if (widget.addOnTapDown) {
             instance
-              ..onTapDown = onTapDown;
+              .onTapDown = onTapDown;
           }
           instance
             ..onSecondaryTapDown = onTapDown

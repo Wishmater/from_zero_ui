@@ -1,28 +1,21 @@
-import 'dart:io';
 
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/animations/heroes_from_zero.dart';
-import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
-import 'package:path_provider/path_provider.dart';
 
 
-import '../../change_notifiers/theme_parameters.dart';
 import '../../router.dart';
-import '../home/page_home.dart';
 
 
 class PageHeroes extends StatefulWidget {
 
-  PageHeroes();
+  const PageHeroes({super.key});
 
   @override
-  _PageHeroesState createState() => _PageHeroesState();
+  PageHeroesState createState() => PageHeroesState();
 
 }
 
-class _PageHeroesState extends State<PageHeroes> {
+class PageHeroesState extends State<PageHeroes> {
 
   late Widget widgetToExport;
   HeroFlightShuttleBuilder? shuttleBuilder;
@@ -30,7 +23,7 @@ class _PageHeroesState extends State<PageHeroes> {
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      title: Text("Heroes"),
+      title: const Text("Heroes"),
       body: _getPage(context),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
         tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: mainRoutes),
@@ -70,17 +63,17 @@ class _PageHeroesState extends State<PageHeroes> {
   Widget _getPage(context){
     widgetToExport = Card(
       child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Column(
               children: [
-                SizedBox(height: 8,),
+                const SizedBox(height: 8,),
                 Padding(
                   padding: const EdgeInsets.only(left: 16),
                   child: ElevatedButton(
-                    child: Text("Normal Hero"),
+                    child: const Text("Normal Hero"),
                     onPressed: () {
                       setState(() {
                         shuttleBuilder = null;
@@ -91,11 +84,11 @@ class _PageHeroesState extends State<PageHeroes> {
                     },
                   ),
                 ),
-                SizedBox(height: 16,),
+                const SizedBox(height: 16,),
                 Padding(
                   padding: const EdgeInsets.only(left: 16),
                   child: ElevatedButton(
-                    child: Text("CrossFade Hero"),
+                    child: const Text("CrossFade Hero"),
                     onPressed: () {
                       setState(() {
                         shuttleBuilder = HeroesFromZero.fadeThroughFlightShuttleBuilder;
@@ -106,11 +99,11 @@ class _PageHeroesState extends State<PageHeroes> {
                     },
                   ),
                 ),
-                SizedBox(height: 16,),
+                const SizedBox(height: 16,),
                 Padding(
                   padding: const EdgeInsets.only(left: 16),
                   child: ElevatedButton( //TODO 3- implement custom trransitionBuilderHero
-                    child: Text("Custom transionBuilder Hero"),
+                    child: const Text("Custom transionBuilder Hero"),
                     onPressed: () {
                       setState(() {
                         shuttleBuilder = null;
@@ -121,11 +114,11 @@ class _PageHeroesState extends State<PageHeroes> {
                     },
                   ),
                 ),
-                SizedBox(height: 16,),
+                const SizedBox(height: 16,),
                 Padding(
                   padding: const EdgeInsets.only(left: 16),
                   child: ElevatedButton(
-                    child: Text("CrossFade in a Page with Higher Depth"),
+                    child: const Text("CrossFade in a Page with Higher Depth"),
                     onPressed: () {
                       setState(() {
                         shuttleBuilder = HeroesFromZero.fadeThroughFlightShuttleBuilder;
@@ -136,10 +129,10 @@ class _PageHeroesState extends State<PageHeroes> {
                     },
                   ),
                 ),
-                SizedBox(height: 8,),
+                const SizedBox(height: 8,),
               ],
             ),
-            SizedBox(width: 32,),
+            const SizedBox(width: 32,),
             Hero(
               tag: "hero_test",
               flightShuttleBuilder: shuttleBuilder,
@@ -154,7 +147,7 @@ class _PageHeroesState extends State<PageHeroes> {
                       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                       child: Text("Heroes Test", style: Theme.of(context).textTheme.titleMedium,),
                     ),
-                    FlutterLogo(size: 192,),
+                    const FlutterLogo(size: 192,),
                   ],
                 ),
               ),

@@ -5,11 +5,8 @@ import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/painting.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/app_update.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 bool alreadyInitedHive = false;
@@ -25,7 +22,7 @@ Future<void> initHive([String? subdir]) async{
     if (file.existsSync()){
       final lines = file.readAsLinesSync();
       file.delete();
-      runApp(LoadingApp());
+      runApp(const LoadingApp());
       doWhenWindowReady(() {
         appWindow.title = "Finishing Update...";
         const initialSize = Size(512, 112);
@@ -59,7 +56,7 @@ class ThemeParametersFromZero extends ChangeNotifier {
   ThemeData get defaultDarkTheme => ThemeData.dark();
 
   /// override for custom choices
-  List<Widget> get themeIcons => [Icon(MaterialCommunityIcons.theme_light_dark), Icon(Icons.wb_sunny), Icon(MaterialCommunityIcons.weather_night),];
+  List<Widget> get themeIcons => [const Icon(MaterialCommunityIcons.theme_light_dark), const Icon(Icons.wb_sunny), const Icon(MaterialCommunityIcons.weather_night),];
   List<String> Function(BuildContext context) get themeNames =>
           (context) => [
             FromZeroLocalizations.of(context).translate("default_theme"),
@@ -79,8 +76,8 @@ class ThemeParametersFromZero extends ChangeNotifier {
 
   List<Locale?> get supportedLocales => [
     null,
-    Locale('en'),
-    Locale('es'),
+    const Locale('en'),
+    const Locale('es'),
   ];
   List<String> Function(BuildContext context) get supportedLocaleTitles =>
           (context) => [
@@ -89,7 +86,7 @@ class ThemeParametersFromZero extends ChangeNotifier {
             "Español",
           ];
   List<Widget> get supportedLocaleIcons => supportedLocales.map(
-          (e) => e==null ? Icon(Icons.settings,)
+          (e) => e==null ? const Icon(Icons.settings,)
               : TextIcon(e.languageCode)
   ).toList();
 
@@ -161,7 +158,7 @@ class _FromZeroLocalizationsDelegate
   @override
   Future<FromZeroLocalizations> load(Locale locale) async {
     // AppLocalizations class is where the JSON loading actually runs
-    FromZeroLocalizations localizations = new FromZeroLocalizations(locale);
+    FromZeroLocalizations localizations = FromZeroLocalizations(locale);
     await localizations.load();
     return localizations;
   }
@@ -175,7 +172,7 @@ class ThemeSwitcher extends StatelessWidget {
 
   final ThemeParametersFromZero themeParameters;
 
-  ThemeSwitcher(this.themeParameters);
+  const ThemeSwitcher(this.themeParameters, {super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -196,14 +193,14 @@ class ThemeSwitcher extends StatelessWidget {
         return IconTheme(
           data: Theme.of(context).iconTheme,
           child: Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(width: 6,),
+                const SizedBox(width: 6,),
                 themeParameters.themeIcons[themeParameters.selectedTheme],
-                SizedBox(width: 12,),
+                const SizedBox(width: 12,),
                 Expanded(
                   child: MaterialKeyValuePair(
                     title: title,
@@ -211,9 +208,9 @@ class ThemeSwitcher extends StatelessWidget {
                     valueStyle: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
-                SizedBox(width: 4,),
+                const SizedBox(width: 4,),
                 Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyLarge!.color,),
-                SizedBox(width: 4,),
+                const SizedBox(width: 4,),
               ],
             ),
           ),
@@ -224,9 +221,9 @@ class ThemeSwitcher extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            SizedBox(width: 4,),
+            const SizedBox(width: 4,),
             themeParameters.themeIcons[value],
-            SizedBox(width: 12,),
+            const SizedBox(width: 12,),
             Expanded(
               child: Text(themeParameters.themeNames(context)[value],
                 style: Theme.of(context).textTheme.titleMedium,
@@ -245,27 +242,27 @@ class LocaleSwitcher extends StatelessWidget {
 
   final ThemeParametersFromZero themeParameters;
 
-  LocaleSwitcher(this.themeParameters);
+  const LocaleSwitcher(this.themeParameters, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return PopupMenuButton(
-      child: ListTile(
-        title: Text(FromZeroLocalizations.of(context).translate("language")),
-        subtitle: Text(themeParameters.supportedLocaleTitles(context)[themeParameters.selectedLocale]),
-        leading: themeParameters.supportedLocaleIcons[themeParameters.selectedLocale],
-        trailing: Icon(Icons.arrow_drop_down),
-      ),
       itemBuilder: (context) => List.generate(themeParameters.supportedLocales.length, (index) => PopupMenuItem(
         value: index,
         child: ListTile(
           title: Text(themeParameters.supportedLocaleTitles(context)[index]),
           leading: themeParameters.supportedLocaleIcons[index],
-          contentPadding: EdgeInsets.all(0),
+          contentPadding: const EdgeInsets.all(0),
         ),
       )),
       initialValue: themeParameters.selectedLocale,
       onSelected: (int value) => value!=themeParameters.selectedLocale ? themeParameters.selectedLocale = value : null,
+      child: ListTile(
+        title: Text(FromZeroLocalizations.of(context).translate("language")),
+        subtitle: Text(themeParameters.supportedLocaleTitles(context)[themeParameters.selectedLocale]),
+        leading: themeParameters.supportedLocaleIcons[themeParameters.selectedLocale],
+        trailing: const Icon(Icons.arrow_drop_down),
+      ),
     );
   }
 
@@ -291,6 +288,8 @@ class LocaleSwitcher extends StatelessWidget {
 
 
 class LoadingApp extends StatelessWidget {
+  const LoadingApp({super.key});
+
 
   @override
   Widget build(BuildContext context) {

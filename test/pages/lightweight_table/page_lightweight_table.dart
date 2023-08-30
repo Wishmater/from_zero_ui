@@ -1,26 +1,19 @@
-import 'dart:io';
 
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
-import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
-import 'package:path_provider/path_provider.dart';
 
-import '../../change_notifiers/theme_parameters.dart';
 import '../../router.dart';
-import '../home/page_home.dart';
 
 class PageLightweightTable extends StatefulWidget {
 
-  PageLightweightTable();
+  const PageLightweightTable({super.key});
 
   @override
-  _PageLightweightTableState createState() => _PageLightweightTableState();
+  PageLightweightTableState createState() => PageLightweightTableState();
 
 }
 
-class _PageLightweightTableState extends State<PageLightweightTable> {
+class PageLightweightTableState extends State<PageLightweightTable> {
 
   late Widget col1;
   late Widget col2;
@@ -43,7 +36,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
     return ScaffoldFromZero(
       mainScrollController: scrollController,
       scrollbarType: ScaffoldFromZero.scrollbarTypeOverAppbar,
-      title: Text("Lightweight Table"),
+      title: const Text("Lightweight Table"),
       body: _getPage(context),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
         tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: mainRoutes),
@@ -107,7 +100,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
   }
 
   Widget _getPage(context){
-    col1 = Card(
+    col1 = const Card(
       child: Padding(
         padding: EdgeInsets.all(16),
         child: ComplicatedTable(),
@@ -118,11 +111,11 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
       enableStickyHeaders: false,
       minWidthGetter: (currentColumnKeys) => 640,
       alternateRowBackgroundBrightness: true,
-      rows: List.generate(100, (index) => ["Dummy data " + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",]).map((e) {
+      rows: List.generate(100, (index) => ["Dummy data $index", "Dummy data", "Dummy data", "Dummy data", "Dummy data",]).map((e) {
         return SimpleRowModel<dynamic>(
           id: e,
           values: e.asMap(),
-          rowAddon: Text('ADDON ASDFG fsgfad gadfsgkadfs glasdnfgklanfsgAFSG DAFG AFSD GADSF GADFGA DFSG'),
+          rowAddon: const Text('ADDON ASDFG fsgfad gadfsgkadfs glasdnfgklanfsgAFSG DAFG AFSD GADSF GADFGA DFSG'),
           onRowTap: (row){},
           onCellTap: (row,) {},
           // actions: [
@@ -163,19 +156,19 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
           child: ResponsiveHorizontalInsets(
             child: Column(
               children: [
-                SizedBox(height: 12,),
+                const SizedBox(height: 12,),
                 col1,
-                SizedBox(height: 12,),
+                const SizedBox(height: 12,),
                 SizedBox(
                   height: constraints.maxHeight-24,
                   child: col2
                 ),
-                SizedBox(height: 12,),
+                const SizedBox(height: 12,),
                 SizedBox(
                   height: constraints.maxHeight-24,
                   child: col3
                 ),
-                SizedBox(height: 12,),
+                const SizedBox(height: 12,),
               ],
             ),
           ),
@@ -187,7 +180,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
 
   List<GlobalKey> col3RowKeys = List.generate(100, (index) => GlobalKey());
   Widget _getCol3(BuildContext context, ScrollController controller, [List<Key>? rowKeys]){
-    if (rowKeys==null) rowKeys = List.generate(100, (index) => ValueKey(index));
+    rowKeys ??= List.generate(100, (index) => ValueKey(index));
     table3 = TableFromZero(
       horizontalDivider: null,
       verticalDivider: null,
@@ -202,7 +195,7 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
         id: index,
         height: 36,
         rowKey: rowKeys![index],
-        values: ["Dummy data" + index.toString(), "Dummy data", "Dummy data", "Dummy data", "Dummy data",].asMap(),
+        values: ["Dummy data$index", "Dummy data", "Dummy data", "Dummy data", "Dummy data",].asMap(),
       )),
     );
     return Padding(
@@ -217,15 +210,16 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
                   valueListenable: textControllers[2]!,
                   builder: (context, TextEditingValue value, child) {
                     var v = value.text;
-                    if (context.findAncestorWidgetOfExactType<Export>()==null)
+                    if (context.findAncestorWidgetOfExactType<Export>()==null) {
                       v = "CustomScrollController";
-                    return Text(v, style: Theme.of(context).textTheme.headline3,);
+                    }
+                    return Text(v, style: Theme.of(context).textTheme.displaySmall,);
                   }
               ),
             ),
           ),
           table3,
-          SliverToBoxAdapter(child: SizedBox(height: 16,),),
+          const SliverToBoxAdapter(child: SizedBox(height: 16,),),
         ],
       ),
     );
@@ -236,12 +230,14 @@ class _PageLightweightTableState extends State<PageLightweightTable> {
 
 class ComplicatedTable extends StatefulWidget {
 
+  const ComplicatedTable({super.key});
+
   @override
-  _ComplicatedTableState createState() => _ComplicatedTableState();
+  ComplicatedTableState createState() => ComplicatedTableState();
 
 }
 
-class _ComplicatedTableState extends State<ComplicatedTable> {
+class ComplicatedTableState extends State<ComplicatedTable> {
 
   List<bool> selected = List.generate(5, (index) => false);
   List<int> rowsIds = List.generate(5, (index) => index);
@@ -255,7 +251,7 @@ class _ComplicatedTableState extends State<ComplicatedTable> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
 //     return TableFromZero.fromRowList(
 //       layoutWidgetType: TableFromZero.animatedColumn,
 //       columnNames: ["Col 1", "Col 2", "Col 3", "Col 4", "Very long column title 5"],

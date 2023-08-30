@@ -1,11 +1,8 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
-import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:dartx/dartx.dart';
-import 'package:from_zero_ui/util/copied_flutter_widgets/my_tooltip.dart';
 
 
 class BoolComparable implements Comparable {
@@ -18,7 +15,7 @@ class BoolComparable implements Comparable {
   String toString() => value ? 'SÍ': 'NO'; // TODO 3 internationalize
 
   @override
-  bool operator == (dynamic other) => other is BoolComparable && this.value==other.value;
+  bool operator == (dynamic other) => other is BoolComparable && value==other.value;
 
   @override
   int get hashCode => value.hashCode;
@@ -221,7 +218,7 @@ class BoolField extends Field<BoolComparable> {
 
   @override
   String toString() {
-    return showBothNeutralAndSpecificUiName ? '$uiName: $uiNameValue' : '$uiNameValue';
+    return showBothNeutralAndSpecificUiName ? '$uiName: $uiNameValue' : uiNameValue;
   }
 
   @override
@@ -238,13 +235,13 @@ class BoolField extends Field<BoolComparable> {
     bool? hidden,
   }) {
     if (hidden ?? fieldParam.hiddenInView) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     final field = fieldParam as BoolField;
     final value = field.value!.value;
     if (value&&fieldParam.showViewCheckmark==BoolFieldShowViewCheckmark.whenFalse
         || !value&&fieldParam.showViewCheckmark==BoolFieldShowViewCheckmark.whenTrue) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     final theme = Theme.of(context);
     final valueName = value
@@ -258,7 +255,7 @@ class BoolField extends Field<BoolComparable> {
           ? Icon(Icons.check,
             color: activeColor,
           )
-          : Icon(Icons.close,
+          : const Icon(Icons.close,
             color: Colors.red,
           );
     } else if (field.displayType==BoolFieldDisplayType.switchTile
@@ -267,7 +264,7 @@ class BoolField extends Field<BoolComparable> {
           ? Icon(MaterialCommunityIcons.toggle_switch,
             color: activeColor,
           )
-          : Icon(MaterialCommunityIcons.toggle_switch_off_outline,
+          : const Icon(MaterialCommunityIcons.toggle_switch_off_outline,
             color: Colors.grey,
           );
     }
@@ -280,7 +277,7 @@ class BoolField extends Field<BoolComparable> {
           if (icon!=null)
             icon,
           if (icon!=null)
-            SizedBox(width: 2,),
+            const SizedBox(width: 2,),
           if (valueName!=null)
             Expanded(
               child: dense
@@ -291,7 +288,7 @@ class BoolField extends Field<BoolComparable> {
                     minFontSize: 14,
                     overflowReplacement: TooltipFromZero(
                       message: valueName,
-                      waitDuration: Duration(milliseconds: 0),
+                      waitDuration: const Duration(milliseconds: 0),
                       verticalOffset: -16,
                       child: AutoSizeText(valueName,
                         style: theme.textTheme.titleMedium,
@@ -324,7 +321,7 @@ class BoolField extends Field<BoolComparable> {
     focusNode ??= this.focusNode;
     Widget result;
     if (hiddenInForm && !ignoreHidden) {
-      result = SizedBox.shrink();
+      result = const SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);
       }
@@ -478,7 +475,7 @@ class BoolField extends Field<BoolComparable> {
                   focusNode: focusNode,
                   value: value!.value,
                   dense: true,
-                  subtitle: SizedBox.shrink(),
+                  subtitle: const SizedBox.shrink(),
                   controlAffinity: ListTileControlAffinity.leading,
                   contentPadding: EdgeInsets.only(left: (maxWidth/2)-20, top: dense ? 8 : 14),
                   tileColor: dense && visibleValidationErrors.isNotEmpty
@@ -532,13 +529,13 @@ class BoolField extends Field<BoolComparable> {
                     onTap: !enabled ? null : () {
                       focusNode.requestFocus();
                       userInteracted = true;
-                      this.value = (!(this.value?.value??false)).comparable;
+                      value = (!(value?.value??false)).comparable;
                     },
                     child: Align(
                       alignment: Alignment.bottomCenter,
                       child: ExcludeFocusTraversal(
                         child: FractionalTranslation(
-                          translation: Offset(0, 0.2),
+                          translation: const Offset(0, 0.2),
                           child: Transform.scale(
                             scaleY: 0.7, scaleX: 0.8,
                             filterQuality: FilterQuality.low,
@@ -549,7 +546,7 @@ class BoolField extends Field<BoolComparable> {
                               onChanged: !enabled ? null : (value) {
                                 focusNode.requestFocus();
                                 userInteracted = true;
-                                this.value = value!.comparable;
+                                this.value = value.comparable;
                               },
                             ),
                           ),
@@ -624,7 +621,7 @@ class BoolField extends Field<BoolComparable> {
             );
             break;
           case BoolFieldDisplayType.radio:
-            result = Text('Unimplemented type'); // TODO 3 implement radio BoolField, maybe also radio ComboField
+            result = const Text('Unimplemented type'); // TODO 3 implement radio BoolField, maybe also radio ComboField
             break;
         }
         result = TooltipFromZero(
@@ -633,8 +630,8 @@ class BoolField extends Field<BoolComparable> {
                 : b.toString().trim().isEmpty ? a.toString()
                 : '$a\n$b';
           }),
+          waitDuration: enabled ? const Duration(seconds: 1) : Duration.zero,
           child: result,
-          waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
         // TODO 3 implement actions in FieldBool
         return result;

@@ -1,15 +1,13 @@
 
-import 'package:flutter/foundation.dart';
 import 'package:value_layout_builder/value_layout_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/src/rendering/box.dart' as box;
 // import 'package:flutter/foundation.dart';
 import 'dart:math' as math;
 
 /// Signature used by [SliverStickyHeader.builder] to build the header
 /// when the sticky header state has changed.
-typedef Widget SliverStickyHeaderWidgetBuilder(
+typedef SliverStickyHeaderWidgetBuilder = Widget Function(
     BuildContext context,
     SliverStickyHeaderState state,
     );
@@ -67,12 +65,12 @@ class DefaultStickyHeaderController extends StatefulWidget {
   }
 
   @override
-  _DefaultStickyHeaderControllerState createState() =>
-      _DefaultStickyHeaderControllerState();
+  DefaultStickyHeaderControllerState createState() => DefaultStickyHeaderControllerState();
+
 }
 
-class _DefaultStickyHeaderControllerState
-    extends State<DefaultStickyHeaderController> {
+class DefaultStickyHeaderControllerState extends State<DefaultStickyHeaderController> {
+
   StickyHeaderController? _controller;
 
   @override
@@ -134,7 +132,7 @@ class SliverStickyHeaderState {
 
   @override
   int get hashCode {
-    return hashValues(scrollPercentage, isPinned);
+    return Object.hashAll([scrollPercentage, isPinned]);
   }
 }
 
@@ -152,7 +150,7 @@ class SliverStickyHeader extends RenderObjectWidget {
   ///
   /// If a [StickyHeaderController] is not provided, then the value of
   /// [DefaultStickyHeaderController.of] will be used.
-  SliverStickyHeader({
+  const SliverStickyHeader({
     Key? key,
     this.header,
     this.sliver,
@@ -296,10 +294,12 @@ class SliverStickyHeaderRenderObjectElement extends RenderObjectElement {
   void insertRenderObjectChild(RenderObject child, int? slot) {
     final RenderSliverStickyHeader renderObject =
     this.renderObject as RenderSliverStickyHeader;
-    if (slot==0)
+    if (slot==0) {
       renderObject.header = child as RenderBox?;
-    if (slot==1)
+    }
+    if (slot==1) {
       renderObject.child = child as RenderSliver?;
+    }
     assert(renderObject == this.renderObject);
   }
 
@@ -424,8 +424,9 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
 
   @override
   void setupParentData(RenderObject child) {
-    if (child.parentData is! SliverPhysicalParentData)
+    if (child.parentData is! SliverPhysicalParentData) {
       child.parentData = SliverPhysicalParentData();
+    }
   }
 
   @override
@@ -519,7 +520,7 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
     if (header != null) {
       header!.layout(
         BoxValueConstraints<SliverStickyHeaderState>(
-          value: _oldState ?? SliverStickyHeaderState(0.0, false),
+          value: _oldState ?? const SliverStickyHeaderState(0.0, false),
           constraints: constraints.asBoxConstraints(),
         ),
         parentUsesSize: true,
@@ -786,13 +787,15 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
 
   @override
   double childMainAxisPosition(RenderObject? child) {
-    if (child == header)
+    if (child == header) {
       return _isPinned
           ? 0.0
           : -(constraints.scrollOffset + constraints.overlap);
-    if (child == this.child)
+    }
+    if (child == this.child) {
       return calculatePaintOffset(constraints,
           from: 0.0, to: headerLogicalExtent!);
+    }
     return 0;
   }
 

@@ -1,15 +1,9 @@
-import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
-import 'package:from_zero_ui/src/ui_components/context_menu.dart';
-import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
-import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
 
 
 class AppbarFromZero extends StatefulWidget {
@@ -93,7 +87,7 @@ class AppbarFromZero extends StatefulWidget {
     this.constraints,
     this.actionPadding = 4,
   }) :
-        this.actions = actions ?? [],
+        actions = actions ?? [],
         super(key: key);
 
   @override
@@ -187,8 +181,9 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
     List<int> removeIndices = [];
     if (forceExpanded!=null){
       ActionState state = forceExpanded!.getStateForMaxWidth(constraints.maxWidth);
-      if (state==ActionState.expanded)
+      if (state==ActionState.expanded) {
         forceExpanded = null;
+      }
     }
     if (forceExpanded==null) {
 
@@ -238,7 +233,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
           }
         }
       }
-      removeIndices.reversed.forEach((element) {actions.removeAt(element);});
+      for (var element in removeIndices.reversed) {actions.removeAt(element);}
       if (overflows.length==1 && overflows.first.icon!=null) {
         actions.add(overflows.removeLast().buildIcon(context, color: actionsColor));
       }
@@ -261,7 +256,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
         final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
         actions.add(
           ContextMenuIconButton(
-            icon: Icon(Icons.more_vert),
+            icon: const Icon(Icons.more_vert),
             color: iconButtonColor,
             hoverColor: iconButtonTransparentColor,
             highlightColor: iconButtonSemiTransparentColor,
@@ -291,11 +286,11 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
       transitionBuilder: (child, animation) => FadeTransition(
         opacity: Tween<double>(begin: -0.5, end: 1).animate(animation),
         child: SlideTransition(
-          position: Tween<Offset>(begin: Offset(-1, 0), end: Offset.zero).animate(animation),
+          position: Tween<Offset>(begin: const Offset(-1, 0), end: Offset.zero).animate(animation),
           child: child,
         ),
       ),
-      child: forceExpanded!=null ? SizedBox.shrink() : widget.title,
+      child: forceExpanded!=null ? const SizedBox.shrink() : widget.title,
     );
     Widget actionsContent = Padding(
       padding: EdgeInsets.only(
@@ -313,7 +308,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
               transitionBuilder: (child, animation) => FadeTransition(
                 opacity: animation,
                 child: SlideTransition(
-                  position: Tween<Offset>(begin: Offset(1, 0), end: Offset.zero).animate(animation),
+                  position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(animation),
                   child: child,
                 ),
               ),
@@ -358,12 +353,12 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
           opacity: animation,
           child: ScaleTransition(
             scale: animation,
-            child: child,
             alignment: Alignment.bottomCenter,
+            child: child,
           ),
         ),
         child: SizedBox(
-          key: ValueKey(forceExpanded!=null ? forceExpanded : expanded.isEmpty),
+          key: ValueKey(forceExpanded ?? expanded.isEmpty),
           height: toolbarHeight,
           child: Padding(
             padding: EdgeInsets.only(top: showWindowButtons ? titleBarHeight*0.7 : 0),
@@ -375,7 +370,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
                   child: forceExpanded!.buildExpanded(context, color: actionsColor),
                 ),
                 IconButton(
-                  icon: Icon(Icons.close),
+                  icon: const Icon(Icons.close),
                   onPressed: () {
                     setState(() {
                       forceExpanded = null;

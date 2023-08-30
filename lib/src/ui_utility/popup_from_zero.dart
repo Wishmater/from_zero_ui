@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/future_handling/future_handling.dart';
 
 
 
@@ -54,7 +53,7 @@ class PopupFromZero extends StatefulWidget {
   final Alignment popupAlignment;
   final Offset offsetCorrection;
 
-  PopupFromZero({
+  const PopupFromZero({
     Key? key,
     this.anchorKey,
     this.referencePosition,
@@ -69,10 +68,11 @@ class PopupFromZero extends StatefulWidget {
         super(key: key);
 
   @override
-  _PopupFromZeroState createState() => _PopupFromZeroState();
+  PopupFromZeroState createState() => PopupFromZeroState();
+
 }
 
-class _PopupFromZeroState extends State<PopupFromZero> {
+class PopupFromZeroState extends State<PopupFromZero> {
 
   GlobalKey childGlobalKey = GlobalKey();
   Offset? lastReferencePosition;
@@ -207,7 +207,7 @@ class _PopupFromZeroState extends State<PopupFromZero> {
               children: [
                 AnimatedPositioned(
                   duration: animation.isCompleted
-                      ? Duration(milliseconds: 250)
+                      ? const Duration(milliseconds: 250)
                       : Duration.zero,
                   curve: Curves.easeOutCubic,
                   left: x,

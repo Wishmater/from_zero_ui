@@ -1,10 +1,7 @@
 import 'package:email_validator/email_validator.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/dao/dao.dart';
-import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 
 
@@ -47,9 +44,9 @@ class ValidationError {
     bool? isVisibleAsSaveConfirmation,
     bool? isVisibleAsHintMessage,
     bool? isVisibleAsTooltip,
-  })  : this._isVisibleAsSaveConfirmation = isVisibleAsSaveConfirmation,
-        this._isVisibleAsHintMessage = isVisibleAsHintMessage,
-        this._isVisibleAsTooltip = isVisibleAsTooltip;
+  })  : _isVisibleAsSaveConfirmation = isVisibleAsSaveConfirmation,
+        _isVisibleAsHintMessage = isVisibleAsHintMessage,
+        _isVisibleAsTooltip = isVisibleAsTooltip;
 
   @override
   String toString() => error;
@@ -63,13 +60,13 @@ class ValidationError {
     bool? isVisibleAsTooltip,
   }) {
     return ValidationError(
-      field: this.field,
-      severity: this.severity,
+      field: field,
+      severity: severity,
       error: error ?? this.error,
       isVisibleAsSaveConfirmation: isVisibleAsSaveConfirmation ?? this.isVisibleAsSaveConfirmation,
       isVisibleAsHintMessage: isVisibleAsHintMessage ?? this.isVisibleAsHintMessage,
       isVisibleAsTooltip: isVisibleAsTooltip ?? this.isVisibleAsTooltip,
-    )..animationController=this.animationController;
+    )..animationController=animationController;
   }
 }
 
@@ -100,6 +97,7 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
           isVisibleAsTooltip: isVisibleAsTooltip,
         );
 
+  @override
   InvalidatingError<T> copyWith({
     String? error,
     bool? isVisibleAsSaveConfirmation,
@@ -107,7 +105,7 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
     bool? isVisibleAsTooltip,
   }) {
     return InvalidatingError<T>(
-      field: this.field as Field<T>,
+      field: field as Field<T>,
       error: error ?? this.error,
       defaultValue: this.defaultValue,
       showVisualConfirmation: this.showVisualConfirmation,
@@ -116,7 +114,7 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
       isVisibleAsSaveConfirmation: isVisibleAsSaveConfirmation ?? this.isVisibleAsSaveConfirmation,
       isVisibleAsHintMessage: isVisibleAsHintMessage ?? this.isVisibleAsHintMessage,
       isVisibleAsTooltip: isVisibleAsTooltip ?? this.isVisibleAsTooltip,
-    )..animationController=this.animationController;
+    )..animationController=animationController;
   }
 }
 
@@ -147,6 +145,7 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
         : ValidationErrorSeverity.invalidating;
   }
 
+  @override
   ForcedValueError<T> copyWith({
     String? error,
     bool? isVisibleAsSaveConfirmation,
@@ -155,15 +154,15 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
     bool Function(T? value, T? defaultValue)? comparator,
   }) {
     return ForcedValueError<T>(
-      field: this.field as Field<T>,
+      field: field as Field<T>,
       error: error ?? this.error,
-      defaultValue: this.defaultValue,
-      showVisualConfirmation: this.showVisualConfirmation,
+      defaultValue: defaultValue,
+      showVisualConfirmation: showVisualConfirmation,
       isVisibleAsSaveConfirmation: isVisibleAsSaveConfirmation ?? this.isVisibleAsSaveConfirmation,
       isVisibleAsHintMessage: isVisibleAsHintMessage ?? this.isVisibleAsHintMessage,
       isVisibleAsTooltip: isVisibleAsTooltip ?? this.isVisibleAsTooltip,
       comparator: comparator ?? this.comparator,
-    )..animationController=this.animationController;
+    )..animationController=animationController;
   }
 }
 
@@ -176,7 +175,7 @@ ValidationError? fieldValidatorRequired<T extends Comparable>(BuildContext conte
   return field.value==null||field.value!.toString().trim().isEmpty
       ? ValidationError(
           field: field,
-          error: errorMessage ?? (field.uiName + ' ' + FromZeroLocalizations.of(context).translate("validation_error_required")),
+          error: errorMessage ?? ('${field.uiName} ${FromZeroLocalizations.of(context).translate("validation_error_required")}'),
           severity: severity,
         )
       : null;
@@ -186,7 +185,7 @@ ValidationError? fieldValidatorListNotEmpty<T extends Comparable>(BuildContext c
   String? errorMessage,
   ValidationErrorSeverity severity = ValidationErrorSeverity.error,
 }) {
-  return field is ListField && (field.value as ComparableList).list.length==0
+  return field is ListField && (field.value as ComparableList).list.isEmpty
       ? ValidationError(
           field: field,
           error: errorMessage ?? 'At least one ${(field as ListField).objectTemplate.classUiName} required', // TODO 2 internationalize
@@ -204,7 +203,7 @@ ValidationError? fieldValidatorNumberNotNegative(BuildContext context, DAO dao, 
       : field.value!<0
           ? ValidationError(
             field: field,
-            error: errorMessage ?? (field.uiName + ' ' + FromZeroLocalizations.of(context).translate("validation_error_not_negative")),
+            error: errorMessage ?? ('${field.uiName} ${FromZeroLocalizations.of(context).translate("validation_error_not_negative")}'),
             severity: severity,
           )
           : null;
@@ -219,7 +218,7 @@ ValidationError? fieldValidatorNumberNotZero(BuildContext context, DAO dao, Fiel
       : field.value==0
           ? ValidationError(
             field: field,
-            error: errorMessage ?? (field.uiName + ' ' + FromZeroLocalizations.of(context).translate("validation_error_not_zero")),
+            error: errorMessage ?? ('${field.uiName} ${FromZeroLocalizations.of(context).translate("validation_error_not_zero")}'),
             severity: severity,
           )
           : null;
@@ -277,7 +276,7 @@ class FieldDiffMessage<T extends Comparable> extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(8)),
+          borderRadius: const BorderRadius.all(Radius.circular(8)),
           border: Border.all(
             width: 2,
             color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.3),
@@ -298,8 +297,8 @@ class FieldDiffMessage<T extends Comparable> extends StatelessWidget {
                         value: oldValueField.toString(),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16, left: 6, right: 6),
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16, left: 6, right: 6),
                       child: Icon(Icons.arrow_right_alt),
                     ),
                     Expanded(
@@ -350,7 +349,7 @@ class ValidationMessage extends StatefulWidget {
   final bool animate;
   final bool hideNotVisibleAsHintMessage;
 
-  ValidationMessage({
+  const ValidationMessage({
     Key? key,
     required this.errors,
     required this.passedFirstEdit,
@@ -394,7 +393,7 @@ class _ValidationMessageState extends State<ValidationMessage> with SingleTicker
       }
     }
     return Padding(
-      padding: EdgeInsets.only(left: 10, right: 10,),
+      padding: const EdgeInsets.only(left: 10, right: 10,),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -419,11 +418,11 @@ class SingleValidationMessage extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _SingleValidationMessageState createState() => _SingleValidationMessageState();
+  SingleValidationMessageState createState() => SingleValidationMessageState();
 
 }
 
-class _SingleValidationMessageState extends State<SingleValidationMessage> with SingleTickerProviderStateMixin {
+class SingleValidationMessageState extends State<SingleValidationMessage> with SingleTickerProviderStateMixin {
 
   late AnimationController animationController;
 
@@ -468,9 +467,9 @@ class _SingleValidationMessageState extends State<SingleValidationMessage> with 
         return Padding(
           padding: const EdgeInsets.only(bottom: 4,),
           child: Container(
-            padding: EdgeInsets.only(left: 8, right: 8, bottom: 4, top: 2),
+            padding: const EdgeInsets.only(left: 8, right: 8, bottom: 4, top: 2),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.all(Radius.circular(4)),
+              borderRadius: const BorderRadius.all(Radius.circular(4)),
               color: widget.error.isBlocking
                   ? color
                   : Colors.transparent,
@@ -524,22 +523,22 @@ class SaveConfirmationValidationMessage extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SaveConfirmationValidationMessageGroup(
-          name: FromZeroLocalizations.of(context).translate("errors") + ':',
+          name: '${FromZeroLocalizations.of(context).translate("errors")}:',
           severity: ValidationErrorSeverity.error,
           errors: errors,
         ),
         SaveConfirmationValidationMessageGroup(
-          name: 'Advertencias Severas' + ':',
+          name: 'Advertencias Severas:',
           severity: ValidationErrorSeverity.nonBlockingError,
           errors: redWarnings,
         ),
         SaveConfirmationValidationMessageGroup(
-          name: FromZeroLocalizations.of(context).translate("warnings") + ':',
+          name: '${FromZeroLocalizations.of(context).translate("warnings")}:',
           severity: ValidationErrorSeverity.warning,
           errors: warnings,
         ),
         SaveConfirmationValidationMessageGroup(
-          name: FromZeroLocalizations.of(context).translate("unfinished") + ':',
+          name: '${FromZeroLocalizations.of(context).translate("unfinished")}:',
           severity: ValidationErrorSeverity.unfinished,
           errors: unfinished,
         ),
@@ -565,7 +564,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (errors.isEmpty) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     bool isBlocking = severity==ValidationErrorSeverity.error || severity==ValidationErrorSeverity.invalidating;
     final children = <Widget>[];
@@ -592,7 +591,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
                     color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
                   ),
                 ),
-                SizedBox(width: 6,),
+                const SizedBox(width: 6,),
                 Expanded(
                   child: Text(e.error,
                     // style: Theme.of(context).textTheme.bodyLarge!.copyWith(color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!),
@@ -616,7 +615,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(height: 18),
+            const SizedBox(height: 18),
             if (name!=null)
               Row(
                 children: [
@@ -624,7 +623,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
                     size: isBlocking ? 38 : 27,
                     color: ValidationMessage.severityColors[Theme.of(context).brightness]![severity]!,
                   ),
-                  SizedBox(width: 4,),
+                  const SizedBox(width: 4,),
                   Expanded(
                     child: Text(name!,
                       style: isBlocking
@@ -636,7 +635,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
               ),
             ...children,
             if (isBlocking)
-              SizedBox(height: 12),
+              const SizedBox(height: 12),
           ],
         ),
       ),
@@ -691,7 +690,7 @@ class ValidationRequiredOverlay extends StatelessWidget {
                 child: Icon(MaterialCommunityIcons.asterisk,
                   size: dense ? 11 : isEmpty ? 14 : 8,
                   color: isEmpty
-                      ? Theme.of(context).errorColor
+                      ? Theme.of(context).colorScheme.error
                       : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
                 ),
               ),

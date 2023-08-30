@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 // import 'package:wave/config.dart';
@@ -12,7 +11,7 @@ class FromZeroBanner extends StatelessWidget {
   final double logoSizePercentage;
 
 
-  FromZeroBanner({this.logoSizePercentage=0.6});
+  const FromZeroBanner({super.key, this.logoSizePercentage=0.6});
 
   @override
   Widget build(BuildContext context) {
@@ -64,13 +63,13 @@ class FromZeroBanner extends StatelessWidget {
 //                   ),
                 ),
               ),
-              Expanded(child: Container(), flex: 1,),
+              Expanded(flex: 1,child: Container(),),
             ],
           ),
           FractionallySizedBox(
             heightFactor: logoSizePercentage,
             widthFactor: logoSizePercentage,
-            child: FromZeroLogo(),
+            child: const FromZeroLogo(),
           )
         ],
       ),
@@ -81,6 +80,8 @@ class FromZeroBanner extends StatelessWidget {
 
 
 class FromZeroLogo extends StatelessWidget {
+  const FromZeroLogo({super.key});
+
 
   @override
   Widget build(BuildContext context) {

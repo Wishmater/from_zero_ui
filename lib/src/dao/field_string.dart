@@ -1,12 +1,9 @@
 import 'dart:async';
 import 'package:flutter/gestures.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/dao/dao.dart';
-import 'package:from_zero_ui/src/dao/field_validators.dart';
 import 'package:dartx/dartx.dart';
 
 
@@ -34,14 +31,15 @@ class StringField extends Field<String> {
   }
 
   @override
-  set value(String? v) {
+  set value(String? v) {  // ignore: must_call_super
+                          // this is intentional :) commitValue(v) calls super
     valUpdateTimer?.cancel();
     v ??= '';
     if (v.isEmpty || v.characters.last == ' ' || v.characters.last == '\n' || !isEdited) {
       commitValue(v);
     } else if (value != controller.text) {
       addUndoEntry(value);
-      valUpdateTimer = Timer(Duration(seconds: 2), () {
+      valUpdateTimer = Timer(const Duration(seconds: 2), () {
         commitValue(v);
       });
     }
@@ -122,9 +120,9 @@ class StringField extends Field<String> {
     super.actionsGetter,
     ViewWidgetBuilder<String> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<String?>? onValueChanged,
-  }) :  this.minLines = minLines ?? (type==StringFieldType.short ? null : 3),
-        this.maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
-        this.showObfuscationToggleButton = showObfuscationToggleButton ?? obfuscate,
+  }) :  minLines = minLines ?? (type==StringFieldType.short ? null : 3),
+        maxLines = maxLines ?? (type==StringFieldType.short ? 1 : 999999999),
+        showObfuscationToggleButton = showObfuscationToggleButton ?? obfuscate,
         super(
           uiNameGetter: uiNameGetter,
           value: value ?? '',
@@ -240,7 +238,7 @@ class StringField extends Field<String> {
     focusNode ??= this.focusNode;
     Widget result;
     if (hiddenInForm && !ignoreHidden) {
-      result = SizedBox.shrink();
+      result = const SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);
       }
@@ -332,7 +330,7 @@ class StringField extends Field<String> {
                     final backgroundColor = this.backgroundColor?.call(context, this, dao);
                     final focusColor = Theme.of(context).focusColor.withOpacity(Theme.of(context).focusColor.opacity*0.6);
                     return AnimatedContainer(
-                      duration: Duration(milliseconds: 250),
+                      duration: const Duration(milliseconds: 250),
                       color: dense && visibleValidationErrors.isNotEmpty
                           ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                           : focusNode.hasFocus  ? backgroundColor!=null ? Color.alphaBlend(focusColor, backgroundColor)
@@ -365,7 +363,7 @@ class StringField extends Field<String> {
                           () => TransparentTapGestureRecognizer(debugOwner: this),
                           (TapGestureRecognizer instance) {
                         instance // hack to fix textField breaking when window loses focus on desktop
-                          ..onTapDown = (details) => controller.notifyListeners();
+                          .onTapDown = (details) => controller.notifyListeners();
                       },
                     ),
                   },
@@ -406,8 +404,8 @@ class StringField extends Field<String> {
                   : b.toString().trim().isEmpty ? a.toString()
                   : '$a\n$b';
             }),
+            waitDuration: enabled ? const Duration(seconds: 1) : Duration.zero,
             child: result,
-            waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
           if (!dense) {
             result = AppbarFromZero(
@@ -420,7 +418,7 @@ class StringField extends Field<String> {
               paddingRight: 6,
               actionPadding: 0,
               skipTraversalForActions: true,
-              constraints: BoxConstraints(),
+              constraints: const BoxConstraints(),
               actions: allActions,
               title: SizedBox(height: largeVertically ? null : 56, child: result),
             );

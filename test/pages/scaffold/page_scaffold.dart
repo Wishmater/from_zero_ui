@@ -1,32 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
-import 'package:from_zero_ui/src/app_scaffolding/snackbar_from_zero.dart';
-import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 import 'package:go_router/go_router.dart';
 
 
-import '../../change_notifiers/theme_parameters.dart';
 import '../../router.dart';
-import '../home/page_home.dart';
 
 class PageScaffold extends StatefulWidget {
 
-  PageScaffold();
+  const PageScaffold({super.key});
 
   @override
-  _PageScaffoldState createState() => _PageScaffoldState();
+  PageScaffoldState createState() => PageScaffoldState();
 
 }
 
-class _PageScaffoldState extends State<PageScaffold> {
+class PageScaffoldState extends State<PageScaffold> {
 
   ScrollController scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      title: Row(
+      title: const Row(
         children: [
           Text("Scaffold FromZero"),
           Hero(
@@ -45,14 +40,14 @@ class _PageScaffoldState extends State<PageScaffold> {
           builder: (context) {
             return ActionFromZero(
               title: "Action 1",
-              icon: Icon(Icons.looks_one),
+              icon: const Icon(Icons.looks_one),
               onTap: (appbarContext){
                 SnackBarFromZero(
                   context: context,
                   type: SnackBarFromZero.info,
-                  title: Text("Title"),
-                  message: Text("Pog message..."),
-                  duration: Duration(seconds: 10),
+                  title: const Text("Title"),
+                  message: const Text("Pog message..."),
+                  duration: const Duration(seconds: 10),
                   actions: [
                     SnackBarAction(
                       label: "Action",
@@ -60,7 +55,7 @@ class _PageScaffoldState extends State<PageScaffold> {
                         SnackBarFromZero(
                           context: context,
                           type: SnackBarFromZero.info,
-                          title: Text("Action Pressed"),
+                          title: const Text("Action Pressed"),
                         ).show(context);
                       },
                     ),
@@ -102,7 +97,7 @@ class _PageScaffoldState extends State<PageScaffold> {
 
         ActionFromZero(
           title: "Search",
-          icon: Icon(Icons.search),
+          icon: const Icon(Icons.search),
           expandedBuilder: ({required context, enabled=true, icon, onTap, required title, color}) {
             return Container(
               width: 256,
@@ -124,44 +119,44 @@ class _PageScaffoldState extends State<PageScaffold> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(height: 12,),
+                const SizedBox(height: 12,),
                 Card(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text("Page Transitions", style: Theme.of(context).textTheme.headlineMedium,),
-                        SizedBox(height: 32,),
+                        const SizedBox(height: 32,),
                         Padding(
                           padding: const EdgeInsets.only(left: 16),
                           child: ElevatedButton(
-                            child: Text("Page With Same ID and Same Depth"),
+                            child: const Text("Page With Same ID and Same Depth"),
                             onPressed: () => GoRouter.of(context).pushNamed("scaffold_same"),
                           ),
                         ),
-                        SizedBox(height: 16,),
+                        const SizedBox(height: 16,),
                         Padding(
                           padding: const EdgeInsets.only(left: 16),
                           child: ElevatedButton(
-                            child: Text("Page With Same ID and Higher Depth"),
+                            child: const Text("Page With Same ID and Higher Depth"),
                             onPressed: () => GoRouter.of(context).pushNamed("scaffold_inner"),
                           ),
                         ),
-                        SizedBox(height: 16,),
+                        const SizedBox(height: 16,),
                         Padding(
                           padding: const EdgeInsets.only(left: 16),
                           child: ElevatedButton(
-                            child: Text("Page With Different ID"),
+                            child: const Text("Page With Different ID"),
                             onPressed: () => GoRouter.of(context).pushNamed("scaffold_other"),
                           ),
                         ),
-                        SizedBox(height: 8,),
+                        const SizedBox(height: 8,),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: 12,),
+                const SizedBox(height: 12,),
               ],
             ),
           ),

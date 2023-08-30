@@ -1,11 +1,11 @@
 part of 'dao.dart';
 
 
-typedef FutureOr<ValidationError?> FieldValidator<T extends Comparable>(BuildContext context, DAO dao, Field<T> field);
-typedef T FieldValueGetter<T, R extends Field>(R field, DAO dao);
-typedef T ContextFulFieldValueGetter<T, R extends Field>(BuildContext context, R field, DAO dao);
-typedef void OnFieldValueChanged<T>(DAO dao, Field field, T value);
-typedef Widget ViewWidgetBuilder<T extends Comparable>(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons, bool dense, bool? hidden});
+typedef FieldValidator<T extends Comparable> = FutureOr<ValidationError?> Function(BuildContext context, DAO dao, Field<T> field);
+typedef FieldValueGetter<T, R extends Field> = T Function(R field, DAO dao);
+typedef ContextFulFieldValueGetter<T, R extends Field> = T Function(BuildContext context, R field, DAO dao);
+typedef OnFieldValueChanged<T> = void Function(DAO dao, Field field, T value);
+typedef ViewWidgetBuilder<T extends Comparable> = Widget Function(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons, bool dense, bool? hidden});
 bool trueFieldGetter(_, __) => true;
 bool falseFieldGetter(_, __) => false;
 List defaultValidatorsGetter(_, __) => [];
@@ -73,6 +73,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   }
 
   T? _value;
+  @override
   T? get value => _value;
   @mustCallSuper
   set value(T? value) {
@@ -127,15 +128,15 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     this.actionsGetter,
     this.viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     this.onValueChanged,
-  }) :  this._value = value,
-        this.dbValue = dbValue ?? value,
-        this.undoValues = undoValues ?? [],
-        this.redoValues = redoValues ?? [],
-        this._fieldGlobalKey = fieldGlobalKey,
-        this._focusNode = focusNode,
-        this.hiddenInTableGetter = hiddenInTableGetter ?? hiddenGetter ?? falseFieldGetter,
-        this.hiddenInViewGetter = hiddenInViewGetter ?? hiddenGetter ?? falseFieldGetter,
-        this.hiddenInFormGetter = hiddenInFormGetter ?? hiddenGetter ?? falseFieldGetter;
+  }) :  _value = value,
+        dbValue = dbValue ?? value,
+        undoValues = undoValues ?? [],
+        redoValues = redoValues ?? [],
+        _fieldGlobalKey = fieldGlobalKey,
+        _focusNode = focusNode,
+        hiddenInTableGetter = hiddenInTableGetter ?? hiddenGetter ?? falseFieldGetter,
+        hiddenInViewGetter = hiddenInViewGetter ?? hiddenGetter ?? falseFieldGetter,
+        hiddenInFormGetter = hiddenInFormGetter ?? hiddenGetter ?? falseFieldGetter;
 
   Field<T> copyWith({
     FieldValueGetter<String, Field>? uiNameGetter,
@@ -276,7 +277,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       if (invalidateNonEmptyValuesIfHiddenInForm && value!=defaultValue) {
         validationErrors.add(InvalidatingError(
           field: this,
-          error: uiName + ' ' + FromZeroLocalizations.of(context).translate("validation_combo_hidden_with_value"),
+          error: '$uiName ${FromZeroLocalizations.of(context).translate("validation_combo_hidden_with_value")}',
           defaultValue: defaultValue,
         ));
       }
@@ -371,7 +372,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   }) {
     Widget result;
     if (hiddenInForm && !ignoreHidden) {
-      result = SizedBox.shrink();
+      result = const SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);
       }
@@ -379,7 +380,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     }
     if (false) {
       result = ListTile(
-        leading: Icon(Icons.error_outline),
+        leading: const Icon(Icons.error_outline),
         title: Text('Unimplemented Widget for type: ${T.toString()}'),
       );
     } else {
@@ -388,7 +389,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     if (addCard) {
       result = Card(
         child: Padding(
-          padding: EdgeInsets.only(left: 12, right: 12,),
+          padding: const EdgeInsets.only(left: 12, right: 12,),
           child: result,
         ),
       );
@@ -429,7 +430,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     String? subtitle,
   }) {
     if (hidden ?? field.hiddenInView) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     linkToInnerDAOs = linkToInnerDAOs && (field.value is DAO)
         && (field.value as DAO).wantsLinkToSelfFromOtherDAOs;
@@ -467,7 +468,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                       minFontSize: 15,
                       overflowReplacement: TooltipFromZero(
                         message: message,
-                        waitDuration: Duration(milliseconds: 0),
+                        waitDuration: const Duration(milliseconds: 0),
                         verticalOffset: -16,
                         child: Text(message,
                           style: Theme.of(context).textTheme.titleMedium!.copyWith(
@@ -502,11 +503,11 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
             ),
             if (linkToInnerDAOs && showViewButtons)
               Padding(
-                padding: EdgeInsets.only(left: 12),
+                padding: const EdgeInsets.only(left: 12),
                 child: IconButton(
-                  icon: Icon(Icons.info_outline),
-                  padding: EdgeInsets.all(0),
-                  constraints: BoxConstraints(maxHeight: 32),
+                  icon: const Icon(Icons.info_outline),
+                  padding: const EdgeInsets.all(0),
+                  constraints: const BoxConstraints(maxHeight: 32),
                   onPressed: () => (field.value as DAO).pushViewDialog(context),
                 ),
               ),
@@ -521,7 +522,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       if (dao.enableUndoRedoMechanism)
         ActionFromZero(
           title: 'Deshacer', // TODO 3 internationalize
-          icon: Icon(MaterialCommunityIcons.undo_variant),
+          icon: const Icon(MaterialCommunityIcons.undo_variant),
           onTap: (context) {
             userInteracted = true;
             focusNode?.requestFocus();
@@ -533,7 +534,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       if (dao.enableUndoRedoMechanism)
         ActionFromZero(
           title: 'Rehacer', // TODO 3 internationalize
-          icon: Icon(MaterialCommunityIcons.redo_variant),
+          icon: const Icon(MaterialCommunityIcons.redo_variant),
           onTap: (context) {
             userInteracted = true;
             focusNode?.requestFocus();
@@ -545,7 +546,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       if (clearable)
         ActionFromZero(
           title: 'Limpiar', // TODO 3 internationalize
-          icon: Icon(Icons.clear),
+          icon: const Icon(Icons.clear),
           onTap: (context) {
             userInteracted = true;
             value = defaultValue;

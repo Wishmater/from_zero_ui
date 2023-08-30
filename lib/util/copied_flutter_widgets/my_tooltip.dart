@@ -5,7 +5,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/widgets.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 
 
@@ -185,9 +184,9 @@ class TooltipFromZero extends StatefulWidget {
   ///
   /// If null, the message's [TextStyle] will be determined based on
   /// [ThemeData]. If [ThemeData.brightness] is set to [Brightness.dark],
-  /// [TextTheme.bodyText2] of [ThemeData.textTheme] will be used with
+  /// [TextTheme.bodyMedium] of [ThemeData.textTheme] will be used with
   /// [Colors.white]. Otherwise, if [ThemeData.brightness] is set to
-  /// [Brightness.light], [TextTheme.bodyText2] of [ThemeData.textTheme] will be
+  /// [Brightness.light], [TextTheme.bodyMedium] of [ThemeData.textTheme] will be
   /// used with [Colors.black].
   final TextStyle? textStyle;
 
@@ -539,22 +538,22 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     _pressActivated = true;
     final bool tooltipCreated = ensureTooltipVisible();
     if (tooltipCreated && enableFeedback) {
-      if (triggerMode == TooltipTriggerMode.longPress)
+      if (triggerMode == TooltipTriggerMode.longPress) {
         Feedback.forLongPress(context);
-      else
+      } else {
         Feedback.forTap(context);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    assert(Overlay.of(context, debugRequiredFor: widget) != null);
     final ThemeData theme = Theme.of(context);
     final TooltipThemeData tooltipTheme = TooltipTheme.of(context);
     final TextStyle defaultTextStyle;
     final BoxDecoration defaultDecoration;
     if (theme.brightness == Brightness.dark) {
-      defaultTextStyle = theme.textTheme.bodyText2!.copyWith(
+      defaultTextStyle = theme.textTheme.bodyMedium!.copyWith(
         color: Colors.black,
         fontSize: _getDefaultFontSize(),
       );
@@ -563,7 +562,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
         borderRadius: const BorderRadius.all(Radius.circular(4)),
       );
     } else {
-      defaultTextStyle = theme.textTheme.bodyText2!.copyWith(
+      defaultTextStyle = theme.textTheme.bodyMedium!.copyWith(
         color: Colors.white,
         fontSize: _getDefaultFontSize(),
       );
@@ -644,9 +643,7 @@ class _TooltipPositionDelegate extends SingleChildLayoutDelegate {
     required this.target,
     required this.verticalOffset,
     required this.preferBelow,
-  }) : assert(target != null),
-        assert(verticalOffset != null),
-        assert(preferBelow != null);
+  });
 
   /// The offset of the target the tooltip is positioned near in the global
   /// coordinate system.
@@ -769,7 +766,7 @@ class _TooltipOverlayState extends State<_TooltipOverlay> {
               maxHeight: widget.maxHeight ?? double.infinity,
             ),
             child: DefaultTextStyle(
-              style: Theme.of(context).textTheme.bodyText2!,
+              style: Theme.of(context).textTheme.bodyMedium!,
               child: Container(
                 decoration: widget.decoration,
                 margin: widget.margin,

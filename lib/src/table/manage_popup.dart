@@ -1,8 +1,6 @@
-import 'package:animations/animations.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
 
 
 abstract class TableFromZeroManagePopup {
@@ -57,7 +55,7 @@ abstract class TableFromZeroManagePopup {
                         controller: scrollController,
                         shrinkWrap: true,
                         slivers: [
-                          SliverToBoxAdapter(child: SizedBox(height: 64+12),),
+                          const SliverToBoxAdapter(child: SizedBox(height: 64+12),),
                           SliverReorderableList(
                             proxyDecorator: (child, index, animation) {
                               return Stack(
@@ -93,7 +91,7 @@ abstract class TableFromZeroManagePopup {
                                   if (isDesktop) {
                                     leading = ReorderableDragStartListener(
                                       index: index,
-                                      child: Icon(Icons.reorder),
+                                      child: const Icon(Icons.reorder),
                                     );
                                   }
                                   final subtitleText = col.getMetadataText(context, controller.filtered, key);
@@ -184,7 +182,7 @@ abstract class TableFromZeroManagePopup {
                               return result;
                             },
                           ),
-                          SliverToBoxAdapter(child: SizedBox(height: 24+42,),),
+                          const SliverToBoxAdapter(child: SizedBox(height: 24+42,),),
                         ],
                       ),
                       Positioned(
@@ -243,12 +241,12 @@ abstract class TableFromZeroManagePopup {
                             ),
                             Container(
                               alignment: Alignment.centerRight,
-                              padding: EdgeInsets.only(bottom: 8, right: 16,),
+                              padding: const EdgeInsets.only(bottom: 8, right: 16,),
                               color: Theme.of(context).cardColor,
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  DialogButton.cancel(),
+                                  const DialogButton.cancel(),
                                   DialogButton.accept(
                                     tooltip: visibleColumns.isEmpty
                                         ? 'Debe haber al menos 1 columna visible'

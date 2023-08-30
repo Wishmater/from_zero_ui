@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/scaffold_from_zero.dart';
 import 'package:multi_value_listenable_builder/multi_value_listenable_builder.dart';
 
 
@@ -19,8 +18,8 @@ extension ActionStateExtension on ActionState {
   bool get shownOnContextMenu => this==ActionState.icon || this==ActionState.button || this==ActionState.expanded || this==ActionState.overflow || this==ActionState.popup;
 }
 
-typedef void ContextCallback(BuildContext context);
-typedef Widget ActionBuilder({
+typedef ContextCallback = void Function(BuildContext context);
+typedef ActionBuilder = Widget Function({
   required BuildContext context,
   required String title,
   Widget? icon,
@@ -28,7 +27,7 @@ typedef Widget ActionBuilder({
   bool enabled,
   Color? color,
 });
-typedef Widget OverflowActionBuilder({
+typedef OverflowActionBuilder = Widget Function({
   required BuildContext context,
   required String title,
   Widget? icon,
@@ -73,7 +72,7 @@ class ActionFromZero extends StatelessWidget {
   }) => expandedBuilder!(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color);
   final bool centerExpanded;
 
-  ActionFromZero({
+  ActionFromZero({super.key, 
     this.onTap,
     required this.title,
     this.icon,
@@ -85,12 +84,12 @@ class ActionFromZero extends StatelessWidget {
     this.buttonBuilder = defaultButtonBuilder,
     this.expandedBuilder,
     this.centerExpanded = true,
-  }) : this.breakpoints = breakpoints ?? {
+  }) : breakpoints = breakpoints ?? {
     0: icon==null ? ActionState.overflow : ActionState.icon,
     ScaffoldFromZero.screenSizeLarge: expandedBuilder==null ? ActionState.button : ActionState.expanded,
   };
 
-  ActionFromZero.divider({
+  ActionFromZero.divider({super.key, 
     Map<double, ActionState>? breakpoints,
     this.overflowBuilder = dividerOverflowBuilder,
     this.iconBuilder = dividerIconBuilder,
@@ -102,12 +101,12 @@ class ActionFromZero extends StatelessWidget {
         expandedBuilder = null,
         centerExpanded = true,
         enabled = true,
-        this.breakpoints = breakpoints ?? {
+        breakpoints = breakpoints ?? {
           0: ActionState.overflow,
           // ScaffoldFromZero.screenSizeLarge: ActionState.icon,
         };
 
-  static final Function(BuildContext context)? nullOnTap = (context)=>null;
+  static void Function(BuildContext context) nullOnTap = (context){};
   ActionFromZero copyWith({
     void Function(BuildContext context)? onTap,
     String? title,
@@ -158,7 +157,7 @@ class ActionFromZero extends StatelessWidget {
   }) {
     return child; // TODO 3 implemet animating between action states, currently it breaks due to some change in Appbar
     return AnimatedSwitcher(
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
       switchInCurve: Curves.easeOutCubic,
       switchOutCurve: Curves.easeInCubic,
       transitionBuilder: (child, animation) {
@@ -193,7 +192,7 @@ class ActionFromZero extends StatelessWidget {
       child: TooltipFromZero(
         message: title,
         child: IconButton(
-          icon: icon ?? SizedBox.shrink(),
+          icon: icon ?? const SizedBox.shrink(),
           color: color,
           hoverColor: transparentColor,
           highlightColor: semiTransparentColor,
@@ -240,18 +239,18 @@ class ActionFromZero extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 if (icon!=null)
                   icon,
                 if (icon!=null)
-                  SizedBox(width: 6,),
+                  const SizedBox(width: 6,),
                 Text(title,
                   style: TextStyle(
                     fontSize: 16,
                     color: color,
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
               ],
             ),
           ),
@@ -273,7 +272,7 @@ class ActionFromZero extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          if (icon!=null) SizedBox(width: 12,),
+          if (icon!=null) const SizedBox(width: 12,),
           if (icon!=null) IconTheme(
             data: Theme.of(context).iconTheme.copyWith(
               color: !enabled || onTap==null
@@ -282,11 +281,11 @@ class ActionFromZero extends StatelessWidget {
             ),
             child: icon,
           ),
-          if (icon==null && forceIconSpace) SizedBox(width: 36,),
-          SizedBox(width: 12,),
+          if (icon==null && forceIconSpace) const SizedBox(width: 36,),
+          const SizedBox(width: 12,),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(bottom: 2),
+              padding: const EdgeInsets.only(bottom: 2),
               child: Text(title,
                 style: TextStyle(
                   fontSize: 16,
@@ -298,7 +297,7 @@ class ActionFromZero extends StatelessWidget {
               ),
             ),
           ),
-          SizedBox(width: 12,),
+          const SizedBox(width: 12,),
         ],
       ),
     );
@@ -311,10 +310,10 @@ class ActionFromZero extends StatelessWidget {
     result = TextButton(
       onPressed: (!enabled || onTap==null) ? null : () => onTap.call(context),
       style: TextButton.styleFrom(
-        padding: EdgeInsets.zero,
-        primary: !enabled || onTap==null
+        foregroundColor: !enabled || onTap==null
             ? Theme.of(context).disabledColor
             : Theme.of(context).textTheme.bodyLarge!.color,
+        padding: EdgeInsets.zero,
       ),
       child: result,
     );
@@ -329,7 +328,7 @@ class ActionFromZero extends StatelessWidget {
     bool enabled = true,
     Color? color,
   }) {
-    return VerticalDivider();
+    return const VerticalDivider();
   }
 
   static Widget dividerOverflowBuilder({
@@ -340,7 +339,7 @@ class ActionFromZero extends StatelessWidget {
     bool enabled = true,
     bool forceIconSpace = false,
   }) {
-    return Divider();
+    return const Divider();
   }
 
 }
@@ -349,14 +348,14 @@ class ActionFromZero extends StatelessWidget {
 
 
 
-typedef void ApiActionCallback(BuildContext context, List<dynamic> data);
+typedef ApiActionCallback = void Function(BuildContext context, List<dynamic> data);
 class APIActionFromZero extends ActionFromZero {
 
   final List<ValueNotifier> dependedNotifiers;
   final List<ApiProvider> Function(List<dynamic> values) providersBuilder;
   final ApiActionCallback? onTapApi;
 
-  APIActionFromZero({
+  APIActionFromZero({super.key, 
     this.onTapApi,
     required super.title,
     super.icon,
@@ -389,7 +388,7 @@ class APIActionFromZero extends ActionFromZero {
         return ApiProviderMultiBuilder(
           providers: providersBuilder(values),
           animatedSwitcherType: AnimatedSwitcherType.normal,
-          transitionBuilder: (context, child, animation) => FadeTransition(child: child, opacity: animation),
+          transitionBuilder: (context, child, animation) => FadeTransition(opacity: animation, child: child),
           dataBuilder: (context, data) {
             onTap = onTapApi==null ? null : (context) {
               return onTapApi!(context, data);
@@ -432,7 +431,7 @@ class APIActionFromZero extends ActionFromZero {
         return ApiProviderMultiBuilder(
           providers: providersBuilder(values),
           animatedSwitcherType: AnimatedSwitcherType.normal,
-          transitionBuilder: (context, child, animation) => FadeTransition(child: child, opacity: animation),
+          transitionBuilder: (context, child, animation) => FadeTransition(opacity: animation, child: child),
           dataBuilder: (context, data) {
             onTap = onTapApi==null ? null : (context) {
               return onTapApi!(context, data);
@@ -475,7 +474,7 @@ class APIActionFromZero extends ActionFromZero {
         return ApiProviderMultiBuilder(
           providers: providersBuilder(values),
           animatedSwitcherType: AnimatedSwitcherType.normal,
-          transitionBuilder: (context, child, animation) => FadeTransition(child: child, opacity: animation),
+          transitionBuilder: (context, child, animation) => FadeTransition(opacity: animation, child: child),
           dataBuilder: (context, data) {
             onTap = onTapApi==null ? null : (context) {
               return onTapApi!(context, data);

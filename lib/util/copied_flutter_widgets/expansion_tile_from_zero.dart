@@ -4,10 +4,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/action_from_zero.dart';
-import 'package:from_zero_ui/src/future_handling/future_handling.dart';
-import 'package:from_zero_ui/src/ui_components/drawer_menu_from_zero.dart';
-import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 
 
@@ -210,8 +206,9 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     _backgroundColor = _controller.drive<Color?>(_backgroundColorTween.chain(_easeOutTween));
 
     _isExpanded = widget.expanded ?? (PageStorage.maybeOf(context)?.readState(context) ?? widget.initiallyExpanded);
-    if (_isExpanded)
+    if (_isExpanded) {
       _controller.value = 1.0;
+    }
     _controller.addListener(() {
       if (mounted) {
         EnsureVisibleWhenFocusedState.ensureVisibleForContext(
@@ -256,8 +253,9 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
           _controller.forward();
         } else {
           _controller.reverse().then<void>((void value) {
-            if (!mounted)
+            if (!mounted) {
               return;
+            }
             setState(() {
               // Rebuild without widget.children.
             });
@@ -277,14 +275,14 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
         clipBehavior: Clip.none,
         children: [
           AnimatedContainerFromChildSize(
-            duration: Duration(milliseconds: 200),
+            duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
             child: Container(
               key: ValueKey(_isExpanded),
               child: widget.titleBuilder?.call(context, _isExpanded) ?? widget.title,
             ),
           ),
-          if (!(widget.trailing is SizedBox) && widget.children.isNotEmpty)
+          if (widget.trailing is! SizedBox && widget.children.isNotEmpty)
             Positioned(
               top: 0, bottom: 0,
               right: widget.style==DrawerMenuFromZero.styleDrawerMenu ? 4 : null,
@@ -295,7 +293,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
                   icon: widget.trailing ?? (widget.enabled ? RotationTransition(
                     turns: _iconTurns,
                     child: Icon(Icons.expand_more, color: _iconColor.value, size: 26,),
-                  ) : SizedBox.shrink()),
+                  ) : const SizedBox.shrink()),
                   iconSize: 26,
                   onPressed: !widget.enabled ? null : () {
                     setExpanded(!_isExpanded);
@@ -313,7 +311,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
                 child: Container(
                   padding: EdgeInsets.only(top: 8, left: widget.actionPadding.left+10),
                   alignment: Alignment.bottomLeft,
-                  child: VerticalDivider(
+                  child: const VerticalDivider(
                     thickness: 2, width: 2,
                   ),
                 ),
@@ -338,15 +336,14 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
           bool expandChildren = widget.childrenKeysForExpandCollapse!=null
               &&  widget.childrenKeysForExpandCollapse!.where((e) => !(e.currentState?.isExpanded ?? false)).isNotEmpty;
           return ContextMenuFromZero(
-            child: prevTitle,
             actions: [
               ...widget.contextMenuActions,
-              if (((widget.enabled && widget.addExpandCollapseContextMenuAction && !(widget.trailing is SizedBox))
+              if (((widget.enabled && widget.addExpandCollapseContextMenuAction && widget.trailing is! SizedBox)
                   || (_isExpanded && widget.childrenKeysForExpandCollapse!=null && widget.childrenKeysForExpandCollapse!.isNotEmpty))
                   && widget.contextMenuActions.isNotEmpty
                   &&  widget.children.isNotEmpty)
                 ActionFromZero.divider(),
-              if (widget.enabled && widget.children.isNotEmpty && widget.addExpandCollapseContextMenuAction && !(widget.trailing is SizedBox))
+              if (widget.enabled && widget.children.isNotEmpty && widget.addExpandCollapseContextMenuAction && widget.trailing is! SizedBox)
                 ActionFromZero(
                   icon: Icon(_isExpanded ? MaterialCommunityIcons.arrow_collapse_up : MaterialCommunityIcons.arrow_expand_down,),
                   title: _isExpanded ? 'Colapsar' : 'Expandir', // TODO 3 internationalize
@@ -362,13 +359,14 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
                   onTap: (context) {
                     bool expand = widget.childrenKeysForExpandCollapse!
                         .where((e) => !(e.currentState?.isExpanded ?? false)).isNotEmpty;
-                    widget.childrenKeysForExpandCollapse!.forEach((e) {
+                    for (var e in widget.childrenKeysForExpandCollapse!) {
                       e.currentState!.setExpanded(expand);
-                    });
+                    }
                     setState((){});
                   },
                 ),
             ],
+            child: prevTitle,
           );
         },
       );
@@ -438,7 +436,9 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     final bool shouldRemoveChildren = closed && !widget.maintainState;
 
     final Widget result = Offstage(
+        offstage: closed,
         child: TickerMode(
+          enabled: !closed,
           child: Padding(
             padding: widget.childrenPadding ?? EdgeInsets.zero,
             child: Column(
@@ -446,9 +446,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
               children: widget.children,
             ),
           ),
-          enabled: !closed,
-        ),
-        offstage: closed
+        )
     );
 
     return AnimatedBuilder(

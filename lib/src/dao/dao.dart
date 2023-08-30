@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:animations/animations.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -12,20 +11,19 @@ import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:from_zero_ui/src/ui_utility/translucent_ink_well.dart';
 
 part 'field.dart';
 part 'lazy_dao.dart';
 
 
-typedef FutureOr<ModelType?> OnSaveCallback<ModelType>(BuildContext context, DAO<ModelType> e);
-typedef ApiState<ModelType?> OnSaveAPICallback<ModelType>(BuildContext context, DAO<ModelType> e);
-typedef void OnDidSaveCallback<ModelType>(BuildContext context, ModelType? model, DAO<ModelType> dao);
-typedef FutureOr<String?> OnDeleteCallback<ModelType>(BuildContext context, DAO<ModelType> e);
-typedef ApiState OnDeleteAPICallback<ModelType>(BuildContext context, DAO<ModelType> e);
-typedef void OnDidDeleteCallback<ModelType>(BuildContext context, DAO<ModelType> dao);
-typedef Widget DAOWidgetBuilder<ModelType>(BuildContext context, DAO<ModelType> dao);
-typedef T DAOValueGetter<T, ModelType>(DAO<ModelType> dao);
+typedef OnSaveCallback<ModelType> = FutureOr<ModelType?> Function(BuildContext context, DAO<ModelType> e);
+typedef OnSaveAPICallback<ModelType> = ApiState<ModelType?> Function(BuildContext context, DAO<ModelType> e);
+typedef OnDidSaveCallback<ModelType> = void Function(BuildContext context, ModelType? model, DAO<ModelType> dao);
+typedef OnDeleteCallback<ModelType> = FutureOr<String?> Function(BuildContext context, DAO<ModelType> e);
+typedef OnDeleteAPICallback<ModelType> = ApiState Function(BuildContext context, DAO<ModelType> e);
+typedef OnDidDeleteCallback<ModelType> = void Function(BuildContext context, DAO<ModelType> dao);
+typedef DAOWidgetBuilder<ModelType> = Widget Function(BuildContext context, DAO<ModelType> dao);
+typedef DAOValueGetter<T, ModelType> = T Function(DAO<ModelType> dao);
 
 enum DoubleColumnLayoutType {
   tabbed,
@@ -117,8 +115,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     this.saveConfirmationDialogTitle,
     this.saveButtonTitle,
     this.saveConfirmationDialogDescription,
-  }) :  this._undoRecord = undoRecord ?? [],
-        this._redoRecord = redoRecord ?? []
+  }) :  _undoRecord = undoRecord ?? [],
+        _redoRecord = redoRecord ?? []
         {
           this.props.forEach((key, value) {
             value.dao = this;
@@ -126,10 +124,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               notifyListeners();
             });
           });
-          this.addListener(() {
-            _selfUpdateListeners.forEach((element) {
+          addListener(() {
+            for (var element in _selfUpdateListeners) {
               element(this);
-            });
+            }
           });
         }
 
@@ -297,7 +295,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     _redoTransaction = null;
   }
 
-  addUndoEntry(Field field, {
+  void addUndoEntry(Field field, {
     bool clearRedo = true,
   }) {
     if (parentDAO!=null) {
@@ -313,7 +311,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       }
     }
   }
-  addRedoEntry(Field field) {
+  void addRedoEntry(Field field) {
     if (parentDAO!=null) {
       parentDAO!.addRedoEntry(field);
     } else {
@@ -325,7 +323,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
   }
 
-  removeLastUndoEntry(Field field) {
+  void removeLastUndoEntry(Field field) {
     int index = -1;
     for (int i=_undoRecord.lastIndex; i>=0 && index==-1; i--) {
       index = _undoRecord[i].lastIndexOf(field);
@@ -337,7 +335,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       }
     }
   }
-  removeLastRedoEntry(Field field) {
+  void removeLastRedoEntry(Field field) {
     int index = -1;
     for (int i=_redoRecord.lastIndex; i>=0 && index==-1; i--) {
       index = _redoRecord[i].lastIndexOf(field);
@@ -350,7 +348,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
   }
 
-  removeAllUndoEntries(Field field) {
+  void removeAllUndoEntries(Field field) {
     for (int i=_undoRecord.lastIndex; i>=0; i--) {
       _undoRecord[i].removeWhere((e) => e==field);
       if (_undoRecord[i].isEmpty) {
@@ -358,7 +356,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       }
     }
   }
-  removeAllRedoEntries(Field field) {
+  void removeAllRedoEntries(Field field) {
     for (int i=_redoRecord.lastIndex; i>=0; i--) {
       _redoRecord[i].removeWhere((e) => e==field);
       if (_redoRecord[i].isEmpty) {
@@ -522,12 +520,12 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 18,),
+                        const SizedBox(height: 18,),
                         Text('Validando Datos...', // TODO 3 internationalize
                           style: Theme.of(context).textTheme.titleLarge,
                         ),
                         Expanded(
-                          child: Container(
+                          child: SizedBox(
                             height: 200,
                             child: ApiProviderBuilder.defaultLoadingBuilder(context, null),
                           ),
@@ -544,19 +542,19 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(height: 18,),
+                      const SizedBox(height: 18,),
                       ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace as StackTrace?, null),
-                      SizedBox(height: 12,),
+                      const SizedBox(height: 12,),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           DialogButton.cancel(
                             child: Text(FromZeroLocalizations.of(context).translate("close_caps")),
                           ),
-                          SizedBox(width: 2,),
+                          const SizedBox(width: 2,),
                         ],
                       ),
-                      SizedBox(height: 12,),
+                      const SizedBox(height: 12,),
                     ],
                   ),
                 );
@@ -584,13 +582,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(validation
-                          ? (saveConfirmationDialogDescription?.call(this) ?? (FromZeroLocalizations.of(context).translate("confirm_save_desc") + "\r\n" + shownName))
+                          ? (saveConfirmationDialogDescription?.call(this) ?? ("${FromZeroLocalizations.of(context).translate("confirm_save_desc")}\r\n$shownName"))
                           : 'Debe resolver los siguientes errores de validación:'), // TODO 3 internationalize
                       SaveConfirmationValidationMessage(allErrors: validationErrors),
                     ],
                   ),
                   dialogActions: [
-                    DialogButton.cancel(),
+                    const DialogButton.cancel(),
                     TimedOverlay(
                       key: timerGlobalKey,
                       duration: validationErrors.isEmpty || !validation
@@ -598,11 +596,11 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                           : Duration(milliseconds: (1000 + 500*Set.from(validationErrors.where((e) => e.isVisibleAsSaveConfirmation).map((e) => e.error)).length).clamp(0, 10000)),
                       builder: (context, elapsed, remaining) {
                         return DialogButton.accept(
-                          child: Text((saveButtonTitle?.call(this).toUpperCase() ?? FromZeroLocalizations.of(context).translate("save_caps"))),
                           tooltip: validation ? null : 'No se puede guardar hasta resolver los errores de validación', // TODO 3 internationalize
                           onPressed: !ignoreBlockingErrors && (remaining!=Duration.zero || !validation) ? null : () {
                             Navigator.of(context).pop(true); // Dismiss alert dialog
                           },
+                          child: Text((saveButtonTitle?.call(this).toUpperCase() ?? FromZeroLocalizations.of(context).translate("save_caps"))),
                         );
                       },
                     ),
@@ -735,13 +733,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             title: Text(FromZeroLocalizations.of(context).translate('confirm_delete_title')),
             content: Text('${FromZeroLocalizations.of(context).translate('confirm_delete_desc')} $uiName?'),
             dialogActions: [
-              DialogButton.cancel(),
+              const DialogButton.cancel(),
               DialogButton(
-                child: Text(FromZeroLocalizations.of(context).translate('delete_caps')),
                 color: Colors.red,
                 onPressed: () {
                   Navigator.of(context).pop(true); // Dismiss alert dialog
                 },
+                child: Text(FromZeroLocalizations.of(context).translate('delete_caps')),
               ),
             ],
           );
@@ -852,13 +850,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           title: Text(FromZeroLocalizations.of(context).translate("confirm_reverse_title")),
           content: Text(FromZeroLocalizations.of(context).translate("confirm_reverse_desc")),
           dialogActions: [
-            DialogButton.cancel(),
+            const DialogButton.cancel(),
             DialogButton(
-              child: Text(FromZeroLocalizations.of(context).translate("reverse_caps")),
               color: Colors.red,
               onPressed: () {
                 Navigator.of(context).pop(true); // Dismiss alert dialog
               },
+              child: Text(FromZeroLocalizations.of(context).translate("reverse_caps")),
             ),
           ],
         );
@@ -879,12 +877,12 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     askForSaveConfirmation ??= showDefaultSnackBars;
     final props = this.props;
     parentDAO = null;
-    props.values.forEach((e) {
+    for (var e in props.values) {
       e.passedFirstEdit = false;
       e.undoValues.clear();
       e.redoValues.clear();
       e.validationErrors = [];
-    });
+    }
     _undoRecord.clear();
     _redoRecord.clear();
     _contextForValidation = _contextForValidation ?? context;
@@ -934,7 +932,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   primaryFormWidgets.add(groupWidget);
                 } else {
                   secondaryScrollControllers[name] = scrollController;
-                  secondarySizeNotifiers[name] ??= ValueNotifier(Size(0, 0));
+                  secondarySizeNotifiers[name] ??= ValueNotifier(const Size(0, 0));
                   if (doubleColumnLayoutType==DoubleColumnLayoutType.tabbed) {
                     secondaryFormWidgets[name] = FocusTraversalOrder(
                       order: NumericFocusOrder(i.toDouble()),
@@ -974,7 +972,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: FocusTraversalOrder(
-                      order: NumericFocusOrder(1),
+                      order: const NumericFocusOrder(1),
                       child: FocusTraversalGroup(
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -1028,7 +1026,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                           ),
                         ),
                         if (secondaryFormWidgets.keys.isNotEmpty)
-                          Expanded(child: SizedBox.shrink()),
+                          const Expanded(child: SizedBox.shrink()),
                         if (secondaryFormWidgets.keys.isNotEmpty)
                           Padding(
                             padding: const EdgeInsets.only(right: 24),
@@ -1159,7 +1157,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             bool allowUndoInvalidatingChanges = _undoRecord.isNotEmpty;
             for (Field e in props.values) {
               final errors = e.validationErrors.whereType<InvalidatingError>();
-              errors.forEach((error) {
+              for (var error in errors) {
                 allowSetInvalidatingFieldsToDefaultValues = allowSetInvalidatingFieldsToDefaultValues && error.allowSetThisFieldToDefaultValue;
                 allowUndoInvalidatingChanges = allowUndoInvalidatingChanges && error.allowUndoInvalidatingChange;
                 if (error.showVisualConfirmation) {
@@ -1167,7 +1165,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 } else {
                   autoResolveInvalidatingErrors.add(error);
                 }
-              });
+              }
             }
             if (autoResolveInvalidatingErrors.isNotEmpty) {
               WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
@@ -1189,7 +1187,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     clipBehavior: Clip.hardEdge,
                     alignment: Alignment.centerLeft,
                     child: SizedBox(
-                      width: secondaryFormWidgets.keys.length==0
+                      width: secondaryFormWidgets.keys.isEmpty
                           ? formDialogWidth+32+24+16
                           : widescreenDialogWidth,
                       child: ResponsiveInsetsDialog(
@@ -1201,7 +1199,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   ),
                 ),
                 PageTransitionSwitcher(
-                  duration: Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 300),
                   transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
                     return FadeThroughTransition(
                       animation: primaryAnimation,
@@ -1210,7 +1208,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       child: child,
                     );
                   },
-                  child: invalidatingErrors.isEmpty ? SizedBox() : Container(
+                  child: invalidatingErrors.isEmpty ? const SizedBox() : Container(
                     color: Colors.black38,
                     child: Center(
                       child: SizedBox(
@@ -1249,9 +1247,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                                 oldValue: e.undoValues.last,
                                                 newValue: e.value,
                                               ),),
-                                            SizedBox(height: 24,),
+                                            const SizedBox(height: 24,),
                                             Text(FromZeroLocalizations.of(context).translate(!allowSetInvalidatingFieldsToDefaultValues ? "confirm_invalidating_change_description2_1" : "confirm_invalidating_change_description2_2")),
-                                            SizedBox(height: 6,),
+                                            const SizedBox(height: 6,),
                                             ValidationMessage(
                                               errors: invalidatingErrors.keys.toList(),
                                               passedFirstEdit: true,
@@ -1367,7 +1365,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       if (enableUndoRedoMechanism && showUndoRedo)
         ActionFromZero(
           title: FromZeroLocalizations.of(context).translate("undo"),
-          icon: Icon(MaterialCommunityIcons.undo_variant,),
+          icon: const Icon(MaterialCommunityIcons.undo_variant,),
           breakpoints: {
             ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
             ScaffoldFromZero.screenSizeMedium: ActionState.icon,
@@ -1379,7 +1377,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       if (enableUndoRedoMechanism && showUndoRedo)
         ActionFromZero(
           title: FromZeroLocalizations.of(context).translate("redo"),
-          icon: Icon(MaterialCommunityIcons.redo_variant,),
+          icon: const Icon(MaterialCommunityIcons.redo_variant,),
           breakpoints: {
             ScaffoldFromZero.screenSizeSmall: ActionState.overflow,
             ScaffoldFromZero.screenSizeMedium: ActionState.icon,
@@ -1464,7 +1462,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
                     ActionFromZero(
                       title: FromZeroLocalizations.of(context).translate('edit'),
-                      icon: Icon(Icons.edit_outlined),
+                      icon: const Icon(Icons.edit_outlined),
                       onTap: (context) async {
                         final tempDao = copyWith();
                         final result = await tempDao.maybeEdit(mainContext,
@@ -1484,7 +1482,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   if (showDeleteButton ?? viewDialogShowsDeleteButton ?? false) // always default false for now, to avoid breaking existing DAOs, should be ?? canDelete
                     ActionFromZero(
                       title: FromZeroLocalizations.of(context).translate('delete'),
-                      icon: Icon(Icons.delete_forever),
+                      icon: const Icon(Icons.delete_forever),
                       breakpoints: {0: ActionState.overflow},
                       onTap: (context) async {
                         final result = await maybeDelete(mainContext);
@@ -1587,7 +1585,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         final fields = group.props.values.where((e) => !e.hiddenInView);
         Widget result;
         if (fields.isEmpty) {
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         }
         result = Column(
           mainAxisSize: MainAxisSize.min,
@@ -1595,7 +1593,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             clear = !clear;
             if (e is ListField && e.buildViewWidgetAsTable) {
               clear = false;
-              final ViewWidgetBuilder<ComparableList<DAO<dynamic>>> temp = ListField.defaultViewWidgetBuilder; // hack to allow correct equality with static function
+              const ViewWidgetBuilder<ComparableList<DAO<dynamic>>> temp = ListField.defaultViewWidgetBuilder; // hack to allow correct equality with static function
               if (e.viewWidgetBuilder != temp) {
                 return e.buildViewWidget(context,
                   linkToInnerDAOs: dao.viewDialogLinksToInnerDAOs,
@@ -1622,7 +1620,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  SizedBox(height: 16,),
+                  const SizedBox(height: 16,),
                   ...newField.buildFieldEditorWidgets(context,
                     dense: false,
                     addCard: false,
@@ -1630,7 +1628,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     expandToFillContainer: false,
                     mainScrollController: mainScrollController,
                   ),
-                  SizedBox(height: 16,),
+                  const SizedBox(height: 16,),
                 ],
               );
             } else {
@@ -1664,7 +1662,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                         flex: titleFlex,
                         child: title,
                       ),
-                      Container(
+                      const SizedBox(
                         height: 24,
                         child: VerticalDivider(width: 0,),
                       ),
@@ -1685,9 +1683,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       maxSize: titleMaxWidth,
                       child: title,
                     ),
-                    FlexibleLayoutItemFromZero(
+                    const FlexibleLayoutItemFromZero(
                       minSize: 1, maxSize: 1,
-                      child: Container(
+                      child: SizedBox(
                         height: 24,
                         child: VerticalDivider(width: 0,),
                       ),
@@ -1762,12 +1760,12 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     final childGroups = group.visibleChildGroups;
     final fields = group.visibleFields;
     if (childGroups.isEmpty && fields.isEmpty) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     bool verticalLayout = firstIteration || group.primary;
     bool addBorder = group.name!=null && group.props.length>1;
     groupBorderNestingCount += (addBorder ? 1 : 0);
-    List<Widget> Function({bool useLayoutFromZero}) getChildren = ({bool useLayoutFromZero = false}) => [
+    getChildren({bool useLayoutFromZero = false}) => [
       ...buildFormWidgets(context,
         props: fields,
         showCancelActionToPop: true,
@@ -1810,11 +1808,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     } else {
       if (group.useLayoutFromZero) {
         result = FlexibleLayoutFromZero(
+          crossAxisAlignment: group.primary ? CrossAxisAlignment.center : CrossAxisAlignment.start,
           children: getChildren(useLayoutFromZero: true)
               .cast<FlexibleLayoutItemFromZero>(),
-          // relevantAxisMaxSize: min(formDialogWidth, // not needed anymore, because now we can use LayoutBuilders (yaay)
-          //     MediaQuery.of(context).size.width - 24)  - (groupBorderNestingCount.coerceIn(0)*16),
-          crossAxisAlignment: group.primary ? CrossAxisAlignment.center : CrossAxisAlignment.start,
         );
       } else {
         ScrollController scrollController = ScrollController();
@@ -1852,7 +1848,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               left: 2, right: 2,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                  borderRadius: const BorderRadius.all(Radius.circular(16)),
                   border: Border.all(
                     width: 1,
                     color: Theme.of(context).dividerColor,
@@ -1920,7 +1916,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         if (asSlivers) {
           result = result.mapIndexed((i, w) {
             return hidden
-                ? SizedBox.shrink()
+                ? const SizedBox.shrink()
                 : SliverPadding(
                     padding: EdgeInsets.only(
                       top: i == 0 ? fieldVerticalPadding : 0,
@@ -1932,7 +1928,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         } else {
           result = result.mapIndexed((i, w) {
             return hidden
-                ? SizedBox.shrink()
+                ? const SizedBox.shrink()
                 : Padding(
                     padding: EdgeInsets.only(
                       top: i==0 ? fieldVerticalPadding : 0,
@@ -1947,12 +1943,12 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 maxSize: hidden ? 0 : e.maxWidth,
                 minSize: hidden ? 0 : e.minWidth,
                 flex: hidden ? 0 : e.flex,
-                child: hidden ? SizedBox.shrink() : AnimatedSwitcher(
+                child: hidden ? const SizedBox.shrink() : AnimatedSwitcher(
                   duration: 300.milliseconds,
                   switchInCurve: Curves.easeOutCubic,
                   switchOutCurve: Curves.easeInCubic,
                   child: e.hiddenInForm
-                      ? SizedBox.shrink()
+                      ? const SizedBox.shrink()
                       : Column(
                     mainAxisSize: MainAxisSize.min,
                     children: result,
@@ -2009,13 +2005,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   title: Text(FromZeroLocalizations.of(context).translate("confirm_close_title")),
                   content: Text(FromZeroLocalizations.of(context).translate("confirm_close_desc")),
                   dialogActions: [
-                    DialogButton.cancel(),
+                    const DialogButton.cancel(),
                     DialogButton(
-                      child: Text(FromZeroLocalizations.of(context).translate("close_caps")),
                       color: Colors.red,
                       onPressed: () {
                         Navigator.of(modalContext).pop(true); // Dismiss alert dialog
                       },
+                      child: Text(FromZeroLocalizations.of(context).translate("close_caps")),
                     )
                   ],
                 );
@@ -2035,7 +2031,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     Expanded(
                       child: TextButton(
                         style: TextButton.styleFrom(
-                          primary: Theme.of(context).disabledColor,
+                          foregroundColor: Theme.of(context).disabledColor,
                         ),
                         child: Padding(
                           padding: const EdgeInsets.all(6.0),
@@ -2051,26 +2047,26 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       ),
                     ),
                   if (showCancelActionToPop)
-                    SizedBox(width: 12,),
+                    const SizedBox(width: 12,),
                   if (showRevertChanges)
                     Expanded(
                       child: ElevatedButton(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Text(FromZeroLocalizations.of(context).translate("reverse_changes_caps"),
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600,),
-                          ),
-                        ),
                         style: ElevatedButton.styleFrom(
-                          primary: Colors.grey,
+                          backgroundColor: Colors.grey,
                         ),
                         onPressed: isEdited && userInteracted ? () {
                           maybeRevertChanges(context);
                         } : null,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          child: Text(FromZeroLocalizations.of(context).translate("reverse_changes_caps"),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600,),
+                          ),
+                        ),
                       ),
                     ),
                   if (showRevertChanges)
-                    SizedBox(width: 12,),
+                    const SizedBox(width: 12,),
                   Expanded(
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -2080,12 +2076,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                         foregroundColor: userInteracted
                             ? Theme.of(context).textTheme.bodyLarge!.color
                             : Theme.of(context).disabledColor,
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text((saveButtonTitle?.call(this).toUpperCase() ?? FromZeroLocalizations.of(context).translate("save_caps")),
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600,),
-                        ),
                       ),
                       onPressed: isEdited ? () async {
                         ModelType? result = await maybeSave(context,
@@ -2098,6 +2088,12 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                           }
                         }
                       } : null,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Text((saveButtonTitle?.call(this).toUpperCase() ?? FromZeroLocalizations.of(context).translate("save_caps")),
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600,),
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -2144,15 +2140,15 @@ class DAOViewDividerWidget extends StatelessWidget {
                 children: [
                   Expanded(
                     flex: titleFlex,
-                    child: SizedBox.expand(),
+                    child: const SizedBox.expand(),
                   ),
-                  Container(
+                  SizedBox(
                     height: goBelow ? height : height/2,
-                    child: VerticalDivider(width: 0,),
+                    child: const VerticalDivider(width: 0,),
                   ),
                   Expanded(
                     flex: valueFlex,
-                    child: SizedBox.expand(),
+                    child: const SizedBox.expand(),
                   ),
                 ],
               ),
@@ -2172,18 +2168,18 @@ class DAOViewDividerWidget extends StatelessWidget {
                 FlexibleLayoutItemFromZero(
                   flex: titleFlex.toDouble(),
                   maxSize: titleMaxWidth ?? double.infinity,
-                  child: SizedBox.expand(),
+                  child: const SizedBox.expand(),
                 ),
                 FlexibleLayoutItemFromZero(
                   minSize: 1, maxSize: 1,
                   child: SizedBox(
                     height: goBelow ? height : height/2,
-                    child: VerticalDivider(width: 0,),
+                    child: const VerticalDivider(width: 0,),
                   ),
                 ),
                 FlexibleLayoutItemFromZero(
                   flex: valueFlex.toDouble(),
-                  child: SizedBox.expand(),
+                  child: const SizedBox.expand(),
                 ),
               ],
             ),

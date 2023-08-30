@@ -3,10 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:from_zero_ui/src/animations/exposed_transitions.dart';
 import 'dart:ui' as ui;
 
-import 'package:from_zero_ui/util/no_fading_transitions/no_fading_fade_through_transition.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 
@@ -277,7 +275,7 @@ class _AnimatedSwitcherImageState extends State<AnimatedSwitcherImage> with Tick
     if (image!=null) {
       // print ('Setting image ${entry.hashCode}');
       await precacheImage(image, context);
-      await Future.delayed(Duration(milliseconds: 1000)); // on success, let app breathe for a while before refreshing
+      await Future.delayed(const Duration(milliseconds: 1000)); // on success, let app breathe for a while before refreshing
       if (!mounted) return;
       entry.image = image;
     }
@@ -337,14 +335,14 @@ class _AnimatedSwitcherImageState extends State<AnimatedSwitcherImage> with Tick
             // print ('build outgouning child: ${entry.hashCode} NO IMAGE ');
             return widget.rebuildOutgoingChildrenIfNoImageReady
                 ? entry.widgetChild
-                : SizedBox.shrink();
+                : const SizedBox.shrink();
           },
         );
       } else {
         // print ('build outgouning child: ${entry.hashCode} NO IMAGE FUTURE ');
         child = widget.rebuildOutgoingChildrenIfNoImageReady
             ? entry.widgetChild
-            : SizedBox.shrink();
+            : const SizedBox.shrink();
       }
     }
     entry.transition = KeyedSubtree(

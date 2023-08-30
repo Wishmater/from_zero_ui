@@ -1,15 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:animations/animations.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/future_handling/async_value_builder.dart';
-import 'package:from_zero_ui/src/future_handling/future_handling.dart';
-import 'package:riverpod/riverpod.dart';
 
 
 typedef ApiProvider<T> = AutoDisposeStateNotifierProvider<ApiState<T>, AsyncValue<T>>;
@@ -19,7 +15,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
 
   // StateNotifierProviderRef<ApiState<State>, AsyncValue<State>> _ref;
   AutoDisposeRef? _ref;
-  Future<State> Function(ApiState<State>) _create;
+  final Future<State> Function(ApiState<State>) _create;
   late Future<State> future;
   bool _running = true;
   late final ValueNotifier<double?> selfTotalNotifier;
@@ -34,13 +30,15 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
   }
 
   ApiState(AutoDisposeRef ref, this._create,)
-      : this._ref = ref,
-        super(AsyncValue.loading()) {
+      : _ref = ref,
+        super(AsyncValue.loading()) { // ignore: prefer_const_constructors
+                                      // declaring const here breaks at runtime for some reason, at least on riverpod 2.0.0-dev.9
     init();
   }
 
   ApiState.noProvider(this._create,)
-      : super(AsyncValue.loading()) {
+      : super(AsyncValue.loading()) { // ignore: prefer_const_constructors
+                                      // declaring const here breaks at runtime for some reason, at least on riverpod 2.0.0-dev.9
     init();
   }
 
@@ -136,23 +134,20 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     selfTotalNotifier.value = null;
     selfProgressNotifier.value = null;
     wholePercentageNotifier.value = null;
-    state = AsyncValue.loading();
+    state = AsyncValue.loading(); // ignore: prefer_const_constructors
+                                  // declaring const here breaks at runtime for some reason, at least on riverpod 2.0.0-dev.9
     try {
       future = _create(this);
-      if (future is Future<State>) {
-        try {
-          final event = await future;
-          if (_running) {
-            state = AsyncValue<State>.data(event);
-          }
-        } catch (err, stack) {
-          if (_running) {
-            state = AsyncValue<State>.error(err, stackTrace: stack);
-          }
-          cancel();
+      try {
+        final event = await future;
+        if (_running) {
+          state = AsyncValue<State>.data(event);
         }
-      } else {
-        state = AsyncData(future as State);
+      } catch (err, stack) {
+        if (_running) {
+          state = AsyncValue<State>.error(err, stackTrace: stack);
+        }
+        cancel();
       }
     } catch (err, stack) {
       state = AsyncValue.error(err, stackTrace: stack);
@@ -220,7 +215,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
         }
       }
       bool allNull = result==null;
-      allWatching.forEach((e) {
+      for (var e in allWatching) {
         final notifier = _ref!.read(e.notifier);
         double? partialProgress = notifier.selfProgressNotifier.value;
         double? partialTotal = notifier.selfTotalNotifier.value;
@@ -228,10 +223,10 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
             : partialTotal==0||partialProgress==null ? 0
             : partialProgress/partialTotal;
         allNull = allNull && partial==null;
-        partial ??= _ref!.read(e).maybeWhen<double>(data:(_)=>1, orElse: ()=>0,);
+        partial ??= notifier.state.maybeWhen<double>(data:(_)=>1, orElse: ()=>0,);
         result = (result??0) + partial;
-      });
-      result = result==null||allNull ? null : (result!/(allWatching.length+1));
+      }
+      result = result==null||allNull ? null : (result/(allWatching.length+1));
     }
     wholePercentageNotifier.value = result;
   }
@@ -460,8 +455,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   }
   static Widget buildErrorDetailsButton(BuildContext context, Object? error, StackTrace? stackTrace, [VoidCallback? onRetry]) {
     Widget result = DialogButton.cancel(
-      leading: Icon(Icons.info_outlined),
-      child: Text('Detalles del Error'), // TODO 3 internationalize
+      leading: const Icon(Icons.info_outlined),
+      child: const Text('Detalles del Error'), // TODO 3 internationalize
       onPressed: () => showErrorDetailsDialog(context, error, stackTrace),
     );
     if (!kReleaseMode && onRetry!=null) {
@@ -469,11 +464,11 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           result,
-          SizedBox(height: 8,),
+          const SizedBox(height: 8,),
           DialogButton.accept(
-            leading: Icon(Icons.refresh),
-            child: Text(FromZeroLocalizations.of(context).translate("retry")),
+            leading: const Icon(Icons.refresh),
             onPressed: onRetry,
+            child: Text(FromZeroLocalizations.of(context).translate("retry")),
           )
         ],
       );
@@ -485,9 +480,9 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
       context: context,
       builder: (context) {
         return DialogFromZero(
-          title: Text('Detalles del Error'),
+          title: const Text('Detalles del Error'),
           content: SelectableText("$error\r\n\r\n$stackTrace}"),
-          dialogActions: [
+          dialogActions: const [
             DialogButton.cancel(
               child: Text('CERRAR'), // TODO 3 internationalize
             ),
@@ -501,7 +496,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
 
 class SliverApiProviderBuilder<T> extends ApiProviderBuilder<T> {
 
-  SliverApiProviderBuilder({
+  const SliverApiProviderBuilder({super.key, 
     required super.provider,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),
@@ -619,7 +614,7 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
 }
 
 class SliverApiProviderMultiBuilder<T> extends ApiProviderMultiBuilder<T> {
-  SliverApiProviderMultiBuilder({
+  const SliverApiProviderMultiBuilder({super.key, 
     required super.providers,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),
@@ -665,6 +660,7 @@ class UnitedValueListenable<T> extends ChangeNotifier implements ValueListenable
     }
     super.dispose();
   }
+  @override
   T get value => _unificator(_listenables.map((e) => e.value));
 }
 
@@ -706,11 +702,11 @@ class ApiStateBuilder<T> extends ConsumerStatefulWidget {
   }) : super(key: key);
 
   @override
-  _ApiStateBuilderState<T> createState() => _ApiStateBuilderState<T>();
+  ApiStateBuilderState<T> createState() => ApiStateBuilderState<T>();
 
 }
 
-class _ApiStateBuilderState<T> extends ConsumerState<ApiStateBuilder<T>> {
+class ApiStateBuilderState<T> extends ConsumerState<ApiStateBuilder<T>> {
 
   late AsyncValue<T> value;
 
@@ -754,7 +750,7 @@ class _ApiStateBuilderState<T> extends ConsumerState<ApiStateBuilder<T>> {
 }
 
 class SliverApiStateBuilder<T> extends ApiStateBuilder<T> {
-  SliverApiStateBuilder({
+  const SliverApiStateBuilder({super.key, 
     required super.stateNotifier,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),

@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
-import 'package:go_router/src/match.dart';
 
 
 class ResponsiveDrawerMenuDivider extends ResponsiveDrawerMenuItem{
@@ -92,7 +90,7 @@ class ResponsiveDrawerMenuItem{
           return [
             if (i>0 && routes[i-1] is! GoRouteGroupFromZero)
               ResponsiveDrawerMenuDivider(
-                widget: Divider(height: 1,),
+                widget: const Divider(height: 1,),
               ),
             ResponsiveDrawerMenuItem(
               title: e.title ?? e.path,
@@ -101,7 +99,7 @@ class ResponsiveDrawerMenuItem{
               children: children,
             ),
             ResponsiveDrawerMenuDivider(
-              widget: Divider(height: 1,),
+              widget: const Divider(height: 1,),
             ),
           ];
         } else {
@@ -164,8 +162,8 @@ class ResponsiveDrawerMenuItem{
       subtitle: subtitle ?? this.subtitle,
       subtitleRight: subtitleRight ?? this.subtitleRight,
       route: route ?? this.route,
-      pathParameters: params ?? this.pathParameters,
-      queryParameters: queryParams ?? this.queryParameters,
+      pathParameters: params ?? pathParameters,
+      queryParameters: queryParams ?? queryParameters,
       extra: extra ?? this.extra,
       icon: icon ?? this.icon,
       children: children ?? this.children,
@@ -188,7 +186,7 @@ class ResponsiveDrawerMenuItem{
 
   BottomNavigationBarItem asBottomNavigationBarItem() {
     return BottomNavigationBarItem(
-      icon: icon ?? Icon(Icons.pages),
+      icon: icon ?? const Icon(Icons.pages),
       label: title,
       tooltip: subtitle,
     );
@@ -241,28 +239,27 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
     this.allowCollapseRoot = true,
     String? homeRoute,
     this.expansionTileKeys,
-  })  : this.homeRoute = homeRoute ?? tabs[0].route,
+  })  : homeRoute = homeRoute ?? tabs[0].route,
         super(key: key);
 
   @override
-  _DrawerMenuFromZeroState createState() => _DrawerMenuFromZeroState();
+  DrawerMenuFromZeroState createState() => DrawerMenuFromZeroState();
 
-  @deprecated
-  static double calculateHeight(List<ResponsiveDrawerMenuItem> tabs){
-    double sum = 0;
-    tabs.forEach((element) {
-      if (element is ResponsiveDrawerMenuDivider){
-        sum += element.title.isEmpty ? 13 : 32;
-      } else{
-        sum += 49;
-      }
-    });
-    return sum;
-  }
+  // static double calculateHeight(List<ResponsiveDrawerMenuItem> tabs){
+  //   double sum = 0;
+  //   for (var element in tabs) {
+  //     if (element is ResponsiveDrawerMenuDivider){
+  //       sum += element.title.isEmpty ? 13 : 32;
+  //     } else{
+  //       sum += 49;
+  //     }
+  //   }
+  //   return sum;
+  // }
 
 }
 
-class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
+class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
   Map<int, GlobalKey<ContextMenuFromZeroState>> _menuButtonKeys = {};
   late List<ResponsiveDrawerMenuItem> _tabs;
@@ -477,9 +474,9 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 4,),
-                    Divider(height: 1,),
-                    tabs[i].title.isEmpty ? SizedBox(height: 4,) : Padding(
+                    const SizedBox(height: 4,),
+                    const Divider(height: 1,),
+                    tabs[i].title.isEmpty ? const SizedBox(height: 4,) : Padding(
                       padding: const EdgeInsets.only(left: 64),
                       child: Text(tabs[i].title, style: theme.textTheme.bodySmall,),
                     )
@@ -539,8 +536,9 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               var goRouter = widget.useGoRouter ? GoRouter.of(context) : null;
               try{
                 var scaffold = Scaffold.of(context);
-                if (scaffold.hasDrawer && scaffold.isDrawerOpen)
+                if (scaffold.hasDrawer && scaffold.isDrawerOpen) {
                   navigator.pop();
+                }
               } catch(_, __){}
               if (widget.pushType == DrawerMenuFromZero.keepRootAlive){
                 // ! this will break if the homeRoute is NOT in the stack
@@ -609,14 +607,14 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   if (widget.homeRoute!=null) {
                     routes.add(widget.homeRoute!);
                   }
-                  Function(List<ResponsiveDrawerMenuItem>)? addRoutes;
+                  void Function(List<ResponsiveDrawerMenuItem>)? addRoutes;
                   addRoutes = (List<ResponsiveDrawerMenuItem> items) {
-                    items.forEach((e) {
+                    for (var e in items) {
                       if (e.route!=null) {
                         routes.add(e.route!);
                       }
                       addRoutes!(e.children ?? []);
-                    });
+                    }
                   };
                   addRoutes(widget.parentTabs ?? _tabs);
                   bool passed = false;
@@ -673,6 +671,31 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
           final expanded = widget.compact||tabs[i].forcePopup ? false
               : scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] ?? tabs[i].defaultExpanded;
           result = ContextMenuFromZero(
+            addGestureDetector: false,
+            key: _menuButtonKeys[i],
+            anchorAlignment: Alignment.topLeft,
+            popupAlignment: Alignment.bottomRight,
+            useCursorLocation: false,
+            contextMenuWidth: 304,
+            offsetCorrection: Offset(
+              route==null ? 0 : scaffoldChangeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId),
+              6,
+            ),
+            contextMenuWidget: DrawerMenuFromZero(
+              popup: true,
+              tabs: tabs[i].children!,
+              // tabs: [tabs[i].children!.first],
+              compact: false,
+              selected: tabs[i].selectedChild,
+              inferSelected: false,
+              paddingRight: 16,
+              pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
+                  ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
+                  : widget.pushType,
+              homeRoute: widget.homeRoute,
+              parentTabs: widget.parentTabs ?? _tabs,
+              style: widget.style,
+            ),
             child: ExpansionTileFromZero(
               key: widget.expansionTileKeys?[i],
               initiallyExpanded: selected==i || tabs[i].selectedChild>=0,
@@ -682,13 +705,13 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               addExpandCollapseContextMenuAction: !widget.compact,
               childrenKeysForExpandCollapse: childKeys[i]?.values.toList(),
               style: widget.style,
-              leading: widget.depth!=0 || widget.allowCollapseRoot ? null : SizedBox.shrink(),
+              leading: widget.depth!=0 || widget.allowCollapseRoot ? null : const SizedBox.shrink(),
               actionPadding: EdgeInsets.only(
                 left: widget.style==DrawerMenuFromZero.styleTree ? widget.depth*20.0 : 0,
               ),
               trailing: widget.depth==0 && !widget.allowCollapseRoot
-                  ? SizedBox.shrink()
-                  : tabs[i].customExpansionTileTrailing ?? (tabs[i].forcePopup ? SizedBox.shrink() : null),
+                  ? const SizedBox.shrink()
+                  : tabs[i].customExpansionTileTrailing ?? (tabs[i].forcePopup ? const SizedBox.shrink() : null),
               titleBuilder: (context, expanded) {
                 return Padding (
                   padding: expanded
@@ -706,7 +729,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                       compact: widget.compact,
                       dense: tabs[i].dense,
                       titleHorizontalOffset: tabs[i].titleHorizontalOffset,
-                      icon: tabs[i].icon ?? SizedBox.shrink(),
+                      icon: tabs[i].icon ?? const SizedBox.shrink(),
                       softWrap: widget.style!=DrawerMenuFromZero.styleTree,
                       contentPadding: EdgeInsets.only(
                         left: widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
@@ -732,7 +755,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                             child: Container(
                               width: 26.0, //(widget.depth+1)*20.0
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.only(topRight: Radius.circular(16)),
+                                borderRadius: const BorderRadius.only(topRight: Radius.circular(16)),
                                 color: Color.alphaBlend(theme.dividerColor.withOpacity(theme.dividerColor.opacity*0.5), Material.maybeOf(context)?.color ?? theme.cardColor),
                                 // color: Color.alphaBlend(
                                 //   selected!=i
@@ -783,31 +806,6 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 scaffoldChangeNotifier.isTreeNodeExpanded[tabs[i].uniqueId] = value;
               },
             ),
-            addGestureDetector: false,
-            key: _menuButtonKeys[i],
-            anchorAlignment: Alignment.topLeft,
-            popupAlignment: Alignment.bottomRight,
-            useCursorLocation: false,
-            contextMenuWidth: 304,
-            offsetCorrection: Offset(
-              route==null ? 0 : scaffoldChangeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId),
-              6,
-            ),
-            contextMenuWidget: DrawerMenuFromZero(
-              popup: true,
-              tabs: tabs[i].children!,
-              // tabs: [tabs[i].children!.first],
-              compact: false,
-              selected: tabs[i].selectedChild,
-              inferSelected: false,
-              paddingRight: 16,
-              pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
-                  ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
-                  : widget.pushType,
-              homeRoute: widget.homeRoute,
-              parentTabs: widget.parentTabs ?? _tabs,
-              style: widget.style,
-            ),
           );
 
         } else{
@@ -822,7 +820,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               subtitleRight: tabs[i].subtitleRight,
               selected: selected==i,
               compact: widget.compact,
-              icon: tabs[i].icon ?? SizedBox.shrink(),
+              icon: tabs[i].icon ?? const SizedBox.shrink(),
               onTap: onTap,
               dense: tabs[i].dense,
               titleHorizontalOffset: tabs[i].titleHorizontalOffset,
@@ -837,8 +835,8 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
           );
           if (tabs[i].contextMenuActions.isNotEmpty) {
             result = ContextMenuFromZero(
-              child: result,
               actions: tabs[i].contextMenuActions,
+              child: result,
             );
           }
 
@@ -865,12 +863,12 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: List.generate(widget.depth, (index) {
                   if (index!=widget.depth-1 && widget.paintPreviousTreeLines[index+1]==false){
-                    return SizedBox(width: 20,);
+                    return const SizedBox(width: 20,);
                   }
                   return FractionallySizedBox(
                     heightFactor: index==widget.depth-1 && i==tabs.length-1 ? 0.5 : 1,
                     alignment: Alignment.topCenter,
-                    child: Container(
+                    child: const SizedBox(
                       width: 20, height: double.infinity,
                       child: VerticalDivider(
                         thickness: 2, width: 2,
@@ -887,7 +885,7 @@ class _DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 alignment: Alignment.centerLeft,
                 child: SizedBox(
                   width: (tabs[i].children==null || tabs[i].children!.isEmpty) ? 24: 12,
-                  child: Divider(
+                  child: const Divider(
                     thickness: 2, height: 2,
                   ),
                 ),
@@ -922,7 +920,7 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
   final bool showAnimatedShadowIfSelected;
   final bool softWrap;
 
-  DrawerMenuButtonFromZero({
+  const DrawerMenuButtonFromZero({
     Key? key,
     this.selected=false,
     this.compact=false,
@@ -943,13 +941,11 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _DrawerMenuButtonFromZeroState createState() => _DrawerMenuButtonFromZeroState();
+  DrawerMenuButtonFromZeroState createState() => DrawerMenuButtonFromZeroState();
 
 }
 
-class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
-
-  _DrawerMenuButtonFromZeroState();
+class DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
 
   @override
   Widget build(BuildContext context) {
@@ -967,11 +963,11 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
         dense: dense,
         mouseCursor: widget.mouseCursor,
         minVerticalPadding: 3, // default is 4
-        visualDensity: VisualDensity(horizontal: -2, vertical: -4), // compact is -2
+        visualDensity: const VisualDensity(horizontal: -2, vertical: -4), // compact is -2
         horizontalTitleGap: 16 + widget.titleHorizontalOffset + (widget.dense ? 5 : 2),
         onTap: widget.onTap,
         title: AnimatedDefaultTextStyle(
-          duration: Duration(milliseconds: 100),
+          duration: const Duration(milliseconds: 100),
           style: Theme.of(context).textTheme.titleSmall!.copyWith(
             fontSize: dense
                 ? widget.selected ? 17 : 14
@@ -1000,13 +996,13 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                     overflow: TextOverflow.fade,
                   ),
                 ),
-              SizedBox(width: 12,),
+              const SizedBox(width: 12,),
             ],
           ),
         ),
         subtitle: dense||widget.subtitle==null||widget.compact ? null
             : AnimatedDefaultTextStyle(
-              duration: Duration(milliseconds: 100),
+              duration: const Duration(milliseconds: 100),
               style: TextStyle(
                 color: widget.selected ? selectedTextColor.withOpacity(0.75) : theme.textTheme.bodySmall!.color,
                 fontWeight: widget.selected ? FontWeight.w600 : null,
@@ -1030,7 +1026,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                           overflow: TextOverflow.fade,
                         ),
                       ),
-                    SizedBox(width: 12,),
+                    const SizedBox(width: 12,),
                   ],
                 ),
               ),
@@ -1042,7 +1038,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
             children: [
               if (widget.selected && widget.showAnimatedShadowIfSelected)
                 InitiallyAnimatedWidget(
-                  duration: Duration(milliseconds: 600),
+                  duration: const Duration(milliseconds: 600),
                   curve: Curves.easeOut,
                   builder: (animation, child) {
                     return Positioned(
@@ -1054,7 +1050,7 @@ class _DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                         child: Container(
                           decoration: BoxDecoration(
                             color: selectedColor,
-                            borderRadius: BorderRadius.only(
+                            borderRadius: const BorderRadius.only(
                               topRight: Radius.circular(12),
                               bottomRight: Radius.circular(12),
                             ),

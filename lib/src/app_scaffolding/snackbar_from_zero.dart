@@ -1,5 +1,4 @@
 
-import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,9 +27,9 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
     Colors.blue.shade500,
   ];
   static final icons = [
-    Icon(Icons.info_outline),
-    Icon(Icons.check_circle),
-    Icon(Icons.warning),
+    const Icon(Icons.info_outline),
+    const Icon(Icons.check_circle),
+    const Icon(Icons.warning),
     SizedBox(
       width: 32, height: 32,
       child: CircularProgressIndicator(
@@ -80,7 +79,7 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
     this.dismissable = true,
     this.pushScreen = false,
     bool blockUI = false,
-  })  : this.blockUI = ValueNotifier(blockUI),
+  })  : blockUI = ValueNotifier(blockUI),
         super(key: key,);
 
   @override
@@ -152,39 +151,39 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
         : SnackBarFromZero.colors[type];
     Widget result = Row(
       children: [
-        SizedBox(width: 10,),
+        const SizedBox(width: 10,),
         if (widget.icon!=null || type!=null)
           widget.icon ?? SnackBarFromZero.icons[type!],
-        SizedBox(width: 8,),
+        const SizedBox(width: 8,),
         Expanded(
           child: widget.content ?? Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 6,),
+              const SizedBox(height: 6,),
               if (widget.title!=null)
                 DefaultTextStyle(
                   style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 16),
                   child: widget.title!,
                 ),
-              SizedBox(height: 2,),
+              const SizedBox(height: 2,),
               if (widget.message!=null)
                 DefaultTextStyle(
                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12),
                   child: widget.message!,
                 ),
-              SizedBox(height: 8,),
+              const SizedBox(height: 8,),
             ],
           ),
         ),
-        SizedBox(width: 8,),
+        const SizedBox(width: 8,),
         if (widget.actions!=null)
           ButtonTheme(
             textTheme: ButtonTextTheme.accent,
-            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
             minWidth: 64.0,
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 128),
+              constraints: const BoxConstraints(maxWidth: 128),
               child: IntrinsicWidth(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -192,7 +191,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (widget.actions!.length>1)
-                      SizedBox(height: 6,),
+                      const SizedBox(height: 6,),
                     ...widget.actions!.map((e) {
                       if (e is SnackBarAction){
                         SnackBarAction action = e;
@@ -202,14 +201,14 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
                               widget.dismiss();
                               action.onPressed();
                             },
-                            child: Text(action.label.toUpperCase(),
-                              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
-                              textAlign: TextAlign.center,
-                            ),
                             style: TextButton.styleFrom(
-                              primary: action.textColor ?? actionColor,
+                              foregroundColor: action.textColor ?? actionColor,
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                              padding: EdgeInsets.symmetric(horizontal: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                            ),
+                            child: Text(action.label.toUpperCase(),
+                              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                         );
@@ -217,7 +216,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
                       return e;
                     }).toList(),
                     if (widget.actions!.length>1)
-                      SizedBox(height: 6,),
+                      const SizedBox(height: 6,),
                   ],
                 ),
               ),
@@ -231,11 +230,11 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
                 widget.onCancel?.call();
                 widget.dismiss();
               },
-              child: Icon(Icons.close, size: 24,),
               style: TextButton.styleFrom(
-                primary: Theme.of(context).textTheme.bodyLarge!.color,
-                padding: EdgeInsets.only(right: 10),
+                foregroundColor: Theme.of(context).textTheme.bodyLarge!.color,
+                padding: const EdgeInsets.only(right: 10),
               ),
+              child: const Icon(Icons.close, size: 24,),
             ),
           ),
       ],
@@ -244,7 +243,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
     if (widget.progressIndicator!=null) {
       progressIndicator = widget.progressIndicator!;
     } else if (!widget.showProgressIndicatorForRemainingTime){
-      progressIndicator = SizedBox.shrink();
+      progressIndicator = const SizedBox.shrink();
     } else {
       if (animationController==null) {
         progressIndicator = LinearProgressIndicator(
@@ -285,7 +284,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
       );
     } else {
       result = Card(
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(28)),
         ),
         color: backgroundColor,
@@ -310,7 +309,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
       width: fixed ? double.infinity : (widget.width ?? (512 + ((widget.actions?.length??0)==0 ? 0 : 128))),
       padding: EdgeInsets.only(bottom: fixed ? 0 : 48,),
       child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: 64,),
+        constraints: const BoxConstraints(minHeight: 64,),
         child: result,
       ),
     );

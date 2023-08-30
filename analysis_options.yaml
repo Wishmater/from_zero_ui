@@ -1,0 +1,19 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    #    strict-casts: true ## would like this one to be active as a warning/hint, but don't know how :(
+    strict-inference: true
+    strict-raw-types: true
+  errors:
+    dead_code: info
+    body_might_complete_normally_nullable: ignore
+    invalid_use_of_visible_for_testing_member: ignore
+    avoid_renaming_method_parameters: ignore
+
+linter:
+  rules:
+    - avoid_print
+
+# Additional information about this file can be found at
+# https://dart.dev/guides/language/analysis-options

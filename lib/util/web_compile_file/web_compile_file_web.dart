@@ -1,5 +1,5 @@
 import 'dart:io';
 
-getFileCompilingWebAsNull(String path) {
+File? getFileCompilingWebAsNull(String path) {
   return null;
 }

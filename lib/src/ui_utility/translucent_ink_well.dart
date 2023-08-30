@@ -5,12 +5,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
 
-import 'package:flutter/src/material/debug.dart';
-import 'package:flutter/src/material/feedback.dart';
-import 'package:flutter/src/material/ink_highlight.dart';
-import 'package:flutter/src/material/material.dart';
-import 'package:flutter/src/material/material_state.dart';
-import 'package:flutter/src/material/theme.dart';
 
 
 
@@ -1144,7 +1138,7 @@ class _InkResponseTranslucentState extends State<_InkResponseTranslucentStateWid
                 onLongPress: widget.excludeFromSemantics || widget.onLongPress == null ? null : simulateLongPress,
                 child: Stack( // CHANGE FROM FLUTTER ORIGINAL: separate the GestureDetector, if it is bellow the child, it absorbes pointer
                   children: [
-                    widget.child ?? SizedBox.expand(),
+                    widget.child ?? const SizedBox.expand(),
                     Positioned.fill(
                       child: GestureDetector(
                         behavior: HitTestBehavior.translucent, // CHANGE FROM FLUTTER ORIGINAL: set this translucent
@@ -1159,7 +1153,7 @@ class _InkResponseTranslucentState extends State<_InkResponseTranslucentStateWid
                         onSecondaryTap: _secondaryEnabled ? handleSecondaryTap : null,
                         onSecondaryTapCancel: _secondaryEnabled ? handleSecondaryTapCancel : null,
                         excludeFromSemantics: true,
-                        child: SizedBox.expand(),
+                        child: const SizedBox.expand(),
                       ),
                     ),
                   ],

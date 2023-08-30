@@ -27,8 +27,8 @@ class ZoomedFadeInFadeOutTransition extends StatelessWidget {
           Widget? child,
           ) {
         return FadeOutTransition(
-          child: child!,
           animation: animation,
+          child: child!,
         );
       },
       child: child,
@@ -37,7 +37,7 @@ class ZoomedFadeInFadeOutTransition extends StatelessWidget {
 }
 
 class ZoomedFadeInTransition extends StatelessWidget {
-  const ZoomedFadeInTransition({
+  const ZoomedFadeInTransition({super.key, 
     required this.child,
     required this.animation,
   });
@@ -86,7 +86,7 @@ class ZoomedFadeInTransition extends StatelessWidget {
 }
 
 class FadeOutTransition extends StatelessWidget {
-  const FadeOutTransition({
+  const FadeOutTransition({super.key, 
     required this.child,
     required this.animation,
   });

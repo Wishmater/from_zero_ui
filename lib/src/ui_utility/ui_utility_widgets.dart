@@ -3,16 +3,10 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:animations/animations.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/app_content_wrapper.dart';
-import 'package:from_zero_ui/src/animations/exposed_transitions.dart';
-import 'package:from_zero_ui/src/app_scaffolding/scaffold_from_zero.dart';
 import 'package:flutter/foundation.dart';
-import 'package:from_zero_ui/util/web_platform_impl/platform_web_impl.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart' as bitsdojo;
 import 'package:bitsdojo_window_platform_interface/window.dart' as bitsdojo_window;
 import 'package:dartx/dartx.dart';
@@ -30,7 +24,7 @@ class ResponsiveHorizontalInsetsSliver extends StatelessWidget {
   /// Screen width required to add padding
   final double breakpoint;
 
-  ResponsiveHorizontalInsetsSliver({
+  const ResponsiveHorizontalInsetsSliver({
     Key? key,
     required this.sliver,
     this.padding = 12,
@@ -57,7 +51,7 @@ class ResponsiveHorizontalInsets extends StatelessWidget {
   final double breakpoint;
   final bool asSliver;
 
-  ResponsiveHorizontalInsets({
+  const ResponsiveHorizontalInsets({
     Key? key,
     required this.child,
     this.smallPadding = 0,
@@ -103,7 +97,7 @@ class ResponsiveInsetsDialog extends StatelessWidget {
   final AlignmentGeometry? alignment;
 
 
-  ResponsiveInsetsDialog({
+  const ResponsiveInsetsDialog({
     Key? key,
     this.bigInsets = const EdgeInsets.all(24),
     this.smallInsets = const EdgeInsets.all(0),
@@ -138,7 +132,6 @@ class ResponsiveInsetsDialog extends StatelessWidget {
     }
     return Dialog (
       insetPadding: insets,
-      child: child,
       backgroundColor: backgroundColor,
       elevation: elevation,
       insetAnimationDuration: insetAnimationDuration,
@@ -148,6 +141,7 @@ class ResponsiveInsetsDialog extends StatelessWidget {
       clipBehavior: clipBehavior,
       shape: shape,
       alignment: alignment,
+      child: child,
     );
   }
 
@@ -169,11 +163,10 @@ class LoadingCheckbox extends StatelessWidget{
   final bool autofocus;
   final Widget loadingWidget;
   final Duration transitionDuration;
-  final Key? key;
   final PageTransitionSwitcherTransitionBuilder? pageTransitionBuilder;
-  AnimatedSwitcherTransitionBuilder? transitionBuilder;
+  final AnimatedSwitcherTransitionBuilder? transitionBuilder;
 
-  LoadingCheckbox({
+  const LoadingCheckbox({
     required this.value,
     required this.onChanged,
     this.mouseCursor,
@@ -183,12 +176,9 @@ class LoadingCheckbox extends StatelessWidget{
     this.loadingWidget = const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3,),),
     this.transitionDuration = const Duration(milliseconds: 300),
     this.pageTransitionBuilder,
-    this.transitionBuilder,
-    this.key,
-  }) {
-    if (transitionBuilder==null && pageTransitionBuilder==null)
-      transitionBuilder = _defaultTransitionBuilder;
-  }
+    AnimatedSwitcherTransitionBuilder? transitionBuilder,
+    super.key,
+  }) : transitionBuilder = transitionBuilder ?? (pageTransitionBuilder==null ? _defaultTransitionBuilder : null);
 
   @override
   Widget build(BuildContext context) {
@@ -202,7 +192,6 @@ class LoadingCheckbox extends StatelessWidget{
       );
     } else{
       result = Checkbox(
-        key: key,
         value: value,
         onChanged: onChanged,
         mouseCursor: mouseCursor,
@@ -216,22 +205,24 @@ class LoadingCheckbox extends StatelessWidget{
         autofocus: autofocus,
       );
     }
-    if (pageTransitionBuilder!=null)
+    if (pageTransitionBuilder!=null) {
       return PageTransitionSwitcher(
         transitionBuilder: pageTransitionBuilder!,
         duration: transitionDuration,
         child: result,
       );
-    else
+    } else {
       return AnimatedSwitcher(
         transitionBuilder: transitionBuilder!,
         duration: transitionDuration,
         child: result,
       );
+    }
   }
 
-  AnimatedSwitcherTransitionBuilder _defaultTransitionBuilder = (Widget child, Animation<double> animation)
-      => ScaleTransition(scale: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic), child: child,);
+  static Widget _defaultTransitionBuilder (Widget child, Animation<double> animation) {
+    return ScaleTransition(scale: CurvedAnimation(parent: animation, curve: Curves.easeOutCubic), child: child,);
+  }
 
   // PageTransitionSwitcherTransitionBuilder _defaultPageTransitionBuilder = (child, primaryAnimation, secondaryAnimation) {
   //   return FadeThroughTransition(
@@ -256,7 +247,7 @@ class MaterialKeyValuePair extends StatelessWidget {
   final int? titleMaxLines;
   final int? valueMaxLines;
 
-  MaterialKeyValuePair({
+  const MaterialKeyValuePair({super.key, 
     required this.title,
     required this.value,
     this.frame=false,
@@ -293,18 +284,18 @@ class MaterialKeyValuePair extends StatelessWidget {
                         style: valueStyle,
                       ),
                     ),
-                  Positioned.fill(
+                  const Positioned.fill(
                     child: Align(
                       alignment: Alignment.bottomCenter,
                       child: Padding(
-                        padding: const EdgeInsets.only(left: 1),
+                        padding: EdgeInsets.only(left: 1),
                         child: Divider(
                           height: 1,
                         ),
                       ),
                     ),
                   ),
-                  Positioned.fill(
+                  const Positioned.fill(
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: VerticalDivider(
@@ -345,11 +336,11 @@ class MaterialKeyValuePair extends StatelessWidget {
 
 class AppbarFiller extends ConsumerWidget {
 
-  final child;
+  final Widget? child;
   final bool useCurrentHeight;
   final bool keepSafeSpace;
 
-  AppbarFiller({
+  const AppbarFiller({super.key, 
     this.child,
     this.useCurrentHeight = false,
     this.keepSafeSpace = true,
@@ -369,9 +360,9 @@ class AppbarFiller extends ConsumerWidget {
     }
     return AnimatedPadding(
       padding: EdgeInsets.only(top: height),
-      duration: scaffold?.appbarAnimationDuration??Duration(milliseconds: 300),
+      duration: scaffold?.appbarAnimationDuration??const Duration(milliseconds: 300),
       curve: scaffold?.appbarAnimationCurve??Curves.easeOutCubic,
-      child: child ?? SizedBox.shrink(),
+      child: child ?? const SizedBox.shrink(),
     );
   }
 
@@ -392,7 +383,7 @@ class OpacityGradient extends StatelessWidget {
   final double? size;
   final double? percentage;
 
-  OpacityGradient({
+  const OpacityGradient({super.key, 
     required this.child,
     this.direction = vertical,
     double? size,
@@ -421,7 +412,7 @@ class OpacityGradient extends StatelessWidget {
               : 1-size!/(direction==top || direction==bottom || direction==vertical ? bounds.height : bounds.width),
           1,
         ],
-        colors: [Colors.transparent, Colors.black, Colors.black, Colors.transparent],
+        colors: const [Colors.transparent, Colors.black, Colors.black, Colors.transparent],
       ).createShader(Rect.fromLTRB(0, 0, bounds.width, bounds.height)),
       blendMode: BlendMode.dstIn,
       child: child,
@@ -439,7 +430,7 @@ class ScrollOpacityGradient extends StatefulWidget {
   final bool applyAtStart;
   final bool applyAtEnd;
 
-  ScrollOpacityGradient({
+  const ScrollOpacityGradient({super.key, 
     required this.scrollController,
     required this.child,
     this.maxSize = 16,
@@ -449,10 +440,10 @@ class ScrollOpacityGradient extends StatefulWidget {
   });
 
   @override
-  _ScrollOpacityGradientState createState() => _ScrollOpacityGradientState();
+  ScrollOpacityGradientState createState() => ScrollOpacityGradientState();
 
 }
-class _ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
+class ScrollOpacityGradientState extends State<ScrollOpacityGradient> {
 
   double size1 = 0;
   double size2 = 0;
@@ -555,7 +546,7 @@ class OverflowScroll extends StatefulWidget {
   final Widget child;
   final bool consumeScrollNotifications;
 
-  OverflowScroll({
+  const OverflowScroll({
     required this.child,
     this.scrollController,
     this.autoscrollSpeed = 64,
@@ -568,10 +559,11 @@ class OverflowScroll extends StatefulWidget {
   }): super(key: key);
 
   @override
-  _OverflowScrollState createState() => _OverflowScrollState();
+  OverflowScrollState createState() => OverflowScrollState();
 
 }
-class _OverflowScrollState extends State<OverflowScroll> {
+
+class OverflowScrollState extends State<OverflowScroll> {
 
   late ScrollController scrollController;
 
@@ -636,7 +628,7 @@ class _OverflowScrollState extends State<OverflowScroll> {
 class ExpandIconButton extends StatefulWidget {
 
   final bool value;
-  final Function(bool value)? onPressed;
+  final void Function(bool value)? onPressed;
   final EdgeInsetsGeometry padding;
 
   const ExpandIconButton({
@@ -647,11 +639,11 @@ class ExpandIconButton extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _ExpandIconButtonState createState() => _ExpandIconButtonState();
+  ExpandIconButtonState createState() => ExpandIconButtonState();
 
 }
 
-class _ExpandIconButtonState extends State<ExpandIconButton> with SingleTickerProviderStateMixin {
+class ExpandIconButtonState extends State<ExpandIconButton> with SingleTickerProviderStateMixin {
 
   late final AnimationController controlPanelAnimationController;
   late final Animatable<double> _halfTween;
@@ -661,7 +653,7 @@ class _ExpandIconButtonState extends State<ExpandIconButton> with SingleTickerPr
   void initState() {
     super.initState();
     _halfTween = Tween<double>(begin: 0.0, end: 0.5);
-    controlPanelAnimationController = AnimationController(duration: Duration(milliseconds: 300), vsync: this);
+    controlPanelAnimationController = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     controlPanelAnimationController.value = widget.value ? 1 : 0;
     _iconTurns = controlPanelAnimationController.drive(_halfTween.chain(CurveTween(curve: Curves.easeIn)));
   }
@@ -716,7 +708,7 @@ class ReturnToTopButton extends ConsumerStatefulWidget {
   final double minThresholdFromTop;
   final bool showOnlyWhenScrollingUp;
 
-  ReturnToTopButton({
+  const ReturnToTopButton({super.key, 
     required this.scrollController,
     required this.child,
     this.onTap,
@@ -727,10 +719,10 @@ class ReturnToTopButton extends ConsumerStatefulWidget {
   });
 
   @override
-  _ReturnToTopButtonState createState() => _ReturnToTopButtonState();
+  ReturnToTopButtonState createState() => ReturnToTopButtonState();
 
 }
-class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
+class ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
 
   double? lastScrollControllerOffset;
   double currentScrollingAmount = 0;
@@ -798,15 +790,12 @@ class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
             builder: (context, showButton, child) {
               Widget result;
               if (!showButton) {
-                result = SizedBox.shrink();
+                result = const SizedBox.shrink();
               } else {
                 result = TooltipFromZero(
                   message: FromZeroLocalizations.of(context).translate('return_to_top'),
                   child: FloatingActionButton(
                     heroTag: null,
-                    child: widget.icon ?? Icon(Icons.arrow_upward,
-                      color: Theme.of(context).textTheme.bodyLarge!.color!,
-                    ),
                     backgroundColor: Theme.of(context).cardColor,
                     onPressed: widget.onTap ?? () {
                       if (widget.duration==null){
@@ -815,14 +804,17 @@ class _ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
                         widget.scrollController.animateTo(0, duration: widget.duration!, curve: Curves.easeOutCubic);
                       }
                     },
+                    child: widget.icon ?? Icon(Icons.arrow_upward,
+                      color: Theme.of(context).textTheme.bodyLarge!.color!,
+                    ),
                   ),
                 );
                 }
               return AnimatedSwitcher(
-                duration: Duration(milliseconds: 300),
+                duration: const Duration(milliseconds: 300),
                 switchInCurve: Curves.easeOutCubic,
                 transitionBuilder: (child, animation) => SlideTransition(
-                  position: Tween(begin: Offset(0, 1), end: Offset.zero,).animate(animation),
+                  position: Tween(begin: const Offset(0, 1), end: Offset.zero,).animate(animation),
                   child: ZoomedFadeInTransition(animation: animation, child: child,),
                 ),
                 child: result,
@@ -843,9 +835,9 @@ class TextIcon extends StatelessWidget {
   final double width;
   final double height;
 
-  TextIcon(
+  const TextIcon(
       this.text,
-      {this.width = 24,
+      {super.key, this.width = 24,
       this.height = 24,}
   );
 
@@ -881,7 +873,7 @@ class TitleTextBackground extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? backgroundColor;
 
-  TitleTextBackground({
+  const TitleTextBackground({super.key, 
     double paddingVertical = 8,
     double paddingHorizontal = 24,
     double? paddingTop,
@@ -891,10 +883,10 @@ class TitleTextBackground extends StatelessWidget {
     this.child,
     this.backgroundColor,
     this.onTap,
-  })  : this.paddingTop = paddingTop ?? paddingVertical,
-        this.paddingBottom = paddingBottom ?? paddingVertical,
-        this.paddingLeft = paddingLeft ?? paddingHorizontal,
-        this.paddingRight = paddingRight ?? paddingHorizontal;
+  })  : paddingTop = paddingTop ?? paddingVertical,
+        paddingBottom = paddingBottom ?? paddingVertical,
+        paddingLeft = paddingLeft ?? paddingHorizontal,
+        paddingRight = paddingRight ?? paddingHorizontal;
 
   @override
   Widget build(BuildContext context) {
@@ -944,21 +936,21 @@ class IconButtonBackground extends StatelessWidget {
 
   final Widget child;
 
-  IconButtonBackground({required this.child,});
+  const IconButtonBackground({super.key, required this.child,});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(666)),
+        borderRadius: const BorderRadius.all(Radius.circular(666)),
         gradient: RadialGradient(
             colors: [
               (Theme.of(context).brightness==Brightness.light
-                  ? Colors.grey.shade100 : Color.fromRGBO(55, 55, 55, 1)).withOpacity(0.8),
+                  ? Colors.grey.shade100 : const Color.fromRGBO(55, 55, 55, 1)).withOpacity(0.8),
               (Theme.of(context).brightness==Brightness.light
-                  ? Colors.grey.shade100 : Color.fromRGBO(55, 55, 55, 1)).withOpacity(0),
+                  ? Colors.grey.shade100 : const Color.fromRGBO(55, 55, 55, 1)).withOpacity(0),
             ],
-            stops: [
+            stops: const [
               0.5,
               1
             ]
@@ -1057,11 +1049,11 @@ class SkipFrameWidget extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _SkipFrameWidgetState createState() => _SkipFrameWidgetState();
+  SkipFrameWidgetState createState() => SkipFrameWidgetState();
 
 }
 
-class _SkipFrameWidgetState extends State<SkipFrameWidget> {
+class SkipFrameWidgetState extends State<SkipFrameWidget> {
 
   late int skipFramesLeft;
 
@@ -1094,9 +1086,9 @@ class _SkipFrameWidgetState extends State<SkipFrameWidget> {
         builder: widget.transitionBuilder ?? (animation, child) {
           return FadeTransition(opacity: animation, child: child!,);
         },
-        child: widget.childBuilder(context),
         duration: widget.duration,
         curve: widget.curve,
+        child: widget.childBuilder(context),
       );
     }
   }
@@ -1105,7 +1097,7 @@ class _SkipFrameWidgetState extends State<SkipFrameWidget> {
 
 
 
-typedef Widget InitiallyAnimatedWidgetBuilder(Animation<double> animation, Widget? child);
+typedef InitiallyAnimatedWidgetBuilder = Widget Function(Animation<double> animation, Widget? child);
 class InitiallyAnimatedWidget extends StatefulWidget {
 
   final InitiallyAnimatedWidgetBuilder? builder;
@@ -1116,7 +1108,7 @@ class InitiallyAnimatedWidget extends StatefulWidget {
   final bool reverse;
   final VoidCallback? onFinish;
 
-  InitiallyAnimatedWidget({
+  const InitiallyAnimatedWidget({
     Key? key,
     this.builder,
     this.duration = const Duration(milliseconds: 300,),
@@ -1129,10 +1121,11 @@ class InitiallyAnimatedWidget extends StatefulWidget {
         super(key: key);
 
   @override
-  _InitiallyAnimatedWidgetState createState() => _InitiallyAnimatedWidgetState();
+  InitiallyAnimatedWidgetState createState() => InitiallyAnimatedWidgetState();
 
 }
-class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with SingleTickerProviderStateMixin {
+
+class InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with SingleTickerProviderStateMixin {
 
   late AnimationController animationController;
   late Animation<double> animation;
@@ -1164,6 +1157,7 @@ class _InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with 
     widget.onFinish?.call();
   }
 
+  @override
   void dispose() {
     animationController.dispose();
     super.dispose();
@@ -1194,10 +1188,10 @@ class KeepAliveMixinWidget extends StatefulWidget {
   final Widget child;
   const KeepAliveMixinWidget({Key? key, required this.child}) : super(key: key);
   @override
-  _KeepAliveMixinWidgetState createState() => _KeepAliveMixinWidgetState();
+  KeepAliveMixinWidgetState createState() => KeepAliveMixinWidgetState();
 }
 
-class _KeepAliveMixinWidgetState extends State<KeepAliveMixinWidget> with
+class KeepAliveMixinWidgetState extends State<KeepAliveMixinWidget> with
                           AutomaticKeepAliveClientMixin<KeepAliveMixinWidget> {
   @override
   bool get wantKeepAlive => true;
@@ -1407,7 +1401,7 @@ class FlexibleLayoutItemFromZero extends StatelessWidget {
 
 
 
-typedef Widget TimedOverlayBuilder(BuildContext context, Duration elapsed, Duration remaining);
+typedef TimedOverlayBuilder = Widget Function(BuildContext context, Duration elapsed, Duration remaining);
 class TimedOverlay extends StatefulWidget {
 
   final Duration duration;
@@ -1432,10 +1426,10 @@ class TimedOverlay extends StatefulWidget {
       color: Colors.black54,
       alignment: Alignment.center,
       child: AnimatedSwitcher(
-        duration: Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 250),
         child: Text(remainingSeconds.toString(),
           key: ValueKey(remainingSeconds),
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -1452,9 +1446,9 @@ class _TimedOverlayState extends State<TimedOverlay> {
   void initState() {
     super.initState();
     lastRemainingCount = (widget.duration.inMicroseconds/widget.rebuildInterval.inMicroseconds).ceil();
-    Timer.periodic(Duration(milliseconds: 10), (timer) {
+    Timer.periodic(const Duration(milliseconds: 10), (timer) {
       if (mounted) {
-        elapsed += Duration(milliseconds: 10);
+        elapsed += const Duration(milliseconds: 10);
         final remaining = widget.duration - elapsed;
         final remainingCount = (remaining.inMicroseconds/widget.rebuildInterval.inMicroseconds).ceil();
         if (remainingCount < lastRemainingCount || elapsed >= widget.duration) {
@@ -1513,7 +1507,7 @@ class BottomClipper extends CustomClipper<Path> {
 
 class PlatformExtended {
 
-  static late final _appWindow = kIsWeb || isMobile ? null : bitsdojo.appWindow;
+  static final _appWindow = kIsWeb || isMobile ? null : bitsdojo.appWindow;
   static bitsdojo_window.DesktopWindow? get appWindow => !windowsDesktopBitsdojoWorking ? null : _appWindow;
 
   static bool get isWindows{

@@ -4,8 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:go_router/src/configuration.dart';
-import 'package:go_router/src/match.dart';
 
 
 
@@ -351,7 +349,7 @@ class GoRouterStateFromZero extends GoRouterState {
   final int pageScaffoldDepth;
   String get pageScaffoldId => route.pageScaffoldId;
 
-  GoRouterStateFromZero(super._configuration, {
+  const GoRouterStateFromZero(super._configuration, {
     required this.route,
     required this.pageScaffoldDepth,
     required super.uri,
@@ -405,20 +403,16 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
     final router = (inherited!.widget as InheritedGoRouter).goRouter;
     final matches = router.routerDelegate.currentConfiguration.matches;
     late GoRouteFromZero currentRoute;
-    int currentDepth = 0;
-    int accumulatedDepth = 0;
+    // int currentDepth = 0;
+    // int accumulatedDepth = 0;
     for (int i=0; i<matches.length; i++) {
       final match = matches[i];
       final route = widget.route ?? (match.route as GoRouteFromZero);
-      accumulatedDepth += route.pageScaffoldDepth;
+      // accumulatedDepth += route.pageScaffoldDepth;
       if (match.pageKey.value == widget.state.pageKey.value) {
         currentRoute = route;
-        currentDepth = accumulatedDepth;
+        // currentDepth = accumulatedDepth;
       }
-      // if (GoRouteFromZero.addQueryParameters(match.matchedLocation, match.queryParameters) == location) {
-      //   currentRoute = route;
-      //   currentDepth = accumulatedDepth;
-      // }
     }
     state = GoRouterStateFromZero(router.configuration,
       route: currentRoute,

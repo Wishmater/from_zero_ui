@@ -1,29 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 
 
-import '../../change_notifiers/theme_parameters.dart';
 import '../../router.dart';
-import '../home/page_home.dart';
 
 class PageScaffoldOther extends StatefulWidget {
 
-  PageScaffoldOther();
+  const PageScaffoldOther({super.key});
 
   @override
-  _PageScaffoldInnerState createState() => _PageScaffoldInnerState();
+  PageScaffoldInnerState createState() => PageScaffoldInnerState();
 
 }
 
-class _PageScaffoldInnerState extends State<PageScaffoldOther> {
+class PageScaffoldInnerState extends State<PageScaffoldOther> {
 
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      title: Text("Inner Page"),
-      body: Center(
+      title: const Text("Inner Page"),
+      body: const Center(
         child: Card(child: FlutterLogo(size: 512,)),
       ),
       useCompactDrawerInsteadOfClose: false,

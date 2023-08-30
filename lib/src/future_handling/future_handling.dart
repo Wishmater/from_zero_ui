@@ -1,10 +1,7 @@
 import 'dart:math';
 
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/animations/exposed_transitions.dart';
-import 'package:intl/intl.dart';
 import 'package:dartx/dartx.dart';
 
 
@@ -45,7 +42,7 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
   @override
   void initState() {
     super.initState();
-    Future.delayed(Duration(milliseconds: 250)).then((value) {
+    Future.delayed(const Duration(milliseconds: 250)).then((value) {
       if (mounted) {
         setState((){
           passedInitialDelay = true;
@@ -73,13 +70,13 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
   @override
   Widget build(BuildContext context) {
     if (!passedInitialDelay) {
-      return LimitedBox(
+      return const LimitedBox(
         maxWidth: 128,
         maxHeight: 128,
         child: SizedBox.expand(),
       );
     }
-    Color color = this.widget.color ?? Theme.of(context).colorScheme.primary;
+    Color color = widget.color ?? Theme.of(context).colorScheme.primary;
     Color colorMedium = color.withOpacity(0.8);
     Color colorMild = color.withOpacity(0.2);
     Color colorTransparent = color.withOpacity(0);
@@ -104,7 +101,7 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
               children: [
                 Center(
                   child: InitiallyAnimatedWidget(
-                    duration: Duration(seconds: 1),
+                    duration: const Duration(seconds: 1),
                     curve: Curves.easeOut,
                     repeat: true,
                     builder: (loopingAnimation, child) {
@@ -209,7 +206,7 @@ class ErrorSign extends StatelessWidget {
             child: icon!,
           ),
         if (icon!=null)
-          SizedBox(height: 4,),
+          const SizedBox(height: 4,),
         Text(
           title,
           style: Theme.of(context).textTheme.titleLarge,
@@ -222,12 +219,12 @@ class ErrorSign extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
         if (retryButton!=null || onRetry!=null)
-          SizedBox(height: 16,),
+          const SizedBox(height: 16,),
         if (retryButton!=null || onRetry!=null)
           retryButton ?? DialogButton.accept(
-            leading: Icon(Icons.refresh),
-            child: Text(FromZeroLocalizations.of(context).translate("retry")),
+            leading: const Icon(Icons.refresh),
             onPressed: onRetry,
+            child: Text(FromZeroLocalizations.of(context).translate("retry")),
           ),
       ],
     );
@@ -288,7 +285,7 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
   final bool applyDefaultTransition;
   final bool enableSkipFrame; // when transitioning from having data to not having it, delay the transition by 1 frame, to not show loading unnecessarily
 
-  FutureBuilderFromZero({
+  const FutureBuilderFromZero({
     Key? key,
     required this.future,
     required this.successBuilder,
@@ -306,11 +303,11 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
         super(key: key);
 
   @override
-  _FutureBuilderFromZeroState<T> createState() => _FutureBuilderFromZeroState<T>();
+  FutureBuilderFromZeroState<T> createState() => FutureBuilderFromZeroState<T>();
 
 }
 
-class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
+class FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
 
   bool skipFrame = false;
   late int initialTimestamp;
@@ -348,7 +345,7 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
             result = widget.successBuilder(context, snapshot.data);
           } else if (_previousBuildData==null && widget.initialData!=null) {
             state = 1;
-            result = widget.successBuilder(context, widget.initialData!);
+            result = widget.successBuilder(context, widget.initialData as T);
           } else {
             state = -1;
             result = widget.errorBuilder(context, snapshot.hasError ? snapshot.error : "Forever Loading", snapshot.hasError ? snapshot.stackTrace : '',);
@@ -379,11 +376,11 @@ class _FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
           int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds).toInt();
           result = AnimatedSwitcherImage(
             transitionBuilder: widget.transitionBuilder,
+            duration: Duration(milliseconds: milliseconds),
             child: Container(
               key: ValueKey(state),
               child: result,
             ),
-            duration: Duration(milliseconds: milliseconds),
           );
         }
         if (widget.applyAnimatedContainerFromChildSize){
@@ -413,7 +410,7 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
   final ValueNotifier<Size?>? sizeNotifier;
   final Listenable? notifyResize;
 
-  AnimatedContainerFromChildSize({
+  const AnimatedContainerFromChildSize({
     required this.child,
     this.duration = const Duration(milliseconds: 300),
     this.alignment = Alignment.topLeft,
@@ -425,11 +422,11 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
   })  : super(key: key);
 
   @override
-  _AnimatedContainerFromChildSizeState createState() => _AnimatedContainerFromChildSizeState();
+  AnimatedContainerFromChildSizeState createState() => AnimatedContainerFromChildSizeState();
 
 }
 
-class _AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromChildSize> {
+class AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromChildSize> {
 
   GlobalKey globalKey = GlobalKey();
   Size? previousSize;

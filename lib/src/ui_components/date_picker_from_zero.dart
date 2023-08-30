@@ -1,14 +1,12 @@
-import 'package:animations/animations.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
 import 'package:intl/intl.dart';
-import 'package:from_zero_ui/util/copied_flutter_widgets/time_picker_dialog_from_zero.dart' as timePickerDialogFromZero;
+import 'package:from_zero_ui/util/copied_flutter_widgets/time_picker_dialog_from_zero.dart' as time_picker_dialog_from_zero;
 
-typedef Widget DatePickerButtonChildBuilder<T>(BuildContext context, String? title, String? hint, DateTime? value, DateFormat formatter, bool enabled, bool clearable,);
+typedef DatePickerButtonChildBuilder<T> = Widget Function(BuildContext context, String? title, String? hint, DateTime? value, DateFormat formatter, bool enabled, bool clearable,);
 /// returns true if navigator should pop after (default true)
-typedef bool? OnDateSelected(DateTime? value);
+typedef OnDateSelected = bool? Function(DateTime? value);
 
 enum DateTimePickerType {
   date,
@@ -33,7 +31,7 @@ class DatePickerFromZero extends StatefulWidget {
   final ButtonStyle? buttonStyle; /// if null, an InkWell will be used instead
   final DateTimePickerType type;
 
-  DatePickerFromZero({
+  DatePickerFromZero({super.key, 
     this.value,
     required this.firstDate,
     required this.lastDate,
@@ -51,10 +49,10 @@ class DatePickerFromZero extends StatefulWidget {
       padding: MaterialStatePropertyAll(EdgeInsets.zero),
     ),
     this.type = DateTimePickerType.date,
-  }) :  this.formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY);
+  }) :  formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY);
 
   @override
-  _DatePickerFromZeroState createState() => _DatePickerFromZeroState();
+  DatePickerFromZeroState createState() => DatePickerFromZeroState();
 
   static Widget defaultButtonChildBuilder(BuildContext context, String? title, String? hint, dynamic value, DateTimePickerType type, DateFormat formatter, bool enabled, bool clearable) {
     final theme = Theme.of(context);
@@ -63,7 +61,7 @@ class DatePickerFromZero extends StatefulWidget {
         : formatter.format(value);
     return IntrinsicWidth(
       child: ConstrainedBox(
-        constraints: BoxConstraints(
+        constraints: const BoxConstraints(
           minHeight: 38, minWidth: 192,
         ),
         child: Padding(
@@ -72,7 +70,7 @@ class DatePickerFromZero extends StatefulWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(width: 8,),
+              const SizedBox(width: 8,),
               Expanded(
                 child: value==null&&hint==null&&title!=null
                     ? Text(title, style: theme.textTheme.titleMedium!.copyWith(
@@ -87,10 +85,10 @@ class DatePickerFromZero extends StatefulWidget {
                         ),
                       ),
                   ),
-              SizedBox(width: 4,),
+              const SizedBox(width: 4,),
               if (enabled && !clearable)
-                Icon(Icons.arrow_drop_down),
-              SizedBox(width: 4,),
+                const Icon(Icons.arrow_drop_down),
+              const SizedBox(width: 4,),
             ],
           ),
         ),
@@ -100,7 +98,7 @@ class DatePickerFromZero extends StatefulWidget {
 
 }
 
-class _DatePickerFromZeroState extends State<DatePickerFromZero> {
+class DatePickerFromZeroState extends State<DatePickerFromZero> {
 
   GlobalKey buttonKey = GlobalKey();
 
@@ -137,16 +135,16 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
       child = TextButton(
         key: buttonKey,
         style: widget.buttonStyle,
-        child: child,
         focusNode: buttonFocusNode,
         onPressed: onPressed,
+        child: child,
       );
     } else {
       child = InkWell(
         key: buttonKey,
-        child: child,
         focusNode: buttonFocusNode,
         onTap: onPressed,
+        child: child,
       );
     }
     return Stack(
@@ -158,7 +156,7 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
             child: ExcludeFocus(
               child: Center(
                   child: AnimatedSwitcher(
-                    duration: Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 300),
                     switchInCurve: Curves.easeOutCubic,
                     transitionBuilder: (child, animation) {
                       return SizeTransition(
@@ -172,13 +170,13 @@ class _DatePickerFromZeroState extends State<DatePickerFromZero> {
                     child: widget.value!=null ? TooltipFromZero(
                       message: FromZeroLocalizations.of(context).translate('clear'),
                       child: IconButton(
-                        icon: Icon(Icons.close),
+                        icon: const Icon(Icons.close),
                         splashRadius: 20,
                         onPressed: () {
                           widget.onSelected?.call(null);
                         },
                       ),
-                    ) : SizedBox.shrink(),
+                    ) : const SizedBox.shrink(),
                   )
               ),
             ),
@@ -200,7 +198,7 @@ class DatePickerFromZeroPopup extends StatefulWidget {
   final String? title;
   final DateTimePickerType type;
 
-  DatePickerFromZeroPopup({
+  const DatePickerFromZeroPopup({super.key, 
     this.value,
     required this.firstDate,
     required this.lastDate,
@@ -210,18 +208,18 @@ class DatePickerFromZeroPopup extends StatefulWidget {
   });
 
   @override
-  _DatePickerFromZeroPopupState createState() => _DatePickerFromZeroPopupState();
+  DatePickerFromZeroPopupState createState() => DatePickerFromZeroPopupState();
 
 }
 
-class _DatePickerFromZeroPopupState extends State<DatePickerFromZeroPopup> {
+class DatePickerFromZeroPopupState extends State<DatePickerFromZeroPopup> {
 
   @override
   Widget build(BuildContext context) {
     switch (widget.type) {
 
       case DateTimePickerType.time:
-        return timePickerDialogFromZero.TimePickerDialog(
+        return time_picker_dialog_from_zero.TimePickerDialog(
           initialTime: TimeOfDay.fromDateTime(widget.value ?? DateTime.now().copyWith(minute: 0)),
           includeDialog: false,
           useLayoutBuilderInsteadOfMediaQuery: true,
@@ -264,7 +262,7 @@ class _DatePickerFromZeroPopupState extends State<DatePickerFromZeroPopup> {
                 },
               ),
             ),
-            SizedBox(height: 16,)
+            const SizedBox(height: 16,)
           ],
         );
 

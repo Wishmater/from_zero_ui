@@ -13,6 +13,7 @@ dependencies:
     sdk: flutter
 
   # * Language Extensions
+  intl: ^0.18.1
   dartx: ^1.2.0
   collection: ^1.17.2 # pinned to 1.17.2 by flutter ver.3.13.0
   email_validator: ^2.1.17
@@ -67,6 +68,11 @@ dependencies:
       url: https://github.com/Wishmater/dart_pdf
       ref: 206d0671ac2a99b577f815353bf7ccb3873dca7f
       path: pdf
+
+
+
+dev_dependencies:
+  flutter_lints: ^2.0.3
 
 
 

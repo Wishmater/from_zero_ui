@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:dartx/dartx.dart';
 
 
 /// for passing lists into a provider familiy and maintaining equality of arguments
@@ -12,7 +11,7 @@ class DeepEqualityList<T> extends ComparableListBase<T> {
 
   @override
   bool operator == (dynamic other) => other is DeepEqualityList<T>
-      && DeepCollectionEquality().equals(this.list, other.list);
+      && const DeepCollectionEquality().equals(list, other.list);
 
   @override
   int get hashCode => Object.hashAll(list);
@@ -20,7 +19,7 @@ class DeepEqualityList<T> extends ComparableListBase<T> {
   @override
   int compareTo(other) {
     if (other is! DeepEqualityList) return -1;
-    return DeepCollectionEquality().equals(this.list, other.list) ? 0
+    return const DeepCollectionEquality().equals(list, other.list) ? 0
         : list.length.compareTo(other.list.length);
   }
 
@@ -52,7 +51,7 @@ class ComparableList<T extends Comparable> extends ComparableListBase<T> {
 
   @override
   bool operator == (dynamic other) => other is ComparableList<T>
-      && (list.length==0&&other.list.length==0 || other.list==this.list);
+      && (list.isEmpty&&other.list.isEmpty || other.list==list);
 
   @override
   int get hashCode => list.hashCode;
@@ -73,15 +72,16 @@ class ComparableList<T extends Comparable> extends ComparableListBase<T> {
 abstract class ComparableListBase<T> implements Comparable, ContainsValue<List<T>> {
 
   final List<T> list;
+  @override
   List<T>? get value => list;
 
   ComparableListBase({
     List<T>? list,
-  })  : this.list = list ?? [];
+  })  : list = list ?? [];
 
   @override
   String toString() {
-    return '${this.runtimeType}: $list';
+    return '$runtimeType: $list';
   }
 
   T get first => list.first;
@@ -92,7 +92,7 @@ abstract class ComparableListBase<T> implements Comparable, ContainsValue<List<T
 
   List operator +(List other) => list + (other as List<T>);
 
-  operator [](int index) => list[index];
+  T operator [](int index) => list[index];
 
   void operator []=(int index, value) => list[index] = value;
 

@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:animations/animations.dart';
 import 'package:excel/excel.dart';
@@ -33,6 +32,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     PdfPageFormat(PdfPageFormat.a4.height*3/4, PdfPageFormat.a4.height),
     PdfPageFormat(PdfPageFormat.a4.height*9/16, PdfPageFormat.a4.height),];
 
+  // TODO 2 this is god awful. Completely refactor this class if we intend on using it again, or scrap it and decouple TableController excel export from it (which is the only use it has now)
   int Function(int currentSize, bool portrait, double scale, String format)? childrenCount;
   final Widget Function(BuildContext context, int index, int currentSize, bool portrait, double scale, String format)? childBuilder;
   final Widget Function(BuildContext context, int index, int currentSize, bool portrait, double scale, String format, ScrollController scrollController)? scrollableChildBuilder;
@@ -93,20 +93,20 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     this.isPngFormatAvailable = true,
     this.autoExport = true,
     this.autoOpenFile = FileAutoOpenType.file,
-  })  : this.showTitle = showTitle ?? textEditingControllers==null ? true : false,
-        this.exportThemeData =  (themeParameters?.lightTheme ?? ThemeData()).copyWith(
+  })  : showTitle = showTitle ?? textEditingControllers==null ? true : false,
+        exportThemeData =  (themeParameters?.lightTheme ?? ThemeData()).copyWith(
           canvasColor: Colors.white,
           cardColor: Colors.white,
-          cardTheme: CardTheme(
+          cardTheme: const CardTheme(
             elevation: 0,
             color: Colors.white,
 //            shape: Border.all(style: BorderStyle.none),
           ),
         ),
-        this.childBuilder = null,
+        childBuilder = null,
         super(key: key);
 
-  Export.dummy({
+  Export.dummy({super.key, 
     required this.dummyChild,
     required this.themeParameters,
     this.isPdfFormatAvailable = true,
@@ -145,17 +145,17 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     this.isPngFormatAvailable = true,
     this.autoExport = true,
     this.autoOpenFile = FileAutoOpenType.file,
-  })  : this.showTitle = showTitle ?? textEditingControllers==null ? true : false,
-        this.exportThemeData =  (themeParameters?.lightTheme ?? ThemeData()).copyWith(
+  })  : showTitle = showTitle ?? textEditingControllers==null ? true : false,
+        exportThemeData =  (themeParameters?.lightTheme ?? ThemeData()).copyWith(
           canvasColor: Colors.white,
           cardColor: Colors.white,
-          cardTheme: CardTheme(
+          cardTheme: const CardTheme(
             elevation: 0,
             color: Colors.white,
 //            shape: Border.all(style: BorderStyle.none),
           ),
         ),
-        this.scrollableChildBuilder = null,
+        scrollableChildBuilder = null,
         scrollableStickyOffset = 0,
         super(key: key);
 
@@ -225,7 +225,7 @@ class ExportState extends State<Export> {
           });
           return 1;
         }
-        if (jumpsSeparatingPages!=null && currentSize==lastSize && portrait==lastPortrait
+        if (currentSize==lastSize && portrait==lastPortrait
             && scale==lastScale && format==lastFormat){
           return jumpsSeparatingPages.length;
         }
@@ -238,13 +238,13 @@ class ExportState extends State<Export> {
           position.haveDimensions;
           double totalHeight = position.maxScrollExtent+position.viewportDimension;
           List<double> significantWidgetVisibleAtStartOffsets = [0];
-          widget.significantWidgetsKeys!.forEach((element) {
+          for (var element in widget.significantWidgetsKeys!) {
             if (element.currentContext!=null) {
               final object = element.currentContext!.findRenderObject();
               final viewport = RenderAbstractViewport.of(object);
               significantWidgetVisibleAtStartOffsets.add(viewport.getOffsetToReveal(object!, 0.0).offset);
             }
-          });
+          }
           significantWidgetVisibleAtStartOffsets.add(position.maxScrollExtent + position.viewportDimension);
           significantWidgetVisibleAtStartOffsets.sort();
           scrollControllers = [];
@@ -264,7 +264,7 @@ class ExportState extends State<Export> {
 //          log (jumpsSeparatingPages);
 //          log (pageBottomPaddings);
           return jumpsSeparatingPages.length;
-        } catch(e, st){
+        } catch(e){
           // log(e, stackTrace: st);
           lastSize = null;
           return 1;
@@ -335,7 +335,7 @@ class ExportState extends State<Export> {
       pdf.addPage(
         pw.Page(
           pageFormat: format,
-          margin: pw.EdgeInsets.all(0),
+          margin: const pw.EdgeInsets.all(0),
           build: (context) => pw.Image(
             pw.MemoryImage(pngBytes),
           ),
@@ -345,13 +345,13 @@ class ExportState extends State<Export> {
         if (!mounted) return;
         saveFileFromZero( // don't await, so the window closes before snackbar
           context: context,
-          name: widget.title+'.pdf',
+          name: '${widget.title}.pdf',
           pathAppend: await widget.path,
           data: pdf.save(),
         );
       }
     } else if (format=='PNG'){
-      final title = widget.title+(widget.childrenCount!(currentSize, portrait, scale, this.format,)>1?' ${(i+1)}':'')+'.png';
+      final title = '${widget.title}${widget.childrenCount!(currentSize, portrait, scale, format,)>1?' ${(i+1)}':''}.png';
       final path = await widget.path;
       if (!mounted) return;
       final pngBytes = _getImageBytes(size, await _getImage(size, boundaryKeys[i]));
@@ -442,7 +442,7 @@ class ExportState extends State<Export> {
               } else{
                 style = col?.textStyle ?? row.textStyle;
               }
-              TextAlign? alignment = col!=null ? col.alignment : null;
+              TextAlign? alignment = col?.alignment;
               CellStyle cellStyle = CellStyle();
               Data cell = sheetObject.cell(CellIndex.indexByColumnRow(rowIndex: i+1, columnIndex: j));
               if (style!=null){
@@ -458,7 +458,7 @@ class ExportState extends State<Export> {
                 cellStyle.backgroundColor = backgroundColor.toHex(includeAlpha: false);
               }
               cellStyle.fontSize = 12;
-              final cellValue;
+              final dynamic cellValue;
               if (col is DateColModel && (row.values[key] is DateTime || row.values[key] is ContainsValue<DateTime>)) {
                 final formatter = col.formatter;
                 final DateTime dateTime = row.values[key] is DateTime ? row.values[key] : (row.values[key] as ContainsValue<DateTime>).value;
@@ -488,8 +488,7 @@ class ExportState extends State<Export> {
                         ? (row.values[key] as ContainsValue).value
                         : row.values[key].toString();
               } else {
-                cellValue = row.values[key]==null ? null
-                    : row.values[key];
+                cellValue = row.values[key];
               }
               if (cellValue==null || cellValue is num) {
                 cell.value = cellValue ?? '';
@@ -526,7 +525,7 @@ class ExportState extends State<Export> {
     if (!mounted) return;
     saveFileFromZero( // don't await, so the window closes before snackbar
       context: context,
-      name: widget.title+'.xlsx',
+      name: '${widget.title}.xlsx',
       pathAppend: await widget.path,
       data: encoded,
     );
@@ -562,7 +561,7 @@ class ExportState extends State<Export> {
       if (!Platform.isAndroid || (await Permission.storage.request().isGranted)){
         showModalFromZero(
           context: context,
-          configuration: FadeScaleTransitionConfiguration(
+          configuration: const FadeScaleTransitionConfiguration(
             barrierDismissible: false
           ),
           builder: (context) {
@@ -570,23 +569,23 @@ class ExportState extends State<Export> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 16,),
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16,),
                   Container(
                     decoration: BoxDecoration(
                       color: Theme.of(context).cardColor.withOpacity(0.8),
-                      borderRadius: BorderRadius.all(Radius.circular(4)),
+                      borderRadius: const BorderRadius.all(Radius.circular(4)),
                     ),
                     child: TextButton(
-                      child: Text('CANCELAR', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
                       style: TextButton.styleFrom(
-                        primary: Colors.red,
+                        foregroundColor: Colors.red,
                       ),
                       onPressed: () {
                         final navigator = Navigator.of(context);
                         navigator.pop();
                         navigator.pop();
                       },
+                      child: const Text('CANCELAR', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
                     ),
                   )
                 ],
@@ -605,7 +604,7 @@ class ExportState extends State<Export> {
       }
     };
     return ResponsiveInsetsDialog(
-      child: Container(
+      child: SizedBox(
         width: ScaffoldFromZero.screenSizeLarge,
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -620,14 +619,14 @@ class ExportState extends State<Export> {
                 child: Container(
                   color: Theme.of(context).canvasColor,
                   alignment: Alignment.center,
-                  padding: EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                   child: Column(
                     children: [
                       Expanded(
                         child: LayoutBuilder(
                           builder: (context, constraints) {
                             if (format=='Excel'){
-                              return Center(
+                              return const Center(
                                 child: Text('Vista previa no disponible'),
                               );
                             }
@@ -646,7 +645,7 @@ class ExportState extends State<Export> {
                             );
                             if (constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium){
                               result = my_arrow_page_indicator.ArrowPageIndicator(
-                                iconPadding: EdgeInsets.symmetric(horizontal: 16),
+                                iconPadding: const EdgeInsets.symmetric(horizontal: 16),
                                 isInside: true,
                                 pageController: controller,
                                 currentPageNotifier: currentPageNotifier,
@@ -698,8 +697,8 @@ class ExportState extends State<Export> {
                                 decoration: InputDecoration(
                                   labelText: "Título", // TODO 3 internationalize
                                   labelStyle: TextStyle(color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75)),
-                                  border: OutlineInputBorder(),
-                                  contentPadding: EdgeInsets.only(left: 12, right: 34, top: 17, bottom: 18),
+                                  border: const OutlineInputBorder(),
+                                  contentPadding: const EdgeInsets.only(left: 12, right: 34, top: 17, bottom: 18),
                                 ),
                               ),
                               Align(
@@ -707,17 +706,17 @@ class ExportState extends State<Export> {
                                 child: ValueListenableBuilder(
                                     valueListenable: textEditingControllers[value],
                                     builder: (context, TextEditingValue text, child) {
-                                      bool empty = text.text==null || text.text.isEmpty;
+                                      bool empty = text.text.isEmpty;
                                       return PageTransitionSwitcher(
                                         transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
                                           return FadeThroughTransition(
                                             animation: primaryAnimation,
                                             secondaryAnimation: secondaryAnimation,
-                                            child: child,
                                             fillColor: Colors.transparent,
+                                            child: child,
                                           );
                                         },
-                                        child: empty ? SizedBox.shrink()
+                                        child: empty ? const SizedBox.shrink()
                                             : IconButton(
                                           icon: Icon(MaterialCommunityIcons.close_circle,
                                             color: Theme.of(context).textTheme.bodySmall!.color,
@@ -740,15 +739,15 @@ class ExportState extends State<Export> {
                       onPressed: (){},
                       child: DropdownButton(
                         value: formatIndex,
-                        underline: SizedBox.shrink(),
+                        underline: const SizedBox.shrink(),
                         dropdownColor: Theme.of(context).cardColor,
                         selectedItemBuilder: (context) => List.generate(supportedFormats.length, (index) =>
                             Center(child: MaterialKeyValuePair(title: "Formato", value: supportedFormats[index])),
                         ),
                         items: List.generate(supportedFormats.length, (index) =>
                             DropdownMenuItem(
-                              child: Text(supportedFormats[index]),
                               value: index,
+                              child: Text(supportedFormats[index]),
                             ),
                         ),
                         onChanged: (value) {
@@ -762,20 +761,20 @@ class ExportState extends State<Export> {
                       onPressed: format=='Excel' ? null : (){},
                       child: DropdownButton(
                         value: portrait,
-                        underline: SizedBox.shrink(),
+                        underline: const SizedBox.shrink(),
                         dropdownColor: Theme.of(context).cardColor,
                         selectedItemBuilder: (context) => [
-                          Center(child: MaterialKeyValuePair(title: "Orientación", value: "Vertical")),
-                          Center(child: MaterialKeyValuePair(title: "Orientación", value: "Horizontal")),
+                          const Center(child: MaterialKeyValuePair(title: "Orientación", value: "Vertical")),
+                          const Center(child: MaterialKeyValuePair(title: "Orientación", value: "Horizontal")),
                         ],
-                        items: [
+                        items: const [
                           DropdownMenuItem(
-                            child: Text("Vertical"),
                             value: true,
+                            child: Text("Vertical"),
                           ),
                           DropdownMenuItem(
-                            child: Text("Horizontal"),
                             value: false,
+                            child: Text("Horizontal"),
                           ),
                         ],
                         onChanged: format=='Excel' ? null : (value) {
@@ -789,15 +788,15 @@ class ExportState extends State<Export> {
                       onPressed: format=='Excel' ? null : (){},
                       child: DropdownButton(
                         value: currentSize,
-                        underline: SizedBox.shrink(),
+                        underline: const SizedBox.shrink(),
                         dropdownColor: Theme.of(context).cardColor,
                         selectedItemBuilder: (context) => List.generate(Export.defaultFormats.length, (index) =>
                             Center(child: MaterialKeyValuePair(title: "Tamaño", value: Export.defaultSizesUI[index])),
                         ),
                         items: List.generate(Export.defaultFormats.length, (index) =>
                             DropdownMenuItem(
-                              child: Text(Export.defaultSizesUI[index]),
                               value: index,
+                              child: Text(Export.defaultSizesUI[index]),
                             ),
                         ),
                         onChanged: format=='Excel' ? null : (value) {
@@ -811,7 +810,7 @@ class ExportState extends State<Export> {
                       width: 256,
                       decoration: BoxDecoration(
                         border: Border.all(width: 1, color: Theme.of(context).dividerColor),
-                        borderRadius: BorderRadius.all(Radius.circular(4))
+                        borderRadius: const BorderRadius.all(Radius.circular(4))
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -824,7 +823,7 @@ class ExportState extends State<Export> {
                           Expanded(
                             child: Slider(
                               value: scale,
-                              label: "Zoom: "+NumberFormat("###,###,###,###,##0%").format(scale),
+                              label: "Zoom: ${NumberFormat("###,###,###,###,##0%").format(scale)}",
                               min: 0.5,
                               max: 1.5,
                               onChanged: format=='Excel' ? null : (value) {
@@ -854,21 +853,20 @@ class ExportState extends State<Export> {
                         mainAxisSize: MainAxisSize.min,
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          SizedBox(width: 6,),
+                          const SizedBox(width: 6,),
                           DialogButton(
-                            child: Text("EXPORTAR"),
                             color: Colors.blue,
                             onPressed: _onExportButtonPressed,
+                            child: const Text("EXPORTAR"),
                           ),
-                          SizedBox(width: 6,),
-                          DialogButton.cancel(),
+                          const SizedBox(width: 6,),
+                          const DialogButton.cancel(),
                         ],
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 6),
                         child: DialogButton(
-                          child: Text("VISTA PREVIA"),
-                          leading: Icon(MaterialCommunityIcons.presentation_play, color: Colors.blue,),
+                          leading: const Icon(MaterialCommunityIcons.presentation_play, color: Colors.blue,),
                           color: Colors.blue,
                           onPressed: () async{
                             showModalFromZero(
@@ -900,6 +898,7 @@ class ExportState extends State<Export> {
                               },
                             );
                           },
+                          child: const Text("VISTA PREVIA"),
                         ),
                       ),
                     ],
@@ -917,6 +916,9 @@ class ExportState extends State<Export> {
     return _PageWrapper(
       themeData: widget.exportThemeData,
       title: widget.showTitle ? textEditingControllers[index].text : null,
+      globalKey: key,
+      size: size,
+      scale: scale,
       child: Builder(
         builder: (context) {
           if (widget.childBuilder!=null){
@@ -934,9 +936,6 @@ class ExportState extends State<Export> {
           }
         },
       ),
-      globalKey: key,
-      size: size,
-      scale: scale,
     );
   }
 
@@ -951,7 +950,7 @@ class _PageWrapper extends StatelessWidget {
   final ThemeData themeData;
   final String? title;
 
-  _PageWrapper({required this.scale, required this.child, required this.size,
+  const _PageWrapper({required this.scale, required this.child, required this.size,
     required this.globalKey, required this.themeData, required this.title});
 
   @override
@@ -985,7 +984,7 @@ class _PageWrapper extends StatelessWidget {
                               children: [
                                 if (title!=null && title!.isNotEmpty)
                                   Padding(
-                                    padding: EdgeInsets.only(top: 16),
+                                    padding: const EdgeInsets.only(top: 16),
                                     child: Text(title!,
                                       style: Theme.of(context).textTheme.headlineMedium,
                                       textAlign: TextAlign.center,

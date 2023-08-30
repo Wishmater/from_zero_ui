@@ -1,16 +1,12 @@
 import 'dart:async';
 import 'dart:math';
-import 'dart:ui' as ui;
 
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/dao/dao.dart';
-import 'package:from_zero_ui/src/dao/field_validators.dart';
 import 'package:intl/intl.dart';
-import 'package:dartx/dartx.dart';
 
 
 
@@ -23,6 +19,7 @@ class NumField extends Field<num> {
   bool allowNegative;
   Timer? valUpdateTimer;
 
+  @override
   set value(num? v) {
     super.value = v;
     syncTextEditingController();
@@ -218,12 +215,10 @@ class NumField extends Field<num> {
     FocusNode? focusNode,
     ScrollController? mainScrollController,
   }) {
-    if (focusNode==null) {
-      focusNode = this.focusNode;
-    }
+    focusNode ??= this.focusNode;
     Widget result;
     if (hiddenInForm && !ignoreHidden) {
-      result = SizedBox.shrink();
+      result = const SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);
       }
@@ -314,7 +309,7 @@ class NumField extends Field<num> {
                     final backgroundColor = this.backgroundColor?.call(context, this, dao);
                     final focusColor = Theme.of(context).focusColor.withOpacity(Theme.of(context).focusColor.opacity*0.6);
                     return AnimatedContainer(
-                      duration: Duration(milliseconds: 250),
+                      duration: const Duration(milliseconds: 250),
                       color: dense && visibleValidationErrors.isNotEmpty
                           ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                           : focusNode.hasFocus  ? backgroundColor!=null ? Color.alphaBlend(focusColor, backgroundColor)
@@ -373,7 +368,7 @@ class NumField extends Field<num> {
                           bool update = false;
                           int commaIndex = v.indexOf('.');
                           if (commaIndex==0 || (commaIndex==1 && v[0]=='-')) {
-                            v = v.substring(0, commaIndex) + '0' + v.substring(commaIndex);
+                            v = '${v.substring(0, commaIndex)}0${v.substring(commaIndex)}';
                             commaIndex++;
                             update = true;
                           }
@@ -381,7 +376,7 @@ class NumField extends Field<num> {
                           if (commaIndex>0) {
                             if (commaIndex!=lastCommaIndex) {
                               v = v.replaceAll('.', '');
-                              v = v.substring(0, commaIndex) + '.' + v.substring(commaIndex);
+                              v = '${v.substring(0, commaIndex)}.${v.substring(commaIndex)}';
                               update = true;
                             }
                             if (v.length-1 - commaIndex > digitsAfterComma) {
@@ -405,7 +400,7 @@ class NumField extends Field<num> {
                         } else if (value!=textVal) {
                           addUndoEntry(value);
                         }
-                        valUpdateTimer = Timer(Duration(seconds: 2), () {
+                        valUpdateTimer = Timer(const Duration(seconds: 2), () {
                           value = textVal;
                         });
                       },
@@ -424,8 +419,8 @@ class NumField extends Field<num> {
                   : b.toString().trim().isEmpty ? a.toString()
                   : '$a\n$b';
             }),
+            waitDuration: enabled ? const Duration(seconds: 1) : Duration.zero,
             child: result,
-            waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
           if (!dense) {
             result = AppbarFromZero(
@@ -438,7 +433,7 @@ class NumField extends Field<num> {
               paddingRight: 6,
               actionPadding: 0,
               skipTraversalForActions: true,
-              constraints: BoxConstraints(),
+              constraints: const BoxConstraints(),
               actions: allActions,
               title: SizedBox(height: largeVertically ? null : 56, child: result),
             );

@@ -1,12 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/snackbar_from_zero.dart';
-import 'package:from_zero_ui/src/app_scaffolding/snackbar_host_from_zero.dart';
 import 'package:open_file/open_file.dart';
 import 'package:humanizer/humanizer.dart';
 import 'package:intl/intl.dart';
@@ -14,7 +10,6 @@ import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:dartx/dartx.dart';
 import 'package:pasteboard/pasteboard.dart';
 
 
@@ -49,7 +44,7 @@ Future<bool> saveFileFromZero ({
   bool cancelled = false;
   // show download progress snackBar
   if (showSnackBars && showDownloadSnackBar) {
-    final type = SnackBarFromZero.info;
+    const type = SnackBarFromZero.info;
     Widget progressIndicator;
     if (downloadedAmount!=null && fileSize!=null) {
       progressIndicator = ValueListenableBuilder<int>(
@@ -97,7 +92,7 @@ Future<bool> saveFileFromZero ({
               valueListenable: fileSize,
               builder: (context, size, child) {
                 if (size==null || size==0) {
-                  return Text('');
+                  return const Text('');
                 } else {
                   return Text('${_percentFormatter.format(count/size)}   ( ${count.bytes().toString()} / ${size.bytes().toString()} )');
                 }
@@ -209,7 +204,7 @@ Future<bool> saveFileFromZero ({
         key: snackBarKey ?? ValueKey(data.hashCode),
         context: context,
         type: SnackBarFromZero.success,
-        duration: Duration(seconds: 8),
+        duration: const Duration(seconds: 8),
         title:  Text(successTitle ?? FromZeroLocalizations.of(context).translate('download_success')),
         message: Text(successMessage ?? "${FromZeroLocalizations.of(context).translate('downloaded_to')} $uiPath"),
         actions: [
@@ -254,11 +249,11 @@ Future<bool> saveFileFromZero ({
         icon: downloadSuccess
             ? null
             : ApiProviderBuilder.getErrorIcon(context, error, stackTrace),
-        duration: Duration(seconds: 6),
+        duration: const Duration(seconds: 6),
         title: Text(FromZeroLocalizations.of(context).translate('download_fail')),
         message: Text(downloadSuccess
             ? FromZeroLocalizations.of(context).translate('error_file')
-            : (ApiProviderBuilder.getErrorTitle(context, error, stackTrace) + '${errorSubtitle==null ? '' : '\n$errorSubtitle'}')),
+            : ('${ApiProviderBuilder.getErrorTitle(context, error, stackTrace)}${errorSubtitle==null ? '' : '\n$errorSubtitle'}')),
         actions: [
           if (onRetry!=null)
           SnackBarAction(

@@ -1,10 +1,6 @@
-import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/dao/dao.dart';
-import 'package:from_zero_ui/src/dao/field_validators.dart';
-import 'package:from_zero_ui/util/copied_flutter_widgets/my_tooltip.dart';
 import 'package:intl/intl.dart';
 import 'package:dartx/dartx.dart';
 
@@ -17,11 +13,11 @@ class DateField extends Field<DateTime> {
   DateTime lastDate;
   final DateTimePickerType type;
 
-  static late final defaultFormatter = DateFormat(DateFormat.YEAR_MONTH_DAY);
-  static late final defaultDenseFormatter = DateFormat("dd/MM/yyyy"); // TODO 3 internationalize
-  static late final defaultTimeFormatter = DateFormat("H:mm");
-  static late final defaultFirstDate = DateTime(1900);
-  static late final defaultLastDate = DateTime(2200);
+  static final defaultFormatter = DateFormat(DateFormat.YEAR_MONTH_DAY);
+  static final defaultDenseFormatter = DateFormat("dd/MM/yyyy"); // TODO 3 internationalize
+  static final defaultTimeFormatter = DateFormat("H:mm");
+  static final defaultFirstDate = DateTime(1900);
+  static final defaultLastDate = DateTime(2200);
 
   DateField({
     required FieldValueGetter<String, Field> uiNameGetter,
@@ -56,10 +52,10 @@ class DateField extends Field<DateTime> {
     ViewWidgetBuilder<DateTime> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
     OnFieldValueChanged<DateTime?>? onValueChanged,
     this.type = DateTimePickerType.date,
-  }) :  this.firstDate = firstDate ?? defaultFirstDate,
-        this.lastDate = lastDate ?? defaultLastDate,
-        this.formatter = formatter ?? (type==DateTimePickerType.time ? defaultTimeFormatter : defaultFormatter),
-        this.formatterDense = formatterDense ?? formatter ?? (type==DateTimePickerType.time ? defaultTimeFormatter : defaultDenseFormatter),
+  }) :  firstDate = firstDate ?? defaultFirstDate,
+        lastDate = lastDate ?? defaultLastDate,
+        formatter = formatter ?? (type==DateTimePickerType.time ? defaultTimeFormatter : defaultFormatter),
+        formatterDense = formatterDense ?? formatter ?? (type==DateTimePickerType.time ? defaultTimeFormatter : defaultDenseFormatter),
         super(
           uiNameGetter: uiNameGetter,
           value: type==DateTimePickerType.date ? value?.toUtc().date : value,
@@ -185,12 +181,10 @@ class DateField extends Field<DateTime> {
     bool ignoreHidden = false,
     ScrollController? mainScrollController,
   }) {
-    if (focusNode==null) {
-      focusNode = this.focusNode;
-    }
+    focusNode ??= this.focusNode;
     Widget result;
     if (hiddenInForm && !ignoreHidden) {
-      result = SizedBox.shrink();
+      result = const SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);
       }
@@ -271,7 +265,7 @@ class DateField extends Field<DateTime> {
           },
         );
         result = AnimatedContainer(
-          duration: Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 300),
           color: dense && visibleValidationErrors.isNotEmpty
               ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
               : backgroundColor?.call(context, this, dao),
@@ -284,8 +278,8 @@ class DateField extends Field<DateTime> {
                 : b.toString().trim().isEmpty ? a.toString()
                 : '$a\n$b';
           }),
+          waitDuration: enabled ? const Duration(seconds: 1) : Duration.zero,
           child: result,
-          waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
         if (!dense) {
           final actions = buildActions(context, focusNode);
@@ -301,7 +295,7 @@ class DateField extends Field<DateTime> {
             paddingRight: 6,
             actionPadding: 0,
             skipTraversalForActions: true,
-            constraints: BoxConstraints(),
+            constraints: const BoxConstraints(),
             actions: [
               ...actions,
               if (actions.isNotEmpty && defaultActions.isNotEmpty)

@@ -1,21 +1,11 @@
-import 'dart:io';
 import 'dart:math';
 
-import 'package:animations/animations.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/table/empty_widget.dart';
-import 'package:from_zero_ui/src/table/filter_popup.dart';
 import 'package:from_zero_ui/src/table/manage_popup.dart';
-import 'package:from_zero_ui/src/ui_utility/notification_relayer.dart';
-import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
-import 'package:from_zero_ui/src/table/table_from_zero_filters.dart';
-import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_sliver_sticky_header.dart';
@@ -31,7 +21,7 @@ typedef OnCheckBoxSelectedCallback = bool? Function(RowModel row, bool? selected
 typedef OnHeaderHoverCallback = void Function(dynamic key, bool selected);
 typedef OnCellTapCallback = ValueChanged<RowModel>? Function(dynamic key,);
 typedef OnCellHoverCallback = OnRowHoverCallback? Function(dynamic key,);
-typedef double WidthGetter(List<dynamic> currentColumnKeys);
+typedef WidthGetter = double Function(List<dynamic> currentColumnKeys);
 
 
 class TableFromZero<T> extends StatefulWidget {
@@ -79,7 +69,7 @@ class TableFromZero<T> extends StatefulWidget {
   final String? Function(RowModel<T> row)? rowDisabledValidator;
   final String? Function(RowModel<T> row)? rowTooltipGetter;
 
-  TableFromZero({
+  const TableFromZero({
     Key? key,
     required this.rows,
     this.columns,
@@ -132,6 +122,7 @@ class TableFromZero<T> extends StatefulWidget {
 
 class TrackingScrollControllerFomZero extends TrackingScrollController {
 
+  @override
   ScrollPosition get position {
     assert(positions.isNotEmpty, 'ScrollController not attached to any scroll views.');
     return positions.first;
@@ -263,24 +254,22 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     sharedController.addListener(() {
       if (!lockScrollUpdates){
         double? newPosition;
-        sharedController.positions.forEach((element) {
+        for (var element in sharedController.positions) {
           if (element.pixels!=lastPosition) newPosition = element.pixels;
-        });
+        }
         lockScrollUpdates = true;
         if (newPosition!=null){
-          lastPosition = newPosition!;
-          sharedController.positions.forEach((element) {
+          lastPosition = newPosition;
+          for (var element in sharedController.positions) {
             if (element.pixels!=newPosition){
-              element.jumpTo(newPosition!);
+              element.jumpTo(newPosition);
             }
-          });
+          }
         }
         lockScrollUpdates = false;
       }
     });
-    if (sortedColumn==null) {
-      sortedColumn = widget.initialSortedColumn;
-    }
+    sortedColumn ??= widget.initialSortedColumn;
     sortedAscending = widget.columns?[sortedColumn]?.defaultSortAscending ?? true;
     init(
       notifyListeners: false,
@@ -596,7 +585,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             operationCounter.value+=available.length;
             if (operationCounter.value>5000000) {
               operationCounter.value = 0;
-              await Future.delayed(Duration(milliseconds: 50));
+              await Future.delayed(const Duration(milliseconds: 50));
               if (state!=null && !state.mounted) {
                 return [];
               }
@@ -610,7 +599,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         operationCounter.value+=available.length;
         if (operationCounter.value>5000000) {
           operationCounter.value = 0;
-          await Future.delayed(Duration(milliseconds: 50));
+          await Future.delayed(const Duration(milliseconds: 50));
           if (state!=null && !state.mounted) {
             return [];
           }
@@ -648,7 +637,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   Widget build(BuildContext context) {
 
     if (widget.hideIfNoRows && allFiltered.isEmpty) {
-      return SliverToBoxAdapter(child: SizedBox.shrink(),);
+      return const SliverToBoxAdapter(child: SizedBox.shrink(),);
     }
     int childCount = allFiltered.length.coerceIn(1);
     final showHeaders = widget.showHeaders
@@ -733,7 +722,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               AnimatedPositioned(
                 left: 0, right: 0, bottom: -2,
                 height: state.isPinned ? 2 : 0,
-                duration: Duration(milliseconds: 250),
+                duration: const Duration(milliseconds: 250),
                 curve: Curves.easeOutCubic,
                 child: const CustomPaint(
                   painter: SimpleShadowPainter(
@@ -752,7 +741,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       final theme = Theme.of(context);
       result = SliverStickyHeader(
         sliver: SliverPadding(
-          padding: EdgeInsets.only(bottom: 8),
+          padding: const EdgeInsets.only(bottom: 8),
           sliver: result,
         ),
         scrollController: widget.scrollController,
@@ -784,7 +773,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                     ),
                   );
                 } else {
-                  return SizedBox.shrink();
+                  return const SizedBox.shrink();
                 }
               },
             ),
@@ -814,7 +803,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
       return Container(
         color: _getMaterialColor(),
-        padding: EdgeInsets.only(top: 4, bottom: 4),
+        padding: const EdgeInsets.only(top: 4, bottom: 4),
         child: widget.emptyWidget ?? TableEmptyWidget(
           tableController: widget.tableController ?? TableController()
             ..currentState = this
@@ -870,7 +859,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         : widget.rowDisabledValidator?.call(row as RowModel<T>);
     final String? tooltip = row==headerRowModel ? null
         : rowDisabledReason??widget.rowTooltipGetter?.call(row as RowModel<T>);
-    final builder = (BuildContext context, BoxConstraints? constraints) {
+    builder(BuildContext context, BoxConstraints? constraints) {
       final Map<Widget, ActionState> rowActionStates = {
         for (final e in widget.rowActions)
           e: e.getStateForMaxWidth(constraints?.maxWidth??double.infinity)
@@ -952,17 +941,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       // This assumes standard icon size, custom action iconBuilders will probably break the table,
       // this is very prone to breaking, but there is no other efficient way of doing it
       final actionsWidth = widget.rowActions.where((e) => rowActionStates[e]!.shownOnPrimaryToolbar).length * 48.0;
-      final decorationBuilder = (BuildContext context, int j) {
-        Widget? result;
+      decorationBuilder(BuildContext context, int j) {
         bool addSizing = true;
-        if (result==null && widget.verticalDivider!=null){
-          if (j%2==0) return Padding(
+        if (widget.verticalDivider!=null){
+          if (j%2==0) {
+            return Padding(
             padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
             child: widget.verticalDivider,
           );
+          }
           j = (j-1)~/2;
         }
-        if (result==null && _showLeadingControls){
+        Widget? result;
+        if (_showLeadingControls){
           if (j==0){
             addSizing = false;
             result = SizedBox(width: _leadingControlsWidth, height: double.infinity,);
@@ -973,7 +964,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         final colKey = (currentColumnKeys??row.values.keys.toList())[j];
         final col = widget.columns?[colKey];
         if (result==null && col?.flex==0){
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         }
         result = Container(
           decoration: _getDecoration(row, index, colKey),
@@ -991,13 +982,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           }
         }
         return result;
-      };
-      final cellBuilder = (BuildContext context, int j) {
+      }
+      cellBuilder(BuildContext context, int j) {
         if (widget.verticalDivider!=null) {
-          if (j%2==0) return Padding(
+          if (j%2==0) {
+            return Padding(
             padding: EdgeInsets.only(left: j==0 ? 0 : 1, right: j==cols-1 ? 0 : 1,),
             child: widget.verticalDivider,
           );
+          }
           j = (j-1)~/2;
         }
         if (_showLeadingControls) {
@@ -1096,7 +1089,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         final colKey = (currentColumnKeys??row.values.keys.toList())[j];
         final col = widget.columns?[colKey];
         if (col?.flex==0){
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         }
         Widget result = Container(
           height: row.height, // widget.enableFixedHeightForListRows ? row.height : null,
@@ -1106,7 +1099,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               : row.depth>0 && j==0
                   ? widget.cellPadding.copyWith(left: widget.cellPadding.left + row.depth*_depthPadding)
                   : widget.cellPadding,
-          child: Container(
+          child: SizedBox(
               width: double.infinity,
               child: row==headerRowModel
                   ? defaultHeaderCellBuilder(context, headerRowModel!, colKey)
@@ -1140,7 +1133,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             return Flexible(flex: _getFlex(colKey), child: result,);
           }
         }
-      };
+      }
       Widget background;
       Widget result;
       if (constraints!=null && minWidth!=null && constraints.maxWidth<minWidth) {
@@ -1261,7 +1254,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             );
           }
         } else {
-          addon = SizedBox.shrink();
+          addon = const SizedBox.shrink();
         }
         Widget top, bottom;
         if (row.rowAddonIsAboveRow ?? false) {
@@ -1274,7 +1267,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         if (row.rowAddonIsSticky ?? widget.enableStickyHeaders){
           result = CustomScrollView(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             slivers: [
               SliverStickyHeader(
                 scrollController: widget.scrollController,
@@ -1338,9 +1331,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       );
       if (row!=headerRowModel) {
         result = ContextMenuFromZero(
-          child: result,
           onShowMenu: () => row.focusNode.requestFocus(),
           actions: rowActions.where((e) => (rowActionStates[e]??ActionState.popup) != ActionState.none).toList().cast(),
+          child: result,
         );
       }
       if (widget.horizontalDivider!=null) {
@@ -1358,7 +1351,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         child: result,
       );
       return result;
-    };
+    }
 
     Widget result;
     // bool intrinsicDimensions = context.findAncestorWidgetOfExactType<IntrinsicHeight>()!=null
@@ -1500,7 +1493,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         clipBehavior: Clip.none,
         children: [
           AnimatedPadding(
-            duration: Duration(milliseconds: 250),
+            duration: const Duration(milliseconds: 250),
             curve: Curves.easeOut,
             padding: EdgeInsets.only(
               left: widget.cellPadding.left + (!export && sortedColumn==colKey ? 15 : 4),
@@ -1516,7 +1509,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               minFontSize: 15,
               overflowReplacement: name!=compactName ? null : TooltipFromZero(
                 message: name,
-                waitDuration: Duration(milliseconds: 0),
+                waitDuration: const Duration(milliseconds: 0),
                 verticalOffset: -16,
                 child: Text(
                   name,
@@ -1537,7 +1530,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               maxHeight: row.height, maxWidth: 32,
               alignment: Alignment.center,
               child: AnimatedSwitcher(
-                duration: Duration(milliseconds: 250),
+                duration: const Duration(milliseconds: 250),
                 switchInCurve: Curves.easeOut,
                 child: (widget.enabled && !export && sortedColumn==colKey)
                     ? col?.buildSortedIcon(context, sortedAscending)
@@ -1549,7 +1542,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                             key: ValueKey(sortedAscending),
                             color: theme.colorScheme.secondary,
                           )
-                    : SizedBox(height: 24,),
+                    : const SizedBox(height: 24,),
                 transitionBuilder: (child, animation) => ScaleTransition(
                   scale: animation,
                   child: FadeTransition(opacity: animation, child: child,),
@@ -1565,7 +1558,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                 maxHeight: row.height, maxWidth: 48,
                 alignment: Alignment.center,
                 child: showFiltersLoading&&availableFilters==null
-                    ? Center(
+                    ? const Center(
                         child: SizedBox(
                           width: 16, height: 16,
                           child: CircularProgressIndicator(
@@ -1600,8 +1593,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     if (compactName!=name) {
       result = TooltipFromZero(
         message: name,
-        child: result,
         preferBelow: false,
+        child: result,
       );
     }
     result = Material(
@@ -1639,7 +1632,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       if (col?.sortEnabled ?? true)
         ActionFromZero(
           title: 'Ordenar Ascendente', // TODO 3 internationalize
-          icon: Icon(MaterialCommunityIcons.sort_ascending),
+          icon: const Icon(MaterialCommunityIcons.sort_ascending),
           onTap: (context) {
             if (sortedColumn!=colKey || !sortedAscending) {
               setState(() {
@@ -1653,7 +1646,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       if (col?.sortEnabled ?? true)
         ActionFromZero(
           title: 'Ordenar Descendente', // TODO 3 internationalize
-          icon: Icon(MaterialCommunityIcons.sort_descending),
+          icon: const Icon(MaterialCommunityIcons.sort_descending),
           onTap: (context) {
             if (sortedColumn!=colKey || sortedAscending) {
               setState(() {
@@ -1667,7 +1660,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       if (currentColumnKeys!=null && widget.allowCustomization)
         ActionFromZero(
           title: 'Esconder Columna', // TODO 3 internationalize
-          icon: Icon(Icons.visibility_off),
+          icon: const Icon(Icons.visibility_off),
           onTap: (context) {
             setState(() {
               currentColumnKeys?.remove(colKey);
@@ -1696,9 +1689,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       );
     }
     result = ContextMenuFromZero(
-      child: result,
       onShowMenu: () => headerFocusNodes[colKey]!.requestFocus(),
       actions: colActions.cast<ActionFromZero>(),
+      child: result,
     );
     return result;
   }
@@ -1750,7 +1743,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
 
   static Widget defaultCellBuilder<T>(BuildContext context, RowModel<T> row, dynamic colKey, ColModel? col, TextStyle? style, TextAlign alignment) {
     final message = ColModel.getRowValueString(row, colKey, col);
-    final autoSizeTextMaxLines = 1;
+    const autoSizeTextMaxLines = 1;
     Widget result = AutoSizeText(
       message,
       style: style,
@@ -1759,11 +1752,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       minFontSize: 15,
       overflowReplacement: TooltipFromZero(
         message: message,
-        waitDuration: Duration(milliseconds: 0),
+        waitDuration: const Duration(milliseconds: 0),
         verticalOffset: -16,
         child: Text(
           message,
-          style: (style ?? TextStyle()).copyWith(
+          style: (style ?? const TextStyle()).copyWith(
             fontSize: 15,
           ),
           textAlign: alignment,
@@ -1853,7 +1846,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       if (controller.currentColumnKeys!=null && controller.columns!=null)
         ActionFromZero(
           title: 'Personalizar Tabla...', // TODO 3 internationalize
-          icon: Icon(Icons.settings),
+          icon: const Icon(Icons.settings),
           breakpoints: {0: ActionState.popup},
           onTap: (context) => controller.currentState!._showManageTablePopup(controller),
         ),
@@ -1907,7 +1900,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     if (skipConditions || (controller.columns!=null && controller.columns!.any((key, value) => (value.filterEnabled??true)))) {
       return ActionFromZero(
         title: 'Limpiar todos los Filtros', // TODO 3 internationalize
-        icon: Icon(MaterialCommunityIcons.filter_remove),
+        icon: const Icon(MaterialCommunityIcons.filter_remove),
         breakpoints: {0: ActionState.popup},
         onTap: !controller.currentState!.filtersApplied.any((k, v) => v) ? null : (context) {
           controller.currentState!.clearAllFilters(
@@ -1950,7 +1943,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         ),
       ActionFromZero(
         title: 'Exportar Excel',
-        icon: Icon(MaterialCommunityIcons.file_excel),
+        icon: const Icon(MaterialCommunityIcons.file_excel),
         breakpoints: {0: ActionState.popup},
         onTap: (appbarContext) {
           String routeTitle = 'Excel';
@@ -1962,7 +1955,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             context: appbarContext,
             builder: (context) => Export.excelOnly(
               scaffoldContext: appbarContext,
-              title: DateFormat("yyyy-MM-dd hh.mm.ss aaa").format(DateTime.now()) + " - $routeTitle",
+              title: "${DateFormat("yyyy-MM-dd hh.mm.ss aaa").format(DateTime.now())} - $routeTitle",
               path: exportPathForExcel,
               excelSheets: () => {
                 routeTitle: tableController,
@@ -1989,7 +1982,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           }
           final toAdd = _getVisibleFilteredRowsSorted(row.filteredChildren);
           allFiltered.insertAll(index+1, toAdd);
-          final animationController = AnimationController(vsync: this, duration: Duration(milliseconds: 250));
+          final animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 250));
           final curvedAnimation = CurvedAnimation(parent: animationController, curve: Curves.easeOutCubic);
           animationController.forward();
           rowAddonEntranceAnimations[row] = curvedAnimation;
@@ -2054,7 +2047,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return hasExpandableRows;
   }
   void _recalculateExpandableRowsExist() {
-    bool? hasExpandableRows = null;
+    bool? hasExpandableRows;
     for (final e in filtered) {
       if (e.hasExpandableRows!=null) {
         hasExpandableRows = (hasExpandableRows??true) && e.hasExpandableRows!;
@@ -2239,7 +2232,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return false;
   }
 
-  static int defaultComparator(a, b, bool sortAscending) {
+  static int defaultComparator(dynamic a, dynamic b, bool sortAscending) {
     int result;
     if (a==null || b==null) {
       if (a==null && b==null) {
@@ -2291,7 +2284,7 @@ class TableController<T> extends ChangeNotifier {
     this.sortedAscending = true,
     this.sortedColumn,
     this.initialValueFiltersExcludeAllElse = false,
-  })  : this.extraFilters = extraFilters ?? [];
+  })  : extraFilters = extraFilters ?? [];
 
   TableController<T> copyWith({
     List<List<RowModel<T>> Function(List<RowModel<T>>)>? extraFilters,
@@ -2367,6 +2360,6 @@ class FilterResults<T> {
     List<RowModel<T>>? filtered,
     List<RowModel<T>>? allFiltered,
     this.expandableRowsExist,
-  })  : this.filtered = filtered ?? [],
-        this.allFiltered = allFiltered ?? [];
+  })  : filtered = filtered ?? [],
+        allFiltered = allFiltered ?? [];
 }

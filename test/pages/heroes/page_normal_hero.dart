@@ -1,27 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 
 
-import '../../change_notifiers/theme_parameters.dart';
 import '../../router.dart';
-import '../home/page_home.dart';
 
 class PageNormalHero extends StatefulWidget {
 
-  PageNormalHero();
+  const PageNormalHero({super.key});
 
   @override
-  _PageHeroesState createState() => _PageHeroesState();
+  PageHeroesState createState() => PageHeroesState();
 
 }
 
-class _PageHeroesState extends State<PageNormalHero> {
+class PageHeroesState extends State<PageNormalHero> {
 
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      title: Text("Heroes"),
+      title: const Text("Heroes"),
       body: _getPage(context),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
         tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: heroesRoutes),
@@ -46,9 +43,9 @@ class _PageHeroesState extends State<PageNormalHero> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-                    child: Text("Heroes Test", style: Theme.of(context).textTheme.headline3,),
+                    child: Text("Heroes Test", style: Theme.of(context).textTheme.displaySmall,),
                   ),
-                  FlutterLogo(size: 512,),
+                  const FlutterLogo(size: 512,),
                 ],
               ),
             ),

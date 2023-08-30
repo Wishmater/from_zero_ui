@@ -99,16 +99,16 @@ class EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
   ///
   /// This method was suggested by Peter Yuen (see discussion).
   ///
-  Future<void> _keyboardToggled() async {
-    if (mounted) {
-      final edgeInsets = MediaQuery.of(context).viewInsets;
-      while (mounted && MediaQuery.of(context).viewInsets == edgeInsets) {
-        await Future.delayed(const Duration(milliseconds: 10));
-      }
-    }
-
-    return;
-  }
+  // Future<void> _keyboardToggled() async {
+  //   if (mounted) {
+  //     final edgeInsets = MediaQuery.of(context).viewInsets;
+  //     while (mounted && MediaQuery.of(context).viewInsets == edgeInsets) {
+  //       await Future.delayed(const Duration(milliseconds: 10));
+  //     }
+  //   }
+  //
+  //   return;
+  // }
 
   Future<void> _ensureVisible() async {
 
@@ -179,7 +179,7 @@ class EnsureVisibleWhenFocusedState extends State<EnsureVisibleWhenFocused>
 
   }
 
-  static _executeEnsureVisible({
+  static Future<void> _executeEnsureVisible({
     required RenderObject object,
     required RenderAbstractViewport viewport,
     required ScrollableState scrollableState,

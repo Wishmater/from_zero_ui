@@ -161,13 +161,12 @@ class FadeThroughTransition extends StatelessWidget {
   ///
   /// The [animation] and [secondaryAnimation] argument are required and must
   /// not be null.
-  const FadeThroughTransition({
+  const FadeThroughTransition({super.key, 
     required this.animation,
     required this.secondaryAnimation,
     this.fillColor,
     required this.child,
-  })  : assert(animation != null),
-        assert(secondaryAnimation != null);
+  });
 
   /// The animation that drives the [child]'s entrance and exit.
   ///
@@ -239,8 +238,8 @@ class _ZoomedFadeInFadeOut extends StatelessWidget {
           Widget? child,
           ) {
         return _FadeOut(
-          child: child!,
           animation: animation,
+          child: child!,
         );
       },
       child: child,
@@ -291,9 +290,9 @@ class _FadeOut extends StatelessWidget {
   final Widget child;
   final Animation<double> animation;
 
-  static final CurveTween _outCurve = CurveTween(
-    curve: const Cubic(0.4, 0.0, 1.0, 1.0),
-  );
+  // static final CurveTween _outCurve = CurveTween(
+  //   curve: const Cubic(0.4, 0.0, 1.0, 1.0),
+  // );
 
 
   @override

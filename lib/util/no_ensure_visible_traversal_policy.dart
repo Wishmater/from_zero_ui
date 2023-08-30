@@ -10,7 +10,6 @@ class NoEnsureVisibleWidgetTraversalPolicy extends WidgetOrderTraversalPolicy {
   bool previous(FocusNode currentNode) => _moveFocus(currentNode, forward: false);
 
   bool _moveFocus(FocusNode currentNode, {required bool forward}) {
-    assert(forward != null);
     final FocusScopeNode nearestScope = currentNode.nearestScope!;
     invalidateScopeData(nearestScope);
     final FocusNode? focusedChild = nearestScope.focusedChild;
@@ -49,7 +48,6 @@ class NoEnsureVisibleWidgetTraversalPolicy extends WidgetOrderTraversalPolicy {
   // Sort all descendants, taking into account the FocusTraversalGroup
   // that they are each in, and filtering out non-traversable/focusable nodes.
   List<FocusNode> _sortAllDescendants(FocusScopeNode scope, FocusNode currentNode) {
-    assert(scope != null);
     final _FocusTraversalGroupMarker? scopeGroupMarker = _getMarker(scope.context);
     final FocusTraversalPolicy defaultPolicy = scopeGroupMarker?.policy ?? ReadingOrderTraversalPolicy();
     // Build the sorting data structure, separating descendants into groups.
@@ -168,9 +166,7 @@ class _FocusTraversalGroupMarker extends InheritedWidget {
     required this.policy,
     required this.focusNode,
     required Widget child,
-  })  : assert(policy != null),
-        assert(focusNode != null),
-        super(child: child);
+  })  : super(child: child);
 
   final FocusTraversalPolicy policy;
   final FocusNode focusNode;

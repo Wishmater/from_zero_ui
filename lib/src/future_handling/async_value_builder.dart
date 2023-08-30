@@ -1,9 +1,6 @@
-import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/animations/animated_switcher_image.dart';
-import 'package:humanizer/humanizer.dart';
 
 
 typedef DataBuilder<T> = Widget Function(BuildContext context, T data);
@@ -95,7 +92,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
   static Widget defaultErrorBuilder(BuildContext context, Object error, StackTrace? stackTrace){
     // log(error, stackTrace: stackTrace);
     return ErrorSign(
-      icon: const Icon(Icons.error_outline), //size: 64, color: Theme.of(context).errorColor,
+      icon: const Icon(Icons.error_outline), //size: 64, color: Theme.of(context).colorScheme.error,
       title: FromZeroLocalizations.of(context).translate("error"),
       subtitle: FromZeroLocalizations.of(context).translate("error_details"),
     );
@@ -109,7 +106,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
 
 class SliverAsyncValueBuilder<T> extends AsyncValueBuilder<T> {
 
-  SliverAsyncValueBuilder({
+  const SliverAsyncValueBuilder({super.key, 
     required super.asyncValue,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),
@@ -227,7 +224,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
 }
 
 class SliverAsyncValueMultiBuilder<T> extends AsyncValueMultiBuilder<T> {
-  SliverAsyncValueMultiBuilder({
+  const SliverAsyncValueMultiBuilder({super.key, 
     required super.asyncValues,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),
@@ -291,7 +288,7 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
 }
 
 class SliverFutureProviderBuilder<T> extends FutureProviderBuilder<T> {
-  SliverFutureProviderBuilder({
+  const SliverFutureProviderBuilder({super.key, 
     required super.provider,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),
@@ -342,13 +339,12 @@ class AsyncBuilderAnimationWrapper extends StatelessWidget {
     if (animatedSwitcherType!=AnimatedSwitcherType.none && transitionDuration!=Duration.zero) {
       if (loadingState!=null) {
         result = KeyedSubtree(
-          child: result,
           key: child.key ?? ValueKey(loadingState),
+          child: result,
         );
       }
       if (animatedSwitcherType==AnimatedSwitcherType.normal) {
         result = AnimatedSwitcher(
-          child: result,
           duration: transitionDuration,
           switchInCurve: transitionInCurve,
           switchOutCurve: transitionOutCurve,
@@ -356,10 +352,10 @@ class AsyncBuilderAnimationWrapper extends StatelessWidget {
           layoutBuilder: (currentChild, previousChildren) {
             return layoutBuilder(currentChild, previousChildren, alignment ?? Alignment.center, clipBehaviour ?? Clip.hardEdge);
           },
+          child: result,
         );
       } else {
         result = AnimatedSwitcherImage(
-          child: result,
           duration: transitionDuration,
           switchInCurve: transitionInCurve,
           switchOutCurve: transitionOutCurve,
@@ -369,6 +365,7 @@ class AsyncBuilderAnimationWrapper extends StatelessWidget {
           clipBehaviour: clipBehaviour ?? Clip.hardEdge,
           takeImages: animatedSwitcherType!=AnimatedSwitcherType.imageNoOutgoing,
           rebuildOutgoingChildrenIfNoImageReady: animatedSwitcherType==AnimatedSwitcherType.imageWithRebuild,
+          child: result,
         );
       }
     }

@@ -1,10 +1,7 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/snackbar_from_zero.dart';
 
 
 enum APISnackBarBlockUIType {
@@ -154,8 +151,8 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
       },
       transitionBuilder: (context, child, animation) {
         return FadeTransition(
-          child: child,
           opacity: animation,
+          child: child,
         );
       },
     );
@@ -163,40 +160,40 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
   }
 
   Widget loadingBuilder(BuildContext context, ValueListenable<double?>? progress) {
-    final type = SnackBarFromZero.loading;
+    const type = SnackBarFromZero.loading;
     final icon = SnackBarFromZero.icons[type];
     final actionColor = SnackBarFromZero.colors[type];
     final errorColor = SnackBarFromZero.colors[SnackBarFromZero.error];
     Widget result = Row(
       children: [
-        SizedBox(width: 10,),
+        const SizedBox(width: 10,),
         icon,
-        SizedBox(width: 8,),
+        const SizedBox(width: 8,),
         Expanded(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 6,),
+              const SizedBox(height: 6,),
               DefaultTextStyle(
                 style: Theme.of(context).textTheme.titleMedium!,
-                child: Text('Procesando...'),
+                child: const Text('Procesando...'),
               ),
-              SizedBox(height: 2,),
+              const SizedBox(height: 2,),
               // if (message!=null)
               //   DefaultTextStyle(
               //     style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12),
               //     child: Text(message),
               //   ),
-              SizedBox(height: 8,),
+              const SizedBox(height: 8,),
             ],
           ),
         ),
-        SizedBox(width: 8,),
+        const SizedBox(width: 8,),
         if (widget.cancelable??false)
           ButtonTheme(
             textTheme: ButtonTextTheme.accent,
-            padding: EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
             minWidth: 64.0,
             child: IntrinsicWidth(
               child: Column(
@@ -204,7 +201,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(height: 6,),
+                  const SizedBox(height: 6,),
                   Expanded(
                     child: TextButton(
                       onPressed: () {
@@ -212,23 +209,23 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
                         widget.onCancel?.call();
                         widget.dismiss();
                       },
-                      child: Text(FromZeroLocalizations.of(context).translate("cancel").toUpperCase(),
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
-                        textAlign: TextAlign.center,
-                      ),
                       style: TextButton.styleFrom(
-                        primary: errorColor,
+                        foregroundColor: errorColor,
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        padding: EdgeInsets.symmetric(horizontal: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                      ),
+                      child: Text(FromZeroLocalizations.of(context).translate("cancel").toUpperCase(),
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
+                        textAlign: TextAlign.center,
                       ),
                     ),
                   ),
-                  SizedBox(height: 6,),
+                  const SizedBox(height: 6,),
                 ],
               ),
             ),
           ),
-        SizedBox(width: 16,),
+        const SizedBox(width: 16,),
       ],
     );
     Widget progressIndicator = progress==null
@@ -249,7 +246,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
     result = IntrinsicHeight(
       child: Container(
         color: Color.alphaBlend(SnackBarFromZero.colors[type].withOpacity(0.066), Theme.of(context).cardColor),
-        constraints: BoxConstraints(minHeight: 56,),
+        constraints: const BoxConstraints(minHeight: 56,),
         child: Column(
           children: [
             progressIndicator,
@@ -300,14 +297,14 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               widget.onCancel?.call();
               widget.dismiss();
             },
-            child: Text(FromZeroLocalizations.of(context).translate("accept_caps").toUpperCase(),
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
-              textAlign: TextAlign.center,
-            ),
             style: TextButton.styleFrom(
-              primary: splashColor,
+              foregroundColor: splashColor,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+            ),
+            child: Text(FromZeroLocalizations.of(context).translate("accept_caps").toUpperCase(),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
+              textAlign: TextAlign.center,
             ),
           ),
         ),
@@ -317,14 +314,14 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
             onPressed: () {
               widget.stateNotifier.refresh(null);
             },
-            child: Text(FromZeroLocalizations.of(context).translate("retry").toUpperCase(),
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
-              textAlign: TextAlign.center,
-            ),
             style: TextButton.styleFrom(
-              primary: splashColor,
+              foregroundColor: splashColor,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+            ),
+            child: Text(FromZeroLocalizations.of(context).translate("retry").toUpperCase(),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
+              textAlign: TextAlign.center,
             ),
           ),
         ),
@@ -335,67 +332,67 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               widget.dismiss();
               ApiProviderBuilder.showErrorDetailsDialog(widget.context, error, stackTrace);
             },
-            child: Text('Detalles del Error',
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).textTheme.bodyLarge!.color!,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+            ),
+            child: const Text('Detalles del Error',
               style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, height: 1.1),
               textAlign: TextAlign.center,
-            ),
-            style: TextButton.styleFrom(
-              primary: Theme.of(context).textTheme.bodyLarge!.color!,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              padding: EdgeInsets.symmetric(horizontal: 6),
             ),
           ),
         ),
     ];
     Widget result = Row(
       children: [
-        SizedBox(width: 10,),
+        const SizedBox(width: 10,),
         icon ?? SnackBarFromZero.icons[type],
-        SizedBox(width: 8,),
+        const SizedBox(width: 8,),
         Expanded(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 6,),
+              const SizedBox(height: 6,),
               if (title!=null)
                 DefaultTextStyle(
                   style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 16),
                   child: Text(title),
                 ),
-              SizedBox(height: 2,),
+              const SizedBox(height: 2,),
               if (message!=null)
                 DefaultTextStyle(
                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12),
                   child: Text(message),
                 ),
-              SizedBox(height: 8,),
+              const SizedBox(height: 8,),
             ],
           ),
         ),
-        SizedBox(width: 8,),
+        const SizedBox(width: 8,),
         ButtonTheme(
           textTheme: ButtonTextTheme.accent,
-          padding: EdgeInsets.symmetric(horizontal: 4, vertical: 0),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
           minWidth: 64.0,
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 128),
+            constraints: const BoxConstraints(maxWidth: 128),
             child: IntrinsicWidth(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  SizedBox(height: 6,),
+                  const SizedBox(height: 6,),
                   ...actions,
-                  SizedBox(height: 6,),
+                  const SizedBox(height: 6,),
                 ],
               ),
             ),
           ),
         ),
         if (showAcceptInsteadOfClose)
-          SizedBox(width: 16,),
+          const SizedBox(width: 16,),
         if (!showAcceptInsteadOfClose && (error==null||(widget.cancelable??true)))
           SizedBox(
             width: 42, height: double.infinity,
@@ -404,18 +401,18 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
                 widget.onCancel?.call();
                 widget.dismiss();
               },
-              child: Icon(Icons.close, size: 24,),
               style: TextButton.styleFrom(
-                primary: Theme.of(context).textTheme.bodyLarge!.color,
-                padding: EdgeInsets.only(right: 10),
+                foregroundColor: Theme.of(context).textTheme.bodyLarge!.color,
+                padding: const EdgeInsets.only(right: 10),
               ),
+              child: const Icon(Icons.close, size: 24,),
             ),
           ),
       ],
     );
     Widget progressIndicator;
     if (!widget.showProgressIndicatorForRemainingTime){
-      progressIndicator = SizedBox.shrink();
+      progressIndicator = const SizedBox.shrink();
     } else {
       if (animationController==null) {
         progressIndicator = LinearProgressIndicator(
@@ -438,7 +435,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
     result = IntrinsicHeight(
       child: Container(
         color: Color.alphaBlend(SnackBarFromZero.colors[type].withOpacity(0.066), Theme.of(context).cardColor),
-        constraints: BoxConstraints(minHeight: 56,),
+        constraints: const BoxConstraints(minHeight: 56,),
         child: Column(
           children: [
             progressIndicator,
@@ -454,7 +451,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
       ),
       child: result,
     );
-    return buildWrapper(context, result: result, hasActions: actions.length>0);
+    return buildWrapper(context, result: result, hasActions: actions.isNotEmpty);
   }
 
   Widget buildWrapper(BuildContext context, {
@@ -466,7 +463,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
             || ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout)));
     if (!fixed) {
       result = Card(
-        shape: RoundedRectangleBorder(
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(28)),
         ),
         clipBehavior: Clip.antiAlias,
@@ -488,7 +485,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
       width: fixed ? double.infinity : (widget.width ?? (512 + (hasActions ? 128 : 0))),
       padding: EdgeInsets.only(bottom: fixed ? 0 : 48,),
       child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: 64,),
+        constraints: const BoxConstraints(minHeight: 64,),
         child: result,
       ),
     );

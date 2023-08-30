@@ -2,8 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/dao/dao.dart';
-import 'package:from_zero_ui/src/dao/field_validators.dart';
 
 
 class ComboField<T extends DAO> extends Field<T> {
@@ -221,12 +219,10 @@ class ComboField<T extends DAO> extends Field<T> {
     FocusNode? focusNode,
     ScrollController? mainScrollController,
   }) {
-    if (focusNode==null) {
-      focusNode = this.focusNode;
-    }
+    focusNode ??= this.focusNode;
     Widget result;
     if (hiddenInForm && !ignoreHidden) {
-      result = SizedBox.shrink();
+      result = const SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);
       }
@@ -301,13 +297,13 @@ class ComboField<T extends DAO> extends Field<T> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        SizedBox(width: 6),
-                        Icon(Icons.add),
-                        SizedBox(width: 6,),
+                        const SizedBox(width: 6),
+                        const Icon(Icons.add),
+                        const SizedBox(width: 6,),
                         Text('${FromZeroLocalizations.of(context).translate("add")} ${emptyDAO.classUiName}',
-                          style: TextStyle(fontSize: 16),
+                          style: const TextStyle(fontSize: 16),
                         ),
-                        SizedBox(width: 6),
+                        const SizedBox(width: 6),
                       ],
                     ),
                   ),
@@ -356,7 +352,7 @@ class ComboField<T extends DAO> extends Field<T> {
           showViewActionOnDAOs: showViewActionOnDAOs,
           showDropdownIcon: showDropdownIcon,
         );
-        if (provider!=null)
+        if (provider!=null) {
           result = Stack(
             children: [
               result,
@@ -366,7 +362,7 @@ class ComboField<T extends DAO> extends Field<T> {
                   provider: provider,
                   animatedSwitcherType: AnimatedSwitcherType.normal,
                   dataBuilder: (context, data) {
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   },
                   loadingBuilder: (context, progress) {
                     return SizedBox(
@@ -380,7 +376,7 @@ class ComboField<T extends DAO> extends Field<T> {
                     );
                   },
                   errorBuilder: (context, error, stackTrace, onRetry) {
-                    return SizedBox(
+                    return const SizedBox(
                       height: 10, width: 10,
                       child: Icon(
                         Icons.error_outlined,
@@ -393,8 +389,9 @@ class ComboField<T extends DAO> extends Field<T> {
               ),
             ],
           );
+        }
         result = AnimatedContainer(
-          duration: Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 300),
           color: dense && visibleValidationErrors.isNotEmpty
               ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
               : backgroundColor?.call(context, this, dao),
@@ -407,8 +404,8 @@ class ComboField<T extends DAO> extends Field<T> {
                 : b.toString().trim().isEmpty ? a.toString()
                 : '$a\n$b';
           }),
+          waitDuration: enabled ? const Duration(seconds: 1) : Duration.zero,
           child: result,
-          waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
         );
         if (!dense) {
           final actions = buildActions(context, focusNode);
@@ -424,7 +421,7 @@ class ComboField<T extends DAO> extends Field<T> {
             paddingRight: 6,
             actionPadding: 0,
             skipTraversalForActions: true,
-            constraints: BoxConstraints(),
+            constraints: const BoxConstraints(),
             actions: [
               ...actions,
               if (actions.isNotEmpty && defaultActions.isNotEmpty)
@@ -537,7 +534,7 @@ class ComboField<T extends DAO> extends Field<T> {
                           color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled&&!showHintInsteadOfValue ? 1 : 0.75),
                         ),
                       ),
-                SizedBox(height: 4,),
+                const SizedBox(height: 4,),
               ],
             ),
           ),
@@ -560,7 +557,7 @@ class ComboField<T extends DAO> extends Field<T> {
       if (possibleValuesProviderGetter!=null)
         ActionFromZero(
           title: 'Refrescar Datos', // TODO 3 internationalize
-          icon: Icon(Icons.refresh,),
+          icon: const Icon(Icons.refresh,),
           breakpoints: {0: ActionState.popup},
           onTap: (context) {
             userInteracted = true;

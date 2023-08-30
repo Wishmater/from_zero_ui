@@ -25,16 +25,16 @@ final mainRoutes = [
         path: '/',
         name: 'home',
         title: 'Home',
-        icon: Icon(Icons.home),
+        icon: const Icon(Icons.home),
         childrenAsDropdownInDrawerNavigation: false,
-        builder: (context, state) => PageHome(),
+        builder: (context, state) => const PageHome(),
         routes: [
           GoRouteFromZero(
             path: 'scaffold',
             name: 'scaffold',
             title: 'Scaffold FromZero',
-            icon: Icon(Icons.subtitles),
-            builder: (context, state) => PageScaffold(),
+            icon: const Icon(Icons.subtitles),
+            builder: (context, state) => const PageScaffold(),
             routes: [
               GoRouteGroupFromZero(
                 showInDrawerNavigation: false,
@@ -42,18 +42,18 @@ final mainRoutes = [
                   GoRouteFromZero(
                     path: 'same',
                     name: 'scaffold_same',
-                    builder: (context, state) => PageScaffoldSame(),
+                    builder: (context, state) => const PageScaffoldSame(),
                   ),
                   GoRouteFromZero(
                     path: 'inner',
                     name: 'scaffold_inner',
-                    builder: (context, state) => PageScaffoldInner(),
+                    builder: (context, state) => const PageScaffoldInner(),
                     pageScaffoldDepth: 1,
                   ),
                   GoRouteFromZero(
                     path: 'other',
                     name: 'scaffold_other',
-                    builder: (context, state) => PageScaffoldOther(),
+                    builder: (context, state) => const PageScaffoldOther(),
                     pageScaffoldId: 'other',
                   ),
                 ],
@@ -64,8 +64,8 @@ final mainRoutes = [
             path: 'lightweight_table',
             name: 'lightweight_table',
             title: 'Lightweight Table',
-            icon: Icon(Icons.table_chart),
-            builder: (context, state) => PageLightweightTable(),
+            icon: const Icon(Icons.table_chart),
+            builder: (context, state) => const PageLightweightTable(),
           ),
           GoRouteGroupFromZero(
             title: 'Heroes',
@@ -75,8 +75,8 @@ final mainRoutes = [
                 path: 'heroes',
                 name: 'heroes',
                 title: 'Heroes',
-                icon: Icon(Icons.person_pin_circle),
-                builder: (context, state) => PageHeroes(),
+                icon: const Icon(Icons.person_pin_circle),
+                builder: (context, state) => const PageHeroes(),
                 routes: heroesRoutes,
               ),
             ],
@@ -85,8 +85,8 @@ final mainRoutes = [
             path: 'future_handling',
             name: 'future_handling',
             title: 'Future Handling',
-            icon: Icon(Icons.refresh),
-            builder: (context, state) => PageFutureHandling(),
+            icon: const Icon(Icons.refresh),
+            builder: (context, state) => const PageFutureHandling(),
           ),
           GoRouteGroupFromZero(
             showInDrawerNavigation: false,
@@ -103,30 +103,30 @@ final heroesRoutes = [
     path: 'normal',
     name: 'heroes_normal',
     title: 'Normal Hero',
-    icon: Icon(Icons.looks_one),
-    builder: (context, state) => PageNormalHero(),
+    icon: const Icon(Icons.looks_one),
+    builder: (context, state) => const PageNormalHero(),
   ),
   GoRouteFromZero(
     path: 'fade',
     name: 'heroes_fade',
     title: 'CrossFade Hero',
-    icon: Icon(Icons.looks_two),
-    builder: (context, state) => PageCrossFadeHero(),
+    icon: const Icon(Icons.looks_two),
+    builder: (context, state) => const PageCrossFadeHero(),
   ),
   GoRouteFromZero(
     path: 'custom',
     name: 'heroes_custom',
     title: 'Custom transionBuilder Hero',
-    icon: Icon(Icons.looks_3),
-    builder: (context, state) => PageCustomHero(),
+    icon: const Icon(Icons.looks_3),
+    builder: (context, state) => const PageCustomHero(),
   ),
   GoRouteFromZero(
     path: 'inner',
     name: 'heroes_inner',
     title: 'CrossFade Higher Depth',
-    icon: Icon(Icons.looks_4),
+    icon: const Icon(Icons.looks_4),
     pageScaffoldDepth: 1,
-    builder: (context, state) => PageInnerHero(),
+    builder: (context, state) => const PageInnerHero(),
   ),
 ];
 
@@ -135,8 +135,8 @@ final settingsRoutes = [
     path: 'settings',
     name: 'settings',
     title: 'Settings',
-    icon: Icon(Icons.settings),
-    builder: (context, state) => PageSettings(),
+    icon: const Icon(Icons.settings),
+    builder: (context, state) => const PageSettings(),
     pageScaffoldId: 'settings',
   ),
 ];
@@ -144,7 +144,7 @@ final settingsRoutes = [
 final initRoute = GoRouteFromZero(
   path: '/login',
   name: 'login',
-  builder: (context, state) => PageSplash(),
+  builder: (context, state) => const PageSplash(),
   pageScaffoldId: 'login',
 );
 
@@ -157,11 +157,11 @@ class PageSplash extends StatefulWidget {
   const PageSplash({Key? key}) : super(key: key);
 
   @override
-  _PageSplashState createState() => _PageSplashState();
+  PageSplashState createState() => PageSplashState();
 
 }
 
-class _PageSplashState extends State<PageSplash> {
+class PageSplashState extends State<PageSplash> {
 
   @override
   void initState() {

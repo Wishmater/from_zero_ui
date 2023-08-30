@@ -42,7 +42,7 @@ class ImageFromZero extends StatefulWidget {
   /// this means the image already has a hero with this tag, a hero will not be added to the image if this is not null
   final String? heroTag;
 
-  ImageFromZero({
+  ImageFromZero({super.key, 
     required this.url,
     this.actions = const [],
     List<Widget>? fullscreenActions,
@@ -59,12 +59,12 @@ class ImageFromZero extends StatefulWidget {
     this.fullscreenAsNewTabOnWeb = true,
     ImageSourceType? sourceType,
   })  : fullscreenActions = fullscreenActions??actions,
-        this.sourceType = sourceType ?? (url.length>=6 && url.substring(0, 6)=="assets" ? ImageSourceType.assets
+        sourceType = sourceType ?? (url.length>=6 && url.substring(0, 6)=="assets" ? ImageSourceType.assets
                                         : url.length>=4 && url.substring(0, 4)=="http" ? ImageSourceType.network
                                         : ImageSourceType.file);
 
   @override
-  _ImageFromZeroState createState() => _ImageFromZeroState();
+  ImageFromZeroState createState() => ImageFromZeroState();
 
   void pushFullscreenImage({
     required BuildContext context,
@@ -99,9 +99,9 @@ class ImageFromZero extends StatefulWidget {
                 heroBuilderForSlidingPage: (Widget result) {
                   return HeroWidget(
                     tag: heroTag ?? url,
-                    child: result,
                     slideType: SlideType.onlyImage,
                     slidePagekey: slidePagekey,
+                    child: result,
                   );
                 },
                 child: ImageFromZero(
@@ -119,7 +119,7 @@ class ImageFromZero extends StatefulWidget {
                       message: FromZeroLocalizations.of(context).translate('close'),
                       child: IconButtonBackground(
                         child: IconButton(
-                          icon: Icon(Icons.close),
+                          icon: const Icon(Icons.close),
                           onPressed: () {
                             Navigator.of(context).pop();
                           },
@@ -139,7 +139,7 @@ class ImageFromZero extends StatefulWidget {
 
 }
 
-class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateMixin{
+class ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateMixin{
 
   late AnimationController _controller;
   late Animation<double> _animation;
@@ -155,7 +155,7 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 300),
+      duration: const Duration(milliseconds: 300),
     );
     _animation = CurvedAnimation(
       parent: _controller,
@@ -285,7 +285,7 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
                   builder: (context, constraints) {
                     final maxSize = max(constraints.maxHeight, constraints.maxWidth);
                     if (maxSize<128) {
-                      return SizedBox.shrink();
+                      return const SizedBox.shrink();
                     }
                     Widget actions = Column(
                         children: widget.fullscreenType==FullscreenType.asAction
@@ -296,7 +296,7 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
                                   message: FromZeroLocalizations.of(context).translate('fullscreen'),
                                   child: IconButtonBackground(
                                     child: IconButton(
-                                      icon: Icon(Icons.fullscreen),
+                                      icon: const Icon(Icons.fullscreen),
                                       onPressed: () {
                                         _pushFullscreen(context);
                                       },
@@ -340,7 +340,7 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
         log(state.lastException, stackTrace: state.lastStack);
         return ErrorSign(
           title: FromZeroLocalizations.of(context).translate('error_image'),
-          icon: Icon(Icons.broken_image, size: 64,),
+          icon: const Icon(Icons.broken_image, size: 64,),
           onRetry: !widget.retryable ? null : () {
             state.reLoadImage();
           },
@@ -360,7 +360,7 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
     return child;
   }
 
-  _onDoubleTap(ExtendedImageGestureState state) {
+  void _onDoubleTap(ExtendedImageGestureState state) {
     ///you can use define pointerDownPosition as you can,
     ///default value is double tap pointer down postion.
     final pointerDownPosition = state.pointerDownPosition;
@@ -421,7 +421,7 @@ class _ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateM
 
 
 class HeroWidget extends StatefulWidget {
-  const HeroWidget({
+  const HeroWidget({super.key, 
     required this.child,
     required this.tag,
     required this.slidePagekey,
@@ -431,12 +431,16 @@ class HeroWidget extends StatefulWidget {
   final SlideType slideType;
   final Object tag;
   final GlobalKey<ExtendedImageSlidePageState> slidePagekey;
+
   @override
-  _HeroWidgetState createState() => _HeroWidgetState();
+  HeroWidgetState createState() => HeroWidgetState();
+
 }
 
-class _HeroWidgetState extends State<HeroWidget> {
+class HeroWidgetState extends State<HeroWidget> {
+
   late RectTween _rectTween;
+
   @override
   Widget build(BuildContext context) {
     return Hero(

@@ -1,17 +1,13 @@
-import 'package:animations/animations.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/ui_utility/popup_from_zero.dart';
-import 'package:dartx/dartx.dart';
 
-typedef Widget ButtonChildBuilder<T>(BuildContext context, String? title, String? hint, T? value, bool enabled, bool clearable, {bool showDropdownIcon});
+typedef ButtonChildBuilder<T> = Widget Function(BuildContext context, String? title, String? hint, T? value, bool enabled, bool clearable, {bool showDropdownIcon});
 /// returns true if navigator should pop after (default true)
-typedef bool? OnPopupItemSelected<T>(T? value);
-typedef Widget ExtraWidgetBuilder<T>(BuildContext context, OnPopupItemSelected<T>? onSelected,);
+typedef OnPopupItemSelected<T> = bool? Function(T? value);
+typedef ExtraWidgetBuilder<T> = Widget Function(BuildContext context, OnPopupItemSelected<T>? onSelected,);
 
 class ComboFromZero<T> extends StatefulWidget {
 
@@ -42,7 +38,7 @@ class ComboFromZero<T> extends StatefulWidget {
   final bool showNullInSelection;
   final bool showHintAsNullInSelection;
 
-  ComboFromZero({
+  const ComboFromZero({super.key, 
     this.value,
     this.possibleValues,
     this.possibleValuesAsync,
@@ -76,13 +72,13 @@ class ComboFromZero<T> extends StatefulWidget {
               || possibleValuesProvider!=null);
 
   @override
-  _ComboFromZeroState<T> createState() => _ComboFromZeroState<T>();
+  ComboFromZeroState<T> createState() => ComboFromZeroState<T>();
 
   static Widget defaultButtonChildBuilder(BuildContext context, String? title, String? hint, dynamic value, bool enabled, bool clearable, {bool showDropdownIcon=true}) {
     final theme = Theme.of(context);
     return IntrinsicWidth(
       child: ConstrainedBox(
-        constraints: BoxConstraints(
+        constraints: const BoxConstraints(
           minHeight: 38, minWidth: 192,
         ),
         child: Padding(
@@ -91,7 +87,7 @@ class ComboFromZero<T> extends StatefulWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(width: 8,),
+              const SizedBox(width: 8,),
               Expanded(
                 child: value==null&&hint==null&&title!=null
                     ? Text(title, style: theme.textTheme.titleMedium!.copyWith(
@@ -106,10 +102,10 @@ class ComboFromZero<T> extends StatefulWidget {
                         ),
                       ),
               ),
-              SizedBox(width: 4,),
+              const SizedBox(width: 4,),
               if (showDropdownIcon && enabled && !clearable)
                 Icon(Icons.arrow_drop_down, color: theme.textTheme.bodyLarge!.color,),
-              SizedBox(width: 4,),
+              const SizedBox(width: 4,),
             ],
           ),
         ),
@@ -119,7 +115,7 @@ class ComboFromZero<T> extends StatefulWidget {
 
 }
 
-class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
+class ComboFromZeroState<T> extends State<ComboFromZero<T>> {
 
   GlobalKey buttonKey = GlobalKey();
 
@@ -253,28 +249,28 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
       result = TextButton(
         key: buttonKey,
         style: widget.buttonStyle,
-        child: Center(
-          child: OverflowScroll(
-            child: result,
-            scrollDirection: Axis.vertical,
-            autoscrollSpeed: null,
-          ),
-        ),
         focusNode: buttonFocusNode,
         onPressed: onPressed,
+        child: Center(
+          child: OverflowScroll(
+            scrollDirection: Axis.vertical,
+            autoscrollSpeed: null,
+            child: result,
+          ),
+        ),
       );
     } else {
       result = InkWell(
         key: buttonKey,
-        child: Center(
-          child: OverflowScroll(
-            child: result,
-            scrollDirection: Axis.vertical,
-            autoscrollSpeed: null,
-          ),
-        ),
         focusNode: buttonFocusNode,
         onTap: onPressed,
+        child: Center(
+          child: OverflowScroll(
+            scrollDirection: Axis.vertical,
+            autoscrollSpeed: null,
+            child: result,
+          ),
+        ),
       );
     }
     result = Stack(
@@ -286,7 +282,7 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
             child: ExcludeFocus(
               child: Center(
                 child: AnimatedSwitcher(
-                  duration: Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 300),
                   switchInCurve: Curves.easeOutCubic,
                   transitionBuilder: (child, animation) {
                     return SizeTransition(
@@ -300,13 +296,13 @@ class _ComboFromZeroState<T> extends State<ComboFromZero<T>> {
                   child: widget.value!=null ? TooltipFromZero(
                     message: FromZeroLocalizations.of(context).translate('clear'),
                     child: IconButton(
-                      icon: Icon(Icons.close),
+                      icon: const Icon(Icons.close),
                       splashRadius: 20,
                       onPressed: () {
                         widget.onSelected?.call(null);
                       },
                     ),
-                  ) : SizedBox.shrink(),
+                  ) : const SizedBox.shrink(),
                 ),
               ),
             ),
@@ -371,7 +367,7 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
   final bool showHintAsNullInSelection;
   final String? hint;
 
-  ComboFromZeroPopup({
+  const ComboFromZeroPopup({super.key, 
     required this.possibleValues,
     this.value,
     this.onSelected,
@@ -390,11 +386,11 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
   });
 
   @override
-  _ComboFromZeroPopupState<T> createState() => _ComboFromZeroPopupState<T>();
+  ComboFromZeroPopupState<T> createState() => ComboFromZeroPopupState<T>();
 
 }
 
-class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
+class ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
 
   final ScrollController popupScrollController = ScrollController();
   String? searchQuery;
@@ -450,14 +446,14 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
         shrinkWrap: true,
         slivers: [
           if (!showSearchBox)
-            SliverToBoxAdapter(child: SizedBox(height: 12,),),
+            const SliverToBoxAdapter(child: SizedBox(height: 12,),),
           TableFromZero<T?>(
             tableController: tableController,
             tableHorizontalPadding: 8,
             initialSortedColumn: widget.sort ? 0 : -1,
             enableFixedHeightForListRows: widget.useFixedRowHeight,
             cellBuilder: widget.popupWidgetBuilder==null ? null
-                : (context, row, colKey) => widget.popupWidgetBuilder!(row.id!),
+                : (context, row, colKey) => widget.popupWidgetBuilder!(row.id as T),
             rows: rows,
             onFilter: (filtered) {
               List<RowModel<T?>> starts = [];
@@ -486,7 +482,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                 ? [
                     RowAction<T>(
                       title: FromZeroLocalizations.of(context).translate('view'),
-                      icon: Icon(Icons.info_outline),
+                      icon: const Icon(Icons.info_outline),
                       onRowTap: (context, row) {
                         (row.id as DAO).pushViewDialog(context);
                       },
@@ -534,9 +530,9 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                           initialValue: searchQuery,
                           focusNode: initialFocus,
                           decoration: InputDecoration(
-                            contentPadding: EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
+                            contentPadding: const EdgeInsets.only(left: 8, right: 80, bottom: 4, top: 8,),
                             labelText: FromZeroLocalizations.of(context).translate('search...'),
-                            labelStyle: TextStyle(height: 1.5),
+                            labelStyle: const TextStyle(height: 1.5),
                             suffixIcon: Icon(Icons.search, color: Theme.of(context).disabledColor,),
                           ),
                           onChanged: (value) {
@@ -556,7 +552,7 @@ class _ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
               ),
             ),
           ),
-          SliverToBoxAdapter(child: SizedBox(height: 12,),),
+          const SliverToBoxAdapter(child: SizedBox(height: 12,),),
         ],
       ),
     );

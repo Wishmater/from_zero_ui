@@ -7,15 +7,15 @@ class NotificationRelayController {
 
   NotificationRelayController(this.shouldRelay);
 
-  List<Function(Notification notification)> _listeners = [];
-  List<Function(Notification notification)> get listeners => _listeners;
+  List<void Function(Notification notification)> _listeners = [];
+  List<void Function(Notification notification)> get listeners => _listeners;
 
-  void addListener(Function(Notification notification) listener) {
+  void addListener(void Function(Notification notification) listener) {
     if (!_listeners.contains(listener)) {
       _listeners.add(listener);
     }
   }
-  void removeListener(Function(Notification notification) listener) {
+  void removeListener(void Function(Notification notification) listener) {
     _listeners.remove(listener);
   }
 
@@ -72,9 +72,9 @@ class NotificationRelayer extends StatefulWidget {
     Key? key,
   }) : super(key: key);
   @override
-  _NotificationRelayerState createState() => _NotificationRelayerState();
+  NotificationRelayerState createState() => NotificationRelayerState();
 }
-class _NotificationRelayerState extends State<NotificationRelayer> {
+class NotificationRelayerState extends State<NotificationRelayer> {
   @override
   void initState() {
     super.initState();

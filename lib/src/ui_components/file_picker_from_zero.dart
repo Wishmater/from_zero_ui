@@ -55,7 +55,7 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
         if (mounted) {
           overlayEntry = OverlayEntry(
             builder: (context) => Positioned.fill(
-              child: _buildDragAndDrop(context, SizedBox.shrink()),
+              child: _buildDragAndDrop(context, const SizedBox.shrink()),
             ),
           );
           Overlay.of(context).insert(overlayEntry!);
@@ -77,7 +77,6 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
       result = widget.child;
     } else {
       result = InkWell(
-        child: widget.child,
         focusNode: widget.focusNode,
         onTap: !widget.enabled ? null : () async {
           final result = await pickFileFromZero(
@@ -91,15 +90,16 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
             widget.onSelected(result);
           }
         },
+        child: widget.child,
       );
     }
     if (widget.enableDragAndDrop) {
       result = AnimatedContainer(
-        duration: Duration(milliseconds: 250),
-        child: result,
+        duration: const Duration(milliseconds: 250),
         color: _dragging
-            ? Theme.of(context).toggleableActiveColor.withOpacity(0.2)
-            : Theme.of(context).toggleableActiveColor.withOpacity(0),
+            ? Theme.of(context).colorScheme.secondary.withOpacity(0.2)
+            : Theme.of(context).colorScheme.secondary.withOpacity(0),
+        child: result,
       );
       if (!widget.allowDragAndDropInWholeScreen) {
         result = _buildDragAndDrop(context, result);

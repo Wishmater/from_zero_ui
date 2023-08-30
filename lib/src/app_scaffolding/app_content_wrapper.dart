@@ -5,16 +5,12 @@ import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:dartx/dartx.dart';
-import 'package:enough_convert/windows.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/snackbar_host_from_zero.dart';
 import 'package:go_router/go_router.dart';
-import 'package:path/path.dart' as p;
 import 'package:window_manager/window_manager.dart';
 
 
@@ -64,11 +60,11 @@ void Function(Object? message, {
 /// Controls different app-wide providers and features needed by other FromZeroWidgets
 class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
 
-  final child;
+  final Widget child;
   final GoRouter goRouter;
   final bool allowDraggingWithMouseDownOnDesktop;
 
-  FromZeroAppContentWrapper({
+  const FromZeroAppContentWrapper({super.key, 
     required this.child,
     required this.goRouter,
     this.allowDraggingWithMouseDownOnDesktop = !kReleaseMode,
@@ -82,7 +78,7 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
   static String? appNameForCloseConfirmation;
 
   static String? windowsProcessName;
-  static exitApp(int code) {
+  static void exitApp(int code) {
     log('Exiting app with code: $code...');
     if (!kIsWeb && Platform.isWindows) {
       log('Detected platform windows, releaseMode=$kReleaseMode, processName=$windowsProcessName');
@@ -105,14 +101,14 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
       _exit(code);
     }
   }
-  static _exit(int code) {
+  static void _exit(int code) {
     log('Exiting the normal dart way (debugger(); + exit(0);)...');
     debugger(); exit(0);
   }
 
   static Future<Map<String, int>> getWindowsProcessess() async {
     final tasklistProc = Process.runSync('tasklist', ['/NH', '/FO', 'csv']);
-    final lines = LineSplitter().convert(tasklistProc.stdout);
+    final lines = const LineSplitter().convert(tasklistProc.stdout);
     final pids = <String, int>{};
     for (var line in lines) {
       final elems = line.split(',').map((elem) => elem.replaceAll('"', '')).toList();
@@ -151,7 +147,7 @@ class FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWra
     //TODO 3 add restrictions to fontSize, uiScale logic, etc. here
     var mediaQueryData = MediaQuery.of(context);
     // final double scale = mediaQueryData.textScaleFactor.clamp(1, 1.25);
-    final double scale = 1;
+    const double scale = 1;
     // TODO 2 experiment with app ui scale with this approach, it looks promising. Some forms break though
     mediaQueryData = mediaQueryData.copyWith(textScaleFactor: scale,);
     final screen = ref.read(fromZeroScreenProvider);
@@ -241,7 +237,7 @@ class FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWra
                                     goRouter: widget.goRouter,
                                     onMaximizeOrRestore: (context) {
                                       // hack so the windowBar doesn't get stuck after maximize
-                                      context.findAncestorStateOfType<_AppearOnMouseOverState>()!.pressed = false;
+                                      context.findAncestorStateOfType<AppearOnMouseOverState>()!.pressed = false;
                                     },
                                   ),
                                 );
@@ -277,17 +273,17 @@ class AppearOnMouseOver extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _AppearOnMouseOverState createState() => _AppearOnMouseOverState();
+  AppearOnMouseOverState createState() => AppearOnMouseOverState();
 
 }
-class _AppearOnMouseOverState extends State<AppearOnMouseOver> {
+class AppearOnMouseOverState extends State<AppearOnMouseOver> {
 
   bool visible = false;
   bool pressed = false;
 
   @override
   Widget build(BuildContext context) {
-    bool visible = (this.visible||this.pressed)&&widget.appear;
+    bool visible = (this.visible||pressed)&&widget.appear;
     return MouseRegion(
       opaque: false,
       onEnter: (event) {
@@ -297,7 +293,7 @@ class _AppearOnMouseOverState extends State<AppearOnMouseOver> {
       },
       onExit: (event) {
         if (pressed) {
-          this.pressed = false;
+          pressed = false;
         } else {
           setState(() {
             this.visible = false;
@@ -306,8 +302,8 @@ class _AppearOnMouseOverState extends State<AppearOnMouseOver> {
       },
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: !visible ? null : () => null,
-        onSecondaryTap: !visible ? null : () => null,
+        onTap: !visible ? null : () {},
+        onSecondaryTap: !visible ? null : () {},
         onTapDown: !visible ? null : (details) => pressed = true,
         onTapCancel: !visible ? null : () => pressed = false,
         onTapUp: !visible ? null : (details) => pressed = false,
@@ -316,7 +312,7 @@ class _AppearOnMouseOverState extends State<AppearOnMouseOver> {
         onPanEnd: !visible ? null : (details) => pressed = false,
         child: AnimatedOpacity(
           opacity: visible ? 1 : 0,
-          duration: Duration(milliseconds: 250),
+          duration: const Duration(milliseconds: 250),
           curve: Curves.easeOutCubic,
           child: IgnorePointer(
             ignoring: !visible,
@@ -362,7 +358,7 @@ class WindowBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final Color iconColor = this.iconTheme?.color
+    final Color iconColor = iconTheme?.color
         ?? theme.appBarTheme.iconTheme?.color 
         ?? theme.primaryIconTheme.color 
         ?? theme.iconTheme.color
@@ -424,8 +420,8 @@ class WindowBar extends StatelessWidget {
                   }
                 },
                 colors: WindowButtonColors(
-                  mouseOver: Color(0xFFD32F2F),
-                  mouseDown: Color(0xFFB71C1C),
+                  mouseOver: const Color(0xFFD32F2F),
+                  mouseDown: const Color(0xFFB71C1C),
                   iconNormal: iconColor.withOpacity(0.8),
                   iconMouseOver: Colors.white,
                   iconMouseDown: Colors.white,
@@ -438,7 +434,7 @@ class WindowBar extends StatelessWidget {
   }
 
   /// used when trying to close the window
-  static smartMultiPop(GoRouter goRouter) async {
+  static Future<void> smartMultiPop(GoRouter goRouter) async {
     final navigator = goRouter.routerDelegate.navigatorKey.currentState!;
     while (true) {
 
@@ -475,7 +471,7 @@ class MoveWindowFromZero extends StatefulWidget {
   final Widget? child;
   final VoidCallback? onDoubleTap;
 
-  MoveWindowFromZero({Key? key, this.child, this.onDoubleTap}) : super(key: key);
+  const MoveWindowFromZero({Key? key, this.child, this.onDoubleTap}) : super(key: key);
 
   @override
   State<MoveWindowFromZero> createState() => _MoveWindowFromZeroState();
@@ -488,7 +484,7 @@ class _MoveWindowFromZeroState extends State<MoveWindowFromZero> {
   void onTapDown(TapDownDetails details) {
     timer?.cancel();
     if (lastTapDownDetails?.globalPosition==details.globalPosition) {
-      (this.widget.onDoubleTap ?? appWindow.maximizeOrRestore).call();
+      (widget.onDoubleTap ?? appWindow.maximizeOrRestore).call();
       lastTapDownDetails = null;
     } else {
       lastTapDownDetails = details;
@@ -505,7 +501,7 @@ class _MoveWindowFromZeroState extends State<MoveWindowFromZero> {
           () => TransparentTapGestureRecognizer(debugOwner: this),
           (TapGestureRecognizer instance) {
         instance
-          ..onTapDown = onTapDown;
+          .onTapDown = onTapDown;
       },
     );
     return RawGestureDetector(
@@ -516,7 +512,7 @@ class _MoveWindowFromZeroState extends State<MoveWindowFromZero> {
         onPanStart: (details) {
           appWindow.startDragging();
         },
-        child: this.widget.child ?? Container(),
+        child: widget.child ?? Container(),
       ),
     );
   }
@@ -590,7 +586,7 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     return _currentDrawerWidths[pageScaffoldId] ?? 0;
   }
   bool _blockNotify = false;
-  setCurrentDrawerWidth(String pageScaffoldId, double value) {
+  void setCurrentDrawerWidth(String pageScaffoldId, double value) {
     if (_currentDrawerWidths[pageScaffoldId] != value) {
       _currentDrawerWidths[pageScaffoldId] = value;
       if (!_blockNotify) notifyListeners();
@@ -686,7 +682,7 @@ class WindowEventListenerWindowManagerPackage with WindowListener {
   WindowEventListenerWindowManagerPackage._(this.routerGetter);
 
   static WindowEventListenerWindowManagerPackage? listener;
-  static initListener(GoRouter Function() routerGetter) {
+  static void initListener(GoRouter Function() routerGetter) {
     listener = WindowEventListenerWindowManagerPackage._(routerGetter);
     // listener!.readEventsTxt();
   }
@@ -737,7 +733,7 @@ class CloseConfirmDialog extends StatelessWidget {
 
   final bool? forceExitApp;
 
-  CloseConfirmDialog({
+  const CloseConfirmDialog({
     Key? key,
     this.forceExitApp,
   }) : super(key: key);
@@ -747,9 +743,8 @@ class CloseConfirmDialog extends StatelessWidget {
     return DialogFromZero(
       title: Text("¿Seguro que quiere cerrar ${FromZeroAppContentWrapper.appNameForCloseConfirmation ?? 'la aplicación'}?"), // TODO 3 internationalize
       dialogActions: <Widget>[
-        DialogButton.cancel(),
+        const DialogButton.cancel(),
         DialogButton(
-          child: Text("CERRAR"),
           color: Colors.red,
           onPressed: () {
             if (forceExitApp ?? PlatformExtended.isDesktop) {
@@ -757,8 +752,9 @@ class CloseConfirmDialog extends StatelessWidget {
             }
             Navigator.of(context).pop(true);
           },
+          child: const Text("CERRAR"),
         ),
-        SizedBox(width: 6,),
+        const SizedBox(width: 6,),
       ],
     );
   }

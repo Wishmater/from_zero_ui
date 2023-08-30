@@ -25,7 +25,7 @@ class SelectableIcon extends StatefulWidget {
     this.curve = Curves.easeOutCubic,
     this.reverseCurve = Curves.easeInCubic,
     super.key,
-  })  : this.selectedIcon = selectedIcon ?? icon;
+  })  : selectedIcon = selectedIcon ?? icon;
 
   @override
   State<SelectableIcon> createState() => _SelectableIconState();
@@ -42,7 +42,7 @@ class _SelectableIconState extends State<SelectableIcon> with SingleTickerProvid
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(duration: Duration(milliseconds: 300), vsync: this);
+    _controller = AnimationController(duration: const Duration(milliseconds: 300), vsync: this);
     _controller.value = widget.selected ? 1 : 0;
   }
   void initCurvedAnimation() {

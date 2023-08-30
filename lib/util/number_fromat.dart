@@ -33,7 +33,7 @@ class ExtendedNumberFormat extends MyNumberFormat{
     final result = _formatter?.format(number) ?? '';
     if (result=='NaN') {
       return '';
-    };
+    }
     return result;
   }
 

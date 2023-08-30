@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:intl/intl.dart';
 
 
@@ -25,6 +24,7 @@ abstract class ContainsValue<T> {
 }
 
 class SimpleValueString<T> implements ContainsValue<T> {
+  @override
   T? value;
   Object string;
   SimpleValueString(this.value, this.string);
@@ -39,6 +39,7 @@ class SimpleValueString<T> implements ContainsValue<T> {
 
 class ValueString<T> implements Comparable, ContainsValue<T> {
 
+  @override
   T? value;
   Object string;
 
@@ -94,7 +95,7 @@ class ValueStringReference<T> extends ValueString<T> {
 
   @override
   String toString() {
-    return value==null ? '' : toStringFunction(value!);
+    return value==null ? '' : toStringFunction(value as T);
   }
 
 }
@@ -106,23 +107,25 @@ class ValueStringReference<T> extends ValueString<T> {
 
 class NumGroupComparingBySum implements ValueString<num>  {
 
+  @override
   num? value = 0;
   List<num?> values;
   NumberFormat? formatter;
 
   NumGroupComparingBySum(this.values, [this.formatter]){
-    values.forEach((element) {
+    for (var element in values) {
       value = value! + (element??0);
-    });
+    }
   }
 
+  @override
   late Object string = toString();
   @override
   String toString() {
     return formatter==null ? value.toString() : formatter!.format(value);
   }
   @override
-  bool operator == (dynamic other) => other is NumGroupComparingBySum && this.value==other.value || value==other;
+  bool operator == (dynamic other) => other is NumGroupComparingBySum && value==other.value || value==other;
   @override
   int get hashCode => value.hashCode;
   @override
@@ -131,6 +134,7 @@ class NumGroupComparingBySum implements ValueString<num>  {
       : other is num ? _compare(other)
       : 1;
 
+  @override
   int _compare(num? other) {
     if (value==null) {
       if (other==null) {

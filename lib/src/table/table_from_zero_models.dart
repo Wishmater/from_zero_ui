@@ -2,7 +2,6 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/table/filter_popup.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:intl/intl.dart';
 
@@ -12,9 +11,9 @@ import 'package:intl/intl.dart';
 
 class RowAction<T> extends ActionFromZero {
 
-  final Function(BuildContext context, RowModel<T> row)? onRowTap;
+  final void Function(BuildContext context, RowModel<T> row)? onRowTap;
 
-  RowAction({
+  RowAction({super.key, 
     required this.onRowTap,
     required String title,
     Widget? icon,
@@ -36,12 +35,12 @@ class RowAction<T> extends ActionFromZero {
     buttonBuilder: buttonBuilder,
   );
 
-  RowAction.divider({
+  RowAction.divider({super.key, 
     Map<double, ActionState>? breakpoints,
     OverflowActionBuilder overflowBuilder = ActionFromZero.dividerOverflowBuilder,
     ActionBuilder iconBuilder = ActionFromZero.dividerIconBuilder,
     ActionBuilder buttonBuilder = ActionFromZero.dividerIconBuilder,
-  })  : this.onRowTap = null,
+  })  : onRowTap = null,
         super(
           onTap: null,
           title: '',
@@ -181,7 +180,7 @@ abstract class ColModel<T>{
           ? filtered
           : filtered.where((e) => rowCountSelector!(e)).toList();
       if (reFiltered.isNotEmpty) {
-        final Set unique = {};
+        final Set<dynamic> unique = {};
         for (final row in reFiltered) {
           final value = getValue(row, key);
           addValueToSet(unique, value);
@@ -191,7 +190,7 @@ abstract class ColModel<T>{
     }
     return '';
   }
-  static addValueToSet(Set set, value) {
+  static void addValueToSet(Set<dynamic> set, dynamic value) {
     if (value is ContainsValue) {
       addValueToSet(set, value.value);
     } else if (value is List) {
@@ -254,30 +253,55 @@ abstract class ColModel<T>{
 
 
 class SimpleRowModel<T> extends RowModel<T> {
+  @override
   T id;
+  @override
   Key? rowKey;
+  @override
   Map values;
+  @override
   Color? backgroundColor;
+  @override
   TextStyle? textStyle;
+  @override
   double? height;
+  @override
   bool? selected;
+  @override
   ValueChanged<RowModel<T>>? onRowTap;
+  @override
   ValueChanged<RowModel<T>>? onRowDoubleTap;
+  @override
   ValueChanged<RowModel<T>>? onRowLongPress;
+  @override
   OnRowHoverCallback? onRowHover;
+  @override
   OnCellTapCallback? onCellTap;
+  @override
   OnCellTapCallback? onCellDoubleTap;
+  @override
   OnCellTapCallback? onCellLongPress;
+  @override
   OnCellHoverCallback? onCellHover;
+  @override
   OnCheckBoxSelectedCallback? onCheckBoxSelected;
+  @override
   Widget? rowAddon;
+  @override
   bool? rowAddonIsCoveredByGestureDetector;
+  @override
   bool? rowAddonIsCoveredByBackground;
+  @override
   bool? rowAddonIsCoveredByScrollable;
+  @override
   bool? rowAddonIsSticky;
+  @override
   bool rowAddonIsExpandable;
+  @override
   bool? rowAddonIsAboveRow;
+  @override
   bool? alwaysOnTop;
+  @override
   List<RowModel<T>> children;
   SimpleRowModel({
     required this.id,
@@ -370,21 +394,37 @@ class SimpleRowModel<T> extends RowModel<T> {
 }
 
 class SimpleColModel<T> extends ColModel<T>{
+  @override
   String name;
+  @override
   String? compactName;
+  @override
   Color? backgroundColor;
+  @override
   TextStyle? textStyle;
+  @override
   TextAlign? alignment;
+  @override
   int? flex;
+  @override
   double? width;
+  @override
   ValueChanged<int>? onHeaderTap;
+  @override
   ValueChanged<int>? onHeaderDoubleTap;
+  @override
   ValueChanged<int>? onHeaderLongPress;
+  @override
   OnHeaderHoverCallback? onHeaderHover;
+  @override
   bool? defaultSortAscending;
+  @override
   bool? sortEnabled;
+  @override
   bool? filterEnabled;
+  @override
   bool Function(RowModel<T> row)? rowCountSelector;
+  @override
   ShowFilterPopupCallback? showFilterPopupCallback;
   SimpleColModel({
     required this.name,

@@ -22,9 +22,9 @@ class FixedSlideTransition extends AnimatedWidget {
     Offset offset = position.value;
     return Transform.translate(
       offset: offset,
-      child: child,
       transformHitTests: transformHitTests,
       filterQuality: filterQuality,
+      child: child,
     );
   }
 

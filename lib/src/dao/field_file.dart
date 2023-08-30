@@ -4,12 +4,9 @@ import 'package:dartx/dartx.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:from_zero_ui/src/ui_components/file_picker_from_zero.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/dao/dao.dart';
-import 'package:from_zero_ui/src/dao/field_validators.dart';
 import 'package:path/path.dart' as path;
 
 
@@ -225,12 +222,10 @@ class FileField extends StringField {
         return e;
       }).toList();
     }
-    if (focusNode==null) {
-      focusNode = this.focusNode;
-    }
+    focusNode ??= this.focusNode;
     Widget result;
     if (hiddenInForm && !ignoreHidden) {
-      result = SizedBox.shrink();
+      result = const SizedBox.shrink();
       if (asSliver) {
         result = SliverToBoxAdapter(child: result,);
       }
@@ -335,8 +330,8 @@ class FileField extends StringField {
                   : b.toString().trim().isEmpty ? a.toString()
                   : '$a\n$b';
             }),
+            waitDuration: enabled ? const Duration(seconds: 1) : Duration.zero,
             child: result,
-            waitDuration: enabled ? Duration(seconds: 1) : Duration.zero,
           );
           if (!dense) {
             final actions = buildActions(context, focusNode);
@@ -352,7 +347,7 @@ class FileField extends StringField {
               paddingRight: 6,
               actionPadding: 0,
               skipTraversalForActions: true,
-              constraints: BoxConstraints(),
+              constraints: const BoxConstraints(),
               actions: [
                 ...actions,
                 if (actions.isNotEmpty && defaultActions.isNotEmpty)
@@ -410,7 +405,7 @@ class FileField extends StringField {
     return [
       if (allowTyping)
         ActionFromZero(
-          icon: Icon(Icons.file_open),
+          icon: const Icon(Icons.file_open),
           title: 'Load from File', // TODO 2 internationalize
           breakpoints: {0: ActionState.icon},
           onTap: (context) async {

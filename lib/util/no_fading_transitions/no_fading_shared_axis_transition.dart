@@ -2,10 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:flutter/animation.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 
 
 /// Determines which type of shared axis transition is used.
@@ -80,7 +77,7 @@ class SharedAxisPageTransitionsBuilder extends PageTransitionsBuilder {
   const SharedAxisPageTransitionsBuilder({
     required this.transitionType,
     this.fillColor,
-  }) : assert(transitionType != null);
+  });
 
   /// Determines which [SharedAxisTransitionType] to build.
   final SharedAxisTransitionType transitionType;
@@ -194,8 +191,7 @@ class SharedAxisTransition extends StatelessWidget {
     required this.transitionType,
     this.fillColor,
     required this.child,
-  })  : assert(transitionType != null),
-        super(key: key);
+  })  : super(key: key);
 
   /// The animation that drives the [child]'s entrance and exit.
   ///

@@ -3,8 +3,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/scheduler/ticker.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/ui_utility/ui_utility_widgets.dart';
-import 'package:from_zero_ui/src/ui_utility/export.dart';
 
 
 /// extends default scroll controller by notifying listeners in extra cases
@@ -51,7 +49,7 @@ class ScrollbarFromZero extends StatefulWidget {
   /// is main window scaffold scrollbar
   final bool mainScrollbar;
 
-  ScrollbarFromZero({
+  const ScrollbarFromZero({
     Key? key,
     this.controller,
     required this.child,
@@ -66,14 +64,11 @@ class ScrollbarFromZero extends StatefulWidget {
   }) :  super(key: key);
 
   @override
-  _ScrollbarFromZeroState createState() =>
-      _ScrollbarFromZeroState();
+  ScrollbarFromZeroState createState() => ScrollbarFromZeroState();
 
 }
 
-
-
-class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
+class ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
   late AlwaysAttachedScrollController alwaysAttachedScrollController;
 
@@ -117,7 +112,7 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
           setState(() {});
           return false;
         }
-        await Future.delayed(Duration(milliseconds: 100));
+        await Future.delayed(const Duration(milliseconds: 100));
         return true;
       });
     }
@@ -130,19 +125,19 @@ class _ScrollbarFromZeroState extends State<ScrollbarFromZero> {
       if (widget.controller!=null) {
         child = ScrollOpacityGradient(
           scrollController: alwaysAttachedScrollController,
-          child: child,
           direction: widget.opacityGradientDirection ?? (widget.controller!.hasClients
               ? widget.controller!.position.axis==Axis.vertical
                   ? OpacityGradient.vertical
                   : OpacityGradient.horizontal
               : OpacityGradient.vertical),
           maxSize: widget.opacityGradientSize,
+          child: child,
         );
       } else {
         child = OpacityGradient(
-          child: child,
           direction: widget.opacityGradientDirection ?? OpacityGradient.vertical,
           size: widget.opacityGradientSize,
+          child: child,
         );
       }
     }
@@ -263,7 +258,7 @@ class DummyScrollPosition extends ScrollPositionWithSingleContext {
 
   DummyScrollPosition(BuildContext context) : super(
     context: DummyScrollContext(context),
-    physics: NeverScrollableScrollPhysics(),
+    physics: const NeverScrollableScrollPhysics(),
   );
 
 }
@@ -271,20 +266,13 @@ class DummyScrollPosition extends ScrollPositionWithSingleContext {
 class AlwaysAttachedScrollController implements ScrollController {
 
   BuildContext context;
+  ScrollController? parent;
   DummyScrollPosition dummyScrollPosition;
 
   AlwaysAttachedScrollController({
-    required ScrollController? parent,
+    required this.parent,
     required this.context,
-  })  : _parent = parent,
-        dummyScrollPosition = DummyScrollPosition(context);
-
-
-  ScrollController? _parent;
-  ScrollController? get parent => _parent;
-  set parent(ScrollController? value) {
-    _parent = value;
-  }
+  })  : dummyScrollPosition = DummyScrollPosition(context);
 
   @override
   bool get hasClients => true;

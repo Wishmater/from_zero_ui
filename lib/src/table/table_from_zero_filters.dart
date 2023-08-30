@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/util/copied_flutter_widgets/my_tooltip.dart';
 import 'package:intl/intl.dart';
 
 
@@ -46,7 +45,7 @@ abstract class FilterText extends ConditionFilter {
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,}) {
     return Container(
       height: 42,
-      padding: EdgeInsets.only(top: 4,),
+      padding: const EdgeInsets.only(top: 4,),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -61,8 +60,8 @@ abstract class FilterText extends ConditionFilter {
             decoration: InputDecoration(
               labelText: getUiName(context),
               floatingLabelBehavior: FloatingLabelBehavior.always,
-              labelStyle: TextStyle(height: 0.75,),
-              contentPadding: EdgeInsets.only(top: 30, left: 12, right: 80),
+              labelStyle: const TextStyle(height: 0.75,),
+              contentPadding: const EdgeInsets.only(top: 30, left: 12, right: 80),
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Theme.of(context).colorScheme.secondary, width: 1,),
               ),
@@ -113,7 +112,7 @@ abstract class FilterText extends ConditionFilter {
               child: TooltipFromZero(
                 message: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('filter')}',
                 child: IconButton(
-                  icon: Icon(Icons.close),
+                  icon: const Icon(Icons.close),
                   splashRadius: 20,
                   onPressed: onDelete,
                 ),
@@ -219,7 +218,7 @@ abstract class FilterNumber extends ConditionFilter {
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,}) {
     return Container(
       height: 42,
-      padding: EdgeInsets.only(top: 4,),
+      padding: const EdgeInsets.only(top: 4,),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -240,8 +239,8 @@ abstract class FilterNumber extends ConditionFilter {
             decoration: InputDecoration(
               labelText: getUiName(context),
               floatingLabelBehavior: FloatingLabelBehavior.always,
-              labelStyle: TextStyle(height: 0.75,),
-              contentPadding: EdgeInsets.only(top: 30, left: 12, right: 80),
+              labelStyle: const TextStyle(height: 0.75,),
+              contentPadding: const EdgeInsets.only(top: 30, left: 12, right: 80),
               focusedBorder: OutlineInputBorder(
                 borderSide: BorderSide(color: Theme.of(context).colorScheme.secondary, width: 1,),
               ),
@@ -292,7 +291,7 @@ abstract class FilterNumber extends ConditionFilter {
               child: TooltipFromZero(
                 message: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('filter')}',
                 child: IconButton(
-                  icon: Icon(Icons.close),
+                  icon: const Icon(Icons.close),
                   splashRadius: 20,
                   onPressed: onDelete,
                 ),
@@ -322,7 +321,7 @@ class FilterNumberEqualTo extends FilterNumber {
     if (query==null) return true;
     final v = col!=null ? col.getValue(row, key) : row.values[key];
     final value = (v is ContainsValue) ? v.value : v;
-    if (!(value is num)) return false;
+    if (value is! num) return false;
     bool result = extra ? value!=query : value==query;
     return result;
   }
@@ -345,7 +344,7 @@ class FilterNumberGreaterThan extends FilterNumber {
     if (query==null) return true;
     final v = col!=null ? col.getValue(row, key) : row.values[key];
     final value = (v is ContainsValue) ? v.value : v;
-    if (!(value is num)) return false;
+    if (value is! num) return false;
     bool result = extra ? value>=query! : value>query!;
     return result;
   }
@@ -368,7 +367,7 @@ class FilterNumberLessThan extends FilterNumber {
     if (query==null) return true;
     final v = col!=null ? col.getValue(row, key) : row.values[key];
     final value = (v is ContainsValue) ? v.value : v;
-    if (!(value is num)) return false;
+    if (value is! num) return false;
     bool result = extra ? value<=query! : value<query!;
     return result;
   }
@@ -386,7 +385,7 @@ abstract class FilterDate extends ConditionFilter {
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,}) {
     return Container(
       height: 40,
-      padding: EdgeInsets.only(bottom: 2,),
+      padding: const EdgeInsets.only(bottom: 2,),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -413,16 +412,16 @@ abstract class FilterDate extends ConditionFilter {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        SizedBox(width: 4,),
+                        const SizedBox(width: 4,),
                         Expanded(
                           child: MaterialKeyValuePair(
                             title: title,
                             titleStyle: Theme.of(context).textTheme.bodySmall!.copyWith(height: 0.8),
                             value: value==null ? '' : formatter.format(value),
-                            valueStyle: TextStyle(fontSize: 15,),
+                            valueStyle: const TextStyle(fontSize: 15,),
                           ),
                         ),
-                        SizedBox(width: 4,),
+                        const SizedBox(width: 4,),
                       ],
                     ),
                   );
@@ -472,7 +471,7 @@ abstract class FilterDate extends ConditionFilter {
               child: TooltipFromZero(
                 message: '${FromZeroLocalizations.of(context).translate('delete')} ${FromZeroLocalizations.of(context).translate('filter')}',
                 child: IconButton(
-                  icon: Icon(Icons.close),
+                  icon: const Icon(Icons.close),
                   splashRadius: 20,
                   onPressed: onDelete,
                 ),
@@ -526,7 +525,7 @@ class FilterDateAfter extends FilterDate {
     if (query==null) return true;
     final v = col!=null ? col.getValue(row, key) : row.values[key];
     final value = (v is ContainsValue) ? v.value : v;
-    if (!(value is DateTime)) return false;
+    if (value is! DateTime) return false;
     bool result = value.isAfter(query!) || (extra&&isSameDay(value, query!));
     return result;
   }
@@ -549,7 +548,7 @@ class FilterDateBefore extends FilterDate {
     if (query==null) return true;
     final v = col!=null ? col.getValue(row, key) : row.values[key];
     final value = (v is ContainsValue) ? v.value : v;
-    if (!(value is DateTime)) return false;
+    if (value is! DateTime) return false;
     bool result = value.isBefore(query!) || (extra&&isSameDay(value, query!));
     return result;
   }

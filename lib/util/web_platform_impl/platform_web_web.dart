@@ -1,2 +1,2 @@
 
-// export 'package:platform_detect/platform_detect.dart';
+export 'package:platform_detect/platform_detect.dart';

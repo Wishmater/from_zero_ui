@@ -2,11 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
-import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
-import 'package:from_zero_ui/src/table/table_from_zero.dart';
-import 'package:from_zero_ui/src/table/table_from_zero_models.dart';
-import 'package:from_zero_ui/src/ui_components/context_menu.dart';
 
 
 class TableHeaderFromZero<T> extends StatefulWidget {
@@ -43,11 +38,11 @@ class TableHeaderFromZero<T> extends StatefulWidget {
   })  : super(key: key);
 
   @override
-  _TableHeaderFromZeroState<T> createState() => _TableHeaderFromZeroState();
+  TableHeaderFromZeroState<T> createState() => TableHeaderFromZeroState();
 
 }
 
-class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
+class TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
 
   bool autofocusSearchOnNextBuild = false;
   String? searchQuery;
@@ -75,7 +70,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
     Widget result = AnimatedBuilder(
       animation: widget.controller,
       builder: (context, child) {
-        List<Widget> actions = this.widget.actions ?? [];
+        List<Widget> actions = widget.actions ?? [];
         if (widget.controller.currentState?.widget.allowCustomization??false) {
           actions = TableFromZeroState.addManageActions(context,
             actions: actions,
@@ -119,7 +114,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
               style: Theme.of(context).textTheme.bodySmall,
             );
           } else {
-            subtitle = SizedBox.shrink();
+            subtitle = const SizedBox.shrink();
           }
         } else {
           final count = filtered!.where((e) => e.onCheckBoxSelected!=null).length;
@@ -130,7 +125,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
           );
         }
         subtitle = AnimatedSwitcher(
-          duration: Duration(milliseconds: 300),
+          duration: const Duration(milliseconds: 300),
           switchInCurve: Curves.easeOutCubic,
           child: subtitle,
           transitionBuilder: (child, animation) {
@@ -166,7 +161,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
                   ... [
                     SizedBox(width: widget.titleLeftPadding,),
                     widget.leading!,
-                    SizedBox(width: 9,),
+                    const SizedBox(width: 9,),
                   ],
                 Expanded(
                   child: OverflowScroll(
@@ -207,7 +202,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
   ActionFromZero buildSearchAction() {
     return ActionFromZero(
       title: 'Buscar...',
-      icon: Icon(Icons.search),
+      icon: const Icon(Icons.search),
       breakpoints: {0: ActionState.expanded},
       centerExpanded: false,
       expandedBuilder: ({required context, enabled=true, icon, onTap, title='', color}) {
@@ -219,13 +214,13 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
         }
         return Container(
           width: 224,
-          padding: EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 4),
           child: Stack(
             children: [
               TextFormField(
                 initialValue: searchQuery,
                 focusNode: searchTextfieldFocusNode,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   contentPadding: EdgeInsets.only(left: 8, right: 8+28, bottom: 12,),
                   labelText: "Buscar...",
                 ),
@@ -248,7 +243,7 @@ class _TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
                   child: Padding(
                     padding: const EdgeInsets.only(top: 1, right: 4),
                     child: IconButton(
-                      icon: Icon(Icons.search),
+                      icon: const Icon(Icons.search),
                       color: Theme.of(context).brightness==Brightness.light ? Theme.of(context).primaryColor : Colors.white,
                       onPressed: submitSearch,
                     ),

@@ -2,29 +2,26 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 import 'package:go_router/go_router.dart';
 
 
-import '../../change_notifiers/theme_parameters.dart';
 import '../../router.dart';
-import '../home/page_home.dart';
 
 class PageScaffoldInner extends StatefulWidget {
 
-  PageScaffoldInner();
+  const PageScaffoldInner({super.key});
 
   @override
-  _PageScaffoldInnerState createState() => _PageScaffoldInnerState();
+  PageScaffoldInnerState createState() => PageScaffoldInnerState();
 
 }
 
-class _PageScaffoldInnerState extends State<PageScaffoldInner> {
+class PageScaffoldInnerState extends State<PageScaffoldInner> {
 
   @override
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
-      title: Text("Inner Page"),
+      title: const Text("Inner Page"),
       body: Center(
         child: Card(child: InkWell(
           onTap: () {
@@ -32,7 +29,7 @@ class _PageScaffoldInnerState extends State<PageScaffoldInner> {
               'rand': Random().nextDouble().toString(),
             });
           },
-          child: FlutterLogo(size: 512,),
+          child: const FlutterLogo(size: 512,),
         )),
       ),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(

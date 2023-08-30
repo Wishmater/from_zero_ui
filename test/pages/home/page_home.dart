@@ -1,42 +1,28 @@
 import 'dart:io';
 
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/app_update.dart';
-import 'package:from_zero_ui/src/app_scaffolding/appbar_from_zero.dart';
-import 'package:from_zero_ui/src/ui_components/context_menu.dart';
 import 'package:from_zero_ui/src/ui_utility/from_zero_logo.dart';
-import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../change_notifiers/theme_parameters.dart';
 import '../../router.dart';
 
 class PageHome extends StatefulWidget {
 
-  PageHome();
+  const PageHome({super.key});
 
   @override
-  _PageHomeState createState() => _PageHomeState();
+  PageHomeState createState() => PageHomeState();
 
 }
 
-class _PageHomeState extends State<PageHome> {
+class PageHomeState extends State<PageHome> {
 
   ScrollController controller = ScrollController();
   late DAO testDao;
 
-  static bool updateCalled = false;
   @override
   void initState() {
-//    if (!updateCalled){
-//      UpdateFromZero(
-//        1,
-//        'http://190.92.122.228:8080/update/cutrans_crm_ver.json',
-//        'http://190.92.122.228:8080/update/cutrans_crm.zip',
-//      ).checkUpdate().then((value) => value.promptUpdate(context));
-//    }
     testDao = DAO(
       uiNameGetter: (dao) => 'Test DAO',
       classUiNameGetter: (dao) => 'Test DAO',
@@ -68,7 +54,7 @@ class _PageHomeState extends State<PageHome> {
       mainScrollController: controller,
       scrollbarType: ScaffoldFromZero.scrollbarTypeOverAppbar,
       appbarType: ScaffoldFromZero.appbarTypeQuickReturn,
-      title: Row(
+      title: const Row(
         children: [
           Text("FromZero playground"),
           Hero(
@@ -99,60 +85,60 @@ class _PageHomeState extends State<PageHome> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              AppbarFiller(),
-              SizedBox(height: 12,),
+              const AppbarFiller(),
+              const SizedBox(height: 12,),
               AspectRatio(
                 aspectRatio: 4,
                 child: ContextMenuFromZero(
                   actions: List.generate(3, (index) {
                     return ActionFromZero(
                       title: 'Kappa $index',
-                      icon: Icon(Icons.translate),
+                      icon: const Icon(Icons.translate),
                     );
                   }),
-                  child: FromZeroBanner(logoSizePercentage: 0.8,),
+                  child: const FromZeroBanner(logoSizePercentage: 0.8,),
                 ),
               ),
-              SizedBox(height: 12,),
-              SizedBox(height: 12,),
+              const SizedBox(height: 12,),
+              const SizedBox(height: 12,),
               Card(
                 clipBehavior: Clip.hardEdge,
                 child: Container(height: 1200, width: 600, color: Colors.red,
                   child: Column(
                     children: [
-                      SizedBox(height: 16,),
+                      const SizedBox(height: 16,),
                       Text(Platform.script.toString()),
-                      SizedBox(height: 16,),
-                      AspectRatio(
+                      const SizedBox(height: 16,),
+                      const AspectRatio(
                         aspectRatio: 4,
                         child: FromZeroBanner(logoSizePercentage: 0.8,),
                       ),
-                      SizedBox(height: 32,),
+                      const SizedBox(height: 32,),
                       ContextMenuFromZero(
                         actions: [
                           ...List.generate(3, (index) {
                             return ActionFromZero(
                               title: 'Kappa $index',
-                              icon: Icon(Icons.translate),
+                              icon: const Icon(Icons.translate),
                             );
                           }),
                           ActionFromZero.divider(),
                           ...List.generate(3, (index) {
                             return ActionFromZero(
                               title: 'Krappa $index',
-                              icon: Icon(Icons.send),
+                              icon: const Icon(Icons.send),
                               enabled: false,
                             );
                           }),
                         ],
                         child: ElevatedButton(
-                          child: Text("SCAFFOLD"),
+                          child: const Text("SCAFFOLD"),
                           onPressed: () {
                             GoRouter.of(context).goNamed("scaffold");
                           },
                         ),
                       ),
-                      SizedBox(height: 32,),
+                      const SizedBox(height: 32,),
                       ...testDao.buildFormWidgets(context,
                         asSlivers: false,
                         expandToFillContainer: false,
@@ -162,7 +148,7 @@ class _PageHomeState extends State<PageHome> {
                   ),
                 ),
               ),
-              SizedBox(height: 12,),
+              const SizedBox(height: 12,),
             ],
           ),
         ),

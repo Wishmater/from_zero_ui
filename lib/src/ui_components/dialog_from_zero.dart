@@ -7,9 +7,7 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/animations/fixed_slide_transition.dart';
 import 'package:multi_value_listenable_builder/multi_value_listenable_builder.dart';
-import 'package:window_manager/window_manager.dart';
 
 
 
@@ -58,7 +56,7 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
         IgnorePointer(
           child: ColoredBox(
             color: _myBarrierColor,
-            child: SizedBox.expand(),
+            child: const SizedBox.expand(),
           ),
         ),
         ScaleTransition(
@@ -73,11 +71,11 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
             ),
           ]).animate(animation),
           child: FixedSlideTransition( // flutter's default SlideTransition causes an assertion when scrolling in a ListView.builder inside it
-            child: child,
             position: Tween<Offset>(
               begin: const Offset(0.0, 128),
               end: Offset.zero,
-            ).animate(animation),
+            ).animate(animation), // flutter's default SlideTransition causes an assertion when scrolling in a ListView.builder inside it
+            child: child,
           ),
         ),
       ],
@@ -97,7 +95,7 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
                     isMouseOverWindowBar.value = false;
                   });
                 }
-                return SizedBox.shrink();
+                return const SizedBox.shrink();
               } else {
                 return MouseRegion(
                   opaque: false,
@@ -194,7 +192,7 @@ class DialogFromZero extends StatefulWidget {
 class _DialogFromZeroState extends State<DialogFromZero> {
 
   late final appBarSizeNotifier = ValueNotifier<Size>(Size(0, widget.appBar==null ? 0 : 56));
-  late final appBarTitleSizeNotifier = ValueNotifier<Size>(Size(0, 0));
+  late final appBarTitleSizeNotifier = ValueNotifier<Size>(const Size(0, 0));
   late final actionsSizeNotifier = ValueNotifier<Size>(Size(0, widget.dialogActions.isEmpty ? 0 : 61));
   late final individualActionsSizeNotifiers = <ValueNotifier<Size>>[];
   late final appBarGlobalKey = GlobalKey<AppbarFromZeroState>();
@@ -219,7 +217,7 @@ class _DialogFromZeroState extends State<DialogFromZero> {
       individualActionsSizeNotifiers.removeRange(widget.dialogActions.length, individualActionsSizeNotifiers.length);
     } else if (widget.dialogActions.length > individualActionsSizeNotifiers.length) {
       final diff = widget.dialogActions.length - individualActionsSizeNotifiers.length;
-      individualActionsSizeNotifiers.addAll(List.generate(diff, (i) => ValueNotifier(Size(0, 0))));
+      individualActionsSizeNotifiers.addAll(List.generate(diff, (i) => ValueNotifier(const Size(0, 0))));
     }
   }
 
@@ -240,7 +238,7 @@ class _DialogFromZeroState extends State<DialogFromZero> {
     if (widget.appBar!=null) {
       appBar = Theme(
         data: Theme.of(context).copyWith(
-          appBarTheme: AppBarTheme(
+          appBarTheme: const AppBarTheme(
             backgroundColor: Colors.transparent,
             elevation: 0,
             toolbarHeight: 68,
@@ -255,7 +253,7 @@ class _DialogFromZeroState extends State<DialogFromZero> {
         title: DefaultTextStyle(
           style: Theme.of(context).textTheme.titleLarge!,
           child: Container(
-            constraints: BoxConstraints(minHeight: 60),
+            constraints: const BoxConstraints(minHeight: 60),
             padding: const EdgeInsets.only(top: 12, bottom: 12, left: 16,),
             alignment: Alignment.centerLeft,
             child: ValueListenableBuilder<Size>(
@@ -331,7 +329,7 @@ class _DialogFromZeroState extends State<DialogFromZero> {
             child: FillerRelayer(
               notifier: actionsSizeNotifier,
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 12, horizontal: 18),
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 18),
                 child: Wrap(
                   runAlignment: WrapAlignment.end,
                   alignment: WrapAlignment.end,
@@ -353,23 +351,23 @@ class _DialogFromZeroState extends State<DialogFromZero> {
     if (widget.includeDialogWidget) {
       if (widget.useReponsiveInsets) {
         result = ResponsiveInsetsDialog(
-          child: result,
           elevation: widget.elevation,
           shadowColor: widget.shadowColor,
           surfaceTintColor: widget.surfaceTintColor,
           clipBehavior: widget.clipBehavior,
           shape: widget.shape,
           alignment: widget.alignment,
+          child: result,
         );
       } else {
         result = Dialog(
-          child: result,
           elevation: widget.elevation,
           shadowColor: widget.shadowColor,
           surfaceTintColor: widget.surfaceTintColor,
           clipBehavior: widget.clipBehavior,
           shape: widget.shape,
           alignment: widget.alignment,
+          child: result,
         );
       }
     }
@@ -411,7 +409,7 @@ class DialogButton extends StatelessWidget {
     this.style,
     this.tooltip,
     super.key,
-  })  : this.child = child,
+  })  : child = child, // ignore: prefer_initializing_formals
         _dialogButtonType = DialogButtonType.other;
 
   const DialogButton.cancel({
@@ -446,7 +444,7 @@ class DialogButton extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           leading!,
-          SizedBox(width: 6,),
+          const SizedBox(width: 6,),
           child,
         ],
       );
@@ -457,6 +455,11 @@ class DialogButton extends StatelessWidget {
         : (this.color ?? _defaultColor(context));
     Widget result = TextButton(
       onPressed: onPressed,
+      focusNode: focusNode,
+      style: style ?? TextButton.styleFrom(
+        foregroundColor: color,
+        padding: padding,
+      ),
       child: DefaultTextStyle(
         style: TextStyle(
           fontSize: 16,
@@ -467,11 +470,6 @@ class DialogButton extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: child,
         ),
-      ),
-      focusNode: focusNode,
-      style: this.style ?? TextButton.styleFrom(
-        primary: color,
-        padding: padding,
       ),
     );
     if (tooltip!=null) {
@@ -490,7 +488,7 @@ class DialogButton extends StatelessWidget {
       case DialogButtonType.accept:
         return Text(FromZeroLocalizations.of(context).translate("accept_caps"));
       case DialogButtonType.other:
-        return Text('???');
+        return const Text('???');
     }
   }
 
@@ -625,7 +623,7 @@ class DialogTitle extends StatelessWidget {
     return Padding(
       padding: padding,
       child: DefaultTextStyle(
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         child: child,
       ),
     );

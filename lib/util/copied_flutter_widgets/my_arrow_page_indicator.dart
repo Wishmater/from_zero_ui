@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+// only used in export.dart, remove when not needed anymore
 //https://stackoverflow.com/questions/51119795/how-to-remove-scroll-glow
 
 class ArrowPageIndicator extends StatefulWidget {
@@ -87,7 +88,7 @@ class ArrowPageIndicator extends StatefulWidget {
 
   @override
   ArrowPageIndicatorState createState() {
-    return new ArrowPageIndicatorState();
+    return ArrowPageIndicatorState();
   }
 }
 
@@ -110,13 +111,13 @@ class ArrowPageIndicatorState extends State<ArrowPageIndicator> {
   @override
   Widget build(BuildContext context) => _buildBody();
 
-  _buildArrow(
+  Widget _buildArrow(
       {required Widget? icon, required IconData iconData, required bool isNotVisible, required bool isLeft}) =>
       Opacity(
         opacity: isNotVisible ? 0.0 : 1.0,
         child: Material(
           color: Theme.of(context).canvasColor.withOpacity(0.75),
-          shape: CircleBorder(),
+          shape: const CircleBorder(),
           child: IconButton(
             iconSize: widget.iconSize,
             splashRadius: widget.iconSize*0.6,
@@ -145,26 +146,26 @@ class ArrowPageIndicatorState extends State<ArrowPageIndicator> {
         ),
       );
 
-  _buildLeftArrow() => _buildArrow(
+  Widget _buildLeftArrow() => _buildArrow(
       icon: widget.leftIcon,
       iconData: Icons.chevron_left,
       isNotVisible: isFirstPage(),
       isLeft: true);
 
-  _buildRightArrow() => _buildArrow(
+  Widget _buildRightArrow() => _buildArrow(
       icon: widget.rightIcon,
       iconData: Icons.chevron_right,
       isNotVisible: isLastPage(),
       isLeft: false);
 
-  _buildPageView() => ScrollConfiguration(
-    child: widget.child,
+  Widget _buildPageView() => ScrollConfiguration(
     behavior: NoGlowBehaviour(),
+    child: widget.child,
   );
 
-  _buildBody() => widget.isInside ? _buildBodyWithStack() : _buildBodyWithRow();
+  Widget _buildBody() => widget.isInside ? _buildBodyWithStack() : _buildBodyWithRow();
 
-  _buildBodyWithStack() => Stack(
+  Widget _buildBodyWithStack() => Stack(
     children: <Widget>[
       _buildPageView(),
       Positioned(
@@ -182,7 +183,7 @@ class ArrowPageIndicatorState extends State<ArrowPageIndicator> {
     ],
   );
 
-  _buildBodyWithRow() => Row(
+  Widget _buildBodyWithRow() => Row(
     children: <Widget>[
       _buildLeftArrow(),
       Expanded(
@@ -196,17 +197,16 @@ class ArrowPageIndicatorState extends State<ArrowPageIndicator> {
 
   bool isLastPage() => _pageIndex == widget.itemCount - 1;
 
-  _handlePageIndex() {
+  void _handlePageIndex() {
     setState(_readCurrentPageIndex);
   }
 
-  _readCurrentPageIndex() {
+  void _readCurrentPageIndex() {
     _pageIndex = widget.currentPageNotifier.value;
   }
 }
 
 class NoGlowBehaviour extends ScrollBehavior {
-  @override
   Widget buildViewportChrome(
       BuildContext context, Widget child, AxisDirection axisDirection) {
     return child;

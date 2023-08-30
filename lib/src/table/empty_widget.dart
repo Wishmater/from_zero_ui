@@ -68,7 +68,7 @@ class TableEmptyWidget<T> extends StatelessWidget {
                     onPressed: () {
                       state?.clearAllFilters();
                     },
-                    child: IntrinsicWidth(
+                    child: const IntrinsicWidth(
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

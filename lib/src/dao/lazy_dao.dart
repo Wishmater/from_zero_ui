@@ -103,25 +103,25 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     this.enableUndoRedoMechanism = enableUndoRedoMechanism;
     this.showConfirmDialogWithBlockingErrors = showConfirmDialogWithBlockingErrors;
     // this.parentDAO = parentDAO;
-    this.doubleColumnLayoutType = enableDoubleColumnLayout;
+    doubleColumnLayoutType = enableDoubleColumnLayout;
     this.searchNameGetter = searchNameGetter;
     this.editDialogTitle = editDialogTitle;
     this.saveConfirmationDialogTitle = saveConfirmationDialogTitle;
     this.saveButtonTitle = saveButtonTitle;
     this.saveConfirmationDialogDescription = saveConfirmationDialogDescription;
-    this._undoRecord = undoRecord ?? [];
-    this._redoRecord = redoRecord ?? [];
+    _undoRecord = undoRecord ?? [];
+    _redoRecord = redoRecord ?? [];
     this.classUiNamePluralGetter = classUiNamePluralGetter ?? classUiNameGetter;
-    this.props.forEach((key, value) {
+    props.forEach((key, value) {
       value.dao = this;
       value.addListener(() {
         notifyListeners();
       });
     });
-    this.addListener(() {
-      _selfUpdateListeners.forEach((element) {
+    addListener(() {
+      for (var element in _selfUpdateListeners) {
         element(this);
-      });
+      }
     });
   }
 
@@ -130,6 +130,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   //
   void buildDAO();
 
+  @override
   LazyDAO<ModelType> copyWith({ // force child classes to override copyWith
     DAOValueGetter<String, ModelType>? classUiNameGetter,
     DAOValueGetter<String, ModelType>? classUiNamePluralGetter,
@@ -229,7 +230,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
         // redoRecord: redoRecord??this._redoRecord,
         showConfirmDialogWithBlockingErrors: showConfirmDialogWithBlockingErrors??this.showConfirmDialogWithBlockingErrors,
         // parentDAO: parentDAO??this.parentDAO,
-        enableDoubleColumnLayout: enableDoubleColumnLayout??this.doubleColumnLayoutType,
+        enableDoubleColumnLayout: enableDoubleColumnLayout??doubleColumnLayoutType,
         searchNameGetter: searchNameGetter ?? this.searchNameGetter,
         editDialogTitle: editDialogTitle ?? this.editDialogTitle,
         saveConfirmationDialogTitle: saveConfirmationDialogTitle ?? this.saveConfirmationDialogTitle,
@@ -245,24 +246,30 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   // DAO methods that should be overriden, to delay build as much as possible
   //
   /// @mustOverride
+  @override
   String get classUiName;
   /// @mustOverride
+  @override
   String get uiName;
   /// @mustOverride
+  @override
   bool get wantsLinkToSelfFromOtherDAOs {
     ensureInitialized();
     return super.wantsLinkToSelfFromOtherDAOs;
   }
+  @override
   set wantsLinkToSelfFromOtherDAOs(bool value) {
     ensureInitialized();
     super.wantsLinkToSelfFromOtherDAOs = value;
   }
   /// @mustOverride ???
+  @override
   bool get canSave {
     ensureInitialized();
     return super.canSave;
   }
   /// @mustOverride ???
+  @override
   bool get canDelete {
     ensureInitialized();
     return super.canDelete;
@@ -272,20 +279,22 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   // DAO methods that should be overriden if also changed in dao
   //
   /// @mustOverride
+  @override
   String get classUiNamePlural {
     try {
       return super.classUiNamePlural;
     } catch (e) {
-      assert(isInitialized, 'classUiNamePlural called without initializing DAO: ${this.runtimeType}: ${this.classUiName}');
+      assert(isInitialized, 'classUiNamePlural called without initializing DAO: $runtimeType: ${this.classUiName}');
       rethrow;
     }
   }
   /// @mustOverride
+  @override
   String get searchName {
     try {
       return super.searchName;
     } catch (e) {
-      assert(isInitialized, 'searchName called without initializing DAO: ${this.runtimeType}: ${this.classUiName}');
+      assert(isInitialized, 'searchName called without initializing DAO: $runtimeType: ${this.classUiName}');
       rethrow;
     }
   }
@@ -293,6 +302,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
 
   // DAO methods that were modified, but don't need to be overridden
   //
+  @override
   Future<ModelType?> save(context, {
     bool updateDbValuesAfterSuccessfulSave = true,
     bool showDefaultSnackBar = true,
@@ -343,10 +353,12 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   // set enableUndoRedoMechanism(bool value) {
   //   super.enableUndoRedoMechanism = value;
   // }
+  @override
   List<FieldGroup> get fieldGroups {
     ensureInitialized();
     return super.fieldGroups;
   }
+  @override
   set fieldGroups(List<FieldGroup> value) {
     ensureInitialized();
     super.fieldGroups = value;
@@ -469,6 +481,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   // void beginUndoTransaction() => super.beginUndoTransaction();
   // void commitRedoTransaction() => super.commitRedoTransaction();
   // void commitUndoTransaction({bool clearRedo = true})  => super.commitUndoTransaction();
+  @override
   Future<bool> delete(context, {bool? showDefaultSnackBar}) {
     ensureInitialized();
     return super.delete(context, showDefaultSnackBar: showDefaultSnackBar);
@@ -477,6 +490,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   // void focusError(ValidationError error) => super.focusError(error);
   // void focusFirstBlockingError() => super.focusFirstBlockingError();
   // void fuseLastTwoUndoRecords() => super.fuseLastTwoUndoRecords();
+  @override
   Future<bool> maybeDelete(BuildContext context, {bool? showDefaultSnackBars}) {
     ensureInitialized();
     return super.maybeDelete(context, showDefaultSnackBars: showDefaultSnackBars);
@@ -510,6 +524,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   //     askForSaveConfirmation: askForSaveConfirmation,
   //   );
   // }
+  @override
   Widget buildEditModalWidget(BuildContext context, {
     bool showDefaultSnackBars = true,
     bool showRevertChanges = false,
@@ -524,6 +539,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
       showUndoRedo: showUndoRedo,
     );
   }
+  @override
   List<Widget> buildFormWidgets(BuildContext context, {
     Map<String, Field<Comparable>>? props,
     ScrollController? mainScrollController,
@@ -554,6 +570,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
       focusNode: focusNode,
     );
   }
+  @override
   Widget buildGroupWidget({
     required BuildContext context,
     required FieldGroup group,
@@ -588,6 +605,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
       wrapInLayoutFromZeroItem: wrapInLayoutFromZeroItem,
     );
   }
+  @override
   Widget buildViewWidget(BuildContext context, {
     List<FieldGroup>? fieldGroups,
     ScrollController? mainScrollController,
@@ -611,6 +629,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
       valueFlex: valueFlex,
     );
   }
+  @override
   Future<ModelType?> maybeEdit(BuildContext context, {
     bool showDefaultSnackBars = true,
     bool showRevertChanges = false,
@@ -625,6 +644,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
       showUndoRedo: showUndoRedo,
     );
   }
+  @override
   Future pushViewDialog(BuildContext mainContext, {
     bool? showEditButton,
     bool? showDeleteButton,
@@ -640,6 +660,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
       showDeleteButton: showDeleteButton,
     );
   }
+  @override
   Future<ModelType?> maybeSave(BuildContext context, {
     bool updateDbValuesAfterSuccessfulSave = true,
     bool showDefaultSnackBars = true,

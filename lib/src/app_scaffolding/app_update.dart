@@ -1,12 +1,10 @@
 
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:animations/animations.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_smart_retry/dio_smart_retry.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -28,7 +26,7 @@ class UpdateFromZero{
 
   UpdateFromZero(this.currentVersion, this.versionJsonUrl, this.appDownloadUrl, {
     Dio? dio,
-  }) : this.dio = dio ?? Dio() {
+  }) : dio = dio ?? Dio() {
     this.dio.interceptors.add(
       RetryInterceptor(
         dio: this.dio,
@@ -97,7 +95,7 @@ class UpdateFromZero{
       return (await showModalFromZero<bool>(
         context: context,
         builder: (context) => _UpdateWidget(this),
-        configuration: FadeScaleTransitionConfiguration(
+        configuration: const FadeScaleTransitionConfiguration(
           barrierDismissible: false,
         ),
       )) ?? false;
@@ -128,7 +126,7 @@ class UpdateFromZero{
               || appDownloadUrl.endsWith('.msix')) {
             // Update is a windows native installer, just run it and let it do its magic
             Process.start(downloadPath.replaceAll('/', '\\'), [],);
-            await Future.delayed(Duration(seconds: 1));
+            await Future.delayed(const Duration(seconds: 1));
             FromZeroAppContentWrapper.exitApp(0);
           } else {
             // Assume update is a zip file and manually extract it
@@ -141,12 +139,12 @@ class UpdateFromZero{
               final filename = file.name;
               if (file.isFile) {
                 final data = file.content as List<int>;
-                File('$tempDirectory/' + filename)
+                File('$tempDirectory/$filename')
                   ..createSync(recursive: true)
                   ..writeAsBytesSync(data);
               } else {
-                Directory('$tempDirectory/' + filename)
-                  ..create(recursive: true);
+                Directory('$tempDirectory/$filename')
+                  .create(recursive: true);
               }
             }
             File argumentsFile = File("update_temp_args.txt");
@@ -155,12 +153,12 @@ class UpdateFromZero{
                 .replaceAll('%20', ' ');
             var executableFile = Directory(newAppDirectory).listSync()
                 .firstWhere((element) => element.path.endsWith('.exe'));
-            argumentsFile.writeAsStringSync(newAppDirectory + "\n" + scriptPath);
+            argumentsFile.writeAsStringSync("$newAppDirectory\n$scriptPath");
             log(executableFile.absolute.path.replaceAll('/', '\\'));
             Process.start(executableFile.absolute.path.replaceAll('/', '\\'), [],
               workingDirectory: scriptPath.replaceAll('/', '\\'),
             );
-            await Future.delayed(Duration(seconds: 1));
+            await Future.delayed(const Duration(seconds: 1));
             FromZeroAppContentWrapper.exitApp(0);
           }
 
@@ -170,7 +168,7 @@ class UpdateFromZero{
             // this requires adding the following permission to manifest, which causes problems with google play upload
             // <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"></uses-permission>
             RUpgrade.installByPath(downloadPath);
-            await Future.delayed(Duration(seconds: 1));
+            await Future.delayed(const Duration(seconds: 1));
             // FromZeroAppContentWrapper.exitApp(0);
           }
 
@@ -191,7 +189,7 @@ class UpdateFromZero{
   }
 
   static Future<void> finishUpdate(String newAppPath, String oldAppPath) async{
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 1));
     Directory oldAppDirectory = Directory(oldAppPath);
     oldAppDirectory.listSync().forEach((element) {
       element.deleteSync(recursive: true);
@@ -203,7 +201,7 @@ class UpdateFromZero{
     Process.start(executableFile.absolute.path.replaceAll('/', '\\'), [],
         workingDirectory: oldAppPath.replaceAll('/', '\\'),
     );
-    await Future.delayed(Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 1));
     FromZeroAppContentWrapper.exitApp(0);
   }
 
@@ -227,7 +225,7 @@ class _UpdateWidget extends StatefulWidget {
 
   final UpdateFromZero update;
 
-  _UpdateWidget(this.update);
+  const _UpdateWidget(this.update);
 
   @override
   __UpdateWidgetState createState() => __UpdateWidgetState();
@@ -254,15 +252,15 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
       title: !started ? Text(FromZeroLocalizations.of(context).translate('update_available'))
           : progress==1 ? Text(FromZeroLocalizations.of(context).translate('processing_update'))
           : Text(FromZeroLocalizations.of(context).translate('downloading_update')),
-      content: Container(
+      content: SizedBox(
         width: 384,
         child: PageTransitionSwitcher(
           transitionBuilder: (child, primaryAnimation, secondaryAnimation) {
             return FadeThroughTransition(
               animation: primaryAnimation,
               secondaryAnimation: secondaryAnimation,
-              child: child,
               fillColor: Colors.transparent,
+              child: child,
             );
           },
           child: !started ? Text(FromZeroLocalizations.of(context).translate('update_available_desc'))
@@ -272,7 +270,7 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
                   LinearProgressIndicator(
                     value: progress==1 ? null : progress,
                   ),
-                  SizedBox(height: 6,),
+                  const SizedBox(height: 6,),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -281,7 +279,7 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
                         Text('${doubleDecimalFormatter.format(count)}MB / ${doubleDecimalFormatter.format(total)}MB'),
                     ],
                   ),
-                  SizedBox(height: 18,),
+                  const SizedBox(height: 18,),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(FromZeroLocalizations.of(context).translate('restart_warning'),
@@ -294,7 +292,7 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
       ),
       dialogActions: <Widget>[
         if (!started)
-          DialogButton.cancel(),
+          const DialogButton.cancel(),
         if (!started)
           DialogButton.accept(
             child: Text(FromZeroLocalizations.of(context).translate('update').toUpperCase()),
@@ -314,7 +312,7 @@ class __UpdateWidgetState extends State<_UpdateWidget> {
               Navigator.of(context).pop();
             },
           ),
-        SizedBox(width: 6,),
+        const SizedBox(width: 6,),
       ],
     );
   }

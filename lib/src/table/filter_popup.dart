@@ -91,7 +91,7 @@ abstract class TableFromZeroFilterPopup {
                                 ),
                               ),
                             ),),
-                            SliverToBoxAdapter(child: SizedBox(height: 16,)),
+                            const SliverToBoxAdapter(child: SizedBox(height: 16,)),
                             if (possibleConditionFilters.isNotEmpty)
                               SliverToBoxAdapter(child: Padding(
                                 padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -114,7 +114,7 @@ abstract class TableFromZeroFilterPopup {
                                             mainAxisSize: MainAxisSize.min,
                                             children: [
                                               Icon(Icons.add, color: Theme.of(context).colorScheme.secondary,),
-                                              SizedBox(width: 6,),
+                                              const SizedBox(width: 6,),
                                               Text(FromZeroLocalizations.of(context).translate('add'),
                                                 style: Theme.of(context).textTheme.titleMedium!.copyWith(color: Theme.of(context).colorScheme.secondary,),
                                               ),
@@ -125,7 +125,7 @@ abstract class TableFromZeroFilterPopup {
                                           return possibleConditionFilters.map((e) {
                                             return PopupMenuItem(
                                               value: e,
-                                              child: Text(e.getUiName(context)+'...'),
+                                              child: Text('${e.getUiName(context)}...'),
                                             );
                                           }).toList();
                                         },
@@ -148,7 +148,7 @@ abstract class TableFromZeroFilterPopup {
                               ),),
                             if (possibleConditionFilters.isNotEmpty && (newConditionFilters[colKey] ?? []).isEmpty)
                               SliverToBoxAdapter(child: Padding(
-                                padding: EdgeInsets.only(left: 24, bottom: 8,),
+                                padding: const EdgeInsets.only(left: 24, bottom: 8,),
                                 child: Text (FromZeroLocalizations.of(context).translate('none'),
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
@@ -178,24 +178,24 @@ abstract class TableFromZeroFilterPopup {
                             if (possibleConditionFilters.isNotEmpty)
                               SliverToBoxAdapter(child: SizedBox(height: (newConditionFilters[colKey] ?? []).isEmpty ? 6 : 12,)),
                             if (possibleConditionFilters.isNotEmpty)
-                              SliverToBoxAdapter(child: Divider(height: 32,)),
+                              const SliverToBoxAdapter(child: Divider(height: 32,)),
                             TableFromZero(
                               tableController: filterTableController,
                               columns: col==null ? null : {colKey: col},
                               showHeaders: false,
-                              emptyWidget: SizedBox.shrink(),
+                              emptyWidget: const SizedBox.shrink(),
                               initialSortedColumn: colKey,
                               rows: (col ?? SimpleColModel(name: ''))
                                   .buildFilterPopupRowModels(availableFilters[colKey] ?? [], newValueFilters, colKey, modified),
                               // override style and text alignment
                               cellBuilder: (context, row, colKey) {
                                 var message = ColModel.getRowValueString(row, colKey, col);
-                                var textStyle = TextStyle(fontSize: 16);
+                                var textStyle = const TextStyle(fontSize: 16);
                                 if (message.isBlank) {
                                   message = '< vacío >'; // TODO 3 internacionalize
                                   textStyle = TextStyle(fontSize: 16, color: Theme.of(context).disabledColor);
                                 }
-                                final autoSizeTextMaxLines = 1;
+                                const autoSizeTextMaxLines = 1;
                                 Widget result = AutoSizeText(
                                   message,
                                   style: textStyle,
@@ -204,7 +204,7 @@ abstract class TableFromZeroFilterPopup {
                                   minFontSize: 15,
                                   overflowReplacement: TooltipFromZero(
                                     message: message,
-                                    waitDuration: Duration(milliseconds: 0),
+                                    waitDuration: const Duration(milliseconds: 0),
                                     verticalOffset: -16,
                                     child: Text(
                                       message,
@@ -221,7 +221,7 @@ abstract class TableFromZeroFilterPopup {
                                 return result;
                               },
                               headerWidgetAddon: Container(
-                                padding: EdgeInsets.fromLTRB(12, 12, 12, 6),
+                                padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
                                 color: Theme.of(context).cardColor,
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -279,13 +279,13 @@ abstract class TableFromZeroFilterPopup {
                                         },
                                         decoration: InputDecoration(
                                           labelText: FromZeroLocalizations.of(context).translate('search...'),
-                                          contentPadding: EdgeInsets.only(bottom: 12, top: 6, left: 6,),
-                                          labelStyle: TextStyle(height: 0.2),
+                                          contentPadding: const EdgeInsets.only(bottom: 12, top: 6, left: 6,),
+                                          labelStyle: const TextStyle(height: 0.2),
                                           suffixIcon: Icon(Icons.search, color: Theme.of(context).disabledColor,),
                                         ),
                                       ),
                                     ),
-                                    SizedBox(height: 6,),
+                                    const SizedBox(height: 6,),
                                     if (filterTableController.currentState==null || filterTableController.filtered.isNotEmpty)
                                       Row(
                                         children: [
@@ -295,14 +295,14 @@ abstract class TableFromZeroFilterPopup {
                                               onPressed: () {
                                                 modified.value = true;
                                                 filterPopupSetState(() {
-                                                  filterTableController.filtered.forEach((initialRow) {
+                                                  for (var initialRow in filterTableController.filtered) {
                                                     for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
                                                       if (row.onCheckBoxSelected!=null) {
                                                         newValueFilters[colKey]![row.id] = true;
                                                         (row as SimpleRowModel).selected = true;
                                                       }
                                                     }
-                                                  });
+                                                  }
                                                 });
                                               },
                                             ),
@@ -313,14 +313,14 @@ abstract class TableFromZeroFilterPopup {
                                               onPressed: () {
                                                 modified.value = true;
                                                 filterPopupSetState(() {
-                                                  filterTableController.filtered.forEach((initialRow) {
+                                                  for (var initialRow in filterTableController.filtered) {
                                                     for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
                                                       if (row.onCheckBoxSelected!=null) {
                                                         newValueFilters[colKey]![row.id] = false;
                                                         (row as SimpleRowModel).selected = false;
                                                       }
                                                     }
-                                                  });
+                                                  }
                                                 });
                                               },
                                             ),
@@ -331,7 +331,7 @@ abstract class TableFromZeroFilterPopup {
                                 ),
                               ),
                             ),
-                            SliverToBoxAdapter(child: SizedBox(height: 16+42,),),
+                            const SliverToBoxAdapter(child: SizedBox(height: 16+42,),),
                           ],
                         );
                       },
@@ -355,12 +355,12 @@ abstract class TableFromZeroFilterPopup {
                             ),
                           ),
                           Container(
-                            padding: EdgeInsets.only(bottom: 8,),
+                            padding: const EdgeInsets.only(bottom: 8,),
                             color: Theme.of(context).cardColor,
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                SizedBox(
+                                const SizedBox(
                                   width: 128,
                                   child: DialogButton.cancel(),
                                 ),

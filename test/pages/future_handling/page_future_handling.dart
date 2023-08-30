@@ -1,27 +1,20 @@
-import 'dart:io';
-import 'dart:ui';
 
-import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:from_zero_ui/src/app_scaffolding/settings.dart';
-import 'package:path_provider/path_provider.dart';
 
 
-import '../../change_notifiers/theme_parameters.dart';
 import '../../router.dart';
-import '../home/page_home.dart';
 
 class PageFutureHandling extends StatefulWidget {
 
-  PageFutureHandling();
+  const PageFutureHandling({super.key});
 
   @override
-  _PageFutureHandlingState createState() => _PageFutureHandlingState();
+  PageFutureHandlingState createState() => PageFutureHandlingState();
 
 }
 
-class _PageFutureHandlingState extends State<PageFutureHandling> {
+class PageFutureHandlingState extends State<PageFutureHandling> {
 
   late Widget widgetToExport;
   final scrollController = ScrollController();
@@ -36,7 +29,7 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
         width: 256,
         color: Colors.red,
         alignment: Alignment.center,
-        child: Text("Future Handling"),
+        child: const Text("Future Handling"),
       ),
       body: _getPage(context),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
@@ -72,7 +65,7 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
         ],
       ),
       floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         onPressed: (){},
       ),
     );
@@ -84,13 +77,13 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
       // key: widgetToExportKey,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SizedBox(height: 12,),
+        const SizedBox(height: 12,),
         Card(
           clipBehavior: Clip.hardEdge,
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: FutureBuilderFromZero(
-              future: Future.delayed(Duration(seconds: 2)).then((value) => "Kappa"),
+              future: Future.delayed(const Duration(seconds: 2)).then((value) => "Kappa"),
               successBuilder: (context, result) {
                 return Center(child: Text("Succes :)\r\nValue: $result"));
               },
@@ -98,13 +91,13 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
             ),
           ),
         ),
-        SizedBox(height: 12,),
+        const SizedBox(height: 12,),
         Card(
           clipBehavior: Clip.hardEdge,
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: FutureBuilderFromZero(
-              future: Future.delayed(Duration(seconds: 3)).then((value) => throw Exception()),
+              future: Future.delayed(const Duration(seconds: 3)).then((value) => throw Exception()),
               successBuilder: (context, result) {
                 return Center(child: Text("Succes :)\r\nValue: $result"));
               },
@@ -112,21 +105,21 @@ class _PageFutureHandlingState extends State<PageFutureHandling> {
             ),
           ),
         ),
-        SizedBox(height: 12,),
+        const SizedBox(height: 12,),
         Card(
           clipBehavior: Clip.hardEdge,
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: FutureBuilderFromZero(
-              future: Future.delayed(Duration(milliseconds: 10)).then((value) => "instant"),
+              future: Future.delayed(const Duration(milliseconds: 10)).then((value) => "instant"),
               successBuilder: (context, result) {
-                return FlutterLogo(size: 600,);
+                return const FlutterLogo(size: 600,);
               },
               applyAnimatedContainerFromChildSize: true,
             ),
           ),
         ),
-        SizedBox(height: 500,),
+        const SizedBox(height: 500,),
       ],
     );
     return SingleChildScrollView(
