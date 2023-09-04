@@ -4,7 +4,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:intl/intl.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/time_picker_dialog_from_zero.dart' as time_picker_dialog_from_zero;
 
-typedef DatePickerButtonChildBuilder<T> = Widget Function(BuildContext context, String? title, String? hint, DateTime? value, DateFormat formatter, bool enabled, bool clearable,);
+typedef DatePickerButtonChildBuilder = Widget Function(BuildContext context, String? title, String? hint, DateTime? value, DateFormat formatter, bool enabled, bool clearable,);
 /// returns true if navigator should pop after (default true)
 typedef OnDateSelected = bool? Function(DateTime? value);
 

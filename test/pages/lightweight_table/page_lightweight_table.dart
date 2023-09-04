@@ -99,7 +99,7 @@ class PageLightweightTableState extends State<PageLightweightTable> {
     );
   }
 
-  Widget _getPage(context){
+  Widget _getPage(BuildContext context){
     col1 = const Card(
       child: Padding(
         padding: EdgeInsets.all(16),

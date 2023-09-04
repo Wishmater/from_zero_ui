@@ -629,7 +629,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     return null;
   }
 
-  Future<ModelType?> save(context, {
+  Future<ModelType?> save(BuildContext context, {
     bool updateDbValuesAfterSuccessfulSave=true,
     bool showDefaultSnackBar=true,
     bool? snackBarCancellable,
@@ -755,7 +755,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
   }
 
-  Future<bool> delete(context, {
+  Future<bool> delete(BuildContext context, {
     bool? showDefaultSnackBar,
   }) async {
     bool success = false;
@@ -842,7 +842,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     }
   }
 
-  void maybeRevertChanges(BuildContext context) async {
+  Future<void> maybeRevertChanges(BuildContext context) async {
     bool? revert = await showModalFromZero(
       context: context,
       builder: (context) {
@@ -1765,7 +1765,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool verticalLayout = firstIteration || group.primary;
     bool addBorder = group.name!=null && group.props.length>1;
     groupBorderNestingCount += (addBorder ? 1 : 0);
-    getChildren({bool useLayoutFromZero = false}) => [
+    List<Widget> getChildren({bool useLayoutFromZero = false}) => [
       ...buildFormWidgets(context,
         props: fields,
         showCancelActionToPop: true,

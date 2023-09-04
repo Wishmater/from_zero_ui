@@ -290,7 +290,7 @@ class ExportState extends State<Export> {
   late Future<void> Function() export;
 
 
-  void _onExportButtonPressed() async{
+  Future<void> _onExportButtonPressed() async{
     await export();
     if (mounted) {
       Navigator.of(context).pop();

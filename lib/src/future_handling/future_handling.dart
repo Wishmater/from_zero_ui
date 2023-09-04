@@ -251,11 +251,11 @@ class ErrorSign extends StatelessWidget {
 typedef SuccessBuilder<T> = Widget Function(BuildContext context, T data);
 typedef FutureErrorBuilder = Widget Function(BuildContext context, Object? error, Object? stackTrace);
 typedef FutureLoadingBuilder = Widget Function(BuildContext context);
-Widget _defaultLoadingBuilder(context){
+Widget _defaultLoadingBuilder(BuildContext context){
   return ApiProviderBuilder.defaultLoadingBuilder(context, null);
 }
 
-Widget defaultErrorBuilder(context, error, stackTrace){
+Widget defaultErrorBuilder(BuildContext context, error, stackTrace){
   // log(error, stackTrace: stackTrace);
   return ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, null);
 }

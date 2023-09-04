@@ -60,7 +60,7 @@ class PageHeroesState extends State<PageHeroes> {
     );
   }
 
-  Widget _getPage(context){
+  Widget _getPage(BuildContext context){
     widgetToExport = Card(
       child: Padding(
         padding: const EdgeInsets.all(16),

@@ -1,19 +1,98 @@
 include: package:flutter_lints/flutter.yaml
 
 analyzer:
+
+
   language:
-    #    strict-casts: true ## would like this one to be active as a warning/hint, but don't know how :(
     strict-inference: true
     strict-raw-types: true
+    #    strict-casts: true ## would like this one to be active as a warning/hint, but don't know how :(
+
+
   errors:
-    dead_code: info
+
     body_might_complete_normally_nullable: ignore
     invalid_use_of_visible_for_testing_member: ignore
     avoid_renaming_method_parameters: ignore
 
+    always_use_package_imports      : error
+    no_self_assignments				: error
+    no_wildcard_variable_uses		: error
+    always_declare_return_types		: error
+    avoid_void_async				: error
+    avoid_field_initializers_in_const_classes: error
+
+    avoid_dynamic_calls             : warning
+    require_trailing_commas			: warning
+    avoid_slow_async_io  			: warning
+    avoid_type_to_string  			: warning
+    literal_only_boolean_expressions: warning
+    no_adjacent_strings_in_list		: warning
+    test_types_in_equals			: warning
+    unnecessary_statements			: warning
+    avoid_returning_null_for_void	: warning
+    cast_nullable_to_non_nullable	: warning
+    directives_ordering				: warning
+    matching_super_parameters		: warning
+    noop_primitive_operations		: warning
+    prefer_final_in_for_each		: warning
+    unnecessary_breaks				: warning
+    unnecessary_null_checks			: warning
+    unnecessary_to_list_in_spreads	: warning
+    use_named_constants				: warning
+    use_string_buffers				: warning
+    use_colored_box					: warning
+    use_decorated_box				: warning
+    unnecessary_null_aware_operator_on_extension_on_nullable: warning
+
+    dead_code: info
+    unnecessary_await_in_return     : info
+    unnecessary_lambdas				: info
+    use_raw_strings					: info
+    use_super_parameters			: info
+    always_put_required_named_parameters_first: info
+    avoid_positional_boolean_parameters: info
+    use_if_null_to_convert_nulls_to_bools: info
+
+
 linter:
   rules:
-    - avoid_print
+    - always_use_package_imports
+    - no_self_assignments
+    - no_wildcard_variable_uses
+    - always_declare_return_types
+    - avoid_void_async
+    - avoid_field_initializers_in_const_classes
+    - avoid_dynamic_calls
+    - require_trailing_commas
+    - avoid_slow_async_io
+    - avoid_type_to_string
+    - literal_only_boolean_expressions
+    - no_adjacent_strings_in_list
+    - test_types_in_equals
+    - unnecessary_statements
+    - avoid_returning_null_for_void
+    - cast_nullable_to_non_nullable
+    - directives_ordering
+    - matching_super_parameters
+    - noop_primitive_operations
+    - prefer_final_in_for_each
+    - unnecessary_breaks
+    - unnecessary_null_checks
+    - unnecessary_to_list_in_spreads
+    - use_named_constants
+    - use_string_buffers
+    - use_colored_box
+    - use_decorated_box
+    - unnecessary_null_aware_operator_on_extension_on_nullable
+    - unnecessary_await_in_return
+    - unnecessary_lambdas
+    - use_raw_strings
+    - use_super_parameters
+    - always_put_required_named_parameters_first
+    - avoid_positional_boolean_parameters
+    - use_if_null_to_convert_nulls_to_bools
+
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

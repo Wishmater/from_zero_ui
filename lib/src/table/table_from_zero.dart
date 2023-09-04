@@ -859,7 +859,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         : widget.rowDisabledValidator?.call(row as RowModel<T>);
     final String? tooltip = row==headerRowModel ? null
         : rowDisabledReason??widget.rowTooltipGetter?.call(row as RowModel<T>);
-    builder(BuildContext context, BoxConstraints? constraints) {
+    Widget builder(BuildContext context, BoxConstraints? constraints) {
       final Map<Widget, ActionState> rowActionStates = {
         for (final e in widget.rowActions)
           e: e.getStateForMaxWidth(constraints?.maxWidth??double.infinity)
@@ -941,7 +941,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       // This assumes standard icon size, custom action iconBuilders will probably break the table,
       // this is very prone to breaking, but there is no other efficient way of doing it
       final actionsWidth = widget.rowActions.where((e) => rowActionStates[e]!.shownOnPrimaryToolbar).length * 48.0;
-      decorationBuilder(BuildContext context, int j) {
+      Widget decorationBuilder(BuildContext context, int j) {
         bool addSizing = true;
         if (widget.verticalDivider!=null){
           if (j%2==0) {
@@ -983,7 +983,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         }
         return result;
       }
-      cellBuilder(BuildContext context, int j) {
+      Widget cellBuilder(BuildContext context, int j) {
         if (widget.verticalDivider!=null) {
           if (j%2==0) {
             return Padding(
@@ -1723,7 +1723,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     }
     return modified;
   }
-  void _showManageTablePopup(TableController controller) async {
+  Future<void> _showManageTablePopup(TableController controller) async {
     if (currentColumnKeys!=null && widget.columns!=null ) {
       final result = await TableFromZeroManagePopup.showDefaultManagePopup(
         context: context,

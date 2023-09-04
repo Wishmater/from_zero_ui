@@ -717,7 +717,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                               } else{
                                 Widget result;
                                 if (canPop&&(widget.drawerContentBuilder==null||(!widget.alwaysShowHamburgerButtonOnMobile&&isMobileLayout))){
-                                  onPressed() async{
+                                  Future<void> onPressed() async{
                                     var navigator = Navigator.of(context);
                                     if (navigator.canPop() && (await ModalRoute.of(context)!.willPop()==RoutePopDisposition.pop)){
                                       navigator.pop();
@@ -905,7 +905,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                 child: Consumer(
                   builder: (context, ref, child) {
                     final isMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
-                    onBackPressed() async {
+                    Future<void> onBackPressed() async {
                       var navigator = Navigator.of(context);
                       if (isMobileLayout) {
                         navigator.pop();
@@ -961,7 +961,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                     final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
                     final isMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
                     if (!isMobileLayout){
-                      onTap(){
+                      void onTap(){
                         if (isMobileLayout) {
                           Navigator.of(context).pop();
                         } else {

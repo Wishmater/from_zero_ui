@@ -235,7 +235,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     super.dispose();
   }
 
-  void _handleTap() async {
+  Future<void> _handleTap() async {
     if (widget.onExpansionChanged == null){
       setExpanded(!_isExpanded);
     } else{

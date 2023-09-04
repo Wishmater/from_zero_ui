@@ -745,7 +745,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     });
   }
 
-  Future<dynamic> maybeAddRow(context, [int? insertIndex]) async {
+  Future<dynamic> maybeAddRow(BuildContext context, [int? insertIndex]) async {
     focusNode.requestFocus();
     final objectTemplate = this.objectTemplate;
     T emptyDAO = (objectTemplate.copyWith() as T)..id=null;
@@ -1110,7 +1110,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     return false;
   }
 
-  static void maybeEditMultiple<T extends DAO>(BuildContext context, List<T> elements) async {
+  static Future<void> maybeEditMultiple<T extends DAO>(BuildContext context, List<T> elements) async {
     // TODO 3 test this well, rework it visually to be like maybeEdit
 
     final T dao = elements.first.copyWith() as T;
@@ -1889,7 +1889,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             );
           }
         }
-        getMinWidth(Iterable currentColumnKeys) {
+        double getMinWidth(Iterable currentColumnKeys) {
           double width = 0;
           for (final key in currentColumnKeys) {
             final value = columns[key];
@@ -1899,7 +1899,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           }
           return width;
         }
-        getMaxWidth(Iterable currentColumnKeys) {
+        double getMaxWidth(Iterable currentColumnKeys) {
           return max(minWidth, 1.4 * getMinWidth(currentColumnKeys));
         }
         if (collapsed!) {

@@ -27,7 +27,7 @@ class PageHeroesState extends State<PageNormalHero> {
     );
   }
 
-  Widget _getPage(context){
+  Widget _getPage(BuildContext context){
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Card(

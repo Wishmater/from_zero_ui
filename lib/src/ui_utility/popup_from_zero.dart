@@ -264,7 +264,7 @@ class RectPercentageClipper extends CustomClipper<Rect> {
   });
 
   @override
-  getClip(Size size) {
+  Rect getClip(Size size) {
     return Rect.fromLTWH(0, 0,
       size.width * widthPercent,
       size.height * heightPercent,

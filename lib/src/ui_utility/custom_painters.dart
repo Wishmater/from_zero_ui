@@ -26,7 +26,7 @@ class SimpleShadowPainter extends CustomPainter {
   }
 
   @override
-  paint (Canvas canvas, Size size){
+  void paint (Canvas canvas, Size size){
 
 //    canvas.drawPath(
 //      Path()

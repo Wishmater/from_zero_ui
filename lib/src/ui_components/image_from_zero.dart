@@ -397,7 +397,7 @@ class ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateMi
     _doubleClickAnimationController.forward();
   }
 
-  void _pushFullscreen(BuildContext context) async {
+  Future<void> _pushFullscreen(BuildContext context) async {
     if (kIsWeb && widget.fullscreenAsNewTabOnWeb && widget.sourceType==ImageSourceType.network && (await canLaunch(widget.url))) {
       launch(widget.url);
     } else {

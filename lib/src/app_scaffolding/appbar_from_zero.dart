@@ -160,7 +160,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
     return result;
   }
 
-  Widget _buildWithConstraints(context, constraints) {
+  Widget _buildWithConstraints(BuildContext context, BoxConstraints? constraints) {
     bool showWindowButtons = widget.mainAppbar && widget.mainAppbarShowButtons && PlatformExtended.appWindow!=null;
     final double titleBarHeight = !showWindowButtons ? 0
         : appWindow.isMaximized ? appWindow.titleBarHeight * 0.66 : appWindow.titleBarHeight;
@@ -180,7 +180,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
     List<Widget> expanded = [];
     List<int> removeIndices = [];
     if (forceExpanded!=null){
-      ActionState state = forceExpanded!.getStateForMaxWidth(constraints.maxWidth);
+      ActionState state = forceExpanded!.getStateForMaxWidth(constraints!.maxWidth);
       if (state==ActionState.expanded) {
         forceExpanded = null;
       }
@@ -194,7 +194,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
           action = action.copyWith(
             onTap: _getOnTap(action),
           );
-          ActionState state = action.getStateForMaxWidth(constraints.maxWidth);
+          ActionState state = action.getStateForMaxWidth(constraints!.maxWidth);
           switch (state){
             case ActionState.none:
               removeIndices.add(i);

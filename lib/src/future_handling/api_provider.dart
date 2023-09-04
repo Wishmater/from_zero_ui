@@ -129,7 +129,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
     super.dispose();
   }
 
-  void _runFuture() async {
+  Future<void> _runFuture() async {
     cancel();
     selfTotalNotifier.value = null;
     selfProgressNotifier.value = null;

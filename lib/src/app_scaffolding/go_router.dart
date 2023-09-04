@@ -17,7 +17,7 @@ extension Replace on GoRouter {
     routerDelegate.pop(); // removeLast()
   }
 
-  void pushReplacementNamed(String name, {
+  Future<void> pushReplacementNamed(String name, {
     Map<String, String> pathParameters = const {},
     Map<String, String> queryParameters = const {},
     Object? extra,
@@ -74,7 +74,7 @@ extension Replace on GoRouter {
   }
 
   /// returns true if successfully popped until wanted
-  Future<bool> maybePopUntil(context, bool Function(RouteMatch match) stop) async {
+  Future<bool> maybePopUntil(BuildContext context, bool Function(RouteMatch match) stop) async {
     bool shouldRemove;
     bool blocked = false;
     do {
@@ -470,7 +470,7 @@ class OnlyOnActiveBuilderState extends ConsumerState<OnlyOnActiveBuilder> {
 
   }
 
-  bool isActiveRoute(context) => widget.state.pageKey.value==GoRouterState.of(context).pageKey.value;
+  bool isActiveRoute(BuildContext context) => widget.state.pageKey.value==GoRouterState.of(context).pageKey.value;
 
 }
 

@@ -1,10 +1,13 @@
 name: from_zero_ui
 description: UI generalizations and utility classes for working with flutter.
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
 version: 0.0.7
-#homepage:
 
 environment:
   sdk: "^3.0.0"
+
 
 dependencies:
   flutter:

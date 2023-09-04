@@ -265,7 +265,7 @@ class _AnimatedSwitcherImageState extends State<AnimatedSwitcherImage> with Tick
       }
     });
   }
-  void _updateImageForEntry(_ChildEntry entry) async {
+  Future<void> _updateImageForEntry(_ChildEntry entry) async {
     entry.isExecutingImageUpdate = true;
     entry.needsImageUpdate = false;
     final future = _getImageFromEntry(entry);
