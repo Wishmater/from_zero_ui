@@ -333,7 +333,6 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
 
   static Widget defaultErrorBuilder(BuildContext context, Object? error, StackTrace? stackTrace, VoidCallback? onRetry) {
     final isRetryable = isErrorRetryable(context, error, stackTrace);
-
     return ErrorSign(
       key: ValueKey(error),
       icon: getErrorIcon(context, error, stackTrace),

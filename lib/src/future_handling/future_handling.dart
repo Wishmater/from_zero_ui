@@ -91,76 +91,78 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
       builder: (context, child) {
         double? value = _valueTween?.evaluate(animation);
         if (value==0) value = null;
-        return Padding(
+        return Container(
           padding: widget.padding,
+          alignment: context.findAncestorWidgetOfExactType<Scaffold>()==null
+              ? Alignment.center
+              : goldenRatioVerticalAlignment,
           child: LimitedBox(
             maxWidth: 128,
             maxHeight: 128,
             child: Stack(
-              fit: StackFit.expand,
               children: [
-                Center(
-                  child: InitiallyAnimatedWidget(
-                    duration: const Duration(seconds: 1),
-                    curve: Curves.easeOut,
-                    repeat: true,
-                    builder: (loopingAnimation, child) {
-                      Color backgroundColor = ColorTween(begin: colorTransparent, end: colorMild).evaluate(loopingAnimation)!;
-                      return Stack(
-                        // fit: StackFit.expand,
-                        children: [
-                          Positioned.fill(
-                            child: Padding(
-                              padding: EdgeInsets.all(strokeWidth/2),
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  gradient: RadialGradient(
-                                    colors: [colorTransparent, colorTransparent, backgroundColor,],
-                                    stops: [0, 0.25 + (0.75 * loopingAnimation.value), 1],
-                                  ),
+                InitiallyAnimatedWidget(
+                  duration: const Duration(seconds: 1),
+                  curve: Curves.easeOut,
+                  repeat: true,
+                  builder: (loopingAnimation, child) {
+                    Color backgroundColor = ColorTween(begin: colorTransparent, end: colorMild).evaluate(loopingAnimation)!;
+                    return Stack(
+                      // fit: StackFit.expand,
+                      children: [
+                        Positioned.fill(
+                          child: Padding(
+                            padding: EdgeInsets.all(strokeWidth/2),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [colorTransparent, colorTransparent, backgroundColor,],
+                                  stops: [0, 0.25 + (0.75 * loopingAnimation.value), 1],
                                 ),
                               ),
                             ),
                           ),
-                          SizedBox(
-                            width: widget.size, height: widget.size,
-                            child: AspectRatio(
-                              aspectRatio: 1,
-                              child: CircularProgressIndicator(
-                                value: value,
-                                strokeWidth: strokeWidth,
-                                backgroundColor: backgroundColor,
-                                valueColor: ColorTween(begin: colorMedium, end: color).animate(loopingAnimation),
-                              ),
+                        ),
+                        SizedBox(
+                          width: widget.size, height: widget.size,
+                          child: AspectRatio(
+                            aspectRatio: 1,
+                            child: CircularProgressIndicator(
+                              value: value,
+                              strokeWidth: strokeWidth,
+                              backgroundColor: backgroundColor,
+                              valueColor: ColorTween(begin: colorMedium, end: color).animate(loopingAnimation),
                             ),
                           ),
-                        ],
-                      );
-                    },
-                  ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
                 if (value!=null && fontSize>0)
-                  Center(
-                    child: OpacityGradient(
-                      direction: OpacityGradient.vertical,
-                      size: 5,
-                      child: Padding(
-                        padding: const EdgeInsets.only(left: 1, bottom: 1,),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text((value*100).round().toString(),
-                              style: TextStyle(
+                  Positioned.fill(
+                    child: Center(
+                      child: OpacityGradient(
+                        direction: OpacityGradient.vertical,
+                        size: 5,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 1, bottom: 1,),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text((value*100).round().toString(),
+                                style: TextStyle(
+                                  fontSize: fontSize,
+                                  color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
+                                ),
+                              ),
+                              Text('%', style: TextStyle(
                                 fontSize: fontSize,
                                 color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
-                              ),
-                            ),
-                            Text('%', style: TextStyle(
-                              fontSize: fontSize,
-                              color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
-                            ),),
-                          ],
+                              ),),
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -177,6 +179,8 @@ class _LoadingSignState extends ImplicitlyAnimatedWidgetState<LoadingSign> {
 
 
 
+
+const goldenRatioVerticalAlignment = Alignment(0, -0.2360939431396786);
 
 class ErrorSign extends StatelessWidget {
 
@@ -285,7 +289,10 @@ class ErrorSign extends StatelessWidget {
     final scrollController = ScrollController();
     result = Padding(
       padding: const EdgeInsets.all(12.0),
-      child: Center(
+      child: Align(
+        alignment: context.findAncestorWidgetOfExactType<Scaffold>()==null
+            ? Alignment.center
+            : goldenRatioVerticalAlignment,
         child: ScrollbarFromZero(
           controller: scrollController,
           child: SingleChildScrollView(

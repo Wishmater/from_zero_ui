@@ -655,7 +655,6 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
     Widget result = Consumer(
       builder: (context, ref, child) {
         final appbarChangeNotifier = ref.watch(fromZeroAppbarChangeNotifierProvider);
-        print(appbarShadowLeft);
         return Stack(
           clipBehavior: Clip.none,
           children: <Widget>[
