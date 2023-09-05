@@ -497,6 +497,7 @@ class StringField extends Field<String> {
       textAlign: textAlign,
       keyboardType: keyboardType,
       maxLines: minLines==null||minLines<=(maxLines??0) ? maxLines : minLines,
+      textInputAction: largeVertically ? null : TextInputAction.next,
       style: Theme.of(context).textTheme.titleMedium!.copyWith(
         height: largeVertically ? 1.2 : 1.05,
         color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
@@ -511,16 +512,33 @@ class StringField extends Field<String> {
           height: dense ? 0 : largeVertically ? 0.2 : 0.6,
           color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
         ),
-        label: Padding(
-          padding: EdgeInsets.only(
-            top: !dense&&hint!=null ? 12 : largeVertically ? 0 : 8,
-            bottom: !dense&&hint!=null ? 12 : largeVertically ? 6 : 0,
-          ),
-          child: Text(uiName,
-            softWrap: false,
-            overflow: TextOverflow.fade,
-          ),
-        ),
+        label: largeVertically
+            ? Padding(
+                padding: EdgeInsets.only(
+                  top: !dense&&hint!=null ? 12 : largeVertically ? 0 : 8,
+                  bottom: !dense&&hint!=null ? 12 : largeVertically ? 6 : 0,
+                ),
+                child: Text(uiName,
+                  softWrap: false,
+                  overflow: TextOverflow.fade,
+                ),
+              )
+            : ClipRect(
+                child: OpacityGradient(
+                  direction: OpacityGradient.right,
+                  child: Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.only(
+                      top: !dense&&hint!=null ? 12 : largeVertically ? 0 : 8,
+                      bottom: !dense&&hint!=null ? 12 : largeVertically ? 6 : 0,
+                    ),
+                    child: Text(uiName,
+                      softWrap: false,
+                      overflow: TextOverflow.visible, // anything bu visible applies a Clip for some reason :(((
+                    ),
+                  ),
+                ),
+              ),
         floatingLabelBehavior: dense ? FloatingLabelBehavior.never
             : !enabled ? (value==null||value.isEmpty) ? FloatingLabelBehavior.never : FloatingLabelBehavior.always
             : hint!=null ? FloatingLabelBehavior.always : FloatingLabelBehavior.auto,

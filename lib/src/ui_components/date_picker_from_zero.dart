@@ -100,9 +100,15 @@ class DatePickerFromZero extends StatefulWidget {
 
 class DatePickerFromZeroState extends State<DatePickerFromZero> {
 
-  GlobalKey buttonKey = GlobalKey();
+  final buttonKey = GlobalKey();
+  late FocusNode buttonFocusNode = widget.focusNode ?? FocusNode();
 
-  late final buttonFocusNode = widget.focusNode ?? FocusNode();
+  @override
+  void didUpdateWidget(covariant DatePickerFromZero oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    buttonFocusNode = widget.focusNode ?? buttonFocusNode;
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget child;

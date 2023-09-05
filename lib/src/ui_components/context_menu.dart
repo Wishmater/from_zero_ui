@@ -199,30 +199,35 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
 
 
 
-class ContextMenuButton extends StatelessWidget {
+class ContextMenuButton extends StatefulWidget {
 
   final List<ActionFromZero> actions;
   /// overrides everything else and is used as context menu widget
   final Widget? contextMenuWidget;
   final double contextMenuWidth;
-  final Alignment anchorAlignment;
+  final Alignment? anchorAlignment;
   final Alignment popupAlignment;
   final Color? barrierColor;
   final bool useCursorLocation;
-  final GlobalKey<ContextMenuFromZeroState> contextMenuKey = GlobalKey();
   final Widget Function(BuildContext context, VoidCallback onTap) buttonBuilder;
 
-  ContextMenuButton({
+  const ContextMenuButton({
     Key? key,
     required this.buttonBuilder,
-    this.actions = const [],
+    required this.actions,
     this.contextMenuWidget,
     this.contextMenuWidth = 256,
-    this.anchorAlignment = Alignment.topLeft,
+    this.anchorAlignment,
     this.popupAlignment = Alignment.bottomRight,
     this.barrierColor,
     this.useCursorLocation = false,
   }) : super(key: key);
+
+  @override
+  State<ContextMenuButton> createState() => _ContextMenuButtonState();
+}
+class _ContextMenuButtonState extends State<ContextMenuButton> {
+  final GlobalKey<ContextMenuFromZeroState> contextMenuKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -233,110 +238,22 @@ class ContextMenuButton extends StatelessWidget {
           child: ContextMenuFromZero(
             key: contextMenuKey,
             addGestureDetector: false,
-            actions: actions,
-            contextMenuWidget: contextMenuWidget,
-            contextMenuWidth: contextMenuWidth,
-            anchorAlignment: anchorAlignment,
-            popupAlignment: popupAlignment,
-            barrierColor: barrierColor,
-            useCursorLocation: useCursorLocation,
+            actions: widget.actions,
+            contextMenuWidget: widget.contextMenuWidget,
+            contextMenuWidth: widget.contextMenuWidth,
+            anchorAlignment: widget.anchorAlignment ?? (PlatformExtended.isMobile ? Alignment.topLeft : Alignment.bottomLeft),
+            popupAlignment: widget.popupAlignment,
+            barrierColor: widget.barrierColor,
+            useCursorLocation: widget.useCursorLocation,
             child: Container(),
           ),
         ),
-        buttonBuilder(context, () {
+        widget.buttonBuilder(context, () {
           contextMenuKey.currentState!.showContextMenu();
         }),
       ],
     );
   }
-
-}
-
-
-
-@deprecated
-class ContextMenuIconButton extends StatelessWidget {
-
-  final List<ActionFromZero> actions;
-  /// overrides everything else and is used as context menu widget
-  final Widget? contextMenuWidget;
-  final double contextMenuWidth;
-  final Alignment anchorAlignment;
-  final Alignment popupAlignment;
-  final Color? barrierColor;
-  final bool useCursorLocation;
-  final GlobalKey<ContextMenuFromZeroState> contextMenuKey = GlobalKey();
-
-  final Widget icon;
-  final FocusNode? focusNode;
-  final double iconSize;
-  final Color? color;
-  final Color? splashColor;
-  final double? splashRadius;
-  final Color? disabledColor;
-  final Color? focusColor;
-  final Color? highlightColor;
-  final Color? hoverColor;
-
-  ContextMenuIconButton({
-    this.actions = const [],
-    this.contextMenuWidget,
-    Key? key,
-    required this.icon,
-    this.focusNode,
-    this.iconSize = 24,
-    this.color,
-    this.splashColor,
-    this.splashRadius,
-    this.disabledColor,
-    this.focusColor,
-    this.highlightColor,
-    this.hoverColor,
-    this.contextMenuWidth = 256,
-    this.anchorAlignment = Alignment.topLeft,
-    this.popupAlignment = Alignment.bottomRight,
-    this.barrierColor,
-    this.useCursorLocation = false,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Positioned.fill(
-          child: ContextMenuFromZero(
-            key: contextMenuKey,
-            addGestureDetector: false,
-            actions: actions,
-            contextMenuWidget: contextMenuWidget,
-            contextMenuWidth: contextMenuWidth,
-            anchorAlignment: anchorAlignment,
-            popupAlignment: popupAlignment,
-            barrierColor: barrierColor,
-            useCursorLocation: useCursorLocation,
-            child: Container(),
-          ),
-        ),
-        IconButton(
-          icon: icon,
-          focusNode: focusNode,
-          color: color,
-          iconSize: iconSize,
-          splashColor: splashColor,
-          splashRadius: splashRadius,
-          disabledColor: disabledColor,
-          focusColor: focusColor,
-          highlightColor: highlightColor,
-          hoverColor: hoverColor,
-          onPressed: () {
-            contextMenuKey.currentState!.showContextMenu();
-          },
-        ),
-      ],
-    );
-  }
-
 }
 
 

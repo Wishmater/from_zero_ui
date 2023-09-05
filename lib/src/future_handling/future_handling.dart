@@ -187,47 +187,101 @@ class ErrorSign extends StatelessWidget {
   final Widget? retryButton;
 
   const ErrorSign({
-    Key? key,
     required this.title,
     this.subtitle,
     this.icon,
     this.onRetry,
     this.retryButton,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    Widget result = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (icon!=null)
-          IconTheme(
-            data: Theme.of(context).iconTheme.copyWith(size: 64, color: Theme.of(context).disabledColor,),
-            child: icon!,
-          ),
-        if (icon!=null)
-          const SizedBox(height: 4,),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleLarge,
-          textAlign: TextAlign.center,
-        ),
-        if (subtitle.isNotNullOrBlank)
-          Text(
+    final titleWidget = Text(
+      title,
+      style: Theme.of(context).textTheme.titleLarge,
+      textAlign: TextAlign.center,
+    );
+    final subtitleWidget = subtitle.isNullOrBlank ? null
+        : Text(
             subtitle!,
             style: Theme.of(context).textTheme.bodyLarge,
             textAlign: TextAlign.center,
-          ),
-        if (retryButton!=null || onRetry!=null)
-          const SizedBox(height: 16,),
-        if (retryButton!=null || onRetry!=null)
-          retryButton ?? DialogButton.accept(
+          );
+    final retryWidget = retryButton==null && onRetry==null ? null
+        : (retryButton ?? DialogButton.accept(
             leading: const Icon(Icons.refresh),
             onPressed: onRetry,
             child: Text(FromZeroLocalizations.of(context).translate("retry")),
+          ));
+    final big = MediaQuery.of(context).size.height > 512;
+    final iconWidget = icon==null ? null
+        : IconTheme(
+            data: Theme.of(context).iconTheme.copyWith(
+              size: 128,
+              color: big
+                  ? Theme.of(context).disabledColor
+                  : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.2),),
+            child: icon!,
+          );
+    Widget result;
+    if (big) {
+      result = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (iconWidget!=null)
+            iconWidget,
+          if (iconWidget!=null)
+            const SizedBox(height: 16,),
+          titleWidget,
+          if (subtitleWidget!=null)
+            const SizedBox(height: 8,),
+          if (subtitleWidget!=null)
+            subtitleWidget,
+          if (retryWidget!=null)
+            const SizedBox(height: 16,),
+          if (retryWidget!=null)
+            retryWidget,
+        ],
+      );
+    } else {
+      result = Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              if (iconWidget!=null)
+                Positioned.fill(
+                  child: OverflowBox(
+                    maxHeight: double.infinity,
+                    child: iconWidget,
+                  ),
+                ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  titleWidget,
+                  if (subtitleWidget!=null)
+                    const SizedBox(height: 8,),
+                  if (subtitleWidget!=null)
+                    subtitleWidget,
+                ],
+              ),
+            ],
           ),
-      ],
-    );
+          if (retryWidget!=null)
+            const SizedBox(height: 16,),
+          if (retryWidget!=null)
+            retryWidget,
+        ],
+      );
+    }
+    // Widget result = LayoutBuilder( // avoid layout builder, so it doesn't break on intrinsic dimensions
+    //   builder: (context, constraints) {
+    //     final big = constraints.maxHeight > 256 && MediaQuery.of(context).size.height > 512;
+    //   },
+    // );
     final scrollController = ScrollController();
     result = Padding(
       padding: const EdgeInsets.all(12.0),
@@ -236,7 +290,10 @@ class ErrorSign extends StatelessWidget {
           controller: scrollController,
           child: SingleChildScrollView(
             controller: scrollController,
-            child: result,
+            child: SizedBox(
+              width: 512,
+              child: result,
+            ),
           ),
         ),
       ),

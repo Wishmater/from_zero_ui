@@ -255,16 +255,19 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
         final iconButtonTransparentColor = iconButtonColor.withOpacity(0.05);
         final iconButtonSemiTransparentColor = iconButtonColor.withOpacity(0.1);
         actions.add(
-          ContextMenuIconButton(
-            icon: const Icon(Icons.more_vert),
-            color: iconButtonColor,
-            hoverColor: iconButtonTransparentColor,
-            highlightColor: iconButtonSemiTransparentColor,
-            focusColor: iconButtonSemiTransparentColor,
-            splashColor: iconButtonSemiTransparentColor,
-            anchorAlignment: Alignment.bottomCenter,
-            popupAlignment: Alignment.bottomCenter,
+          ContextMenuButton(
             actions: overflows,
+            buttonBuilder: (context, onTap) {
+              return IconButton(
+                onPressed: onTap,
+                icon: const Icon(Icons.more_vert),
+                color: iconButtonColor,
+                hoverColor: iconButtonTransparentColor,
+                highlightColor: iconButtonSemiTransparentColor,
+                focusColor: iconButtonSemiTransparentColor,
+                splashColor: iconButtonSemiTransparentColor,
+              );
+            },
           ),
         );
       }

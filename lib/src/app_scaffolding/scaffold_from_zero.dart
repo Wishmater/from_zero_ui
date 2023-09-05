@@ -405,7 +405,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                 final isMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
                 return Scaffold(
                   backgroundColor: widget.backgroundColor,
-                  floatingActionButton: Consumer(
+                  floatingActionButton: widget.floatingActionButton==null ? null : Consumer(
                     builder: (context, ref, child) {
                       final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
                       Widget result = LayoutBuilder(
@@ -445,7 +445,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                     width: widget.drawerWidth,
                     child: Drawer(
                       elevation: widget.drawerElevation*5,
-                      child: _getResponsiveDrawerContent(context),
+                      child: _getResponsiveDrawerContent(context, isMobileLayout: true),
                     ),
                   ) : null,
                   body: child!,
@@ -464,9 +464,22 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
       builder: (context, ref, child) {
         final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
         final screen = ref.watch(fromZeroScreenProvider);
+        final isMobileLayout = screen.isMobileLayout;
+        final mediaQuery = MediaQuery.of(context);
+        final addedPaddingWidth = isMobileLayout ? 0 : mediaQuery.padding.left;
+        final calculatedDrawerWidth = widget.drawerWidth + addedPaddingWidth;
+        final currentDrawerWidth = changeNotifier.getCurrentDrawerWidth(pageScaffoldId) + addedPaddingWidth;
+        final calculatedDrawerLeft = widget.useCompactDrawerInsteadOfClose
+            ? 0.0
+            : currentDrawerWidth - calculatedDrawerWidth - addedPaddingWidth * (1 - currentDrawerWidth / calculatedDrawerWidth);
+        final shadowsLeft = widget.useCompactDrawerInsteadOfClose
+            ? calculatedDrawerLeft + currentDrawerWidth
+            : calculatedDrawerLeft + calculatedDrawerWidth;
         return Stack(
           fit: StackFit.passthrough,
           children: [
+
+            const SizedBox.expand(), // always force stack to take all available space
 
             // COLLAPSIBLE BACKGROUND
             Consumer(
@@ -503,9 +516,12 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
             AnimatedPositioned(
               duration: widget.drawerAnimationDuration,
               curve: widget.drawerAnimationCurve,
-              left: changeNotifier.getCurrentDrawerWidth(pageScaffoldId),
+              left: currentDrawerWidth,
               right: 0, top: 0, bottom: 0,
-              child: _getBody(context),
+              child: _getBody(context,
+                isMobileLayout: isMobileLayout,
+                appbarShadowLeft: shadowsLeft - currentDrawerWidth,
+              ),
             ),
 
             // CUSTOM SHADOWS (drawer right)
@@ -513,16 +529,20 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
               builder: (context, ref, child) {
                 final appbarChangeNotifier = ref.watch(fromZeroAppbarChangeNotifierProvider);
                 if (!screen.isMobileLayout && widget.drawerContentBuilder!=null){
-                  return AnimatedContainer(
-                    alignment: Alignment.centerLeft,
-                    padding: EdgeInsets.only(top: appbarChangeNotifier.currentAppbarHeight, left: changeNotifier.getCurrentDrawerWidth(pageScaffoldId)),
+                  return AnimatedPositioned(
+                    top: appbarChangeNotifier.currentAppbarHeight,
+                    bottom: 0,
+                    left: shadowsLeft,
                     duration: widget.drawerAnimationDuration,
                     curve: widget.drawerAnimationCurve,
                     child: SizedBox(
-                      width: widget.drawerElevation,
                       height: double.infinity,
+                      width: widget.drawerElevation,
                       child: const CustomPaint(
-                        painter: SimpleShadowPainter(direction: SimpleShadowPainter.right, shadowOpacity: 0.45),
+                        painter: SimpleShadowPainter(
+                          direction: SimpleShadowPainter.right,
+                          shadowOpacity: 0.45,
+                        ),
                       ),
                     ),
                   );
@@ -533,37 +553,37 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
             ),
 
             //DESKTOP DRAWER
-            Container(
-              child: screen.isMobileLayout || widget.drawerContentBuilder==null ? Container()
-                  : widget.useCompactDrawerInsteadOfClose
+            screen.isMobileLayout || widget.drawerContentBuilder==null
+                ? const SizedBox.shrink()
+                : widget.useCompactDrawerInsteadOfClose
                     ? AnimatedContainer(
-                      duration: widget.drawerAnimationDuration,
-                      curve: widget.drawerAnimationCurve,
-                      width: changeNotifier.getCurrentDrawerWidth(pageScaffoldId),
-                      child: _getResponsiveDrawerContent(context),
-                    )
+                        duration: widget.drawerAnimationDuration,
+                        curve: widget.drawerAnimationCurve,
+                        width: currentDrawerWidth,
+                        child: _getResponsiveDrawerContent(context, isMobileLayout: false),
+                      )
                     : AnimatedPositioned(
-                      duration: widget.drawerAnimationDuration,
-                      curve: widget.drawerAnimationCurve,
-                      left: changeNotifier.getCurrentDrawerWidth(pageScaffoldId)-widget.drawerWidth,
-                      width: widget.drawerWidth,
-                      top: 0, bottom: 0,
-                      child: _getResponsiveDrawerContent(context),
-                    ),
-            ),
+                        duration: widget.drawerAnimationDuration,
+                        curve: widget.drawerAnimationCurve,
+                        left: calculatedDrawerLeft,
+                        width: calculatedDrawerWidth,
+                        top: 0, bottom: 0,
+                        child: _getResponsiveDrawerContent(context, isMobileLayout: false,),
+                      ),
 
             //DESKTOP DRAWER OPEN GESTURE DETECTOR
             screen.isMobileLayout || widget.drawerContentBuilder==null || PlatformExtended.isDesktop // this should be if no mouse, instead of platform based
                 ? Positioned(top: 0, bottom: 0, width: 0, child: Container(),)
                 : Positioned(
-                  top: 0, bottom: 0, left: 0, width: changeNotifier.getCurrentDrawerWidth(pageScaffoldId)+18,
-                  child: GestureDetector(
-                    onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
-                    onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
-                    behavior: HitTestBehavior.translucent,
-                    excludeFromSemantics: true,
+                    top: 0, bottom: 0, left: 0,
+                    width: currentDrawerWidth + 18,
+                    child: GestureDetector(
+                      onHorizontalDragUpdate: (details) => onHorizontalDragUpdate(details, changeNotifier),
+                      onHorizontalDragEnd: (details) => onHorizontalDragEnd(details, changeNotifier),
+                      behavior: HitTestBehavior.translucent,
+                      excludeFromSemantics: true,
+                    ),
                   ),
-                ),
           ],
         );
       },
@@ -571,7 +591,10 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
     return result;
   }
 
-  Widget _getBody (BuildContext context){
+  Widget _getBody (BuildContext context, {
+    required bool isMobileLayout,
+    double appbarShadowLeft = 0,
+  }){
     var changeNotifierNotListen = ref.read(fromZeroScaffoldChangeNotifierProvider);
     Widget body = Align(
       alignment: Alignment.topCenter,
@@ -581,7 +604,19 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         child: widget.bodyTransitionBuilder(
           child: NotificationListener(
             key: bodyGlobalKey,
-            child: widget.body,
+            child: SafeArea(
+              right: true,
+              left: isMobileLayout,
+              top: false, bottom: false,
+              child: MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  padding: EdgeInsets.zero,
+                  viewPadding: EdgeInsets.zero,
+                  viewInsets: EdgeInsets.zero,
+                ),
+                child: widget.body,
+              ),
+            ),
             onNotification: (notification) {
               if (notification is ScrollMetricsNotification) {
                 return notification.metrics.axis==Axis.horizontal;
@@ -620,7 +655,9 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
     Widget result = Consumer(
       builder: (context, ref, child) {
         final appbarChangeNotifier = ref.watch(fromZeroAppbarChangeNotifierProvider);
+        print(appbarShadowLeft);
         return Stack(
+          clipBehavior: Clip.none,
           children: <Widget>[
 
             // show correct color on mobile status bar when no appbar
@@ -656,11 +693,11 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
 
             // CUSTOM SHADOWS (appbar)
             if (widget.appbarType != ScaffoldFromZero.appbarTypeNone)
-              AnimatedContainer(
+              AnimatedPositioned(
                 duration: widget.appbarAnimationDuration,
                 curve: widget.appbarAnimationCurve,
-                alignment: Alignment.topCenter,
-                padding: EdgeInsets.only(top: appbarChangeNotifier.currentAppbarHeight,),
+                top: appbarChangeNotifier.currentAppbarHeight,
+                left: appbarShadowLeft, right: 0,
                 child: SizedBox(
                   width: double.infinity,
                   height: widget.appbarElevation,
@@ -681,26 +718,35 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                 child: Stack(
                   children: [
                     const Positioned.fill(child: AbsorbPointer()),
-                    AppbarFromZero(
-                      key: appbarGlobalKey,
-                      mainAppbar: widget.isPrimaryScaffold && changeNotifierNotListen.showWindowBarOnDesktop,
-                      controller: widget.appbarController,
-                      onExpanded: widget.onAppbarActionExpanded,
-                      onUnexpanded: widget.onAppbarActionUnexpanded,
-                      backgroundColor: (Theme.of(context).appBarTheme.backgroundColor??Theme.of(context).primaryColor).withOpacity(0.9),
-                      elevation: 0,
-                      titleSpacing: 0,
-                      centerTitle: widget.centerTitle,
-                      actions: widget.actions,
-                      initialExpandedAction: widget.initialExpandedAction,
-                      toolbarHeight: widget.appbarHeight,
-                      topSafePadding: appbarChangeNotifier.safeAreaOffset,
-                      addContextMenu: widget.appbarAddContextMenu,
-                      paddingRight: widget.scrollbarType!=ScaffoldFromZero.scrollbarTypeOverAppbar ? 0
-                          : (Theme.of(context).scrollbarTheme.thickness?.resolve({}) ?? 8)
-                              + (Theme.of(context).scrollbarTheme.crossAxisMargin ?? 0)
-                                  .clamp((PlatformExtended.appWindow?.isMaximized??true) ? 0 : 6, double.infinity),
-                      title: Row(
+                    Consumer(
+                      builder: (context, ref, child) {
+                        return MediaQuery.removePadding(
+                          context: context,
+                          removeLeft: true,
+                          child: AppbarFromZero(
+                            key: appbarGlobalKey,
+                            mainAppbar: widget.isPrimaryScaffold && changeNotifierNotListen.showWindowBarOnDesktop,
+                            controller: widget.appbarController,
+                            onExpanded: widget.onAppbarActionExpanded,
+                            onUnexpanded: widget.onAppbarActionUnexpanded,
+                            backgroundColor: (Theme.of(context).appBarTheme.backgroundColor??Theme.of(context).primaryColor).withOpacity(0.9),
+                            elevation: 0,
+                            titleSpacing: 0,
+                            centerTitle: widget.centerTitle,
+                            actions: widget.actions,
+                            initialExpandedAction: widget.initialExpandedAction,
+                            toolbarHeight: widget.appbarHeight,
+                            topSafePadding: appbarChangeNotifier.safeAreaOffset,
+                            addContextMenu: widget.appbarAddContextMenu,
+                            paddingRight: widget.scrollbarType!=ScaffoldFromZero.scrollbarTypeOverAppbar ? 0
+                                : (Theme.of(context).scrollbarTheme.thickness?.resolve({}) ?? 8)
+                                    + (Theme.of(context).scrollbarTheme.crossAxisMargin ?? 0)
+                                        .clamp((PlatformExtended.appWindow?.isMaximized??true) ? 0 : 6, double.infinity),
+                            title: child!,
+                          ),
+                        );
+                      },
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: <Widget>[
@@ -874,7 +920,9 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
     return result;
   }
 
-  Widget _getResponsiveDrawerContent(BuildContext context){
+  Widget _getResponsiveDrawerContent(BuildContext context, {
+    required bool isMobileLayout,
+  }){
     return Consumer(
       builder: (context, ref, child) {
         final appbarChangeNotifier = ref.read(fromZeroAppbarChangeNotifierProvider);
@@ -885,14 +933,25 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
               : 0,
         );
         drawerContentScrollController.addListener(_onDrawerScroll);
-        Widget drawerAppbar =  OverflowBox(
+        final mediaQuery = MediaQuery.of(context);
+        final addedPaddingWidth = isMobileLayout ? 0 : mediaQuery.padding.left;
+        final calculatedDrawerWidth = widget.drawerWidth + addedPaddingWidth;
+        final calculatedCompactDrawerWidth = !widget.useCompactDrawerInsteadOfClose
+            ? 0
+            : widget.compactDrawerWidth + addedPaddingWidth;
+        Widget drawerAppbar = OverflowBox(
           minWidth: 0,
-          maxWidth: widget.drawerWidth,
+          maxWidth: calculatedDrawerWidth,
           minHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
           maxHeight: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
           alignment: Alignment.centerRight,
           child: MediaQuery(
-            data: MediaQuery.of(context).copyWith(padding: EdgeInsets.only(top: appbarChangeNotifier.safeAreaOffset)),
+            data: mediaQuery.copyWith(
+              padding: EdgeInsets.only(
+                top: appbarChangeNotifier.safeAreaOffset,
+                left: mediaQuery.padding.left,
+              ),
+            ),
             child: AppbarFromZero(
               elevation: 0,
               toolbarHeight: widget.appbarHeight,
@@ -924,7 +983,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                       children: [
                         if (!isMobileLayout && canPop)
                           Positioned(
-                            left: -8,
+                            left: -12,
                             child: TooltipFromZero(
                               message: FromZeroLocalizations.of(context).translate("back"),
                               child: IconButton(
@@ -960,6 +1019,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                   builder: (context, ref, child) {
                     final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
                     final isMobileLayout = ref.watch(fromZeroScreenProvider.select((value) => value.isMobileLayout));
+                    final isDrawerOpen = isMobileLayout || changeNotifier.isDrawerExpanded(pageScaffoldId);
                     if (!isMobileLayout){
                       void onTap(){
                         if (isMobileLayout) {
@@ -975,8 +1035,9 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: TooltipFromZero(
-                          message: changeNotifier.getCurrentDrawerWidth(pageScaffoldId)>widget.compactDrawerWidth||isMobileLayout
-                              ? FromZeroLocalizations.of(context).translate("menu_close") : FromZeroLocalizations.of(context).translate("menu_open"),
+                          message: isDrawerOpen
+                              ? FromZeroLocalizations.of(context).translate("menu_close")
+                              : FromZeroLocalizations.of(context).translate("menu_open"),
                           child: IconButton(
                             icon: const Icon(Icons.menu),
                             color: iconButtonColor,
@@ -1007,12 +1068,10 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
 
             //DRAWER CONTENT
             Expanded(
-              child: Container(
-                decoration: const BoxDecoration(),
-                clipBehavior: Clip.hardEdge,
+              child: ClipRect(
                 child: OverflowBox(
-                  minWidth: widget.drawerWidth,
-                  maxWidth: widget.drawerWidth,
+                  minWidth: calculatedDrawerWidth,
+                  maxWidth: calculatedDrawerWidth,
                   alignment: Alignment.bottomLeft,
                   child: Stack(
                     children: [
@@ -1026,8 +1085,8 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                   child: Consumer(
                                     builder: (context, ref, child) {
                                       final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
-                                      final currentDrawerWidth = changeNotifier.getCurrentDrawerWidth(pageScaffoldId);
-                                      Widget result = _getUserDrawerContent(context, currentDrawerWidth==widget.compactDrawerWidth);
+                                      final currentDrawerWidth = changeNotifier.getCurrentDrawerWidth(pageScaffoldId) + addedPaddingWidth;
+                                      Widget result = _getUserDrawerContent(context, currentDrawerWidth==calculatedCompactDrawerWidth);
                                       result = widget.drawerContentTransitionBuilder(
                                         child: result,
                                         animation: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
@@ -1056,8 +1115,10 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                             data: Theme.of(context).copyWith(
                                               scrollbarTheme: Theme.of(context).scrollbarTheme.copyWith(
                                                 thickness: MaterialStateProperty.resolveWith((states) {
-                                                  final baseThickness = states.contains(MaterialState.hovered) ? 12.0 : 8.0;
-                                                  return baseThickness + (widget.drawerWidth - currentDrawerWidth - 4).coerceIn(0);
+                                                  final baseThickness = Theme.of(context).scrollbarTheme.thickness?.resolve(states)
+                                                      ?? (PlatformExtended.isMobile ? 4 : states.contains(MaterialState.hovered) ? 12.0 : 8.0);
+                                                  final removable = PlatformExtended.isMobile ? 0 : 4;
+                                                  return baseThickness + (calculatedDrawerWidth - currentDrawerWidth - removable).coerceIn(0);
                                                 }),
                                               ),
                                             ),
@@ -1073,6 +1134,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                     ? Consumer(
                                       builder: (context, ref, child) {
                                         final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
+                                        final currentDrawerWidth = changeNotifier.getCurrentDrawerWidth(pageScaffoldId) + addedPaddingWidth;
                                         return widget.addFooterDivisions ?
                                             Material(
                                               color: Theme.of(context).cardColor,
@@ -1080,11 +1142,11 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                                 children: <Widget>[
                                                   const Divider(height: 3, thickness: 3,),
                                                   const SizedBox(height: 8,),
-                                                  _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(pageScaffoldId)==widget.compactDrawerWidth),
+                                                  _getUserDrawerFooter(context, currentDrawerWidth==calculatedCompactDrawerWidth),
                                                   const SizedBox(height: 12,),
                                                 ],
                                               ),
-                                            ) : _getUserDrawerFooter(context, changeNotifier.getCurrentDrawerWidth(pageScaffoldId)==widget.compactDrawerWidth);
+                                            ) : _getUserDrawerFooter(context, currentDrawerWidth==calculatedCompactDrawerWidth);
                                       },
                                     ) : const SizedBox.shrink(),
                               ],
@@ -1102,7 +1164,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                         duration: widget.drawerAnimationDuration,
                         curve: widget.drawerAnimationCurve,
                         alignment: Alignment.topCenter,
-                        width: widget.drawerWidth,
+                        width: calculatedDrawerWidth,
                         child: SizedBox(
                           width: double.infinity,
                           height: widget.drawerAppbarElevation,

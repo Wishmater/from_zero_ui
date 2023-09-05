@@ -25,7 +25,7 @@
 
 
 
-// add this class somewhere: in scroll_activity.dart or in the same file as above
+// add this class in scroll_activity.dart
 
 class PointerScrollActivity extends ScrollActivity {
 

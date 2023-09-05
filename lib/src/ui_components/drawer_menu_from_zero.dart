@@ -655,6 +655,7 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
         }
 
+        final addedPaddingLeft = MediaQuery.of(context).padding.left;
         Widget result;
 
         if (tabs[i].children?.isNotEmpty??false){
@@ -707,7 +708,7 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               style: widget.style,
               leading: widget.depth!=0 || widget.allowCollapseRoot ? null : const SizedBox.shrink(),
               actionPadding: EdgeInsets.only(
-                left: widget.style==DrawerMenuFromZero.styleTree ? widget.depth*20.0 : 0,
+                left: addedPaddingLeft + (widget.style==DrawerMenuFromZero.styleTree ? widget.depth*20.0 : 0),
               ),
               trailing: widget.depth==0 && !widget.allowCollapseRoot
                   ? const SizedBox.shrink()
@@ -732,12 +733,13 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                       icon: tabs[i].icon ?? const SizedBox.shrink(),
                       softWrap: widget.style!=DrawerMenuFromZero.styleTree,
                       contentPadding: EdgeInsets.only(
-                        left: widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
+                        left: addedPaddingLeft + widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
                         right: widget.paddingRight + (widget.style==DrawerMenuFromZero.styleDrawerMenu ? 42 : 0),
                         top: widget.style!=DrawerMenuFromZero.styleTree ? 2 : 0,
                         bottom: widget.style!=DrawerMenuFromZero.styleTree ? 2 : 0,
                       ),
                     ), tabs, i,
+                    addedPaddingLeft: addedPaddingLeft,
                   ),
                 );
               },
@@ -826,12 +828,13 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
               titleHorizontalOffset: tabs[i].titleHorizontalOffset,
               softWrap: widget.style!=DrawerMenuFromZero.styleTree,
               contentPadding: EdgeInsets.only(
-                left: widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
+                left: addedPaddingLeft + widget.depth*20.0 + (widget.style==DrawerMenuFromZero.styleTree ? 16 : 0),
                 right: widget.paddingRight,
                 top: widget.style!=DrawerMenuFromZero.styleTree ? 2 : 0,
                 bottom: widget.style!=DrawerMenuFromZero.styleTree ? 2 : 0,
               ),
             ), tabs, i,
+            addedPaddingLeft: addedPaddingLeft,
           );
           if (tabs[i].contextMenuActions.isNotEmpty) {
             result = ContextMenuFromZero(
@@ -849,7 +852,9 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
     return result;
   }
 
-  Widget getTreeOverlay(Widget child, List<ResponsiveDrawerMenuItem> tabs, int i,){
+  Widget getTreeOverlay(Widget child, List<ResponsiveDrawerMenuItem> tabs, int i, {
+    double addedPaddingLeft = 0,
+  }){
     if (widget.style==DrawerMenuFromZero.styleTree){
       return Stack(
         clipBehavior: Clip.none,
@@ -858,30 +863,35 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
           if (widget.depth>0)
             Positioned(
               left: 11, right: 0, bottom: -12, top: -12,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(widget.depth, (index) {
-                  if (index!=widget.depth-1 && widget.paintPreviousTreeLines[index+1]==false){
-                    return const SizedBox(width: 20,);
-                  }
-                  return FractionallySizedBox(
-                    heightFactor: index==widget.depth-1 && i==tabs.length-1 ? 0.5 : 1,
-                    alignment: Alignment.topCenter,
-                    child: const SizedBox(
-                      width: 20, height: double.infinity,
-                      child: VerticalDivider(
-                        thickness: 2, width: 2,
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: addedPaddingLeft,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: List.generate(widget.depth, (index) {
+                    if (index!=widget.depth-1 && widget.paintPreviousTreeLines[index+1]==false){
+                      return const SizedBox(width: 20,);
+                    }
+                    return FractionallySizedBox(
+                      heightFactor: index==widget.depth-1 && i==tabs.length-1 ? 0.5 : 1,
+                      alignment: Alignment.topCenter,
+                      child: const SizedBox(
+                        width: 20, height: double.infinity,
+                        child: VerticalDivider(
+                          thickness: 2, width: 2,
+                        ),
                       ),
-                    ),
-                  );
-                }),
+                    );
+                  }),
+                ),
               ),
             ),
           if (widget.depth>0)
             Positioned.fill(
               child: Container(
-                padding: EdgeInsets.only(left: 20.0*widget.depth,),
+                padding: EdgeInsets.only(left: addedPaddingLeft + 20.0*widget.depth,),
                 alignment: Alignment.centerLeft,
                 child: SizedBox(
                   width: (tabs[i].children==null || tabs[i].children!.isEmpty) ? 24: 12,
@@ -1040,22 +1050,23 @@ class DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                 InitiallyAnimatedWidget(
                   duration: const Duration(milliseconds: 600),
                   curve: Curves.easeOut,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: selectedColor,
+                      borderRadius: const BorderRadius.only(
+                        topRight: Radius.circular(12),
+                        bottomRight: Radius.circular(12),
+                      ),
+                    ),
+                  ),
                   builder: (animation, child) {
                     return Positioned(
                       top: 2, bottom: 2,
                       right: -4 + 96*(1 - animation.value) - (widget.titleHorizontalOffset/2),
-                      left: -widget.contentPadding.left,
+                      left: -widget.contentPadding.left - MediaQuery.of(context).size.width,
                       child: Opacity(
                         opacity: (animation.value*2).coerceIn(0, 1),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: selectedColor,
-                            borderRadius: const BorderRadius.only(
-                              topRight: Radius.circular(12),
-                              bottomRight: Radius.circular(12),
-                            ),
-                          ),
-                        ),
+                        child: child,
                       ),
                     );
                   },

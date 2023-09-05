@@ -117,9 +117,15 @@ class ComboFromZero<T> extends StatefulWidget {
 
 class ComboFromZeroState<T> extends State<ComboFromZero<T>> {
 
-  GlobalKey buttonKey = GlobalKey();
+  final buttonKey = GlobalKey();
+  late FocusNode buttonFocusNode = widget.focusNode ?? FocusNode();
 
-  late final buttonFocusNode = widget.focusNode ?? FocusNode();
+  @override
+  void didUpdateWidget(ComboFromZero<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    buttonFocusNode = widget.focusNode ?? buttonFocusNode;
+  }
+
   @override
   Widget build(BuildContext context) {
     Widget result;
