@@ -225,16 +225,16 @@ class GoRouteFromZero extends GoRoute {
     );
   }
 
-  Map<String, String> getPathParameters(Map<String, String> pathParameters)
+  Map<String, String> getPathParameters([Map<String, String> pathParameters = const {}])
       => {...defaultPathParameters, ...pathParameters};
-  Map<String, String> getQueryParameters(Map<String, String> queryParameters)
+  Map<String, String> getQueryParameters([Map<String, String> queryParameters = const {}])
       => {...defaultQueryParameters, ...queryParameters};
-  Object? getExtra(Object? extra) {
+  Object? getExtra([Object? extra]) {
     if ((extra==null || extra is Map) && defaultExtra is Map ) {
       return {
         if (extra!=null)
           ...(extra as Map),
-        ...(defaultExtra as Map),
+        ...(defaultExtra! as Map),
       };
     } else {
       return extra;
