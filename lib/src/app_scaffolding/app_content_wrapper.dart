@@ -168,12 +168,12 @@ class FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWra
       behavior: scrollConfiguration,
       child: LayoutBuilder(
         builder: (context, constraints) {
-          double screenWidth = scaffoldChangeNotifier._previousWidth ?? 1280;
-          double screenHeight = scaffoldChangeNotifier._previousHeight ?? 720;
+          double screenWidth = scaffoldChangeNotifier.previousWidth ?? 1280;
+          double screenHeight = scaffoldChangeNotifier.previousHeight ?? 720;
           if (constraints.maxWidth>0){
             screenWidth = constraints.maxWidth;
             screenHeight = constraints.maxHeight;
-            if (scaffoldChangeNotifier._previousWidth==null) {
+            if (scaffoldChangeNotifier.previousWidth==null) {
               screen._isMobileLayout = constraints.maxWidth < ScaffoldFromZero.screenSizeMedium;
               if (constraints.maxWidth>=ScaffoldFromZero.screenSizeXLarge){
                 screen._breakpoint = ScaffoldFromZero.screenSizeXLarge;
@@ -184,8 +184,8 @@ class FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWra
               } else{
                 screen._breakpoint = ScaffoldFromZero.screenSizeSmall;
               }
-              scaffoldChangeNotifier._previousWidth = constraints.maxWidth;
-              scaffoldChangeNotifier._previousHeight = constraints.maxHeight;
+              scaffoldChangeNotifier.previousWidth = constraints.maxWidth;
+              scaffoldChangeNotifier.previousHeight = constraints.maxHeight;
             } else {
               WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
                 screen._isMobileLayout = constraints.maxWidth < ScaffoldFromZero.screenSizeMedium;
@@ -198,9 +198,9 @@ class FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWra
                 } else{
                   screen.breakpoint = ScaffoldFromZero.screenSizeSmall;
                 }
-                scaffoldChangeNotifier._updateDrawerWidths(screen.isMobileLayout, constraints.maxWidth);
-                scaffoldChangeNotifier._previousWidth = constraints.maxWidth;
-                scaffoldChangeNotifier._previousHeight = constraints.maxHeight;
+                scaffoldChangeNotifier.validateDrawerWidths(screen.isMobileLayout, constraints.maxWidth);
+                scaffoldChangeNotifier.previousWidth = constraints.maxWidth;
+                scaffoldChangeNotifier.previousHeight = constraints.maxHeight;
               });
             }
           }
@@ -582,19 +582,19 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
       _currentDrawerWidths[pageScaffoldId] =
           drawerOpenByDefaultOnDesktop  ? expandedDrawerWidths[pageScaffoldId] ?? 304
                                         : collapsedDrawerWidths[pageScaffoldId] ?? 56;
-      _blockNotify = true;
-      if (_previousWidth!=null) {
-        _updateDrawerWidths(_previousWidth!<ScaffoldFromZero.screenSizeMedium, _previousWidth!);
+      blockNotify = true;
+      if (previousWidth!=null) {
+        validateDrawerWidths(previousWidth!<ScaffoldFromZero.screenSizeMedium, previousWidth!);
       }
-      _blockNotify = false;
+      blockNotify = false;
     }
     return _currentDrawerWidths[pageScaffoldId] ?? 0;
   }
-  bool _blockNotify = false;
+  bool blockNotify = false;
   void setCurrentDrawerWidth(String pageScaffoldId, double value) {
     if (_currentDrawerWidths[pageScaffoldId] != value) {
       _currentDrawerWidths[pageScaffoldId] = value;
-      if (!_blockNotify) notifyListeners();
+      if (!blockNotify) notifyListeners();
     }
   }
   void collapseDrawer([String? pageScaffoldId]){
@@ -612,22 +612,35 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
   }
 
   // Mechanism to automatically expand/collapse drawer in response to screen width changes in desktop
-  double? _previousWidth;
-  double? _previousHeight;
-  void _updateDrawerWidths(bool isMobileLayout, double width){
+  double? previousWidth;
+  double? previousHeight;
+  void validateDrawerWidths(bool isMobileLayout, double width){
     for (final e in _currentDrawerWidths.keys) {
-      _updateDrawerWidth(e, isMobileLayout, width);
+      validateDrawerWidth(e, isMobileLayout, width);
     }
   }
-  void _updateDrawerWidth(String pageScaffoldId, bool isMobileLayout, double width){
+  void validateDrawerWidth(String pageScaffoldId, bool isMobileLayout, double width){
+    final collapsed = collapsedDrawerWidths[pageScaffoldId] ?? 56;
+    final expanded = expandedDrawerWidths[pageScaffoldId] ?? 304;
     if (width < ScaffoldFromZero.screenSizeMedium) {
       setCurrentDrawerWidth(pageScaffoldId, 0);
-    } else if (PlatformExtended.isDesktop && _previousWidth!=null && _previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
-      setCurrentDrawerWidth(pageScaffoldId, expandedDrawerWidths[pageScaffoldId] ?? 304);
-    } else if (PlatformExtended.isDesktop && _previousWidth!=null && _previousWidth!>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
-      setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId] ?? 56);
-    } else if (getCurrentDrawerWidth(pageScaffoldId) < (collapsedDrawerWidths[pageScaffoldId] ?? 56)){
-      setCurrentDrawerWidth(pageScaffoldId, collapsedDrawerWidths[pageScaffoldId] ?? 56);
+    } else if (PlatformExtended.isDesktop && previousWidth!=null && previousWidth!<ScaffoldFromZero.screenSizeLarge && width>=ScaffoldFromZero.screenSizeLarge){
+      setCurrentDrawerWidth(pageScaffoldId, expanded);
+    } else if (PlatformExtended.isDesktop && previousWidth!=null && previousWidth!>=ScaffoldFromZero.screenSizeLarge && width<ScaffoldFromZero.screenSizeLarge){
+      setCurrentDrawerWidth(pageScaffoldId, collapsed);
+    } else {
+      final currentWidth = getCurrentDrawerWidth(pageScaffoldId);
+      if (currentWidth < collapsed){
+        setCurrentDrawerWidth(pageScaffoldId, collapsed);
+      } else if (currentWidth > expanded){
+        setCurrentDrawerWidth(pageScaffoldId, expanded);
+      } else if (currentWidth > collapsed && currentWidth < expanded) {
+        if (currentWidth > ((expanded-collapsed)/2)) {
+          setCurrentDrawerWidth(pageScaffoldId, expanded);
+        } else {
+          setCurrentDrawerWidth(pageScaffoldId, collapsed);
+        }
+      }
     }
   }
 

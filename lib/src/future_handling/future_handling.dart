@@ -469,6 +469,8 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
   final Clip clipBehavior;
   final ValueNotifier<Size?>? sizeNotifier;
   final Listenable? notifyResize;
+  final bool animateWidth;
+  final bool animateHeight;
 
   const AnimatedContainerFromChildSize({
     required this.child,
@@ -478,6 +480,8 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
     this.clipBehavior = Clip.none,
     this.sizeNotifier,
     this.notifyResize,
+    this.animateWidth = true,
+    this.animateHeight = true,
     super.key,
   });
 
@@ -561,9 +565,7 @@ class AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromChi
           ),
         );
         if (size == null){
-          return AnimatedContainer(
-            duration: widget.duration,
-            curve: widget.curve,
+          return buildResult(context,
             child: child,
           );
         } else{
@@ -591,15 +593,30 @@ class AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromChi
               child: result,
             );
           }
-          return AnimatedContainer(
-            height: height,
-            width: width,
+          return buildResult(context,
             duration: Duration(milliseconds: milliseconds),
-            curve: widget.curve,
+            width: width,
+            height: height,
             child: result,
           );
         }
       },
     );
   }
+
+  Widget buildResult(BuildContext context, {
+    required Widget child,
+    Duration? duration,
+    double? width,
+    double? height,
+  }) {
+    return AnimatedContainer(
+      height: widget.animateHeight ? height : null,
+      width: widget.animateWidth ? width : null,
+      duration: duration ?? widget.duration,
+      curve: widget.curve,
+      child: child,
+    );
+  }
+
 }

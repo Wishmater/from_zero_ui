@@ -276,6 +276,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
           AnimatedContainerFromChildSize(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeOutCubic,
+            animateWidth: false,
             child: Container(
               key: ValueKey(_isExpanded),
               child: widget.titleBuilder?.call(context, _isExpanded) ?? widget.title,
