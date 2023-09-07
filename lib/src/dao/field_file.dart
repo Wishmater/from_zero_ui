@@ -26,38 +26,38 @@ class FileField extends StringField {
     return value.isNullOrEmpty ? null
         : pickDirectory
             ? '$value${path.separator}'
-            : value?.split('/').last.split('\\').last;
+            : value?.split('/').last.split(r'\').last;
   }
 
 
   FileField({
-    required FieldValueGetter<String, Field> uiNameGetter,
-    String? value,
+    required super.uiNameGetter,
+    super.value,
     String? dbValue,
-    FieldValueGetter<bool, Field> clearableGetter = Field.defaultClearableGetter,
-    double maxWidth = 512,
-    double minWidth = 128,
-    double flex = 0,
-    FieldValueGetter<String?, Field>? hintGetter,
-    FieldValueGetter<String?, Field>? tooltipGetter,
-    double? tableColumnWidth,
-    FieldValueGetter<bool, Field>? hiddenGetter,
-    FieldValueGetter<bool, Field>? hiddenInTableGetter,
-    FieldValueGetter<bool, Field>? hiddenInViewGetter,
-    FieldValueGetter<bool, Field>? hiddenInFormGetter,
-    FieldValueGetter<List<FieldValidator<String>>, Field>? validatorsGetter,
-    bool validateOnlyOnConfirm = false,
-    FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
-    List<String?>? undoValues,
-    List<String?>? redoValues,
-    GlobalKey? fieldGlobalKey,
-    FocusNode? focusNode,
-    bool invalidateNonEmptyValuesIfHiddenInForm = true,
-    String? defaultValue,
-    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    super.clearableGetter,
+    super.maxWidth,
+    super.minWidth,
+    super.flex,
+    super.hintGetter,
+    super.tooltipGetter,
+    super.tableColumnWidth,
+    super.hiddenGetter,
+    super.hiddenInTableGetter,
+    super.hiddenInViewGetter,
+    super.hiddenInFormGetter,
+    super.validatorsGetter,
+    super.validateOnlyOnConfirm,
+    super.colModelBuilder,
+    super.undoValues,
+    super.redoValues,
+    super.fieldGlobalKey,
+    super.focusNode,
+    super.invalidateNonEmptyValuesIfHiddenInForm,
+    super.defaultValue = null,
+    super.backgroundColor,
     super.actionsGetter,
-    ViewWidgetBuilder<String> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
-    OnFieldValueChanged<String?>? onValueChanged,
+    super.viewWidgetBuilder,
+    super.onValueChanged,
     this.fileType = FileType.any,
     this.allowedExtensions,
     this.enableDragAndDrop = true,
@@ -66,32 +66,7 @@ class FileField extends StringField {
     this.allowTyping = false,
     this.initialDirectory,
   }) :  super(
-          uiNameGetter: uiNameGetter,
-          value: value,
           dbValue: dbValue ?? value,
-          clearableGetter: clearableGetter,
-          hintGetter: hintGetter,
-          tooltipGetter: tooltipGetter,
-          maxWidth: maxWidth,
-          minWidth: minWidth,
-          flex: flex,
-          tableColumnWidth: tableColumnWidth,
-          hiddenGetter: hiddenGetter,
-          hiddenInTableGetter: hiddenInTableGetter,
-          hiddenInViewGetter: hiddenInViewGetter,
-          hiddenInFormGetter: hiddenInFormGetter,
-          validatorsGetter: validatorsGetter,
-          validateOnlyOnConfirm: validateOnlyOnConfirm,
-          colModelBuilder: colModelBuilder,
-          undoValues: undoValues,
-          redoValues: redoValues,
-          fieldGlobalKey: fieldGlobalKey,
-          focusNode: focusNode,
-          invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
-          defaultValue: defaultValue,
-          backgroundColor: backgroundColor,
-          viewWidgetBuilder: viewWidgetBuilder,
-          onValueChanged: onValueChanged,
         );
 
 
@@ -262,13 +237,13 @@ class FileField extends StringField {
     return [result];
   }
   Widget _buildFieldEditorWidget(BuildContext context, {
+    required FocusNode focusNode,
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool largeHorizontally = false,
     bool dense = false,
     BoxConstraints? constraints,
-    required FocusNode focusNode,
   }) {
     String? initialDirectory;
     if (this.initialDirectory!=null) {

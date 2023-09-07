@@ -31,11 +31,11 @@ class ValidationError {
   ValidationErrorSeverity severity;
   String error;
   AnimationController? animationController;
-  bool? _isVisibleAsSaveConfirmation;
+  final bool? _isVisibleAsSaveConfirmation;
   bool get isVisibleAsSaveConfirmation => _isVisibleAsSaveConfirmation ?? severity!=ValidationErrorSeverity.disabling;
-  bool? _isVisibleAsHintMessage;
+  final bool? _isVisibleAsHintMessage;
   bool get isVisibleAsHintMessage => _isVisibleAsHintMessage ?? severity!=ValidationErrorSeverity.disabling && severity!=ValidationErrorSeverity.unfinished;
-  bool? _isVisibleAsTooltip;
+  final bool? _isVisibleAsTooltip;
   bool get isVisibleAsTooltip => _isVisibleAsTooltip ?? severity==ValidationErrorSeverity.disabling;
   ValidationError({
     required this.field,
@@ -77,24 +77,19 @@ class InvalidatingError<T extends Comparable> extends ValidationError {
   bool allowSetThisFieldToDefaultValue;
   bool setAsDbValue;
   InvalidatingError({
-    required Field<T> field,
-    required String error,
+    required Field<T> super.field,
+    required super.error,
     this.defaultValue,
     this.showVisualConfirmation = false,
     this.allowUndoInvalidatingChange = true,
     this.allowSetThisFieldToDefaultValue = true,
     this.setAsDbValue = false,
-    bool? isVisibleAsSaveConfirmation,
-    bool? isVisibleAsHintMessage,
-    bool? isVisibleAsTooltip,
+    super.isVisibleAsSaveConfirmation,
+    super.isVisibleAsHintMessage,
+    super.isVisibleAsTooltip,
   })  : assert(showVisualConfirmation || allowUndoInvalidatingChange),
         super(
-          field: field,
-          error: error,
           severity: ValidationErrorSeverity.invalidating,
-          isVisibleAsSaveConfirmation: isVisibleAsSaveConfirmation,
-          isVisibleAsHintMessage: isVisibleAsHintMessage,
-          isVisibleAsTooltip: isVisibleAsTooltip,
         );
 
   @override
@@ -123,22 +118,17 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
   ForcedValueError({
     required Field<T> field,
     required T? defaultValue,
-    required String error,
-    bool showVisualConfirmation = false,
-    bool? isVisibleAsSaveConfirmation,
-    bool? isVisibleAsHintMessage,
-    bool? isVisibleAsTooltip,
+    required super.error,
+    super.showVisualConfirmation,
+    super.isVisibleAsSaveConfirmation,
+    super.isVisibleAsHintMessage,
+    super.isVisibleAsTooltip,
     this.comparator,
   })  : super(
           field: field,
-          error: error,
           defaultValue: defaultValue,
-          showVisualConfirmation: showVisualConfirmation,
           allowSetThisFieldToDefaultValue: true,
           allowUndoInvalidatingChange: true,
-          isVisibleAsSaveConfirmation: isVisibleAsSaveConfirmation,
-          isVisibleAsHintMessage: isVisibleAsHintMessage,
-          isVisibleAsTooltip: isVisibleAsTooltip,
         ) {
     severity = (comparator?.call(field.value, defaultValue) ?? field.value==defaultValue)
         ? ValidationErrorSeverity.disabling
@@ -253,11 +243,11 @@ class FieldDiffMessage<T extends Comparable> extends StatelessWidget {
   late final Field<T> newdValueField;
 
   FieldDiffMessage({
-    Key? key,
     required this.field,
     required this.oldValue,
     required this.newValue,
-  }) : super(key: key) {
+    super.key,
+  }) {
     final dummyDao = DAO(uiNameGetter: (dao) => 'Dummy', classUiNameGetter: (dao) => 'Dummy',);
     oldValueField = field.copyWith()
       ..onValueChanged = null;
@@ -350,13 +340,13 @@ class ValidationMessage extends StatefulWidget {
   final bool hideNotVisibleAsHintMessage;
 
   const ValidationMessage({
-    Key? key,
     required this.errors,
     required this.passedFirstEdit,
     this.animate = true,
     this.errorTextStyle,
     this.hideNotVisibleAsHintMessage = true,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ValidationMessage> createState() => _ValidationMessageState();
@@ -414,8 +404,8 @@ class SingleValidationMessage extends StatefulWidget {
     required this.error,
     this.errorTextStyle,
     this.animate = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   SingleValidationMessageState createState() => SingleValidationMessageState();
@@ -496,9 +486,9 @@ class SaveConfirmationValidationMessage extends StatelessWidget {
   final List<ValidationError> allErrors;
 
   const SaveConfirmationValidationMessage({
-    Key? key,
     required this.allErrors,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -555,11 +545,11 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
   final List<ValidationError> errors;
 
   const SaveConfirmationValidationMessageGroup({
-    Key? key,
     required this.name,
     required this.severity,
     required this.errors,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -588,7 +578,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
                   padding: const EdgeInsets.only(top: 7),
                   child: Icon(Icons.circle,
                     size: 10,
-                    color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity]!,
+                    color: ValidationMessage.severityColors[Theme.of(context).brightness]![e.severity],
                   ),
                 ),
                 const SizedBox(width: 6,),
@@ -621,7 +611,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
                 children: [
                   Icon(Icons.warning,
                     size: isBlocking ? 38 : 27,
-                    color: ValidationMessage.severityColors[Theme.of(context).brightness]![severity]!,
+                    color: ValidationMessage.severityColors[Theme.of(context).brightness]![severity],
                   ),
                   const SizedBox(width: 4,),
                   Expanded(
@@ -661,8 +651,8 @@ class ValidationRequiredOverlay extends StatelessWidget {
     required this.child,
     required this.dense,
     this.textAlign = TextAlign.left,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

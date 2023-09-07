@@ -51,7 +51,7 @@ class PageHeroesState extends State<PageCrossFadeHero> {
             child: Hero(
               tag: "hero_test",
               flightShuttleBuilder: HeroesFromZero.fadeThroughFlightShuttleBuilder,
-              child: Container(
+              child: ColoredBox(
                 color: Theme.of(context).colorScheme.secondary,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

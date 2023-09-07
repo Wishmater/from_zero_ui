@@ -50,7 +50,6 @@ class AppbarFromZero extends StatefulWidget {
   final double actionPadding;
 
   AppbarFromZero({
-    Key? key,
 //    this.leading,
     this.title = const SizedBox.shrink(),
     List<Widget>? actions,
@@ -85,9 +84,9 @@ class AppbarFromZero extends StatefulWidget {
     this.transitionsDuration = const Duration(milliseconds: 300),
     this.constraints,
     this.actionPadding = 4,
+    super.key,
   }) :
-        actions = actions ?? [],
-        super(key: key);
+        actions = actions ?? [];
 
   @override
   AppbarFromZeroState createState() => AppbarFromZeroState();
@@ -197,16 +196,13 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
           switch (state){
             case ActionState.none:
               removeIndices.add(i);
-              break;
             case ActionState.popup:
               contextMenuActions.add(action);
               removeIndices.add(i);
-              break;
             case ActionState.overflow:
               overflows.add(action);
               contextMenuActions.add(action);
               removeIndices.add(i);
-              break;
             case ActionState.icon:
               actions[i] = action.buildIcon(context, color: actionsColor);
               if (actions[i] is! VerticalDivider && actions[i] is! Divider) {
@@ -216,11 +212,9 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
                 );
               }
               contextMenuActions.add(action);
-              break;
             case ActionState.button:
               actions[i] = action.buildButton(context, color: actionsColor);
               contextMenuActions.add(action);
-              break;
             case ActionState.expanded:
               if (action.centerExpanded){
                 expanded.add(action.buildExpanded(context, color: actionsColor));
@@ -228,11 +222,12 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
               } else{
                 actions[i] = action.buildExpanded(context, color: actionsColor);
               }
-              break;
           }
         }
       }
-      for (var element in removeIndices.reversed) {actions.removeAt(element);}
+      for (final element in removeIndices.reversed) {
+        actions.removeAt(element);
+      }
       if (overflows.length==1 && overflows.first.icon!=null) {
         actions.add(overflows.removeLast().buildIcon(context, color: actionsColor));
       }

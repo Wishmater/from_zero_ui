@@ -34,8 +34,8 @@ class TableHeaderFromZero<T> extends StatefulWidget {
     this.backgroundColor,
     this.showColumnMetadata,
     this.titleLeftPadding = 18,
-    Key? key,
-  })  : super(key: key);
+    super.key,
+  });
 
   @override
   TableHeaderFromZeroState<T> createState() => TableHeaderFromZeroState();

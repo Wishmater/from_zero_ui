@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 class ZoomedFadeInFadeOutTransition extends StatelessWidget {
-  const ZoomedFadeInFadeOutTransition({Key? key, required this.animation, required this.child})
-      : super(key: key);
+  const ZoomedFadeInFadeOutTransition({
+    required this.animation,
+    required this.child,
+    super.key,
+  });
 
   final Animation<double> animation;
   final Widget child;
@@ -37,9 +40,10 @@ class ZoomedFadeInFadeOutTransition extends StatelessWidget {
 }
 
 class ZoomedFadeInTransition extends StatelessWidget {
-  const ZoomedFadeInTransition({super.key, 
+  const ZoomedFadeInTransition({
     required this.child,
     required this.animation,
+    super.key,
   });
 
   final Widget child;
@@ -86,9 +90,10 @@ class ZoomedFadeInTransition extends StatelessWidget {
 }
 
 class FadeOutTransition extends StatelessWidget {
-  const FadeOutTransition({super.key, 
+  const FadeOutTransition({
     required this.child,
     required this.animation,
+    super.key,
   });
 
   final Widget child;

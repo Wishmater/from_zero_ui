@@ -154,7 +154,7 @@ final initRoute = GoRouteFromZero(
 
 class PageSplash extends StatefulWidget {
 
-  const PageSplash({Key? key}) : super(key: key);
+  const PageSplash({super.key});
 
   @override
   PageSplashState createState() => PageSplashState();

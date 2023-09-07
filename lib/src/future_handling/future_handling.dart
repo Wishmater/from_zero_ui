@@ -14,20 +14,16 @@ class LoadingSign extends ImplicitlyAnimatedWidget {
   final double size;
 
   const LoadingSign({
-    Key? key,
+    super.key,
     this.value,
     this.color,
     /// for animating value
-    Duration duration = const Duration(milliseconds: 250),
+    super.duration = const Duration(milliseconds: 250),
     /// for animating value
-    Curve curve = Curves.easeOutCubic,
+    super.curve = Curves.easeOutCubic,
     this.padding = const EdgeInsets.all(12),
     this.size = 48,
-  }) :  super(
-    key: key,
-    duration: duration,
-    curve: curve,
-  );
+  });
 
   @override
   ImplicitlyAnimatedWidgetState<LoadingSign> createState() => _LoadingSignState();
@@ -331,9 +327,9 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
   final bool enableSkipFrame; // when transitioning from having data to not having it, delay the transition by 1 frame, to not show loading unnecessarily
 
   const FutureBuilderFromZero({
-    Key? key,
     required this.future,
     required this.successBuilder,
+    super.key,
     this.errorBuilder = defaultErrorBuilder,
     this.loadingBuilder = defaultLoadingBuilder,
     this.initialData,
@@ -344,8 +340,7 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
     this.applyAnimatedContainerFromChildSize = false,
     this.enableSkipFrame = true,
   }) :  transitionBuilder = transitionBuilder ?? (applyDefaultTransition ? defaultTransitionBuilder : noneTransitionBuilder),
-        duration = duration ?? (applyDefaultTransition ? const Duration(milliseconds: 300) : Duration.zero),
-        super(key: key);
+        duration = duration ?? (applyDefaultTransition ? const Duration(milliseconds: 300) : Duration.zero);
 
   @override
   FutureBuilderFromZeroState<T> createState() => FutureBuilderFromZeroState<T>();
@@ -354,7 +349,7 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
     return ApiProviderBuilder.defaultLoadingBuilder(context, null);
   }
 
-  static Widget defaultErrorBuilder(BuildContext context, error, stackTrace){
+  static Widget defaultErrorBuilder(BuildContext context, dynamic error, dynamic stackTrace){
     // log(error, stackTrace: stackTrace);
     return ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, null);
   }
@@ -438,7 +433,7 @@ class FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
           updatePreviousData();
         }
         if (widget.applyDefaultTransition) {
-          int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds).toInt();
+          int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds);
           result = AnimatedSwitcherImage(
             transitionBuilder: widget.transitionBuilder,
             duration: Duration(milliseconds: milliseconds),
@@ -483,8 +478,8 @@ class AnimatedContainerFromChildSize extends StatefulWidget {
     this.clipBehavior = Clip.none,
     this.sizeNotifier,
     this.notifyResize,
-    Key? key,
-  })  : super(key: key);
+    super.key,
+  });
 
   @override
   AnimatedContainerFromChildSizeState createState() => AnimatedContainerFromChildSizeState();

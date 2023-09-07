@@ -68,7 +68,6 @@ class ArrowPageIndicator extends StatefulWidget {
   static const defaultPadding = EdgeInsets.all(8.0);
 
   const ArrowPageIndicator({
-    Key? key,
     required this.pageController,
     required this.currentPageNotifier,
     required this.itemCount,
@@ -84,7 +83,8 @@ class ArrowPageIndicator extends StatefulWidget {
     this.iconSize = defaultIconSize,
     this.tooltipLeft,
     this.tooltipRight,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ArrowPageIndicatorState createState() {

@@ -45,9 +45,8 @@ typedef AnimatedSwitcherImageLayoutBuilder = Widget Function(Widget? currentChil
 class AnimatedSwitcherImage extends StatefulWidget {
 
   const AnimatedSwitcherImage({
-    super.key,
-    this.child,
     required this.duration,
+    this.child,
     this.reverseDuration,
     this.switchInCurve = Curves.easeOutCubic,
     this.switchOutCurve = Curves.easeInCubic,
@@ -57,6 +56,7 @@ class AnimatedSwitcherImage extends StatefulWidget {
     this.clipBehaviour = Clip.hardEdge,
     this.takeImages = true,
     this.rebuildOutgoingChildrenIfNoImageReady = false,
+    super.key,
   });
 
   final Widget? child;

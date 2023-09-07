@@ -43,8 +43,8 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
   
   void initialize({
     required DAOValueGetter<String, ModelType> classUiNameGetter,
-    DAOValueGetter<String, ModelType>? classUiNamePluralGetter,
     required DAOValueGetter<String, ModelType> uiNameGetter,
+    DAOValueGetter<String, ModelType>? classUiNamePluralGetter,
     DAOValueGetter<String, ModelType>? uiNameDenseGetter,
     dynamic id,
     List<FieldGroup> fieldGroups = const [],
@@ -114,12 +114,10 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     this.classUiNamePluralGetter = classUiNamePluralGetter ?? classUiNameGetter;
     props.forEach((key, value) {
       value.dao = this;
-      value.addListener(() {
-        notifyListeners();
-      });
+      value.addListener(notifyListeners);
     });
     addListener(() {
-      for (var element in _selfUpdateListeners) {
+      for (final element in _selfUpdateListeners) {
         element(this);
       }
     });

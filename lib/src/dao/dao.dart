@@ -84,8 +84,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
 
   DAO({
     required this.classUiNameGetter,
-    this.classUiNamePluralGetter,
     required this.uiNameGetter,
+    this.classUiNamePluralGetter,
     this.uiNameDenseGetter,
     this.id,
     this.fieldGroups = const [],
@@ -121,12 +121,10 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         {
           this.props.forEach((key, value) {
             value.dao = this;
-            value.addListener(() {
-              notifyListeners();
-            });
+            value.addListener(notifyListeners);
           });
           addListener(() {
-            for (var element in _selfUpdateListeners) {
+            for (final element in _selfUpdateListeners) {
               element(this);
             }
           });
@@ -878,7 +876,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     askForSaveConfirmation ??= showDefaultSnackBars;
     final props = this.props;
     parentDAO = null;
-    for (var e in props.values) {
+    for (final e in props.values) {
       e.passedFirstEdit = false;
       e.undoValues.clear();
       e.redoValues.clear();
@@ -933,7 +931,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   primaryFormWidgets.add(groupWidget);
                 } else {
                   secondaryScrollControllers[name] = scrollController;
-                  secondarySizeNotifiers[name] ??= ValueNotifier(const Size(0, 0));
+                  secondarySizeNotifiers[name] ??= ValueNotifier(Size.zero);
                   if (doubleColumnLayoutType==DoubleColumnLayoutType.tabbed) {
                     secondaryFormWidgets[name] = FocusTraversalOrder(
                       order: NumericFocusOrder(i.toDouble()),
@@ -1127,7 +1125,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                                             ? 12 : 0,
                                                         bottom: 28,
                                                       ),
-                                                      child: secondaryFormWidgets[e]!,
+                                                      child: secondaryFormWidgets[e],
                                                     ),
                                                   ),
                                                 ),
@@ -1156,9 +1154,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             List<InvalidatingError> autoResolveInvalidatingErrors = [];
             bool allowSetInvalidatingFieldsToDefaultValues = true;
             bool allowUndoInvalidatingChanges = _undoRecord.isNotEmpty;
-            for (Field e in props.values) {
+            for (final Field e in props.values) {
               final errors = e.validationErrors.whereType<InvalidatingError>();
-              for (var error in errors) {
+              for (final error in errors) {
                 allowSetInvalidatingFieldsToDefaultValues = allowSetInvalidatingFieldsToDefaultValues && error.allowSetThisFieldToDefaultValue;
                 allowUndoInvalidatingChanges = allowUndoInvalidatingChanges && error.allowUndoInvalidatingChange;
                 if (error.showVisualConfirmation) {
@@ -1209,7 +1207,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       child: child,
                     );
                   },
-                  child: invalidatingErrors.isEmpty ? const SizedBox() : Container(
+                  child: invalidatingErrors.isEmpty ? const SizedBox() : ColoredBox(
                     color: Colors.black38,
                     child: Center(
                       child: SizedBox(
@@ -1269,7 +1267,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                                   oldValue: value.value,
                                                   newValue: key.defaultValue,
                                                 ),);
-                                              }).values.toList(),
+                                              }).values,
                                           ],
                                         ),
                                       ),
@@ -1968,7 +1966,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           }
         }
         return result;
-      }).flatten().toList(),
+      }).flatten(),
       if (showActionButtons)
         ...buildActionButtons(context,
           showRevertChanges: showRevertChanges,

@@ -20,27 +20,20 @@ class APISnackBar<T> extends SnackBarFromZero {
   final APISnackBarBlockUIType blockUIType;
 
   APISnackBar({
-    Key? key,
-    required BuildContext context,
+    required super.context,
     required this.stateNotifier,
     this.successTitle,
     this.successMessage,
     this.cancelable,
-    int? behaviour,
-    Duration? duration = const Duration(milliseconds: 3000),
-    double? width,
-    bool showProgressIndicatorForRemainingTime = false,
-    VoidCallback? onCancel,
+    super.behaviour,
+    super.duration = const Duration(milliseconds: 3000),
+    super.width,
+    super.showProgressIndicatorForRemainingTime,
+    super.onCancel,
     this.blockUIType = APISnackBarBlockUIType.whileLoadingOrError,
+    super.key,
   })  : super(
-          key: key,
-          context: context,
-          behaviour: behaviour,
-          duration: duration,
-          width: width,
           dismissable: cancelable??false,
-          showProgressIndicatorForRemainingTime: showProgressIndicatorForRemainingTime,
-          onCancel: onCancel,
           blockUI: blockUIType==APISnackBarBlockUIType.never ? false : true,
         );
 
@@ -146,9 +139,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
       errorBuilder: (context, error, stackTrace, onRetry) {
         return resultBuilder(context, error, stackTrace);
       },
-      loadingBuilder: (context, progress) {
-        return loadingBuilder(context, progress);
-      },
+      loadingBuilder: loadingBuilder,
       transitionBuilder: (context, child, animation) {
         return FadeTransition(
           opacity: animation,
@@ -333,7 +324,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
               ApiProviderBuilder.showErrorDetailsDialog(widget.context, error, stackTrace);
             },
             style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).textTheme.bodyLarge!.color!,
+              foregroundColor: Theme.of(context).textTheme.bodyLarge!.color,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               padding: const EdgeInsets.symmetric(horizontal: 6),
             ),

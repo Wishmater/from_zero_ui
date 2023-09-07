@@ -37,7 +37,7 @@ class ExtendedNumberFormat extends MyNumberFormat{
     return result;
   }
 
-  String? tryFormat(number) {
+  String? tryFormat(dynamic number) {
     try {
       return format(number);
     } catch(_) {}
@@ -49,7 +49,7 @@ class ExtendedNumberFormat extends MyNumberFormat{
     return _formatter?.parse(number) ?? num.parse(number);
   }
 
-  num? tryParse(number) {
+  num? tryParse(dynamic number) {
     try {
       return parse(number);
     } catch(_) {}

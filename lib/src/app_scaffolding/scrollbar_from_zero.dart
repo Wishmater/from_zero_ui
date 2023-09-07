@@ -50,9 +50,8 @@ class ScrollbarFromZero extends StatefulWidget {
   final bool mainScrollbar;
 
   const ScrollbarFromZero({
-    Key? key,
-    this.controller,
     required this.child,
+    this.controller,
     this.applyOpacityGradientToChildren,
     this.opacityGradientDirection,
     this.opacityGradientSize = 16,
@@ -61,7 +60,8 @@ class ScrollbarFromZero extends StatefulWidget {
     this.ignoreDevicePadding = true,
     this.mainScrollbar = false,
     // this.addPaddingOnDesktop = false,
-  }) :  super(key: key);
+    super.key,
+  });
 
   @override
   ScrollbarFromZeroState createState() => ScrollbarFromZeroState();
@@ -188,9 +188,9 @@ class ScrollbarFromZeroState extends State<ScrollbarFromZero> {
   }
 
   Widget buildScrollbar({
-    Key? key,
     required BuildContext context,
     required Widget child,
+    Key? key,
   }) {
     return Scrollbar(
       key: key,

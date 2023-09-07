@@ -136,7 +136,7 @@ class PageHeroesState extends State<PageHeroes> {
             Hero(
               tag: "hero_test",
               flightShuttleBuilder: shuttleBuilder,
-              child: Container(
+              child: ColoredBox(
                 color: Theme.of(context).colorScheme.secondary,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

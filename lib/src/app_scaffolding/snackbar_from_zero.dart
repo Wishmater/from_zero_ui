@@ -61,7 +61,6 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
 
 
   SnackBarFromZero({
-    Key? key,
     required this.context,
     this.type,
     this.behaviour,
@@ -79,8 +78,8 @@ class SnackBarFromZero extends ConsumerStatefulWidget {
     this.dismissable = true,
     this.pushScreen = false,
     bool blockUI = false,
-  })  : blockUI = ValueNotifier(blockUI),
-        super(key: key,);
+    super.key,
+  })  : blockUI = ValueNotifier(blockUI);
 
   @override
   ConsumerState<SnackBarFromZero> createState() => SnackBarFromZeroState();
@@ -214,7 +213,7 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
                         );
                       }
                       return e;
-                    }).toList(),
+                    }),
                     if (widget.actions!.length>1)
                       const SizedBox(height: 6,),
                   ],

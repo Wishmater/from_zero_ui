@@ -194,7 +194,7 @@ class DialogFromZero extends StatefulWidget {
 class _DialogFromZeroState extends State<DialogFromZero> {
 
   late final appBarSizeNotifier = ValueNotifier<Size>(Size(0, widget.appBar==null ? 0 : 56));
-  late final appBarTitleSizeNotifier = ValueNotifier<Size>(const Size(0, 0));
+  late final appBarTitleSizeNotifier = ValueNotifier<Size>(Size.zero);
   late final actionsSizeNotifier = ValueNotifier<Size>(Size(0, widget.dialogActions.isEmpty ? 0 : 61));
   late final individualActionsSizeNotifiers = <ValueNotifier<Size>>[];
   late final appBarGlobalKey = GlobalKey<AppbarFromZeroState>();
@@ -219,7 +219,7 @@ class _DialogFromZeroState extends State<DialogFromZero> {
       individualActionsSizeNotifiers.removeRange(widget.dialogActions.length, individualActionsSizeNotifiers.length);
     } else if (widget.dialogActions.length > individualActionsSizeNotifiers.length) {
       final diff = widget.dialogActions.length - individualActionsSizeNotifiers.length;
-      individualActionsSizeNotifiers.addAll(List.generate(diff, (i) => ValueNotifier(const Size(0, 0))));
+      individualActionsSizeNotifiers.addAll(List.generate(diff, (i) => ValueNotifier(Size.zero)));
     }
   }
 
@@ -317,7 +317,7 @@ class _DialogFromZeroState extends State<DialogFromZero> {
                 top: appBarSize.height,
                 bottom: actionsSize.height,
               ),
-              child: child!,
+              child: child,
             );
           },
           child: ScrollbarFromZero(
@@ -427,8 +427,8 @@ class DialogButton extends StatelessWidget {
 })  : _dialogButtonType = DialogButtonType.cancel;
 
   const DialogButton.accept({
-    this.child,
     required this.onPressed,
+    this.child,
     this.leading,
     this.color,
     this.padding,

@@ -35,8 +35,8 @@ class ContextMenuFromZero extends StatefulWidget {
     this.addGestureDetector = true,
     this.onShowMenu,
     this.addOnTapDown = true,
-    Key? key,
-  }) :  super(key: key) {
+    super.key,
+  }) {
     for (int i=0; i<actions.length; i++) {
       if (actions[i].overflowBuilder==ActionFromZero.dividerOverflowBuilder
           && (i==0 || i==actions.lastIndex || actions[i+1].overflowBuilder==ActionFromZero.dividerOverflowBuilder)) {
@@ -111,7 +111,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
   }
 
 
-  void onTapDown(details) => tapDownDetails = details;
+  void onTapDown(TapDownDetails details) => tapDownDetails = details;
   void showContextMenu() {
     if (!didShowContextMenuThisFrame) {
       didShowContextMenuThisFrame = true;
@@ -186,9 +186,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
       );
       result = GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onLongPress: PlatformExtended.isMobile ? () {
-          showContextMenu();
-        } : null,
+        onLongPress: PlatformExtended.isMobile ? showContextMenu : null,
         child: result,
       );
     }
@@ -212,7 +210,6 @@ class ContextMenuButton extends StatefulWidget {
   final Widget Function(BuildContext context, VoidCallback onTap) buttonBuilder;
 
   const ContextMenuButton({
-    Key? key,
     required this.buttonBuilder,
     required this.actions,
     this.contextMenuWidget,
@@ -221,7 +218,8 @@ class ContextMenuButton extends StatefulWidget {
     this.popupAlignment = Alignment.bottomRight,
     this.barrierColor,
     this.useCursorLocation = false,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<ContextMenuButton> createState() => _ContextMenuButtonState();
@@ -260,8 +258,8 @@ class _ContextMenuButtonState extends State<ContextMenuButton> {
 
 class TransparentTapGestureRecognizer extends TapGestureRecognizer {
   TransparentTapGestureRecognizer({
-    Object? debugOwner,
-  }) : super(debugOwner: debugOwner);
+    super.debugOwner,
+  });
 
   @override
   void rejectGesture(int pointer) {

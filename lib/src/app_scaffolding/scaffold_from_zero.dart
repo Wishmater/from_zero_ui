@@ -88,7 +88,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
   final bool isPrimaryScaffold; // don't show windowBar if false
 
 
-  ScaffoldFromZero({super.key, 
+  ScaffoldFromZero({
     required this.body,
     this.title,
     this.actions,
@@ -131,6 +131,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
     ScaffoldFromZeroTransitionBuilder? titleTransitionBuilder,
     ScaffoldFromZeroTransitionBuilder? drawerContentTransitionBuilder,
     ScaffoldFromZeroTransitionBuilder? bodyTransitionBuilder,
+    super.key,
   }) :
         // this.appbarType = appbarType ?? (title==null&&(actions==null||actions.isEmpty)&&drawerContentBuilder==null ? appbarTypeNone : appbarTypeStatic),
         drawerWidth = drawerWidth ?? (drawerContentBuilder==null ? 0 : 304),
@@ -446,7 +447,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                       child: _getResponsiveDrawerContent(context, isMobileLayout: true),
                     ),
                   ) : null,
-                  body: child!,
+                  body: child,
                 );
               },
               child: _getMainLayout(context),

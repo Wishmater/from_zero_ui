@@ -26,15 +26,15 @@ class ComboField<T extends DAO> extends Field<T> {
 
 
   ComboField({
-    required FieldValueGetter<String, Field> uiNameGetter,
-    T? value,
-    T? dbValue,
-    FieldValueGetter<bool, Field> clearableGetter = Field.defaultClearableGetter,
-    double maxWidth = 512,
-    double minWidth = 128,
-    double flex = 0,
-    FieldValueGetter<String?, Field>? hintGetter,
-    FieldValueGetter<String?, Field>? tooltipGetter,
+    required super.uiNameGetter,
+    super.value,
+    super.dbValue,
+    super.clearableGetter,
+    super.maxWidth,
+    super.minWidth,
+    super.flex,
+    super.hintGetter,
+    super.tooltipGetter,
     this.possibleValuesGetter,
     this.possibleValuesFutureGetter,
     this.possibleValuesProviderGetter,
@@ -43,56 +43,29 @@ class ComboField<T extends DAO> extends Field<T> {
     this.showViewActionOnDAOs = true,
     this.showDropdownIcon = false,
     this.extraWidget,
-    double? tableColumnWidth,
-    FieldValueGetter<bool, Field>? hiddenGetter,
-    FieldValueGetter<bool, Field>? hiddenInTableGetter,
-    FieldValueGetter<bool, Field>? hiddenInViewGetter,
-    FieldValueGetter<bool, Field>? hiddenInFormGetter,
+    super.tableColumnWidth,
+    super.hiddenGetter,
+    super.hiddenInTableGetter,
+    super.hiddenInViewGetter,
+    super.hiddenInFormGetter,
     this.newObjectTemplateGetter,
-    FieldValueGetter<List<FieldValidator<T>>, Field>? validatorsGetter,
-    bool validateOnlyOnConfirm = false,
-    FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
-    List<T?>? undoValues,
-    List<T?>? redoValues,
+    super.validatorsGetter,
+    super.validateOnlyOnConfirm,
+    super.colModelBuilder,
+    super.undoValues,
+    super.redoValues,
     this.invalidateValuesNotInPossibleValues = true,
-    GlobalKey? fieldGlobalKey,
-    FocusNode? focusNode,
-    bool invalidateNonEmptyValuesIfHiddenInForm = true,
-    T? defaultValue,
-    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    super.fieldGlobalKey,
+    super.focusNode,
+    super.invalidateNonEmptyValuesIfHiddenInForm,
+    super.defaultValue,
+    super.backgroundColor,
     super.actionsGetter,
-    ViewWidgetBuilder<T> viewWidgetBuilder = Field.defaultViewWidgetBuilder,
-    OnFieldValueChanged<T?>? onValueChanged,
+    super.viewWidgetBuilder,
+    super.onValueChanged,
     this.showNullInSelection = false,
     this.showHintAsNullInSelection = true,
-  }) :  super(
-          uiNameGetter: uiNameGetter,
-          value: value,
-          dbValue: dbValue,
-          clearableGetter: clearableGetter,
-          maxWidth: maxWidth,
-          minWidth: minWidth,
-          flex: flex,
-          hintGetter: hintGetter,
-          tooltipGetter: tooltipGetter,
-          tableColumnWidth: tableColumnWidth,
-          hiddenGetter: hiddenGetter,
-          hiddenInTableGetter: hiddenInTableGetter,
-          hiddenInViewGetter: hiddenInViewGetter,
-          hiddenInFormGetter: hiddenInFormGetter,
-          validatorsGetter: validatorsGetter,
-          validateOnlyOnConfirm: validateOnlyOnConfirm,
-          colModelBuilder: colModelBuilder,
-          undoValues: undoValues,
-          redoValues: redoValues,
-          fieldGlobalKey: fieldGlobalKey,
-          focusNode: focusNode,
-          invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
-          defaultValue: defaultValue,
-          backgroundColor: backgroundColor,
-          viewWidgetBuilder: viewWidgetBuilder,
-          onValueChanged: onValueChanged,
-        );
+  });
 
   @override
   ComboField<T> copyWith({
@@ -259,13 +232,12 @@ class ComboField<T extends DAO> extends Field<T> {
     return [result];
   }
   Widget _buildFieldEditorWidget(BuildContext context, {
-    bool addCard=false,
+    required FocusNode focusNode, bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool largeHorizontally = false,
     bool dense = false,
     BoxConstraints? constraints,
-    required FocusNode focusNode,
   }) {
     ExtraWidgetBuilder<T>? extraWidget;
     final newObjectTemplate = this.newObjectTemplate;
@@ -483,7 +455,7 @@ class ComboField<T extends DAO> extends Field<T> {
 
   static Widget buttonContentBuilder(BuildContext context, String? title, String? hint, dynamic value, bool enabled, bool clearable, {
     bool showDropdownIcon = false,
-    dense = false,
+    bool dense = false,
   }) {
     final showHintOrTitleInsteadOfValue = value==null||value.toString().isEmpty;
     final showHintInsteadOfValue = showHintOrTitleInsteadOfValue && hint!=null;

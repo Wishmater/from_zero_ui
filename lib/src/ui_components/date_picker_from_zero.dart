@@ -31,10 +31,10 @@ class DatePickerFromZero extends StatefulWidget {
   final ButtonStyle? buttonStyle; /// if null, an InkWell will be used instead
   final DateTimePickerType type;
 
-  DatePickerFromZero({super.key, 
-    this.value,
+  DatePickerFromZero({
     required this.firstDate,
     required this.lastDate,
+    this.value,
     DateFormat? formatter,
     this.onSelected,
     this.onCanceled,
@@ -49,6 +49,7 @@ class DatePickerFromZero extends StatefulWidget {
       padding: MaterialStatePropertyAll(EdgeInsets.zero),
     ),
     this.type = DateTimePickerType.date,
+    super.key,
   }) :  formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY);
 
   @override
@@ -204,13 +205,14 @@ class DatePickerFromZeroPopup extends StatefulWidget {
   final String? title;
   final DateTimePickerType type;
 
-  const DatePickerFromZeroPopup({super.key, 
-    this.value,
+  const DatePickerFromZeroPopup({
     required this.firstDate,
     required this.lastDate,
+    this.value,
     this.onSelected,
     this.title,
     this.type = DateTimePickerType.date,
+    super.key,
   });
 
   @override

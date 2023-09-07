@@ -215,7 +215,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
         }
       }
       bool allNull = result==null;
-      for (var e in allWatching) {
+      for (final e in allWatching) {
         final notifier = _ref!.read(e.notifier);
         double? partialProgress = notifier.selfProgressNotifier.value;
         double? partialTotal = notifier.selfTotalNotifier.value;
@@ -261,7 +261,6 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   final bool addLoadingStateAsValueKeys;
 
   const ApiProviderBuilder({
-    Key? key,
     required this.provider,
     required this.dataBuilder,
     this.loadingBuilder = ApiProviderBuilder.defaultLoadingBuilder,
@@ -276,7 +275,8 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
     this.clipBehaviour,
     this.addLoadingStateAsValueKeys = true,
     this.animatedSwitcherType = AnimatedSwitcherType.image,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -496,7 +496,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
 
 class SliverApiProviderBuilder<T> extends ApiProviderBuilder<T> {
 
-  const SliverApiProviderBuilder({super.key, 
+  const SliverApiProviderBuilder({
     required super.provider,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),
@@ -504,6 +504,7 @@ class SliverApiProviderBuilder<T> extends ApiProviderBuilder<T> {
     super.errorBuilder = SliverApiProviderBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
   );
@@ -548,7 +549,6 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
   final bool addLoadingStateAsValueKeys;
 
   const ApiProviderMultiBuilder({
-    Key? key,
     required this.providers,
     required this.dataBuilder,
     this.loadingBuilder = ApiProviderBuilder.defaultLoadingBuilder,
@@ -563,7 +563,8 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
     this.clipBehaviour,
     this.addLoadingStateAsValueKeys = true,
     this.animatedSwitcherType = AnimatedSwitcherType.image,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -614,7 +615,7 @@ class ApiProviderMultiBuilder<T> extends ConsumerWidget {
 }
 
 class SliverApiProviderMultiBuilder<T> extends ApiProviderMultiBuilder<T> {
-  const SliverApiProviderMultiBuilder({super.key, 
+  const SliverApiProviderMultiBuilder({
     required super.providers,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),
@@ -622,6 +623,7 @@ class SliverApiProviderMultiBuilder<T> extends ApiProviderMultiBuilder<T> {
     super.errorBuilder = SliverApiProviderBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
   );
@@ -684,7 +686,6 @@ class ApiStateBuilder<T> extends ConsumerStatefulWidget {
   final bool addLoadingStateAsValueKeys;
 
   const ApiStateBuilder({
-    Key? key,
     required this.stateNotifier,
     required this.dataBuilder,
     this.loadingBuilder = ApiProviderBuilder.defaultLoadingBuilder,
@@ -699,7 +700,8 @@ class ApiStateBuilder<T> extends ConsumerStatefulWidget {
     this.clipBehaviour,
     this.addLoadingStateAsValueKeys = true,
     this.animatedSwitcherType = AnimatedSwitcherType.image,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ApiStateBuilderState<T> createState() => ApiStateBuilderState<T>();
@@ -750,7 +752,7 @@ class ApiStateBuilderState<T> extends ConsumerState<ApiStateBuilder<T>> {
 }
 
 class SliverApiStateBuilder<T> extends ApiStateBuilder<T> {
-  const SliverApiStateBuilder({super.key, 
+  const SliverApiStateBuilder({
     required super.stateNotifier,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),
@@ -758,6 +760,7 @@ class SliverApiStateBuilder<T> extends ApiStateBuilder<T> {
     super.errorBuilder = SliverApiProviderBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
   );

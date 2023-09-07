@@ -42,7 +42,7 @@ class ImageFromZero extends StatefulWidget {
   /// this means the image already has a hero with this tag, a hero will not be added to the image if this is not null
   final String? heroTag;
 
-  ImageFromZero({super.key, 
+  ImageFromZero({
     required this.url,
     this.actions = const [],
     List<Widget>? fullscreenActions,
@@ -58,6 +58,7 @@ class ImageFromZero extends StatefulWidget {
     this.heroTag,
     this.fullscreenAsNewTabOnWeb = true,
     ImageSourceType? sourceType,
+    super.key,
   })  : fullscreenActions = fullscreenActions??actions,
         sourceType = sourceType ?? (url.length>=6 && url.substring(0, 6)=="assets" ? ImageSourceType.assets
                                         : url.length>=4 && url.substring(0, 4)=="http" ? ImageSourceType.network
@@ -421,11 +422,12 @@ class ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateMi
 
 
 class HeroWidget extends StatefulWidget {
-  const HeroWidget({super.key, 
+  const HeroWidget({
     required this.child,
     required this.tag,
     required this.slidePagekey,
     this.slideType = SlideType.onlyImage,
+    super.key,
   });
   final Widget child;
   final SlideType slideType;

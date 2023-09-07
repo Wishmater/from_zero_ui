@@ -27,7 +27,7 @@ class SnackBarControllerFromZero {
   void Function(VoidCallback)? setState;
   int? type;
 
-  Completer<void> _closedCompleter = Completer();
+  final Completer<void> _closedCompleter = Completer();
   Future<void> get closed => _closedCompleter.future;
 
   void dismiss() {
@@ -75,8 +75,8 @@ class SnackBarHostFromZero extends ConsumerStatefulWidget {
 
   const SnackBarHostFromZero({
     required this.child,
-    Key? key,
-  }) : super(key: key,);
+    super.key,
+  });
 
   @override
   SnackBarHostFromZeroState createState() => SnackBarHostFromZeroState();

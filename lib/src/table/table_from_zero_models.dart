@@ -13,40 +13,32 @@ class RowAction<T> extends ActionFromZero {
 
   final void Function(BuildContext context, RowModel<T> row)? onRowTap;
 
-  RowAction({super.key, 
+  RowAction({
     required this.onRowTap,
-    required String title,
-    Widget? icon,
-    bool enabled = true,
+    required super.title,
+    super.icon,
+    super.enabled,
     Map<double, ActionState>? breakpoints,
-    OverflowActionBuilder overflowBuilder = ActionFromZero.defaultOverflowBuilder,
-    ActionBuilder iconBuilder = ActionFromZero.defaultIconBuilder,
-    ActionBuilder buttonBuilder = ActionFromZero.defaultButtonBuilder,
+    super.overflowBuilder,
+    super.iconBuilder,
+    super.buttonBuilder,
+    super.key,
   }) : super(
     onTap: (context) {},
-    title: title,
-    icon: icon,
-    enabled: enabled,
     breakpoints: breakpoints ?? {
       0: ActionState.icon,
     },
-    overflowBuilder: overflowBuilder,
-    iconBuilder: iconBuilder,
-    buttonBuilder: buttonBuilder,
   );
 
   RowAction.divider({super.key, 
     Map<double, ActionState>? breakpoints,
-    OverflowActionBuilder overflowBuilder = ActionFromZero.dividerOverflowBuilder,
-    ActionBuilder iconBuilder = ActionFromZero.dividerIconBuilder,
-    ActionBuilder buttonBuilder = ActionFromZero.dividerIconBuilder,
+    super.overflowBuilder = ActionFromZero.dividerOverflowBuilder,
+    super.iconBuilder = ActionFromZero.dividerIconBuilder,
+    super.buttonBuilder = ActionFromZero.dividerIconBuilder,
   })  : onRowTap = null,
         super(
           onTap: null,
           title: '',
-          overflowBuilder: overflowBuilder,
-          iconBuilder: iconBuilder,
-          buttonBuilder: buttonBuilder,
           breakpoints: breakpoints ?? {
             0: ActionState.popup,
           },
@@ -305,8 +297,8 @@ class SimpleRowModel<T> extends RowModel<T> {
   List<RowModel<T>> children;
   SimpleRowModel({
     required this.id,
-    this.rowKey,
     required this.values,
+    this.rowKey,
     this.backgroundColor,
     this.textStyle,
     this.height = 36,
@@ -549,7 +541,7 @@ class NumColModel<T> extends SimpleColModel<T> {
       final List list = value is List ? value
           : value is ComparableList ? value.list : [];
       return ListField.listToStringAll(list,
-        converter: (value) => _format(value),
+        converter: _format,
       );
     } else {
       return _format(value);
@@ -769,7 +761,7 @@ class DateColModel<T> extends SimpleColModel<T> {
       final List list = value is List ? value
           : value is ComparableList ? value.list : [];
       return ListField.listToStringAll(list,
-        converter: (value) => _format(value),
+        converter: _format,
       );
     } else {
       return _format(value);

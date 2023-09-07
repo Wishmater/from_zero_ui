@@ -113,7 +113,7 @@ class NumGroupComparingBySum implements ValueString<num>  {
   NumberFormat? formatter;
 
   NumGroupComparingBySum(this.values, [this.formatter]){
-    for (var element in values) {
+    for (final element in values) {
       value = value! + (element??0);
     }
   }
@@ -146,7 +146,7 @@ class NumGroupComparingBySum implements ValueString<num>  {
       return -1;
     }
     if (value is Comparable) {
-      return (value! as Comparable).compareTo(other);
+      return (value!).compareTo(other);
     } else {
       return (value.toString()).compareTo(other.toString());
     }

@@ -17,11 +17,11 @@ import 'package:url_launcher/url_launcher.dart';
 final _percentFormatter = NumberFormat.decimalPercentPattern(decimalDigits: 1);
 
 Future<bool> saveFileFromZero ({
-  Key? snackBarKey,
   required BuildContext context,
   required FutureOr<List<int>> data,
   required String? pathAppend,
   required String name,
+  Key? snackBarKey,
   ValueNotifier<int>? downloadedAmount,
   ValueNotifier<int?>? fileSize,
   VoidCallback? onCancel,
@@ -39,7 +39,7 @@ Future<bool> saveFileFromZero ({
   }
   name = name // cleanup filename so it doesn't cause issues with system file path requirements
       .replaceAll('/', '-')
-      .replaceAll('\\', '-'); // TODO 3 validate all banned characters, depending on OS
+      .replaceAll(r'\', '-'); // TODO 3 validate all banned characters, depending on OS
 
   SnackBarControllerFromZero? downloadSnackBarController;
   bool cancelled = false;
@@ -95,7 +95,7 @@ Future<bool> saveFileFromZero ({
                 if (size==null || size==0) {
                   return const Text('');
                 } else {
-                  return Text('${_percentFormatter.format(count/size)}   ( ${count.bytes().toString()} / ${size.bytes().toString()} )');
+                  return Text('${_percentFormatter.format(count/size)}   ( ${count.bytes()} / ${size.bytes()} )');
                 }
               },
             );
@@ -233,7 +233,7 @@ Future<bool> saveFileFromZero ({
               if (Platform.isAndroid) {
                 await OpenFile.open(file!.parent.absolute.path);
               } else if (Platform.isWindows) {
-                await Process.run('explorer.exe /select,"${file!.absolute.path.replaceAll('/', '\\')}"', []);
+                await Process.run('explorer.exe /select,"${file!.absolute.path.replaceAll('/', r'\')}"', []);
               } else {
                 await launch(file!.parent.absolute.path);
               }

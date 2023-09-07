@@ -252,7 +252,7 @@ class LocaleSwitcher extends StatelessWidget {
         child: ListTile(
           title: Text(themeParameters.supportedLocaleTitles(context)[index]),
           leading: themeParameters.supportedLocaleIcons[index],
-          contentPadding: const EdgeInsets.all(0),
+          contentPadding: EdgeInsets.zero,
         ),
       ),),
       initialValue: themeParameters.selectedLocale,

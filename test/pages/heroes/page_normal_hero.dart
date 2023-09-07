@@ -34,7 +34,7 @@ class PageHeroesState extends State<PageNormalHero> {
         child: Center(
           child: Hero(
             tag: "hero_test",
-            child: Container(
+            child: ColoredBox(
               color: Theme.of(context).colorScheme.secondary,
               child: Column(
                 mainAxisSize: MainAxisSize.min,

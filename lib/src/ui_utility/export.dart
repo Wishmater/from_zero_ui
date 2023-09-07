@@ -54,7 +54,6 @@ class Export extends StatefulWidget { //TODO 3 internationalize
   final FileAutoOpenType autoOpenFile;
 
   Export.excelOnly({
-    Key? key,
     required this.path,
     required this.title,
     required this.scaffoldContext,
@@ -62,6 +61,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     this.actions = const [],
     this.autoExport = true,
     this.autoOpenFile = FileAutoOpenType.file,
+    super.key,
   })  : isPdfFormatAvailable = false,
         isPngFormatAvailable = false,childBuilder = null,
         childrenCount = null,
@@ -72,17 +72,15 @@ class Export extends StatefulWidget { //TODO 3 internationalize
         scrollableStickyOffset = 0,
         dummyChild = null,
         themeParameters = null,
-        exportThemeData = ThemeData(),
-        super(key: key);
+        exportThemeData = ThemeData();
 
   Export.scrollable({
-    Key? key,
     required this.scrollableChildBuilder,
-    this.scrollableStickyOffset = 0,
     required this.themeParameters,
     required this.path,
     required this.title,
     required this.scaffoldContext,
+    this.scrollableStickyOffset = 0,
     this.textEditingControllers,
     bool? showTitle,
     this.actions = const [],
@@ -93,6 +91,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     this.isPngFormatAvailable = true,
     this.autoExport = true,
     this.autoOpenFile = FileAutoOpenType.file,
+    super.key,
   })  : showTitle = showTitle ?? textEditingControllers==null ? true : false,
         exportThemeData =  (themeParameters?.lightTheme ?? ThemeData()).copyWith(
           canvasColor: Colors.white,
@@ -103,14 +102,14 @@ class Export extends StatefulWidget { //TODO 3 internationalize
 //            shape: Border.all(style: BorderStyle.none),
           ),
         ),
-        childBuilder = null,
-        super(key: key);
+        childBuilder = null;
 
-  Export.dummy({super.key, 
+  Export.dummy({
     required this.dummyChild,
     required this.themeParameters,
     this.isPdfFormatAvailable = true,
     this.isPngFormatAvailable = true,
+    super.key,
   }) :  autoExport = true,
         autoOpenFile = FileAutoOpenType.file,
         childBuilder = null,
@@ -128,7 +127,6 @@ class Export extends StatefulWidget { //TODO 3 internationalize
         exportThemeData = (themeParameters?.lightTheme ?? ThemeData());
 
   Export({
-    Key? key,
     required this.childBuilder,
     required this.childrenCount,
     required this.themeParameters,
@@ -145,6 +143,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
     this.isPngFormatAvailable = true,
     this.autoExport = true,
     this.autoOpenFile = FileAutoOpenType.file,
+    super.key,
   })  : showTitle = showTitle ?? textEditingControllers==null ? true : false,
         exportThemeData =  (themeParameters?.lightTheme ?? ThemeData()).copyWith(
           canvasColor: Colors.white,
@@ -156,8 +155,7 @@ class Export extends StatefulWidget { //TODO 3 internationalize
           ),
         ),
         scrollableChildBuilder = null,
-        scrollableStickyOffset = 0,
-        super(key: key);
+        scrollableStickyOffset = 0;
 
   @override
   ExportState createState() => ExportState();
@@ -204,10 +202,10 @@ class ExportState extends State<Export> {
 
   List<double> jumpsSeparatingPages = [0];
   List<double> pageBottomPaddings = [0];
-  var lastSize;
-  var lastPortrait;
-  var lastScale;
-  var lastFormat;
+  int? lastSize;
+  bool? lastPortrait;
+  double? lastScale;
+  String? lastFormat;
   bool first = true;
 
   @override
@@ -238,7 +236,7 @@ class ExportState extends State<Export> {
           position.haveDimensions;
           double totalHeight = position.maxScrollExtent+position.viewportDimension;
           List<double> significantWidgetVisibleAtStartOffsets = [0];
-          for (var element in widget.significantWidgetsKeys!) {
+          for (final element in widget.significantWidgetsKeys!) {
             if (element.currentContext!=null) {
               final object = element.currentContext!.findRenderObject();
               final viewport = RenderAbstractViewport.of(object);
@@ -298,7 +296,7 @@ class ExportState extends State<Export> {
   }
 
   int doneExports = 0;
-  Future<void> _export(Size size, [i=0, pdf]) async {
+  Future<void> _export(Size size, [int i=0, dynamic pdf]) async {
     if (format=='Excel'){
       return _executeExcelExport();
     }
@@ -325,7 +323,7 @@ class ExportState extends State<Export> {
       }
     });
   }
-  Future<void> _executeExport(Size size, i, pw.Document pdf) async {
+  Future<void> _executeExport(Size size, int i, pw.Document pdf) async {
     if (format=='PDF'){
       var format = Export.defaultFormats[currentSize];
       if (!portrait) format = PdfPageFormat(format.height, format.width);
@@ -335,7 +333,7 @@ class ExportState extends State<Export> {
       pdf.addPage(
         pw.Page(
           pageFormat: format,
-          margin: const pw.EdgeInsets.all(0),
+          margin: pw.EdgeInsets.zero,
           build: (context) => pw.Image(
             pw.MemoryImage(pngBytes),
           ),
@@ -374,7 +372,7 @@ class ExportState extends State<Export> {
   }
   Future<ui.Image> _getImage(Size size, GlobalKey boundaryKey) async{
     RenderRepaintBoundary boundary = boundaryKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
-    return await boundary.toImage(pixelRatio: 1920/size.longestSide);
+    return boundary.toImage(pixelRatio: 1920/size.longestSide);
   }
   Future<Uint8List> _getImageBytes(Size size, ui.Image image) async{
     ByteData byteData = (await image.toByteData(format: ui.ImageByteFormat.png))!;
@@ -414,7 +412,7 @@ class ExportState extends State<Export> {
                 flexMultiplier += col?.width??(col?.flex??0);
               } else if(!widthSetted) {
                 final percentage = (col?.width??(col?.flex??0)) * 100 / flexMultiplier;
-                double w = (tableWidth * percentage / 100).toDouble();
+                double w = (tableWidth * percentage / 100);
                 sheetObject.setColWidth(j, w/6.4);
                 if(j==keys.length-1){
                   widthSetted = true;
@@ -475,7 +473,7 @@ class ExportState extends State<Export> {
                   cellStyle.numFormat = "###,###,###,###,##0.00";
                 }
                 if (cellStyle.numFormat!=null) {
-                  if(!excel.numFormats.contains(cellStyle.numFormat!)) {
+                  if(!excel.numFormats.contains(cellStyle.numFormat)) {
                     excel.addNumFormats(cellStyle.numFormat!);
                   }
                 }
@@ -571,7 +569,7 @@ class ExportState extends State<Export> {
                 children: [
                   const CircularProgressIndicator(),
                   const SizedBox(height: 16,),
-                  Container(
+                  DecoratedBox(
                     decoration: BoxDecoration(
                       color: Theme.of(context).cardColor.withOpacity(0.8),
                       borderRadius: const BorderRadius.all(Radius.circular(4)),
@@ -752,7 +750,7 @@ class ExportState extends State<Export> {
                         ),
                         onChanged: (value) {
                           setState(() {
-                            formatIndex = (value! as int)!;
+                            formatIndex = (value!);
                           });
                         },
                       ),
@@ -779,7 +777,7 @@ class ExportState extends State<Export> {
                         ],
                         onChanged: format=='Excel' ? null : (value) {
                           setState(() {
-                            portrait = (value! as bool)!;
+                            portrait = (value! as bool);
                           });
                         },
                       ),
@@ -801,7 +799,7 @@ class ExportState extends State<Export> {
                         ),
                         onChanged: format=='Excel' ? null : (value) {
                           setState(() {
-                            currentSize = (value! as int)!;
+                            currentSize = (value! as int);
                           });
                         },
                       ),
@@ -962,7 +960,7 @@ class _PageWrapper extends StatelessWidget {
           child: AspectRatio(
             aspectRatio: size.width/size.height,
             child: SizedBox.expand(
-              child: Container(
+              child: ColoredBox(
                 color: Colors.white,
                 child: FittedBox(
                   alignment: Alignment.center,

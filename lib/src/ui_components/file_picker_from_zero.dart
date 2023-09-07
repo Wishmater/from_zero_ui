@@ -34,8 +34,8 @@ class FilePickerFromZero extends StatefulWidget {
     this.onlyForDragAndDrop = false,
     this.initialDirectory,
     this.enabled = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<FilePickerFromZero> createState() => _FilePickerFromZeroState();
@@ -128,7 +128,7 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
       onDragDone: (detail) {
         if (mounted) {
           final paths = detail.files.map((e) => e.path).toList();
-          final result = paths.map((e) => File(e)).toList();
+          final result = paths.map(File.new).toList();
           if (_isListAccepted(paths)) {
             widget.onSelected(result);
           }
@@ -152,7 +152,7 @@ class _FilePickerFromZeroState extends State<FilePickerFromZero> {
     if (!widget.allowMultiple && paths.length>1) {
       return false;
     } else {
-      return paths.where((e) => _isAccepted(e)).isNotEmpty;
+      return paths.where(_isAccepted).isNotEmpty;
     }
   }
   bool _isAccepted(String path) {

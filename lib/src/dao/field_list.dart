@@ -44,7 +44,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool showObjectsFromAvailablePoolAsTable;
   AvailablePoolTransformerFunction<T>? transformSelectedFromAvailablePool; /// transformation applied to selected items from available pool before adding them to ListField rows
   ContextFulFieldValueGetter<List<ActionFromZero>, Field>? availablePoolTableActions;
-  bool? _allowAddNew;
+  final bool? _allowAddNew;
   bool get allowAddNew => _allowAddNew ?? objectTemplate.canSave;
   bool collapsed;
   bool allowMultipleSelection;
@@ -66,13 +66,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   Widget? Function(BuildContext context, RowModel<T> row, int index, double? minWidth, Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder)? tableRowWidgetBuilder;
   /// this means that save() will be called on the object when adding a row
   /// and delete() will be called when removing a row, default false
-  bool? _skipDeleteConfirmation;
+  final bool? _skipDeleteConfirmation;
   bool get skipDeleteConfirmation => _skipDeleteConfirmation ?? !objectTemplate.canDelete;
   bool showTableHeaders;
   bool showTableHeaderAddon;
   bool showElementCount;
   double? rowHeight;
-  bool? _showDefaultSnackBars;
+  final bool? _showDefaultSnackBars;
   bool get showDefaultSnackBars => _showDefaultSnackBars ?? objectTemplate.canSave;
   ContextFulFieldValueGetter<List<RowAction<T>>, ListField<T, U>>? extraRowActionsBuilder; //TODO 3 also allow global action builders
   bool showEditDialogOnAdd;
@@ -213,7 +213,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }
 
   ListField({
-    required FieldValueGetter<String, Field> uiNameGetter,
+    required super.uiNameGetter,
     required this.objectTemplateGetter,
     required List<T> objects,
     List<T>? dbObjects,
@@ -224,13 +224,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.transformSelectedFromAvailablePool,
     this.availablePoolTableActions,
     bool? allowAddNew,
-    FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, /// Unused in table
+    super.clearableGetter = trueFieldGetter, /// Unused in table
     this.tableCellsEditable = false,
     bool? allowTableCustomization,
     this.ignoreWidthGettersIfEmpty,
-    double maxWidth = double.infinity,
-    double minWidth = 512,
-    double flex = 0,
+    super.maxWidth = double.infinity,
+    super.minWidth = 512,
+    super.flex,
     TableController<T>? tableController,
     this.collapsed = false,
     this.allowMultipleSelection = false,
@@ -255,38 +255,38 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.extraRowActionsBuilder,
     this.showAddButtonAtEndOfTable = false,
     bool? showEditDialogOnAdd,
-    FieldValueGetter<String?, Field>? hintGetter,
-    FieldValueGetter<String?, Field>? tooltipGetter,
+    super.hintGetter,
+    super.tooltipGetter,
     this.tableErrorWidget,
-    double? tableColumnWidth,
-    FieldValueGetter<bool, Field>? hiddenGetter,
-    FieldValueGetter<bool, Field>? hiddenInTableGetter,
-    FieldValueGetter<bool, Field>? hiddenInViewGetter,
-    FieldValueGetter<bool, Field>? hiddenInFormGetter,
+    super.tableColumnWidth,
+    super.hiddenGetter,
+    super.hiddenInTableGetter,
+    super.hiddenInViewGetter,
+    super.hiddenInFormGetter,
     this.initialSortedColumn,
     this.onRowTap,
-    FieldValueGetter<List<FieldValidator<ComparableList<T>>>, Field>? validatorsGetter,
-    bool validateOnlyOnConfirm = false,
+    super.validatorsGetter,
+    super.validateOnlyOnConfirm,
     this.tableSortable,
     bool? tableFilterable,
-    FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
-    List<ComparableList<T>?>? undoValues,
-    List<ComparableList<T>?>? redoValues,
-    GlobalKey? fieldGlobalKey,
-    bool invalidateNonEmptyValuesIfHiddenInForm = true,
+    super.colModelBuilder,
+    super.undoValues,
+    super.redoValues,
+    super.fieldGlobalKey,
+    super.invalidateNonEmptyValuesIfHiddenInForm,
     this.invalidateValuesNotInAvailablePool = false,
     ComparableList<T>? defaultValue,
     this.expandHorizontally = true,
-    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    super.backgroundColor,
     super.actionsGetter,
-    ViewWidgetBuilder<ComparableList<T>> viewWidgetBuilder = ListField.defaultViewWidgetBuilder,
+    super.viewWidgetBuilder = ListField.defaultViewWidgetBuilder,
     this.icon,
     this.onFilter,
     this.exportPathForExcel,
     this.buildViewWidgetAsTable = false,
     this.addSearchAction = false,
     bool? validateChildren,
-    OnFieldValueChanged<ComparableList<T>?>? onValueChanged,
+    super.onValueChanged,
     this.tableFooterStickyOffset = 12,
     this.tableHorizontalPadding = 8,
     this.rowAddonField,
@@ -312,38 +312,16 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         validateChildren = tableCellsEditable && (validateChildren ?? true),
         allowTableCustomization = allowTableCustomization ?? !tableCellsEditable,
         super(
-          uiNameGetter: uiNameGetter,
           value: ComparableList(list: objects),
           dbValue: ComparableList(list: dbObjects ?? objects),
-          clearableGetter: clearableGetter,
-          maxWidth: maxWidth,
-          minWidth: minWidth,
-          flex: flex,
-          hintGetter: hintGetter,
-          tooltipGetter: tooltipGetter,
-          tableColumnWidth: tableColumnWidth,
-          hiddenGetter: hiddenGetter,
-          hiddenInTableGetter: hiddenInTableGetter,
-          hiddenInViewGetter: hiddenInViewGetter,
-          hiddenInFormGetter: hiddenInFormGetter,
-          validatorsGetter: validatorsGetter,
-          validateOnlyOnConfirm: validateOnlyOnConfirm,
-          colModelBuilder: colModelBuilder,
-          undoValues: undoValues,
-          redoValues: redoValues,
-          fieldGlobalKey: fieldGlobalKey,
-          invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
           defaultValue: defaultValue ?? ComparableList<T>(),
-          backgroundColor: backgroundColor,
-          viewWidgetBuilder: viewWidgetBuilder,
-          onValueChanged: onValueChanged,
         ) {
     this.selectedObjects = selectedObjects ?? ValueNotifier({});
     addListeners();
   }
 
   void addListeners() {
-    for (var element in value!.list) {
+    for (final element in value!.list) {
       element.addListener(notifyListeners);
     }
   }
@@ -351,7 +329,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   @override
   set dao(DAO dao) {
     super.dao = dao;
-    for (var element in value!.list) {
+    for (final element in value!.list) {
       element.parentDAO = dao;
     }
   }
@@ -696,7 +674,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   void duplicateRows(Iterable<T> elements, [bool focusAdded = true]) {
     if (elements.isEmpty) return;
     final newValue = value!.copyWith();
-    for (var e in elements) {
+    for (final e in elements) {
       int index = newValue.indexOf(e);
       final newItem = e.copyWith() as T;
       newItem.id = null;
@@ -718,7 +696,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     if (elements.isEmpty) return false;
     bool result = false;
     final newValue = value!.copyWith();
-    for (var e in elements) {
+    for (final e in elements) {
       result = newValue.remove(e) || result;
       if (proxiedListFields!=null) {
         for (final proxiedList in proxiedListFields!(this, dao)) {
@@ -1250,7 +1228,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     if (confirm??false) {
       dao.props.forEach((key, value) {
         if (value.isEdited) {
-          for (var e in elements) {
+          for (final e in elements) {
             e.props[key]?.value = value.value;
           }
         }
@@ -1344,12 +1322,12 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     return [result];
   }
   Widget _builWidgetsAsPopupButton(BuildContext context, {
+    required FocusNode focusNode,
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool largeHorizontally = false,
     bool dense = false,
-    required FocusNode focusNode,
   }) {
     Widget result = AnimatedBuilder(
       animation: this,
@@ -1806,7 +1784,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                     showDefaultSnackBars: showDefaultSnackBars,
                   );
                 };
-                break;
               case RowTapType.edit:
                 onRowTap = (row) async {
                   final copy = row.id.copyWith() as T;
@@ -1818,10 +1795,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                     notifyListeners();
                   }
                 };
-                break;
               case RowTapType.none:
                 onRowTap = null;
-                break;
             }
           }
           Widget? rowAddonWidget;
@@ -2057,7 +2032,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               ),
           ],
           onAllSelected: allowMultipleSelection ? (value, rows) {
-            for (var row in rows) {
+            for (final row in rows) {
               selectedObjects.value[row.id] = value??false;
               (row as SimpleRowModel).selected = value??false;
             }
@@ -2206,7 +2181,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         if (collapsed! || !enabled) {
           return const SizedBox.shrink();
         }
-        return Container(
+        return ColoredBox(
           color: backgroundColor?.call(context, this, dao) ?? Material.of(context).color ?? Theme.of(context).cardColor,
           child: TextButton.icon(
             style: TextButton.styleFrom(
@@ -2331,7 +2306,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 padding: const EdgeInsets.only(left: 12),
                 child: IconButton(
                   icon: const Icon(Icons.info_outline),
-                  padding: const EdgeInsets.all(0),
+                  padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(maxHeight: 32),
                   onPressed: onTap,
                 ),

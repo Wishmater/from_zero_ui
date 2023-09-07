@@ -70,7 +70,6 @@ class TableFromZero<T> extends StatefulWidget {
   final String? Function(RowModel<T> row)? rowTooltipGetter;
 
   const TableFromZero({
-    Key? key,
     required this.rows,
     this.columns,
     this.enabled = true,
@@ -111,7 +110,8 @@ class TableFromZero<T> extends StatefulWidget {
     this.allowCustomization = true,
     this.rowDisabledValidator,
     this.rowTooltipGetter,
-  }) :  super(key: key,);
+    super.key,
+  });
 
   @override
   TableFromZeroState<T> createState() => TableFromZeroState<T>();
@@ -254,13 +254,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     sharedController.addListener(() {
       if (!lockScrollUpdates){
         double? newPosition;
-        for (var element in sharedController.positions) {
+        for (final element in sharedController.positions) {
           if (element.pixels!=lastPosition) newPosition = element.pixels;
         }
         lockScrollUpdates = true;
         if (newPosition!=null){
           lastPosition = newPosition;
-          for (var element in sharedController.positions) {
+          for (final element in sharedController.positions) {
             if (element.pixels!=newPosition){
               element.jumpTo(newPosition);
             }
@@ -705,7 +705,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         ? headerRowModel!=null
             ? headerRowModel!.values.isEmpty && headerRowModel!.rowAddon!=null
                 ? headerRowModel!.rowAddon!
-                : _getRow(context, headerRowModel!, -1, minWidth)
+                : _getRow(context, headerRowModel, -1, minWidth)
             : null
         : headerRowModel?.rowAddon;
     if (header!=null) {
@@ -966,7 +966,8 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         if (result==null && col?.flex==0){
           return const SizedBox.shrink();
         }
-        result = Container(
+        result = Container( // ignore: use_decorated_box
+                            // decoration is nullable, so it can't be passed to a DecoratedBox, and this ensures result!=null
           decoration: _getDecoration(row, index, colKey),
           child: result,
         );
@@ -1509,7 +1510,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               minFontSize: 15,
               overflowReplacement: name!=compactName ? null : TooltipFromZero(
                 message: name,
-                waitDuration: const Duration(milliseconds: 0),
+                waitDuration: Duration.zero,
                 verticalOffset: -16,
                 child: Text(
                   name,
@@ -1752,7 +1753,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       minFontSize: 15,
       overflowReplacement: TooltipFromZero(
         message: message,
-        waitDuration: const Duration(milliseconds: 0),
+        waitDuration: Duration.zero,
         verticalOffset: -16,
         child: Text(
           message,
@@ -1816,18 +1817,18 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return widget.columns?[colKey]?.alignment ?? TextAlign.left;
   }
 
-  TextStyle? _getStyle(BuildContext context, RowModel<T> row, dynamic j){
+  TextStyle? _getStyle(BuildContext context, RowModel<T> row, dynamic key){
     TextStyle? style;
-    if (widget.rowStyleTakesPriorityOverColumn){
-      style = row.textStyle ?? widget.columns?[j]?.textStyle;
-    } else{
-      style = widget.columns?[j]?.textStyle ?? row.textStyle;
+    if (widget.rowStyleTakesPriorityOverColumn) {
+      style = row.textStyle ?? widget.columns?[key]?.textStyle;
+    } else {
+      style = widget.columns?[key]?.textStyle ?? row.textStyle;
     }
     return style;
   }
 
-  int _getFlex(j){
-    return widget.columns?[j]?.flex ?? 1;
+  int _getFlex(dynamic key) {
+    return widget.columns?[key]?.flex ?? 1;
   }
 
   static List<Widget> addManageActions(BuildContext context, {
@@ -1876,7 +1877,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         icon: MaterialCommunityIcons.filter_outline,
         selectedIcon: MaterialCommunityIcons.filter,
         selectedColor: theme.brightness==Brightness.light ? theme.primaryColor : theme.colorScheme.secondary,
-        unselectedColor: theme.textTheme.bodyLarge!.color!,
+        unselectedColor: theme.textTheme.bodyLarge!.color,
         unselectedOffset: 0,
         selectedOffset: 0,
       ),
@@ -1925,9 +1926,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     }
     _updateFiltersApplied();
     if (updateStateIfModified) {
-      setState(() {
-        filter();
-      });
+      setState(filter);
     }
   }
   static List<Widget> addExportExcelAction(BuildContext context, {
@@ -2218,7 +2217,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             || (conditionFilters[key] ?? []).isNotEmpty,
     };
   }
-  bool _isValueFilterApplied(key) {
+  bool _isValueFilterApplied(dynamic key) {
     bool? previous;
     for (var i = 0; i < (availableFilters.value?[key]?.length ?? 0); ++i) {
       final availableFilter = availableFilters.value![key]![i];

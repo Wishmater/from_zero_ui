@@ -10,9 +10,9 @@ class GestureRelayController {
 
   GestureRelayController();
 
-  List<PointerDownEventListener> _onPointerDowns = [];
+  final List<PointerDownEventListener> _onPointerDowns = [];
   List<PointerDownEventListener> get onPointerDowns => _onPointerDowns;
-  List<PointerSignalEventListener> _onPointerSignals = [];
+  final List<PointerSignalEventListener> _onPointerSignals = [];
   List<PointerSignalEventListener> get onPointerSignals => _onPointerSignals;
 
   void addOnPointerDown(PointerDownEventListener listener) {
@@ -53,8 +53,8 @@ class GestureRelayer extends StatefulWidget {
   const GestureRelayer({
     required this.controller,
     required this.child,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<GestureRelayer> createState() => _GestureRelayerState();
@@ -134,15 +134,15 @@ class GestureRelayListener extends StatelessWidget {
     required this.controller,
     required this.child,
     this.behaviour = HitTestBehavior.deferToChild,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Listener(
       behavior: behaviour,
-      onPointerDown: (event) => controller.relayOnPointerDown(event),
-      onPointerSignal: (event) => controller.relayOnPointerSignal(event),
+      onPointerDown: controller.relayOnPointerDown,
+      onPointerSignal: controller.relayOnPointerSignal,
       child: child,
     );
   }

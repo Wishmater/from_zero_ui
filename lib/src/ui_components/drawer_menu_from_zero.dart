@@ -222,7 +222,6 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
   final Map<int, GlobalKey<ExpansionTileFromZeroState>>? expansionTileKeys;
 
   DrawerMenuFromZero({
-    Key? key,
     required this.tabs,
     this.parentTabs,
     @deprecated
@@ -239,8 +238,8 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
     this.allowCollapseRoot = true,
     String? homeRoute,
     this.expansionTileKeys,
-  })  : homeRoute = homeRoute ?? tabs[0].route,
-        super(key: key);
+    super.key,
+  })  : homeRoute = homeRoute ?? tabs[0].route;
 
   @override
   DrawerMenuFromZeroState createState() => DrawerMenuFromZeroState();
@@ -261,7 +260,7 @@ class DrawerMenuFromZero extends ConsumerStatefulWidget {
 
 class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
-  Map<int, GlobalKey<ContextMenuFromZeroState>> _menuButtonKeys = {};
+  final Map<int, GlobalKey<ContextMenuFromZeroState>> _menuButtonKeys = {};
   late List<ResponsiveDrawerMenuItem> _tabs;
   late int _selected;
   bool pendingUpdate = false;
@@ -458,7 +457,7 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
         if (divider.widget!=null){
           return Padding(
             padding: EdgeInsets.only(left: widget.depth==0 ? 0 : 26 + (widget.depth-1)*21.0),
-            child: divider.widget!,
+            child: divider.widget,
           );
         } else{
           double height = widget.compact||tabs[i].title.isNullOrEmpty ? 9 : 32;
@@ -512,8 +511,8 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   }
                   GoRouter.of(context).goNamed(
                     tabs[i].route!,
-                    pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
-                    queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                    pathParameters: (tabs[i].pathParameters??{}).map(MapEntry.new),
+                    queryParameters: (tabs[i].queryParameters??{}).map(MapEntry.new),
                     extra: tabs[i].extra,
                   );
                 }
@@ -551,8 +550,8 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   } else {
                     goRouter.pushNamed(
                       tabs[i].route!,
-                      pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
-                      queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                      pathParameters: (tabs[i].pathParameters??{}).map(MapEntry.new),
+                      queryParameters: (tabs[i].queryParameters??{}).map(MapEntry.new),
                       extra: tabs[i].extra,
                     );
                   }
@@ -579,8 +578,8 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                         goRouter.pushNamedAndRemoveUntil(
                           tabs[i].route!,
                           (match) => (match.route as GoRoute).name==widget.homeRoute,
-                          pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
-                          queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                          pathParameters: (tabs[i].pathParameters??{}).map(MapEntry.new),
+                          queryParameters: (tabs[i].queryParameters??{}).map(MapEntry.new),
                           extra: tabs[i].extra,
                         );
                       }
@@ -596,8 +595,8 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                 } else {
                   goRouter.pushNamed(
                     tabs[i].route!,
-                    pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
-                    queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                    pathParameters: (tabs[i].pathParameters??{}).map(MapEntry.new),
+                    queryParameters: (tabs[i].queryParameters??{}).map(MapEntry.new),
                     extra: tabs[i].extra,
                   );
                 }
@@ -609,7 +608,7 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                   }
                   void Function(List<ResponsiveDrawerMenuItem>)? addRoutes;
                   addRoutes = (List<ResponsiveDrawerMenuItem> items) {
-                    for (var e in items) {
+                    for (final e in items) {
                       if (e.route!=null) {
                         routes.add(e.route!);
                       }
@@ -641,8 +640,8 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                         }
                         return false;
                       },
-                      pathParameters: (tabs[i].pathParameters??{}).map((key, value) => MapEntry(key, value.toString())),
-                      queryParameters: (tabs[i].queryParameters??{}).map((key, value) => MapEntry(key, value.toString())),
+                      pathParameters: (tabs[i].pathParameters??{}).map(MapEntry.new),
+                      queryParameters: (tabs[i].queryParameters??{}).map(MapEntry.new),
                       extra: tabs[i].extra,
                     );
                   }
@@ -931,10 +930,9 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
   final bool softWrap;
 
   const DrawerMenuButtonFromZero({
-    Key? key,
+    required this.title,
     this.selected=false,
     this.compact=false,
-    required this.title,
     this.denseTitle,
     this.titleWidget,
     this.subtitle,
@@ -948,7 +946,8 @@ class DrawerMenuButtonFromZero extends StatefulWidget {
     this.mouseCursor = SystemMouseCursors.click,
     this.showAnimatedShadowIfSelected = true,
     this.softWrap = true,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   DrawerMenuButtonFromZeroState createState() => DrawerMenuButtonFromZeroState();

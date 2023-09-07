@@ -165,8 +165,8 @@ class _FocusTraversalGroupMarker extends InheritedWidget {
   const _FocusTraversalGroupMarker({
     required this.policy,
     required this.focusNode,
-    required Widget child,
-  })  : super(child: child);
+    required super.child,
+  });
 
   final FocusTraversalPolicy policy;
   final FocusNode focusNode;

@@ -5,15 +5,14 @@ class FadeUpwardsSlideTransition extends StatelessWidget {
   final bool upwards;
   final Tween<Offset>? movementTween;
   FadeUpwardsSlideTransition({
-    Key? key,
-    required Animation<double> routeAnimation, // The route's linear 0.0 - 1.0 animation.
+    required Animation<double> routeAnimation,
     required this.child,
     this.movementTween,
     this.upwards = true,
+    super.key,
   }) : _positionAnimation = routeAnimation
           .drive((movementTween ?? (upwards ? _bottomUpTween : _topDownTween))
-              .chain(_fastOutSlowInTween),),
-        super(key: key);
+              .chain(_fastOutSlowInTween),);
 
   // Fractional offset from 1/4 screen below the top to fully on screen.
   static final Tween<Offset> _bottomUpTween = Tween<Offset>(
@@ -41,11 +40,10 @@ class FadeUpwardsSlideTransition extends StatelessWidget {
 
 class FadeUpwardsFadeTransition extends StatelessWidget {
   FadeUpwardsFadeTransition({
-    Key? key,
-    required Animation<double> routeAnimation, // The route's linear 0.0 - 1.0 animation.
+    required Animation<double> routeAnimation,
     required this.child,
-  }) : _opacityAnimation = routeAnimation.drive(_easeInTween),
-        super(key: key);
+    super.key,
+  }) : _opacityAnimation = routeAnimation.drive(_easeInTween);
 
   static final Animatable<double> _easeInTween = CurveTween(curve: Curves.easeIn);
 

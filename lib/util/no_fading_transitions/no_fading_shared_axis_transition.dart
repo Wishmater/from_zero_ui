@@ -185,13 +185,13 @@ class SharedAxisTransition extends StatelessWidget {
   /// The [animation] and [secondaryAnimation] argument are required and must
   /// not be null.
   const SharedAxisTransition({
-    Key? key,
     required this.animation,
     required this.secondaryAnimation,
     required this.transitionType,
-    this.fillColor,
     required this.child,
-  })  : super(key: key);
+    this.fillColor,
+    super.key,
+  });
 
   /// The animation that drives the [child]'s entrance and exit.
   ///
@@ -294,8 +294,8 @@ class _EnterTransition extends StatelessWidget {
   const _EnterTransition({
     required this.animation,
     required this.transitionType,
-    this.reverse = false,
     required this.child,
+    this.reverse = false,
   });
 
   final Animation<double> animation;
@@ -327,12 +327,11 @@ class _EnterTransition extends StatelessWidget {
           builder: (BuildContext context, Widget? child) {
             return Transform.translate(
               offset: slideInTransition.evaluate(animation),
-              child: child!,
+              child: child,
             );
           },
           child: child,
         );
-        break;
       case SharedAxisTransitionType.vertical:
         final Animatable<Offset> slideInTransition = Tween<Offset>(
           begin: Offset(0.0, !reverse ? 30.0 : -30.0),
@@ -349,14 +348,12 @@ class _EnterTransition extends StatelessWidget {
           },
           child: child,
         );
-        break;
       case SharedAxisTransitionType.scaled:
         return ScaleTransition(
           scale: (!reverse ? _scaleUpTransition : _scaleDownTransition)
               .animate(animation),
           child: child,
         );
-        break;
     }
   }
 }
@@ -365,9 +362,9 @@ class _ExitTransition extends StatelessWidget {
   const _ExitTransition({
     required this.animation,
     required this.transitionType,
-    this.reverse = false,
     required this.fillColor,
     required this.child,
+    this.reverse = false,
   });
 
   final Animation<double> animation;
@@ -395,7 +392,7 @@ class _ExitTransition extends StatelessWidget {
           end: Offset(!reverse ? -30.0 : 30.0, 0.0),
         ).chain(CurveTween(curve: standardEasing));
 
-        return Container(
+        return ColoredBox(
           color: fillColor,
           child: AnimatedBuilder(
             animation: animation,
@@ -408,14 +405,13 @@ class _ExitTransition extends StatelessWidget {
             child: child,
           ),
         );
-        break;
       case SharedAxisTransitionType.vertical:
         final Animatable<Offset> slideOutTransition = Tween<Offset>(
           begin: Offset.zero,
           end: Offset(0.0, !reverse ? -30.0 : 30.0),
         ).chain(CurveTween(curve: standardEasing));
 
-        return Container(
+        return ColoredBox(
           color: fillColor,
           child: AnimatedBuilder(
             animation: animation,
@@ -428,9 +424,8 @@ class _ExitTransition extends StatelessWidget {
             child: child,
           ),
         );
-        break;
       case SharedAxisTransitionType.scaled:
-        return Container(
+        return ColoredBox(
           color: fillColor,
           child: ScaleTransition(
             scale: (!reverse ? _scaleUpTransition : _scaleDownTransition)
@@ -438,7 +433,6 @@ class _ExitTransition extends StatelessWidget {
             child: child,
           ),
         );
-        break;
     }
   }
 }

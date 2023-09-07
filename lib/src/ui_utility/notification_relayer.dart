@@ -7,7 +7,7 @@ class NotificationRelayController {
 
   NotificationRelayController(this.shouldRelay);
 
-  List<void Function(Notification notification)> _listeners = [];
+  final List<void Function(Notification notification)> _listeners = [];
   List<void Function(Notification notification)> get listeners => _listeners;
 
   void addListener(void Function(Notification notification) listener) {
@@ -42,8 +42,8 @@ class NotificationRelayListener extends StatelessWidget {
     required this.child,
     required this.controller,
     this.consumeRelayedNotifications = false,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -69,8 +69,8 @@ class NotificationRelayer extends StatefulWidget {
   const NotificationRelayer({
     required this.child,
     required this.controller,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
   @override
   NotificationRelayerState createState() => NotificationRelayerState();
 }

@@ -64,10 +64,11 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
   final GoRouter goRouter;
   final bool allowDraggingWithMouseDownOnDesktop;
 
-  const FromZeroAppContentWrapper({super.key, 
+  const FromZeroAppContentWrapper({
     required this.child,
     required this.goRouter,
     this.allowDraggingWithMouseDownOnDesktop = !kReleaseMode,
+    super.key,
   });
 
   @override
@@ -110,7 +111,7 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
     final tasklistProc = Process.runSync('tasklist', ['/NH', '/FO', 'csv']);
     final lines = const LineSplitter().convert(tasklistProc.stdout);
     final pids = <String, int>{};
-    for (var line in lines) {
+    for (final line in lines) {
       final elems = line.split(',').map((elem) => elem.replaceAll('"', '')).toList();
       final name = elems[0];
       final pid = int.parse(elems[1]);
@@ -269,8 +270,8 @@ class AppearOnMouseOver extends StatefulWidget {
   const AppearOnMouseOver({
     required this.child,
     this.appear = true,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   AppearOnMouseOverState createState() => AppearOnMouseOverState();
@@ -341,7 +342,6 @@ class WindowBar extends StatelessWidget {
   final GoRouter? goRouter;
 
   const WindowBar({
-    Key? key,
     this.goRouter,
     this.height,
     this.backgroundColor,
@@ -353,7 +353,8 @@ class WindowBar extends StatelessWidget {
     this.showMaximizeOrRestore = true,
     this.showClose = true,
     this.title,
-  })  : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -471,7 +472,11 @@ class MoveWindowFromZero extends StatefulWidget {
   final Widget? child;
   final VoidCallback? onDoubleTap;
 
-  const MoveWindowFromZero({Key? key, this.child, this.onDoubleTap}) : super(key: key);
+  const MoveWindowFromZero({
+    this.child,
+    this.onDoubleTap,
+    super.key,
+  });
 
   @override
   State<MoveWindowFromZero> createState() => _MoveWindowFromZeroState();
@@ -734,9 +739,9 @@ class CloseConfirmDialog extends StatelessWidget {
   final bool? forceExitApp;
 
   const CloseConfirmDialog({
-    Key? key,
     this.forceExitApp,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

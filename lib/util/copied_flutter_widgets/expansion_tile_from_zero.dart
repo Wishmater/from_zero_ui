@@ -31,7 +31,6 @@ class ExpansionTileFromZero extends StatefulWidget {
   /// the tile to reveal or hide the [children]. The [initiallyExpanded] property must
   /// be non-null.
   const ExpansionTileFromZero({
-    Key? key,
     this.leading,
     this.title,
     this.subtitle,
@@ -54,14 +53,14 @@ class ExpansionTileFromZero extends StatefulWidget {
     this.childrenKeysForExpandCollapse = const [],
     this.enabled = true,
     this.titleBuilder,
+    super.key,
   }) :  assert(title!=null || titleBuilder!=null, 'Must specify a title'),
         assert(title==null || titleBuilder==null, 'Only 1 title must be specified'),
         assert(
         expandedCrossAxisAlignment != CrossAxisAlignment.baseline,
         'CrossAxisAlignment.baseline is not supported since the expanded children '
             'are aligned in a column, not a row. Try to use another constant.',
-        ),
-        super(key: key);
+        );
 
 
 
@@ -359,7 +358,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
                   onTap: (context) {
                     bool expand = widget.childrenKeysForExpandCollapse!
                         .where((e) => !(e.currentState?.isExpanded ?? false)).isNotEmpty;
-                    for (var e in widget.childrenKeysForExpandCollapse!) {
+                    for (final e in widget.childrenKeysForExpandCollapse!) {
                       e.currentState!.setExpanded(expand);
                     }
                     setState((){});
@@ -374,7 +373,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     return Material(
       type: MaterialType.transparency,
       color: Material.maybeOf(context)?.color ?? Colors.transparent,
-      child: Container(
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: _backgroundColor.value,
           // border: Border(

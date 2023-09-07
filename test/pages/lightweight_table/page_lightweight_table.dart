@@ -180,7 +180,7 @@ class PageLightweightTableState extends State<PageLightweightTable> {
 
   List<GlobalKey> col3RowKeys = List.generate(100, (index) => GlobalKey());
   Widget _getCol3(BuildContext context, ScrollController controller, [List<Key>? rowKeys]){
-    rowKeys ??= List.generate(100, (index) => ValueKey(index));
+    rowKeys ??= List.generate(100, ValueKey.new);
     table3 = TableFromZero(
       horizontalDivider: null,
       verticalDivider: null,

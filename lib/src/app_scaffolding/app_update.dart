@@ -125,7 +125,7 @@ class UpdateFromZero{
               || appDownloadUrl.endsWith('.msi')
               || appDownloadUrl.endsWith('.msix')) {
             // Update is a windows native installer, just run it and let it do its magic
-            Process.start(downloadPath.replaceAll('/', '\\'), [],);
+            Process.start(downloadPath.replaceAll('/', r'\'), [],);
             await Future.delayed(const Duration(seconds: 1));
             FromZeroAppContentWrapper.exitApp(0);
           } else {
@@ -154,9 +154,9 @@ class UpdateFromZero{
             var executableFile = Directory(newAppDirectory).listSync()
                 .firstWhere((element) => element.path.endsWith('.exe'));
             argumentsFile.writeAsStringSync("$newAppDirectory\n$scriptPath");
-            log(executableFile.absolute.path.replaceAll('/', '\\'));
-            Process.start(executableFile.absolute.path.replaceAll('/', '\\'), [],
-              workingDirectory: scriptPath.replaceAll('/', '\\'),
+            log(executableFile.absolute.path.replaceAll('/', r'\'));
+            Process.start(executableFile.absolute.path.replaceAll('/', r'\'), [],
+              workingDirectory: scriptPath.replaceAll('/', r'\'),
             );
             await Future.delayed(const Duration(seconds: 1));
             FromZeroAppContentWrapper.exitApp(0);
@@ -198,8 +198,8 @@ class UpdateFromZero{
     copyDirectory(newAppDirectory, oldAppDirectory);
     var executableFile = oldAppDirectory.listSync()
         .firstWhere((element) => element.path.endsWith('.exe'));
-    Process.start(executableFile.absolute.path.replaceAll('/', '\\'), [],
-        workingDirectory: oldAppPath.replaceAll('/', '\\'),
+    Process.start(executableFile.absolute.path.replaceAll('/', r'\'), [],
+        workingDirectory: oldAppPath.replaceAll('/', r'\'),
     );
     await Future.delayed(const Duration(seconds: 1));
     FromZeroAppContentWrapper.exitApp(0);

@@ -90,17 +90,17 @@ abstract class ComparableListBase<T> implements Comparable, ContainsValue<List<T
 
   int get length => list.length;
 
-  List operator +(List other) => list + (other as List<T>);
+  List<T> operator +(List<dynamic> other) => list + (other as List<T>);
 
   T operator [](int index) => list[index];
 
-  void operator []=(int index, value) => list[index] = value;
+  void operator []=(int index, T value) => list[index] = value;
 
   void add(T value) => list.add(value);
 
   void insert(int index, T value) => list.insert(index, value);
 
-  void addAll(Iterable iterable) => list.addAll(iterable.cast<T>());
+  void addAll(Iterable<dynamic> iterable) => list.addAll(iterable.cast<T>());
 
   bool remove(T value) => list.remove(value);
 
@@ -114,7 +114,7 @@ abstract class ComparableListBase<T> implements Comparable, ContainsValue<List<T
 
   bool get isNotEmpty => list.isNotEmpty;
 
-  Iterable where(bool Function(T element) test) => list.where(test);
+  Iterable<T> where(bool Function(T element) test) => list.where(test);
 
   int indexOf(T element) => list.indexOf(element);
 

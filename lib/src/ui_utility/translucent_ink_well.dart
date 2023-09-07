@@ -501,6 +501,7 @@ class InkResponseTranslucent extends StatelessWidget {
 
 class _InkResponseTranslucentStateWidget extends StatefulWidget {
   const _InkResponseTranslucentStateWidget({
+    required this.debugCheckContext,
     this.child,
     this.onTap,
     this.onTapDown,
@@ -534,7 +535,6 @@ class _InkResponseTranslucentStateWidget extends StatefulWidget {
     this.autofocus = false,
     this.parentState,
     this.getRectCallback,
-    required this.debugCheckContext,
     this.statesController,
   });
 
@@ -880,9 +880,7 @@ class _InkResponseTranslucentState extends State<_InkResponseTranslucentStateWid
     if (!mounted) {
       return;
     }
-    setState(() {
-      updateFocusHighlights();
-    });
+    setState(updateFocusHighlights);
   }
 
   bool get _shouldShowFocus {

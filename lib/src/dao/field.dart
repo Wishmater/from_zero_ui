@@ -82,7 +82,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       addUndoEntry(_value);
       _value = value;
       if (dao.contextForValidation!=null) {
-        dao.validate(dao.contextForValidation!,
+        dao.validate(dao.contextForValidation,
           validateNonEditedFields: false,
         );
       }
@@ -378,14 +378,11 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       }
       return [result];
     }
-    if (false) {
-      result = ListTile(
-        leading: const Icon(Icons.error_outline),
-        title: Text('Unimplemented Widget for type: ${T.toString()}'),
-      );
-    } else {
-      result = Container();
-    }
+    // result = ListTile(
+    //   leading: const Icon(Icons.error_outline),
+    //   title: Text('Unimplemented Widget for type: ${T}'),
+    // );
+    result = Container();
     if (addCard) {
       result = Card(
         child: Padding(
@@ -468,7 +465,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                       minFontSize: 15,
                       overflowReplacement: TooltipFromZero(
                         message: message,
-                        waitDuration: const Duration(milliseconds: 0),
+                        waitDuration: Duration.zero,
                         verticalOffset: -16,
                         child: Text(message,
                           style: Theme.of(context).textTheme.titleMedium!.copyWith(
@@ -506,7 +503,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                 padding: const EdgeInsets.only(left: 12),
                 child: IconButton(
                   icon: const Icon(Icons.info_outline),
-                  padding: const EdgeInsets.all(0),
+                  padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(maxHeight: 32),
                   onPressed: () => (field.value! as DAO).pushViewDialog(context),
                 ),

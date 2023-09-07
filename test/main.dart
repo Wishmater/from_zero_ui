@@ -43,7 +43,7 @@ class MyApp extends StatelessWidget {
       final initialized = initChangeNotifier.initialized;
       final goingToInitScreen = state.matchedLocation == '/login';
       // the user is not logged in and not headed to /login, they need to login
-      if (!initialized && !goingToInitScreen) return '/login?from=${state.uri.toString()}';
+      if (!initialized && !goingToInitScreen) return '/login?from=${state.uri}';
       // the user is logged in and headed to /login, no need to login again
       if (initialized && goingToInitScreen) return state.uri.queryParameters['from'] ?? '/';
       // no need to redirect at all

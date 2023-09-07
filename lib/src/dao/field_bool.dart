@@ -79,44 +79,42 @@ class BoolField extends Field<BoolComparable> {
   }
 
   BoolField({
-    required FieldValueGetter<String, Field> uiNameGetter,
+    required super.uiNameGetter,
     this.displayType = BoolFieldDisplayType.checkBoxTile,
     this.uiNameTrueGetter,
     this.uiNameFalseGetter,
     this.listTileControlAffinity = ListTileControlAffinity.leading,
     bool? showBothNeutralAndSpecificUiName,
-    BoolComparable value = const BoolComparable(false),
+    BoolComparable super.value = const BoolComparable(false),
     BoolComparable? dbValue,
     // FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, // non-nullable by design
     double? maxWidth,
     double? minWidth,
-    double flex = 0,
-    FieldValueGetter<String?, Field>? hintGetter,
-    FieldValueGetter<String?, Field>? tooltipGetter,
-    double? tableColumnWidth,
-    FieldValueGetter<bool, Field>? hiddenGetter,
-    FieldValueGetter<bool, Field>? hiddenInTableGetter,
-    FieldValueGetter<bool, Field>? hiddenInViewGetter,
-    FieldValueGetter<bool, Field>? hiddenInFormGetter,
-    FieldValueGetter<List<FieldValidator<BoolComparable>>, Field>? validatorsGetter,
-    bool validateOnlyOnConfirm = false,
-    FieldValueGetter<SimpleColModel, Field> colModelBuilder = Field.fieldDefaultGetColumn,
-    List<BoolComparable?>? undoValues,
-    List<BoolComparable?>? redoValues,
-    GlobalKey? fieldGlobalKey,
-    FocusNode? focusNode,
-    bool invalidateNonEmptyValuesIfHiddenInForm = true,
-    BoolComparable? defaultValue = const BoolComparable(false),
-    ContextFulFieldValueGetter<Color?, Field>? backgroundColor,
+    super.flex,
+    super.hintGetter,
+    super.tooltipGetter,
+    super.tableColumnWidth,
+    super.hiddenGetter,
+    super.hiddenInTableGetter,
+    super.hiddenInViewGetter,
+    super.hiddenInFormGetter,
+    super.validatorsGetter,
+    super.validateOnlyOnConfirm,
+    super.colModelBuilder,
+    super.undoValues,
+    super.redoValues,
+    super.fieldGlobalKey,
+    super.focusNode,
+    super.invalidateNonEmptyValuesIfHiddenInForm,
+    super.defaultValue = const BoolComparable(false),
+    super.backgroundColor,
     this.selectedColor,
     super.actionsGetter,
-    ViewWidgetBuilder<BoolComparable> viewWidgetBuilder = BoolField.defaultViewWidgetBuilder,
-    OnFieldValueChanged<BoolComparable?>? onValueChanged,
+    super.viewWidgetBuilder = BoolField.defaultViewWidgetBuilder,
+    super.onValueChanged,
     this.showViewCheckmark = BoolFieldShowViewCheckmark.always,
   }) :  showBothNeutralAndSpecificUiName = showBothNeutralAndSpecificUiName ?? (uiNameFalseGetter!=null||uiNameTrueGetter!=null),
         super(
-          uiNameGetter: uiNameGetter,
-          value: value,
           dbValue: dbValue ?? value,
           clearableGetter: falseFieldGetter,
           maxWidth: maxWidth ?? ( displayType==BoolFieldDisplayType.compactCheckBox ? 96
@@ -125,26 +123,6 @@ class BoolField extends Field<BoolComparable> {
           minWidth: minWidth ?? ( displayType==BoolFieldDisplayType.compactCheckBox ? 96
                                 : displayType==BoolFieldDisplayType.compactSwitch ? 96
                                 : 128),
-          flex: flex,
-          hintGetter: hintGetter,
-          tooltipGetter: tooltipGetter,
-          tableColumnWidth: tableColumnWidth,
-          hiddenGetter: hiddenGetter,
-          hiddenInTableGetter: hiddenInTableGetter,
-          hiddenInViewGetter: hiddenInViewGetter,
-          hiddenInFormGetter: hiddenInFormGetter,
-          validatorsGetter: validatorsGetter,
-          validateOnlyOnConfirm: validateOnlyOnConfirm,
-          colModelBuilder: colModelBuilder,
-          undoValues: undoValues,
-          redoValues: redoValues,
-          fieldGlobalKey: fieldGlobalKey,
-          focusNode: focusNode,
-          invalidateNonEmptyValuesIfHiddenInForm: invalidateNonEmptyValuesIfHiddenInForm,
-          defaultValue: defaultValue,
-          backgroundColor: backgroundColor,
-          viewWidgetBuilder: viewWidgetBuilder,
-          onValueChanged: onValueChanged,
         );
 
   @override
@@ -288,7 +266,7 @@ class BoolField extends Field<BoolComparable> {
                     minFontSize: 14,
                     overflowReplacement: TooltipFromZero(
                       message: valueName,
-                      waitDuration: const Duration(milliseconds: 0),
+                      waitDuration: Duration.zero,
                       verticalOffset: -16,
                       child: AutoSizeText(valueName,
                         style: theme.textTheme.titleMedium,
@@ -357,12 +335,12 @@ class BoolField extends Field<BoolComparable> {
     return [result];
   }
   Widget _buildFieldEditorWidget(BuildContext context, {
+    required FocusNode focusNode,
     bool addCard=false,
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool largeHorizontally = false,
     bool dense = false,
-    required FocusNode focusNode,
   }) {
     final theme = Theme.of(context);
     Widget result = AnimatedBuilder(
@@ -419,7 +397,6 @@ class BoolField extends Field<BoolComparable> {
                 ),
               ),
             );
-            break;
           case BoolFieldDisplayType.switchTile:
             result = Theme(
               data: theme.copyWith(
@@ -467,7 +444,6 @@ class BoolField extends Field<BoolComparable> {
                 },
               ),
             );
-            break;
           case BoolFieldDisplayType.compactCheckBox:
             result = Stack(
               children: [
@@ -516,7 +492,6 @@ class BoolField extends Field<BoolComparable> {
                 ),
               ],
             );
-            break;
           case BoolFieldDisplayType.compactSwitch:
             result = Stack(
               children: [
@@ -583,7 +558,6 @@ class BoolField extends Field<BoolComparable> {
                 ),
               ],
             );
-            break;
           case BoolFieldDisplayType.combo:
             result = ComboFromZero<DAO>(
               focusNode: focusNode,
@@ -619,10 +593,8 @@ class BoolField extends Field<BoolComparable> {
               showViewActionOnDAOs: false,
               showDropdownIcon: true,
             );
-            break;
           case BoolFieldDisplayType.radio:
             result = const Text('Unimplemented type'); // TODO 3 implement radio BoolField, maybe also radio ComboField
-            break;
         }
         result = TooltipFromZero(
           message: validationErrors.where((e) => dense || e.severity==ValidationErrorSeverity.disabling).fold('', (a, b) {

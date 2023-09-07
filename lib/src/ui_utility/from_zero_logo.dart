@@ -15,7 +15,7 @@ class FromZeroBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return ColoredBox(
       color: Colors.blue.shade900,
       child: Stack(
         alignment: Alignment.center,

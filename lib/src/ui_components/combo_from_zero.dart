@@ -152,7 +152,7 @@ class ComboFromZeroState<T> extends State<ComboFromZero<T>> {
           errorBuilder: _buildComboError,
         );
       } else {
-        result = _buildCombo(context, widget.possibleValues!);
+        result = _buildCombo(context, widget.possibleValues);
       }
     } else {
       result = _buildCombo(context, null);
@@ -373,7 +373,7 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
   final bool showHintAsNullInSelection;
   final String? hint;
 
-  const ComboFromZeroPopup({super.key, 
+  const ComboFromZeroPopup({
     required this.possibleValues,
     this.value,
     this.onSelected,
@@ -389,6 +389,7 @@ class ComboFromZeroPopup<T> extends StatefulWidget {
     this.showNullInSelection = false,
     this.showHintAsNullInSelection = true,
     this.hint,
+    super.key,
   });
 
   @override
@@ -495,7 +496,7 @@ class ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                     ),
                   ]
                 : [],
-            headerWidgetAddon: Container(
+            headerWidgetAddon: ColoredBox(
               color: Theme.of(context).cardColor,
               child: Column(
                 children: [

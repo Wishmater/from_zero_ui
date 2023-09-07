@@ -36,7 +36,6 @@ class AsyncValueBuilder<T> extends StatelessWidget {
   final bool addLoadingStateAsValueKeys;
 
   const AsyncValueBuilder({
-    Key? key,
     required this.asyncValue,
     required this.dataBuilder,
     this.loadingBuilder = AsyncValueBuilder.defaultLoadingBuilder,
@@ -51,7 +50,8 @@ class AsyncValueBuilder<T> extends StatelessWidget {
     this.clipBehaviour,
     this.addLoadingStateAsValueKeys = true,
     this.animatedSwitcherType = AnimatedSwitcherType.image,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +106,7 @@ class AsyncValueBuilder<T> extends StatelessWidget {
 
 class SliverAsyncValueBuilder<T> extends AsyncValueBuilder<T> {
 
-  const SliverAsyncValueBuilder({super.key, 
+  const SliverAsyncValueBuilder({
     required super.asyncValue,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),
@@ -114,6 +114,7 @@ class SliverAsyncValueBuilder<T> extends AsyncValueBuilder<T> {
     super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
   );
@@ -162,7 +163,6 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
   final bool addLoadingStateAsValueKeys;
 
   const AsyncValueMultiBuilder({
-    Key? key,
     required this.asyncValues,
     required this.dataBuilder,
     this.loadingBuilder = AsyncValueBuilder.defaultLoadingBuilder,
@@ -177,7 +177,8 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
     this.clipBehaviour,
     this.addLoadingStateAsValueKeys = true,
     this.animatedSwitcherType = AnimatedSwitcherType.image,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -224,7 +225,7 @@ class AsyncValueMultiBuilder<T> extends StatelessWidget {
 }
 
 class SliverAsyncValueMultiBuilder<T> extends AsyncValueMultiBuilder<T> {
-  const SliverAsyncValueMultiBuilder({super.key, 
+  const SliverAsyncValueMultiBuilder({
     required super.asyncValues,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),
@@ -232,6 +233,7 @@ class SliverAsyncValueMultiBuilder<T> extends AsyncValueMultiBuilder<T> {
     super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
   );
@@ -254,7 +256,6 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
   final Alignment? alignment; // used for animated switches
 
   const FutureProviderBuilder({
-    Key? key,
     required this.provider,
     required this.dataBuilder,
     this.loadingBuilder = AsyncValueBuilder.defaultLoadingBuilder,
@@ -266,7 +267,8 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
     this.applyAnimatedContainerFromChildSize = false,
     this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
     this.alignment,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -288,7 +290,7 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
 }
 
 class SliverFutureProviderBuilder<T> extends FutureProviderBuilder<T> {
-  const SliverFutureProviderBuilder({super.key, 
+  const SliverFutureProviderBuilder({
     required super.provider,
     required super.dataBuilder,
     super.transitionDuration = const Duration(milliseconds: 300),
@@ -296,6 +298,7 @@ class SliverFutureProviderBuilder<T> extends FutureProviderBuilder<T> {
     super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
   );
@@ -318,6 +321,7 @@ class AsyncBuilderAnimationWrapper extends StatelessWidget {
   final Widget child;
 
   const AsyncBuilderAnimationWrapper({
+    required this.child,
     this.transitionBuilder = AsyncValueBuilder.defaultTransitionBuilder,
     this.transitionDuration = const Duration(milliseconds: 300),
     this.transitionInCurve = Curves.easeOutCubic,
@@ -328,7 +332,6 @@ class AsyncBuilderAnimationWrapper extends StatelessWidget {
     this.clipBehaviour,
     this.animatedSwitcherType = AnimatedSwitcherType.image,
     this.loadingState,
-    required this.child,
     super.key,
   });
 

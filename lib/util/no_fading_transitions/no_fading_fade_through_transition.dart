@@ -161,11 +161,12 @@ class FadeThroughTransition extends StatelessWidget {
   ///
   /// The [animation] and [secondaryAnimation] argument are required and must
   /// not be null.
-  const FadeThroughTransition({super.key, 
+  const FadeThroughTransition({
     required this.animation,
     required this.secondaryAnimation,
-    this.fillColor,
     required this.child,
+    this.fillColor,
+    super.key,
   });
 
   /// The animation that drives the [child]'s entrance and exit.
@@ -200,7 +201,7 @@ class FadeThroughTransition extends StatelessWidget {
   Widget build(BuildContext context) {
     return _ZoomedFadeInFadeOut(
       animation: animation,
-      child: Container(
+      child: ColoredBox(
         color: fillColor ?? Theme.of(context).canvasColor,
         child: _ZoomedFadeInFadeOut(
           animation: ReverseAnimation(secondaryAnimation),
@@ -212,8 +213,10 @@ class FadeThroughTransition extends StatelessWidget {
 }
 
 class _ZoomedFadeInFadeOut extends StatelessWidget {
-  const _ZoomedFadeInFadeOut({Key? key, required this.animation, required this.child})
-      : super(key: key);
+  const _ZoomedFadeInFadeOut({
+    required this.animation,
+    required this.child,
+  });
 
   final Animation<double> animation;
   final Widget child;

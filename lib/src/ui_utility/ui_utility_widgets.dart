@@ -23,11 +23,11 @@ class ResponsiveHorizontalInsetsSliver extends StatelessWidget {
   final double breakpoint;
 
   const ResponsiveHorizontalInsetsSliver({
-    Key? key,
     required this.sliver,
     this.padding = 12,
     this.breakpoint = ScaffoldFromZero.screenSizeMedium,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -50,13 +50,13 @@ class ResponsiveHorizontalInsets extends StatelessWidget {
   final bool asSliver;
 
   const ResponsiveHorizontalInsets({
-    Key? key,
     required this.child,
     this.smallPadding = 0,
     this.bigPadding = 12,
     this.breakpoint = ScaffoldFromZero.screenSizeMedium,
     this.asSliver = false,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -96,11 +96,10 @@ class ResponsiveInsetsDialog extends StatelessWidget {
 
 
   const ResponsiveInsetsDialog({
-    Key? key,
-    this.bigInsets = const EdgeInsets.all(24),
-    this.smallInsets = const EdgeInsets.all(0),
-    this.breakpoint = ScaffoldFromZero.screenSizeMedium,
     required this.child,
+    this.bigInsets = const EdgeInsets.all(24),
+    this.smallInsets = EdgeInsets.zero,
+    this.breakpoint = ScaffoldFromZero.screenSizeMedium,
     this.backgroundColor,
     this.elevation,
     this.insetAnimationDuration = const Duration(milliseconds: 100),
@@ -110,7 +109,8 @@ class ResponsiveInsetsDialog extends StatelessWidget {
     this.clipBehavior = Clip.none,
     this.shape,
     this.alignment,
-  })  : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +245,7 @@ class MaterialKeyValuePair extends StatelessWidget {
   final int? titleMaxLines;
   final int? valueMaxLines;
 
-  const MaterialKeyValuePair({super.key, 
+  const MaterialKeyValuePair({
     required this.title,
     required this.value,
     this.frame=false,
@@ -254,6 +254,7 @@ class MaterialKeyValuePair extends StatelessWidget {
     this.padding = 0,
     this.titleMaxLines,
     this.valueMaxLines,
+    super.key,
   });
 
   @override
@@ -381,11 +382,12 @@ class OpacityGradient extends StatelessWidget {
   final double? size;
   final double? percentage;
 
-  const OpacityGradient({super.key, 
+  const OpacityGradient({
     required this.child,
     this.direction = vertical,
     double? size,
     this.percentage,
+    super.key,
   }) :
     assert(size==null || percentage==null, "Can't set both a hard size and a percentage."),
     size = size==null&&percentage==null ? 16 : size
@@ -428,13 +430,14 @@ class ScrollOpacityGradient extends StatefulWidget {
   final bool applyAtStart;
   final bool applyAtEnd;
 
-  const ScrollOpacityGradient({super.key, 
+  const ScrollOpacityGradient({
     required this.scrollController,
     required this.child,
     this.maxSize = 16,
     this.direction = OpacityGradient.vertical,
     this.applyAtEnd = true,
     this.applyAtStart = true,
+    super.key,
   });
 
   @override
@@ -553,8 +556,8 @@ class OverflowScroll extends StatefulWidget {
     this.initialAutoscrollWaitTime = const Duration(seconds: 3),
     this.scrollDirection = Axis.horizontal,
     this.consumeScrollNotifications = true,
-    Key? key,
-  }): super(key: key);
+    super.key,
+  });
 
   @override
   OverflowScrollState createState() => OverflowScrollState();
@@ -633,8 +636,8 @@ class ExpandIconButton extends StatefulWidget {
     required this.value,
     required this.onPressed,
     this.padding = const EdgeInsets.all(8),
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   ExpandIconButtonState createState() => ExpandIconButtonState();
@@ -682,7 +685,7 @@ class ExpandIconButtonState extends State<ExpandIconButton> with SingleTickerPro
             return Icon(Icons.expand_more,
               color: ColorTween(
                 end: Theme.of(context).colorScheme.secondary,
-                begin: Theme.of(context).textTheme.bodyLarge!.color!,
+                begin: Theme.of(context).textTheme.bodyLarge!.color,
               ).evaluate(controlPanelAnimationController),
               size: 32,
             );
@@ -706,7 +709,7 @@ class ReturnToTopButton extends ConsumerStatefulWidget {
   final double minThresholdFromTop;
   final bool showOnlyWhenScrollingUp;
 
-  const ReturnToTopButton({super.key, 
+  const ReturnToTopButton({
     required this.scrollController,
     required this.child,
     this.onTap,
@@ -714,6 +717,7 @@ class ReturnToTopButton extends ConsumerStatefulWidget {
     this.minThresholdFromTop = 256,
     this.showOnlyWhenScrollingUp = true,
     this.duration = const Duration(milliseconds: 300),
+    super.key,
   });
 
   @override
@@ -803,7 +807,7 @@ class ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
                       }
                     },
                     child: widget.icon ?? Icon(Icons.arrow_upward,
-                      color: Theme.of(context).textTheme.bodyLarge!.color!,
+                      color: Theme.of(context).textTheme.bodyLarge!.color,
                     ),
                   ),
                 );
@@ -934,11 +938,14 @@ class IconButtonBackground extends StatelessWidget {
 
   final Widget child;
 
-  const IconButtonBackground({super.key, required this.child,});
+  const IconButtonBackground({
+    required this.child,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.all(Radius.circular(666)),
         gradient: RadialGradient(
@@ -981,8 +988,8 @@ class AnimatedIconFromZero extends StatefulWidget {
     this.reverseCurve = Curves.easeInCubic,
     this.color,
     this.size,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<AnimatedIconFromZero> createState() => _AnimatedIconFromZeroState();
@@ -1037,14 +1044,14 @@ class SkipFrameWidget extends StatefulWidget {
   final Curve curve;
 
   const SkipFrameWidget({
-    Key? key,
     required this.paceholderBuilder,
     required this.childBuilder,
     this.frameSkipCount = 1,
     this.transitionBuilder,
     this.duration = const Duration(milliseconds: 250,),
     this.curve = Curves.easeOutCubic,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   SkipFrameWidgetState createState() => SkipFrameWidgetState();
@@ -1082,7 +1089,7 @@ class SkipFrameWidgetState extends State<SkipFrameWidget> {
     } else {
       return InitiallyAnimatedWidget(
         builder: widget.transitionBuilder ?? (animation, child) {
-          return FadeTransition(opacity: animation, child: child!,);
+          return FadeTransition(opacity: animation, child: child,);
         },
         duration: widget.duration,
         curve: widget.curve,
@@ -1107,7 +1114,7 @@ class InitiallyAnimatedWidget extends StatefulWidget {
   final VoidCallback? onFinish;
 
   const InitiallyAnimatedWidget({
-    Key? key,
+    super.key,
     this.builder,
     this.duration = const Duration(milliseconds: 300,),
     this.curve = Curves.easeOutCubic,
@@ -1115,8 +1122,7 @@ class InitiallyAnimatedWidget extends StatefulWidget {
     this.repeat = false,
     this.reverse = true,
     this.onFinish,
-  })  : assert(!(repeat==true && onFinish!=null), "Can't specify onFinish callbacks for an infinite loop"),
-        super(key: key);
+  })  : assert(!(repeat==true && onFinish!=null), "Can't specify onFinish callbacks for an infinite loop");
 
   @override
   InitiallyAnimatedWidgetState createState() => InitiallyAnimatedWidgetState();
@@ -1184,7 +1190,7 @@ class InitiallyAnimatedWidgetState extends State<InitiallyAnimatedWidget> with S
 
 class KeepAliveMixinWidget extends StatefulWidget {
   final Widget child;
-  const KeepAliveMixinWidget({Key? key, required this.child}) : super(key: key);
+  const KeepAliveMixinWidget({required this.child, super.key});
   @override
   KeepAliveMixinWidgetState createState() => KeepAliveMixinWidgetState();
 }
@@ -1270,13 +1276,13 @@ class FlexibleLayoutFromZero extends StatelessWidget {
   final bool applyIntrinsicCrossAxis;
 
   const FlexibleLayoutFromZero({
+    required this.children,
     this.axis = Axis.horizontal,
     this.relevantAxisMaxSize,
     this.crossAxisAlignment = CrossAxisAlignment.center,
     this.applyIntrinsicCrossAxis = false,
-    required this.children,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1387,8 +1393,8 @@ class FlexibleLayoutItemFromZero extends StatelessWidget {
     this.maxSize = double.infinity,
     this.minSize = 0,
     this.flex = 0,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1408,12 +1414,12 @@ class TimedOverlay extends StatefulWidget {
   final TimedOverlayBuilder overlayBuilder;
 
   const TimedOverlay({
-    Key? key,
     required this.duration,
     required this.builder,
     this.rebuildInterval = const Duration(seconds: 1),
     this.overlayBuilder = defaultOverlayBuilder,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   State<TimedOverlay> createState() => _TimedOverlayState();

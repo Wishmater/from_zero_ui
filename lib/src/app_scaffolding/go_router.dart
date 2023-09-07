@@ -114,16 +114,16 @@ class GoRouteFromZero extends GoRoute {
 
 
   GoRouteFromZero({
-    required String path,
+    required super.path,
     String? name,
     this.title,
     this.subtitle,
     this.icon = const SizedBox.shrink(),
     GoRouterWidgetBuilder? builder,
-    GoRouterRedirect? redirect,
+    super.redirect,
     Widget Function(BuildContext context, Animation<double> animation,
         Animation<double> secondaryAnimation, Widget child,)? transitionBuilder,
-    List<GoRouteFromZero> routes = const [],
+    List<GoRouteFromZero> super.routes = const [],
     this.pageScaffoldId = 'main',
     this.pageScaffoldDepth = 0,
     this.childrenAsDropdownInDrawerNavigation = true,
@@ -133,11 +133,8 @@ class GoRouteFromZero extends GoRoute {
   }) :  assert((builder==null && transitionBuilder==null) || pageBuilder==null,
             'If specifying pageBuilder; builder and transitionBuilder will be overriden, so they should be null',),
         super(
-          path: path,
           name: name ?? path,
           builder: null,
-          redirect: redirect,
-          routes: routes,
           pageBuilder: pageBuilder ?? (context, state) {
             return CustomTransitionPage<void>(
               key: state.pageKey,
@@ -302,18 +299,15 @@ class GoRouteGroupFromZero extends GoRouteFromZero {
   final bool showAsDropdown;
 
   GoRouteGroupFromZero({
-    String? title,
-    String? subtitle,
+    required super.routes,
+    super.title,
+    super.subtitle,
     Widget? icon,
-    required List<GoRouteFromZero> routes,
     this.showInDrawerNavigation = true,
     this.showAsDropdown = true,
   }) : super(
     path: 'null',
-    title: title,
-    subtitle: subtitle,
     icon: icon ?? const SizedBox.shrink(),
-    routes: routes,
   );
 
   @override
@@ -354,13 +348,13 @@ class GoRouterStateFromZero extends GoRouterState {
     required this.pageScaffoldDepth,
     required super.uri,
     required super.matchedLocation,
-    super.name,
-    super.path,
     required super.fullPath,
     required super.pathParameters,
+    required super.pageKey,
+    super.name,
+    super.path,
     super.extra,
     super.error,
-    required super.pageKey,
   });
 
 }
@@ -378,8 +372,8 @@ class OnlyOnActiveBuilder extends ConsumerStatefulWidget {
     required this.state,
     required this.builder,
     this.route,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   OnlyOnActiveBuilderState createState() => OnlyOnActiveBuilderState();

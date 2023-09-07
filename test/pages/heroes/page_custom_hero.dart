@@ -32,7 +32,7 @@ class PageHeroesState extends State<PageCustomHero> {
       padding: const EdgeInsets.all(16),
       child: Card(
         child: Center(
-          child: Container(
+          child: ColoredBox(
             color: Theme.of(context).colorScheme.secondary,
             child: Column(
               mainAxisSize: MainAxisSize.min,

@@ -204,7 +204,7 @@ abstract class TableFromZeroFilterPopup {
                                   minFontSize: 15,
                                   overflowReplacement: TooltipFromZero(
                                     message: message,
-                                    waitDuration: const Duration(milliseconds: 0),
+                                    waitDuration: Duration.zero,
                                     verticalOffset: -16,
                                     child: Text(
                                       message,
@@ -295,7 +295,7 @@ abstract class TableFromZeroFilterPopup {
                                               onPressed: () {
                                                 modified.value = true;
                                                 filterPopupSetState(() {
-                                                  for (var initialRow in filterTableController.filtered) {
+                                                  for (final initialRow in filterTableController.filtered) {
                                                     for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
                                                       if (row.onCheckBoxSelected!=null) {
                                                         newValueFilters[colKey]![row.id] = true;
@@ -313,7 +313,7 @@ abstract class TableFromZeroFilterPopup {
                                               onPressed: () {
                                                 modified.value = true;
                                                 filterPopupSetState(() {
-                                                  for (var initialRow in filterTableController.filtered) {
+                                                  for (final initialRow in filterTableController.filtered) {
                                                     for (final row in [initialRow, ...initialRow.allFilteredChildren]) {
                                                       if (row.onCheckBoxSelected!=null) {
                                                         newValueFilters[colKey]![row.id] = false;

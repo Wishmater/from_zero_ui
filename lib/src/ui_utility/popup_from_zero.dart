@@ -54,7 +54,7 @@ class PopupFromZero extends StatefulWidget {
   final Offset offsetCorrection;
 
   const PopupFromZero({
-    Key? key,
+    required this.builder,
     this.anchorKey,
     this.referencePosition,
     this.referenceSize,
@@ -63,9 +63,8 @@ class PopupFromZero extends StatefulWidget {
     this.anchorAlignment = Alignment.topCenter,
     this.popupAlignment = Alignment.bottomCenter,
     this.offsetCorrection = Offset.zero,
-    required this.builder,
-  }) :  assert(anchorKey!=null || (referencePosition!=null && referenceSize!=null)),
-        super(key: key);
+    super.key,
+  }) :  assert(anchorKey!=null || (referencePosition!=null && referenceSize!=null));
 
   @override
   PopupFromZeroState createState() => PopupFromZeroState();
@@ -227,7 +226,7 @@ class PopupFromZeroState extends State<PopupFromZero> {
                       maxHeight: maxHeight,
                       child: Container(
                         key: childGlobalKey,
-                        child: child!,
+                        child: child,
                       ),
                     ),
                   ),

@@ -93,7 +93,6 @@ class TooltipFromZero extends StatefulWidget {
   /// All parameters that are defined in the constructor will
   /// override the default values _and_ the values in [TooltipTheme.of].
   const TooltipFromZero({
-    Key? key,
     required this.message,
     this.height,
     this.padding,
@@ -110,7 +109,8 @@ class TooltipFromZero extends StatefulWidget {
     this.enableFeedback,
     this.maxWidth = 512,
     this.maxHeight = 256,
-  }) :  super(key: key);
+    super.key,
+  });
 
   /// Null means no max cap on width/height
   final double? maxWidth;
@@ -267,7 +267,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
   static const Duration _fadeInDuration = Duration(milliseconds: 150);
   static const Duration _fadeOutDuration = Duration(milliseconds: 75);
   static const Duration _defaultShowDuration = Duration(milliseconds: 1500);
-  static const Duration _defaultHoverShowDuration = Duration(milliseconds: 0);
+  static const Duration _defaultHoverShowDuration = Duration.zero;
   static const Duration _defaultWaitDuration = Duration.zero;
   static const Duration _defaultHoverOpaqueDuration = Duration(milliseconds: 2500);
   static const bool _defaultExcludeFromSemantics = false;
@@ -457,9 +457,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
           _insideTooltipMouseRegion = false;
           _onExitedMouseRegion();
         } : null,
-        onForceExit: () {
-          _hideTooltipFromZero();
-        },
+        onForceExit: _hideTooltipFromZero,
         decoration: decoration,
         textStyle: textStyle,
         animation: CurvedAnimation(
@@ -686,23 +684,22 @@ class _TooltipPositionDelegate extends SingleChildLayoutDelegate {
 class _TooltipOverlay extends StatefulWidget {
 
   const _TooltipOverlay({
-    Key? key,
     required this.message,
     required this.height,
-    this.padding,
-    this.margin,
-    this.decoration,
-    this.textStyle,
     required this.animation,
     required this.target,
     required this.verticalOffset,
     required this.preferBelow,
+    this.padding,
+    this.margin,
+    this.decoration,
+    this.textStyle,
     this.onEnter,
     this.onExit,
     this.maxWidth,
     this.maxHeight,
     this.onForceExit,
-  }) : super(key: key);
+  });
 
   final String message;
   final double height;

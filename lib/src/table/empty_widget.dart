@@ -23,8 +23,8 @@ class TableEmptyWidget<T> extends StatelessWidget {
     this.exportPathForExcel,
     this.onShowMenu,
     this.retryButton,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {

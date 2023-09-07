@@ -28,14 +28,14 @@ import 'package:flutter/rendering.dart';
 ///
 class EnsureVisibleWhenFocused extends StatefulWidget {
   const EnsureVisibleWhenFocused({
-    Key? key,
     required this.child,
     required this.focusNode,
     this.curve = Curves.easeOut,
     this.duration = const Duration(milliseconds: 100),
     this.alignmentStart = 0.1,
     this.alignmentEnd = 0.9,
-  }) : super(key: key);
+    super.key,
+  });
 
   final double alignmentStart;
   final double alignmentEnd;

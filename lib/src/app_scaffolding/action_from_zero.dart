@@ -72,9 +72,9 @@ class ActionFromZero extends StatelessWidget {
   }) => expandedBuilder!(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color);
   final bool centerExpanded;
 
-  ActionFromZero({super.key, 
-    this.onTap,
+  ActionFromZero({
     required this.title,
+    this.onTap,
     this.icon,
     this.color,
     this.enabled = true,
@@ -84,6 +84,7 @@ class ActionFromZero extends StatelessWidget {
     this.buttonBuilder = defaultButtonBuilder,
     this.expandedBuilder,
     this.centerExpanded = true,
+    super.key,
   }) : breakpoints = breakpoints ?? {
     0: icon==null ? ActionState.overflow : ActionState.icon,
     ScaffoldFromZero.screenSizeLarge: expandedBuilder==null ? ActionState.button : ActionState.expanded,
@@ -352,14 +353,15 @@ class APIActionFromZero extends ActionFromZero {
   final List<ApiProvider> Function(List<dynamic> values) providersBuilder;
   final ApiActionCallback? onTapApi;
 
-  APIActionFromZero({super.key, 
-    this.onTapApi,
+  APIActionFromZero({
     required super.title,
+    required this.providersBuilder,
+    this.onTapApi,
     super.icon,
     super.enabled = true,
     super. breakpoints,
-    required this.providersBuilder,
     this.dependedNotifiers = const [],
+    super.key,
   });
 
   @override

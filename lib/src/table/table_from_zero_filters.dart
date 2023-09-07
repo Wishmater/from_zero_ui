@@ -37,9 +37,9 @@ abstract class ConditionFilter<T> {
 abstract class FilterText extends ConditionFilter {
   String query;
   FilterText({
-    required bool extra,
+    required super.extra,
     required this.query,
-  }) : super(extra: extra,);
+  });
 
   @override
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,}) {
@@ -147,8 +147,8 @@ abstract class FilterText extends ConditionFilter {
 class FilterTextContains extends FilterText {
   FilterTextContains({
     bool inverse = false,
-    String query = '',
-  }) : super(extra: inverse, query: query,);
+    super.query = '',
+  }) : super(extra: inverse,);
   @override
   String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_text_contains');
   @override
@@ -168,8 +168,8 @@ class FilterTextContains extends FilterText {
 class FilterTextStartsWith extends FilterText {
   FilterTextStartsWith({
     bool inverse = false,
-    String query = '',
-  }) : super(extra: inverse, query: query,);
+    super.query = '',
+  }) : super(extra: inverse,);
   @override
   String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_text_begins');
   @override
@@ -189,8 +189,8 @@ class FilterTextStartsWith extends FilterText {
 class FilterTextEndsWith extends FilterText {
   FilterTextEndsWith({
     bool inverse = false,
-    String query = '',
-  }) : super(extra: inverse, query: query,);
+    super.query = '',
+  }) : super(extra: inverse,);
   @override
   String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_text_ends');
   @override
@@ -210,9 +210,9 @@ class FilterTextEndsWith extends FilterText {
 abstract class FilterNumber extends ConditionFilter {
   num? query;
   FilterNumber({
-    required bool extra,
+    required super.extra,
     required  this.query,
-  }) : super(extra: extra,);
+  });
 
   @override
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,}) {
@@ -308,8 +308,8 @@ abstract class FilterNumber extends ConditionFilter {
 class FilterNumberEqualTo extends FilterNumber {
   FilterNumberEqualTo({
     bool inverse = false,
-    num? query,
-  }) : super(extra: inverse, query: query,);
+    super.query,
+  }) : super(extra: inverse,);
   @override
   String getUiName(BuildContext context) => 'Número igual a'; //Number equal to // TODO 2 internationalize
   @override
@@ -331,8 +331,8 @@ class FilterNumberEqualTo extends FilterNumber {
 class FilterNumberGreaterThan extends FilterNumber {
   FilterNumberGreaterThan({
     bool inclusive = true,
-    num? query,
-  }) : super(extra: inclusive, query: query,);
+    super.query,
+  }) : super(extra: inclusive,);
   @override
   String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_number_greater');
   @override
@@ -354,8 +354,8 @@ class FilterNumberGreaterThan extends FilterNumber {
 class FilterNumberLessThan extends FilterNumber {
   FilterNumberLessThan({
     bool inclusive = true,
-    num? query,
-  }) : super(extra: inclusive, query: query,);
+    super.query,
+  }) : super(extra: inclusive,);
   @override
   String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_number_less');
   @override
@@ -377,9 +377,9 @@ class FilterNumberLessThan extends FilterNumber {
 abstract class FilterDate extends ConditionFilter {
   DateTime? query;
   FilterDate({
-    required bool extra,
+    required super.extra,
     required this.query,
-  }) : super(extra: extra,);
+  });
 
   @override
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,}) {
@@ -512,8 +512,8 @@ bool isSameDay(DateTime a, DateTime b) {
 class FilterDateAfter extends FilterDate {
   FilterDateAfter({
     bool inclusive = true,
-    DateTime? query,
-  }) : super(extra: inclusive, query: query,);
+    super.query,
+  }) : super(extra: inclusive,);
   @override
   String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_date_after');
   @override
@@ -535,8 +535,8 @@ class FilterDateAfter extends FilterDate {
 class FilterDateBefore extends FilterDate {
   FilterDateBefore({
     bool inclusive = true,
-    DateTime? query,
-  }) : super(extra: inclusive, query: query,);
+    super.query,
+  }) : super(extra: inclusive,);
   @override
   String getUiName(BuildContext context) => FromZeroLocalizations.of(context).translate('filter_date_before');
   @override
