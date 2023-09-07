@@ -2,16 +2,16 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:animations/animations.dart';
+import 'package:dartx/dartx.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
-import 'package:sliver_tools/sliver_tools.dart';
+import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:multi_value_listenable_builder/multi_value_listenable_builder.dart';
+import 'package:sliver_tools/sliver_tools.dart';
 
 
 enum RowTapType {
@@ -419,7 +419,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               if (currentValidationId!=dao.validationCallCount) return false;
               results.add(field.validate(context, e, currentValidationId,
                 validateIfNotEdited: validateIfNotEdited,
-              ));
+              ),);
             }
           }
         }
@@ -437,7 +437,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         field: this,
         error: FromZeroLocalizations.of(context).translate("validation_combo_not_possible"),
         defaultValue: ComparableList(list: confirmedValidValues),
-      ));
+      ),);
     }
     for (final e in objects) {
       final objectProps = e.props;
@@ -448,7 +448,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               .map((err) => err.copyWith(
                 error: err.error.isNullOrBlank
                     ? '' : '${e.classUiName} - ${err.error}',
-              )));
+              ),),);
         }
       }
     }
@@ -1524,7 +1524,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                         : '${objects.length} ${objects.length>1 ? FromZeroLocalizations.of(context).translate('element_plur')
                                         : FromZeroLocalizations.of(context).translate('element_sing')}',
                                       style: Theme.of(context).textTheme.bodySmall,
-                                    )
+                                    ),
                                   ],
                                 ),
                               ),
@@ -1664,8 +1664,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   reverse: lastPage!=null && lastPage!>page,
                   layoutBuilder: (List<Widget> entries) {
                     entries.sort((a, b) {
-                      return ((b as KeyedSubtree).key as ValueKey).value
-                          .compareTo(((a as KeyedSubtree).key as ValueKey).value);
+                      return ((b as KeyedSubtree).key! as ValueKey).value
+                          .compareTo(((a as KeyedSubtree).key! as ValueKey).value);
                     },);
                     return Stack(
                       alignment: Alignment.topCenter,
@@ -1982,7 +1982,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               linkToInnerDAOs: false,
               showViewButtons: false,
               dense: true,
-              hidden: false
+              hidden: false,
             );
           },
           rowActions: [
@@ -2177,7 +2177,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           }
         }
         return result;
-      }
+      },
     );
     List<Widget> resultList = [
       result,

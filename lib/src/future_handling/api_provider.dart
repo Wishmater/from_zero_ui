@@ -79,7 +79,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
           for (final e in _watching)
             e: widgetRef==null
                 ? _ref!.read(e.notifier)
-                : widgetRef.read(e.notifier)
+                : widgetRef.read(e.notifier),
         };
         for (final e in watchingNotifiers.keys) {
           refreshed = refreshed || watchingNotifiers[e]!.retry(widgetRef, e);
@@ -104,7 +104,7 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
         for (final e in _watching)
           e: widgetRef==null
               ? _ref!.read(e.notifier)
-              : widgetRef.read(e.notifier)
+              : widgetRef.read(e.notifier),
       };
       for (final e in watchingNotifiers.keys) {
         try {
@@ -469,7 +469,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
             leading: const Icon(Icons.refresh),
             onPressed: onRetry,
             child: Text(FromZeroLocalizations.of(context).translate("retry")),
-          )
+          ),
         ],
       );
     }

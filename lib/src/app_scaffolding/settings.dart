@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -87,7 +87,7 @@ class ThemeParametersFromZero extends ChangeNotifier {
           ];
   List<Widget> get supportedLocaleIcons => supportedLocales.map(
           (e) => e==null ? const Icon(Icons.settings,)
-              : TextIcon(e.languageCode)
+              : TextIcon(e.languageCode),
   ).toList();
 
   int get selectedLocale => Hive.box("settings").get("locale", defaultValue: 0);
@@ -254,7 +254,7 @@ class LocaleSwitcher extends StatelessWidget {
           leading: themeParameters.supportedLocaleIcons[index],
           contentPadding: const EdgeInsets.all(0),
         ),
-      )),
+      ),),
       initialValue: themeParameters.selectedLocale,
       onSelected: (int value) => value!=themeParameters.selectedLocale ? themeParameters.selectedLocale = value : null,
       child: ListTile(
@@ -318,7 +318,7 @@ class LoadingApp extends StatelessWidget {
               LinearProgressIndicator(
                 valueColor: ColorTween(
                     begin: Theme.of(context).primaryColor,
-                    end: Theme.of(context).primaryColor
+                    end: Theme.of(context).primaryColor,
                 ).animate(kAlwaysDismissedAnimation) as Animation<Color>,
               ),
               Expanded(

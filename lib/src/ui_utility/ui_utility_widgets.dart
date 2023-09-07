@@ -3,15 +3,13 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:animations/animations.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:flutter/foundation.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart' as bitsdojo;
 import 'package:bitsdojo_window_platform_interface/window.dart' as bitsdojo_window;
 import 'package:dartx/dartx.dart';
-
-
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
 
@@ -819,7 +817,7 @@ class ReturnToTopButtonState extends ConsumerState<ReturnToTopButton> {
                 ),
                 child: result,
               );
-            }
+            },
           ),
         ),
       ],
@@ -944,16 +942,16 @@ class IconButtonBackground extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: const BorderRadius.all(Radius.circular(666)),
         gradient: RadialGradient(
-            colors: [
-              (Theme.of(context).brightness==Brightness.light
-                  ? Colors.grey.shade100 : const Color.fromRGBO(55, 55, 55, 1)).withOpacity(0.8),
-              (Theme.of(context).brightness==Brightness.light
-                  ? Colors.grey.shade100 : const Color.fromRGBO(55, 55, 55, 1)).withOpacity(0),
-            ],
-            stops: const [
-              0.5,
-              1
-            ]
+          colors: [
+            (Theme.of(context).brightness==Brightness.light
+                ? Colors.grey.shade100 : const Color.fromRGBO(55, 55, 55, 1)).withOpacity(0.8),
+            (Theme.of(context).brightness==Brightness.light
+                ? Colors.grey.shade100 : const Color.fromRGBO(55, 55, 55, 1)).withOpacity(0),
+          ],
+          stops: const [
+            0.5,
+            1,
+          ],
         ),
       ),
       child: child,

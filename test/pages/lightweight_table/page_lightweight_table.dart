@@ -93,7 +93,7 @@ class PageLightweightTableState extends State<PageLightweightTable> {
           DrawerMenuFromZero(
             tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: settingsRoutes),
             compact: compact,
-          )
+          ),
         ],
       ),
     );
@@ -161,12 +161,12 @@ class PageLightweightTableState extends State<PageLightweightTable> {
                 const SizedBox(height: 12,),
                 SizedBox(
                   height: constraints.maxHeight-24,
-                  child: col2
+                  child: col2,
                 ),
                 const SizedBox(height: 12,),
                 SizedBox(
                   height: constraints.maxHeight-24,
-                  child: col3
+                  child: col3,
                 ),
                 const SizedBox(height: 12,),
               ],
@@ -190,13 +190,13 @@ class PageLightweightTableState extends State<PageLightweightTable> {
         filterEnabled: true,
         width: e=="Col 1" ? 128 : null,
         alignment: e=="Col 3" ? TextAlign.right : null,
-      )).toList().asMap(),
+      ),).toList().asMap(),
       rows: List.generate(100, (index) => SimpleRowModel<dynamic>(
         id: index,
         height: 36,
         rowKey: rowKeys![index],
         values: ["Dummy data$index", "Dummy data", "Dummy data", "Dummy data", "Dummy data",].asMap(),
-      )),
+      ),),
     );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -214,7 +214,7 @@ class PageLightweightTableState extends State<PageLightweightTable> {
                       v = "CustomScrollController";
                     }
                     return Text(v, style: Theme.of(context).textTheme.displaySmall,);
-                  }
+                  },
               ),
             ),
           ),

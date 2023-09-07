@@ -819,7 +819,7 @@ class DateColModel<T> extends SimpleColModel<T> {
           (row as SimpleRowModel).selected = selected;
           return true;
         },
-      ));
+      ),);
     }
     for (final year in grouped.keys) {
       result.add(SimpleRowModel(
@@ -848,7 +848,7 @@ class DateColModel<T> extends SimpleColModel<T> {
               ],
             ),
         ],
-      ));
+      ),);
     }
     return result;
   }

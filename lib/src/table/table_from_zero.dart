@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cancelable_compute/cancelable_compute.dart' as cancelable_compute;
+import 'package:dartx/dartx.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
@@ -10,11 +13,8 @@ import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_sliver_sticky_header.dart';
 import 'package:from_zero_ui/util/no_ensure_visible_traversal_policy.dart';
-import 'dart:async';
-import 'package:dartx/dartx.dart';
 import 'package:intl/intl.dart';
 import 'package:sliver_tools/sliver_tools.dart';
-import 'package:cancelable_compute/cancelable_compute.dart' as cancelable_compute;
 
 typedef OnRowHoverCallback = void Function(RowModel row, bool selected);
 typedef OnCheckBoxSelectedCallback = bool? Function(RowModel row, bool? selected);
@@ -55,7 +55,7 @@ class TableFromZero<T> extends StatefulWidget {
   final List<RowAction<T>> rowActions;
   final Widget? Function(BuildContext context, RowModel<T> row, dynamic colKey)? cellBuilder;
   final Widget? Function(BuildContext context, RowModel<T> row, int index, double? minWidth,
-      Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder)? rowBuilder;
+      Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder,)? rowBuilder;
   final Widget? Function(BuildContext context, RowModel row, double? minWidth)? headerRowBuilder;
   final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   final TableController<T>? tableController;
@@ -389,7 +389,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
   void initHeaderRowModel() {
     if (widget.headerRowModel!=null) {
       if (widget.headerRowModel is SimpleRowModel) {
-        headerRowModel = (widget.headerRowModel as SimpleRowModel).copyWith(
+        headerRowModel = (widget.headerRowModel! as SimpleRowModel).copyWith(
           onCheckBoxSelected: widget.headerRowModel!.onCheckBoxSelected,
           values: widget.columns==null || widget.columns!.length==widget.headerRowModel!.values.length
               ? widget.headerRowModel!.values
@@ -446,7 +446,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                   return MapEntry(key, _sanitizeValueForIsolate(key, value, // TODO 2 performance, maybe allow to manually disable sanitization
                     fieldAliases: fieldAliases[key]!,
                     daoAliases: daoAliases[key]!,
-                  ));
+                  ),);
                 });
               }).toList(),
               fieldAliases.isEmpty && daoAliases.isEmpty,
@@ -464,7 +464,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         });
         if (valueFiltersApplied.values.where((e) => e==true).isNotEmpty) {
           validInitialFiltersIsolateController = cancelable_compute.compute(_getValidInitialFilters,
-              [valueFilters, computedAvailableFilters]);
+              [valueFilters, computedAvailableFilters],);
           computedValidInitialFilters = await validInitialFiltersIsolateController!.value;
         }
       } catch (e, st) {
@@ -507,12 +507,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       return value.map((e) => _sanitizeValueForIsolate(key, e,
         fieldAliases: fieldAliases,
         daoAliases: daoAliases,
-      )).toList();
+      ),).toList();
     } else if (value is ComparableList) {
       return value.list.map((e) => _sanitizeValueForIsolate(key, e,
         fieldAliases: fieldAliases,
         daoAliases: daoAliases,
-      )).toList();
+      ),).toList();
     } else if (value is Field) {
       final newValue = _sanitizeValueForIsolate(key, value.value,
         fieldAliases: fieldAliases,
@@ -862,12 +862,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     Widget builder(BuildContext context, BoxConstraints? constraints) {
       final Map<Widget, ActionState> rowActionStates = {
         for (final e in widget.rowActions)
-          e: e.getStateForMaxWidth(constraints?.maxWidth??double.infinity)
+          e: e.getStateForMaxWidth(constraints?.maxWidth??double.infinity),
       };
       List<Widget> rowActions = row==headerRowModel ? []
           : widget.rowActions.map((e) => e.copyWith(onTap: (context) {
               e.onRowTap?.call(context, row as RowModel<T>);
-            },)).toList();
+            },),).toList();
       for (final e in rowActions) {
         if (!rowActionStates.containsKey(e)) {
           rowActionStates[e] = e is ActionFromZero
@@ -2095,7 +2095,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         return (aVal as dynamic).compareTo(bVal) * sortedAscendingMultiplier;
       }
       return bVal.compareTo(aVal) * -sortedAscendingMultiplier;
-    }));
+    }),);
     for (final e in list) {
       smartSort<T>(e.children,
         sortedColumnKey: sortedColumnKey,

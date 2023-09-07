@@ -69,7 +69,7 @@ class ValueString<T> implements Comparable, ContainsValue<T> {
       return -1;
     }
     if (value is Comparable) {
-      return (value as Comparable).compareTo(other);
+      return (value! as Comparable).compareTo(other);
     } else {
       return (value.toString()).compareTo(other.toString());
     }
@@ -146,7 +146,7 @@ class NumGroupComparingBySum implements ValueString<num>  {
       return -1;
     }
     if (value is Comparable) {
-      return (value as Comparable).compareTo(other);
+      return (value! as Comparable).compareTo(other);
     } else {
       return (value.toString()).compareTo(other.toString());
     }

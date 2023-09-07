@@ -70,7 +70,7 @@ class FromZeroBanner extends StatelessWidget {
             heightFactor: logoSizePercentage,
             widthFactor: logoSizePercentage,
             child: const FromZeroLogo(),
-          )
+          ),
         ],
       ),
     );

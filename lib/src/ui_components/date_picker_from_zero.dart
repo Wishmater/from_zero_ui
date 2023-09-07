@@ -1,8 +1,8 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:intl/intl.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/time_picker_dialog_from_zero.dart' as time_picker_dialog_from_zero;
+import 'package:intl/intl.dart';
 
 typedef DatePickerButtonChildBuilder = Widget Function(BuildContext context, String? title, String? hint, DateTime? value, DateFormat formatter, bool enabled, bool clearable,);
 /// returns true if navigator should pop after (default true)
@@ -183,7 +183,7 @@ class DatePickerFromZeroState extends State<DatePickerFromZero> {
                         },
                       ),
                     ) : const SizedBox.shrink(),
-                  )
+                  ),
               ),
             ),
           ),
@@ -268,7 +268,7 @@ class DatePickerFromZeroPopupState extends State<DatePickerFromZeroPopup> {
                 },
               ),
             ),
-            const SizedBox(height: 16,)
+            const SizedBox(height: 16,),
           ],
         );
 

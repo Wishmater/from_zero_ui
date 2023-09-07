@@ -2,8 +2,8 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 
 
@@ -590,7 +590,7 @@ class _InkResponseTranslucentStateWidget extends StatefulWidget {
       if (onSecondaryTap != null) 'secondary tap',
       if (onSecondaryTapUp != null) 'secondary tap up',
       if (onSecondaryTapDown != null) 'secondary tap down',
-      if (onSecondaryTapCancel != null) 'secondary tap cancel'
+      if (onSecondaryTapCancel != null) 'secondary tap cancel',
     ];
     properties.add(IterableProperty<String>('gestures', gestures, ifEmpty: '<none>'));
     properties.add(DiagnosticsProperty<MouseCursor>('mouseCursor', mouseCursor));
@@ -600,7 +600,7 @@ class _InkResponseTranslucentStateWidget extends StatefulWidget {
       highlightShape,
       description: '${containedInkWellTranslucent ? "clipped to " : ""}$highlightShape',
       showName: false,
-    ));
+    ),);
   }
 }
 

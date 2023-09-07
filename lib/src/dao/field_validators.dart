@@ -185,7 +185,7 @@ ValidationError? fieldValidatorListNotEmpty<T extends Comparable>(BuildContext c
   String? errorMessage,
   ValidationErrorSeverity severity = ValidationErrorSeverity.error,
 }) {
-  return field is ListField && (field.value as ComparableList).list.isEmpty
+  return field is ListField && (field.value! as ComparableList).list.isEmpty
       ? ValidationError(
           field: field,
           error: errorMessage ?? 'At least one ${(field as ListField).objectTemplate.classUiName} required', // TODO 2 internationalize
@@ -389,7 +389,7 @@ class _ValidationMessageState extends State<ValidationMessage> with SingleTicker
             errorTextStyle: widget.errorTextStyle,
             animate: widget.animate,
           ),
-        ));
+        ),);
       }
     }
     return Padding(
@@ -600,7 +600,7 @@ class SaveConfirmationValidationMessageGroup extends StatelessWidget {
               ],
             ),
           ),
-        ));
+        ),);
       }
     }
     return Material(

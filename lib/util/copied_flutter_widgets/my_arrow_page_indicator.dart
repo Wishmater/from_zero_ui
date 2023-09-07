@@ -112,7 +112,7 @@ class ArrowPageIndicatorState extends State<ArrowPageIndicator> {
   Widget build(BuildContext context) => _buildBody();
 
   Widget _buildArrow(
-      {required Widget? icon, required IconData iconData, required bool isNotVisible, required bool isLeft}) =>
+      {required Widget? icon, required IconData iconData, required bool isNotVisible, required bool isLeft,}) =>
       Opacity(
         opacity: isNotVisible ? 0.0 : 1.0,
         child: Material(
@@ -137,10 +137,10 @@ class ArrowPageIndicatorState extends State<ArrowPageIndicator> {
                   : isLeft
                   ? widget.pageController.previousPage(
                   duration: Duration(milliseconds: widget.duration),
-                  curve: widget.curve)
+                  curve: widget.curve,)
                   : widget.pageController.nextPage(
                   duration: Duration(milliseconds: widget.duration),
-                  curve: widget.curve);
+                  curve: widget.curve,);
             },
           ),
         ),
@@ -150,13 +150,13 @@ class ArrowPageIndicatorState extends State<ArrowPageIndicator> {
       icon: widget.leftIcon,
       iconData: Icons.chevron_left,
       isNotVisible: isFirstPage(),
-      isLeft: true);
+      isLeft: true,);
 
   Widget _buildRightArrow() => _buildArrow(
       icon: widget.rightIcon,
       iconData: Icons.chevron_right,
       isNotVisible: isLastPage(),
-      isLeft: false);
+      isLeft: false,);
 
   Widget _buildPageView() => ScrollConfiguration(
     behavior: NoGlowBehaviour(),
@@ -208,7 +208,7 @@ class ArrowPageIndicatorState extends State<ArrowPageIndicator> {
 
 class NoGlowBehaviour extends ScrollBehavior {
   Widget buildViewportChrome(
-      BuildContext context, Widget child, AxisDirection axisDirection) {
+      BuildContext context, Widget child, AxisDirection axisDirection,) {
     return child;
   }
 }

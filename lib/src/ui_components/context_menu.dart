@@ -1,7 +1,7 @@
+import 'package:dartx/dartx.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:dartx/dartx.dart';
 
 class ContextMenuFromZero extends StatefulWidget {
 

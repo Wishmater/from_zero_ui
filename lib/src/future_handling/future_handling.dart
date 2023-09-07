@@ -1,8 +1,8 @@
 import 'dart:math';
 
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:dartx/dartx.dart';
 
 
 
@@ -531,7 +531,7 @@ class AnimatedContainerFromChildSizeState extends State<AnimatedContainerFromChi
     if (widget.child != oldWidget?.child){
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
         try {
-          RenderBox renderBox = globalKey.currentContext!.findRenderObject() as RenderBox;
+          RenderBox renderBox = globalKey.currentContext!.findRenderObject()! as RenderBox;
           previousSize = size;
           size = renderBox.size;
           if (size!=previousSize) {

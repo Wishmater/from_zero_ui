@@ -2,11 +2,11 @@ import 'dart:io';
 
 import 'package:dartx/dartx.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:from_zero_ui/src/ui_components/file_picker_from_zero.dart';
-import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/src/ui_components/file_picker_from_zero.dart';
+import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:path/path.dart' as path;
 
 
@@ -312,7 +312,7 @@ class FileField extends StringField {
                           showDropdownIcon: false,
                         ),
                       );
-                    }
+                    },
                   ),
                 ),
               ),
@@ -355,7 +355,7 @@ class FileField extends StringField {
                 ...defaultActions,
               ].map((e) => e.copyWith(
                 enabled: enabled,
-              )).toList(),
+              ),).toList(),
               title: SizedBox(height: 56, child: result),
             );
           }

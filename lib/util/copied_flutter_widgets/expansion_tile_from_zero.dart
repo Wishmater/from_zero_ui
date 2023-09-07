@@ -446,7 +446,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
               children: widget.children,
             ),
           ),
-        )
+        ),
     );
 
     return AnimatedBuilder(

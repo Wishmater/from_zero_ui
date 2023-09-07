@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:open_file/open_file.dart';
 import 'package:humanizer/humanizer.dart';
 import 'package:intl/intl.dart';
+import 'package:open_file/open_file.dart';
+import 'package:pasteboard/pasteboard.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:url_launcher/url_launcher.dart';
-import 'package:pasteboard/pasteboard.dart';
 
 
 final _percentFormatter = NumberFormat.decimalPercentPattern(decimalDigits: 1);
@@ -253,7 +254,7 @@ Future<bool> saveFileFromZero ({
         title: Text(FromZeroLocalizations.of(context).translate('download_fail')),
         message: Text(downloadSuccess
             ? FromZeroLocalizations.of(context).translate('error_file')
-            : ('${ApiProviderBuilder.getErrorTitle(context, error, stackTrace)}${errorSubtitle==null ? '' : '\n$errorSubtitle'}')),
+            : ('${ApiProviderBuilder.getErrorTitle(context, error, stackTrace)}${errorSubtitle==null ? '' : '\n$errorSubtitle'}'),),
         actions: [
           if (onRetry!=null)
           SnackBarAction(
@@ -261,7 +262,7 @@ Future<bool> saveFileFromZero ({
             onPressed: () {
               retry = true;
             },
-          )
+          ),
         ],
       ).show(context).closed;
     }

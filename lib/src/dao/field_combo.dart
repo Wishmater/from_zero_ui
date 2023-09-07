@@ -1,7 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 
 
 class ComboField<T extends DAO> extends Field<T> {
@@ -203,7 +203,7 @@ class ComboField<T extends DAO> extends Field<T> {
         field: this,
         error: FromZeroLocalizations.of(context).translate("validation_combo_not_possible"),
         defaultValue: null,
-      ));
+      ),);
     }
     validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
     return validationErrors.where((e) => e.isBlocking).isEmpty;
@@ -429,7 +429,7 @@ class ComboField<T extends DAO> extends Field<T> {
               ...defaultActions,
             ].map((e) => e.copyWith(
               enabled: enabled,
-            )).toList(),
+            ),).toList(),
             title: SizedBox(height: 56, child: result),
           );
         }

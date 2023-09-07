@@ -600,7 +600,7 @@ class FillerRelayer extends StatelessWidget {
           builder: (context, constraints) {
             _addCallback(context);
             return child;
-          }
+          },
         ),
       ),
     );

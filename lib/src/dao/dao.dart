@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'dart:math';
+
 import 'package:animations/animations.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:dartx/dartx.dart';
 import 'package:from_zero_ui/src/app_scaffolding/api_snackbar.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:preload_page_view/preload_page_view.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 
 part 'field.dart';
 part 'lazy_dao.dart';
@@ -583,7 +584,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                     children: [
                       Text(validation
                           ? (saveConfirmationDialogDescription?.call(this) ?? ("${FromZeroLocalizations.of(context).translate("confirm_save_desc")}\r\n$shownName"))
-                          : 'Debe resolver los siguientes errores de validación:'), // TODO 3 internationalize
+                          : 'Debe resolver los siguientes errores de validación:',), // TODO 3 internationalize
                       SaveConfirmationValidationMessage(allErrors: validationErrors),
                     ],
                   ),
@@ -712,7 +713,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         title: Text(success
             ? '$classUiName ${newInstance ? FromZeroLocalizations.of(context).translate("added")
             : FromZeroLocalizations.of(context).translate("edited")} ${FromZeroLocalizations.of(context).translate("successfully")}.'
-            : FromZeroLocalizations.of(context).translate("connection_error_long")),
+            : FromZeroLocalizations.of(context).translate("connection_error_long"),),
       ).show(context);
     }
     return model;
@@ -801,7 +802,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           type: success ? SnackBarFromZero.success : SnackBarFromZero.error,
           title: Text(success
               ? '$classUiName ${FromZeroLocalizations.of(context).translate("deleted")} ${FromZeroLocalizations.of(context).translate("successfully")}.'
-              : (errorString ?? FromZeroLocalizations.of(context).translate("connection_error_long"))),
+              : (errorString ?? FromZeroLocalizations.of(context).translate("connection_error_long")),),
         ).show(context);
       }
     }
@@ -1071,7 +1072,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                                           );
                                                         },
                                                       );
-                                                    }
+                                                    },
                                                   ),
                                                 ),
                                               ),
@@ -1149,7 +1150,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               dialogActions: [Column(
                 mainAxisSize: MainAxisSize.min,
                 children: formActions,
-              )],
+              ),],
             );
             Map<InvalidatingError, Field> invalidatingErrors = {};
             List<InvalidatingError> autoResolveInvalidatingErrors = [];
@@ -1267,7 +1268,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                                   field: value,
                                                   oldValue: value.value,
                                                   newValue: key.defaultValue,
-                                                ));
+                                                ),);
                                               }).values.toList(),
                                           ],
                                         ),
@@ -2012,7 +2013,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                         Navigator.of(modalContext).pop(true); // Dismiss alert dialog
                       },
                       child: Text(FromZeroLocalizations.of(context).translate("close_caps")),
-                    )
+                    ),
                   ],
                 );
               },

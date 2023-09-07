@@ -1,15 +1,13 @@
-
 import 'dart:async';
 import 'dart:io';
 
+import 'package:dartx/dartx.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-
 import 'package:from_zero_ui/util/no_fading_transitions/no_fading_shared_axis_transition.dart' as no_fading_shared_axis_transition;
-import 'package:dartx/dartx.dart';
 
 
 typedef DrawerContentBuilder = Widget Function(BuildContext context, bool compact,);
@@ -165,7 +163,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
             Positioned.fill(
               left: Tween<double>(begin: 64.0, end: 0.0)
                   .evaluate(CurvedAnimation( curve: Curves.easeInQuad,
-                  parent: scaffoldChangeNotifier.titleAnimation ? animation : kAlwaysCompleteAnimation),
+                  parent: scaffoldChangeNotifier.titleAnimation ? animation : kAlwaysCompleteAnimation,),
               ),
               child: FadeTransition(
                 opacity: CurvedAnimation( curve: Curves.easeOutCubic,
@@ -392,7 +390,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         overrides: [
           fromZeroAppbarChangeNotifierProvider.overrideWithProvider(ChangeNotifierProvider<AppbarChangeNotifier>((ref) {
             return appbarChangeNotifier!;
-          })),
+          }),),
         ],
         child: FadeUpwardsFadeTransition(
           routeAnimation: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
@@ -678,7 +676,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                       ),
                       child: ColoredBox(color: statusBarColor,),
                     );
-                  }
+                  },
                 ),
               ),
 
@@ -845,7 +843,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                             ),
                                           ),
                                         );
-                                      }
+                                      },
                                   );
                                 }
                                 return result;
@@ -1155,7 +1153,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                             result = widget.drawerBackground!(context, result);
                           }
                           return result;
-                        }
+                        },
                       ),
 
                       //CUSTOM SHADOWS (drawer appbar)

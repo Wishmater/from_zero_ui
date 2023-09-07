@@ -47,9 +47,9 @@ class SimpleShadowPainter extends CustomPainter {
             ),
             Offset(
                 direction==right ? size.width*(1+spreadPercentage) : size.width,
-                direction==down ? size.height*(1+spreadPercentage) : size.height
-            )
-        )
+                direction==down ? size.height*(1+spreadPercentage) : size.height,
+            ),
+        ),
     );
     double spread = direction==down||direction==up
         ? size.height*spreadPercentage
@@ -64,9 +64,9 @@ class SimpleShadowPainter extends CustomPainter {
                 ),
                 Offset(
                     direction==right ? size.width : size.width+spread,
-                    direction==down ? size.height : size.height+spread
-                )
-            )
+                    direction==down ? size.height : size.height+spread,
+                ),
+            ),
         )
         ..fillType = PathFillType.evenOdd,
       Paint()

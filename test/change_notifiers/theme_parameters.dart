@@ -44,7 +44,7 @@ class ThemeParameters extends ThemeParametersFromZero {
           color: Colors.black,
         ),
         iconTheme: IconThemeData(
-            color: Colors.black
+            color: Colors.black,
         ),
       ),
       tooltipTheme: TooltipThemeData(
@@ -95,7 +95,7 @@ class ThemeParameters extends ThemeParametersFromZero {
           color: Colors.black,
         ),
         iconTheme: IconThemeData(
-            color: Colors.black
+            color: Colors.black,
         ),
       ),
       tooltipTheme: TooltipThemeData(

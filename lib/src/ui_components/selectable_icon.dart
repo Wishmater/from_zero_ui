@@ -56,7 +56,7 @@ class _SelectableIconState extends State<SelectableIcon> with SingleTickerProvid
     _iconTurns = _curvedAnimation!.drive(Tween<double>(
       begin: widget.unselectedOffset,
       end: widget.selectedOffset,
-    ));
+    ),);
   }
   void initColorAnimation() {
     _iconColor = _curvedAnimation!.drive(ColorTween(
@@ -64,7 +64,7 @@ class _SelectableIconState extends State<SelectableIcon> with SingleTickerProvid
           ?? Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.75),
       end: widget.selectedColor 
           ?? Theme.of(context).colorScheme.secondary,
-    ));
+    ),);
   }
 
   @override

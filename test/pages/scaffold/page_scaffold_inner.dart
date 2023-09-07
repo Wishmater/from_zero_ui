@@ -27,10 +27,10 @@ class PageScaffoldInnerState extends State<PageScaffoldInner> {
           onTap: () {
             GoRouter.of(context).pushNamed('scaffold_inner', queryParameters: {
               'rand': Random().nextDouble().toString(),
-            });
+            },);
           },
           child: const FlutterLogo(size: 512,),
-        )),
+        ),),
       ),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(
         tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: mainRoutes),

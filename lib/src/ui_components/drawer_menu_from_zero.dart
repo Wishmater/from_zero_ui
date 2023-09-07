@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:dartx/dartx.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:go_router/go_router.dart';
@@ -479,7 +479,7 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                     tabs[i].title.isEmpty ? const SizedBox(height: 4,) : Padding(
                       padding: const EdgeInsets.only(left: 64),
                       child: Text(tabs[i].title, style: theme.textTheme.bodySmall,),
-                    )
+                    ),
                   ],
                 ),
               ),
@@ -1098,7 +1098,7 @@ class DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                         child: result,
                       );
                       return result;
-                    }
+                    },
                   ),
                 ),
               ),

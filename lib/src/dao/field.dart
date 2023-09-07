@@ -205,7 +205,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   bool get isEdited => value!=dbValue;
 
   @override
-  int compareTo(other) => other is Field ? value==null||(value is String && (value as String).isEmpty) ? 1 : other.value==null ? -1 : value!.compareTo(other.value) : 1;
+  int compareTo(other) => other is Field ? value==null||(value is String && (value! as String).isEmpty) ? 1 : other.value==null ? -1 : value!.compareTo(other.value) : 1;
 
   void revertChanges() {
     _value = dbValue;
@@ -279,7 +279,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
           field: this,
           error: '$uiName ${FromZeroLocalizations.of(context).translate("validation_combo_hidden_with_value")}',
           defaultValue: defaultValue,
-        ));
+        ),);
       }
       if (!validateIfHidden) {
         return validationErrors.where((e) => e.isBlocking).isEmpty;
@@ -299,7 +299,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     T? emptyValue,
   }) async {
     bool isRequired = false;
-    if (value==null || (value is String && (value as String).isBlank) || (value is ComparableList && (value as ComparableList).isEmpty)) {
+    if (value==null || (value is String && (value! as String).isBlank) || (value is ComparableList && (value! as ComparableList).isEmpty)) {
       isRequired = !normalValidationResult;
     } else {
       try {
@@ -331,7 +331,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
         log (e, stackTrace: st);
         result.add(ValidationError(field: field,
           error: 'Error al ejecutar validación: ${ApiProviderBuilder.getErrorTitle(context, e, st)}\n${ApiProviderBuilder.getErrorSubtitle(context, error, st)}',
-        ));
+        ),);
       }
       if (currentValidationId!=dao.validationCallCount) return [];
       if (error!=null) {
@@ -433,13 +433,13 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       return const SizedBox.shrink();
     }
     linkToInnerDAOs = linkToInnerDAOs && (field.value is DAO)
-        && (field.value as DAO).wantsLinkToSelfFromOtherDAOs;
+        && (field.value! as DAO).wantsLinkToSelfFromOtherDAOs;
     final onTap = linkToInnerDAOs
-        ? ()=>(field.value as DAO).pushViewDialog(context)
+        ? ()=>(field.value! as DAO).pushViewDialog(context)
         : null;
     String message;
     if (field.value is DAO) {
-      message = dense ? (field.value as DAO).uiNameDense : (field.value as DAO).uiName;
+      message = dense ? (field.value! as DAO).uiNameDense : (field.value! as DAO).uiName;
     } else if (field is DateField) {
       message = field.value==null ? ''
           : dense
@@ -508,7 +508,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                   icon: const Icon(Icons.info_outline),
                   padding: const EdgeInsets.all(0),
                   constraints: const BoxConstraints(maxHeight: 32),
-                  onPressed: () => (field.value as DAO).pushViewDialog(context),
+                  onPressed: () => (field.value! as DAO).pushViewDialog(context),
                 ),
               ),
           ],
@@ -585,10 +585,10 @@ class FieldGroup {
   final bool useLayoutFromZero;
   /// only used when building FlexibleLayoutFromZero
   double get maxWidth => max(fields.values.maxBy((e) => e.maxWidth)?.maxWidth ?? 0,
-                              childGroups.maxBy((e) => e.maxWidth)?.maxWidth ?? 0);
+                              childGroups.maxBy((e) => e.maxWidth)?.maxWidth ?? 0,);
   /// only used when building FlexibleLayoutFromZero
   double get minWidth => max(fields.values.maxBy((e) => e.minWidth)?.minWidth ?? 0,
-                              childGroups.maxBy((e) => e.minWidth)?.minWidth ?? 0);
+                              childGroups.maxBy((e) => e.minWidth)?.minWidth ?? 0,);
 
   const FieldGroup({
     this.fields = const {},

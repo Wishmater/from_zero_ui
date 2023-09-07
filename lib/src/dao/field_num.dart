@@ -1,11 +1,10 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/material.dart' as material;
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:intl/intl.dart';
 
 
@@ -298,7 +297,7 @@ class NumField extends Field<num> {
             ...defaultActions,
           ].map((e) => e.copyWith(
             enabled: enabled,
-          )).toList();
+          ),).toList();
           Widget result = Stack(
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [
@@ -408,7 +407,7 @@ class NumField extends Field<num> {
                         focusNode.nextFocus();
                       },
                     );
-                  }
+                  },
                 ),
               ),
             ],

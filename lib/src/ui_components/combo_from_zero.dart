@@ -69,7 +69,7 @@ class ComboFromZero<T> extends StatefulWidget {
     this.showHintAsNullInSelection = true,
   }) :  assert(possibleValues!=null
               || possibleValuesFuture!=null
-              || possibleValuesProvider!=null);
+              || possibleValuesProvider!=null,);
 
   @override
   ComboFromZeroState<T> createState() => ComboFromZeroState<T>();
@@ -443,7 +443,7 @@ class ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
         onRowTap: (value) {
           _select(null);
         },
-      ));
+      ),);
     }
     return ScrollbarFromZero(
       controller: popupScrollController,
@@ -470,7 +470,7 @@ class ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                 final q = searchQuery!.trim().toUpperCase();
                 for (final e in filtered) {
                   final value = (e.id is DAO)
-                      ? (e.id as DAO).searchName.toUpperCase()
+                      ? (e.id! as DAO).searchName.toUpperCase()
                       : e.id==null ? e.values[0]
                       : e.id.toString().toUpperCase();
                   if (value.contains(q)) {
@@ -492,7 +492,7 @@ class ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                       onRowTap: (context, row) {
                         (row.id as DAO).pushViewDialog(context);
                       },
-                    )
+                    ),
                   ]
                 : [],
             headerWidgetAddon: Container(

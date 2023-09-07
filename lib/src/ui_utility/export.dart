@@ -1,23 +1,23 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:animations/animations.dart';
+import 'package:dartx/dartx.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/rendering.dart' as rendering;
 import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_arrow_page_indicator.dart' as my_arrow_page_indicator;
 import 'package:intl/intl.dart';
 import 'package:page_view_indicators/page_view_indicators.dart';
-import 'package:dartx/dartx.dart';
-import 'dart:ui' as ui;
+import 'package:path/path.dart' as p;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:path/path.dart' as p;
-import 'package:flutter/rendering.dart' as rendering;
 
 enum FileAutoOpenType {
   none,
@@ -255,9 +255,9 @@ class ExportState extends State<Export> {
             if (significantWidgetVisibleAtStartOffsets[i]
                 > jumpsSeparatingPages.last+position.viewportDimension){
               jumpsSeparatingPages.add((significantWidgetVisibleAtStartOffsets[i-1]
-                  - widget.scrollableStickyOffset).clamp(0, double.infinity));
+                  - widget.scrollableStickyOffset).clamp(0, double.infinity),);
               pageBottomPaddings.add(position.viewportDimension - (significantWidgetVisibleAtStartOffsets[i-1]
-                  - jumpsSeparatingPages[jumpsSeparatingPages.length-2]));
+                  - jumpsSeparatingPages[jumpsSeparatingPages.length-2]),);
             }
           }
           pageBottomPaddings.add((position.viewportDimension - (totalHeight - jumpsSeparatingPages.last)).clamp(0.0, double.infinity));
@@ -339,7 +339,7 @@ class ExportState extends State<Export> {
           build: (context) => pw.Image(
             pw.MemoryImage(pngBytes),
           ),
-        )
+        ),
       );
       if (i==widget.childrenCount!(currentSize, portrait, scale, this.format,)-1){
         if (!mounted) return;
@@ -373,7 +373,7 @@ class ExportState extends State<Export> {
     }
   }
   Future<ui.Image> _getImage(Size size, GlobalKey boundaryKey) async{
-    RenderRepaintBoundary boundary = boundaryKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+    RenderRepaintBoundary boundary = boundaryKey.currentContext!.findRenderObject()! as RenderRepaintBoundary;
     return await boundary.toImage(pixelRatio: 1920/size.longestSide);
   }
   Future<Uint8List> _getImageBytes(Size size, ui.Image image) async{
@@ -391,7 +391,7 @@ class ExportState extends State<Export> {
       bool widthSetted = false;
       double flexMultiplier = 0;
       final tableWidth = value.currentState!.widget.minWidthGetter!(value.currentState!.currentColumnKeys?.toList()
-          ?? (value.currentState!.widget.columns?.keys.where((e) => value.currentState!.widget.columns![e]!.flex!=0))?.toList() ?? []);
+          ?? (value.currentState!.widget.columns?.keys.where((e) => value.currentState!.widget.columns![e]!.flex!=0))?.toList() ?? [],);
       for (var i = value.currentState!.widget.columns==null ? 0 : -1; i < value.currentState!.filtered.length; ++i) {
         RowModel row;
         if (i==-1) {
@@ -541,7 +541,7 @@ class ExportState extends State<Export> {
         widget.textEditingControllers==null ? TextEditingController()
           : widget.textEditingControllers!.length > textEditingControllers.length
             ? widget.textEditingControllers![textEditingControllers.length] ?? TextEditingController()
-            : widget.textEditingControllers!.last ?? TextEditingController()
+            : widget.textEditingControllers!.last ?? TextEditingController(),
       );
     }
     while (boundaryKeys.length < (widget.childrenCount?.call(currentSize, portrait, scale, format,)??1)){
@@ -562,7 +562,7 @@ class ExportState extends State<Export> {
         showModalFromZero(
           context: context,
           configuration: const FadeScaleTransitionConfiguration(
-            barrierDismissible: false
+            barrierDismissible: false,
           ),
           builder: (context) {
             return Center(
@@ -587,7 +587,7 @@ class ExportState extends State<Export> {
                       },
                       child: const Text('CANCELAR', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),),
                     ),
-                  )
+                  ),
                 ],
               ),
             );
@@ -654,7 +654,7 @@ class ExportState extends State<Export> {
                               );
                             }
                             return result;
-                          }
+                          },
                         ),
                       ),
 //                      Text(
@@ -727,7 +727,7 @@ class ExportState extends State<Export> {
                                           splashRadius: 24,
                                         ),
                                       );
-                                    }
+                                    },
                                 ),
                               ),
                             ],
@@ -752,7 +752,7 @@ class ExportState extends State<Export> {
                         ),
                         onChanged: (value) {
                           setState(() {
-                            formatIndex = value as int;
+                            formatIndex = (value! as int)!;
                           });
                         },
                       ),
@@ -779,7 +779,7 @@ class ExportState extends State<Export> {
                         ],
                         onChanged: format=='Excel' ? null : (value) {
                           setState(() {
-                            portrait = value as bool;
+                            portrait = (value! as bool)!;
                           });
                         },
                       ),
@@ -801,7 +801,7 @@ class ExportState extends State<Export> {
                         ),
                         onChanged: format=='Excel' ? null : (value) {
                           setState(() {
-                            currentSize = value as int;
+                            currentSize = (value! as int)!;
                           });
                         },
                       ),
@@ -810,7 +810,7 @@ class ExportState extends State<Export> {
                       width: 256,
                       decoration: BoxDecoration(
                         border: Border.all(width: 1, color: Theme.of(context).dividerColor),
-                        borderRadius: const BorderRadius.all(Radius.circular(4))
+                        borderRadius: const BorderRadius.all(Radius.circular(4)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -951,7 +951,7 @@ class _PageWrapper extends StatelessWidget {
   final String? title;
 
   const _PageWrapper({required this.scale, required this.child, required this.size,
-    required this.globalKey, required this.themeData, required this.title});
+    required this.globalKey, required this.themeData, required this.title,});
 
   @override
   Widget build(BuildContext context) {

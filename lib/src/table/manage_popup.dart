@@ -13,7 +13,7 @@ abstract class TableFromZeroManagePopup {
     final columnKeys = List.from(controller.columnKeys!);
     final columnVisibility = {
       for (final e in columnKeys)
-        e: controller.currentColumnKeys!.contains(e)
+        e: controller.currentColumnKeys!.contains(e),
     };
     final filterButtonGlobalKeys = {
       for (final e in columnKeys)
@@ -254,7 +254,7 @@ abstract class TableFromZeroManagePopup {
                                     onPressed: visibleColumns.isEmpty ? null : () {
                                       Navigator.of(context).pop(true);
                                     },
-                                  )
+                                  ),
                                 ],
                               ),
                             ),
@@ -263,7 +263,7 @@ abstract class TableFromZeroManagePopup {
                       ),
                     ],
                   );
-                }
+                },
               ),
             ),
           ),

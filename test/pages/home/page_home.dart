@@ -41,7 +41,7 @@ class PageHomeState extends State<PageHome> {
                 );
               }),
             ),
-          }
+          },
         ),
       ],
     );
@@ -60,7 +60,7 @@ class PageHomeState extends State<PageHome> {
           Hero(
             tag: 'title-hero',
             child: Icon(Icons.ac_unit, color: Colors.white,),
-          )
+          ),
         ],
       ),
       body: _getPage(context),

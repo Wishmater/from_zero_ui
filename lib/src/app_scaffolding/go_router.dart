@@ -122,7 +122,7 @@ class GoRouteFromZero extends GoRoute {
     GoRouterWidgetBuilder? builder,
     GoRouterRedirect? redirect,
     Widget Function(BuildContext context, Animation<double> animation,
-        Animation<double> secondaryAnimation, Widget child)? transitionBuilder,
+        Animation<double> secondaryAnimation, Widget child,)? transitionBuilder,
     List<GoRouteFromZero> routes = const [],
     this.pageScaffoldId = 'main',
     this.pageScaffoldDepth = 0,
@@ -131,7 +131,7 @@ class GoRouteFromZero extends GoRoute {
     LocalKey Function(BuildContext context, GoRouterState state,)? pageKeyGetter,
     this.titleBuilder,
   }) :  assert((builder==null && transitionBuilder==null) || pageBuilder==null,
-            'If specifying pageBuilder; builder and transitionBuilder will be overriden, so they should be null'),
+            'If specifying pageBuilder; builder and transitionBuilder will be overriden, so they should be null',),
         super(
           path: path,
           name: name ?? path,
@@ -149,7 +149,7 @@ class GoRouteFromZero extends GoRoute {
           },
         ) {
     assert(this is GoRouteGroupFromZero || builder!=null || pageBuilder!=null,
-        'One of builder or pageBuilder must be specified');
+        'One of builder or pageBuilder must be specified',);
   }
 
   GoRouteFromZero copyWith({
@@ -254,7 +254,7 @@ class GoRouteFromZero extends GoRoute {
       if (e is GoRouteGroupFromZero) {
         result.addAll(getCleanRoutes(e.routes,
           addStartingSlash: addStartingSlash,
-        ));
+        ),);
       } else {
         result.add(e.copyWith(
           path: addStartingSlash && !e.path.startsWith('/')
@@ -262,7 +262,7 @@ class GoRouteFromZero extends GoRoute {
           routes: getCleanRoutes(e.routes,
             addStartingSlash: false,
           ),
-        ));
+        ),);
       }
     }
     return result;
@@ -273,7 +273,7 @@ class GoRouteFromZero extends GoRoute {
     final uri = Uri.parse(loc);
     assert(uri.queryParameters.isEmpty);
     return _canonicalUri(
-        Uri(path: uri.path, queryParameters: queryParameters).toString());
+        Uri(path: uri.path, queryParameters: queryParameters).toString(),);
   }
   static String _canonicalUri(String loc) {
     var canon = Uri.parse(loc).toString();

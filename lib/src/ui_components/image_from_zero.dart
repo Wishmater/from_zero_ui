@@ -1,10 +1,10 @@
+import 'dart:math';
+
+import 'package:extended_image/extended_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:extended_image/extended_image.dart';
-import 'dart:math';
-
 import 'package:from_zero_ui/util/web_compile_file/web_compile_file.dart';
 import 'package:url_launcher/link.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -92,7 +92,7 @@ class ImageFromZero extends StatefulWidget {
                     offset: offset,
                     pageSize: pageSize,
                     color: Theme.of(context).canvasColor,
-                    pageGestureAxis: SlideAxis.both);
+                    pageGestureAxis: SlideAxis.both,);
               },
               slideAxis: SlideAxis.both,
               child: ExtendedImageSlidePageHandler(
@@ -126,7 +126,7 @@ class ImageFromZero extends StatefulWidget {
                         ),
                       ),
                     ),
-                    ...actions
+                    ...actions,
                   ],
                 ),
               ),
@@ -162,7 +162,7 @@ class ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateMi
       curve: Curves.easeOutCubic,
     );
     _doubleClickAnimationController = AnimationController(
-        duration: const Duration(milliseconds: 150), vsync: this);
+        duration: const Duration(milliseconds: 150), vsync: this,);
   }
 
   @override
@@ -225,7 +225,7 @@ class ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateMi
             scale = scale + mult*event.scrollDelta.dy;
             extendedImageGestureKey.currentState!.handleDoubleTap(
                 scale: scale,
-                doubleTapPosition: event.position);
+                doubleTapPosition: event.position,);
           }
         },
         child: result,
@@ -386,7 +386,7 @@ class ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateMi
     _doubleClickAnimationListener = () {
       state.handleDoubleTap(
           scale: _doubleClickAnimation!.value,
-          doubleTapPosition: pointerDownPosition);
+          doubleTapPosition: pointerDownPosition,);
     };
     _doubleClickAnimation = _doubleClickAnimationController
         .drive(Tween<double>(begin: begin, end: end));
@@ -454,7 +454,7 @@ class HeroWidgetState extends State<HeroWidget> {
           Animation<double> animation,
           HeroFlightDirection flightDirection,
           BuildContext fromHeroContext,
-          BuildContext toHeroContext) {
+          BuildContext toHeroContext,) {
         // make hero more smoothly
         final Hero hero = (flightDirection == HeroFlightDirection.pop
             ? fromHeroContext.widget
@@ -488,7 +488,7 @@ class HeroWidgetState extends State<HeroWidget> {
                   Opacity(
                     opacity: animation.value,
                     child: animatedBuilderChild,
-                  )
+                  ),
                 ],
               );
 
@@ -496,10 +496,10 @@ class HeroWidgetState extends State<HeroWidget> {
               if (fixTransform) {
                 final Tween<Offset> offsetTween = Tween<Offset>(
                     begin: Offset.zero,
-                    end: widget.slidePagekey.currentState!.offset);
+                    end: widget.slidePagekey.currentState!.offset,);
 
                 final Tween<double> scaleTween = Tween<double>(
-                    begin: 1.0, end: widget.slidePagekey.currentState!.scale);
+                    begin: 1.0, end: widget.slidePagekey.currentState!.scale,);
                 animatedBuilderChild = Transform.translate(
                   offset: offsetTween.evaluate(animation),
                   child: Transform.scale(

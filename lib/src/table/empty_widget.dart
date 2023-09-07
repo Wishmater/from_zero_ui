@@ -1,9 +1,9 @@
 import 'dart:async';
 
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:dartx/dartx.dart';
 
 class TableEmptyWidget<T> extends StatelessWidget {
 

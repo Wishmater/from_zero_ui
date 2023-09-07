@@ -54,7 +54,7 @@ class PageHeroesState extends State<PageHeroes> {
           DrawerMenuFromZero(
             tabs: ResponsiveDrawerMenuItem.fromGoRoutes(routes: settingsRoutes),
             compact: compact,
-          )
+          ),
         ],
       ),
     );
@@ -158,7 +158,7 @@ class PageHeroesState extends State<PageHeroes> {
     );
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: widgetToExport
+      child: widgetToExport,
     );
   }
 

@@ -1,10 +1,11 @@
 import 'dart:async';
+
+import 'package:dartx/dartx.dart';
 import 'package:flutter/gestures.dart';
-import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
-import 'package:dartx/dartx.dart';
+import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 
 
 enum StringFieldType {
@@ -319,7 +320,7 @@ class StringField extends Field<String> {
             ...defaultActions,
           ].map((e) => e.copyWith(
             enabled: enabled,
-          )).toList();
+          ),).toList();
           Widget result = Stack(
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [
@@ -392,7 +393,7 @@ class StringField extends Field<String> {
                         },
                         actions: allActions,
                       );
-                    }
+                    },
                   ),
                 ),
               ),
@@ -560,7 +561,7 @@ class StringField extends Field<String> {
                 onPressed: e.onTap==null ? null : () => e.onTap?.call(context),
                 type: ContextMenuButtonType.custom,
               );
-            })
+            }),
           ],
           anchors: editableTextState.contextMenuAnchors,
         );

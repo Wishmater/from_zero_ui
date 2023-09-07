@@ -173,7 +173,7 @@ class TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
                         if (widget.title!=null)
                           DefaultTextStyle(
                             style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                              fontSize: Theme.of(context).textTheme.titleLarge!.fontSize!*0.85
+                              fontSize: Theme.of(context).textTheme.titleLarge!.fontSize!*0.85,
                             ),
                             child: widget.title!,
                           ),

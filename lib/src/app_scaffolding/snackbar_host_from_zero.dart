@@ -134,7 +134,7 @@ class SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
                     key: ValueKey(controller._snackBarQueue.first.hashCode),
                     child: controller._snackBarQueue.first,
                   ),
-            )
+            ),
           ],
         ),
         Positioned(

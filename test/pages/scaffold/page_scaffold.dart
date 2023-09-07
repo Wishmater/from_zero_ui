@@ -27,7 +27,7 @@ class PageScaffoldState extends State<PageScaffold> {
           Hero(
             tag: 'title-hero',
             child: Icon(Icons.ac_unit, color: Colors.white,),
-          )
+          ),
         ],
       ),
       body: _getPage(context),
@@ -83,7 +83,7 @@ class PageScaffoldState extends State<PageScaffold> {
                 ).show(context);
               },
             );
-          }
+          },
         ),
         Builder(builder: (context) => ActionFromZero(
           title: "Action 2",
