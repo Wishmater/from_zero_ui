@@ -315,25 +315,6 @@ class ErrorSign extends StatelessWidget {
 typedef SuccessBuilder<T> = Widget Function(BuildContext context, T data);
 typedef FutureErrorBuilder = Widget Function(BuildContext context, Object? error, Object? stackTrace);
 typedef FutureLoadingBuilder = Widget Function(BuildContext context);
-Widget _defaultLoadingBuilder(BuildContext context){
-  return ApiProviderBuilder.defaultLoadingBuilder(context, null);
-}
-
-Widget defaultErrorBuilder(BuildContext context, error, stackTrace){
-  // log(error, stackTrace: stackTrace);
-  return ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, null);
-}
-
-Widget _defaultTransitionBuilder(Widget child, Animation<double> animation){
-  return ZoomedFadeInFadeOutTransition(
-    animation: animation,
-    child: child,
-  );
-}
-
-Widget _noneTransitionBuilder(Widget child, Animation<double> animation){
-  return child;
-}
 
 class FutureBuilderFromZero<T> extends StatefulWidget {
 
@@ -354,7 +335,7 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
     required this.future,
     required this.successBuilder,
     this.errorBuilder = defaultErrorBuilder,
-    this.loadingBuilder = _defaultLoadingBuilder,
+    this.loadingBuilder = defaultLoadingBuilder,
     this.initialData,
     AnimatedSwitcherTransitionBuilder? transitionBuilder,
     this.keepPreviousDataWhileLoading = false,
@@ -362,12 +343,32 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
     Duration? duration,
     this.applyAnimatedContainerFromChildSize = false,
     this.enableSkipFrame = true,
-  }) :  transitionBuilder = transitionBuilder ?? (applyDefaultTransition ? _defaultTransitionBuilder : _noneTransitionBuilder),
+  }) :  transitionBuilder = transitionBuilder ?? (applyDefaultTransition ? defaultTransitionBuilder : noneTransitionBuilder),
         duration = duration ?? (applyDefaultTransition ? const Duration(milliseconds: 300) : Duration.zero),
         super(key: key);
 
   @override
   FutureBuilderFromZeroState<T> createState() => FutureBuilderFromZeroState<T>();
+
+  static Widget defaultLoadingBuilder(BuildContext context){
+    return ApiProviderBuilder.defaultLoadingBuilder(context, null);
+  }
+
+  static Widget defaultErrorBuilder(BuildContext context, error, stackTrace){
+    // log(error, stackTrace: stackTrace);
+    return ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, null);
+  }
+
+  static Widget defaultTransitionBuilder(Widget child, Animation<double> animation){
+    return ZoomedFadeInFadeOutTransition(
+      animation: animation,
+      child: child,
+    );
+  }
+
+  static Widget noneTransitionBuilder(Widget child, Animation<double> animation){
+    return child;
+  }
 
 }
 

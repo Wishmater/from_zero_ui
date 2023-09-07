@@ -284,16 +284,13 @@ class ActionFromZero extends StatelessWidget {
           if (icon==null && forceIconSpace) const SizedBox(width: 36,),
           const SizedBox(width: 12,),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Text(title,
-                style: TextStyle(
-                  fontSize: 16,
-                  height: 1.1,
-                  color: !enabled || onTap==null
-                      ? Theme.of(context).disabledColor
-                      : Theme.of(context).textTheme.bodyLarge!.color,
-                ),
+            child: Text(title,
+              style: TextStyle(
+                fontSize: 16,
+                height: 1.1,
+                color: !enabled || onTap==null
+                    ? Theme.of(context).disabledColor
+                    : Theme.of(context).textTheme.bodyLarge!.color,
               ),
             ),
           ),
