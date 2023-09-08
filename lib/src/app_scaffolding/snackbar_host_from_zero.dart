@@ -1,5 +1,6 @@
 
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -97,6 +98,10 @@ class SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
     if (currentSnackBar!=null && !isSameSnackBar && currentSnackBar is APISnackBar) {
       currentSnackBar.updateBlockUI(currentSnackBar.stateNotifier.state);
     }
+    final mediaQuery = MediaQuery.of(context);
+    print (mediaQuery.padding);
+    print (mediaQuery.viewInsets);
+    print (mediaQuery.viewPadding);
     Widget result = Stack(
       children: [
         Column(
@@ -138,7 +143,9 @@ class SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
           ],
         ),
         Positioned(
-          bottom: 0, left: 0, right: 0, // TODO 3 snackbar doesnt respond to bottom keyboard inset
+          bottom: max(mediaQuery.viewPadding.bottom, mediaQuery.viewInsets.bottom),
+          left: max(mediaQuery.viewPadding.left, mediaQuery.viewInsets.left),
+          right: max(mediaQuery.viewPadding.right, mediaQuery.viewInsets.right),
           child: AnimatedSwitcher(
             switchInCurve: Curves.easeOutCubic,
             switchOutCurve: Curves.easeInCubic,

@@ -101,24 +101,24 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
     });
   }
   void initAnimationController() {
-    if (widget.duration!=null) {
-      if (widget.duration!=Duration.zero) {
-        animationController = AnimationController(
-          vsync: this,
-          duration: widget.duration,
-        );
-        animationController!.addStatusListener((status) {
-          if (status==AnimationStatus.completed) {
-            widget.dismiss();
-          }
-        });
-        animationController?.forward();
-      } else {
-        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-          widget.dismiss();
-        });
-      }
-    }
+    // if (widget.duration!=null) {
+    //   if (widget.duration!=Duration.zero) {
+    //     animationController = AnimationController(
+    //       vsync: this,
+    //       duration: widget.duration,
+    //     );
+    //     animationController!.addStatusListener((status) {
+    //       if (status==AnimationStatus.completed) {
+    //         widget.dismiss();
+    //       }
+    //     });
+    //     animationController?.forward();
+    //   } else {
+    //     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+    //       widget.dismiss();
+    //     });
+    //   }
+    // }
   }
 
   @override
@@ -170,13 +170,16 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
                 style: Theme.of(context).textTheme.titleMedium!,
                 child: const Text('Procesando...'),
               ),
-              const SizedBox(height: 2,),
+              // if (message!=null)
+              //   const SizedBox(height: 2,),
               // if (message!=null)
               //   DefaultTextStyle(
               //     style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12),
               //     child: Text(message),
               //   ),
-              const SizedBox(height: 8,),
+              // if (message!=null)
+              //   const SizedBox(height: 2,),
+              const SizedBox(height: 6,),
             ],
           ),
         ),
@@ -351,12 +354,15 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
                   style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 16),
                   child: Text(title),
                 ),
-              const SizedBox(height: 2,),
+              if (message!=null)
+                const SizedBox(height: 2,),
               if (message!=null)
                 DefaultTextStyle(
                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12),
                   child: Text(message),
                 ),
+              if (message!=null)
+                const SizedBox(height: 2,),
               const SizedBox(height: 8,),
             ],
           ),

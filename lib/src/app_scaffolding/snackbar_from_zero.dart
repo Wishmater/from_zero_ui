@@ -117,18 +117,18 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
   void initState() {
     super.initState();
     widget.controller?.setState = setState;
-    if (widget.duration!=null) {
-      animationController = AnimationController(
-        vsync: this,
-        duration: widget.duration,
-      );
-      animationController!.addStatusListener((status) {
-        if (status==AnimationStatus.completed) {
-          widget.dismiss();
-        }
-      });
-      animationController!.forward();
-    }
+    // if (widget.duration!=null) {
+    //   animationController = AnimationController(
+    //     vsync: this,
+    //     duration: widget.duration,
+    //   );
+    //   animationController!.addStatusListener((status) {
+    //     if (status==AnimationStatus.completed) {
+    //       widget.dismiss();
+    //     }
+    //   });
+    //   animationController!.forward();
+    // }
   }
 
   @override
@@ -165,13 +165,16 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
                   style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 16),
                   child: widget.title!,
                 ),
-              const SizedBox(height: 2,),
+              if (widget.message!=null)
+                const SizedBox(height: 2,),
               if (widget.message!=null)
                 DefaultTextStyle(
                   style: Theme.of(context).textTheme.bodyLarge!.copyWith(fontSize: 12),
                   child: widget.message!,
                 ),
-              const SizedBox(height: 8,),
+              if (widget.message!=null)
+                const SizedBox(height: 2,),
+              const SizedBox(height: 6,),
             ],
           ),
         ),
