@@ -311,11 +311,11 @@ class FilterNumberEqualTo extends FilterNumber {
     super.query,
   }) : super(extra: inverse,);
   @override
-  String getUiName(BuildContext context) => 'Número igual a'; //Number equal to // TODO 2 internationalize
+  String getUiName(BuildContext context) => 'Número igual a'; //Number equal to // TODO 3 internationalize
   @override
-  String getExtraUiName(BuildContext context) => 'Invertir'; //Reverse // TODO 2 internationalize
+  String getExtraUiName(BuildContext context) => 'Invertir'; //Reverse // TODO 3 internationalize
   @override
-  String getExtraUiTooltipFromZero(BuildContext context) => 'Incluir valores distintos al valor especificado'; // TODO 2 internationalize
+  String getExtraUiTooltipFromZero(BuildContext context) => 'Incluir valores distintos al valor especificado'; // TODO 3 internationalize
   @override
   bool isAllowed(row, key, col) {
     if (query==null) return true;

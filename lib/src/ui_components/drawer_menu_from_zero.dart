@@ -574,7 +574,6 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
                         );
                       } else {
                         navigator.popUntil(ModalRoute.withName(widget.homeRoute!));
-                        // TODO 2 make this a maybe pop (This causes routes to first be popped, and then new one pushed, which might bring some visual issues)
                         goRouter.pushNamedAndRemoveUntil(
                           tabs[i].route!,
                           (match) => (match.route as GoRoute).name==widget.homeRoute,
