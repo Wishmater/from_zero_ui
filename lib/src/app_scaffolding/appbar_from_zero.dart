@@ -388,7 +388,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
       statusBarBrightness = statusBarBrightness==Brightness.light ? Brightness.dark : Brightness.light;
       result = AppBar(
         systemOverlayStyle: SystemUiOverlayStyle(
-          systemStatusBarContrastEnforced: true, // TODO 2 conditionally allow transparency in status bar for cool quickReturn appbars, currently disabled because popups break it
+          systemStatusBarContrastEnforced: false, // maybe make this optional or circumstantial
           statusBarColor: statusBarColor,
           statusBarIconBrightness: statusBarBrightness, // For Android (dark icons)
           statusBarBrightness: statusBarBrightness, // For iOS (dark icons)

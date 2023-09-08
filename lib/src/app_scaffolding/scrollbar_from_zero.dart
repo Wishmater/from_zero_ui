@@ -180,8 +180,10 @@ class ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
     }
 
-    return NotificationListener( // TODO 2 only scroll-related notifications should be consumed
-      onNotification: (notification) => true,
+    return NotificationListener(
+      onNotification: (notification) {
+        return notification is ScrollNotification;
+      },
       child: result,
     );
 

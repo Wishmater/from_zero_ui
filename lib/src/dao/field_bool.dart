@@ -334,6 +334,15 @@ class BoolField extends Field<BoolComparable> {
     }
     return [result];
   }
+  void _focusNext(FocusNode focusNode, FocusNode node) {
+    if (focusNode.hasFocus) {
+      node.nextFocus();
+      print ('faslgjharfgjhafldshgafklshgalfksghakdfsghak');
+      Future.delayed(Duration(milliseconds: 200)).then((_) {
+        _focusNext(focusNode, node);
+      });
+    }
+  }
   Widget _buildFieldEditorWidget(BuildContext context, {
     required FocusNode focusNode,
     bool addCard=false,
@@ -343,6 +352,15 @@ class BoolField extends Field<BoolComparable> {
     bool dense = false,
   }) {
     final theme = Theme.of(context);
+    final hackFocusTraversalPolicy = ReadingOrderTraversalPolicy( // hack to prevent switch/checkbox from interrupting traversal
+      requestFocusCallback: (node, {alignment, alignmentPolicy, curve, duration}) {
+        if (focusNode.hasFocus) {
+          _focusNext(focusNode, node);
+        } else {
+          node.requestFocus();
+        }
+      },
+    );
     Widget result = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
@@ -358,42 +376,48 @@ class BoolField extends Field<BoolComparable> {
                   horizontalTitleGap: 10, // for some reason SwitchListTile take horizontalTitleGap from the Theme, but you can't specify it directly as a parameter... really stupid
                 ),
               ),
-              child: CheckboxListTile(
-                focusNode: focusNode,
-                value: value!.value,
-                dense: true,
-                controlAffinity: listTileControlAffinity,
-                contentPadding: EdgeInsets.only(
-                  left: dense ? 0 : 12,
-                  right: dense ? 0 : 12,
-                  bottom: dense ? 22 : addCard ? 16 : 12,
-                ),
-                tileColor: dense && visibleValidationErrors.isNotEmpty
-                    ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
-                    : backgroundColor?.call(context, this, dao),
-                checkColor: selectedColor?.call(context, this, dao),
-                onChanged: !enabled ? null : (value) {
-                  focusNode.requestFocus();
-                  userInteracted = true;
-                  this.value = value!.comparable;
-                },
-                title: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (!dense && showBothNeutralAndSpecificUiName)
-                      Text(uiName,
-                        style: theme.textTheme.bodySmall!.copyWith(
+              child: FocusTraversalGroup(
+                policy: hackFocusTraversalPolicy,
+                child: CheckboxListTile(
+                  onFocusChange: (value) {
+                    print ('$value ${focusNode.hasFocus}');
+                  },
+                  focusNode: focusNode,
+                  value: value!.value,
+                  dense: true,
+                  controlAffinity: listTileControlAffinity,
+                  contentPadding: EdgeInsets.only(
+                    left: dense ? 0 : 12,
+                    right: dense ? 0 : 12,
+                    bottom: dense ? 22 : addCard ? 16 : 12,
+                  ),
+                  tileColor: dense && visibleValidationErrors.isNotEmpty
+                      ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
+                      : backgroundColor?.call(context, this, dao),
+                  checkColor: selectedColor?.call(context, this, dao),
+                  onChanged: !enabled ? null : (value) {
+                    focusNode.requestFocus();
+                    userInteracted = true;
+                    this.value = value!.comparable;
+                  },
+                  title: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (!dense && showBothNeutralAndSpecificUiName)
+                        Text(uiName,
+                          style: theme.textTheme.bodySmall!.copyWith(
+                            color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                          ),
+                        ),
+                      Text(uiNameValue,
+                        style: theme.textTheme.titleMedium!.copyWith(
                           color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                          height: 1.2,
                         ),
                       ),
-                    Text(uiNameValue,
-                      style: theme.textTheme.titleMedium!.copyWith(
-                        color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                        height: 1.2,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );
@@ -404,98 +428,109 @@ class BoolField extends Field<BoolComparable> {
                   horizontalTitleGap: 10, // for some reason SwitchListTile take horizontalTitleGap from the Theme, but you can't specify it directly as a parameter... really stupid
                 ),
               ),
-              child: SwitchListTile(
-                focusNode: focusNode,
-                value: value!.value,
-                dense: true,
-                controlAffinity: listTileControlAffinity,
-                contentPadding: EdgeInsets.only(
-                  left: dense ? 0 : 8,
-                  right: dense ? 0 : 8,
-                  bottom: dense ? 22 : addCard ? 16 : 12,
-                ),
-                tileColor: dense && visibleValidationErrors.isNotEmpty
-                    ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
-                    : backgroundColor?.call(context, this, dao),
-                activeColor: selectedColor?.call(context, this, dao),
-                activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
-                title: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (!dense && showBothNeutralAndSpecificUiName)
-                      Text(uiName,
-                        style: theme.textTheme.bodySmall!.copyWith(
-                          color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                        ),
-                      ),
-                    Text(uiNameValue,
-                      style: theme.textTheme.titleMedium!.copyWith(
-                        color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                        height: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-                onChanged: !enabled ? null : (value) {
-                  focusNode.requestFocus();
-                  userInteracted = true;
-                  this.value = value.comparable;
-                },
-              ),
-            );
-          case BoolFieldDisplayType.compactCheckBox:
-            result = Stack(
-              children: [
-                CheckboxListTile(
+              child: FocusTraversalGroup(
+                policy: hackFocusTraversalPolicy,
+                child: SwitchListTile(
+                  onFocusChange: (value) {
+                    print ('$value ${focusNode.hasFocus}');
+                  },
                   focusNode: focusNode,
                   value: value!.value,
                   dense: true,
-                  subtitle: const SizedBox.shrink(),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  contentPadding: EdgeInsets.only(left: (maxWidth/2)-20, top: dense ? 8 : 14),
+                  controlAffinity: listTileControlAffinity,
+                  contentPadding: EdgeInsets.only(
+                    left: dense ? 0 : 8,
+                    right: dense ? 0 : 8,
+                    bottom: dense ? 22 : addCard ? 16 : 12,
+                  ),
                   tileColor: dense && visibleValidationErrors.isNotEmpty
                       ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                       : backgroundColor?.call(context, this, dao),
-                  checkColor: selectedColor?.call(context, this, dao),
+                  activeColor: selectedColor?.call(context, this, dao),
+                  activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
+                  title: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (!dense && showBothNeutralAndSpecificUiName)
+                        Text(uiName,
+                          style: theme.textTheme.bodySmall!.copyWith(
+                            color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                          ),
+                        ),
+                      Text(uiNameValue,
+                        style: theme.textTheme.titleMedium!.copyWith(
+                          color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                          height: 1.2,
+                        ),
+                      ),
+                    ],
+                  ),
                   onChanged: !enabled ? null : (value) {
                     focusNode.requestFocus();
                     userInteracted = true;
-                    this.value = value!.comparable;
+                    this.value = value.comparable;
                   },
                 ),
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: Padding(
-                      padding: EdgeInsets.only(left: 2, right: 2, top: 0, bottom: dense ? 30 : 22),
-                      child: Center(
-                        child: AutoSizeText(uiNameValue,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          softWrap: false,
-                          style: TextStyle(
-                            height: 1,
-                            color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                          ),
-                          overflowReplacement: AutoSizeText(uiNameValue,
+              ),
+            );
+          case BoolFieldDisplayType.compactCheckBox:
+            result = FocusTraversalGroup(
+              policy: hackFocusTraversalPolicy,
+              child: Stack(
+                children: [
+                  CheckboxListTile(
+                    focusNode: focusNode,
+                    value: value!.value,
+                    dense: true,
+                    subtitle: const SizedBox.shrink(),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.only(left: (maxWidth/2)-20, top: dense ? 8 : 14),
+                    tileColor: dense && visibleValidationErrors.isNotEmpty
+                        ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
+                        : backgroundColor?.call(context, this, dao),
+                    checkColor: selectedColor?.call(context, this, dao),
+                    onChanged: !enabled ? null : (value) {
+                      focusNode.requestFocus();
+                      userInteracted = true;
+                      this.value = value!.comparable;
+                    },
+                  ),
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Padding(
+                        padding: EdgeInsets.only(left: 2, right: 2, top: 0, bottom: dense ? 30 : 22),
+                        child: Center(
+                          child: AutoSizeText(uiNameValue,
                             textAlign: TextAlign.center,
-                            maxLines: 2,
+                            maxLines: 1,
+                            softWrap: false,
                             style: TextStyle(
                               height: 1,
                               color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                            ),
+                            overflowReplacement: AutoSizeText(uiNameValue,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              style: TextStyle(
+                                height: 1,
+                                color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           case BoolFieldDisplayType.compactSwitch:
             result = Stack(
               children: [
                 Material(
+                  type: MaterialType.card,
+                  elevation: 0,
                   color: dense && visibleValidationErrors.isNotEmpty
                       ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
                       : backgroundColor?.call(context, this, dao),
@@ -606,27 +641,27 @@ class BoolField extends Field<BoolComparable> {
           child: result,
         );
         // TODO 3 implement actions in FieldBool
+        if (addCard) {
+          result = Card(
+            clipBehavior: Clip.hardEdge,
+            color: enabled ? theme.cardColor : theme.canvasColor,
+            child: Stack(
+              children: [
+                result,
+                // if (!enabled)
+                //   Positioned.fill(
+                //     child: MouseRegion(
+                //       opaque: false,
+                //       cursor: SystemMouseCursors.forbidden,
+                //     ),
+                //   ),
+              ],
+            ),
+          );
+        }
         return result;
       },
     );
-    if (addCard) {
-      result = Card(
-        clipBehavior: Clip.hardEdge,
-        color: enabled ? null : theme.canvasColor,
-        child: Stack(
-          children: [
-            result,
-            // if (!enabled)
-            //   Positioned.fill(
-            //     child: MouseRegion(
-            //       opaque: false,
-            //       cursor: SystemMouseCursors.forbidden,
-            //     ),
-            //   ),
-          ],
-        ),
-      );
-    }
     result = EnsureVisibleWhenFocused(
       focusNode: focusNode,
       child: Padding(

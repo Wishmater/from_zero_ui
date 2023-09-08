@@ -683,12 +683,15 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                 height: appbarChangeNotifier.safeAreaOffset,
                 child: Builder(
                   builder: (context) {
-                    final statusBarColor = Theme.of(context).appBarTheme.backgroundColor ?? Theme.of(context).primaryColor;
+                    final statusBarColor = widget.backgroundColor
+                        ?? Theme.of(context).scaffoldBackgroundColor;
+                        // ?? Theme.of(context).appBarTheme.backgroundColor
+                        // ?? Theme.of(context).primaryColor;
                     Brightness statusBarBrightness = ThemeData.estimateBrightnessForColor(statusBarColor);
                     statusBarBrightness = statusBarBrightness==Brightness.light ? Brightness.dark : Brightness.light;
                     return AnnotatedRegion<SystemUiOverlayStyle>(
                       value: SystemUiOverlayStyle(
-                        systemStatusBarContrastEnforced: true, // TODO 2 conditionally allow transparency in status bar for cool quickReturn appbars, currently disabled because popups break it
+                        systemStatusBarContrastEnforced: false, // maybe make this optional or circumstantial ???
                         statusBarColor: statusBarColor,
                         statusBarIconBrightness: statusBarBrightness, // For Android (dark icons)
                         statusBarBrightness: statusBarBrightness, // For iOS (dark icons)
@@ -1187,17 +1190,18 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
           );
         }
         Widget result = Column(
+          verticalDirection: VerticalDirection.up, // make sure appbar is painted on top of drawer
           children: <Widget>[
+
+            //DRAWER CONTENT
+            Expanded(
+              child: drawerContent,
+            ),
 
             //DRAWER APPBAR
             SizedBox(
               height: appbarChangeNotifier.appbarHeight+appbarChangeNotifier.safeAreaOffset,
               child: drawerAppbar,
-            ),
-
-            //DRAWER CONTENT
-            Expanded(
-              child: drawerContent,
             ),
 
           ],
