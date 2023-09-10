@@ -1340,7 +1340,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       focusNode.requestFocus();
     });
     return FutureBuilderFromZero(
-      applyDefaultTransition: false,
+      animatedSwitcherType: AnimatedSwitcherType.none,
       future: initialValidation,
       successBuilder: (context, data) => content,
       loadingBuilder: (context) {

@@ -317,14 +317,20 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
   final T? initialData;
   final Future future;
   final SuccessBuilder<T> successBuilder;
-  final Duration duration;
   final bool applyAnimatedContainerFromChildSize;
   final bool keepPreviousDataWhileLoading;
   final FutureErrorBuilder errorBuilder;
   final FutureLoadingBuilder loadingBuilder;
   final AnimatedSwitcherTransitionBuilder transitionBuilder;
-  final bool applyDefaultTransition;
   final bool enableSkipFrame; // when transitioning from having data to not having it, delay the transition by 1 frame, to not show loading unnecessarily
+  final Duration transitionDuration;
+  final Curve transitionInCurve;
+  final Curve transitionOutCurve;
+  final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
+  final Alignment? alignment; // used for animated switches
+  final Clip? clipBehaviour;
+  final bool addLoadingStateAsValueKeys;
+  final AnimatedSwitcherType animatedSwitcherType;
 
   const FutureBuilderFromZero({
     required this.future,
@@ -333,14 +339,19 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
     this.errorBuilder = defaultErrorBuilder,
     this.loadingBuilder = defaultLoadingBuilder,
     this.initialData,
-    AnimatedSwitcherTransitionBuilder? transitionBuilder,
     this.keepPreviousDataWhileLoading = false,
-    this.applyDefaultTransition = true,
-    Duration? duration,
+    this.transitionBuilder = defaultTransitionBuilder,
+    this.transitionDuration = const Duration(milliseconds: 300),
+    this.transitionInCurve = Curves.easeOutCubic,
+    this.transitionOutCurve = Curves.easeInCubic,
     this.applyAnimatedContainerFromChildSize = false,
     this.enableSkipFrame = true,
-  }) :  transitionBuilder = transitionBuilder ?? (applyDefaultTransition ? defaultTransitionBuilder : noneTransitionBuilder),
-        duration = duration ?? (applyDefaultTransition ? const Duration(milliseconds: 300) : Duration.zero);
+    this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
+    this.alignment,
+    this.clipBehaviour,
+    this.addLoadingStateAsValueKeys = true,
+    this.animatedSwitcherType = AnimatedSwitcherType.image,
+  });
 
   @override
   FutureBuilderFromZeroState<T> createState() => FutureBuilderFromZeroState<T>();
@@ -359,10 +370,6 @@ class FutureBuilderFromZero<T> extends StatefulWidget {
       animation: animation,
       child: child,
     );
-  }
-
-  static Widget noneTransitionBuilder(Widget child, Animation<double> animation){
-    return child;
   }
 
 }
@@ -432,23 +439,20 @@ class FutureBuilderFromZeroState<T> extends State<FutureBuilderFromZero<T>> {
         if (state==1) {
           updatePreviousData();
         }
-        if (widget.applyDefaultTransition) {
-          int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.duration.inMilliseconds);
-          result = AnimatedSwitcherImage(
-            transitionBuilder: widget.transitionBuilder,
-            duration: Duration(milliseconds: milliseconds),
-            child: Container(
-              key: ValueKey(state),
-              child: result,
-            ),
-          );
-        }
-        if (widget.applyAnimatedContainerFromChildSize){
-          result = AnimatedContainerFromChildSize(
-            duration: widget.duration,
-            child: result,
-          );
-        }
+        int milliseconds = (DateTime.now().millisecondsSinceEpoch-initialTimestamp).clamp(0, widget.transitionDuration.inMilliseconds);
+        result = AsyncBuilderAnimationWrapper(
+          transitionBuilder: (context, child, animation) => widget.transitionBuilder(child, animation),
+          transitionDuration: Duration(milliseconds: milliseconds),
+          transitionInCurve: widget.transitionInCurve,
+          transitionOutCurve: widget.transitionOutCurve,
+          applyAnimatedContainerFromChildSize: widget.applyAnimatedContainerFromChildSize,
+          layoutBuilder: widget.layoutBuilder,
+          alignment: widget.alignment,
+          animatedSwitcherType: widget.animatedSwitcherType,
+          loadingState: widget.addLoadingStateAsValueKeys ? state.toString() : null,
+          clipBehaviour: widget.clipBehaviour,
+          child: result,
+        );
         return result;
       },
     );
