@@ -46,7 +46,9 @@ extension ComparableBoolExtension on bool {
 
 enum BoolFieldDisplayType {
   checkBoxTile,
+  intrinsicHeightCheckBoxTile,
   switchTile,
+  intrinsicHeightSwitchTile,
   compactCheckBox,
   compactSwitch,
   combo,
@@ -56,6 +58,11 @@ enum BoolFieldShowViewCheckmark {
   always,
   whenTrue,
   whenFalse,
+}
+enum BoolFieldShowBothNeutralAndSpecificUiName {
+  no,
+  specificBelow, // previous behaviour
+  specificAbove,
 }
 
 
@@ -68,7 +75,7 @@ class BoolField extends Field<BoolComparable> {
   String get uiNameFalse => (uiNameFalseGetter??uiNameGetter)(this, dao);
   String get uiNameValue => value!.value ? uiNameTrue : uiNameFalse;
   ListTileControlAffinity listTileControlAffinity;
-  bool showBothNeutralAndSpecificUiName;
+  BoolFieldShowBothNeutralAndSpecificUiName showBothNeutralAndSpecificUiName;
   ContextFulFieldValueGetter<Color?, BoolField>? selectedColor;
   BoolFieldShowViewCheckmark showViewCheckmark;
 
@@ -84,7 +91,7 @@ class BoolField extends Field<BoolComparable> {
     this.uiNameTrueGetter,
     this.uiNameFalseGetter,
     this.listTileControlAffinity = ListTileControlAffinity.leading,
-    bool? showBothNeutralAndSpecificUiName,
+    BoolFieldShowBothNeutralAndSpecificUiName? showBothNeutralAndSpecificUiName,
     BoolComparable super.value = const BoolComparable(false),
     BoolComparable? dbValue,
     // FieldValueGetter<bool, Field> clearableGetter = trueFieldGetter, // non-nullable by design
@@ -113,7 +120,10 @@ class BoolField extends Field<BoolComparable> {
     super.viewWidgetBuilder = BoolField.defaultViewWidgetBuilder,
     super.onValueChanged,
     this.showViewCheckmark = BoolFieldShowViewCheckmark.always,
-  }) :  showBothNeutralAndSpecificUiName = showBothNeutralAndSpecificUiName ?? (uiNameFalseGetter!=null||uiNameTrueGetter!=null),
+  }) :  showBothNeutralAndSpecificUiName = showBothNeutralAndSpecificUiName
+            ?? (uiNameFalseGetter!=null||uiNameTrueGetter!=null
+                ? BoolFieldShowBothNeutralAndSpecificUiName.specificBelow
+                : BoolFieldShowBothNeutralAndSpecificUiName.no),
         super(
           dbValue: dbValue ?? value,
           clearableGetter: falseFieldGetter,
@@ -156,7 +166,7 @@ class BoolField extends Field<BoolComparable> {
     ContextFulFieldValueGetter<Color?, Field>? selectedColor,
     ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actionsGetter,
     ViewWidgetBuilder<BoolComparable>? viewWidgetBuilder,
-    bool? showBothNeutralAndSpecificUiName,
+    BoolFieldShowBothNeutralAndSpecificUiName? showBothNeutralAndSpecificUiName,
     OnFieldValueChanged<BoolComparable?>? onValueChanged,
     BoolFieldShowViewCheckmark? showViewCheckmark,
   }) {
@@ -196,7 +206,8 @@ class BoolField extends Field<BoolComparable> {
 
   @override
   String toString() {
-    return showBothNeutralAndSpecificUiName ? '$uiName: $uiNameValue' : uiNameValue;
+    return showBothNeutralAndSpecificUiName!=BoolFieldShowBothNeutralAndSpecificUiName.no
+        ? '$uiName: $uiNameValue' : uiNameValue;
   }
 
   @override
@@ -352,6 +363,8 @@ class BoolField extends Field<BoolComparable> {
     bool dense = false,
   }) {
     final theme = Theme.of(context);
+    final isSizeNotHardRestricted = displayType==BoolFieldDisplayType.intrinsicHeightSwitchTile
+        || displayType==BoolFieldDisplayType.intrinsicHeightCheckBoxTile;
     final hackFocusTraversalPolicy = ReadingOrderTraversalPolicy( // hack to prevent switch/checkbox from interrupting traversal
       requestFocusCallback: (node, {alignment, alignmentPolicy, curve, duration}) {
         if (focusNode.hasFocus) {
@@ -370,6 +383,7 @@ class BoolField extends Field<BoolComparable> {
         Widget result;
         switch(displayType) {
           case BoolFieldDisplayType.checkBoxTile:
+          case BoolFieldDisplayType.intrinsicHeightCheckBoxTile:
             result = Theme(
               data: theme.copyWith(
                 listTileTheme: theme.listTileTheme.copyWith(
@@ -389,39 +403,52 @@ class BoolField extends Field<BoolComparable> {
                   contentPadding: EdgeInsets.only(
                     left: dense ? 0 : 12,
                     right: dense ? 0 : 12,
-                    bottom: dense ? 22 : addCard ? 16 : 12,
-                  ),
-                  tileColor: dense && visibleValidationErrors.isNotEmpty
-                      ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
-                      : backgroundColor?.call(context, this, dao),
-                  checkColor: selectedColor?.call(context, this, dao),
-                  onChanged: !enabled ? null : (value) {
-                    focusNode.requestFocus();
-                    userInteracted = true;
-                    this.value = value!.comparable;
-                  },
-                  title: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!dense && showBothNeutralAndSpecificUiName)
-                        Text(uiName,
+                    bottom: isSizeNotHardRestricted ? 0
+                      : dense ? 22 : addCard ? 16 : 12,
+                ),
+                tileColor: dense && visibleValidationErrors.isNotEmpty
+                    ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
+                    : backgroundColor?.call(context, this, dao),
+                checkColor: selectedColor?.call(context, this, dao),
+                onChanged: !enabled ? null : (value) {
+                  focusNode.requestFocus();
+                  userInteracted = true;
+                  this.value = value!.comparable;
+                },
+                title: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!dense && showBothNeutralAndSpecificUiName==BoolFieldShowBothNeutralAndSpecificUiName.specificBelow)
+                        Padding(
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Text(uiName,
                           style: theme.textTheme.bodySmall!.copyWith(
                             color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                           ),
                         ),
-                      Text(uiNameValue,
-                        style: theme.textTheme.titleMedium!.copyWith(
-                          color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                          height: 1.2,
+                      ),
+                    Text(uiNameValue,
+                      style: theme.textTheme.titleMedium!.copyWith(
+                        color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                        height: 1.2,
+                      ),
+                    ),
+                    if (!dense && showBothNeutralAndSpecificUiName==BoolFieldShowBothNeutralAndSpecificUiName.specificAbove)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Text(uiName,
+                          style: theme.textTheme.bodySmall!.copyWith(
+                            color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
+                  ],),
                 ),
               ),
             );
           case BoolFieldDisplayType.switchTile:
+          case BoolFieldDisplayType.intrinsicHeightSwitchTile:
             result = Theme(
               data: theme.copyWith(
                 listTileTheme: theme.listTileTheme.copyWith(
@@ -441,37 +468,49 @@ class BoolField extends Field<BoolComparable> {
                   contentPadding: EdgeInsets.only(
                     left: dense ? 0 : 8,
                     right: dense ? 0 : 8,
-                    bottom: dense ? 22 : addCard ? 16 : 12,
-                  ),
-                  tileColor: dense && visibleValidationErrors.isNotEmpty
-                      ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
-                      : backgroundColor?.call(context, this, dao),
-                  activeColor: selectedColor?.call(context, this, dao),
-                  activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
-                  title: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!dense && showBothNeutralAndSpecificUiName)
-                        Text(uiName,
+                    bottom: isSizeNotHardRestricted ? 0
+                      : dense ? 22 : addCard ? 16 : 12,
+                ),
+                tileColor: dense && visibleValidationErrors.isNotEmpty
+                    ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
+                    : backgroundColor?.call(context, this, dao),
+                activeColor: selectedColor?.call(context, this, dao),
+                activeTrackColor: selectedColor?.call(context, this, dao)?.withOpacity(0.33),
+                title: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (!dense && showBothNeutralAndSpecificUiName==BoolFieldShowBothNeutralAndSpecificUiName.specificBelow)
+                        Padding(
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Text(uiName,
                           style: theme.textTheme.bodySmall!.copyWith(
                             color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
                           ),
                         ),
-                      Text(uiNameValue,
-                        style: theme.textTheme.titleMedium!.copyWith(
-                          color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                          height: 1.2,
+                      ),
+                    Text(uiNameValue,
+                      style: theme.textTheme.titleMedium!.copyWith(
+                        color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                        height: 1.2,
+                      ),
+                    ),
+                    if (!dense && showBothNeutralAndSpecificUiName==BoolFieldShowBothNeutralAndSpecificUiName.specificAbove)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 3),
+                        child: Text(uiName,
+                          style: theme.textTheme.bodySmall!.copyWith(
+                            color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                  onChanged: !enabled ? null : (value) {
-                    focusNode.requestFocus();
-                    userInteracted = true;
-                    this.value = value.comparable;
-                  },
+                  ],
                 ),
+                onChanged: !enabled ? null : (value) {
+                  focusNode.requestFocus();
+                  userInteracted = true;
+                  this.value = value.comparable;
+                },),
               ),
             );
           case BoolFieldDisplayType.compactCheckBox:
@@ -644,24 +683,19 @@ class BoolField extends Field<BoolComparable> {
         if (addCard) {
           result = Card(
             clipBehavior: Clip.hardEdge,
-            color: enabled ? theme.cardColor : theme.canvasColor,
-            child: Stack(
-              children: [
-                result,
-                // if (!enabled)
-                //   Positioned.fill(
-                //     child: MouseRegion(
-                //       opaque: false,
-                //       cursor: SystemMouseCursors.forbidden,
-                //     ),
-                //   ),
-              ],
-            ),
+            color: enabled ? null : theme.canvasColor,
+            child: result,
           );
         }
         return result;
       },
     );
+    if (!isSizeNotHardRestricted) {
+      result = SizedBox(
+        height: 64,
+        child: result,
+      );
+    }
     result = EnsureVisibleWhenFocused(
       focusNode: focusNode,
       child: Padding(
@@ -673,10 +707,7 @@ class BoolField extends Field<BoolComparable> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                height: 64,
-                child: result,
-              ),
+              result,
               if (!dense)
                 ValidationMessage(errors: validationErrors, passedFirstEdit: passedFirstEdit,),
             ],
