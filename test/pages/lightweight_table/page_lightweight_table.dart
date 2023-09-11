@@ -35,7 +35,7 @@ class PageLightweightTableState extends State<PageLightweightTable> {
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
       mainScrollController: scrollController,
-      scrollbarType: ScaffoldFromZero.scrollbarTypeOverAppbar,
+      scrollbarType: ScrollBarType.overAppbar,
       title: const Text("Lightweight Table"),
       body: _getPage(context),
       drawerContentBuilder: (context, compact) => DrawerMenuFromZero(

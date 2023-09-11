@@ -23,7 +23,7 @@ class PageFutureHandlingState extends State<PageFutureHandling> {
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
       mainScrollController: scrollController,
-      appbarType: ScaffoldFromZero.appbarTypeCollapse,
+      appbarType: AppbarType.collapse,
       title: Container(
         height: 56,
         width: 256,

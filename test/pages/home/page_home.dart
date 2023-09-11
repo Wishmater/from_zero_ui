@@ -52,8 +52,8 @@ class PageHomeState extends State<PageHome> {
   Widget build(BuildContext context) {
     return ScaffoldFromZero(
       mainScrollController: controller,
-      scrollbarType: ScaffoldFromZero.scrollbarTypeOverAppbar,
-      appbarType: ScaffoldFromZero.appbarTypeQuickReturn,
+      scrollbarType: ScrollBarType.overAppbar,
+      appbarType: AppbarType.quickReturn,
       title: const Row(
         children: [
           Text("FromZero playground"),

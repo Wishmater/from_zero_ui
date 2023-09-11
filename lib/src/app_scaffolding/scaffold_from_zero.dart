@@ -19,6 +19,26 @@ typedef ScaffoldFromZeroTransitionBuilder = Widget Function({
   required ScaffoldFromZeroChangeNotifier scaffoldChangeNotifier,
 });
 
+enum ScaffoldTypeAnimation {
+  same,
+  other,
+  inner,
+  outer,
+}
+
+enum AppbarType {
+  none,
+  static,
+  collapse,
+  quickReturn,
+}
+
+enum ScrollBarType {
+  none,
+  belowAppbar,
+  overAppbar,
+}
+
 class ScaffoldFromZero extends ConsumerStatefulWidget {
 
 
@@ -27,17 +47,6 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
   static const double screenSizeLarge = 848;
   static const double screenSizeXLarge = 1280;
   static const List<double> sizes = [screenSizeSmall, screenSizeMedium, screenSizeLarge, screenSizeXLarge];
-  static const int animationTypeSame = 5000;
-  static const int animationTypeOther = 5001;
-  static const int animationTypeInner = 5002;
-  static const int animationTypeOuter = 5003;
-  static const int appbarTypeNone = 6003;
-  static const int appbarTypeStatic = 6000;
-  static const int appbarTypeCollapse = 6001;
-  static const int appbarTypeQuickReturn = 6002;
-  static const int scrollbarTypeNone = 7001;
-  static const int scrollbarTypeBellowAppbar = 7002;
-  static const int scrollbarTypeOverAppbar = 7003;
 
   final Duration drawerAnimationDuration = 300.milliseconds; //TODO 3- allow customization of durations and curves of appbar and drawer animations (fix conflicts)
   final drawerAnimationCurve = Curves.easeOutCubic;
@@ -51,12 +60,12 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
   final ActionFromZero? initialExpandedAction;
   final double appbarHeight;
   final double appbarElevation;
-  final int appbarType;
+  final AppbarType appbarType;
   final AppbarFromZeroController? appbarController;
   final void Function(ActionFromZero)? onAppbarActionExpanded;
   final VoidCallback? onAppbarActionUnexpanded;
   final ScrollController? mainScrollController;
-  final int scrollbarType;
+  final ScrollBarType scrollbarType;
   final double collapsibleBackgroundHeight;
   final Color? collapsibleBackgroundColor;
   final Widget body;
@@ -100,14 +109,14 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
     this.useCompactDrawerInsteadOfClose = true,
     this.constraintBodyOnXLargeScreens = true,
     double? appbarHeight,
-    this.appbarType = appbarTypeStatic,
+    this.appbarType = AppbarType.static,
     this.appbarController,
     this.onAppbarActionExpanded,
     this.onAppbarActionUnexpanded,
     this.mainScrollController,
     double? collapsibleBackgroundLength,
     this.collapsibleBackgroundColor,
-    int? scrollbarType,
+    ScrollBarType? scrollbarType,
     bool? bodyFloatsBelowAppbar,
     double? compactDrawerWidth,
     double? drawerWidth,
@@ -135,11 +144,11 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
   }) :
         // this.appbarType = appbarType ?? (title==null&&(actions==null||actions.isEmpty)&&drawerContentBuilder==null ? appbarTypeNone : appbarTypeStatic),
         drawerWidth = drawerWidth ?? (drawerContentBuilder==null ? 0 : 304),
-        collapsibleBackgroundHeight = collapsibleBackgroundLength ?? (appbarType==ScaffoldFromZero.appbarTypeStatic||appbarHeight==null ? -1 : appbarHeight*4),
-        scrollbarType = scrollbarType ?? (appbarType==ScaffoldFromZero.appbarTypeStatic ? scrollbarTypeBellowAppbar : scrollbarTypeOverAppbar),
-        bodyFloatsBelowAppbar = bodyFloatsBelowAppbar ?? appbarType==ScaffoldFromZero.appbarTypeQuickReturn,
+        collapsibleBackgroundHeight = collapsibleBackgroundLength ?? (appbarType==AppbarType.static||appbarHeight==null ? -1 : appbarHeight*4),
+        scrollbarType = scrollbarType ?? (appbarType==AppbarType.static ? ScrollBarType.belowAppbar : ScrollBarType.overAppbar),
+        bodyFloatsBelowAppbar = bodyFloatsBelowAppbar ?? appbarType==AppbarType.quickReturn,
         compactDrawerWidth = drawerContentBuilder==null||!useCompactDrawerInsteadOfClose ? 0 : 56,
-        appbarHeight = appbarHeight ?? (appbarType==ScaffoldFromZero.appbarTypeNone ? 0 : (48 + (PlatformExtended.appWindow?.titleBarHeight??8))), //useCompactDrawerInsteadOfClose ? 56 : 0
+        appbarHeight = appbarHeight ?? (appbarType==AppbarType.none ? 0 : (48 + (PlatformExtended.appWindow?.titleBarHeight??8))), //useCompactDrawerInsteadOfClose ? 56 : 0
         titleTransitionBuilder = titleTransitionBuilder ?? defaultTitleTransitionBuilder,
         drawerContentTransitionBuilder = drawerContentTransitionBuilder ?? defaultDrawerContentTransitionBuilder,
         bodyTransitionBuilder = bodyTransitionBuilder ?? defaultBodyTransitionBuilder;
@@ -258,9 +267,9 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
                 sharedAnimation = ReverseAnimation(secondaryAnimation);
               }
               return no_fading_shared_axis_transition.SharedAxisTransition(
-                animation: scaffoldChangeNotifier.animationType==ScaffoldFromZero.animationTypeOuter
+                animation: scaffoldChangeNotifier.animationType==ScaffoldTypeAnimation.outer
                     ? ReverseAnimation(sharedSecondaryAnimation) : sharedAnimation,
-                secondaryAnimation: scaffoldChangeNotifier.animationType==ScaffoldFromZero.animationTypeOuter
+                secondaryAnimation: scaffoldChangeNotifier.animationType==ScaffoldTypeAnimation.outer
                     ? ReverseAnimation(sharedAnimation).isCompleted ? kAlwaysDismissedAnimation : ReverseAnimation(sharedAnimation)
                     : sharedSecondaryAnimation.isCompleted ? kAlwaysDismissedAnimation : sharedSecondaryAnimation,
                 transitionType: no_fading_shared_axis_transition.SharedAxisTransitionType.scaled,
@@ -415,7 +424,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         child: FadeUpwardsFadeTransition(
           routeAnimation: ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation,
           child: FadeUpwardsSlideTransition(
-            routeAnimation: ref.read(fromZeroScaffoldChangeNotifierProvider).animationType==ScaffoldFromZero.animationTypeOther
+            routeAnimation: ref.read(fromZeroScaffoldChangeNotifierProvider).animationType==ScaffoldTypeAnimation.other
                 ? (ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation)
                 : kAlwaysCompleteAnimation,
             child: Consumer(
@@ -653,7 +662,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         ),
       ),
     );
-    if (widget.scrollbarType==ScaffoldFromZero.scrollbarTypeBellowAppbar) {
+    if (widget.scrollbarType==ScrollBarType.belowAppbar) {
       body = ScrollbarFromZero(
         applyOpacityGradientToChildren: false,
         ignoreDevicePadding: false,
@@ -662,7 +671,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         child: body,
       );
     }
-    if (widget.isPrimaryScaffold && widget.appbarType==ScaffoldFromZero.appbarTypeNone
+    if (widget.isPrimaryScaffold && widget.appbarType==AppbarType.none
         && changeNotifierNotListen.showWindowBarOnDesktop && !kIsWeb
         && Platform.isWindows && windowsDesktopBitsdojoWorking) {
       body = Column(
@@ -680,7 +689,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
           children: <Widget>[
 
             // show correct color on mobile status bar when no appbar
-            if (widget.appbarType == ScaffoldFromZero.appbarTypeNone)
+            if (widget.appbarType == AppbarType.none)
               Positioned(
                 top: 0, left: 0, right: 0,
                 height: appbarChangeNotifier.safeAreaOffset,
@@ -714,7 +723,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
             ),
 
             // CUSTOM SHADOWS (appbar)
-            if (widget.appbarType != ScaffoldFromZero.appbarTypeNone)
+            if (widget.appbarType != AppbarType.none)
               AnimatedPositioned(
                 duration: widget.appbarAnimationDuration,
                 curve: widget.appbarAnimationCurve,
@@ -730,7 +739,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
               ),
 
             // APPBAR
-            if (widget.appbarType != ScaffoldFromZero.appbarTypeNone)
+            if (widget.appbarType != AppbarType.none)
               AnimatedPositioned(
                 duration: widget.appbarAnimationDuration,
                 curve: widget.appbarAnimationCurve,
@@ -760,7 +769,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                             toolbarHeight: widget.appbarHeight,
                             topSafePadding: appbarChangeNotifier.safeAreaOffset,
                             addContextMenu: widget.appbarAddContextMenu,
-                            paddingRight: widget.scrollbarType!=ScaffoldFromZero.scrollbarTypeOverAppbar ? 0
+                            paddingRight: widget.scrollbarType!=ScrollBarType.overAppbar ? 0
                                 : (Theme.of(context).scrollbarTheme.thickness?.resolve({}) ?? 8)
                                     + (Theme.of(context).scrollbarTheme.crossAxisMargin ?? 0)
                                         .clamp((PlatformExtended.appWindow?.isMaximized??true) ? 0 : 6, double.infinity),
@@ -902,7 +911,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         );
       },
     );
-    if (widget.scrollbarType==ScaffoldFromZero.scrollbarTypeOverAppbar) {
+    if (widget.scrollbarType==ScrollBarType.overAppbar) {
       result = ScrollbarFromZero(
         controller: widget.mainScrollController,
         ignoreDevicePadding: false,
@@ -1272,7 +1281,7 @@ class AppbarChangeNotifier extends ChangeNotifier{
   final double appbarHeight;
   final double safeAreaOffset;
   final double backgroundHeight;
-  final int appbarType;
+  final AppbarType appbarType;
   final double appbarScrollMultiplier = 0.5; //TODO 3 expose scroll appbar effect multipliers
   final double backgroundScrollMultiplier = 1.5;
   final double unaffectedScrollLength; //TODO 3 expose this as well in Scaffold
@@ -1306,11 +1315,11 @@ class AppbarChangeNotifier extends ChangeNotifier{
   double mainScrollPosition = 0;
   int? lastScrollUpdateTime; //TODO 2 wait for the scroll gesture to end instead of the timer ? how
   void handleMainScrollerControllerCall(ScrollController scrollController){
-    if (appbarType==ScaffoldFromZero.appbarTypeStatic) return;
+    if (appbarType==AppbarType.static) return;
     if (!scrollController.hasClients) return;
 
     var currentPosition = scrollController.position.pixels;
-    if (appbarType==ScaffoldFromZero.appbarTypeCollapse) {
+    if (appbarType==AppbarType.collapse) {
       currentPosition = currentPosition.coerceIn(0, unaffectedScrollLength+(safeAreaOffset+appbarHeight)/appbarScrollMultiplier);
     }
     double delta = currentPosition - mainScrollPosition;
@@ -1336,7 +1345,7 @@ class AppbarChangeNotifier extends ChangeNotifier{
       currentBackgroundOffset = -jump;
     }
 
-    if (appbarType==ScaffoldFromZero.appbarTypeQuickReturn && lastScrollUpdateTime == null){
+    if (appbarType==AppbarType.quickReturn && lastScrollUpdateTime == null){
       lastScrollUpdateTime = DateTime.now().millisecondsSinceEpoch;
       Future.doWhile(() async{
         await Future.delayed(80.milliseconds);

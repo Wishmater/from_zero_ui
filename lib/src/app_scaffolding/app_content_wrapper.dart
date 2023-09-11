@@ -29,7 +29,7 @@ var fromZeroScaffoldChangeNotifierProvider = ChangeNotifierProvider<ScaffoldFrom
 });
 
 var fromZeroAppbarChangeNotifierProvider = ChangeNotifierProvider<AppbarChangeNotifier>((ref) {
-  return AppbarChangeNotifier(0, 0, 0, ScaffoldFromZero.appbarTypeNone, null);
+  return AppbarChangeNotifier(0, 0, 0, AppbarType.none, null);
 });
 
 var fromZeroThemeParametersProvider = ChangeNotifierProvider<ThemeParametersFromZero>((ref) {
@@ -557,9 +557,9 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
     this.showWindowBarOnDesktop = true,
   });
 
-  int _animationType = ScaffoldFromZero.animationTypeOther;
-  int get animationType => _animationType;
-  set animationType(int value) {
+  ScaffoldTypeAnimation _animationType = ScaffoldTypeAnimation.other;
+  ScaffoldTypeAnimation get animationType => _animationType;
+  set animationType(ScaffoldTypeAnimation value) {
     _animationType = value;
     notifyListeners();
   }
@@ -668,17 +668,17 @@ class ScaffoldFromZeroChangeNotifier extends ChangeNotifier{
   }
   void updateAnimationTypes(){
     if (currentRouteState==null || previousRouteState==null || currentRouteState!.pageScaffoldId!=previousRouteState!.pageScaffoldId) {
-      _animationType = ScaffoldFromZero.animationTypeOther;
+      _animationType = ScaffoldTypeAnimation.other;
     } else if (currentRouteState!.pageScaffoldDepth > previousRouteState!.pageScaffoldDepth) {
-      _animationType = ScaffoldFromZero.animationTypeInner;
+      _animationType = ScaffoldTypeAnimation.inner;
     } else if (currentRouteState!.pageScaffoldDepth < previousRouteState!.pageScaffoldDepth) {
-      _animationType = ScaffoldFromZero.animationTypeOuter;
+      _animationType = ScaffoldTypeAnimation.outer;
     } else {
-      _animationType = ScaffoldFromZero.animationTypeSame;
+      _animationType = ScaffoldTypeAnimation.same;
     }
-    fadeAnim = animationType==ScaffoldFromZero.animationTypeSame;
-    sharedAnim = animationType==ScaffoldFromZero.animationTypeInner || animationType==ScaffoldFromZero.animationTypeOuter;
-    titleAnimation = animationType!=ScaffoldFromZero.animationTypeOther;
+    fadeAnim = animationType==ScaffoldTypeAnimation.same;
+    sharedAnim = animationType==ScaffoldTypeAnimation.inner || animationType==ScaffoldTypeAnimation.outer;
+    titleAnimation = animationType!=ScaffoldTypeAnimation.other;
         // && currentRoute!=null && previousRoute!=null
         // && !(  (currentScaffold.title?.key!=null && previousScaffold.title?.key!=null
         //         && currentScaffold.title?.key==previousScaffold.title?.key)
