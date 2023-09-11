@@ -121,10 +121,14 @@ class TableFromZero<T> extends StatefulWidget {
 
 class TrackingScrollControllerFomZero extends TrackingScrollController {
 
+  int mainIndex = 0;
+
   @override
   ScrollPosition get position {
     assert(positions.isNotEmpty, 'ScrollController not attached to any scroll views.');
-    return positions.first;
+    return positions.length>mainIndex
+        ? positions.elementAt(mainIndex)
+        : positions.last;
   }
 
 }
@@ -393,7 +397,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           values: widget.columns==null || widget.columns!.length==widget.headerRowModel!.values.length
               ? widget.headerRowModel!.values
               : widget.columns!.map((key, value) => MapEntry(key, value.name)),
-          rowAddon: headerRowModel?.rowAddon ?? widget.headerWidgetAddon,
+          rowAddon: widget.headerRowModel?.rowAddon ?? widget.headerWidgetAddon,
           rowAddonIsAboveRow: widget.headerRowModel?.rowAddonIsAboveRow ?? true,
           rowAddonIsCoveredByBackground: widget.headerRowModel?.rowAddonIsCoveredByBackground ?? widget.headerWidgetAddon==null,
           rowAddonIsCoveredByScrollable: widget.headerRowModel?.rowAddonIsCoveredByScrollable ?? widget.headerWidgetAddon==null,
@@ -642,11 +646,9 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     final showHeaders = widget.showHeaders
         && (allFiltered.isNotEmpty || filtersApplied.values.any((e) => e));
     final minWidth = widget.ignoreWidthGettersIfEmpty&&allFiltered.isEmpty&&!showHeaders ? null
-        : currentColumnKeys==null ? null
-        : widget.minWidthGetter?.call(currentColumnKeys!);
+        : widget.minWidthGetter?.call(currentColumnKeys??[]);
     final maxWidth = widget.ignoreWidthGettersIfEmpty&&allFiltered.isEmpty&&!showHeaders ? 640.0
-        : currentColumnKeys==null ? null
-        : widget.maxWidthGetter?.call(currentColumnKeys!);
+        : widget.maxWidthGetter?.call(currentColumnKeys??[]);
     Widget result;
 
     // if (!(widget.implicitlyAnimated ?? allFiltered.length<10)) {
@@ -703,10 +705,18 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     Widget? header = showHeaders
         ? headerRowModel!=null
             ? headerRowModel!.values.isEmpty && headerRowModel!.rowAddon!=null
-                ? headerRowModel!.rowAddon!
+                ? LayoutBuilder(builder: (context, constraints) {
+                    return _wrapRowAddon(headerRowModel!, constraints, minWidth)!;
+                  },)
                 : _getRow(context, headerRowModel, -1, minWidth)
             : null
-        : headerRowModel?.rowAddon;
+        : headerRowModel?.rowAddon==null
+            ? null
+            : minWidth==null
+                ? headerRowModel!.rowAddon!
+                : LayoutBuilder(builder: (context, constraints) {
+                    return _wrapRowAddon(headerRowModel!, constraints, minWidth)!;
+                  },);
     if (header!=null) {
       result = SliverStickyHeader.builder(
         sliver: result,
@@ -782,15 +792,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     }
 
     // if (maxWidth!=null) { // this needs to be always added, otherwise it will force rebuild of inner widgets when added/removed
-      result = SliverCrossAxisConstrained(
-        maxCrossAxisExtent: maxWidth ?? double.infinity,
-        child: result,
-      );
+    //   result = SliverCrossAxisConstrained(
+    //     maxCrossAxisExtent: maxWidth ?? double.infinity,
+    //     child: result,
+    //   );
     // }
-    result = FocusTraversalGroup(
-      policy: ReadingOrderTraversalPolicy(),
-      child: result,
-    );
+    // result = FocusTraversalGroup(
+    //   policy: ReadingOrderTraversalPolicy(),
+    //   child: result,
+    // );
 
     return result;
 
@@ -1147,21 +1157,38 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             padding: EdgeInsets.symmetric(horizontal: widget.tableHorizontalPadding),
           ),
         );
-        result = SizedBox(
-          height: row.height,
-          child: ListView.builder(
+        if (row.height!=null) {
+          result = SizedBox(
+            height: row.height,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              controller: sharedController,
+              itemBuilder: cellBuilder,
+              itemCount: cols,
+              padding: EdgeInsets.symmetric(horizontal: widget.tableHorizontalPadding),
+              cacheExtent: 99999999,
+            ),
+          );
+        } else {
+          result = SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             controller: sharedController,
-            itemBuilder: cellBuilder,
-            itemCount: cols,
-            padding: EdgeInsets.symmetric(horizontal: widget.tableHorizontalPadding),
-            cacheExtent: 99999999,
-          ),
-        );
+            child: IntrinsicHeight(
+              child: Row(
+                children: [
+                  SizedBox(width: widget.tableHorizontalPadding,),
+                  for (int index=0; index<cols; index++)
+                    cellBuilder(context, index),
+                  SizedBox(width: widget.tableHorizontalPadding,),
+                ],
+              ),
+            ),
+          );
+        }
         result = ScrollOpacityGradient(
           scrollController: sharedController,
           direction: OpacityGradient.horizontal,
-          child: row==headerRowModel // TODO 2 horizontal scrollbar might not work in tables with no header
+          child: (widget.columns!=null && widget.showHeaders ? row==headerRowModel : index==0)
               ? NotificationRelayListener(
                 controller: notificationRelayController,
                 consumeRelayedNotifications: true,
@@ -1206,46 +1233,37 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           child: result,
         );
       } else if (rowActions.isNotEmpty) {
-        result = Material(
-          type: MaterialType.transparency,
-          child: SizedBox(
+        result = AppbarFromZero(
+          title: result,
+          actions: rowActions,
+          useFlutterAppbar: false,
+          toolbarHeight: row.height,
+          addContextMenu: false,
+          skipTraversalForActions: true,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          paddingRight: 0,
+          titleSpacing: 0,
+          transitionsDuration: 0.milliseconds,
+        );
+        if (row.height!=null) {
+          result = SizedBox(
             height: row.height,
             child: OverflowBox( // hack to fix Appbar actions overflowing when rowHeight<40
               maxHeight: max(40, row.height??0),
-              child: AppbarFromZero(
-                title: result,
-                actions: rowActions,
-                useFlutterAppbar: false,
-                toolbarHeight: row.height,
-                addContextMenu: false,
-                skipTraversalForActions: true,
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                paddingRight: 0,
-                titleSpacing: 0,
-                transitionsDuration: 0.milliseconds,
-              ),
+              child: result,
             ),
-          ),
+          );
+        }
+        result = Material(
+          type: MaterialType.transparency,
+          child: result,
         );
       }
       if (row.rowAddon!=null) {
         Widget addon;
         if (row.expanded || !row.rowAddonIsExpandable) {
-          addon = row.rowAddon!;
-          if ((row.rowAddonIsCoveredByScrollable??true) && constraints!=null && minWidth!=null && constraints.maxWidth<minWidth) {
-            addon = NotificationListener(
-              onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
-              child: SingleChildScrollView(
-                controller: sharedController,
-                scrollDirection: Axis.horizontal,
-                child: SizedBox(
-                  width: minWidth,
-                  child: addon,
-                ),
-              ),
-            );
-          }
+          addon = _wrapRowAddon(row, constraints, minWidth)!;
           if (row.rowAddonIsExpandable && rowAddonEntranceAnimations[row]!=null) {
             addon = _buildEntranceAnimation(
               child: addon,
@@ -1446,6 +1464,23 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         );
       },
     );
+  }
+  Widget? _wrapRowAddon(RowModel row, BoxConstraints? constraints, double? minWidth) {
+    if (row.rowAddon==null) return null;
+    if ((row.rowAddonIsCoveredByScrollable??true) && constraints!=null && minWidth!=null && constraints.maxWidth<minWidth) {
+      return NotificationListener(
+        onNotification: (n) => n is ScrollNotification || n is ScrollMetricsNotification,
+        child: SingleChildScrollView(
+          controller: sharedController,
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: minWidth,
+            child: row.rowAddon,
+          ),
+        ),
+      );
+    }
+    return row.rowAddon;
   }
 
   Widget defaultHeaderCellBuilder(BuildContext context, RowModel row, dynamic colKey, {
