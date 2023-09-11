@@ -502,8 +502,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         final shadowsLeft = widget.useCompactDrawerInsteadOfClose
             ? calculatedDrawerLeft + currentDrawerWidth
             : calculatedDrawerLeft + calculatedDrawerWidth;
-        return Stack(
-          fit: StackFit.passthrough,
+        Widget result = Stack(
           children: [
 
             const SizedBox.expand(), // always force stack to take all available space
@@ -615,6 +614,29 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                   ),
           ],
         );
+        if (widget.isPrimaryScaffold
+            && changeNotifier.showWindowBarOnDesktop && !kIsWeb
+            && Platform.isWindows && windowsDesktopBitsdojoWorking) {
+          if (widget.appbarType==AppbarType.none) {
+            result = Column(
+              children: [
+                WindowBar(backgroundColor: Theme.of(context).cardColor,),
+                Expanded(child: result),
+              ],
+            );
+          } else {
+            result = Stack(
+              children: [
+                result,
+                const Positioned(
+                  top: 0, left: 0, right: 0,
+                  child: WindowBar(title: SizedBox.shrink()),
+                ),
+              ],
+            );
+          }
+        }
+        return result;
       },
     );
     return result;
@@ -669,16 +691,6 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         mainScrollbar: true,
         controller: widget.mainScrollController,
         child: body,
-      );
-    }
-    if (widget.isPrimaryScaffold && widget.appbarType==AppbarType.none
-        && changeNotifierNotListen.showWindowBarOnDesktop && !kIsWeb
-        && Platform.isWindows && windowsDesktopBitsdojoWorking) {
-      body = Column(
-        children: [
-          WindowBar(backgroundColor: Theme.of(context).cardColor,),
-          Expanded(child: body),
-        ],
       );
     }
     Widget result = Consumer(

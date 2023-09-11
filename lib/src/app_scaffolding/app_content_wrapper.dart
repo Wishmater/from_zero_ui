@@ -329,6 +329,8 @@ class AppearOnMouseOverState extends State<AppearOnMouseOver> {
 
 class WindowBar extends StatelessWidget {
 
+  static String? logoImageAssetsPath;
+
   final double? height;
   final Color? backgroundColor;
   final IconThemeData? iconTheme;
@@ -358,6 +360,7 @@ class WindowBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    MediaQuery.sizeOf(context); // listen to resize, to difference maximized
     final theme = Theme.of(context);
     final Color iconColor = iconTheme?.color
         ?? theme.appBarTheme.iconTheme?.color 
@@ -371,10 +374,37 @@ class WindowBar extends StatelessWidget {
       color: backgroundColor,
       child: MoveWindowFromZero(
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             if (title!=null)
-              Expanded(child: title!,),
+              title!,
+            if (title==null && (logoImageAssetsPath!=null || FromZeroAppContentWrapper.appNameForCloseConfirmation!=null))
+              const SizedBox(width: 9,),
+            if (title==null && logoImageAssetsPath!=null)
+              IgnorePointer(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: SizedBox(
+                    width: 14, height: 14,
+                    child: Image.asset(logoImageAssetsPath!,),
+                  ),
+                ),
+              ),
+            if (title==null && logoImageAssetsPath!=null && FromZeroAppContentWrapper.appNameForCloseConfirmation!=null)
+              const SizedBox(width: 7,),
+            if (title==null && FromZeroAppContentWrapper.appNameForCloseConfirmation!=null)
+              IgnorePointer(
+                child: Material(
+                  type: MaterialType.transparency,
+                  child: Text(FromZeroAppContentWrapper.appNameForCloseConfirmation!,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
+            Expanded(child: Container()),
             if (PlatformExtended.appWindow!=null && showMinimize)
               MinimizeWindowButton(
                 animate: true,

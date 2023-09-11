@@ -293,38 +293,28 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
       padding: EdgeInsets.only(
         right: widget.paddingRight,
       ),
-      child: Stack(
-        alignment: Alignment.centerRight,
-        children: [
-          Padding(
-            padding: EdgeInsets.only(top: showWindowButtons ? titleBarHeight*0.7 : 0),
-            child: AnimatedSwitcher(
-              duration: widget.transitionsDuration,
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) => FadeTransition(
-                opacity: animation,
-                child: SlideTransition(
-                  position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(animation),
-                  child: child,
-                ),
-              ),
-              child: Row(
-                key: ValueKey(forceExpanded),
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  ...actions,
-                  SizedBox(width: showWindowButtons ? 8 : 0,),
-                ],
-              ),
+      child: Padding(
+        padding: EdgeInsets.only(top: showWindowButtons ? titleBarHeight*0.7 : 0),
+        child: AnimatedSwitcher(
+          duration: widget.transitionsDuration,
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero).animate(animation),
+              child: child,
             ),
           ),
-          if (showWindowButtons)
-            Align(
-              alignment: Alignment.topRight,
-              child: WindowBar(height: titleBarHeight,),
-            ),
-        ],
+          child: Row(
+            key: ValueKey(forceExpanded),
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              ...actions,
+              SizedBox(width: showWindowButtons ? 8 : 0,),
+            ],
+          ),
+        ),
       ),
     );
     if (widget.skipTraversalForActions) {
@@ -457,6 +447,17 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
         ],
       );
     }
+    // if (showWindowButtons) { // now always built in ScaffoldFromZero, so it takes full width
+    //   result = Stack(
+    //     children: [
+    //       result,
+    //       Positioned(
+    //         top: 0, left: 0, right: 0,
+    //         child: WindowBar(height: titleBarHeight,),
+    //       ),
+    //     ],
+    //   );
+    // }
     if (widget.addContextMenu) {
       result = ContextMenuFromZero(
         onShowMenu: widget.onShowContextMenu,
