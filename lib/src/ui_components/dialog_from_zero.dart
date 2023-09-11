@@ -87,7 +87,7 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
         children: [
           Builder(
             builder: (context) {
-              MediaQuery.of(context); // listen to windows size changes
+              MediaQuery.sizeOf(context); // listen to windows size changes
               if (appWindow.isMaximized) {
                 if (isMouseOverWindowBar.value && didSetIsMouseOverWindowBar) {
                   // weird hack, but otherwise it's stuck on true

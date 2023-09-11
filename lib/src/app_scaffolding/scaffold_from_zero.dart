@@ -394,15 +394,18 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
     if (appbarChangeNotifier==null){
       appbarChangeNotifier = AppbarChangeNotifier(
         widget.appbarHeight,
-        MediaQuery.of(context).padding.top,
+        MediaQuery.paddingOf(context).top,
         widget.collapsibleBackgroundHeight,
         widget.appbarType,
         null,
       );
       canPop = ModalRoute.of(context)?.canPop ?? Navigator.of(context).canPop();
     }
+    final mediaQuery = MediaQuery.of(context);
     return MediaQuery(
-      data: MediaQuery.of(context).copyWith(padding: MediaQuery.of(context).padding.copyWith(top: 0)),
+      data: mediaQuery.copyWith(
+        padding: mediaQuery.padding.copyWith(top: 0),
+      ),
       child: ProviderScope(
         overrides: [
           fromZeroAppbarChangeNotifierProvider.overrideWithProvider(ChangeNotifierProvider<AppbarChangeNotifier>((ref) {
@@ -480,8 +483,8 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         final changeNotifier = ref.watch(fromZeroScaffoldChangeNotifierProvider);
         final screen = ref.watch(fromZeroScreenProvider);
         final isMobileLayout = screen.isMobileLayout;
-        final mediaQuery = MediaQuery.of(context);
-        final addedPaddingWidth = isMobileLayout ? 0 : mediaQuery.padding.left;
+        final mediaQueryPadding = MediaQuery.paddingOf(context);
+        final addedPaddingWidth = isMobileLayout ? 0 : mediaQueryPadding.left;
         final calculatedDrawerWidth = widget.drawerWidth + addedPaddingWidth;
         final currentDrawerWidth = changeNotifier.getCurrentDrawerWidth(pageScaffoldId) + addedPaddingWidth;
         final calculatedDrawerLeft = widget.useCompactDrawerInsteadOfClose

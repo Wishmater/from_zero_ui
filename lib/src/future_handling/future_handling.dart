@@ -214,7 +214,7 @@ class ErrorSign extends StatelessWidget {
             onPressed: onRetry,
             child: Text(FromZeroLocalizations.of(context).translate("retry")),
           ));
-    final big = MediaQuery.of(context).size.height > 512;
+    final big = MediaQuery.sizeOf(context).height > 512;
     final iconWidget = icon==null ? null
         : IconTheme(
             data: Theme.of(context).iconTheme.copyWith(
@@ -279,7 +279,7 @@ class ErrorSign extends StatelessWidget {
     }
     // Widget result = LayoutBuilder( // avoid layout builder, so it doesn't break on intrinsic dimensions
     //   builder: (context, constraints) {
-    //     final big = constraints.maxHeight > 256 && MediaQuery.of(context).size.height > 512;
+    //     final big = constraints.maxHeight > 256 && MediaQuery.sizeOf(context).height > 512;
     //   },
     // );
     final scrollController = ScrollController();

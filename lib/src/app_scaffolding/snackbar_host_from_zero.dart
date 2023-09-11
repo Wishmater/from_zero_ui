@@ -98,7 +98,8 @@ class SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
     if (currentSnackBar!=null && !isSameSnackBar && currentSnackBar is APISnackBar) {
       currentSnackBar.updateBlockUI(currentSnackBar.stateNotifier.state);
     }
-    final mediaQuery = MediaQuery.of(context);
+    final viewPadding = MediaQuery.viewPaddingOf(context);
+    final viewInsets = MediaQuery.viewInsetsOf(context);
     Widget result = Stack(
       children: [
         Column(
@@ -140,9 +141,9 @@ class SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
           ],
         ),
         Positioned(
-          bottom: max(mediaQuery.viewPadding.bottom, mediaQuery.viewInsets.bottom),
-          left: max(mediaQuery.viewPadding.left, mediaQuery.viewInsets.left),
-          right: max(mediaQuery.viewPadding.right, mediaQuery.viewInsets.right),
+          bottom: max(viewPadding.bottom, viewInsets.bottom),
+          left: max(viewPadding.left, viewInsets.left),
+          right: max(viewPadding.right, viewInsets.right),
           child: AnimatedSwitcher(
             switchInCurve: Curves.easeOutCubic,
             switchOutCurve: Curves.easeInCubic,

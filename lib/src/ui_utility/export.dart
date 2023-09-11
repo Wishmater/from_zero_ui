@@ -545,11 +545,12 @@ class ExportState extends State<Export> {
     while (boundaryKeys.length < (widget.childrenCount?.call(currentSize, portrait, scale, format,)??1)){
       boundaryKeys.add(GlobalKey());
     }
+    final devicePixelRatio = MediaQuery.devicePixelRatioOf(context);
     var size = Size(
-      Export.defaultFormats[currentSize].width/PdfPageFormat.inch*96*MediaQuery.of(context).devicePixelRatio,
-      Export.defaultFormats[currentSize].height/PdfPageFormat.inch*96*MediaQuery.of(context).devicePixelRatio,
+      Export.defaultFormats[currentSize].width/PdfPageFormat.inch*96*devicePixelRatio,
+      Export.defaultFormats[currentSize].height/PdfPageFormat.inch*96*devicePixelRatio,
     );
-    var mult = (2-scale)*(1.5/MediaQuery.of(context).devicePixelRatio);
+    var mult = (2-scale)*(1.5/devicePixelRatio);
     if (!portrait){
       size = Size(mult*size.height, mult*size.width);
     } else {
@@ -953,6 +954,7 @@ class _PageWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
     return ExcludeSemantics(
       child: IgnorePointer(
         child: Padding(
@@ -969,7 +971,7 @@ class _PageWrapper extends StatelessWidget {
                   child: RepaintBoundary(
                     key: globalKey,
                     child: MediaQuery(
-                      data: MediaQuery.of(context).copyWith(
+                      data: mediaQuery.copyWith(
                         disableAnimations: true, //TODO 3 this doesn't work for some reason
                       ),
                       child: Theme(
@@ -977,7 +979,7 @@ class _PageWrapper extends StatelessWidget {
                         child: SizedBox.fromSize(
                           size: size,
                           child: Padding(
-                            padding: EdgeInsets.all(32*(2-scale)*(MediaQuery.of(context).devicePixelRatio/1.5)),
+                            padding: EdgeInsets.all(32*(2-scale)*(mediaQuery.devicePixelRatio/1.5)),
                             child: Column(
                               children: [
                                 if (title!=null && title!.isNotEmpty)

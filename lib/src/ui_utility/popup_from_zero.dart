@@ -98,8 +98,7 @@ class PopupFromZeroState extends State<PopupFromZero> {
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final mediaQueryPadding = mediaQuery.padding + mediaQuery.viewInsets; // padding has the permanent padding (notch), viewInsets has the keyboard inset
+    final mediaQueryPadding = MediaQuery.viewPaddingOf(context) + MediaQuery.viewInsetsOf(context); // viewPadding has the permanent padding (notch), viewInsets has the keyboard inset
     return LayoutBuilder(
       builder: (context, constraints) {
         final mqMaxWidth = constraints.maxWidth - mediaQueryPadding.horizontal;

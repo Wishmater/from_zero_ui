@@ -2105,7 +2105,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           }
         } else {
           if (separateScrollableBreakpoint!=null && objects.length>separateScrollableBreakpoint!) {
-            final mediaQuery = MediaQuery.of(context);
             final scrollController = ScrollController();
             result = Material(
               color: enabled
@@ -2113,7 +2112,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   : Theme.of(context).canvasColor,
               child: Container(
                 padding: addCard ? null : const EdgeInsets.only(right: 24),
-                height: mediaQuery.size.height - mediaQuery.padding.vertical - mediaQuery.viewInsets.vertical - 256,
+                height: MediaQuery.sizeOf(context).height
+                    - MediaQuery.viewPaddingOf(context).vertical
+                    - MediaQuery.viewInsetsOf(context).vertical - 256,
                 child: ScrollbarFromZero(
                   controller: scrollController,
                   child: CustomScrollView(
@@ -2244,9 +2245,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     }
     if (field.separateScrollableBreakpoint!=null && field.objects.length>field.separateScrollableBreakpoint!) {
       final scrollController = ScrollController();
-      final mediaQuery = MediaQuery.of(context);
       return Container(
-        height: mediaQuery.size.height - mediaQuery.padding.vertical - mediaQuery.viewInsets.vertical - 256,
+        height: MediaQuery.sizeOf(context).height
+            - MediaQuery.viewPaddingOf(context).vertical
+            - MediaQuery.viewInsetsOf(context).vertical - 256,
         padding: const EdgeInsets.only(right: 24),
         child: ScrollbarFromZero(
           controller: scrollController,

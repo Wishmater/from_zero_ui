@@ -653,7 +653,7 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
 
         }
 
-        final addedPaddingLeft = MediaQuery.of(context).padding.left;
+        final addedPaddingLeft = MediaQuery.paddingOf(context).left;
         Widget result;
 
         if (tabs[i].children?.isNotEmpty??false){
@@ -1061,7 +1061,7 @@ class DrawerMenuButtonFromZeroState extends State<DrawerMenuButtonFromZero> {
                     return Positioned(
                       top: 2, bottom: 2,
                       right: -4 + 96*(1 - animation.value) - (widget.titleHorizontalOffset/2),
-                      left: -widget.contentPadding.left - MediaQuery.of(context).size.width,
+                      left: -widget.contentPadding.left - MediaQuery.sizeOf(context).width,
                       child: Opacity(
                         opacity: (animation.value*2).coerceIn(0, 1),
                         child: child,

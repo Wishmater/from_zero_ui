@@ -163,8 +163,8 @@ class ScrollbarFromZeroState extends State<ScrollbarFromZero> {
         ),
       );
       if (widget.ignoreDevicePadding) {
-        result = MediaQuery(
-          data: MediaQuery.of(context).copyWith(padding: EdgeInsets.zero),
+        result = MediaQuery.removePadding(
+          context: context,
           child: result,
         );
       }

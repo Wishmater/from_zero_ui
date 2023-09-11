@@ -32,7 +32,7 @@ class ResponsiveHorizontalInsetsSliver extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SliverPadding(
-      padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < breakpoint ? 0 : padding),
+      padding: EdgeInsets.symmetric(horizontal: MediaQuery.sizeOf(context).width < breakpoint ? 0 : padding),
       sliver: sliver,
     );
   }
@@ -60,7 +60,7 @@ class ResponsiveHorizontalInsets extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final insets = EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width < breakpoint ? smallPadding : bigPadding);
+    final insets = EdgeInsets.symmetric(horizontal: MediaQuery.sizeOf(context).width < breakpoint ? smallPadding : bigPadding);
     if (asSliver) {
       return SliverPadding(
         padding: insets,
@@ -114,7 +114,7 @@ class ResponsiveInsetsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
     EdgeInsets insets = bigInsets;
     if (size.width < breakpoint) {
       insets = insets.copyWith(
@@ -1287,9 +1287,10 @@ class FlexibleLayoutFromZero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (relevantAxisMaxSize!=null) {
+      final size = MediaQuery.sizeOf(context);
       final relevantScreenSize = axis==Axis.horizontal
-          ? MediaQuery.of(context).size.width
-          : MediaQuery.of(context).size.height;
+          ? size.width
+          : size.height;
       return buildInternal(context, min(relevantAxisMaxSize!, relevantScreenSize));
     } else {
       return LayoutBuilder(
