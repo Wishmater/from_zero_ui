@@ -99,9 +99,6 @@ class SnackBarHostFromZeroState extends ConsumerState<SnackBarHostFromZero> {
       currentSnackBar.updateBlockUI(currentSnackBar.stateNotifier.state);
     }
     final mediaQuery = MediaQuery.of(context);
-    print (mediaQuery.padding);
-    print (mediaQuery.viewInsets);
-    print (mediaQuery.viewPadding);
     Widget result = Stack(
       children: [
         Column(

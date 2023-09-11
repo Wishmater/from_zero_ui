@@ -403,7 +403,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
 //          ),
             title,
             ClipPath(
-              clipper: BottomClipper(),
+              clipper: SideClipper(clipBottom: true),
               child: Align(
                 alignment: widget.expandedAlignment ?? Alignment.center,
                 heightFactor: _heightFactor.value,

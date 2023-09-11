@@ -997,7 +997,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                     children: [
                       if (!isMobileLayout && canPop)
                         Positioned(
-                          left: 4, top: 0, bottom: 0,
+                          left: 8, top: 0, bottom: 0,
                           child: Center(
                             child: TooltipFromZero(
                               message: FromZeroLocalizations.of(context).translate("back"),

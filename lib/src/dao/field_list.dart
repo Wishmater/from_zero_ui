@@ -1332,40 +1332,50 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     Widget result = AnimatedBuilder(
       animation: this,
       builder: (context, child) {
-        Widget result = TextButton(
-          focusNode: focusNode,
-          style: TextButton.styleFrom(
-            padding: dense ? EdgeInsets.zero : null,
-          ),
-          child: ComboField.buttonContentBuilder(context, uiName, hint ?? uiName, toString(), enabled, false,
-            showDropdownIcon: false,
-            dense: dense,
-          ),
-          onPressed: () async {
-            focusNode.requestFocus();
-            await showPopupFromZero<bool>(
-              context: context,
-              anchorKey: fieldGlobalKey,
-              builder: (context) {
-                return Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    ...buildWidgetsAsTable(context,
-                      addCard: false,
-                      asSliver: false, // TODO 3 try to do it as sliver for better performance
-                      expandToFillContainer: false,
-                      dense: false,
-                      focusNode: FocusNode(),
-                      collapsed: false,
-                      collapsible: false,
-                      fieldGlobalKey: const ValueKey('popup'),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
+        final onPressed = () async {
+          focusNode.requestFocus();
+          await showPopupFromZero<bool>(
+            context: context,
+            anchorKey: fieldGlobalKey,
+            builder: (context) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ...buildWidgetsAsTable(context,
+                    addCard: false,
+                    asSliver: false, // TODO 3 try to do it as sliver for better performance
+                    expandToFillContainer: false,
+                    dense: false,
+                    focusNode: FocusNode(),
+                    collapsed: false,
+                    collapsible: false,
+                    fieldGlobalKey: const ValueKey('popup'),
+                  ),
+                ],
+              );
+            },
+          );
+        };
+        Widget result = ComboField.buttonContentBuilder(context, uiName, hint ?? uiName, toString(), enabled, false,
+          showDropdownIcon: false,
+          dense: dense,
         );
+        if (addCard || dense) {
+          result = InkWell(
+            focusNode: focusNode,
+            onTap: onPressed,
+            child: result,
+          );
+        } else {
+          result = TextButton(
+            focusNode: focusNode,
+            // style: TextButton.styleFrom(
+            //   padding: dense ? EdgeInsets.zero : null, // not needed since dense now uses InkWell
+            // ),
+            onPressed: onPressed,
+            child: result,
+          );
+        }
         final visibleListFieldValidationErrors = passedFirstEdit
             ? listFieldValidationErrors
             : listFieldValidationErrors.where((e) => e.isBeforeEditing);

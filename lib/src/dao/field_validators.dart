@@ -659,6 +659,7 @@ class ValidationRequiredOverlay extends StatelessWidget {
     final showAsterisk = isRequired && (!dense || isEmpty);
     final visibleErrors = !showAsterisk ? <ValidationError>[]
         : errors.where((e) => e.isBlocking);
+    final isAlignedRight = textAlign==TextAlign.right && !isEmpty; // because label is never aligned right in TextField
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -667,10 +668,10 @@ class ValidationRequiredOverlay extends StatelessWidget {
           Positioned(
             top: dense ? 7
                 : isEmpty ? 5 : 10,
-            left: textAlign==TextAlign.right ? null
+            left: isAlignedRight ? null
                 : dense ? -5
                 : isEmpty ? 4 : 5,
-            right: textAlign!=TextAlign.right ? null
+            right: !isAlignedRight ? null
                 : dense ? -5
                 : isEmpty ? 4 : 5,
             child: TooltipFromZero(

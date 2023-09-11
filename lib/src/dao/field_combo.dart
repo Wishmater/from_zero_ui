@@ -476,7 +476,8 @@ class ComboField<T extends DAO> extends Field<T> {
                         maxLines: 2,
                         style: Theme.of(context).textTheme.titleMedium!.copyWith(
                           height: 1,
-                          color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(enabled&&!showHintInsteadOfValue ? 1 : 0.75),
+                          fontWeight: showHintOrTitleInsteadOfValue ? FontWeight.normal : null,
+                          // color: Theme.of(context).textTheme.dis,
                         ),
                       )
                 : value==null&&hint==null&&title!=null

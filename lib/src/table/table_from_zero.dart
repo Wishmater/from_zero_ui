@@ -12,7 +12,6 @@ import 'package:from_zero_ui/src/table/manage_popup.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_sliver_sticky_header.dart';
-import 'package:from_zero_ui/util/no_ensure_visible_traversal_policy.dart';
 import 'package:intl/intl.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
@@ -1348,7 +1347,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         );
       }
       result = FocusTraversalGroup(
-        policy: NoEnsureVisibleWidgetTraversalPolicy(),
+        policy: ReadingOrderTraversalPolicy(),
         child: result,
       );
       return result;

@@ -345,13 +345,11 @@ class BoolField extends Field<BoolComparable> {
     }
     return [result];
   }
-  void _focusNext(FocusNode focusNode, FocusNode node) {
+  Future<void> _focusNext(FocusNode focusNode, FocusNode node) async {
+    await Future.delayed(const Duration(milliseconds: 1)); // let the focus system cook
     if (focusNode.hasFocus) {
-      node.nextFocus();
-      print ('faslgjharfgjhafldshgafklshgalfksghakdfsghak');
-      Future.delayed(Duration(milliseconds: 200)).then((_) {
-        _focusNext(focusNode, node);
-      });
+      focusNode.parent!.nextFocus();
+      _focusNext(focusNode, node);
     }
   }
   Widget _buildFieldEditorWidget(BuildContext context, {
@@ -368,6 +366,7 @@ class BoolField extends Field<BoolComparable> {
     final hackFocusTraversalPolicy = ReadingOrderTraversalPolicy( // hack to prevent switch/checkbox from interrupting traversal
       requestFocusCallback: (node, {alignment, alignmentPolicy, curve, duration}) {
         if (focusNode.hasFocus) {
+          focusNode.parent!.nextFocus();
           _focusNext(focusNode, node);
         } else {
           node.requestFocus();
@@ -393,9 +392,6 @@ class BoolField extends Field<BoolComparable> {
               child: FocusTraversalGroup(
                 policy: hackFocusTraversalPolicy,
                 child: CheckboxListTile(
-                  onFocusChange: (value) {
-                    print ('$value ${focusNode.hasFocus}');
-                  },
                   focusNode: focusNode,
                   value: value!.value,
                   dense: true,
@@ -458,9 +454,6 @@ class BoolField extends Field<BoolComparable> {
               child: FocusTraversalGroup(
                 policy: hackFocusTraversalPolicy,
                 child: SwitchListTile(
-                  onFocusChange: (value) {
-                    print ('$value ${focusNode.hasFocus}');
-                  },
                   focusNode: focusNode,
                   value: value!.value,
                   dense: true,

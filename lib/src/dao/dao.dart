@@ -867,6 +867,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
 
   /// this code assumes it is called only once on showModal, if it is called multiple times inside a build() method it will behave weirdly
+  List<int> _tabBarAnimationLocks = [];
   Widget buildEditModalWidget(BuildContext context, {
     bool showDefaultSnackBars = true,
     bool showRevertChanges = false,
@@ -1062,12 +1063,15 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                                             child: Text(e, style: Theme.of(context).textTheme.titleMedium,),
                                                           );
                                                         }).toList(),
-                                                        onTap: (value) {
+                                                        onTap: (value) async {
                                                           DefaultTabController.of(context).index = value;
-                                                          pageController.animateToPage(value,
+                                                          final future = pageController.animateToPage(value,
                                                             duration: kTabScrollDuration,
                                                             curve: Curves.ease,
                                                           );
+                                                          _tabBarAnimationLocks.add(future.hashCode);
+                                                          await future;
+                                                          _tabBarAnimationLocks.remove(future.hashCode);
                                                         },
                                                       );
                                                     },
@@ -1105,7 +1109,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                         controller: pageController,
                                         preloadPagesCount: 999,
                                         onPageChanged: (value) {
-                                          if (!tabController.indexIsChanging) { // breaks if the pageview is scrolled sideways very fast on mobile, but it's the best alternative to prevent flickering
+                                          if (_tabBarAnimationLocks.isEmpty) {
                                             tabController.animateTo(value);
                                           }
                                         },

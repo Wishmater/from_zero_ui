@@ -1489,24 +1489,6 @@ class _TimedOverlayState extends State<TimedOverlay> {
 
 
 
-class BottomClipper extends CustomClipper<Path> {
-  final double infinite = 999999;
-  @override
-  Path getClip(Size size) {
-    var path = Path();
-    path.moveTo(-infinite, -infinite);
-    path.lineTo(-infinite, size.height);
-    path.lineTo(infinite, size.height);
-    path.lineTo(infinite, -infinite);
-    path.close();
-    return path;
-  }
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
-}
-
-
-
 
 
 class PlatformExtended {
@@ -1622,4 +1604,52 @@ extension HexColor on Color {
 extension InverseBrigtenes on Brightness {
   Brightness get inverse => this==Brightness.light
       ? Brightness.dark : Brightness.light;
+}
+
+
+class SideClipper extends CustomClipper<Path> {
+  bool clipLeft;
+  bool clipRight;
+  bool clipTop;
+  bool clipBottom;
+  SideClipper({
+    this.clipLeft = false,
+    this.clipRight = false,
+    this.clipTop = false,
+    this.clipBottom = false,
+  });
+  SideClipper.vertical()
+      : clipLeft = false,
+        clipRight = false,
+        clipTop = true,
+        clipBottom = true;
+  SideClipper.horizontal()
+      : clipLeft = true,
+        clipRight = true,
+        clipTop = false,
+        clipBottom = false;
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    final right = clipRight ? size.width : 999999999.0;
+    final left = clipLeft ? 0.0 : -999999999.0;
+    final top = clipTop ? 0.0 : -999999999.0;
+    final bottom = clipBottom ? size.height : 999999999.0;
+    // path starts at (0,0)
+    path.lineTo(right, top);
+    path.lineTo(right, bottom);
+    path.lineTo(left, bottom);
+    path.lineTo(left, top);
+    return path;
+  }
+
+  @override
+  bool shouldReclip(SideClipper oldClipper) {
+    return oldClipper.clipLeft != clipLeft
+        || oldClipper.clipRight != clipRight
+        || oldClipper.clipTop != clipTop
+        || oldClipper.clipBottom != clipBottom;
+  }
+
 }

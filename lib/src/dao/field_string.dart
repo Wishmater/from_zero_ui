@@ -500,7 +500,8 @@ class StringField extends Field<String> {
                   overflow: TextOverflow.fade,
                 ),
               )
-            : ClipRect(
+            : ClipPath(
+                clipper: SideClipper.horizontal(),
                 child: OpacityGradient(
                   direction: OpacityGradient.right,
                   child: Container(

@@ -138,7 +138,7 @@ class TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
         );
         return Theme(
           data: Theme.of(context).copyWith(
-            appBarTheme: AppBarTheme(
+            appBarTheme: Theme.of(context).appBarTheme.copyWith(
               color: widget.backgroundColor ?? Material.of(context).color ?? Theme.of(context).cardColor, // Colors.transparent
               iconTheme: Theme.of(context).iconTheme,
               actionsIconTheme: widget.defaultActionsColor==null
