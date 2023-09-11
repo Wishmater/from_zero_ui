@@ -91,6 +91,19 @@ class ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     super.dispose();
   }
 
+  void _listenToControllerAttached(ScrollController controller) {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (!mounted || widget.controller!=controller) {
+        return;
+      }
+      if (controller.hasClients) {
+        setState(() {});
+        return;
+      }
+      _listenToControllerAttached(controller);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -103,22 +116,7 @@ class ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     bool supportsAlwaysShown = widget.controller!=null && (widget.controller!.hasClients || alwaysAttachedScrollController.lastPosition!=null);
     if (widget.controller!=null && wantsAlwaysShown && !supportsAlwaysShown) {
       // Listen until the controller has clients
-      final controller = widget.controller!;
-      Future.doWhile(() async {
-        if (!mounted || widget.controller!=controller) {
-          return false;
-        }
-        if (controller.hasClients) {
-          setState(() {});
-          return false;
-        }
-        await Future.delayed(const Duration(milliseconds: 100));
-        return true;
-      });
-    }
-
-    if (context.findAncestorWidgetOfExactType<Export>()!=null) {
-      return child;
+      _listenToControllerAttached(widget.controller!);
     }
 
     if (widget.applyOpacityGradientToChildren ?? widget.controller!=null){
@@ -182,7 +180,7 @@ class ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
     return NotificationListener(
       onNotification: (notification) {
-        return notification is ScrollNotification;
+        return notification is ScrollNotification || notification is ScrollMetricsNotification;
       },
       child: result,
     );
