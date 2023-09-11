@@ -49,7 +49,7 @@ dependencies:
   platform_detect: ^2.0.7
   permission_handler: ^10.4.3  # if build window throws error, check https://github.com/Baseflow/flutter-permission-handler/issues/819#issuecomment-1673271795
   open_file: ^3.3.2
-  file_picker: ^5.3.3
+  file_picker: ^5.5.0
   desktop_drop: ^0.4.1
   universal_html: ^2.2.3 # used for file_saver_from_zero download on web
   enough_convert: ^1.6.0 # used for reading window events on windows # ! replace with native converters if ever available on windows and web
