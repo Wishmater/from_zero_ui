@@ -705,6 +705,7 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
   double externalStuckOffset = 0;
   double stickAddedOffset = 0;
   double determineStuckOffsetFromExternalController() {
+    if (scrollController==null) return 0;
     try {
       final scrollPosition = scrollController!.position;
 
@@ -729,8 +730,11 @@ class RenderSliverStickyHeader extends RenderSliver with RenderSliverHelpers {
             .clamp(0.0, fullScrollExtent - (_headerExtent??0.0));
       }
       return stuckOffset;
-    } catch(_) {}
-    return 0;
+    // } catch(e, st) {print(e); print(st); return 0; }
+    // } catch(_) { return 0; }
+    } catch(_) {
+      return previousExternalStuckOffset ?? 0;
+    }
   }
 
   @override
