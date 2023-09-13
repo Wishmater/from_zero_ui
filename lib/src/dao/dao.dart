@@ -992,7 +992,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 padding: const EdgeInsets.only(left: 16),
                 child: AppbarFromZero(
                   constraints: constraints,
-                  backgroundColor: Theme.of(context).canvasColor,
+                  backgroundColor: Colors.transparent,
+                  surfaceTintColor: Colors.transparent, // match dialog
                   elevation: 0,
                   toolbarHeight: 56 + 12,
                   paddingRight: 18,

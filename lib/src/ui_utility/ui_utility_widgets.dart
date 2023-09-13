@@ -108,7 +108,7 @@ class ResponsiveInsetsDialog extends StatelessWidget {
     this.surfaceTintColor,
     this.clipBehavior = Clip.none,
     this.shape,
-    this.alignment,
+    this.alignment = goldenRatioVerticalAlignment,
     super.key,
   });
 

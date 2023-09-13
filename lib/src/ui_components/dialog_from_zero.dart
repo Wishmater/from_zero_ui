@@ -51,7 +51,8 @@ class FromZeroModalConfiguration extends FadeScaleTransitionConfiguration {
       Widget child,
       ) {
     Widget result = Stack(
-      alignment: Alignment.center,
+      alignment: Alignment.bottomCenter, // Alignment.center
+      fit: StackFit.expand,
       children: [
         IgnorePointer(
           child: ColoredBox(
@@ -177,7 +178,7 @@ class DialogFromZero extends StatefulWidget {
     this.surfaceTintColor,
     this.clipBehavior = Clip.none,
     this.shape,
-    this.alignment,
+    this.alignment = goldenRatioVerticalAlignment,
     super.key,
   }) :  assert(appBar==null || (title==null && appBarActions==null),
           'Setting appBar overrides title and appBarActions, no need to specify both',

@@ -180,7 +180,11 @@ class ScrollbarFromZeroState extends State<ScrollbarFromZero> {
 
     return NotificationListener(
       onNotification: (notification) {
-        return notification is ScrollNotification || notification is ScrollMetricsNotification;
+        if (notification is ScrollMetricsNotification) {
+          widget.controller?.notifyListeners();
+          return true;
+        }
+        return notification is ScrollNotification;
       },
       child: result,
     );
