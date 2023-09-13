@@ -101,24 +101,24 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
     });
   }
   void initAnimationController() {
-    // if (widget.duration!=null) {
-    //   if (widget.duration!=Duration.zero) {
-    //     animationController = AnimationController(
-    //       vsync: this,
-    //       duration: widget.duration,
-    //     );
-    //     animationController!.addStatusListener((status) {
-    //       if (status==AnimationStatus.completed) {
-    //         widget.dismiss();
-    //       }
-    //     });
-    //     animationController?.forward();
-    //   } else {
-    //     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-    //       widget.dismiss();
-    //     });
-    //   }
-    // }
+    if (widget.duration!=null) {
+      if (widget.duration!=Duration.zero) {
+        animationController = AnimationController(
+          vsync: this,
+          duration: widget.duration,
+        );
+        animationController!.addStatusListener((status) {
+          if (status==AnimationStatus.completed) {
+            widget.dismiss();
+          }
+        });
+        animationController?.forward();
+      } else {
+        WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+          widget.dismiss();
+        });
+      }
+    }
   }
 
   @override
