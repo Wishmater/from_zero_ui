@@ -1428,91 +1428,22 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     if (useIntrinsicWidth==null && props.values.where((e) => e is ListField && !e.hiddenInView && (e.buildViewWidgetAsTable || e.objects.length>50)).isNotEmpty) {
       useIntrinsicWidth = false;
     }
-    Widget content = AnimatedBuilder(
-      animation: this,
-      builder: (context, child) {
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            Widget result = DialogFromZero(
-              includeDialogWidget: false,
-              contentPadding: EdgeInsets.zero,
-              scrollController: scrollController,
-              appBar: AppbarFromZero(
-                constraints: constraints,
-                useFlutterAppbar: false,
-                primary: false,
-                paddingRight: 16,
-                toolbarHeight: 68,
-                title: OverflowScroll(
-                  child: Padding(
-                    padding: const EdgeInsets.only(left: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SelectableText(uiName,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        if (uiName!=classUiName)
-                          SelectableText(classUiName,
-                            style: Theme.of(context).textTheme.titleSmall,
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                actions: [
-                  if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
-                    ActionFromZero(
-                      title: FromZeroLocalizations.of(context).translate('edit'),
-                      icon: const Icon(Icons.edit_outlined),
-                      onTap: (context) async {
-                        final tempDao = copyWith();
-                        final result = await tempDao.maybeEdit(mainContext,
-                          showDefaultSnackBars: showDefaultSnackBars,
-                        );
-                        if (result != null) {
-                          final tempProps = tempDao.props;
-                          props.forEach((key, value) {
-                            if (value.value != tempProps[key]!.value) {
-                              value.value = tempProps[key]!.value;
-                            }
-                          });
-                          Navigator.of(context).pop();
-                        }
-                      },
-                    ),
-                  if (showDeleteButton ?? viewDialogShowsDeleteButton ?? false) // always default false for now, to avoid breaking existing DAOs, should be ?? canDelete
-                    ActionFromZero(
-                      title: FromZeroLocalizations.of(context).translate('delete'),
-                      icon: const Icon(Icons.delete_forever),
-                      breakpoints: {0: ActionState.overflow},
-                      onTap: (context) async {
-                        final result = await maybeDelete(mainContext);
-                        if (result) {
-                          Navigator.of(context).pop();
-                        }
-                      },
-                    ),
-                  ...(viewDialogExtraActions?.call(mainContext, this) ?? []),
-                ],
+    return showModalFromZero(context: mainContext,
+      builder: (context) {
+        return AnimatedBuilder(
+          animation: this,
+          builder: (context, child) {
+            final scrollController = ScrollController();
+            Widget result = SingleChildScrollView(
+              controller: scrollController,
+              child: buildViewWidget(mainContext,
+                mainScrollController: scrollController,
               ),
-              content: SingleChildScrollView(
-                controller: scrollController,
-                child: buildViewWidget(mainContext,
-                  mainScrollController: scrollController,
-                ),
-              ),
-              dialogActions: [
-                DialogButton.cancel(
-                  child: Text(FromZeroLocalizations.of(context).translate("close_caps")),
-                ),
-              ],
             );
             if (useIntrinsicWidth ?? true) {
               result = ConstrainedBox(
                 constraints: BoxConstraints(
-                  minWidth: viewDialogWidth*0.5,
+                  // minWidth: viewDialogWidth*0.5,
                   maxWidth: viewDialogWidth*1.5,
                 ),
                 child: IntrinsicWidth(child: result,),
@@ -1523,18 +1454,65 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 child: result,
               );
             }
-            return result;
+            return DialogFromZero(
+              contentPadding: EdgeInsets.zero,
+              scrollController: scrollController,
+              content: result,
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SelectableText(uiName,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  if (uiName!=classUiName)
+                    SelectableText(classUiName,
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                ],
+              ),
+              dialogActions: [
+                DialogButton.cancel(
+                  child: Text(FromZeroLocalizations.of(context).translate("close_caps")),
+                ),
+              ],
+              appBarActions: [
+                if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
+                  ActionFromZero(
+                    title: FromZeroLocalizations.of(context).translate('edit'),
+                    icon: const Icon(Icons.edit_outlined),
+                    onTap: (context) async {
+                      final tempDao = copyWith();
+                      final result = await tempDao.maybeEdit(mainContext,
+                        showDefaultSnackBars: showDefaultSnackBars,
+                      );
+                      if (result != null) {
+                        final tempProps = tempDao.props;
+                        props.forEach((key, value) {
+                          if (value.value != tempProps[key]!.value) {
+                            value.value = tempProps[key]!.value;
+                          }
+                        });
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                if (showDeleteButton ?? viewDialogShowsDeleteButton ?? false) // always default false for now, to avoid breaking existing DAOs, should be ?? canDelete
+                  ActionFromZero(
+                    title: FromZeroLocalizations.of(context).translate('delete'),
+                    icon: const Icon(Icons.delete_forever),
+                    breakpoints: {0: ActionState.overflow},
+                    onTap: (context) async {
+                      final result = await maybeDelete(mainContext);
+                      if (result) {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                  ),
+                ...(viewDialogExtraActions?.call(mainContext, this) ?? []),
+              ],
+            );
           },
-        );
-      },
-    );
-    return showModalFromZero(context: mainContext,
-      builder: (context) {
-        return Center(
-          child: ResponsiveInsetsDialog(
-            backgroundColor: Theme.of(context).cardColor,
-            child: content,
-          ),
         );
       },
     );
