@@ -986,6 +986,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     listField.dao = dao;
     return ScrollbarFromZero(
       controller: scrollController,
+      applyOpacityGradientToChildren: false,
       child: CustomScrollView(
         controller: scrollController,
         shrinkWrap: true,
@@ -2136,14 +2137,17 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               ),
             );
           }
-          result = TooltipFromZero(
-            message: (dense ? visibleListFieldValidationErrors : visibleListFieldValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling)).fold('', (a, b) {
-              return a.toString().trim().isEmpty ? b.toString()
-                  : b.toString().trim().isEmpty ? a.toString()
-                  : '$a\n$b';
-            }),
-            waitDuration: enabled ? const Duration(seconds: 1) : Duration.zero,
-            child: result,
+          result = SizedBox(
+            width: getMaxWidth(columns.keys),
+            child: TooltipFromZero(
+              message: (dense ? visibleListFieldValidationErrors : visibleListFieldValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling)).fold('', (a, b) {
+                return a.toString().trim().isEmpty ? b.toString()
+                    : b.toString().trim().isEmpty ? a.toString()
+                    : '$a\n$b';
+              }),
+              waitDuration: enabled ? const Duration(seconds: 1) : Duration.zero,
+              child: result,
+            ),
           );
           if (!enabled) {
             result = IgnorePointer(
