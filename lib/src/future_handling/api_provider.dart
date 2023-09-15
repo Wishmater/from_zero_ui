@@ -504,6 +504,7 @@ class SliverApiProviderBuilder<T> extends ApiProviderBuilder<T> {
     super.errorBuilder = SliverApiProviderBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.animatedSwitcherType = AnimatedSwitcherType.normal, /// AnimatedSwitcherImage doesn't support slivers, because of the RepaintBoundary
     super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
@@ -623,6 +624,7 @@ class SliverApiProviderMultiBuilder<T> extends ApiProviderMultiBuilder<T> {
     super.errorBuilder = SliverApiProviderBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.animatedSwitcherType = AnimatedSwitcherType.normal, /// AnimatedSwitcherImage doesn't support slivers, because of the RepaintBoundary
     super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
@@ -760,6 +762,7 @@ class SliverApiStateBuilder<T> extends ApiStateBuilder<T> {
     super.errorBuilder = SliverApiProviderBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.animatedSwitcherType = AnimatedSwitcherType.normal, /// AnimatedSwitcherImage doesn't support slivers, because of the RepaintBoundary
     super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,

@@ -1541,13 +1541,14 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               style: textStyle,
               textAlign: alignment,
               maxLines: autoSizeTextMaxLines,
+              softWrap: autoSizeTextMaxLines>1,
               minFontSize: 15,
               overflowReplacement: name!=compactName ? null : TooltipFromZero(
                 message: name,
                 waitDuration: Duration.zero,
                 verticalOffset: -16,
                 child: Text(
-                  name,
+                  compactName,
                   textAlign: alignment,
                   style: textStyle.copyWith(
                     fontSize: 15,
@@ -1784,6 +1785,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       style: style,
       textAlign: alignment,
       maxLines: autoSizeTextMaxLines,
+      softWrap: autoSizeTextMaxLines>1,
       minFontSize: 15,
       overflowReplacement: TooltipFromZero(
         message: message,

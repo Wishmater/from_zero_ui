@@ -114,6 +114,7 @@ class SliverAsyncValueBuilder<T> extends AsyncValueBuilder<T> {
     super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.animatedSwitcherType = AnimatedSwitcherType.normal, /// AnimatedSwitcherImage doesn't support slivers, because of the RepaintBoundary
     super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
@@ -233,6 +234,7 @@ class SliverAsyncValueMultiBuilder<T> extends AsyncValueMultiBuilder<T> {
     super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.animatedSwitcherType = AnimatedSwitcherType.normal, /// AnimatedSwitcherImage doesn't support slivers, because of the RepaintBoundary
     super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
@@ -254,6 +256,9 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
   final bool applyAnimatedContainerFromChildSize;
   final AnimatedSwitcherImageLayoutBuilder layoutBuilder;
   final Alignment? alignment; // used for animated switches
+  final Clip? clipBehaviour;
+  final AnimatedSwitcherType animatedSwitcherType;
+  final bool addLoadingStateAsValueKeys;
 
   const FutureProviderBuilder({
     required this.provider,
@@ -267,6 +272,9 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
     this.applyAnimatedContainerFromChildSize = false,
     this.layoutBuilder = AnimatedSwitcherImage.defaultLayoutBuilder,
     this.alignment,
+    this.clipBehaviour,
+    this.addLoadingStateAsValueKeys = true,
+    this.animatedSwitcherType = AnimatedSwitcherType.image,
     super.key,
   });
 
@@ -284,6 +292,9 @@ class FutureProviderBuilder<T> extends ConsumerWidget {
       applyAnimatedContainerFromChildSize: applyAnimatedContainerFromChildSize,
       layoutBuilder: layoutBuilder,
       alignment: alignment,
+      animatedSwitcherType: animatedSwitcherType,
+      addLoadingStateAsValueKeys: addLoadingStateAsValueKeys,
+      clipBehaviour: clipBehaviour,
     );
   }
 
@@ -298,6 +309,7 @@ class SliverFutureProviderBuilder<T> extends FutureProviderBuilder<T> {
     super.errorBuilder = SliverAsyncValueBuilder.defaultErrorBuilder,
     super.transitionBuilder = SliverAsyncValueBuilder.defaultTransitionBuilder,
     super.layoutBuilder = AnimatedSwitcherImage.sliverLayoutBuilder,
+    super.animatedSwitcherType = AnimatedSwitcherType.normal, /// AnimatedSwitcherImage doesn't support slivers, because of the RepaintBoundary
     super.key,
   }) : super(
     applyAnimatedContainerFromChildSize: false,
