@@ -512,7 +512,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               future: validationFuture,
               applyAnimatedContainerFromChildSize: true,
               loadingBuilder: (context) {
-                return Padding(
+                return Container(
+                  width: 512,
                   padding: const EdgeInsets.symmetric(horizontal: 18),
                   child: IntrinsicHeight(
                     child: Column(
@@ -535,7 +536,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 );
               },
               errorBuilder: (context, error, stackTrace) {
-                return Padding(
+                return Container(
+                  width: 512,
                   padding: const EdgeInsets.symmetric(horizontal: 18),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -572,19 +574,22 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 if (shownName.isNullOrEmpty) shownName = classUiName;
                 return DialogFromZero(
                   includeDialogWidget: false,
+                  maxWidth: 512,
                   title: Text(validation
                       ? (saveConfirmationDialogTitle?.call(this) ?? FromZeroLocalizations.of(context).translate("confirm_save_title"))
                       : 'Error de Validación', // TODO 3 internationalize
                   ),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(validation
-                          ? (saveConfirmationDialogDescription?.call(this) ?? ("${FromZeroLocalizations.of(context).translate("confirm_save_desc")}\r\n$shownName"))
-                          : 'Debe resolver los siguientes errores de validación:',), // TODO 3 internationalize
-                      SaveConfirmationValidationMessage(allErrors: validationErrors),
-                    ],
+                  content: IntrinsicWidth(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(validation
+                            ? (saveConfirmationDialogDescription?.call(this) ?? ("${FromZeroLocalizations.of(context).translate("confirm_save_desc")}\r\n$shownName"))
+                            : 'Debe resolver los siguientes errores de validación:',), // TODO 3 internationalize
+                        SaveConfirmationValidationMessage(allErrors: validationErrors),
+                      ],
+                    ),
                   ),
                   dialogActions: [
                     const DialogButton.cancel(),
