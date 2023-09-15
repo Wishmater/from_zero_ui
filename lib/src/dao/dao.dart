@@ -836,8 +836,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       }
     }
     if (!keepUndo) beginUndoTransaction(); // discard undo transaction
+    final fuse = _undoTransaction?.isNotEmpty ?? false;
     commitUndoTransaction();
-    if (keepUndo) fuseLastTwoUndoRecords();
+    if (fuse) fuseLastTwoUndoRecords();
   }
   void fuseLastTwoUndoRecords() {
     if (_undoRecord.length>1) {
