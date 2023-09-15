@@ -35,7 +35,7 @@ dependencies:
   flutter_font_icons : ^2.2.5
   animations: ^2.0.7
   extended_image: ^8.1.0
-  google_fonts: ^5.1.0 # used in from_zero_logo
+  google_fonts: ^6.0.0 # used in from_zero_logo
   sliver_tools: ^0.2.12
   flutter_sticky_header: ^0.6.5 # ideally, we would always use sliver_tools and get rid of this dependency + our hacky copied code
   humanizer: ^2.2.0
