@@ -717,7 +717,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
             ? '$classUiName ${newInstance ? FromZeroLocalizations.of(context).translate("added")
             : FromZeroLocalizations.of(context).translate("edited")} ${FromZeroLocalizations.of(context).translate("successfully")}.'
             : FromZeroLocalizations.of(context).translate("connection_error_long"),),
-      ).show(context);
+      ).show();
     }
     return model;
   }
@@ -806,7 +806,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           title: Text(success
               ? '$classUiName ${FromZeroLocalizations.of(context).translate("deleted")} ${FromZeroLocalizations.of(context).translate("successfully")}.'
               : (errorString ?? FromZeroLocalizations.of(context).translate("connection_error_long")),),
-        ).show(context);
+        ).show();
       }
     }
     if (success) {

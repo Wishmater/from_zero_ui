@@ -56,7 +56,7 @@ class PageScaffoldState extends State<PageScaffold> {
                           context: context,
                           type: SnackBarFromZero.info,
                           title: const Text("Action Pressed"),
-                        ).show(context);
+                        ).show();
                       },
                     ),
 //                    SnackBarAction(
@@ -80,7 +80,7 @@ class PageScaffoldState extends State<PageScaffold> {
 //                      },
 //                    ),
                   ],
-                ).show(context);
+                ).show();
               },
             );
           },

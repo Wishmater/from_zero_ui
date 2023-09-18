@@ -32,14 +32,19 @@ Future<bool> saveFileFromZero ({
   bool showResultSnackBar = true, // TODO 3 implement output pickers in not web (optional)
   String? successTitle,
   String? successMessage,
+  bool isHostContext = false,
 }) async {
+
+  // avoid using the context over async gaps
+  final snackbarHostContext = isHostContext ? context : context.findAncestorStateOfType<SnackBarHostFromZeroState>()!.context;
+  final localizations = FromZeroLocalizations.of(snackbarHostContext);
 
   if (!kIsWeb && Platform.isAndroid && !(await Permission.storage.request().isGranted)) {
     return false;
   }
   name = name // cleanup filename so it doesn't cause issues with system file path requirements
       .replaceAll('/', '-')
-      .replaceAll(r'\', '-'); // TODO 3 validate all banned characters, depending on OS
+      .replaceAll(r'\', '-'); // TODO 2 validate all banned characters, depending on Platform
 
   SnackBarControllerFromZero? downloadSnackBarController;
   bool cancelled = false;
@@ -73,12 +78,14 @@ Future<bool> saveFileFromZero ({
         backgroundColor: SnackBarFromZero.softColors[type],
       );
     }
+    // we're trusting that the parent SnackbarHost won't be disposed while waiting. SnackbarHost should live at the root of the widget tree for as long as the app lives.
+    // ignore: use_build_context_synchronously
     downloadSnackBarController = SnackBarFromZero(
       key: snackBarKey ?? ValueKey(data.hashCode),
-      context: context,
+      context: snackbarHostContext,
       type: type,
       progressIndicator: progressIndicator,
-      title: Text(FromZeroLocalizations.of(context).translate('downloading')),
+      title: Text(localizations.translate('downloading')),
       onCancel: () {
         cancelled = true;
         onCancel?.call();
@@ -102,7 +109,7 @@ Future<bool> saveFileFromZero ({
           }
         },
       ),
-    ).show(context);
+    ).show(isHostContext: true);
   }
 
   bool success = true;
@@ -165,9 +172,9 @@ Future<bool> saveFileFromZero ({
 
       // get pretty path to show to user
       if (Platform.isWindows) {
-        uiPath = FromZeroLocalizations.of(context).translate('documents');
+        uiPath = localizations.translate('documents');
       } else {
-        uiPath = FromZeroLocalizations.of(context).translate('downloads');
+        uiPath = localizations.translate('downloads');
       }
       if (pathAppend!=null) {
         uiPath = p.join(uiPath, pathAppend);
@@ -192,25 +199,25 @@ Future<bool> saveFileFromZero ({
   bool retry = false;
   if (success && autoOpenOnFinish) {
     if (Platform.isAndroid){
-      OpenFile.open(file!.absolute.path);
-      // OpenFile.open(file!.parent.absolute.path);
+      await OpenFile.open(file!.absolute.path);
     } else{
       await launch(file!.absolute.path);
-      // await launch(file!.parent.absolute.path);
     }
   }
   if (error!=null || (showSnackBars && showResultSnackBar)) {
     if (success && uiPath!=null) {
+      // we're trusting that the parent SnackbarHost won't be disposed while waiting. SnackbarHost should live at the root of the widget tree for as long as the app lives.
+      // ignore: use_build_context_synchronously
       await SnackBarFromZero(
         key: snackBarKey ?? ValueKey(data.hashCode),
-        context: context,
+        context: snackbarHostContext,
         type: SnackBarFromZero.success,
         duration: const Duration(seconds: 8),
-        title:  Text(successTitle ?? FromZeroLocalizations.of(context).translate('download_success')),
-        message: Text(successMessage ?? "${FromZeroLocalizations.of(context).translate('downloaded_to')} $uiPath"),
+        title:  Text(successTitle ?? localizations.translate('download_success')),
+        message: Text(successMessage ?? "${localizations.translate('downloaded_to')} $uiPath"),
         actions: [
           SnackBarAction(
-            label: FromZeroLocalizations.of(context).translate('open').toUpperCase(),
+            label: localizations.translate('open').toUpperCase(),
             onPressed: () async {
               if (Platform.isAndroid){
                 await OpenFile.open(file!.absolute.path);
@@ -228,7 +235,7 @@ Future<bool> saveFileFromZero ({
               },
             ),
           SnackBarAction(
-            label: FromZeroLocalizations.of(context).translate('open_folder').toUpperCase(),
+            label: localizations.translate('open_folder').toUpperCase(),
             onPressed: () async {
               if (Platform.isAndroid) {
                 await OpenFile.open(file!.parent.absolute.path);
@@ -240,37 +247,42 @@ Future<bool> saveFileFromZero ({
             },
           ),
         ],
-      ).show(context).closed;
+      ).show(isHostContext: true).closed;
     } else if (!success) {
-      final errorSubtitle = ApiProviderBuilder.getErrorSubtitle(context, error, stackTrace);
+      // we're trusting that the parent SnackbarHost won't be disposed while waiting. SnackbarHost should live at the root of the widget tree for as long as the app lives.
+      // ignore: use_build_context_synchronously
+      final errorSubtitle = ApiProviderBuilder.getErrorSubtitle(snackbarHostContext, error, stackTrace);
+      // ignore: use_build_context_synchronously
       await SnackBarFromZero(
         key: snackBarKey ?? ValueKey(data.hashCode),
-        context: context,
+        context: snackbarHostContext,
         type: SnackBarFromZero.error,
         icon: downloadSuccess
             ? null
-            : ApiProviderBuilder.getErrorIcon(context, error, stackTrace),
+            : ApiProviderBuilder.getErrorIcon(snackbarHostContext, error, stackTrace), // ignore: use_build_context_synchronously
         duration: const Duration(seconds: 6),
-        title: Text(FromZeroLocalizations.of(context).translate('download_fail')),
+        title: Text(localizations.translate('download_fail')),
         message: Text(downloadSuccess
-            ? FromZeroLocalizations.of(context).translate('error_file')
-            : ('${ApiProviderBuilder.getErrorTitle(context, error, stackTrace)}${errorSubtitle==null ? '' : '\n$errorSubtitle'}'),),
+            ? localizations.translate('error_file')
+            : ('${ApiProviderBuilder.getErrorTitle(snackbarHostContext, error, stackTrace)}${errorSubtitle==null ? '' : '\n$errorSubtitle'}'),), // ignore: use_build_context_synchronously
         actions: [
           if (onRetry!=null)
           SnackBarAction(
-            label: FromZeroLocalizations.of(context).translate('retry'),
+            label: localizations.translate('retry'),
             onPressed: () {
               retry = true;
             },
           ),
         ],
-      ).show(context).closed;
+      ).show(isHostContext: true).closed;
     }
   }
 
   if (retry) {
+    // we're trusting that the parent SnackbarHost won't be disposed while waiting. SnackbarHost should live at the root of the widget tree for as long as the app lives.
+    // ignore: use_build_context_synchronously
     success = await saveFileFromZero(
-      context: context,
+      context: snackbarHostContext,
       data: onRetry!(),
       pathAppend: pathAppend,
       name: name,
@@ -282,6 +294,7 @@ Future<bool> saveFileFromZero ({
       showResultSnackBar: showResultSnackBar,
       showSnackBars: showSnackBars,
       snackBarKey: snackBarKey ?? snackBarKey ?? ValueKey(data.hashCode),
+      isHostContext: true,
     );
   }
 
