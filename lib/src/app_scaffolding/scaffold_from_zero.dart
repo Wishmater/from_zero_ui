@@ -498,7 +498,9 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
         final currentDrawerWidth = changeNotifier.getCurrentDrawerWidth(pageScaffoldId) + addedPaddingWidth;
         final calculatedDrawerLeft = widget.useCompactDrawerInsteadOfClose
             ? 0.0
-            : currentDrawerWidth - calculatedDrawerWidth - addedPaddingWidth * (1 - currentDrawerWidth / calculatedDrawerWidth);
+            : calculatedDrawerWidth==0
+                ? currentDrawerWidth - addedPaddingWidth
+                : currentDrawerWidth - calculatedDrawerWidth - addedPaddingWidth * (1 - currentDrawerWidth / calculatedDrawerWidth);
         final shadowsLeft = widget.useCompactDrawerInsteadOfClose
             ? calculatedDrawerLeft + currentDrawerWidth
             : calculatedDrawerLeft + calculatedDrawerWidth;
