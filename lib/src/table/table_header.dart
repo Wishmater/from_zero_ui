@@ -205,7 +205,15 @@ class TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
       icon: const Icon(Icons.search),
       breakpoints: {0: ActionState.expanded},
       centerExpanded: false,
-      expandedBuilder: ({required context, enabled=true, icon, onTap, title='', color}) {
+      expandedBuilder: ({
+        required BuildContext context,
+        required String title,
+        Widget? icon,
+        ContextCallback? onTap,
+        bool enabled = true,
+        Color? color,
+        Listenable? rebuildListenable,
+      }) {
         if (autofocusSearchOnNextBuild) {
           autofocusSearchOnNextBuild = false;
           WidgetsBinding.instance.addPostFrameCallback((timeStamp) {

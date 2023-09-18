@@ -98,7 +98,15 @@ class PageScaffoldState extends State<PageScaffold> {
         ActionFromZero(
           title: "Search",
           icon: const Icon(Icons.search),
-          expandedBuilder: ({required context, required title, enabled=true, icon, onTap, color}) {
+          expandedBuilder: ({
+            required BuildContext context,
+            required String title,
+            Widget? icon,
+            ContextCallback? onTap,
+            bool enabled = true,
+            Color? color,
+            Listenable? rebuildListenable,
+          }) {
             return Container(
               width: 256,
               color: Colors.green,

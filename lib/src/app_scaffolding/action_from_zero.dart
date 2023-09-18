@@ -26,6 +26,7 @@ typedef ActionBuilder = Widget Function({
   ContextCallback? onTap,
   bool enabled,
   Color? color,
+  Listenable? rebuildListenable,
 });
 typedef OverflowActionBuilder = Widget Function({
   required BuildContext context,
@@ -34,6 +35,7 @@ typedef OverflowActionBuilder = Widget Function({
   ContextCallback? onTap,
   bool enabled,
   bool forceIconSpace,
+  Listenable? rebuildListenable,
 });
 
 class ActionFromZero extends StatelessWidget {
@@ -45,6 +47,7 @@ class ActionFromZero extends StatelessWidget {
   final Widget? icon;
   final Color? color;
   final bool enabled;
+  final Listenable? rebuildListenable;
 
   /// from each breakpoint up, the selected widget will be used
   /// defaults to overflow
@@ -54,22 +57,22 @@ class ActionFromZero extends StatelessWidget {
 
   /// optional callbacks to customize the look of the widget in its different states
   final OverflowActionBuilder overflowBuilder;
-  Widget buildOverflow(BuildContext context, {bool forceIconSpace=false}) => overflowBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, forceIconSpace: forceIconSpace);
+  Widget buildOverflow(BuildContext context, {bool forceIconSpace=false}) => overflowBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, forceIconSpace: forceIconSpace, rebuildListenable: rebuildListenable);
 
   final ActionBuilder iconBuilder;
   Widget buildIcon(BuildContext context, {
     Color? color,
-  }) => iconBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color);
+  }) => iconBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color, rebuildListenable: rebuildListenable);
 
   final ActionBuilder buttonBuilder;
   Widget buildButton(BuildContext context, {
     Color? color,
-  }) => buttonBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color);
+  }) => buttonBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color, rebuildListenable: rebuildListenable);
 
   final ActionBuilder? expandedBuilder;
   Widget buildExpanded(BuildContext context, {
     Color? color,
-  }) => expandedBuilder!(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color);
+  }) => expandedBuilder!(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color, rebuildListenable: rebuildListenable);
   final bool centerExpanded;
 
   ActionFromZero({
@@ -84,6 +87,7 @@ class ActionFromZero extends StatelessWidget {
     this.buttonBuilder = defaultButtonBuilder,
     this.expandedBuilder,
     this.centerExpanded = true,
+    this.rebuildListenable,
     super.key,
   }) : breakpoints = breakpoints ?? {
     0: icon==null ? ActionState.overflow : ActionState.icon,
@@ -95,6 +99,7 @@ class ActionFromZero extends StatelessWidget {
     this.overflowBuilder = dividerOverflowBuilder,
     this.iconBuilder = dividerIconBuilder,
     this.buttonBuilder = dividerIconBuilder,
+    this.rebuildListenable,
   }) :  title = '',
         icon = null,
         color = null,
@@ -120,6 +125,8 @@ class ActionFromZero extends StatelessWidget {
     ActionBuilder? expandedBuilder,
     bool? centerExpanded,
     bool? enabled,
+    Listenable? rebuildListenable,
+    Key? key,
   }) {
     return ActionFromZero(
       onTap: onTap==nullOnTap ? null : (onTap ?? this.onTap),
@@ -133,6 +140,8 @@ class ActionFromZero extends StatelessWidget {
       expandedBuilder: expandedBuilder ?? this.expandedBuilder,
       centerExpanded: centerExpanded ?? this.centerExpanded,
       enabled: enabled ?? this.enabled,
+      rebuildListenable: rebuildListenable ?? this.rebuildListenable,
+      key: key ?? this.key,
     );
   }
 
@@ -157,20 +166,20 @@ class ActionFromZero extends StatelessWidget {
     required Widget child,
   }) {
     return child; // TODO 3 implemet animating between action states, currently it breaks due to some change in Appbar
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) {
-        return SizeTransition(
-          sizeFactor: animation,
-          axis: Axis.horizontal,
-          axisAlignment: -1,
-          child: child,
-        );
-      },
-      child: child,
-    );
+    // return AnimatedSwitcher(
+    //   duration: const Duration(milliseconds: 300),
+    //   switchInCurve: Curves.easeOutCubic,
+    //   switchOutCurve: Curves.easeInCubic,
+    //   transitionBuilder: (child, animation) {
+    //     return SizeTransition(
+    //       sizeFactor: animation,
+    //       axis: Axis.horizontal,
+    //       axisAlignment: -1,
+    //       child: child,
+    //     );
+    //   },
+    //   child: child,
+    // );
   }
 
   static Widget defaultIconBuilder({
@@ -180,7 +189,23 @@ class ActionFromZero extends StatelessWidget {
     ContextCallback? onTap,
     bool enabled = true,
     Color? color,
+    Listenable? rebuildListenable,
   }) {
+    if (rebuildListenable!=null) {
+      return AnimatedBuilder(
+        animation: rebuildListenable,
+        builder: (context, child) {
+          return defaultIconBuilder(context: context,
+            title: title,
+            icon: icon,
+            onTap: onTap,
+            enabled: enabled,
+            color: color,
+            rebuildListenable: null,
+          );
+        },
+      );
+    }
     if (!enabled || onTap==null) {
       color = Theme.of(context).disabledColor;
     } else {
@@ -214,7 +239,23 @@ class ActionFromZero extends StatelessWidget {
     ContextCallback? onTap,
     bool enabled = true,
     Color? color,
+    Listenable? rebuildListenable,
   }) {
+    if (rebuildListenable!=null) {
+      return AnimatedBuilder(
+        animation: rebuildListenable,
+        builder: (context, child) {
+          return defaultButtonBuilder(context: context,
+            title: title,
+            icon: icon,
+            onTap: onTap,
+            enabled: enabled,
+            color: color,
+            rebuildListenable: null,
+          );
+        },
+      );
+    }
     if (!enabled || onTap==null) {
       color = Theme.of(context).disabledColor;
     } else {
@@ -267,7 +308,23 @@ class ActionFromZero extends StatelessWidget {
     ContextCallback? onTap,
     bool enabled = true,
     bool forceIconSpace = false,
+    Listenable? rebuildListenable,
   }) {
+    if (rebuildListenable!=null) {
+      return AnimatedBuilder(
+        animation: rebuildListenable,
+        builder: (context, child) {
+          return defaultOverflowBuilder(context: context,
+            title: title,
+            icon: icon,
+            onTap: onTap,
+            enabled: enabled,
+            forceIconSpace: forceIconSpace,
+            rebuildListenable: null,
+          );
+        },
+      );
+    }
     Widget result = Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
@@ -325,6 +382,7 @@ class ActionFromZero extends StatelessWidget {
     ContextCallback? onTap,
     bool enabled = true,
     Color? color,
+    Listenable? rebuildListenable,
   }) {
     return const VerticalDivider();
   }
@@ -336,6 +394,7 @@ class ActionFromZero extends StatelessWidget {
     ContextCallback? onTap,
     bool enabled = true,
     bool forceIconSpace = false,
+    Listenable? rebuildListenable,
   }) {
     return const Divider();
   }
@@ -380,7 +439,23 @@ class APIActionFromZero extends ActionFromZero {
     ContextCallback? onTap,
     bool enabled = true,
     Color? color,
+    Listenable? rebuildListenable,
   }) {
+    if (rebuildListenable!=null) {
+      return AnimatedBuilder(
+        animation: rebuildListenable,
+        builder: (context, child) {
+          return apiIconBuilder(context: context,
+            title: title,
+            icon: icon,
+            onTap: onTap,
+            enabled: enabled,
+            color: color,
+            rebuildListenable: null,
+          );
+        },
+      );
+    }
     return MultiValueListenableBuilder(
       valueListenables: dependedNotifiers,
       builder: (context, values, child) {
@@ -423,7 +498,23 @@ class APIActionFromZero extends ActionFromZero {
     ContextCallback? onTap,
     bool enabled = true,
     Color? color,
+    Listenable? rebuildListenable,
   }) {
+    if (rebuildListenable!=null) {
+      return AnimatedBuilder(
+        animation: rebuildListenable,
+        builder: (context, child) {
+          return apiButtonBuilder(context: context,
+            title: title,
+            icon: icon,
+            onTap: onTap,
+            enabled: enabled,
+            color: color,
+            rebuildListenable: null,
+          );
+        },
+      );
+    }
     return MultiValueListenableBuilder(
       valueListenables: dependedNotifiers,
       builder: (context, values, child) {
@@ -466,7 +557,23 @@ class APIActionFromZero extends ActionFromZero {
     ContextCallback? onTap,
     bool enabled = true,
     bool forceIconSpace = false,
+    Listenable? rebuildListenable,
   }) {
+    if (rebuildListenable!=null) {
+      return AnimatedBuilder(
+        animation: rebuildListenable,
+        builder: (context, child) {
+          return apiOverflowBuilder(context: context,
+            title: title,
+            icon: icon,
+            onTap: onTap,
+            enabled: enabled,
+            forceIconSpace: forceIconSpace,
+            rebuildListenable: null,
+          );
+        },
+      );
+    }
     return MultiValueListenableBuilder(
       valueListenables: dependedNotifiers,
       builder: (context, values, child) {
