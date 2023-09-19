@@ -266,7 +266,7 @@ class FieldDiffMessage<T extends Comparable> extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
         decoration: BoxDecoration(
-          borderRadius: const BorderRadius.all(Radius.circular(8)),
+          borderRadius: const BorderRadius.all(Radius.circular(16)),
           border: Border.all(
             width: 2,
             color: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.3),
@@ -459,7 +459,7 @@ class SingleValidationMessageState extends State<SingleValidationMessage> with S
           child: Container(
             padding: const EdgeInsets.only(left: 8, right: 8, bottom: 4, top: 2),
             decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(4)),
+              borderRadius: const BorderRadius.all(Radius.circular(16)),
               color: widget.error.isBlocking
                   ? color
                   : Colors.transparent,
