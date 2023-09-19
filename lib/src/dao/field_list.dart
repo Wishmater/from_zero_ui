@@ -22,6 +22,7 @@ enum RowTapType {
 
 enum ListFieldDisplayType {
   table,
+  combo,
   popupButton,
   tabbedForm,
 }
@@ -1256,32 +1257,41 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       }
       return [result];
     }
-    if (dense || displayType==ListFieldDisplayType.popupButton) {
-      return builWidgetsAsPopupButton(context,
-        addCard: addCard,
-        asSliver: asSliver,
-        expandToFillContainer: expandToFillContainer,
-        dense: dense,
-        focusNode: focusNode,
-      );
-    } else if (displayType==ListFieldDisplayType.tabbedForm) {
-      return builWidgetsAsTabbedForm(context,
-        addCard: addCard,
-        asSliver: asSliver,
-        expandToFillContainer: expandToFillContainer,
-        dense: dense,
-        focusNode: focusNode,
-      );
-    } else {
-      return buildWidgetsAsTable(context,
+    var displayType = dense // TODO 2 maybe combo should also be allowed to build in dense if it has less than 2 elements
+        ? ListFieldDisplayType.popupButton
+        : this.displayType;
+    return switch (displayType) {
+      ListFieldDisplayType.table => buildWidgetsAsTable(context,
         addCard: addCard,
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
         dense: dense,
         focusNode: focusNode,
         mainScrollController: mainScrollController,
-      );
-    }
+      ),
+      ListFieldDisplayType.combo => buildWidgetsAsCombo(context,
+        addCard: addCard,
+        asSliver: asSliver,
+        expandToFillContainer: expandToFillContainer,
+        dense: dense,
+        focusNode: focusNode,
+        mainScrollController: mainScrollController,
+      ),
+      ListFieldDisplayType.popupButton => builWidgetsAsPopupButton(context,
+        addCard: addCard,
+        asSliver: asSliver,
+        expandToFillContainer: expandToFillContainer,
+        dense: dense,
+        focusNode: focusNode,
+      ),
+      ListFieldDisplayType.tabbedForm => builWidgetsAsTabbedForm(context,
+        addCard: addCard,
+        asSliver: asSliver,
+        expandToFillContainer: expandToFillContainer,
+        dense: dense,
+        focusNode: focusNode,
+      ),
+    };
   }
 
   List<Widget> builWidgetsAsPopupButton(BuildContext context, {
@@ -1742,6 +1752,244 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       );
     }
     return [result];
+  }
+
+
+  List<Widget> buildWidgetsAsCombo(BuildContext context, {
+    bool addCard=true,
+    bool asSliver = true,
+    bool expandToFillContainer = true,
+    bool dense = false,
+    FocusNode? focusNode,
+    bool? collapsible,
+    bool? collapsed,
+    Key? fieldGlobalKey,
+    ScrollController? mainScrollController,
+  }) {
+    focusNode ??= this.focusNode;
+    List<Widget> result;
+    if (objects.length>1 || tableCellsEditable || !hasAvailableObjectsPool) {
+      return buildWidgetsAsTable(context,
+        addCard: addCard,
+        asSliver: asSliver,
+        expandToFillContainer: expandToFillContainer,
+        dense: dense,
+        focusNode: focusNode,
+        collapsible: collapsible,
+        collapsed: collapsed,
+        fieldGlobalKey: fieldGlobalKey,
+        mainScrollController: mainScrollController,
+      );
+    } else if (expandToFillContainer) {
+      result = [LayoutBuilder(
+        builder: (context, constraints) {
+          return _buildWidgetsAsCombo(context,
+            addCard: addCard,
+            asSliver: asSliver,
+            expandToFillContainer: expandToFillContainer,
+            dense: dense,
+            focusNode: focusNode!,
+            collapsible: collapsible,
+            collapsed: collapsed,
+            fieldGlobalKey: fieldGlobalKey,
+            mainScrollController: mainScrollController,
+            largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
+          );
+        },
+      )];
+    } else {
+      result = [_buildWidgetsAsCombo(context,
+        addCard: addCard,
+        asSliver: asSliver,
+        expandToFillContainer: expandToFillContainer,
+        dense: dense,
+        focusNode: focusNode!,
+        collapsible: collapsible,
+        collapsed: collapsed,
+        fieldGlobalKey: fieldGlobalKey,
+        mainScrollController: mainScrollController,
+      )];
+    }
+    return result;
+  }
+  Widget _buildWidgetsAsCombo(BuildContext context, {
+    required FocusNode focusNode,
+    bool addCard=true,
+    bool asSliver = true,
+    bool expandToFillContainer = true,
+    bool dense = false,
+    bool? collapsible,
+    bool? collapsed,
+    Key? fieldGlobalKey,
+    ScrollController? mainScrollController,
+    bool largeHorizontally = false,
+  }) {
+    Widget result = AnimatedBuilder(
+      animation: this,
+      builder: (context, child) {
+        final enabled = this.enabled;
+        final visibleValidationErrors = passedFirstEdit
+            ? validationErrors
+            : validationErrors.where((e) => e.isBeforeEditing);
+        Widget result = ComboField.buttonContentBuilder(context, uiName, hint, objects.firstOrNull, enabled, false, dense: dense,);
+        final onTap = () async {
+          final toRemoveAfter = objects;
+          final result = await maybeAddRow(context, 0);
+          if (result!=null) {
+            removeRows(toRemoveAfter);
+          }
+        };
+        if (addCard) {
+          result = InkWell(
+            key: headerGlobalKey,
+            onTap: onTap,
+            child: result,
+          );
+        } else {
+          result = TextButton(
+            key: headerGlobalKey,
+            onPressed: onTap,
+            child: result,
+          );
+        }
+        if (availableObjectsPoolProvider!=null) {
+          result = Stack(
+            children: [
+              result,
+              Positioned(
+                left: 3, top: 3,
+                child: ApiProviderBuilder(
+                  provider: availableObjectsPoolProvider!.call(context, this, dao),
+                  animatedSwitcherType: AnimatedSwitcherType.normal,
+                  dataBuilder: (context, data) {
+                    return const SizedBox.shrink();
+                  },
+                  loadingBuilder: (context, progress) {
+                    return SizedBox(
+                      height: 10, width: 10,
+                      child: LoadingSign(
+                        value: null,
+                        padding: EdgeInsets.zero,
+                        size: 12,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace, onRetry) {
+                    return const SizedBox(
+                      height: 10, width: 10,
+                      child: Icon(
+                        Icons.error_outlined,
+                        color: Colors.red,
+                        size: 12,
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        }
+        result = AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          color: dense && visibleValidationErrors.isNotEmpty
+              ? ValidationMessage.severityColors[Theme.of(context).brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
+              : backgroundColor?.call(context, this, dao),
+          curve: Curves.easeOut,
+          child: result,
+        );
+        result = TooltipFromZero(
+          message: (dense ? visibleValidationErrors : visibleValidationErrors.where((e) => e.severity==ValidationErrorSeverity.disabling)).fold('', (a, b) {
+            return a.toString().trim().isEmpty ? b.toString()
+                : b.toString().trim().isEmpty ? a.toString()
+                : '$a\n$b';
+          }),
+          waitDuration: enabled ? const Duration(seconds: 1) : Duration.zero,
+          child: result,
+        );
+        if (!dense) {
+          final actions = buildActions(context, focusNode);
+          final defaultActions = buildDefaultActions(context);
+          result = AppbarFromZero(
+            addContextMenu: enabled,
+            onShowContextMenu: () => focusNode!.requestFocus(),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            useFlutterAppbar: false,
+            extendTitleBehindActions: true,
+            toolbarHeight: 56,
+            paddingRight: 6,
+            actionPadding: 0,
+            skipTraversalForActions: true,
+            actions: [
+              ActionFromZero(
+                title: 'Limpiar', // TODO 3 internationalize
+                icon: const Icon(Icons.clear),
+                onTap: (context) {
+                  userInteracted = true;
+                  value = defaultValue;
+                  WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                    focusNode.requestFocus();
+                  });
+                },
+                breakpoints: {0: enabled&&value!=defaultValue ? ActionState.icon : ActionState.popup},
+                enabled: clearable && value!=defaultValue,
+              ),
+              ...actions,
+              if (actions.isNotEmpty && defaultActions.isNotEmpty)
+                ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
+              ...defaultActions,
+            ].map((e) => e.copyWith(
+              enabled: enabled,
+            ),).toList(),
+            title: SizedBox(height: 56, child: result),
+          );
+        }
+        result = ValidationRequiredOverlay(
+          isRequired: isRequired,
+          isEmpty: enabled && value==null,
+          errors: validationErrors,
+          dense: dense,
+          child: result,
+        );
+        return result;
+      },
+    );
+    if (addCard) {
+      result = Card(
+        clipBehavior: Clip.hardEdge,
+        color: enabled ? null : Theme.of(context).canvasColor,
+        child: result,
+      );
+    }
+    result = EnsureVisibleWhenFocused(
+      focusNode: focusNode,
+      child: Padding(
+        key: fieldGlobalKey,
+        padding: EdgeInsets.symmetric(horizontal: !dense && largeHorizontally ? 12 : 0),
+        child: SizedBox(
+          width: maxWidth,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 64,
+                child: result,
+              ),
+              if (!dense)
+                ValidationMessage(errors: validationErrors, passedFirstEdit: passedFirstEdit,),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (asSliver) {
+      result = SliverToBoxAdapter(
+        child: result,
+      );
+    }
+    return result;
   }
 
 
