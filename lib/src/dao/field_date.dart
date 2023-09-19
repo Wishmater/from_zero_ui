@@ -23,8 +23,8 @@ class DateField extends Field<DateTime> {
     required super.uiNameGetter,
     DateTime? firstDate,
     DateTime? lastDate,
-    DateTime? value,
-    DateTime? dbValue,
+    super.value,
+    super.dbValue,
     super.clearableGetter,
     super.maxWidth,
     super.minWidth,
@@ -55,11 +55,7 @@ class DateField extends Field<DateTime> {
   }) :  firstDate = firstDate ?? defaultFirstDate,
         lastDate = lastDate ?? defaultLastDate,
         formatter = formatter ?? (type==DateTimePickerType.time ? defaultTimeFormatter : defaultFormatter),
-        formatterDense = formatterDense ?? formatter ?? (type==DateTimePickerType.time ? defaultTimeFormatter : defaultDenseFormatter),
-        super(
-          value: type==DateTimePickerType.date ? value?.toUtc().date : value,
-          dbValue: type==DateTimePickerType.date ? dbValue?.toUtc().date : dbValue,
-        );
+        formatterDense = formatterDense ?? formatter ?? (type==DateTimePickerType.time ? defaultTimeFormatter : defaultDenseFormatter);
 
   @override
   DateField copyWith({
@@ -96,8 +92,8 @@ class DateField extends Field<DateTime> {
   }) {
     return DateField(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
-      value: type==DateTimePickerType.date ? (value??this.value)?.toUtc().date : value??this.value,
-      dbValue: type==DateTimePickerType.date ? (dbValue??this.dbValue)?.toUtc().date : dbValue??this.dbValue,
+      value: value??this.value,
+      dbValue: dbValue??this.dbValue,
       clearableGetter: clearableGetter??this.clearableGetter,
       maxWidth: maxWidth??this.maxWidth,
       minWidth: minWidth??this.minWidth,
@@ -125,20 +121,6 @@ class DateField extends Field<DateTime> {
       onValueChanged: onValueChanged ?? this.onValueChanged,
       type: type ?? this.type,
     );
-  }
-
-  @override
-  set value(DateTime? v) {
-    super.value = type==DateTimePickerType.date
-        ? v?.toUtc().date
-        : v;
-  }
-
-  @override
-  set dbValue(DateTime? v) {
-    super.dbValue = type==DateTimePickerType.date
-        ? v?.toUtc().date
-        : v;
   }
 
   @override
