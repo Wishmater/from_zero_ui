@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 
@@ -259,7 +260,7 @@ class TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
   void submitSearch() {
     final filtered = widget.controller.filtered;
     searchTextfieldFocusNode.unfocus();
-    if (filtered.length==1) {
+    if (searchQuery.isNotNullOrBlank && filtered.length==1) {
       filtered.first.onRowTap?.call(filtered.first);
     }
   }

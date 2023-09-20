@@ -185,6 +185,7 @@ class ErrorSign extends StatelessWidget {
   final VoidCallback? onRetry;
   final Widget? icon;
   final Widget? retryButton;
+  final bool? compact;
 
   const ErrorSign({
     required this.title,
@@ -192,6 +193,7 @@ class ErrorSign extends StatelessWidget {
     this.icon,
     this.onRetry,
     this.retryButton,
+    this.compact,
     super.key,
   });
 
@@ -214,18 +216,18 @@ class ErrorSign extends StatelessWidget {
             onPressed: onRetry,
             child: Text(FromZeroLocalizations.of(context).translate("retry")),
           ));
-    final big = MediaQuery.sizeOf(context).height > 512;
+    final compact = this.compact ?? MediaQuery.sizeOf(context).height > 512;
     final iconWidget = icon==null ? null
         : IconTheme(
             data: Theme.of(context).iconTheme.copyWith(
               size: 128,
-              color: big
+              color: !compact
                   ? Theme.of(context).disabledColor
-                  : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.2),),
+                  : Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.1),),
             child: icon!,
           );
     Widget result;
-    if (big) {
+    if (!compact) {
       result = Column(
         mainAxisSize: MainAxisSize.min,
         children: [
