@@ -521,8 +521,8 @@ class SliverApiProviderBuilder<T> extends ApiProviderBuilder<T> {
 
   static Widget defaultErrorBuilder(BuildContext context, Object? error, StackTrace? stackTrace, VoidCallback? onRetry) {
     return SliverToBoxAdapter(
-      child: SizedBox(
-        height: 256,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 256),
         child: ApiProviderBuilder.defaultErrorBuilder(context, error, stackTrace, onRetry),
       ),
     );

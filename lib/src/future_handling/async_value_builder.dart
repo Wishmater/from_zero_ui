@@ -130,8 +130,8 @@ class SliverAsyncValueBuilder<T> extends AsyncValueBuilder<T> {
   }
 
   static Widget defaultErrorBuilder(BuildContext context, Object error, StackTrace? stackTrace){
-    return SizedBox(
-      height: 256,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 256),
       child: SliverToBoxAdapter(
         child: AsyncValueBuilder.defaultErrorBuilder(context, error, stackTrace),
       ),
