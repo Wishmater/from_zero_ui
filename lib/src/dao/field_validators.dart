@@ -459,13 +459,14 @@ class SingleValidationMessageState extends State<SingleValidationMessage> with S
           child: Container(
             padding: const EdgeInsets.only(left: 8, right: 8, bottom: 4, top: 2),
             decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(16)),
+              borderRadius: const BorderRadius.all(Radius.circular(12)),
               color: widget.error.isBlocking
                   ? color
                   : Colors.transparent,
             ),
             child: Text(widget.error.toString(),
               style: (widget.errorTextStyle ?? Theme.of(context).textTheme.titleMedium!).copyWith(
+                height: 1.1,
                 color: widget.error.isBlocking
                     ? Colors.white
                     : color,
