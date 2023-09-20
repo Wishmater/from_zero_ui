@@ -216,7 +216,7 @@ class ErrorSign extends StatelessWidget {
             onPressed: onRetry,
             child: Text(FromZeroLocalizations.of(context).translate("retry")),
           ));
-    final compact = this.compact ?? MediaQuery.sizeOf(context).height > 512;
+    final compact = this.compact ?? MediaQuery.sizeOf(context).height < 512;
     final iconWidget = icon==null ? null
         : IconTheme(
             data: Theme.of(context).iconTheme.copyWith(
