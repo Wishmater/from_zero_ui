@@ -1654,3 +1654,77 @@ class SideClipper extends CustomClipper<Path> {
   }
 
 }
+
+
+
+class ComposedIcon extends StatelessWidget {
+  final Widget icon;
+  final Widget subicon;
+  final double subIconSize; /// percentage
+  final double clipSize; /// percentage
+  final double horizontalOffset; /// percentage
+  final double verticalOffset; /// percentage
+  const ComposedIcon({
+    required this.icon,
+    required this.subicon,
+    this.subIconSize = 0.65,
+    this.clipSize = 0.8,
+    this.horizontalOffset = 0.6,
+    this.verticalOffset = 0.6,
+    super.key,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      fit: StackFit.passthrough,
+      children: [
+        ClipPath(
+          clipper: IconBottomRightClipper(
+            percentage: subIconSize * clipSize,
+          ),
+          child: icon,
+        ),
+        Positioned.fill(
+          child: Center(
+            child: FractionalTranslation(
+              translation: Offset(
+                subIconSize * horizontalOffset,
+                subIconSize * verticalOffset,
+              ),
+              child: Transform.scale(
+                scale: subIconSize,
+                child: subicon,
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class IconBottomRightClipper extends CustomClipper<Path> {
+  final double percentage;
+  IconBottomRightClipper({
+    this.percentage = 0.5,
+  });
+  @override
+  Path getClip(Size size) {
+    final result = Path();
+    final offset = size.width*percentage;
+    final toOffset = size.width*(1-percentage);
+    result.moveTo(toOffset, size.height);
+    result.arcToPoint(Offset(size.width, toOffset),
+      radius: Radius.circular(offset),
+    );
+    result.lineTo(size.width, 0);
+    result.lineTo(0, 0);
+    result.lineTo(0, size.height);
+    result.moveTo(toOffset, size.height);
+    return result;
+  }
+  @override
+  bool shouldReclip(IconBottomRightClipper oldClipper) {
+    return oldClipper.percentage!=percentage;
+  }
+}
