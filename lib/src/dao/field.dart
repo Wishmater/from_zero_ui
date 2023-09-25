@@ -272,27 +272,29 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool validateIfNotEdited=false,
     bool validateIfHidden=false,
   }) async {
-    validationErrors = [];
+    final validationErrors = <ValidationError>[];
     if (dao.parentDAO==null ? hiddenInForm : hiddenInTable) {
       if (invalidateNonEmptyValuesIfHiddenInForm && value!=defaultValue) {
-        validationErrors.add(InvalidatingError(
-          field: this,
-          error: '$uiName ${FromZeroLocalizations.of(context).translate("validation_combo_hidden_with_value")}',
+        validationErrors.add(InvalidatingError(field: this,
+          error: '$uiName: ${FromZeroLocalizations.of(context).translate("validation_combo_hidden_with_value")}',
           defaultValue: defaultValue,
         ),);
       }
       if (!validateIfHidden) {
+        this.validationErrors = validationErrors;
         return validationErrors.where((e) => e.isBlocking).isEmpty;
       }
     }
     if (validateIfNotEdited) {
       passedFirstEdit = true;
     }
-    validationErrors = await _getValidationErrors<T>(context, dao, this, currentValidationId);
+    validationErrors.addAll(await _getValidationErrors<T>(context, dao, this, currentValidationId));
     if (currentValidationId!=dao.validationCallCount) return false;
     validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
     final result = validationErrors.where((e) => e.isBlocking).isEmpty;
+    if (!context.mounted) return false;
     await validateRequired(context, dao, currentValidationId, result);
+    this.validationErrors = validationErrors;
     return result;
   }
   Future<bool> validateRequired(BuildContext context, DAO dao, int currentValidationId, bool normalValidationResult, {

@@ -48,7 +48,7 @@
     "validation_error_not_zero": "number cannot be zero",
     "validation_error_email": "must be a valid email address",
     "validation_combo_not_possible": "invalid value",
-    "validation_combo_hidden_with_value": "not allowed",
+    "validation_combo_hidden_with_value": "invalid field",
     "confirm_save_title": "Confirm save changes",
     "confirm_save_desc": "Sure you want to save changes?",
     "confirm_reverse_title": "Confirm reverse changes",

@@ -153,10 +153,6 @@ class ComboField<T extends DAO> extends Field<T> {
     bool validateIfNotEdited=false,
     bool validateIfHidden=false,
   }) async {
-    super.validate(context, dao, currentValidationId,
-      validateIfNotEdited: validateIfNotEdited,
-      validateIfHidden: validateIfHidden,
-    );
     if (currentValidationId!=dao.validationCallCount) return false;
     final List<T> possibleValues;
     final provider = possibleValuesProviderGetter?.call(context, this, dao);
@@ -170,13 +166,25 @@ class ComboField<T extends DAO> extends Field<T> {
         possibleValues = possibleValuesGetter!.call(context, this, dao)!;
       }
     }
-    if (currentValidationId!=dao.validationCallCount) return false;
+    if (currentValidationId!=dao.validationCallCount || !context.mounted) return false;
+    await super.validate(context, dao, currentValidationId, // ignore: use_build_context_synchronously
+      validateIfNotEdited: validateIfNotEdited,
+      validateIfHidden: validateIfHidden,
+    );
+    if (currentValidationId!=dao.validationCallCount || !context.mounted) return false;
     if (invalidateValuesNotInPossibleValues && value!=null && !possibleValues.contains(value)) {
-      validationErrors.add(InvalidatingError<T>(
-        field: this,
-        error: FromZeroLocalizations.of(context).translate("validation_combo_not_possible"),
-        defaultValue: null,
-      ),);
+      // ignore: use_build_context_synchronously
+      final error = '$uiName: ${FromZeroLocalizations.of(context).translate("validation_combo_not_possible")}';
+      if (value==dbValue) {
+        validationErrors.add(ValidationError(field: this,
+          error: error,
+        ),);
+      } else {
+        validationErrors.add(InvalidatingError<T>(field: this,
+          error: error,
+          defaultValue: null,
+        ),);
+      }
     }
     validationErrors.sort((a, b) => a.severity.weight.compareTo(b.severity.weight));
     return validationErrors.where((e) => e.isBlocking).isEmpty;

@@ -799,7 +799,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         log('Error while deleting $classUiName: $uiName', isError: true);
         log(e, stackTrace: st, isError: true);
       }
-      if (showDefaultSnackBar) {
+      if (showDefaultSnackBar && context.mounted) {
         SnackBarFromZero(
           context: context,
           type: success ? SnackBarFromZero.success : SnackBarFromZero.error,
