@@ -627,7 +627,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     bool removed = false;
     initialFilters.forEach((col, filters) {
       filters.removeWhere((key, value) {
-        bool remove = !availableFilters[col]!.contains(key);
+        bool remove = !(availableFilters[col]?.contains(key)??false);
         removed = remove;
         return remove;
       });
