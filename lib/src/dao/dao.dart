@@ -1368,6 +1368,48 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     );
   }
 
+
+  List<Widget> buildViewDialogDefaultActions(BuildContext context, {
+    bool? showEditButton,
+    bool? showDeleteButton,
+    bool showDefaultSnackBars = true,
+  }) {
+    return [
+      if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
+        ActionFromZero(
+          title: FromZeroLocalizations.of(context).translate('edit'),
+          icon: const Icon(Icons.edit_outlined),
+          onTap: (context) async {
+            final tempDao = copyWith();
+            final result = await tempDao.maybeEdit(context,
+              showDefaultSnackBars: showDefaultSnackBars,
+            );
+            if (result != null) {
+              final tempProps = tempDao.props;
+              props.forEach((key, value) {
+                if (value.value != tempProps[key]!.value) {
+                  value.value = tempProps[key]!.value;
+                }
+              });
+              Navigator.of(context).pop();
+            }
+          },
+        ),
+      if (showDeleteButton ?? viewDialogShowsDeleteButton ?? false) // always default false for now, to avoid breaking existing DAOs, should be ?? canDelete
+        ActionFromZero(
+          title: FromZeroLocalizations.of(context).translate('delete'),
+          icon: const Icon(Icons.delete_forever),
+          breakpoints: {0: ActionState.overflow},
+          onTap: (context) async {
+            final result = await maybeDelete(context);
+            if (result) {
+              Navigator.of(context).pop();
+            }
+          },
+        ),
+    ];
+  }
+
   List<Widget> buildFormDialogDefaultActions(BuildContext context, {
     bool showUndoRedo = true,
   }) {
@@ -1484,38 +1526,11 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                 ),
               ],
               appBarActions: [
-                if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
-                  ActionFromZero(
-                    title: FromZeroLocalizations.of(context).translate('edit'),
-                    icon: const Icon(Icons.edit_outlined),
-                    onTap: (context) async {
-                      final tempDao = copyWith();
-                      final result = await tempDao.maybeEdit(mainContext,
-                        showDefaultSnackBars: showDefaultSnackBars,
-                      );
-                      if (result != null) {
-                        final tempProps = tempDao.props;
-                        props.forEach((key, value) {
-                          if (value.value != tempProps[key]!.value) {
-                            value.value = tempProps[key]!.value;
-                          }
-                        });
-                        Navigator.of(context).pop();
-                      }
-                    },
-                  ),
-                if (showDeleteButton ?? viewDialogShowsDeleteButton ?? false) // always default false for now, to avoid breaking existing DAOs, should be ?? canDelete
-                  ActionFromZero(
-                    title: FromZeroLocalizations.of(context).translate('delete'),
-                    icon: const Icon(Icons.delete_forever),
-                    breakpoints: {0: ActionState.overflow},
-                    onTap: (context) async {
-                      final result = await maybeDelete(mainContext);
-                      if (result) {
-                        Navigator.of(context).pop();
-                      }
-                    },
-                  ),
+                ...buildViewDialogDefaultActions(context,
+                  showEditButton: showEditButton,
+                  showDeleteButton: showDeleteButton,
+                  showDefaultSnackBars: showDefaultSnackBars,
+                ),
                 ...(viewDialogExtraActions?.call(mainContext, this) ?? []),
               ],
             );
