@@ -103,11 +103,23 @@ class DatePickerFromZeroState extends State<DatePickerFromZero> {
 
   final buttonKey = GlobalKey();
   late FocusNode buttonFocusNode = widget.focusNode ?? FocusNode();
+  bool _isPushedPopup = false;
 
   @override
   void didUpdateWidget(covariant DatePickerFromZero oldWidget) {
     super.didUpdateWidget(oldWidget);
     buttonFocusNode = widget.focusNode ?? buttonFocusNode;
+    if (!widget.enabled && _isPushedPopup) {
+      final thisRoute = ModalRoute.of(context);
+      if (thisRoute!=null) {
+        Navigator.of(context).popUntil((route) {
+          return route==thisRoute;
+        });
+      } else {
+        Navigator.of(context).pop();
+      }
+      // _popPopup();
+    }
   }
 
   @override
@@ -120,6 +132,7 @@ class DatePickerFromZeroState extends State<DatePickerFromZero> {
     }
     final onPressed = widget.enabled ? () async {
       buttonFocusNode.requestFocus();
+      _isPushedPopup = true;
       bool? accepted = await showPopupFromZero<bool>(
         context: context,
         anchorKey: buttonKey,
@@ -129,11 +142,16 @@ class DatePickerFromZeroState extends State<DatePickerFromZero> {
             value: widget.value,
             firstDate: widget.firstDate,
             lastDate: widget.lastDate,
-            onSelected: widget.onSelected,
+            onSelected: (value) {
+              if (widget.enabled) {
+                widget.onSelected?.call(value);
+              }
+            },
             type: widget.type,
           );
         },
       );
+      _isPushedPopup = false;
       if (accepted!=true) {
         widget.onCanceled?.call();
       }
@@ -180,7 +198,9 @@ class DatePickerFromZeroState extends State<DatePickerFromZero> {
                         icon: const Icon(Icons.close),
                         splashRadius: 20,
                         onPressed: () {
-                          widget.onSelected?.call(null);
+                          if (widget.enabled) {
+                            widget.onSelected?.call(null);
+                          }
                         },
                       ),
                     ) : const SizedBox.shrink(),

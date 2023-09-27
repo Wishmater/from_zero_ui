@@ -1,4 +1,3 @@
-import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
@@ -254,7 +253,7 @@ class DateField extends Field<DateTime> {
             ),).toList();
           }
           result = AppbarFromZero(
-            addContextMenu: enabled,
+            contextMenuEnabled: enabled,
             onShowContextMenu: () => focusNode.requestFocus(),
             backgroundColor: Colors.transparent,
             elevation: 0,

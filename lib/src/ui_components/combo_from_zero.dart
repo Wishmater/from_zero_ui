@@ -119,11 +119,23 @@ class ComboFromZeroState<T> extends State<ComboFromZero<T>> {
 
   final buttonKey = GlobalKey();
   late FocusNode buttonFocusNode = widget.focusNode ?? FocusNode();
+  bool _isPushedPopup = false;
 
   @override
   void didUpdateWidget(ComboFromZero<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     buttonFocusNode = widget.focusNode ?? buttonFocusNode;
+    if (!widget.enabled && _isPushedPopup) {
+      final thisRoute = ModalRoute.of(context);
+      if (thisRoute!=null) {
+        Navigator.of(context).popUntil((route) {
+          return route==thisRoute;
+        });
+      } else {
+        Navigator.of(context).pop();
+      }
+      // _popPopup();
+    }
   }
 
   @override
@@ -210,6 +222,7 @@ class ComboFromZeroState<T> extends State<ComboFromZero<T>> {
     }
     final onPressed = widget.enabled ? () async {
       buttonFocusNode.requestFocus();
+      _isPushedPopup = true;
       T? selected = await showPopupFromZero<T>(
         context: context,
         anchorKey: buttonKey,
@@ -247,6 +260,7 @@ class ComboFromZeroState<T> extends State<ComboFromZero<T>> {
           return result;
         },
       );
+      _isPushedPopup = false;
       if (selected==null) {
         widget.onCanceled?.call();
       }
@@ -305,7 +319,9 @@ class ComboFromZeroState<T> extends State<ComboFromZero<T>> {
                       icon: const Icon(Icons.close),
                       splashRadius: 20,
                       onPressed: () {
-                        widget.onSelected?.call(null);
+                        if (widget.enabled) {
+                          widget.onSelected?.call(null);
+                        }
                       },
                     ),
                   ) : const SizedBox.shrink(),
@@ -321,7 +337,11 @@ class ComboFromZeroState<T> extends State<ComboFromZero<T>> {
   Widget _buildPopup(BuildContext context, List<T> possibleValues,) {
     return ComboFromZeroPopup<T>(
       possibleValues: possibleValues,
-      onSelected: widget.onSelected,
+      onSelected: (value) {
+        if (widget.enabled) {
+          widget.onSelected?.call(value);
+        }
+      },
       onCanceled: widget.onCanceled,
       value: widget.value,
       sort: widget.sort,

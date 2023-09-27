@@ -35,6 +35,7 @@ class AppbarFromZero extends StatefulWidget {
   final bool mainAppbarShowButtons;
   final double paddingRight;
   final bool addContextMenu;
+  final bool contextMenuEnabled;
   final VoidCallback? onShowContextMenu;
   /// sometimes, it's useful to disable flutter AppBar and just use a Row
   /// for title and actions.
@@ -78,6 +79,7 @@ class AppbarFromZero extends StatefulWidget {
     this.mainAppbarShowButtons = true,
     this.paddingRight = 8,
     this.addContextMenu = true,
+    this.contextMenuEnabled = true,
     this.onShowContextMenu,
     this.skipTraversalForActions = false,
     this.extendTitleBehindActions = false,
@@ -462,6 +464,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
       result = ContextMenuFromZero(
         onShowMenu: widget.onShowContextMenu,
         actions: contextMenuActions,
+        enabled: widget.contextMenuEnabled,
         child: result,
       );
     }

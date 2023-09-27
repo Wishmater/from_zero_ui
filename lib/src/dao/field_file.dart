@@ -323,7 +323,7 @@ class FileField extends StringField {
               ),).toList();
             }
             result = AppbarFromZero(
-              addContextMenu: enabled,
+              contextMenuEnabled: enabled,
               onShowContextMenu: () => focusNode.requestFocus(),
               backgroundColor: Colors.transparent,
               elevation: 0,
