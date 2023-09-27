@@ -53,6 +53,7 @@ class ExpansionTileFromZero extends StatefulWidget {
     this.childrenKeysForExpandCollapse = const [],
     this.enabled = true,
     this.titleBuilder,
+    this.borderRadius,
     super.key,
   }) :  assert(title!=null || titleBuilder!=null, 'Must specify a title'),
         assert(title==null || titleBuilder==null, 'Only 1 title must be specified'),
@@ -73,6 +74,7 @@ class ExpansionTileFromZero extends StatefulWidget {
   final List<GlobalKey<ExpansionTileFromZeroState>>? childrenKeysForExpandCollapse;
   final bool enabled;
   final Widget Function(BuildContext context, bool expanded)? titleBuilder;
+  final BorderRadius? borderRadius;
 
   /// A widget to display before the title.
   ///
@@ -270,6 +272,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
     // final Color borderSideColor = _borderColor.value;
     Widget title = InkWell(
       onTap: !widget.enabled ? null : _handleTap,
+      borderRadius: widget.borderRadius,
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -290,10 +293,16 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
               child: Padding(
                 padding: widget.actionPadding,
                 child: widget.leading ?? IconButton(
-                  icon: widget.trailing ?? (widget.enabled ? RotationTransition(
-                    turns: _iconTurns,
-                    child: Icon(Icons.expand_more, color: _iconColor.value, size: 26,),
-                  ) : const SizedBox.shrink()),
+                  icon: SizedBox(
+                    width: 8,
+                    child: OverflowBox(
+                      maxWidth: double.infinity, maxHeight: double.infinity,
+                      child: widget.trailing ?? (widget.enabled ? RotationTransition(
+                        turns: _iconTurns,
+                        child: Icon(Icons.expand_more, color: _iconColor.value, size: 26,),
+                      ) : const SizedBox.shrink()),
+                    ),
+                  ),
                   iconSize: 26,
                   onPressed: !widget.enabled ? null : () {
                     setExpanded(!_isExpanded);
@@ -403,7 +412,7 @@ class ExpansionTileFromZeroState extends State<ExpansionTileFromZero> with Singl
 //          ),
             title,
             ClipPath(
-              clipper: SideClipper(clipBottom: true),
+              clipper: SideClipper(clipBottom: true, clipTop: true),
               child: Align(
                 alignment: widget.expandedAlignment ?? Alignment.center,
                 heightFactor: _heightFactor.value,

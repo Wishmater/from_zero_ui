@@ -698,7 +698,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       }
     }
     if (success) {
-      onDidSave?.call(contextForValidation??context, model, this);
+      didSave(context, model);
     }
     if (updateDbValuesAfterSuccessfulSave && success) {
       props.forEach((key, value) {
@@ -720,6 +720,11 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       ).show();
     }
     return model;
+  }
+
+  @mustCallSuper
+  void didSave(BuildContext context, ModelType? model) {
+    onDidSave?.call(contextForValidation??context, model, this);
   }
 
 
