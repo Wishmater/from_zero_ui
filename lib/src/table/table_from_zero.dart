@@ -1813,7 +1813,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       bool applyDarker = widget.alternateRowBackgroundBrightness
           && _shouldApplyDarkerBackground(backgroundColor, row, index, colKey, isHeader);
       if (backgroundColor.opacity<1 && widget.alternateRowBackgroundBrightness) {
-        backgroundColor = Color.alphaBlend(backgroundColor, _getMaterialColor());
+        backgroundColor = backgroundColor.opacity==0
+            ? _getMaterialColor()
+            : Color.alphaBlend(backgroundColor, _getMaterialColor());
+        // backgroundColor = backgroundColor.opacity==0
+        //     ? _getMaterialColor()
+        //     : Color.alphaBlend(backgroundColor, _getBrightnessColor());
       }
       if (applyDarker) {
         backgroundColor = Color.alphaBlend(backgroundColor.withOpacity(0.965), Colors.black);
@@ -1822,6 +1827,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return backgroundColor==null ? null : BoxDecoration(color: backgroundColor);
   }
   Color _getMaterialColor() => widget.backgroundColor ?? Material.of(context).color ?? Theme.of(context).cardColor;
+  // Color _getBrightnessColor() => Theme.of(context).brightness==Brightness.light ? Colors.white : Color.fromRGBO(0, 0, 0, 1);
   Color? _getBackgroundColor(RowModel row, dynamic colKey, bool isHeader){
     Color? backgroundColor;
     if (isHeader){
