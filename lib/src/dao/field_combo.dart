@@ -153,24 +153,24 @@ class ComboField<T extends DAO> extends Field<T> {
     bool validateIfNotEdited=false,
     bool validateIfHidden=false,
   }) async {
-    if (currentValidationId!=dao.validationCallCount) return false;
-    final List<T> possibleValues;
-    final provider = possibleValuesProviderGetter?.call(context, this, dao);
-    if (provider!=null) {
-      possibleValues = await (context as WidgetRef).watch(provider.notifier).future;
-    } else {
-      final future = possibleValuesFutureGetter?.call(context, this, dao);
-      if (future!=null) {
-        possibleValues = await future;
-      } else {
-        possibleValues = possibleValuesGetter!.call(context, this, dao)!;
-      }
-    }
     if (currentValidationId!=dao.validationCallCount || !context.mounted) return false;
     await super.validate(context, dao, currentValidationId, // ignore: use_build_context_synchronously
       validateIfNotEdited: validateIfNotEdited,
       validateIfHidden: validateIfHidden,
     );
+    if (currentValidationId!=dao.validationCallCount || !context.mounted) return false;
+    final List<T> possibleValues;
+    final provider = possibleValuesProviderGetter?.call(context, this, dao); // ignore: use_build_context_synchronously
+    if (provider!=null) {
+      possibleValues = await (context as WidgetRef).watch(provider.notifier).future;
+    } else {
+      final future = possibleValuesFutureGetter?.call(context, this, dao); // ignore: use_build_context_synchronously
+      if (future!=null) {
+        possibleValues = await future;
+      } else {
+        possibleValues = possibleValuesGetter!.call(context, this, dao)!; // ignore: use_build_context_synchronously
+      }
+    }
     if (currentValidationId!=dao.validationCallCount || !context.mounted) return false;
     if (invalidateValuesNotInPossibleValues && value!=null && !possibleValues.contains(value)) {
       // ignore: use_build_context_synchronously

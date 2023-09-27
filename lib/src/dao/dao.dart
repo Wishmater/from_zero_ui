@@ -889,10 +889,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     final props = this.props;
     parentDAO = null;
     for (final e in props.values) {
-      e.passedFirstEdit = false;
       e.undoValues.clear();
       e.redoValues.clear();
-      e.validationErrors = [];
     }
     _undoRecord.clear();
     _redoRecord.clear();
@@ -1452,6 +1450,11 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? askForSaveConfirmation,
     bool showUndoRedo = true,
   }) async {
+    for (final e in props.values) {
+      e.passedFirstEdit = false;
+      e.userInteracted = false;
+      e.validationErrors = [];
+    }
     ModelType? confirm = await showModalFromZero(
       context: context,
       builder: (modalContext) {
