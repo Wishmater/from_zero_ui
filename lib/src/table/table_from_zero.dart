@@ -1923,7 +1923,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         unselectedOffset: 0,
         selectedOffset: 0,
       ),
-      enabled: col?.filterEnabled ?? true,
+      disablingError: (col?.filterEnabled ?? true) ? null : '',
       breakpoints: {0: ActionState.popup},
       onTap: (context) async {
         final result = await controller.currentState!._showFilterPopup(colKey,

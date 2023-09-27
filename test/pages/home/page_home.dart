@@ -127,7 +127,7 @@ class PageHomeState extends State<PageHome> {
                             return ActionFromZero(
                               title: 'Krappa $index',
                               icon: const Icon(Icons.send),
-                              enabled: false,
+                              disablingError: 'reason...',
                             );
                           }),
                         ],

@@ -390,6 +390,17 @@ class ComboField<T extends DAO> extends Field<T> {
         if (!dense) {
           final actions = buildActions(context, focusNode);
           final defaultActions = buildDefaultActions(context);
+          var allActions = [
+            ...actions,
+            if (actions.isNotEmpty && defaultActions.isNotEmpty)
+              ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
+            ...defaultActions,
+          ];
+          if (!enabled) {
+            allActions = allActions.map((e) => e.copyWith(
+              disablingError: '',
+            ),).toList();
+          }
           result = AppbarFromZero(
             addContextMenu: enabled,
             onShowContextMenu: () => focusNode.requestFocus(),
@@ -402,14 +413,7 @@ class ComboField<T extends DAO> extends Field<T> {
             actionPadding: 0,
             skipTraversalForActions: true,
             constraints: const BoxConstraints(),
-            actions: [
-              ...actions,
-              if (actions.isNotEmpty && defaultActions.isNotEmpty)
-                ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
-              ...defaultActions,
-            ].map((e) => e.copyWith(
-              enabled: enabled,
-            ),).toList(),
+            actions: allActions,
             title: SizedBox(height: 56, child: result),
           );
         }

@@ -289,14 +289,17 @@ class StringField extends Field<String> {
               : validationErrors.where((e) => e.isBeforeEditing);
           final actions = buildActions(context, focusNode);
           final defaultActions = buildDefaultActions(context, focusNode: focusNode);
-          final allActions = [
+          var allActions = [
             ...actions,
             if (actions.isNotEmpty && defaultActions.isNotEmpty)
               ActionFromZero.divider(breakpoints: {0: ActionState.popup}),
             ...defaultActions,
-          ].map((e) => e.copyWith(
-            enabled: enabled,
-          ),).toList();
+          ];
+          if (!enabled) {
+            allActions = allActions.map((e) => e.copyWith(
+              disablingError: '',
+            ),).toList();
+          }
           Widget result = Stack(
             fit: largeVertically ? StackFit.loose : StackFit.expand,
             children: [

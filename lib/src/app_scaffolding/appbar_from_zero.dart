@@ -469,7 +469,8 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
   }
 
   void Function(BuildContext context)? _getOnTap (ActionFromZero action){
-    if (!action.enabled) {
+    final enabled = action.disablingError==null;
+    if (!enabled) {
       return null;
     }
     if (action.onTap==null && action.expandedBuilder!=null && forceExpanded!=action) {

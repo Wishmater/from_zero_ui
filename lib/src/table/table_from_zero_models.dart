@@ -17,7 +17,7 @@ class RowAction<T> extends ActionFromZero {
     required this.onRowTap,
     required super.title,
     super.icon,
-    super.enabled,
+    super.disablingError,
     Map<double, ActionState>? breakpoints,
     super.overflowBuilder,
     super.iconBuilder,

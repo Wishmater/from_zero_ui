@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/src/foundation/diagnostics.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:multi_value_listenable_builder/multi_value_listenable_builder.dart';
 
@@ -24,7 +25,7 @@ typedef ActionBuilder = Widget Function({
   required String title,
   Widget? icon,
   ContextCallback? onTap,
-  bool enabled,
+  String? disablingError,
   Color? color,
 });
 typedef OverflowActionBuilder = Widget Function({
@@ -32,7 +33,7 @@ typedef OverflowActionBuilder = Widget Function({
   required String title,
   Widget? icon,
   ContextCallback? onTap,
-  bool enabled,
+  String? disablingError,
   bool forceIconSpace,
 });
 
@@ -44,7 +45,7 @@ class ActionFromZero extends StatelessWidget {
   final String title;
   final Widget? icon;
   final Color? color;
-  final bool enabled;
+  final String? disablingError;
 
   /// from each breakpoint up, the selected widget will be used
   /// defaults to overflow
@@ -54,22 +55,22 @@ class ActionFromZero extends StatelessWidget {
 
   /// optional callbacks to customize the look of the widget in its different states
   final OverflowActionBuilder overflowBuilder;
-  Widget buildOverflow(BuildContext context, {bool forceIconSpace=false}) => overflowBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, forceIconSpace: forceIconSpace);
+  Widget buildOverflow(BuildContext context, {bool forceIconSpace=false}) => overflowBuilder(context: context, title: title, icon: icon, onTap: onTap, disablingError: disablingError, forceIconSpace: forceIconSpace);
 
   final ActionBuilder iconBuilder;
   Widget buildIcon(BuildContext context, {
     Color? color,
-  }) => iconBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color);
+  }) => iconBuilder(context: context, title: title, icon: icon, onTap: onTap, disablingError: disablingError, color: color??this.color);
 
   final ActionBuilder buttonBuilder;
   Widget buildButton(BuildContext context, {
     Color? color,
-  }) => buttonBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color);
+  }) => buttonBuilder(context: context, title: title, icon: icon, onTap: onTap, disablingError: disablingError, color: color??this.color);
 
   final ActionBuilder? expandedBuilder;
   Widget buildExpanded(BuildContext context, {
     Color? color,
-  }) => expandedBuilder!(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color??this.color);
+  }) => expandedBuilder!(context: context, title: title, icon: icon, onTap: onTap, disablingError: disablingError, color: color??this.color);
   final bool centerExpanded;
 
   ActionFromZero({
@@ -77,7 +78,7 @@ class ActionFromZero extends StatelessWidget {
     this.onTap,
     this.icon,
     this.color,
-    this.enabled = true,
+    this.disablingError,
     Map<double, ActionState>? breakpoints,
     this.overflowBuilder = defaultOverflowBuilder,
     this.iconBuilder = defaultIconBuilder,
@@ -100,8 +101,8 @@ class ActionFromZero extends StatelessWidget {
         color = null,
         onTap = null,
         expandedBuilder = null,
+        disablingError = null,
         centerExpanded = true,
-        enabled = true,
         breakpoints = breakpoints ?? {
           0: ActionState.overflow,
           // ScaffoldFromZero.screenSizeLarge: ActionState.icon,
@@ -119,7 +120,7 @@ class ActionFromZero extends StatelessWidget {
     ActionBuilder? buttonBuilder,
     ActionBuilder? expandedBuilder,
     bool? centerExpanded,
-    bool? enabled,
+    String? disablingError,
   }) {
     return ActionFromZero(
       onTap: onTap==nullOnTap ? null : (onTap ?? this.onTap),
@@ -132,7 +133,7 @@ class ActionFromZero extends StatelessWidget {
       buttonBuilder: buttonBuilder ?? this.buttonBuilder,
       expandedBuilder: expandedBuilder ?? this.expandedBuilder,
       centerExpanded: centerExpanded ?? this.centerExpanded,
-      enabled: enabled ?? this.enabled,
+      disablingError: disablingError ?? this.disablingError,
     );
   }
 
@@ -153,34 +154,16 @@ class ActionFromZero extends StatelessWidget {
     return state;
   }
 
-  static Widget defaultAnimatedSwitcherBuilder({
-    required Widget child,
-  }) {
-    return child; // TODO 3 implemet animating between action states, currently it breaks due to some change in Appbar
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      switchInCurve: Curves.easeOutCubic,
-      switchOutCurve: Curves.easeInCubic,
-      transitionBuilder: (child, animation) {
-        return SizeTransition(
-          sizeFactor: animation,
-          axis: Axis.horizontal,
-          axisAlignment: -1,
-          child: child,
-        );
-      },
-      child: child,
-    );
-  }
 
   static Widget defaultIconBuilder({
     required BuildContext context,
     required String title,
     Widget? icon,
     ContextCallback? onTap,
-    bool enabled = true,
+    String? disablingError,
     Color? color,
   }) {
+    final enabled = disablingError==null;
     if (!enabled || onTap==null) {
       color = Theme.of(context).disabledColor;
     } else {
@@ -189,39 +172,40 @@ class ActionFromZero extends StatelessWidget {
     }
     final transparentColor = color.withOpacity(0.05);
     final semiTransparentColor = color.withOpacity(0.1);
-    return defaultAnimatedSwitcherBuilder(
-      child: TooltipFromZero(
-        message: title,
-        child: IconButton(
-          icon: icon ?? const SizedBox.shrink(),
-          color: color,
-          hoverColor: transparentColor,
-          highlightColor: semiTransparentColor,
-          focusColor: semiTransparentColor,
-          splashColor: semiTransparentColor,
-          onPressed: (!enabled || onTap==null) ? null : (){
-            onTap.call(context);
-          },
-        ),
+    return TooltipFromZero(
+      message: '$title${disablingError==null ? '' : '\n$disablingError'}',
+      child: IconButton(
+        icon: icon ?? const SizedBox.shrink(),
+        color: color,
+        hoverColor: transparentColor,
+        highlightColor: semiTransparentColor,
+        focusColor: semiTransparentColor,
+        splashColor: semiTransparentColor,
+        onPressed: (!enabled || onTap==null) ? null : (){
+          onTap.call(context);
+        },
       ),
     );
   }
+
 
   static Widget defaultButtonBuilder({
     required BuildContext context,
     required String title,
     Widget? icon,
     ContextCallback? onTap,
-    bool enabled = true,
+    String? disablingError,
     Color? color,
   }) {
+    final enabled = disablingError==null;
     if (!enabled || onTap==null) {
       color = Theme.of(context).disabledColor;
     } else {
       color ??= Theme.of(context).appBarTheme.toolbarTextStyle?.color
           ?? Theme.of(context).textTheme.bodyLarge!.color!;
     }
-    return defaultAnimatedSwitcherBuilder(
+    return TooltipFromZero(
+      message: disablingError,
       child: SizedBox(
         height: 64,
         child: TextButton(
@@ -260,14 +244,16 @@ class ActionFromZero extends StatelessWidget {
     );
   }
 
+
   static Widget defaultOverflowBuilder({
     required BuildContext context,
     required String title,
     Widget? icon,
     ContextCallback? onTap,
-    bool enabled = true,
+    String? disablingError,
     bool forceIconSpace = false,
   }) {
+    final enabled = disablingError==null;
     Widget result = Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
@@ -299,12 +285,6 @@ class ActionFromZero extends StatelessWidget {
         ],
       ),
     );
-    if (!enabled || onTap==null) {
-      result = MouseRegion(
-        cursor: SystemMouseCursors.forbidden,
-        child: result,
-      );
-    }
     result = TextButton(
       onPressed: (!enabled || onTap==null) ? null : () => onTap.call(context),
       style: TextButton.styleFrom(
@@ -315,15 +295,19 @@ class ActionFromZero extends StatelessWidget {
       ),
       child: result,
     );
-    return result;
+    return TooltipFromZero(
+      message: disablingError,
+      child: result,
+    );
   }
+
 
   static Widget dividerIconBuilder({
     required BuildContext context,
     required String title,
     Widget? icon,
     ContextCallback? onTap,
-    bool enabled = true,
+    String? disablingError,
     Color? color,
   }) {
     return const VerticalDivider();
@@ -334,7 +318,7 @@ class ActionFromZero extends StatelessWidget {
     required String title,
     Widget? icon,
     ContextCallback? onTap,
-    bool enabled = true,
+    String? disablingError,
     bool forceIconSpace = false,
   }) {
     return const Divider();
@@ -342,6 +326,117 @@ class ActionFromZero extends StatelessWidget {
 
 }
 
+
+
+class AnimatedActionFromZero extends StatelessWidget implements ActionFromZero {
+
+  final Listenable animation;
+  final ActionFromZero Function() builder;
+
+  AnimatedActionFromZero({
+    required this.animation,
+    required this.builder,
+  });
+
+  @override
+  ActionFromZero copyWith({void Function(BuildContext context)? onTap, String? title, Widget? icon, Color? color, Map<double, ActionState>? breakpoints, OverflowActionBuilder? overflowBuilder, ActionBuilder? iconBuilder, ActionBuilder? buttonBuilder, ActionBuilder? expandedBuilder, bool? centerExpanded, String? disablingError})
+  => _action.copyWith(onTap: onTap, title: title, icon: icon, color: color, breakpoints: breakpoints, overflowBuilder: overflowBuilder, iconBuilder: iconBuilder, buttonBuilder: buttonBuilder, expandedBuilder: expandedBuilder, centerExpanded: centerExpanded, disablingError: disablingError);
+
+  ActionFromZero? _cachedAction;
+  ActionFromZero get _action {
+    _cachedAction ??= builder();
+    return _cachedAction!;
+  }
+
+  void _reset() => _cachedAction = null;
+  Widget _buildListenerWrapper(Widget Function(BuildContext) builder) {
+    return _LifecycleHook(
+      onInitState: () => animation.addListener(_reset),
+      onDispose: () => animation.removeListener(_reset),
+      child: AnimatedBuilder(
+        animation: animation,
+        builder: (context, child) {
+          return builder(context);
+        },
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) =>
+      _buildListenerWrapper((context) => _action.build(context));
+  @override
+  Widget buildButton(BuildContext context, {Color? color}) =>
+      _buildListenerWrapper((context) => _action.buildButton(context, color: color));
+  @override
+  Widget buildExpanded(BuildContext context, {Color? color}) =>
+      _buildListenerWrapper((context) => _action.buildExpanded(context, color: color));
+  @override
+  Widget buildIcon(BuildContext context, {Color? color}) =>
+      _buildListenerWrapper((context) => _action.buildIcon(context, color: color));
+  @override
+  Widget buildOverflow(BuildContext context, {bool forceIconSpace = false}) =>
+      _buildListenerWrapper((context) => _action.buildOverflow(context, forceIconSpace: forceIconSpace));
+
+  @override
+  Map<double, ActionState> get breakpoints => _action.breakpoints;
+  @override
+  ActionBuilder get buttonBuilder => _action.buttonBuilder;
+  @override
+  bool get centerExpanded => _action.centerExpanded;
+  @override
+  Color? get color => _action.color;
+  @override
+  String? get disablingError => _action.disablingError;
+  @override
+  ActionBuilder? get expandedBuilder => _action.expandedBuilder;
+  @override
+  ActionState getStateForMaxWidth(double width) => _action.getStateForMaxWidth(width);
+  @override
+  Widget? get icon => _action.icon;
+  @override
+  ActionBuilder get iconBuilder => _action.iconBuilder;
+  @override
+  Key? get key => _action.key;
+  @override
+  ContextCallback? get onTap => _action.onTap;
+  @override
+  OverflowActionBuilder get overflowBuilder => _action.overflowBuilder;
+  @override
+  String get title => _action.title;
+  @override
+  int get uniqueId => _action.uniqueId;
+
+}
+class _LifecycleHook extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onInitState;
+  final VoidCallback? onDispose;
+  const _LifecycleHook({
+    required this.child,
+    this.onInitState,
+    this.onDispose,
+    super.key,
+  });
+  @override
+  State<_LifecycleHook> createState() => _LifecycleHookState();
+}
+class _LifecycleHookState extends State<_LifecycleHook> {
+  @override
+  void initState() {
+    super.initState();
+    widget.onInitState?.call();
+  }
+  @override
+  void dispose() {
+    super.dispose();
+    widget.onDispose?.call();
+  }
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
+  }
+}
 
 
 
@@ -358,7 +453,7 @@ class APIActionFromZero extends ActionFromZero {
     required this.providersBuilder,
     this.onTapApi,
     super.icon,
-    super.enabled = true,
+    super.disablingError,
     super. breakpoints,
     this.dependedNotifiers = const [],
     super.key,
@@ -378,7 +473,7 @@ class APIActionFromZero extends ActionFromZero {
     required String title,
     Widget? icon,
     ContextCallback? onTap,
-    bool enabled = true,
+    String? disablingError,
     Color? color,
   }) {
     return MultiValueListenableBuilder(
@@ -392,13 +487,13 @@ class APIActionFromZero extends ActionFromZero {
             onTap = onTapApi==null ? null : (context) {
               return onTapApi!(context, data);
             };
-            return ActionFromZero.defaultIconBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color);
+            return ActionFromZero.defaultIconBuilder(context: context, title: title, icon: icon, onTap: onTap, disablingError: disablingError, color: color);
           },
           loadingBuilder: (context, progress) {
             onTap = null;
             return Stack(
               children: [
-                ActionFromZero.defaultIconBuilder(context: context, title: title, icon: icon, onTap: null, enabled: false, color: color),
+                ActionFromZero.defaultIconBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', color: color),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: ApiProviderBuilder.defaultLoadingBuilder(context, progress, size: 32),
@@ -409,7 +504,7 @@ class APIActionFromZero extends ActionFromZero {
           },
           errorBuilder: (context, error, stackTrace, onRetry) {
             onTap = null;
-            return ActionFromZero.defaultIconBuilder(context: context, title: title, icon: icon, onTap: null, enabled: false, color: color);
+            return ActionFromZero.defaultIconBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', color: color);
           },
         );
       },
@@ -421,7 +516,7 @@ class APIActionFromZero extends ActionFromZero {
     required String title,
     Widget? icon,
     ContextCallback? onTap,
-    bool enabled = true,
+    String? disablingError,
     Color? color,
   }) {
     return MultiValueListenableBuilder(
@@ -435,13 +530,13 @@ class APIActionFromZero extends ActionFromZero {
             onTap = onTapApi==null ? null : (context) {
               return onTapApi!(context, data);
             };
-            return ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, color: color);
+            return ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: onTap, disablingError: disablingError, color: color);
           },
           loadingBuilder: (context, progress) {
             onTap = null;
             return Stack(
               children: [
-                ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: null, enabled: false, color: color),
+                ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', color: color),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: ApiProviderBuilder.defaultLoadingBuilder(context, progress, size: 34),
@@ -452,7 +547,7 @@ class APIActionFromZero extends ActionFromZero {
           },
           errorBuilder: (context, error, stackTrace, onRetry) {
             onTap = null;
-            return ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: null, enabled: false, color: color);
+            return ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', color: color);
           },
         );
       },
@@ -464,7 +559,7 @@ class APIActionFromZero extends ActionFromZero {
     required String title,
     Widget? icon,
     ContextCallback? onTap,
-    bool enabled = true,
+    String? disablingError,
     bool forceIconSpace = false,
   }) {
     return MultiValueListenableBuilder(
@@ -478,13 +573,13 @@ class APIActionFromZero extends ActionFromZero {
             onTap = onTapApi==null ? null : (context) {
               return onTapApi!(context, data);
             };
-            return ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: onTap, enabled: enabled, forceIconSpace: forceIconSpace);
+            return ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: onTap, disablingError: disablingError, forceIconSpace: forceIconSpace);
           },
           loadingBuilder: (context, progress) {
             onTap = null;
             return Stack(
               children: [
-                ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: null, enabled: false, forceIconSpace: forceIconSpace),
+                ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', forceIconSpace: forceIconSpace),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: ApiProviderBuilder.defaultLoadingBuilder(context, progress, size: 32),
@@ -495,7 +590,7 @@ class APIActionFromZero extends ActionFromZero {
           },
           errorBuilder: (context, error, stackTrace, onRetry) {
             onTap = null;
-            return ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: null, enabled: false, forceIconSpace: forceIconSpace);
+            return ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', forceIconSpace: forceIconSpace);
           },
         );
       },

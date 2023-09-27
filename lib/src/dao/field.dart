@@ -519,42 +519,51 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   List<ActionFromZero> buildDefaultActions(BuildContext context, {FocusNode? focusNode}) {
     return [
       if (dao.enableUndoRedoMechanism)
-        ActionFromZero(
-          title: 'Deshacer', // TODO 3 internationalize
-          icon: const Icon(MaterialCommunityIcons.undo_variant),
-          onTap: (context) {
-            userInteracted = true;
-            focusNode?.requestFocus();
-            undo(removeEntryFromDAO: true);
-          },
-          breakpoints: {0: ActionState.popup},
-          enabled: undoValues.isNotEmpty,
+        AnimatedActionFromZero(
+          animation: this,
+          builder: () => ActionFromZero(
+            title: 'Deshacer', // TODO 3 internationalize
+            icon: const Icon(MaterialCommunityIcons.undo_variant),
+            onTap: (context) {
+              userInteracted = true;
+              focusNode?.requestFocus();
+              undo(removeEntryFromDAO: true);
+            },
+            breakpoints: {0: ActionState.popup},
+            disablingError: undoValues.isNotEmpty ? null : '',
+          ),
         ),
       if (dao.enableUndoRedoMechanism)
-        ActionFromZero(
-          title: 'Rehacer', // TODO 3 internationalize
-          icon: const Icon(MaterialCommunityIcons.redo_variant),
-          onTap: (context) {
-            userInteracted = true;
-            focusNode?.requestFocus();
-            redo(removeEntryFromDAO: true);
-          },
-          breakpoints: {0: ActionState.popup},
-          enabled: redoValues.isNotEmpty,
+        AnimatedActionFromZero(
+          animation: this,
+          builder: () => ActionFromZero(
+            title: 'Rehacer', // TODO 3 internationalize
+            icon: const Icon(MaterialCommunityIcons.redo_variant),
+            onTap: (context) {
+              userInteracted = true;
+              focusNode?.requestFocus();
+              redo(removeEntryFromDAO: true);
+            },
+            breakpoints: {0: ActionState.popup},
+            disablingError: redoValues.isNotEmpty ? null : '',
+          ),
         ),
       if (clearable)
-        ActionFromZero(
-          title: 'Limpiar', // TODO 3 internationalize
-          icon: const Icon(Icons.clear),
-          onTap: (context) {
-            userInteracted = true;
-            value = defaultValue;
-            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-              (focusNode??_focusNode)?.requestFocus();
-            });
-          },
-          breakpoints: {0: enabled&&value!=defaultValue ? ActionState.icon : ActionState.popup},
-          enabled: clearable && value!=defaultValue,
+        AnimatedActionFromZero(
+          animation: this,
+          builder: () => ActionFromZero(
+            title: 'Limpiar', // TODO 3 internationalize
+            icon: const Icon(Icons.clear),
+            onTap: (context) {
+              userInteracted = true;
+              value = defaultValue;
+              WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                (focusNode??_focusNode)?.requestFocus();
+              });
+            },
+            breakpoints: {0: enabled&&value!=defaultValue ? ActionState.icon : ActionState.popup},
+            disablingError: clearable && value!=defaultValue ? null : '',
+          ),
         ),
     ];
   }
