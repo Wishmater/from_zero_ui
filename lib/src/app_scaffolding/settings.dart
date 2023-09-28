@@ -6,8 +6,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:intl/intl.dart';
 
 bool alreadyInitedHive = false;
 Future<void> initHive([String? subdir]) async{
@@ -209,8 +211,8 @@ class ThemeSwitcher extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4,),
-                Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyLarge!.color,),
-                const SizedBox(width: 4,),
+                // Icon(Icons.arrow_drop_down, color: Theme.of(context).textTheme.bodyLarge!.color,),
+                // const SizedBox(width: 4,),
               ],
             ),
           ),
@@ -236,6 +238,120 @@ class ThemeSwitcher extends StatelessWidget {
   }
 
 }
+
+
+class UiScalePicker extends ConsumerStatefulWidget {
+
+  const UiScalePicker({
+    super.key,
+  });
+
+  @override
+  ConsumerState<UiScalePicker> createState() => _UiScalePickerState();
+
+}
+class _UiScalePickerState extends ConsumerState<UiScalePicker> {
+
+  double? value;
+
+  @override
+  void initState() {
+    super.initState();
+    value = Hive.box('settings').get('ui_scale');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final defaultValue = MediaQuery.textScaleFactorOf(context).clamp(1.0, 1.5);
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 16),
+          child: Transform.translate(
+            offset: const Offset(0, 8),
+            child: Text('Zoom',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ),
+        Row(
+          children: [
+            SizedBox(
+              width: 140,
+              child: CheckboxListTile(
+                value: value==null,
+                dense: true,
+                contentPadding: const EdgeInsets.only(left: 8, right: 8),
+                controlAffinity: ListTileControlAffinity.leading,
+                title: Transform.translate(
+                  offset: const Offset(-8, 0),
+                  child: Text('Por Defecto',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    this.value = (value??false) ? null : defaultValue;
+                    commitValue();
+                  });
+                },
+              ),
+            ),
+            Expanded(
+              child: TooltipFromZero(
+                waitDuration: value==null ? Duration.zero : const Duration(seconds: 1),
+                message: value==null
+                    ? 'Zoom por defecto del sistema operativo: ${NumberFormat('0.00').format(defaultValue)}\nPara cambiar el zoom manualmente desmarque "Por Defecto"'
+                    : null, // 'Zoom: ${NumberFormat('0.00').format(value)}',
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      left: 6, right: 6,
+                      child: Center(
+                        child: Container(
+                          width: double.infinity, height: 8,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(16),
+                            color: Theme.of(context).dividerColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Slider(
+                      value: value ?? MediaQuery.textScaleFactorOf(context).clamp(1, 1.5),
+                      min: 1,
+                      max: 1.5,
+                      divisions: 10,
+                      label: value==null ? null : 'Zoom: ${NumberFormat('0.00').format(value)}',
+                      onChanged: value==null ? null : (value) {
+                        setState(() {
+                          this.value = value;
+                        });
+                      },
+                      onChangeEnd: (value) {
+                        commitValue();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 12,),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void commitValue() {
+    Hive.box('settings').put('ui_scale', value);
+    ref.read(fromZeroScreenProvider).scale = value;
+  }
+
+}
+
 
 
 class LocaleSwitcher extends StatelessWidget {

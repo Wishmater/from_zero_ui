@@ -362,11 +362,14 @@ abstract class TableFromZeroFilterPopup {
                               children: [
                                 const SizedBox(
                                   width: 128,
-                                  child: DialogButton.cancel(),
+                                  child: DialogButton.cancel(
+                                    child: AutoSizeText('CANCELAR', maxLines: 1, softWrap: false, wrapWords: false,),
+                                  ),
                                 ),
                                 SizedBox(
                                   width: 128,
                                   child: DialogButton.accept(
+                                    child: const AutoSizeText('ACEPTAR', maxLines: 1, softWrap: false, wrapWords: false,),
                                     onPressed: () {
                                       Navigator.of(context).pop(true);
                                     },

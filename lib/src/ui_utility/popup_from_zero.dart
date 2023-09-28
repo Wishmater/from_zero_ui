@@ -83,7 +83,7 @@ class PopupFromZeroState extends State<PopupFromZero> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(_checkChildSize);
   }
-  void _checkChildSize(timeStamp) { // hack to know when child changes size, since notifications don't work for some reason
+  void _checkChildSize(timeStamp) { // TODO 1 performance hack to know when child changes size, since notifications don't work for some reason. Test the same method used in AnimatedFromChildSize, it could also work here
     if (!mounted) {
       return;
     }
@@ -121,7 +121,9 @@ class PopupFromZeroState extends State<PopupFromZero> {
         if (widget.anchorKey != null) {
           try {
             RenderBox box = widget.anchorKey!.currentContext!.findRenderObject()! as RenderBox;
-            referencePosition = box.localToGlobal(Offset.zero); //this is global position
+            referencePosition = box.localToGlobal(Offset.zero,
+              ancestor: widget.anchorKey!.currentContext!.findAncestorStateOfType<SnackBarHostFromZeroState>()?.context.findRenderObject(), // hack to support UI scale
+            ); //this is global position
             referenceSize = box.size;
           } catch(_) {}
         }

@@ -71,7 +71,19 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
   }) {
     actions = actions.where((e) => e.getStateForMaxWidth(0).shownOnContextMenu).toList();
     onShowMenu?.call();
-    Offset? mousePosition = useCursorLocation ? tapDownDetails?.globalPosition : null;
+    Offset? mousePosition;
+    if (useCursorLocation) {
+      try {
+        // hack to support UI scale
+        RenderBox box = context.findRenderObject()! as RenderBox;
+        final referencePosition = box.localToGlobal(Offset.zero,
+          ancestor: context.findAncestorStateOfType<SnackBarHostFromZeroState>()?.context.findRenderObject(),
+        ); //this is global position
+        mousePosition = tapDownDetails==null ? null : referencePosition + tapDownDetails.localPosition;
+      } catch (_) {
+        mousePosition = tapDownDetails?.globalPosition;
+      }
+    }
     showPopupFromZero<dynamic>( // TODO 3 find a way to show a non-blocking popup (an overlay)
       context: context,
       anchorKey: mousePosition==null ? anchorKey : null,

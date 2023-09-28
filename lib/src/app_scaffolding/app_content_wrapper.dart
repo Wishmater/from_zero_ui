@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive/hive.dart';
 import 'package:window_manager/window_manager.dart';
 
 
@@ -145,12 +146,15 @@ class FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWra
 
   @override
   Widget build(BuildContext context) {
-    //TODO 3 add restrictions to fontSize, uiScale logic, etc. here
     var mediaQueryData = MediaQuery.of(context);
-    // final double scale = mediaQueryData.textScaleFactor.clamp(1, 1.25);
-    const double scale = 1;
-    // TODO 2 experiment with app ui scale with this approach, it looks promising. Some forms break though
-    mediaQueryData = mediaQueryData.copyWith(textScaleFactor: scale,);
+    final double scale = ref.watch(fromZeroScreenProvider.select((v) => v.scale)) ?? mediaQueryData.textScaleFactor;
+    final extraScale = (scale - 1).clamp(0, 0.5); // assumes scale ranges 1 to 2
+    final textScale = 1 + (extraScale * 0.3);
+    final uiScale = 1 - (extraScale * 0.7);
+    mediaQueryData = mediaQueryData.copyWith(
+      textScaleFactor: textScale,
+      size: mediaQueryData.size * uiScale,
+    );
     final screen = ref.read(fromZeroScreenProvider);
     final scaffoldChangeNotifier = ref.read(fromZeroScaffoldChangeNotifierProvider);
     bool showWindowButtons = PlatformExtended.appWindow!=null && scaffoldChangeNotifier.showWindowBarOnDesktop;
@@ -215,8 +219,8 @@ class FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWra
               height: screenHeight,
               child: FittedBox(
                 child: SizedBox(
-                  width: screenWidth / scale,
-                  height: screenHeight / scale,
+                  width: screenWidth * uiScale,
+                  height: screenHeight * uiScale,
                   child: MediaQuery(
                     data: mediaQueryData,
                     child: Stack(
@@ -571,6 +575,13 @@ class ScreenFromZero extends ChangeNotifier{
   double get breakpoint => _breakpoint;
   set breakpoint(double value) {
     _breakpoint = value;
+    notifyListeners();
+  }
+
+  double? _scale = Hive.box('settings').get('ui_scale');
+  double? get scale => _scale;
+  set scale(double? value) {
+    _scale = value;
     notifyListeners();
   }
 
