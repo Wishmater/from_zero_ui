@@ -1796,19 +1796,19 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             largeHorizontally: constraints.maxWidth>=ScaffoldFromZero.screenSizeMedium,
           );
         },
-      )];
+      ),];
     } else {
       result = [_buildWidgetsAsCombo(context,
         addCard: addCard,
         asSliver: asSliver,
         expandToFillContainer: expandToFillContainer,
         dense: dense,
-        focusNode: focusNode!,
+        focusNode: focusNode,
         collapsible: collapsible,
         collapsed: collapsed,
         fieldGlobalKey: fieldGlobalKey,
         mainScrollController: mainScrollController,
-      )];
+      ),];
     }
     return result;
   }
@@ -1939,7 +1939,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           }
           result = AppbarFromZero(
             contextMenuEnabled: enabled,
-            onShowContextMenu: () => focusNode!.requestFocus(),
+            onShowContextMenu: () => focusNode.requestFocus(),
             backgroundColor: Colors.transparent,
             elevation: 0,
             useFlutterAppbar: false,

@@ -547,7 +547,7 @@ class NumColModel<T> extends SimpleColModel<T> {
       return _format(value);
     }
   }
-  String _format(value) {
+  String _format(dynamic value) {
     return value==null ? ''
         : (formatter!=null && value is num) ? formatter!.format(value)
         : value.toString();
@@ -767,7 +767,7 @@ class DateColModel<T> extends SimpleColModel<T> {
       return _format(value);
     }
   }
-  String _format(value) {
+  String _format(dynamic value) {
     return value==null ? ''
         : (formatter!=null && value is DateTime) ? formatter!.format(value)
         : value is DateField && value.value!=null ? value.formatterDense.format(value.value!)

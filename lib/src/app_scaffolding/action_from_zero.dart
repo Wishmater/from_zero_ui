@@ -336,11 +336,12 @@ class AnimatedActionFromZero extends StatelessWidget implements ActionFromZero {
   AnimatedActionFromZero({
     required this.animation,
     required this.builder,
+    super.key,
   });
 
   @override
   ActionFromZero copyWith({void Function(BuildContext context)? onTap, String? title, Widget? icon, Color? color, Map<double, ActionState>? breakpoints, OverflowActionBuilder? overflowBuilder, ActionBuilder? iconBuilder, ActionBuilder? buttonBuilder, ActionBuilder? expandedBuilder, bool? centerExpanded, String? disablingError})
-  => _action.copyWith(onTap: onTap, title: title, icon: icon, color: color, breakpoints: breakpoints, overflowBuilder: overflowBuilder, iconBuilder: iconBuilder, buttonBuilder: buttonBuilder, expandedBuilder: expandedBuilder, centerExpanded: centerExpanded, disablingError: disablingError);
+      => _action.copyWith(onTap: onTap, title: title, icon: icon, color: color, breakpoints: breakpoints, overflowBuilder: overflowBuilder, iconBuilder: iconBuilder, buttonBuilder: buttonBuilder, expandedBuilder: expandedBuilder, centerExpanded: centerExpanded, disablingError: disablingError);
 
   ActionFromZero? _cachedAction;
   ActionFromZero get _action {

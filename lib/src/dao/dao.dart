@@ -878,7 +878,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   }
 
   /// this code assumes it is called only once on showModal, if it is called multiple times inside a build() method it will behave weirdly
-  List<int> _tabBarAnimationLocks = [];
+  late final List<int> _tabBarAnimationLocks = [];
   Widget buildEditModalWidget(BuildContext context, {
     bool showDefaultSnackBars = true,
     bool showRevertChanges = false,
