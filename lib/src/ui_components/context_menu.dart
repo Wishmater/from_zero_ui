@@ -1,9 +1,10 @@
 import 'package:dartx/dartx.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 
-class ContextMenuFromZero extends StatefulWidget {
+class ContextMenuFromZero extends ConsumerStatefulWidget {
 
   final Widget child;
   final List<ActionFromZero> actions;
@@ -46,17 +47,17 @@ class ContextMenuFromZero extends StatefulWidget {
   }
 
   @override
-  State<ContextMenuFromZero> createState() => ContextMenuFromZeroState();
+  ConsumerState<ContextMenuFromZero> createState() => ContextMenuFromZeroState();
 
 }
 
 
-class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
+class ContextMenuFromZeroState extends ConsumerState<ContextMenuFromZero> {
 
   final GlobalKey anchorKey = GlobalKey();
   static bool didShowContextMenuThisFrame = false;
 
-  static void showContextMenuFromZero(BuildContext context, {
+  static void showContextMenuFromZero(BuildContext context, WidgetRef ref, {
     required List<ActionFromZero> actions,
     required GlobalKey anchorKey,
     VoidCallback? onShowMenu,
@@ -73,15 +74,19 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
     onShowMenu?.call();
     Offset? mousePosition;
     if (useCursorLocation) {
-      try {
-        // hack to support UI scale
-        RenderBox box = context.findRenderObject()! as RenderBox;
-        final referencePosition = box.localToGlobal(Offset.zero,
-          ancestor: context.findAncestorStateOfType<SnackBarHostFromZeroState>()?.context.findRenderObject(),
-        ); //this is global position
-        mousePosition = tapDownDetails==null ? null : referencePosition + tapDownDetails.localPosition;
-      } catch (_) {
+      if ((ref.read(fromZeroScreenProvider).scale??MediaQuery.textScaleFactorOf(context))==1) {
         mousePosition = tapDownDetails?.globalPosition;
+      } else {
+        try {
+          // hack to support UI scale
+          RenderBox box = context.findRenderObject()! as RenderBox;
+          final referencePosition = box.localToGlobal(Offset.zero,
+            ancestor: context.findAncestorStateOfType<SnackBarHostFromZeroState>()?.context.findRenderObject(),
+          ); //this is global position
+          mousePosition = tapDownDetails==null ? null : referencePosition + tapDownDetails.localPosition;
+        } catch (_) {
+          mousePosition = tapDownDetails?.globalPosition;
+        }
       }
     }
     showPopupFromZero<dynamic>( // TODO 3 find a way to show a non-blocking popup (an overlay)
@@ -132,7 +137,7 @@ class ContextMenuFromZeroState extends State<ContextMenuFromZero> {
       });
       final actions = widget.contextMenuWidget==null ? getAllContextActions() : widget.actions;
       if (widget.enabled && (widget.contextMenuWidget!=null || actions.isNotEmpty)) {
-        showContextMenuFromZero(context,
+        showContextMenuFromZero(context, ref,
           actions: actions,
           anchorKey: anchorKey,
           contextMenuWidth: widget.contextMenuWidth,
