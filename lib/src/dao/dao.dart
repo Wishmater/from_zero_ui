@@ -1481,7 +1481,6 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? useIntrinsicWidth,
     bool showDefaultSnackBars = true,
   }) {
-    ScrollController scrollController = ScrollController();
     if (useIntrinsicWidth==null && props.values.where((e) => e is ListField && !e.hiddenInView && (e.buildViewWidgetAsTable || e.objects.length>50)).isNotEmpty) {
       useIntrinsicWidth = false;
     }
@@ -1498,23 +1497,13 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
               ),
             );
             if (useIntrinsicWidth ?? true) {
-              result = ConstrainedBox(
-                constraints: BoxConstraints(
-                  // minWidth: viewDialogWidth*0.5,
-                  maxWidth: viewDialogWidth*1.5,
-                ),
-                child: IntrinsicWidth(child: result,),
-              );
-            } else {
-              result = SizedBox(
-                width: viewDialogWidth,
-                child: result,
-              );
+              result = IntrinsicWidth(child: result,);
             }
             return DialogFromZero(
               contentPadding: EdgeInsets.zero,
               scrollController: scrollController,
               content: result,
+              maxWidth: viewDialogWidth * ((useIntrinsicWidth ?? true) ? 1.5 : 1),
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
