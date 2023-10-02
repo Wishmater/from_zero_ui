@@ -323,8 +323,11 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
         Expanded(
           child: TextButton(
             onPressed: () {
+              final navigatorContext = Navigator.of(widget.context).context;
               widget.dismiss();
-              ApiProviderBuilder.showErrorDetailsDialog(widget.context, error, stackTrace);
+              WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+                ApiProviderBuilder.showErrorDetailsDialog(navigatorContext, error, stackTrace);
+              });
             },
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).textTheme.bodyLarge!.color,
