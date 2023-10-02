@@ -56,6 +56,7 @@ class TableFromZero<T> extends StatefulWidget {
   final Widget? Function(BuildContext context, RowModel<T> row, int index, double? minWidth,
       Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder,)? rowBuilder;
   final Widget? Function(BuildContext context, RowModel row, double? minWidth)? headerRowBuilder;
+  final void Function(List<RowModel<T>>)? onSort;
   final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   final TableController<T>? tableController;
   final bool? enableSkipFrameWidgetForRows;
@@ -99,6 +100,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.cellBuilder,
     this.rowBuilder,
     this.headerRowBuilder,
+    this.onSort,
     this.onFilter,
     this.tableController,
     this.exportPathForExcel,
@@ -977,7 +979,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         }
         result = Container( // ignore: use_decorated_box
                             // decoration is nullable, so it can't be passed to a DecoratedBox, and this ensures result!=null
-          decoration: _getDecoration(row, index, colKey),
+          decoration: _getDecoration(row, index, colKey, rowDisabledReason!=null),
           child: result,
         );
         if (addSizing){
@@ -1114,7 +1116,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
               child: row==headerRowModel
                   ? defaultHeaderCellBuilder(context, headerRowModel!, colKey)
                   : widget.cellBuilder?.call(context, row as RowModel<T>, colKey)
-                      ?? TableFromZeroState.defaultCellBuilder<T>(context, row as RowModel<T>, colKey, col, _getStyle(context, row, colKey), _getAlignment(colKey)),
+                      ?? TableFromZeroState.defaultCellBuilder<T>(context, row as RowModel<T>, colKey, col, _getStyle(context, row, colKey, rowDisabledReason!=null), _getAlignment(colKey)),
           ),
         );
         if (row.onCellTap!=null || row.onCellDoubleTap!=null || row.onCellLongPress!=null || row.onCellHover!=null){
@@ -1333,7 +1335,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                 child: Stack(
                   children: [
                     Container(
-                      decoration: _getDecoration(row, index, null),
+                      decoration: _getDecoration(row, index, null, rowDisabledReason!=null),
                     ),
                     Padding(
                       padding: EdgeInsets.only(right: actionsWidth),
@@ -1806,7 +1808,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return result;
   }
 
-  BoxDecoration? _getDecoration(RowModel row, int index, dynamic colKey,){
+  BoxDecoration? _getDecoration(RowModel row, int index, dynamic colKey, bool isDisabled,){
     bool isHeader = row==headerRowModel;
     Color? backgroundColor = _getBackgroundColor(row, colKey, isHeader);
     if (backgroundColor!=null) {
@@ -1816,12 +1818,16 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         backgroundColor = backgroundColor.opacity==0
             ? _getMaterialColor()
             : Color.alphaBlend(backgroundColor, _getMaterialColor());
-        // backgroundColor = backgroundColor.opacity==0
-        //     ? _getMaterialColor()
-        //     : Color.alphaBlend(backgroundColor, _getBrightnessColor());
       }
       if (applyDarker) {
         backgroundColor = Color.alphaBlend(backgroundColor.withOpacity(0.965), Colors.black);
+      }
+    }
+    if (isDisabled) {
+      backgroundColor ??= _getMaterialColor();
+      backgroundColor = Color.alphaBlend(backgroundColor.withOpacity(0.66), Theme.of(context).disabledColor);
+      if (backgroundColor.opacity<1) {
+        backgroundColor = Color.alphaBlend(backgroundColor, _getMaterialColor());
       }
     }
     return backgroundColor==null ? null : BoxDecoration(color: backgroundColor);
@@ -1859,12 +1865,18 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     return widget.columns?[colKey]?.alignment ?? TextAlign.left;
   }
 
-  TextStyle? _getStyle(BuildContext context, RowModel<T> row, dynamic key){
+  TextStyle? _getStyle(BuildContext context, RowModel<T> row, dynamic key, bool isDisabled){
     TextStyle? style;
     if (widget.rowStyleTakesPriorityOverColumn) {
       style = row.textStyle ?? widget.columns?[key]?.textStyle;
     } else {
       style = widget.columns?[key]?.textStyle ?? row.textStyle;
+    }
+    if (isDisabled) {
+      style ??= Theme.of(context).textTheme.bodyLarge;
+      style = style!.copyWith(
+        color: Color.alphaBlend(style.color!.withOpacity(0.66), Theme.of(context).disabledColor),
+      );
     }
     return style;
   }
@@ -2102,6 +2114,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       sortedColumnKey: sortedColumn,
       sortedAscending: sortedAscending,
     );
+    widget.onSort?.call(sorted);
     filter(notifyListeners: notifyListeners);
   }
   static void smartSort<T>(List<RowModel<T>> list, {
