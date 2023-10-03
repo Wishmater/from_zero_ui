@@ -1954,7 +1954,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         }
         result = ValidationRequiredOverlay(
           isRequired: isRequired,
-          isEmpty: enabled && value==null,
+          isEmpty: enabled && (value==null || value!.isEmpty),
           errors: validationErrors,
           dense: dense,
           child: result,
@@ -2610,7 +2610,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           padding: EdgeInsets.symmetric(horizontal: (tableHorizontalPadding-8).coerceAtLeast(0)),
           child: ValidationRequiredOverlay(
             isRequired: isRequired,
-            isEmpty: enabled && value==null || value!.isEmpty,
+            isEmpty: enabled && (value==null || value!.isEmpty),
             dense: false,
             errors: validationErrors,
             child: Stack(
