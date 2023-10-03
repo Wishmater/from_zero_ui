@@ -270,6 +270,8 @@ class MaterialKeyValuePair extends StatelessWidget {
               if (title!=null)
                 Text(title!,
                   maxLines: titleMaxLines,
+                  softWrap: titleMaxLines==1 ? false : null,
+                  overflow: titleMaxLines==1 ? TextOverflow.fade : null,
                   style: titleStyle ?? Theme.of(context).textTheme.bodySmall,
                 ),
               Stack(
@@ -280,6 +282,8 @@ class MaterialKeyValuePair extends StatelessWidget {
                       padding: const EdgeInsets.only(left: 3, bottom: 1),
                       child: Text(value!,
                         maxLines: valueMaxLines,
+                        softWrap: valueMaxLines==1 ? false : null,
+                        overflow: valueMaxLines==1 ? TextOverflow.fade : null,
                         style: valueStyle,
                       ),
                     ),
@@ -314,16 +318,18 @@ class MaterialKeyValuePair extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (title!=null)
-          Text(
-            title!,
+          Text(title!,
             maxLines: titleMaxLines,
+            softWrap: titleMaxLines==1 ? false : null,
+            overflow: titleMaxLines==1 ? TextOverflow.fade : null,
             style: titleStyle ?? Theme.of(context).textTheme.bodySmall,
           ),
         SizedBox(height: padding,),
         if (value!=null)
-          Text(
-            value!,
+          Text(value!,
             maxLines: valueMaxLines,
+            softWrap: valueMaxLines==1 ? false : null,
+            overflow: valueMaxLines==1 ? TextOverflow.fade : null,
             style: valueStyle,
           ),
       ],
