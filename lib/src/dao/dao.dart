@@ -2122,7 +2122,7 @@ class DAOViewDividerWidget extends StatelessWidget {
     this.titleFlex = 1000000,
     this.valueFlex = 1618034,
     this.titleMaxWidth,
-    this.height = 24,
+    this.height = 16,
     this.goBelow = true,
     super.key,
   });
