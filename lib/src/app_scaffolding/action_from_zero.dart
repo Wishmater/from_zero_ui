@@ -1,5 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/foundation/diagnostics.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:multi_value_listenable_builder/multi_value_listenable_builder.dart';
 
@@ -443,20 +443,22 @@ class _LifecycleHookState extends State<_LifecycleHook> {
 
 
 typedef ApiActionCallback = void Function(BuildContext context, List<dynamic> data);
+typedef ApiDisablingErrorCallback = String? Function(BuildContext context, List<dynamic> data);
 class APIActionFromZero extends ActionFromZero {
 
   final List<ValueNotifier> dependedNotifiers;
   final List<ApiProvider> Function(List<dynamic> values) providersBuilder;
   final ApiActionCallback? onTapApi;
+  final ApiDisablingErrorCallback? disablingErrorBuilder;
 
   APIActionFromZero({
     required super.title,
     required this.providersBuilder,
     this.onTapApi,
     super.icon,
-    super.disablingError,
     super. breakpoints,
     this.dependedNotifiers = const [],
+    this.disablingErrorBuilder,
     super.key,
   });
 
@@ -469,6 +471,21 @@ class APIActionFromZero extends ActionFromZero {
   @override
   OverflowActionBuilder get overflowBuilder => apiOverflowBuilder;
 
+  static Widget _maybeAddMultiValueListenableBuilder(BuildContext context, {
+    required List<ValueListenable> valueListenables,
+    required Widget Function(BuildContext context, List<dynamic> values, Widget? child) builder,
+    Widget? child,
+  }) {
+    if (valueListenables.isEmpty) {
+      return builder(context, [], child);
+    }
+    return MultiValueListenableBuilder(
+      valueListenables: valueListenables,
+      builder: builder,
+      child: child,
+    );
+  }
+
   Widget apiIconBuilder({
     required BuildContext context,
     required String title,
@@ -477,7 +494,7 @@ class APIActionFromZero extends ActionFromZero {
     String? disablingError,
     Color? color,
   }) {
-    return MultiValueListenableBuilder(
+    return _maybeAddMultiValueListenableBuilder(context,
       valueListenables: dependedNotifiers,
       builder: (context, values, child) {
         return ApiProviderMultiBuilder(
@@ -488,7 +505,14 @@ class APIActionFromZero extends ActionFromZero {
             onTap = onTapApi==null ? null : (context) {
               return onTapApi!(context, data);
             };
-            return ActionFromZero.defaultIconBuilder(context: context, title: title, icon: icon, onTap: onTap, disablingError: disablingError, color: color);
+            return ActionFromZero.defaultIconBuilder(
+              context: context,
+              title: title,
+              icon: icon,
+              onTap: onTap,
+              disablingError: disablingErrorBuilder?.call(context, data),
+              color: color,
+            );
           },
           loadingBuilder: (context, progress) {
             onTap = null;
@@ -520,7 +544,7 @@ class APIActionFromZero extends ActionFromZero {
     String? disablingError,
     Color? color,
   }) {
-    return MultiValueListenableBuilder(
+    return _maybeAddMultiValueListenableBuilder(context,
       valueListenables: dependedNotifiers,
       builder: (context, values, child) {
         return ApiProviderMultiBuilder(
@@ -531,7 +555,14 @@ class APIActionFromZero extends ActionFromZero {
             onTap = onTapApi==null ? null : (context) {
               return onTapApi!(context, data);
             };
-            return ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: onTap, disablingError: disablingError, color: color);
+            return ActionFromZero.defaultButtonBuilder(
+              context: context,
+              title: title,
+              icon: icon,
+              onTap: onTap,
+              disablingError: disablingErrorBuilder?.call(context, data),
+              color: color,
+            );
           },
           loadingBuilder: (context, progress) {
             onTap = null;
@@ -563,7 +594,7 @@ class APIActionFromZero extends ActionFromZero {
     String? disablingError,
     bool forceIconSpace = false,
   }) {
-    return MultiValueListenableBuilder(
+    return _maybeAddMultiValueListenableBuilder(context,
       valueListenables: dependedNotifiers,
       builder: (context, values, child) {
         return ApiProviderMultiBuilder(
@@ -574,7 +605,14 @@ class APIActionFromZero extends ActionFromZero {
             onTap = onTapApi==null ? null : (context) {
               return onTapApi!(context, data);
             };
-            return ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: onTap, disablingError: disablingError, forceIconSpace: forceIconSpace);
+            return ActionFromZero.defaultOverflowBuilder(
+              context: context,
+              title: title,
+              icon: icon,
+              onTap: onTap,
+              disablingError: disablingErrorBuilder?.call(context, data),
+              forceIconSpace: forceIconSpace,
+            );
           },
           loadingBuilder: (context, progress) {
             onTap = null;

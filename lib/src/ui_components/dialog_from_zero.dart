@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui' as ui;
+
 import 'package:animations/animations.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:dartx/dartx.dart';
@@ -257,7 +258,7 @@ class _DialogFromZeroState extends State<DialogFromZero> {
           style: Theme.of(context).textTheme.titleLarge!,
           child: Container(
             constraints: const BoxConstraints(minHeight: 60),
-            padding: const EdgeInsets.only(top: 12, bottom: 12, left: 16,),
+            padding: const EdgeInsets.only(top: 12, bottom: 12, left: 16, right: 12),
             alignment: Alignment.centerLeft,
             child: ValueListenableBuilder<Size>(
               valueListenable: appBarTitleSizeNotifier,
