@@ -45,8 +45,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool showObjectsFromAvailablePoolAsTable;
   AvailablePoolTransformerFunction<T>? transformSelectedFromAvailablePool; /// transformation applied to selected items from available pool before adding them to ListField rows
   ContextFulFieldValueGetter<List<ActionFromZero>, Field>? availablePoolTableActions;
-  final bool? _allowAddNew;
+  bool? _allowAddNew;
   bool get allowAddNew => _allowAddNew ?? objectTemplate.canSave;
+  set allowAddNew(bool? value) {
+    _allowAddNew = value;
+  }
   bool collapsed;
   bool allowMultipleSelection;
   bool selectionDefault;
@@ -78,7 +81,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   ContextFulFieldValueGetter<List<RowAction<T>>, ListField<T, U>>? extraRowActionsBuilder; //TODO 3 also allow global action builders
   bool showEditDialogOnAdd;
   bool showAddButtonAtEndOfTable;
-  Widget? tableErrorWidget;
+  ContextFulFieldValueGetter<Widget, ListField<T, U>>? tableErrorWidget;
   dynamic initialSortedColumn;
   ValueChanged<RowModel>? onRowTap;
   bool? tableSortable;
@@ -495,7 +498,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     ValueChanged<RowModel>? onRowTap,
     bool? showAddButtonAtEndOfTable,
     bool? showEditDialogOnAdd,
-    Widget? tableErrorWidget,
+    ContextFulFieldValueGetter<Widget, ListField<T, U>>? tableErrorWidget,
     bool? showDefaultSnackBars,
     FieldValueGetter<List<FieldValidator<ComparableList<T>>>, Field>? validatorsGetter,
     bool? validateOnlyOnConfirm,
@@ -2306,7 +2309,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             tableController.notifyListeners();
             notifyListeners();
           } : null,
-          emptyWidget: tableErrorWidget
+          emptyWidget: tableErrorWidget?.call(context, this, dao)
              ?? Focus(
                   focusNode: _errorWidgetFocusNode,
                   skipTraversal: true,
@@ -2443,6 +2446,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   Widget buildAddAddon({
     required BuildContext context,
     required bool? collapsed,
+    VoidCallback? onPressed,
+    bool addonEnabled = true,
   }) {
     collapsed ??= this.collapsed;
     return AnimatedBuilder(
@@ -2457,10 +2462,13 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
             style: TextButton.styleFrom(
               backgroundColor: Color.alphaBlend(Theme.of(context).colorScheme.secondary.withOpacity(0.1), Theme.of(context).cardColor),
             ),
-            onPressed: () {
-              userInteracted = true;
-              maybeAddRow(dao.contextForValidation ?? context);
-            },
+            onPressed: !addonEnabled ? null : (onPressed ?? () async {
+              focusNode.requestFocus();
+              final result = await maybeAddRow(dao.contextForValidation ?? context);
+              if (result!=null) {
+                userInteracted = true;
+              }
+            }),
             icon: const Icon(Icons.add),
             label: Padding(
               padding: const EdgeInsets.only(top: 10, bottom: 10,),
