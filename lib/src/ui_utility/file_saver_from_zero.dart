@@ -85,6 +85,7 @@ Future<bool> saveFileFromZero ({
       context: snackbarHostContext,
       type: type,
       progressIndicator: progressIndicator,
+      duration: null,
       title: Text(localizations.translate('downloading')),
       onCancel: () {
         cancelled = true;
@@ -260,7 +261,7 @@ Future<bool> saveFileFromZero ({
         icon: downloadSuccess
             ? null
             : ApiProviderBuilder.getErrorIcon(snackbarHostContext, error, stackTrace), // ignore: use_build_context_synchronously
-        duration: const Duration(seconds: 6),
+        duration: null,
         title: Text(localizations.translate('download_fail')),
         message: Text(downloadSuccess
             ? localizations.translate('error_file')

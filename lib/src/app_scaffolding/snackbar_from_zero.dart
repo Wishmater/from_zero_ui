@@ -117,18 +117,18 @@ class SnackBarFromZeroState extends ConsumerState<SnackBarFromZero> with TickerP
   void initState() {
     super.initState();
     widget.controller?.setState = setState;
-    // if (widget.duration!=null) {
-    //   animationController = AnimationController(
-    //     vsync: this,
-    //     duration: widget.duration,
-    //   );
-    //   animationController!.addStatusListener((status) {
-    //     if (status==AnimationStatus.completed) {
-    //       widget.dismiss();
-    //     }
-    //   });
-    //   animationController!.forward();
-    // }
+    if (widget.duration!=null) {
+      animationController = AnimationController(
+        vsync: this,
+        duration: widget.duration,
+      );
+      animationController!.addStatusListener((status) {
+        if (status==AnimationStatus.completed) {
+          widget.dismiss();
+        }
+      });
+      animationController!.forward();
+    }
   }
 
   @override
