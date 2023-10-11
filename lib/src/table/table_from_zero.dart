@@ -876,9 +876,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           e: e.getStateForMaxWidth(constraints?.maxWidth??double.infinity),
       };
       List<Widget> rowActions = row==headerRowModel ? []
-          : widget.rowActions.map((e) => e.copyWith(onTap: (context) {
-              e.onRowTap?.call(context, row as RowModel<T>);
-            },),).toList();
+          : widget.rowActions.map((e) => e.copyWith(
+              onTap: (context) {
+                e.onRowTap?.call(context, row as RowModel<T>);
+              },
+              disablingError: e.disablingErrorGetter?.call(context, row as RowModel<T>),
+            ),).toList();
       for (final e in rowActions) {
         if (!rowActionStates.containsKey(e)) {
           rowActionStates[e] = e is ActionFromZero

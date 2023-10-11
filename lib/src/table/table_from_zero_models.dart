@@ -12,17 +12,18 @@ import 'package:intl/intl.dart';
 class RowAction<T> extends ActionFromZero {
 
   final void Function(BuildContext context, RowModel<T> row)? onRowTap;
+  final String? Function(BuildContext context, RowModel<T> row)? disablingErrorGetter;
 
   RowAction({
     required this.onRowTap,
     required super.title,
     super.icon,
-    super.disablingError,
     Map<double, ActionState>? breakpoints,
     super.overflowBuilder,
     super.iconBuilder,
     super.buttonBuilder,
     super.key,
+    this.disablingErrorGetter,
   }) : super(
     onTap: (context) {},
     breakpoints: breakpoints ?? {
@@ -36,6 +37,7 @@ class RowAction<T> extends ActionFromZero {
     super.iconBuilder = ActionFromZero.dividerIconBuilder,
     super.buttonBuilder = ActionFromZero.dividerIconBuilder,
   })  : onRowTap = null,
+        disablingErrorGetter = null,
         super(
           onTap: null,
           title: '',
