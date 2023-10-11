@@ -16,9 +16,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 final _percentFormatter = NumberFormat.decimalPercentPattern(decimalDigits: 1);
 
+Set<int> _ongoingDownloads = {};
+
 Future<bool> saveFileFromZero ({
   required BuildContext context,
-  required FutureOr<List<int>> data,
+  required FutureOr<List<int>> Function() data,
   required String? pathAppend,
   required String name,
   Key? snackBarKey,
@@ -35,11 +37,17 @@ Future<bool> saveFileFromZero ({
   bool isHostContext = false,
 }) async {
 
+  final hashCode = Object.hashAll([pathAppend, name]);
+  if (_ongoingDownloads.contains(hashCode)) {
+    return false; // already downloading
+  }
+  _ongoingDownloads.add(hashCode);
   // avoid using the context over async gaps
   final snackbarHostContext = isHostContext ? context : context.findAncestorStateOfType<SnackBarHostFromZeroState>()!.context;
   final localizations = FromZeroLocalizations.of(snackbarHostContext);
 
   if (!kIsWeb && Platform.isAndroid && !(await Permission.storage.request().isGranted)) {
+    _ongoingDownloads.remove(hashCode);
     return false;
   }
   name = name // cleanup filename so it doesn't cause issues with system file path requirements
@@ -123,8 +131,9 @@ Future<bool> saveFileFromZero ({
   try {
 
     // finish download
-    List<int> bytes = await data;
+    List<int> bytes = await data();
     if (cancelled) {
+      _ongoingDownloads.remove(hashCode);
       return false;
     }
     downloadSuccess = true;
@@ -192,6 +201,7 @@ Future<bool> saveFileFromZero ({
     success = false;
   }
   if (cancelled) {
+    _ongoingDownloads.remove(hashCode);
     return false;
   }
 
@@ -279,12 +289,13 @@ Future<bool> saveFileFromZero ({
     }
   }
 
+  _ongoingDownloads.remove(hashCode);
   if (retry) {
     // we're trusting that the parent SnackbarHost won't be disposed while waiting. SnackbarHost should live at the root of the widget tree for as long as the app lives.
     // ignore: use_build_context_synchronously
     success = await saveFileFromZero(
       context: snackbarHostContext,
-      data: onRetry!(),
+      data: onRetry!,
       pathAppend: pathAppend,
       name: name,
       downloadedAmount: downloadedAmount,

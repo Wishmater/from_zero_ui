@@ -345,7 +345,7 @@ class ExportState extends State<Export> {
           context: context,
           name: '${widget.title}.pdf',
           pathAppend: await widget.path,
-          data: pdf.save(),
+          data: pdf.save,
         );
       }
     } else if (format=='PNG'){
@@ -358,7 +358,7 @@ class ExportState extends State<Export> {
           context: context,
           name: title,
           pathAppend: path,
-          data: pdf.save(),
+          data: pdf.save,
         );
       } else {
         final imgFile = File(path+title);
@@ -519,13 +519,11 @@ class ExportState extends State<Export> {
     });
     excel.delete('Sheet1');
     if (!mounted) return;
-    var encoded = excel.encode()!;
-    if (!mounted) return;
     saveFileFromZero( // don't await, so the window closes before snackbar
       context: context,
       name: '${widget.title}.xlsx',
       pathAppend: await widget.path,
-      data: encoded,
+      data: () async => excel.encode()!,
     );
     doneExports = widget.childrenCount?.call(currentSize, portrait, scale, format,)??1;
   }
