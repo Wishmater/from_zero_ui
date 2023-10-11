@@ -1569,7 +1569,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                       },
                                     ),
                                   if ((allowAddNew||hasAvailableObjectsPool))
-                                    RowAction.divider(),
+                                    ActionFromZero.divider(),
                                   ActionFromZero(
                                     icon: const Icon(Icons.edit_outlined),
                                     title: FromZeroLocalizations.of(context).translate('edit'),
@@ -2200,7 +2200,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           cellPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
           backgroundColor: backgroundColor?.call(context, this, dao),
           ignoreWidthGettersIfEmpty: ignoreWidthGettersIfEmpty ?? !addCard,
-          rowDisabledValidator: rowDisabledValidator,
+          rowDisabledValidator: rowDisabledValidator ?? (this.onRowTap==null && rowTapType==RowTapType.edit
+              ? (row) => row.id.canSave ? null : ''
+              : null),
           rowTooltipGetter: rowTooltipGetter,
           cellBuilder: tableCellsEditable ? (context, row, colKey) {
             final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
@@ -2262,6 +2264,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               icon: const Icon(Icons.edit_outlined),
               title: FromZeroLocalizations.of(context).translate('edit'),
               breakpoints: actionEditBreakpoints,
+              disablingErrorGetter: (context, row) => row.id.canSave ? null : '',
               onRowTap: (context, row) async {
                 final copy = row.id.copyWith() as T;
                 copy.parentDAO = null;
@@ -2289,6 +2292,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 icon: Icon(!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
                 title: FromZeroLocalizations.of(context).translate('delete'),
                 breakpoints: actionDeleteBreakpoints,
+                disablingErrorGetter: (context, row) => row.id.canDelete ? null : '',
                 onRowTap: (context, row) async {
                   row.focusNode.requestFocus();
                   if (await maybeDelete(context, [row.id])) {
