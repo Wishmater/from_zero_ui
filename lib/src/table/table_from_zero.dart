@@ -881,6 +881,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
                 e.onRowTap?.call(context, row as RowModel<T>);
               },
               disablingError: e.disablingErrorGetter?.call(context, row as RowModel<T>),
+              breakpoints: e.breakpointsGetter?.call(context, row as RowModel<T>) ?? e.breakpoints,
             ),).toList();
       for (final e in rowActions) {
         if (!rowActionStates.containsKey(e)) {

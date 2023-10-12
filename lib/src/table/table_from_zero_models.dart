@@ -13,23 +13,25 @@ class RowAction<T> extends ActionFromZero {
 
   final void Function(BuildContext context, RowModel<T> row)? onRowTap;
   final String? Function(BuildContext context, RowModel<T> row)? disablingErrorGetter;
+  final Map<double, ActionState>? Function(BuildContext context, RowModel<T> row)? breakpointsGetter;
 
   RowAction({
     required this.onRowTap,
     required super.title,
     super.icon,
-    Map<double, ActionState>? breakpoints,
+    super.breakpoints,
+    this.breakpointsGetter,
     super.overflowBuilder,
     super.iconBuilder,
     super.buttonBuilder,
+    super.expandedBuilder,
+    super.centerExpanded,
     super.key,
     this.disablingErrorGetter,
-  }) : super(
-    onTap: (context) {},
-    breakpoints: breakpoints ?? {
-      0: ActionState.icon,
-    },
-  );
+  }) :  assert(breakpointsGetter==null || breakpoints!=null, 'Please specify default breakpoints, that should be the max that a column can get'),
+        super(
+          onTap: (context) {},
+        );
 
   RowAction.divider({super.key, 
     Map<double, ActionState>? breakpoints,
@@ -38,6 +40,7 @@ class RowAction<T> extends ActionFromZero {
     super.buttonBuilder = ActionFromZero.dividerIconBuilder,
   })  : onRowTap = null,
         disablingErrorGetter = null,
+        breakpointsGetter = null,
         super(
           onTap: null,
           title: '',
