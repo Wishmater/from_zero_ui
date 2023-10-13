@@ -2292,7 +2292,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 icon: Icon(!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
                 title: FromZeroLocalizations.of(context).translate('delete'),
                 breakpoints: actionDeleteBreakpoints,
-                disablingErrorGetter: (context, row) => row.id.canDelete ? null : '',
+                disablingErrorGetter: (context, row) => hasAvailableObjectsPool || row.id.canDelete ? null : '',
                 onRowTap: (context, row) async {
                   row.focusNode.requestFocus();
                   if (await maybeDelete(context, [row.id])) {
