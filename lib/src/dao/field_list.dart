@@ -100,6 +100,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   FieldValueGetter<List<ListField<T, U>>, ListField<T, U>>? proxiedListFields; // objects from these fields will also show here
   String? Function(RowModel<T> row)? rowDisabledValidator;
   String? Function(RowModel<T> row)? rowTooltipGetter;
+  void Function(List<RowModel<T>> rows)? onSort;
 
   T get objectTemplate => objectTemplateGetter(this, dao)..parentDAO = dao;
   List<T> get objects {
@@ -301,6 +302,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.proxiedListFields,
     this.rowDisabledValidator,
     this.rowTooltipGetter,
+    this.onSort,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         tableFilterable = tableFilterable ?? false,
         showEditDialogOnAdd = showEditDialogOnAdd ?? (displayType==ListFieldDisplayType.table && !tableCellsEditable),
@@ -531,6 +533,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     FieldValueGetter<List<ListField<T, U>>, ListField<T, U>>? proxiedListFields,
     String? Function(RowModel<T> row)? rowDisabledValidator,
     String? Function(RowModel<T> row)? rowTooltipGetter,
+    void Function(List<RowModel<T>> rows)? onSort,
   }) {
     return ListField<T, U>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -612,6 +615,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       proxiedListFields: proxiedListFields ?? this.proxiedListFields,
       rowDisabledValidator: rowDisabledValidator ?? this.rowDisabledValidator,
       rowTooltipGetter: rowTooltipGetter ?? this.rowTooltipGetter,
+      onSort: onSort ?? this.onSort,
     );
   }
 
@@ -2189,6 +2193,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           allowCustomization: allowTableCustomization,
           alternateRowBackgroundSmartly: false,
           onFilter: onFilter,
+          onSort: onSort,
           exportPathForExcel: exportPathForExcel ?? dao.defaultExportPath,
           columns: columns,
           showHeaders: showTableHeaders,

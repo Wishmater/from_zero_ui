@@ -56,7 +56,7 @@ class TableFromZero<T> extends StatefulWidget {
   final Widget? Function(BuildContext context, RowModel<T> row, int index, double? minWidth,
       Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder,)? rowBuilder;
   final Widget? Function(BuildContext context, RowModel row, double? minWidth)? headerRowBuilder;
-  final void Function(List<RowModel<T>>)? onSort;
+  final void Function(List<RowModel<T>> rows)? onSort;
   final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   final TableController<T>? tableController;
   final bool? enableSkipFrameWidgetForRows;
