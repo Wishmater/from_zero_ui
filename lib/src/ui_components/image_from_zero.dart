@@ -6,6 +6,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/web_compile_file/web_compile_file.dart';
+import 'package:mlog/mlog.dart';
 import 'package:url_launcher/link.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -337,8 +338,7 @@ class ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateMi
       case LoadState.failed:
         animate = true;
         _controller.reset();
-        log('Error while loading ImageFromZero:');
-        log(state.lastException, stackTrace: state.lastStack);
+        log(LgLvl.error, 'Error while loading ImageFromZero:', e: state.lastException, st: state.lastStack);
         return ErrorSign(
           title: FromZeroLocalizations.of(context).translate('error_image'),
           icon: const Icon(Icons.broken_image, size: 64,),

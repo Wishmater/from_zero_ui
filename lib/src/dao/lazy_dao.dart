@@ -10,24 +10,16 @@ enum DAOBuildLogType {
 /// receives a model and a function to turn it into a DAO, only calls said function when necessary
 abstract class LazyDAO<ModelType> extends DAO<ModelType> {
 
-  // static DAOBuildLogType logDaoBuild = DAOBuildLogType.fullStackTrace;
-  // static DAOBuildLogType logDaoBuild = kReleaseMode ? DAOBuildLogType.none : DAOBuildLogType.simple;
-  static DAOBuildLogType logDaoBuild = DAOBuildLogType.none;
-
   ModelType? originalModel;
   bool _isInitialized = false;
   bool get isInitialized => _isInitialized;
   void ensureInitialized()  {
     if (!isInitialized) {
       buildDAO();
-      if (logDaoBuild!=DAOBuildLogType.none) {
-        try {
-          log('Building dao $runtimeType: $classUiName -- $uiName',
-            stackTrace: logDaoBuild==DAOBuildLogType.fullStackTrace ? StackTrace.current : null,
-          );
-        } catch(_) {
-          log('Building dao: Error logging name $runtimeType');
-        }
+      try {
+        log(LgLvl.finer, 'Building dao $runtimeType: $classUiName -- $uiName', type: FzLgType.dao);
+      } catch(e, st) {
+        log(LgLvl.finer, 'Building dao: Error logging name $runtimeType', e: e, st: st, type: FzLgType.dao);
       }
     }
   }

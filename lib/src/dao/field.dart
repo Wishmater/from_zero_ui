@@ -311,8 +311,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
         isRequired = emptyValidationErrors.where((e) => e.isBlocking).isNotEmpty;
       } catch (e, st) {
         isRequired = false;
-        log ('Error while trying to evaluate if field is required: ${dao.classUiName} - ${dao.uiName}  --  $uiName');
-        log(e, stackTrace: st);
+        log (LgLvl.error, 'Error while trying to evaluate if field is required: ${dao.classUiName} - ${dao.uiName}  --  $uiName', e: e, st: st, type: FzLgType.dao);
       }
     }
     this.isRequired = isRequired;
@@ -330,9 +329,10 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       try {
         error = await e;
       } catch (e, st) {
-        log (e, stackTrace: st);
+        final message = 'Error al ejecutar validación: ${ApiProviderBuilder.getErrorTitle(context, e, st)}\n${ApiProviderBuilder.getErrorSubtitle(context, error, st)}';
+        log (LgLvl.error, message, e: e, st: st, type: FzLgType.dao);
         result.add(ValidationError(field: field,
-          error: 'Error al ejecutar validación: ${ApiProviderBuilder.getErrorTitle(context, e, st)}\n${ApiProviderBuilder.getErrorSubtitle(context, error, st)}',
+          error: message,
         ),);
       }
       if (currentValidationId!=dao.validationCallCount) return [];

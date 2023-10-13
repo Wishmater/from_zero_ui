@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hive/hive.dart';
+import 'package:mlog/mlog.dart';
 import 'package:window_manager/window_manager.dart';
 
 
@@ -39,22 +40,35 @@ var fromZeroThemeParametersProvider = ChangeNotifierProvider<ThemeParametersFrom
 
 
 /// Override this for custom logging, including logs from from_zero
-void Function(Object? message, {
-  Object? stackTrace,
-  bool? isError,
-}) log = (Object? message, {
-  Object? stackTrace,
-  bool? isError,
-}) {
-  isError ??= stackTrace!=null || message is Exception;
-  if (!isError) {
-    stdout.writeln(message);
-    if (stackTrace!=null) stdout.writeln(stackTrace);
-  } else {
-    stderr.writeln(message);
-    if (stackTrace!=null) stderr.writeln(stackTrace);
+void Function(LgLvl level, Object? msg, {
+  Object? type,
+  Object? e,
+  StackTrace? st,
+  int extraTraceLineOffset,
+}) log = mlog;
+
+enum FzLgType {
+  routing('fzRouting', '[FZ_ROUTING]'),
+  appUpdate('fzAppUpdate', ' [FZ_APP_UPDATE] '),
+  dao('fzDao', ' [FZ_DAO] ');
+
+  final String name;
+  final String print;
+  const FzLgType(this.name, this.print);
+
+  @override
+  String toString() => print;
+
+  /// Dado un string [s] devuelve un [FzLgType] opcional
+  static FzLgType fromString(String s) {
+    for (final type in FzLgType.values) {
+      if (type.name == s) {
+        return type;
+      }
+    }
+    throw ArgumentError("String not matching", "s");
   }
-};
+}
 
 
 /// Put this widget in the builder method of your MaterialApp.
@@ -81,20 +95,16 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
 
   static String? windowsProcessName;
   static void exitApp(int code) {
-    log('Exiting app with code: $code...');
+    log(LgLvl.info, 'Exiting app with code: $code...', type: FzLgType.routing);
     if (!kIsWeb && Platform.isWindows) {
-      log('Detected platform windows, releaseMode=$kReleaseMode, processName=$windowsProcessName');
+      log(LgLvl.fine, 'Detected platform windows, releaseMode=$kReleaseMode, processName=$windowsProcessName', type: FzLgType.routing);
       if (kReleaseMode && windowsProcessName!=null) {
-        log('Running process: taskkill /IM "$windowsProcessName" /F');
+        log(LgLvl.fine, 'Running process: taskkill /IM "$windowsProcessName" /F', type: FzLgType.routing);
         // this ensures the process is completely killed and doesn't hang in older Windows versions
         final result = Process.runSync('cmd', ['/c', 'taskkill', '/IM', '$windowsProcessName', '/F']);
-        log('Finished taskkill process with code: ${result.exitCode}');
-        log('   stderr:');
-        log(result.stderr);
-        log('   stdout:');
-        log(result.stdout);
-        log("Seems like killing the process didn't work...");
-        log('Exiting the normal dart way (debugger(); + exit(0);)...');
+        log(LgLvl.error, 'Finished taskkill process with code: ${result.exitCode}\n   stderr:\n${result.stderr}\n   stdout:\n${result.stdout}', type: FzLgType.routing);
+        log(LgLvl.error, "Seems like killing the process didn't work...", type: FzLgType.routing);
+        log(LgLvl.error, 'Exiting the normal dart way (debugger(); + exit(0);)...', type: FzLgType.routing);
         debugger(); exit(0);
       } else {
         _exit(code);
@@ -104,7 +114,7 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
     }
   }
   static void _exit(int code) {
-    log('Exiting the normal dart way (debugger(); + exit(0);)...');
+    log(LgLvl.fine, 'Exiting the normal dart way (debugger(); + exit(0);)...', type: FzLgType.routing);
     debugger(); exit(0);
   }
 
@@ -474,28 +484,28 @@ class WindowBar extends StatelessWidget {
     while (true) {
 
       final goRoute = goRouter.routerDelegate.currentConfiguration.last.route;
-      log ('Trying to pop ${goRouter.routerDelegate.currentConfiguration.last.matchedLocation}');
+      log (LgLvl.finer, 'Trying to pop ${goRouter.routerDelegate.currentConfiguration.last.matchedLocation}', type: FzLgType.routing);
       if (await navigator.maybePop()) {
         final previousGoRouteFromZero = goRoute is GoRouteFromZero ? goRoute : null;
         final newGoRoute = goRouter.routerDelegate.currentConfiguration.last.route;
         final newGoRouteFromZero = newGoRoute is GoRouteFromZero ? newGoRoute : null;
         if (newGoRoute==goRoute) {
           // if route refused to pop, or popped route was a modal, stop iteration
-          log('  Route refused to pop, or popped route was a modal, stopping iteration...');
+          log(LgLvl.finer, '  Route refused to pop, or popped route was a modal, stopping iteration...', type: FzLgType.routing);
           return;
         }
         if (previousGoRouteFromZero?.pageScaffoldId!=newGoRouteFromZero?.pageScaffoldId) {
           // if new route is a different scaffold ID, stop iteration
-          log('  New route is a different scaffold ID, stopping iteration...');
+          log(LgLvl.finer, '  New route is a different scaffold ID, stopping iteration...', type: FzLgType.routing);
           return;
         }
       } else {
         // if successfully popped last route, exit app (maybePop only false when popDisposition==bubble)
-        log ('  Successfully popped last route, exiting app...');
+        log (LgLvl.finer, '  Successfully popped last route, exiting app...', type: FzLgType.routing);
         FromZeroAppContentWrapper.exitApp(0);
         return;
       }
-      log ('  Popped successfully, continuing popping iteration...');
+      log (LgLvl.finer, '  Popped successfully, continuing popping iteration...', type: FzLgType.routing);
 
     }
   }

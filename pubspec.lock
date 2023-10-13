@@ -449,6 +449,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.1"
+  mlog:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: "443773902d94fd74f96065a74491204d3d335ebf"
+      resolved-ref: "443773902d94fd74f96065a74491204d3d335ebf"
+      url: "https://github.com/ross96D/mlog"
+    source: git
+    version: "1.0.0"
   multi_value_listenable_builder:
     dependency: "direct main"
     description:

@@ -10,6 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:intl/intl.dart';
+import 'package:mlog/mlog.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -105,7 +106,7 @@ class UpdateFromZero{
 
   Future<Response?> executeUpdate(BuildContext context, {ProgressCallback? onReceiveProgress}) async{
     if (updateAvailable==true && !kIsWeb){
-      log ('Downloading Update...');
+      log (LgLvl.fine, 'Downloading Update...', type: FzLgType.appUpdate);
       final downloadPath = await getDownloadPath();
       if (!kIsWeb && Platform.isAndroid && !(await Permission.storage.request().isGranted)) {
         return null;
@@ -114,7 +115,7 @@ class UpdateFromZero{
         appDownloadUrl,
         downloadPath,
         onReceiveProgress: onReceiveProgress ?? (rcv, total) {
-          log('received: ${rcv.toStringAsFixed(0)} out of total: ${total.toStringAsFixed(0)}');
+          log(LgLvl.finer, 'received: ${rcv.toStringAsFixed(0)} out of total: ${total.toStringAsFixed(0)}', type: FzLgType.appUpdate);
         },
         deleteOnError: true,
       );
@@ -154,7 +155,7 @@ class UpdateFromZero{
             var executableFile = Directory(newAppDirectory).listSync()
                 .firstWhere((element) => element.path.endsWith('.exe'));
             argumentsFile.writeAsStringSync("$newAppDirectory\n$scriptPath");
-            log(executableFile.absolute.path.replaceAll('/', r'\'));
+            log(LgLvl.fine, executableFile.absolute.path.replaceAll('/', r'\'), type: FzLgType.appUpdate);
             Process.start(executableFile.absolute.path.replaceAll('/', r'\'), [],
               workingDirectory: scriptPath.replaceAll('/', r'\'),
             );

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:humanizer/humanizer.dart';
 import 'package:intl/intl.dart';
+import 'package:mlog/mlog.dart';
 import 'package:open_file/open_file.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:path/path.dart' as p;
@@ -194,8 +195,7 @@ Future<bool> saveFileFromZero ({
     }
 
   } catch (e, st) {
-    log ('Error while saving file:', isError: true);
-    log (e, stackTrace: st);
+    log (LgLvl.error, 'Error while saving file:', e: e, st: st);
     error = e;
     stackTrace = st;
     success = false;

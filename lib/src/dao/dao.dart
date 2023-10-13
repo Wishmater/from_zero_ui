@@ -11,6 +11,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/app_scaffolding/api_snackbar.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
+import 'package:mlog/mlog.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 
 part 'field.dart';
@@ -681,8 +682,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         await Future.any([controller.closed, completer.future]);
         success = model!=null;
       } catch (e, st) {
-        log('Error while saving $classUiName: $uiName', isError: true);
-        log(e, stackTrace: st, isError: true);
+        log(LgLvl.error, 'Error while saving $classUiName: $uiName', e: e, st: st, type: FzLgType.dao);
       }
       removeListener();
     } else if (onSave==null) {
@@ -693,8 +693,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         success = model!=null;
       } catch (e, st) {
         success = false;
-        log('Error while saving $classUiName: $uiName', isError: true);
-        log(e, stackTrace: st, isError: true);
+        log(LgLvl.error, 'Error while saving $classUiName: $uiName', e: e, st: st, type: FzLgType.dao);
       }
     }
     if (success) {
@@ -791,8 +790,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       try {
         await Future.any([controller.closed, completer.future]);
       } catch (e, st) {
-        log('Error while deleting $classUiName: $uiName', isError: true);
-        log(e, stackTrace: st, isError: true);
+        log(LgLvl.error, 'Error while deleting $classUiName: $uiName', e: e, st: st, type: FzLgType.dao);
       }
       removeListener();
     } else {
@@ -801,8 +799,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         success = errorString==null;
       } catch (e, st) {
         success = false;
-        log('Error while deleting $classUiName: $uiName', isError: true);
-        log(e, stackTrace: st, isError: true);
+        log(LgLvl.error, 'Error while deleting $classUiName: $uiName', e: e, st: st, type: FzLgType.dao);
       }
       if (showDefaultSnackBar && context.mounted) {
         SnackBarFromZero(

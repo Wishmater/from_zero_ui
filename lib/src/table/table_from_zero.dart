@@ -13,6 +13,7 @@ import 'package:from_zero_ui/util/comparable_list.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_ensure_visible_when_focused.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/my_sliver_sticky_header.dart';
 import 'package:intl/intl.dart';
+import 'package:mlog/mlog.dart';
 import 'package:sliver_tools/sliver_tools.dart';
 
 typedef OnRowHoverCallback = void Function(RowModel row, bool selected);
@@ -473,8 +474,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
           computedValidInitialFilters = await validInitialFiltersIsolateController!.value;
         }
       } catch (e, st) {
-        log('Isolate creation for computing table filters failed. Computing synchronously...');
-        log(e, stackTrace: st, isError: false,);
+        log(LgLvl.warning, 'TabelFromZero - Isolate creation for computing table filters failed. Computing synchronously...', e: e, st: st);
         initFilters(rows,
           computeFiltersInIsolate: false,
           filterAfter: filterAfter,
