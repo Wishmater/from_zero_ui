@@ -45,7 +45,59 @@ void Function(LgLvl level, Object? msg, {
   Object? e,
   StackTrace? st,
   int extraTraceLineOffset,
-}) log = mlog;
+  FlutterErrorDetails? details,
+}) log = defaultLog;
+
+void defaultLog(LgLvl level, Object? msg, {
+  Object? type,
+  Object? e,
+  StackTrace? st,
+  int extraTraceLineOffset = 0,
+  FlutterErrorDetails? details,
+}) {
+  final message = defaultLogGetString(level, msg,
+    type: type,
+    e: e,
+    st: st,
+    extraTraceLineOffset: extraTraceLineOffset,
+    details: details,
+  );
+  if (message!=null) {
+    print (message); //ignore: avoid_print
+  }
+}
+
+String? defaultLogGetString(LgLvl level, Object? msg, {
+  Object? type,
+  Object? e,
+  StackTrace? st,
+  int extraTraceLineOffset = 0,
+  FlutterErrorDetails? details,
+}) {
+  String? message = mlogGetMessage(level, msg,
+    type: type,
+    e: e,
+    st: st,
+    extraTraceLineOffset: extraTraceLineOffset,
+  );
+  if (message==null) return null;
+  if (details!=null) {
+    message = addFlutterDetailsToMlog(message, details);
+  }
+  return message;
+}
+
+String addFlutterDetailsToMlog(String msg, FlutterErrorDetails details) {
+  String detailsString = '\n${TextTreeRenderer(
+    wrapWidthProperties: 100,
+    maxDescendentsTruncatableNode: 5,
+  ).render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error)).trimRight()}';
+  detailsString = detailsString.splitMapJoin('\n', onNonMatch: (e) {
+    return '    $e';
+  },);
+  if (msg.length<=3) return detailsString;
+  return msg.substring(0, msg.length-2) + detailsString + msg.substring(msg.length-2);
+}
 
 enum FzLgType {
   routing('fzRouting', '[FZ_ROUTING]'),
