@@ -312,6 +312,19 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     GestureBinding.instance.pointerRouter.addGlobalRoute(_handlePointerEvent);
   }
 
+  @override
+  void didUpdateWidget(covariant TooltipFromZero oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_entry!=null && oldWidget.message!=widget.message) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        if (mounted && _entry!=null) {
+          _removeEntry(resetMouseRegionBooleans: false);
+          ensureTooltipVisible();
+        }
+      });
+    }
+  }
+
   // https://material.io/components/tooltips#specs
   double _getDefaultTooltipHeight() {
     final ThemeData theme = Theme.of(context);
@@ -371,12 +384,12 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
   }
 
   void _hideTooltipFromZero({ bool immediately = false }) {
-    _showTimer?.cancel();
-    _showTimer = null;
     if (immediately) {
       _removeEntry();
       return;
     } else {
+      _showTimer?.cancel();
+      _showTimer = null;
       final showDuration = _pressActivated ? this.showDuration : hoverShowDuration;
       _hideTimer ??= Timer(showDuration, () {
         if (mounted) {
@@ -477,7 +490,9 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     TooltipFromZero._openedToolTips.add(this);
   }
 
-  void _removeEntry() {
+  void _removeEntry({
+    bool resetMouseRegionBooleans = true,
+  }) {
     TooltipFromZero._openedToolTips.remove(this);
     _hideTimer?.cancel();
     _hideTimer = null;
@@ -487,8 +502,10 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
     _showTimer = null;
     _entry?.remove();
     _entry = null;
-    _insideChildMouseRegion = false;
-    _insideTooltipMouseRegion = false;
+    if (resetMouseRegionBooleans) {
+      _insideChildMouseRegion = false;
+      _insideTooltipMouseRegion = false;
+    }
   }
 
   bool _insideChildMouseRegion = false;
