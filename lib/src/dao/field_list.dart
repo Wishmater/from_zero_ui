@@ -83,7 +83,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool showAddButtonAtEndOfTable;
   ContextFulFieldValueGetter<Widget, ListField<T, U>>? tableErrorWidget;
   dynamic initialSortedColumn;
-  ValueChanged<RowModel>? onRowTap;
+  ValueChanged<RowModel<T>>? onRowTap;
   bool? tableSortable;
   bool? tableFilterable;
   bool expandHorizontally;
