@@ -213,6 +213,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     dao.removeAllUndoEntries(this);
     redoValues.clear();
     dao.removeAllRedoEntries(this);
+    onValueChanged?.call(dao, this, _value);
     notifyListeners();
   }
 
@@ -239,6 +240,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     if (requestFocus) {
       this.requestFocus();
     }
+    onValueChanged?.call(dao, this, _value);
     notifyListeners();
   }
 
@@ -265,6 +267,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     if (requestFocus) {
       this.requestFocus();
     }
+    onValueChanged?.call(dao, this, _value);
     notifyListeners();
   }
 
