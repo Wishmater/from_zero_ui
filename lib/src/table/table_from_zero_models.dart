@@ -1,4 +1,5 @@
 import 'package:dartx/dartx.dart';
+import 'package:date/date.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -775,6 +776,7 @@ class DateColModel<T> extends SimpleColModel<T> {
   String _format(dynamic value) {
     return value==null ? ''
         : (formatter!=null && value is DateTime) ? formatter!.format(value)
+        : (formatter!=null && value is Date) ? formatter!.format(value.toDateTime())
         : value is DateField && value.value!=null ? value.formatterDense.format(value.value!)
         : value.toString();
   }
@@ -792,6 +794,8 @@ class DateColModel<T> extends SimpleColModel<T> {
       DateTime? value;
       if (e is DateTime) {
         value = e;
+      } else if (e is Date) {
+        value = e.toDateTime();
       } else if (e is ContainsValue<DateTime>) {
         value = e.value;
       }

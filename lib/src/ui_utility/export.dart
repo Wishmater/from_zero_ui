@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:animations/animations.dart';
 import 'package:dartx/dartx.dart';
+import 'package:date/date.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -457,10 +458,13 @@ class ExportState extends State<Export> {
               }
               cellStyle.fontSize = 12;
               final dynamic cellValue;
-              if (col is DateColModel && (row.values[key] is DateTime || row.values[key] is ContainsValue<DateTime>)) {
-                final formatter = col.formatter;
-                final DateTime dateTime = row.values[key] is DateTime ? row.values[key] : (row.values[key] as ContainsValue<DateTime>).value;
-                cellValue = formatter != null ? formatter.format(dateTime) : dateFormat.format(dateTime);
+              if (col is DateColModel && (row.values[key] is DateTime
+                  || row.values[key] is Date
+                  || row.values[key] is ContainsValue<DateTime>)) {
+                final DateTime dateTime = row.values[key] is DateTime ? row.values[key]
+                    : row.values[key] is Date ? (row.values[key] as Date).toDateTime()
+                    : (row.values[key] as ContainsValue<DateTime>).value;
+                cellValue = (col.formatter??dateFormat).format(dateTime);
               } else if (col is NumColModel && (row.values[key] is double
                   || (row.values[key] is ContainsValue<num> && ((row.values[key] as ContainsValue<num>).value is double)))) {
                 cellValue = row.values[key] is double ? row.values[key] : (row.values[key] as ContainsValue<num>).value;

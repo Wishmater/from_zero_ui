@@ -71,6 +71,10 @@ dependencies:
       url: https://github.com/Wishmater/dart_pdf
       ref: 206d0671ac2a99b577f815353bf7ccb3873dca7f
       path: pdf
+  date:
+    git:
+      url: https://github.com/ross96D/date
+      ref: 19024cad57189e59659172113e538e9f0738da37
   mlog:
     git:
       url: https://github.com/ross96D/mlog
