@@ -173,8 +173,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "19024cad57189e59659172113e538e9f0738da37"
-      resolved-ref: "19024cad57189e59659172113e538e9f0738da37"
+      ref: "328c847be4a88a8e58314ed2def9a401d3bf0a2e"
+      resolved-ref: "328c847be4a88a8e58314ed2def9a401d3bf0a2e"
       url: "https://github.com/ross96D/date"
     source: git
     version: "1.0.0"
