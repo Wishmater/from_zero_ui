@@ -8,6 +8,7 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:mlog/mlog.dart';
 import 'package:multi_value_listenable_builder/multi_value_listenable_builder.dart';
 
 
@@ -570,7 +571,7 @@ class RelayedFiller extends StatelessWidget {
   }
 }
 
-class FillerRelayer extends StatelessWidget {
+class FillerRelayer extends StatefulWidget {
   final ValueNotifier<Size?> notifier;
   final Widget child;
   const FillerRelayer({
@@ -578,11 +579,19 @@ class FillerRelayer extends StatelessWidget {
     required this.child,
     super.key,
   });
+  @override
+  State<FillerRelayer> createState() => _FillerRelayerState();
+}
+class _FillerRelayerState extends State<FillerRelayer> {
+  int _currentCallbackId = 0;
   void _addCallback(BuildContext context) {
+    final callbackId = ++_currentCallbackId;
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      if (callbackId!=_currentCallbackId) return;
       WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        if (callbackId!=_currentCallbackId) return;
         try {
-          notifier.value = context.size;
+          widget.notifier.value = context.size;
         } catch (_) {}
       });
     });
@@ -601,7 +610,7 @@ class FillerRelayer extends StatelessWidget {
         child: LayoutBuilder(
           builder: (context, constraints) {
             _addCallback(context);
-            return child;
+            return widget.child;
           },
         ),
       ),
