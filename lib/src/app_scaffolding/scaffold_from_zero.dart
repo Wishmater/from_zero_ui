@@ -944,7 +944,9 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                 return Stack(
                   clipBehavior: Clip.none,
                   children: [
-                    widget.bottomNavigationBarBuilder!(context),
+                    ClipRect(
+                      child: widget.bottomNavigationBarBuilder!(context),
+                    ),
                     Positioned(
                       left: 0, right: 0,
                       top: -widget.appbarElevation*0.7,
