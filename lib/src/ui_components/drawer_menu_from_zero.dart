@@ -677,23 +677,40 @@ class DrawerMenuFromZeroState extends ConsumerState<DrawerMenuFromZero> {
             useCursorLocation: false,
             contextMenuWidth: 304,
             offsetCorrection: Offset(
-              route==null ? 0 : scaffoldChangeNotifier.getCurrentDrawerWidth(route!.pageScaffoldId),
-              6,
+              scaffoldChangeNotifier.collapsedDrawerWidths[route?.pageScaffoldId] ?? 0,
+              -2,
             ),
-            contextMenuWidget: DrawerMenuFromZero(
-              popup: true,
-              tabs: tabs[i].children!,
-              // tabs: [tabs[i].children!.first],
-              compact: false,
-              selected: tabs[i].selectedChild,
-              inferSelected: false,
-              paddingRight: 16,
-              pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
-                  ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
-                  : widget.pushType,
-              homeRoute: widget.homeRoute,
-              parentTabs: widget.parentTabs ?? _tabs,
-              style: widget.style,
+            contextMenuWidget: Builder(
+              builder: (context) {
+                final scrollController = ScrollController();
+                return ScrollbarTheme(
+                  data: Theme.of(Navigator.of(context).context).scrollbarTheme,
+                  child: ScrollbarFromZero(
+                    controller: scrollController,
+                    child: SingleChildScrollView(
+                      controller: scrollController,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: DrawerMenuFromZero(
+                          popup: true,
+                          tabs: tabs[i].children!,
+                          // tabs: [tabs[i].children!.first],
+                          compact: false,
+                          selected: tabs[i].selectedChild,
+                          inferSelected: false,
+                          paddingRight: 16,
+                          pushType: widget.pushType == DrawerMenuFromZero.keepRootAlive
+                              ? (selected==0 ? DrawerMenuFromZero.push : DrawerMenuFromZero.replace)
+                              : widget.pushType,
+                          homeRoute: widget.homeRoute,
+                          parentTabs: widget.parentTabs ?? _tabs,
+                          style: widget.style,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
             child: ExpansionTileFromZero(
               key: widget.expansionTileKeys?[i],

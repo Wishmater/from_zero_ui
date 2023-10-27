@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 
@@ -170,12 +171,18 @@ class PopupFromZeroState extends State<PopupFromZero> {
               if (maxHeight-y < childSize.height) {
                 y = maxHeightWithPaddingTop - childSize.height;
               }
-              double overlappingWidth = Rectangle(referencePosition.dx, 0, referenceSize.width, 1)
+              final overlappingWidth = Rectangle(referencePosition.dx, 0, referenceSize.width, 1)
                   .intersection(Rectangle(x, 0, popupWidth, 1))?.width.toDouble() ?? 0;
-              double overlappingHeight = Rectangle(0, referencePosition.dy, 1, referenceSize.height)
+              final overlappingHeight = Rectangle(0, referencePosition.dy, 1, referenceSize.height)
                   .intersection(Rectangle(0, y, 1, childSize.height))?.height.toDouble() ?? 0;
               currentChildWidth = overlappingWidth + ((popupWidth-overlappingWidth) * animation.value);
               currentChildHeight = overlappingHeight + ((childSize.height-overlappingHeight) * animation.value);
+              final overlappingCorrectionX = x < referencePosition.dx  // add offsetCorrection only if not already accounted for in overlappingMeassure
+                  ? x - referencePosition.dx
+                  : (x - (referencePosition.dx + referenceSize.width)).coerceAtLeast(0);
+              final overlappingCorrectionY = y < referencePosition.dy  // add offsetCorrection only if not already accounted for in overlappingMeassure
+                  ? y - referencePosition.dy
+                  : (y - (referencePosition.dy + referenceSize.height)).coerceAtLeast(0);
               if (overlappingWidth >= referenceSize.width) {
                 x = referencePosition.dx - ((currentChildWidth-referenceSize.width) * ((widget.popupAlignment.x-1)/-2));
               } else if (referencePosition.dx < x) {
@@ -184,14 +191,14 @@ class PopupFromZeroState extends State<PopupFromZero> {
                 x = referencePosition.dx - ((currentChildWidth-overlappingWidth) * ((popupAlignment.x-1)/-2));
               }
               if (overlappingHeight >= referenceSize.height) {
-                y = referencePosition.dy - ((currentChildHeight-overlappingHeight) * ((popupAlignment.y-1)/-2));
+                y = referencePosition.dy - ((currentChildHeight-referenceSize.height) * ((popupAlignment.y-1)/-2));
               } else if (referencePosition.dy < y) {
                 y = referencePosition.dy + referenceSize.height - overlappingHeight;
               } else {
                 y = referencePosition.dy - ((currentChildHeight-overlappingHeight) * ((popupAlignment.y-1)/-2));
               }
-              x = x.clamp(padding.left, maxWidthWithPaddingLeft);
-              y = y.clamp(padding.top, maxHeightWithPaddingTop);
+              x = (x + overlappingCorrectionX).clamp(padding.left, maxWidthWithPaddingLeft);
+              y = (y + overlappingCorrectionY).clamp(padding.top, maxHeightWithPaddingTop);
               if (maxWidth-x < currentChildWidth) {
                 x = (maxWidthWithPaddingLeft - currentChildWidth).clamp(padding.left, maxWidthWithPaddingLeft);
               }
