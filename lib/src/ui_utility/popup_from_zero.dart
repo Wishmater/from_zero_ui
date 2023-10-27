@@ -177,12 +177,12 @@ class PopupFromZeroState extends State<PopupFromZero> {
                   .intersection(Rectangle(0, y, 1, childSize.height))?.height.toDouble() ?? 0;
               currentChildWidth = overlappingWidth + ((popupWidth-overlappingWidth) * animation.value);
               currentChildHeight = overlappingHeight + ((childSize.height-overlappingHeight) * animation.value);
-              final overlappingCorrectionX = x < referencePosition.dx  // add offsetCorrection only if not already accounted for in overlappingMeassure
+              final overlappingCorrectionX = (x < referencePosition.dx  // add offsetCorrection only if not already accounted for in overlappingMeassure
                   ? x - referencePosition.dx
-                  : (x - (referencePosition.dx + referenceSize.width)).coerceAtLeast(0);
-              final overlappingCorrectionY = y < referencePosition.dy  // add offsetCorrection only if not already accounted for in overlappingMeassure
+                  : x - (referencePosition.dx + referenceSize.width)).smartClamp(0, widget.offsetCorrection.dx);
+              final overlappingCorrectionY = (y < referencePosition.dy  // add offsetCorrection only if not already accounted for in overlappingMeassure
                   ? y - referencePosition.dy
-                  : (y - (referencePosition.dy + referenceSize.height)).coerceAtLeast(0);
+                  : y - (referencePosition.dy + referenceSize.height)).smartClamp(0, widget.offsetCorrection.dy);
               if (overlappingWidth >= referenceSize.width) {
                 x = referencePosition.dx - ((currentChildWidth-referenceSize.width) * ((widget.popupAlignment.x-1)/-2));
               } else if (referencePosition.dx < x) {
@@ -256,6 +256,11 @@ class PopupFromZeroState extends State<PopupFromZero> {
 
 
 
+extension SmartClamp on double {
+  num smartClamp(double x, double y) {
+    return x<y ? clamp(x, y) : clamp(y, x);
+  }
+}
 
 
 
