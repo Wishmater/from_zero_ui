@@ -442,13 +442,13 @@ class _LifecycleHookState extends State<_LifecycleHook> {
 
 
 
-typedef ApiActionCallback = void Function(BuildContext context, List<dynamic> data);
+typedef ApiActionCallback<T> = void Function(BuildContext context, List<T> data);
 typedef ApiDisablingErrorCallback = String? Function(BuildContext context, List<dynamic> data);
-class APIActionFromZero extends ActionFromZero {
+class APIActionFromZero<T> extends ActionFromZero {
 
   final List<ValueNotifier> dependedNotifiers;
-  final List<ApiProvider> Function(List<dynamic> values) providersBuilder;
-  final ApiActionCallback? onTapApi;
+  final List<ApiProvider<T>> Function(List<dynamic> values) providersBuilder;
+  final ApiActionCallback<T>? onTapApi;
   final ApiDisablingErrorCallback? disablingErrorBuilder;
 
   APIActionFromZero({
