@@ -1086,7 +1086,6 @@ class SkipFrameWidgetState extends State<SkipFrameWidget> {
 
   static void skipNextFrame() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      print ('${DateTime.now()} ${statesWantingToBuild.length}');
       for (int i=0; i<maxWidgetsBuiltPerFrame; i++) {
         if (statesWantingToBuild.isEmpty) return;
         if (statesWantingToBuild.first.skipFramesLeft > 0) {

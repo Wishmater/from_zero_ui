@@ -831,6 +831,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       } else {
         if (_enableSkipFrameWidgetForRows) {
           return SkipFrameWidget(
+            key: ValueKey(row),
             paceholderBuilder: (context) {
               return SizedBox(
                 height: row.height,
@@ -2117,6 +2118,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     smartSort<T>(sorted,
       sortedColumnKey: sortedColumn,
       sortedAscending: sortedAscending,
+      col: widget.columns?[sortedColumn],
     );
     widget.onSort?.call(sorted);
     filter(notifyListeners: notifyListeners);
@@ -2137,9 +2139,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       }
       dynamic aVal = ColModel.getRowValue(a, sortedColumnKey, col);
       dynamic bVal = ColModel.getRowValue(b, sortedColumnKey, col);
-      if (aVal!=null && aVal is! Comparable) aVal = ColModel.getRowValueString(a, sortedColumnKey, col);
-      if (bVal!=null && bVal is! Comparable) bVal = ColModel.getRowValueString(b, sortedColumnKey, col);
-      final sortedAscendingMultiplier = sortedAscending ? 1 : -1;
       if (aVal==null) {
         if (bVal==null) {
           return 0;
@@ -2150,14 +2149,26 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         return -1;
       }
       if (aVal is ContainsValue) {
-        return (aVal as dynamic).compareTo(bVal) * sortedAscendingMultiplier;
+        aVal = aVal.value;
       }
-      return bVal.compareTo(aVal) * -sortedAscendingMultiplier;
+      if (bVal is ContainsValue) {
+        bVal = bVal.value;
+      }
+      final Comparable<dynamic> aCompVal = aVal! is Comparable
+          ? aVal
+          : ColModel.getRowValueString(a, sortedColumnKey, col);
+      final Comparable<dynamic> bCompVal = bVal! is Comparable
+          ? bVal
+          : ColModel.getRowValueString(b, sortedColumnKey, col);
+      return sortedAscending
+          ? aCompVal.compareTo(bCompVal)
+          : bCompVal.compareTo(aCompVal);
     }),);
     for (final e in list) {
       smartSort<T>(e.children,
         sortedColumnKey: sortedColumnKey,
         sortedAscending: sortedAscending,
+        col: col,
       );
     }
   }
