@@ -2230,9 +2230,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     bool pass = true;
     for (final key in valueFilters.keys) {
       if (key!=skipColKey) {
-        final col = widget.columns?[key];
+        // final col = widget.columns?[key];
         if (valueFiltersApplied[key] ?? false) {
-          final value = ColModel.getRowValue(row, key, col);
+          final value = row.values[key]; // availableFilters are calculated with row[key], so it needs to be the same here
+          // final value = ColModel.getRowValue(row, key, col);
           if (value is List || value is ComparableList || value is ListField) {
             final List list = value is List ? value
                 : value is ComparableList ? value.list
