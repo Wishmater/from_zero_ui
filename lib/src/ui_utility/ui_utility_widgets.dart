@@ -1066,24 +1066,44 @@ class SkipFrameWidget extends StatefulWidget {
 
 class SkipFrameWidgetState extends State<SkipFrameWidget> {
 
+  static final maxWidgetsBuiltPerFrame = 5;
+  static final statesWantingToBuild = <SkipFrameWidgetState>[];
   late int skipFramesLeft;
 
   @override
   void initState() {
     super.initState();
     skipFramesLeft = widget.frameSkipCount;
-    skipNextFrame();
+    if (statesWantingToBuild.isEmpty) skipNextFrame();
+    statesWantingToBuild.add(this);
   }
 
-  void skipNextFrame() {
+  @override
+  void dispose() {
+    super.dispose();
+    statesWantingToBuild.remove(this);
+  }
+
+  static void skipNextFrame() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      if (mounted) {
-        skipFramesLeft--;
-        if (skipFramesLeft > 0) {
-          skipNextFrame();
-        } else {
-          setState(() {});
+      print ('${DateTime.now()} ${statesWantingToBuild.length}');
+      for (int i=0; i<maxWidgetsBuiltPerFrame; i++) {
+        if (statesWantingToBuild.isEmpty) return;
+        if (statesWantingToBuild.first.skipFramesLeft > 0) {
+          statesWantingToBuild.first.skipFramesLeft--;
+          if (statesWantingToBuild.first.skipFramesLeft==0) {
+            statesWantingToBuild.first.setState(() {});
+            statesWantingToBuild.removeAt(0);
+          }
         }
+      }
+      if (statesWantingToBuild.isNotEmpty) {
+        for (int i=0; i<statesWantingToBuild.length; i++) {
+          if (statesWantingToBuild[i].skipFramesLeft > 1) {
+            statesWantingToBuild[i].skipFramesLeft--;
+          }
+        }
+        skipNextFrame();
       }
     });
   }
