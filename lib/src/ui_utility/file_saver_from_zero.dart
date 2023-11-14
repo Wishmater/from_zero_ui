@@ -11,6 +11,7 @@ import 'package:open_file/open_file.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
+import 'package:sanitize_filename/sanitize_filename.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -51,9 +52,7 @@ Future<bool> saveFileFromZero ({
     _ongoingDownloads.remove(hashCode);
     return false;
   }
-  name = name // cleanup filename so it doesn't cause issues with system file path requirements
-      .replaceAll('/', '-')
-      .replaceAll(r'\', '-'); // TODO 2 validate all banned characters, depending on Platform
+  name = sanitizeFilename(name); // cleanup filename so it doesn't cause issues with system file path requirements
 
   SnackBarControllerFromZero? downloadSnackBarController;
   bool cancelled = false;
