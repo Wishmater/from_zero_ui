@@ -424,6 +424,8 @@ class ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
   TableController<T?> tableController = TableController();
   FocusNode initialFocus = FocusNode();
 
+  final GlobalKey addonKey = GlobalKey();
+
   bool get showSearchBox => widget.showSearchBox ?? widget.possibleValues.length > 3;
 
   @override
@@ -517,6 +519,7 @@ class ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
                   ]
                 : [],
             headerWidgetAddon: ColoredBox(
+              key: addonKey,
               color: Theme.of(context).cardColor,
               child: Column(
                 children: [
