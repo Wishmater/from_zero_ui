@@ -2139,6 +2139,12 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       }
       dynamic aVal = ColModel.getRowValue(a, sortedColumnKey, col);
       dynamic bVal = ColModel.getRowValue(b, sortedColumnKey, col);
+      if (aVal is ContainsValue) {
+        aVal = aVal.value;
+      }
+      if (bVal is ContainsValue) {
+        bVal = bVal.value;
+      }
       if (aVal==null) {
         if (bVal==null) {
           return 0;
@@ -2147,12 +2153,6 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       }
       if (bVal==null) {
         return -1;
-      }
-      if (aVal is ContainsValue) {
-        aVal = aVal.value;
-      }
-      if (bVal is ContainsValue) {
-        bVal = bVal.value;
       }
       final Comparable<dynamic> aCompVal = aVal! is Comparable
           ? aVal
