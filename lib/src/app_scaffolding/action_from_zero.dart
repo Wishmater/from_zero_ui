@@ -254,50 +254,55 @@ class ActionFromZero extends StatelessWidget {
     bool forceIconSpace = false,
   }) {
     final enabled = disablingError==null;
-    Widget result = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          if (icon!=null) const SizedBox(width: 12,),
-          if (icon!=null) IconTheme(
-            data: Theme.of(context).iconTheme.copyWith(
-              color: !enabled || onTap==null
-                  ? Theme.of(context).disabledColor
-                  : Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white,
-            ),
-            child: icon,
-          ),
-          if (icon==null && forceIconSpace) const SizedBox(width: 36,),
-          const SizedBox(width: 12,),
-          Expanded(
-            child: Text(title,
-              style: TextStyle(
-                fontSize: 16,
-                height: 1.1,
-                color: !enabled || onTap==null
-                    ? Theme.of(context).disabledColor
-                    : Theme.of(context).textTheme.bodyLarge!.color,
+    final originalContext = context;
+    return Builder(
+      builder: (context) {
+        Widget result = Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              if (icon!=null) const SizedBox(width: 12,),
+              if (icon!=null) IconTheme(
+                data: Theme.of(context).iconTheme.copyWith(
+                  color: !enabled || onTap==null
+                      ? Theme.of(context).disabledColor
+                      : Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white,
+                ),
+                child: icon,
               ),
-            ),
+              if (icon==null && forceIconSpace) const SizedBox(width: 36,),
+              const SizedBox(width: 12,),
+              Expanded(
+                child: Text(title,
+                  style: TextStyle(
+                    fontSize: 16,
+                    height: 1.1,
+                    color: !enabled || onTap==null
+                        ? Theme.of(context).disabledColor
+                        : Theme.of(context).textTheme.bodyLarge!.color,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12,),
+            ],
           ),
-          const SizedBox(width: 12,),
-        ],
-      ),
-    );
-    result = TextButton(
-      onPressed: (!enabled || onTap==null) ? null : () => onTap.call(context),
-      style: TextButton.styleFrom(
-        foregroundColor: !enabled || onTap==null
-            ? Theme.of(context).disabledColor
-            : Theme.of(context).textTheme.bodyLarge!.color,
-        padding: EdgeInsets.zero,
-      ),
-      child: result,
-    );
-    return TooltipFromZero(
-      message: disablingError,
-      child: result,
+        );
+        result = TextButton(
+          onPressed: (!enabled || onTap==null) ? null : () => onTap.call(originalContext),
+          style: TextButton.styleFrom(
+            foregroundColor: !enabled || onTap==null
+                ? Theme.of(context).disabledColor
+                : Theme.of(context).textTheme.bodyLarge!.color,
+            padding: EdgeInsets.zero,
+          ),
+          child: result,
+        );
+        return TooltipFromZero(
+          message: disablingError,
+          child: result,
+        );
+      },
     );
   }
 

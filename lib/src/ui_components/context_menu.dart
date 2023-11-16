@@ -99,7 +99,7 @@ class ContextMenuFromZeroState extends ConsumerState<ContextMenuFromZero> {
       anchorAlignment: anchorAlignment,
       offsetCorrection: offsetCorrection,
       barrierColor: barrierColor,
-      builder: (context) {
+      builder: (popupContext) {
         final scrollController = ScrollController();
         if (contextMenuWidget!=null) {
           return contextMenuWidget;
@@ -111,7 +111,7 @@ class ContextMenuFromZeroState extends ConsumerState<ContextMenuFromZero> {
               shrinkWrap: true,
               itemCount: actions.length,
               padding: const EdgeInsets.symmetric(vertical: 8),
-              itemBuilder: (context, index) {
+              itemBuilder: (itemContext, index) {
                 final action = actions[index];
                 return action.copyWith(
                   onTap: action.onTap==null ? null : (context) {
