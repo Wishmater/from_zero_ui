@@ -47,8 +47,9 @@ dependencies:
   url_launcher: ^6.1.12
   path_provider: ^2.1.0
   platform_detect: ^2.0.7
+  device_info_plus: ^9.0.3
   permission_handler: ^10.4.3  # if build window throws error, check https://github.com/Baseflow/flutter-permission-handler/issues/819#issuecomment-1673271795
-  open_file: ^3.3.2
+  open_file_plus: ^3.4.1  # version 3.0.0+ requires MANAGE_EXTERNAL_STORAGE permission to open files, even though the files are owned by our app
   file_picker: ^5.5.0
   desktop_drop: ^0.4.1
   universal_html: ^2.2.3 # used for file_saver_from_zero download on web

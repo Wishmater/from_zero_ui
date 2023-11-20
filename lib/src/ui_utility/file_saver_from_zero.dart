@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:humanizer/humanizer.dart';
 import 'package:intl/intl.dart';
 import 'package:mlog/mlog.dart';
-import 'package:open_file/open_file.dart';
+import 'package:open_file_plus/open_file_plus.dart';
 import 'package:pasteboard/pasteboard.dart';
 import 'package:path/path.dart' as p;
 import 'package:permission_handler/permission_handler.dart';
@@ -48,7 +49,7 @@ Future<bool> saveFileFromZero ({
   final snackbarHostContext = isHostContext ? context : context.findAncestorStateOfType<SnackBarHostFromZeroState>()!.context;
   final localizations = FromZeroLocalizations.of(snackbarHostContext);
 
-  if (!kIsWeb && Platform.isAndroid && !(await Permission.storage.request().isGranted)) {
+  if (!await requestDefaultFilePermission()) {
     _ongoingDownloads.remove(hashCode);
     return false;
   }
@@ -230,7 +231,9 @@ Future<bool> saveFileFromZero ({
             label: localizations.translate('open').toUpperCase(),
             onPressed: () async {
               if (Platform.isAndroid){
-                await OpenFile.open(file!.absolute.path);
+                final res = await OpenFile.open(file!.absolute.path);
+                print (res);
+                print ('${res.message} -- ${res.type}');
               } else{
                 await launch(file!.absolute.path);
               }
@@ -311,4 +314,24 @@ Future<bool> saveFileFromZero ({
 
   return success;
 
+}
+
+
+Future<bool> requestDefaultFilePermission() async {
+  if (kIsWeb) {
+    return true;
+  } else if (Platform.isAndroid) {
+    final androidInfo = await DeviceInfoPlugin().androidInfo;
+    if (androidInfo.version.sdkInt >= 29) {
+      // apparently, in Android 10+, we implicitly have access to files we own (created by us)
+      // we only need to request file permissions in older versions https://stackoverflow.com/a/73630987
+      // also: on Android 13+ (sdkVersion 33), we would need to ask for granular
+      // permissions, if we wanted to access other app's files: https://github.com/Baseflow/flutter-permission-handler/issues/907#issuecomment-1326089512
+      return true;
+    } else {
+      return (await Permission.storage.request()).isGranted;
+    }
+  } else {
+    return true;
+  }
 }

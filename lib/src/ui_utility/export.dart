@@ -559,7 +559,7 @@ class ExportState extends State<Export> {
       size = Size(mult*size.width, mult*size.height);
     }
     export = () async {
-      if (!Platform.isAndroid || (await Permission.storage.request().isGranted)){
+      if (await requestDefaultFilePermission()){
         showModalFromZero(
           context: context,
           configuration: const FadeScaleTransitionConfiguration(

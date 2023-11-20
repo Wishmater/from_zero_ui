@@ -47,7 +47,7 @@ class UpdateFromZero{
       _checkUpdate = _checkUpdateInternal();
       File file = File(await getDownloadPath());
       if (file.existsSync()) {
-        if (!kIsWeb && Platform.isAndroid && await Permission.storage.request().isGranted) {
+        if (!kIsWeb && Platform.isAndroid && await requestDefaultFilePermission()) {
           file.delete(recursive: true);
         } else {
           if (file.path.endsWith('.zip')) {
@@ -108,7 +108,7 @@ class UpdateFromZero{
     if (updateAvailable==true && !kIsWeb){
       log (LgLvl.fine, 'Downloading Update...', type: FzLgType.appUpdate);
       final downloadPath = await getDownloadPath();
-      if (!kIsWeb && Platform.isAndroid && !(await Permission.storage.request().isGranted)) {
+      if (!await requestDefaultFilePermission()) {
         return null;
       }
       final download = dio.download(
@@ -165,7 +165,7 @@ class UpdateFromZero{
 
         } else if (Platform.isAndroid) {
 
-          if (await Permission.storage.request().isGranted){
+          if (await requestDefaultFilePermission()){
             // this requires adding the following permission to manifest, which causes problems with google play upload
             // <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"></uses-permission>
             RUpgrade.installByPath(downloadPath);
