@@ -685,6 +685,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     for (final e in elements) {
       int index = newValue.indexOf(e);
       final newItem = e.copyWith() as T;
+      if (e is LazyDAO) (e as LazyDAO).ensureInitialized();
       newItem.id = null;
       newItem.parentDAO = dao;
       if (index<0) {
