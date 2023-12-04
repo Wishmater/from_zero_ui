@@ -4,7 +4,7 @@ import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/util/copied_flutter_widgets/time_picker_dialog_from_zero.dart' as time_picker_dialog_from_zero;
 import 'package:intl/intl.dart';
 
-typedef DatePickerButtonChildBuilder = Widget Function(BuildContext context, String? title, String? hint, DateTime? value, DateFormat formatter, bool enabled, bool clearable,);
+typedef DatePickerButtonChildBuilder = Widget Function(BuildContext context, String? title, String? hint, DateTime? value, DateFormat formatter, bool enabled, bool showClearButton,);
 /// returns true if navigator should pop after (default true)
 typedef OnDateSelected = bool? Function(DateTime? value);
 
@@ -27,6 +27,7 @@ class DatePickerFromZero extends StatefulWidget {
   final DatePickerButtonChildBuilder? buttonChildBuilder;
   final double? popupWidth;
   final bool clearable;
+  final bool showClearButton;
   final FocusNode? focusNode;
   final ButtonStyle? buttonStyle; /// if null, an InkWell will be used instead
   final DateTimePickerType type;
@@ -43,6 +44,7 @@ class DatePickerFromZero extends StatefulWidget {
     this.buttonChildBuilder,
     this.enabled = true,
     this.clearable = true,
+    bool? showClearButton,
     this.popupWidth,
     this.focusNode,
     this.buttonStyle = const ButtonStyle(
@@ -50,12 +52,13 @@ class DatePickerFromZero extends StatefulWidget {
     ),
     this.type = DateTimePickerType.date,
     super.key,
-  }) :  formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY);
+  })  : showClearButton = showClearButton ?? clearable,
+        formatter = formatter ?? DateFormat(DateFormat.YEAR_MONTH_DAY);
 
   @override
   DatePickerFromZeroState createState() => DatePickerFromZeroState();
 
-  static Widget defaultButtonChildBuilder(BuildContext context, String? title, String? hint, dynamic value, DateTimePickerType type, DateFormat formatter, bool enabled, bool clearable) {
+  static Widget defaultButtonChildBuilder(BuildContext context, String? title, String? hint, dynamic value, DateTimePickerType type, DateFormat formatter, bool enabled, bool showClearButton) {
     final theme = Theme.of(context);
     final formattedValue = value==null ? null : type==DateTimePickerType.time
         ? TimeOfDay.fromDateTime(value).format(context)
@@ -66,7 +69,7 @@ class DatePickerFromZero extends StatefulWidget {
           minHeight: 38, minWidth: 192,
         ),
         child: Padding(
-          padding: EdgeInsets.only(right: enabled&&clearable ? 32 : 0),
+          padding: EdgeInsets.only(right: enabled&&showClearButton ? 32 : 0),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -87,7 +90,7 @@ class DatePickerFromZero extends StatefulWidget {
                       ),
                   ),
               const SizedBox(width: 4,),
-              if (enabled && !clearable)
+              if (enabled && !showClearButton)
                 const Icon(Icons.arrow_drop_down),
               const SizedBox(width: 4,),
             ],
@@ -126,9 +129,9 @@ class DatePickerFromZeroState extends State<DatePickerFromZero> {
   Widget build(BuildContext context) {
     Widget child;
     if (widget.buttonChildBuilder==null) {
-      child = DatePickerFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, widget.value, widget.type, widget.formatter, widget.enabled, widget.clearable);
+      child = DatePickerFromZero.defaultButtonChildBuilder(context, widget.title, widget.hint, widget.value, widget.type, widget.formatter, widget.enabled, widget.clearable&&widget.showClearButton);
     } else {
-      child = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.formatter, widget.enabled, widget.clearable);
+      child = widget.buttonChildBuilder!(context, widget.title, widget.hint, widget.value, widget.formatter, widget.enabled, widget.clearable&&widget.showClearButton);
     }
     final onPressed = widget.enabled ? () async {
       buttonFocusNode.requestFocus();
@@ -142,6 +145,7 @@ class DatePickerFromZeroState extends State<DatePickerFromZero> {
             value: widget.value,
             firstDate: widget.firstDate,
             lastDate: widget.lastDate,
+            clearable: widget.clearable,
             onSelected: (value) {
               if (widget.enabled) {
                 widget.onSelected?.call(value);
@@ -175,7 +179,7 @@ class DatePickerFromZeroState extends State<DatePickerFromZero> {
     return Stack(
       children: [
         child,
-        if (widget.enabled && widget.clearable)
+        if (widget.enabled && widget.clearable && widget.showClearButton)
           Positioned(
             right: 8, top: 0, bottom: 0,
             child: ExcludeFocus(
@@ -224,6 +228,7 @@ class DatePickerFromZeroPopup extends StatefulWidget {
   final OnDateSelected? onSelected;
   final String? title;
   final DateTimePickerType type;
+  final bool clearable;
 
   const DatePickerFromZeroPopup({
     required this.firstDate,
@@ -232,6 +237,7 @@ class DatePickerFromZeroPopup extends StatefulWidget {
     this.onSelected,
     this.title,
     this.type = DateTimePickerType.date,
+    this.clearable = true,
     super.key,
   });
 
@@ -290,6 +296,23 @@ class DatePickerFromZeroPopupState extends State<DatePickerFromZeroPopup> {
                 },
               ),
             ),
+            if (widget.clearable)
+              Container(
+                alignment: Alignment.bottomRight,
+                padding: const EdgeInsets.only(right: 16),
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: Theme.of(context).textTheme.bodyLarge!.color!.withOpacity(0.9),
+                  ),
+                  onPressed: () {
+                    bool? pop = widget.onSelected?.call(null);
+                    if (pop??true) {
+                      Navigator.of(context).pop(true);
+                    }
+                  },
+                  child: const Text('Sin Fecha'), // TODO 3 internationalize
+                ),
+              ),
             const SizedBox(height: 16,),
           ],
         );

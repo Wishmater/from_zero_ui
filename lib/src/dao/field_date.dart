@@ -196,7 +196,8 @@ class DateField extends Field<DateTime> {
         Widget result = DatePickerFromZero(
           focusNode: focusNode,
           enabled: enabled,
-          clearable: false,
+          clearable: clearable,
+          showClearButton: false,
           title: uiName,
           firstDate: firstDate,
           lastDate: lastDate,
