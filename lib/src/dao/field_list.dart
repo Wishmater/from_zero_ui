@@ -83,6 +83,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   bool showAddButtonAtEndOfTable;
   ContextFulFieldValueGetter<Widget, ListField<T, U>>? tableErrorWidget;
   dynamic initialSortedColumn;
+  final bool sortNullOnTop;
   ValueChanged<RowModel<T>>? onRowTap;
   bool? tableSortable;
   bool? tableFilterable;
@@ -269,6 +270,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     super.hiddenInViewGetter,
     super.hiddenInFormGetter,
     this.initialSortedColumn,
+    this.sortNullOnTop = true,
     this.onRowTap,
     super.validatorsGetter,
     super.validateOnlyOnConfirm,
@@ -492,6 +494,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     String Function(ListField field)? toStringGetter,
     ContextFulFieldValueGetter<List<RowAction<T>>, ListField<T, U>>? extraRowActionBuilders,
     int? initialSortColumn,
+    bool? sortNullOnTop,
     bool? tableCellsEditable,
     bool? allowTableCustomization,
     bool? ignoreWidthGettersIfEmpty,
@@ -569,6 +572,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       showElementCount: showElementCount ?? this.showElementCount,
       rowHeight: rowHeight ?? this.rowHeight,
       initialSortedColumn: initialSortColumn ?? this.initialSortedColumn,
+      sortNullOnTop: sortNullOnTop ?? this.sortNullOnTop,
       tableCellsEditable: tableCellsEditable ?? this.tableCellsEditable,
       allowTableCustomization: allowTableCustomization ?? this.allowTableCustomization,
       ignoreWidthGettersIfEmpty: ignoreWidthGettersIfEmpty ?? this.ignoreWidthGettersIfEmpty,
@@ -981,6 +985,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       actionsGetter: availablePoolTableActions,
       allowAddNew: allowAddNew && emptyDAO.canSave,
       initialSortedColumn: initialSortedColumn,
+      sortNullOnTop: sortNullOnTop,
       tableFooterStickyOffset: 56,
       addSearchAction: true,
       allowMultipleSelection: allowAddMultipleFromAvailablePool,
@@ -2190,6 +2195,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           minWidthGetter: getMinWidth,
           maxWidthGetter: asSliver ? getMaxWidth : null,
           initialSortedColumn: initialSortedColumn,
+          sortNullOnTop: sortNullOnTop,
           tableController: tableController,
           allowCustomization: allowTableCustomization,
           alternateRowBackgroundSmartly: false,

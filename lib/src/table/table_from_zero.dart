@@ -47,6 +47,7 @@ class TableFromZero<T> extends StatefulWidget {
   final ScrollController? scrollController;
   final double tableHorizontalPadding;
   final dynamic initialSortedColumn;
+  final bool sortNullOnTop;
   final Widget? emptyWidget;
   final bool? Function(bool? value, List<RowModel<T>> filtered)? onAllSelected;
   final Widget? horizontalDivider;
@@ -92,6 +93,7 @@ class TableFromZero<T> extends StatefulWidget {
     this.scrollController,
     this.tableHorizontalPadding = 8,
     this.initialSortedColumn,
+    this.sortNullOnTop = true,
     this.emptyWidget,
     this.onAllSelected,
     this.horizontalDivider, //const Divider(height: 1, color: const Color(0xFF757575),),
@@ -2119,6 +2121,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       sortedColumnKey: sortedColumn,
       sortedAscending: sortedAscending,
       col: widget.columns?[sortedColumn],
+      sortNullOnTop: widget.sortNullOnTop,
     );
     widget.onSort?.call(sorted);
     filter(notifyListeners: notifyListeners);
@@ -2127,12 +2130,13 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     bool sortedAscending = true,
     Object? sortedColumnKey,
     ColModel? col,
+    bool sortNullOnTop = true,
   }) {
     if (list.isEmpty) return;
     mergeSort<RowModel<T>>(list.cast<RowModel<T>>(), compare: ((RowModel<T> a, RowModel<T> b) {
       if ((a.alwaysOnTop!=null || b.alwaysOnTop!=null) && a.alwaysOnTop!=b.alwaysOnTop) {
-        if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1;
-        if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1;
+        if (a.alwaysOnTop==true || b.alwaysOnTop==false) return -1; // ignore: use_if_null_to_convert_nulls_to_bools
+        if (a.alwaysOnTop==false || b.alwaysOnTop==true) return 1; // ignore: use_if_null_to_convert_nulls_to_bools
       }
       if (sortedColumnKey==null) {
         return 0;
@@ -2149,10 +2153,10 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         if (bVal==null) {
           return 0;
         }
-        return 1;
+        return sortNullOnTop ? 1 : -1;
       }
       if (bVal==null) {
-        return -1;
+        return sortNullOnTop ? -1 : 1;
       }
       final Comparable<dynamic> aCompVal = aVal! is Comparable
           ? aVal
@@ -2169,6 +2173,7 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
         sortedColumnKey: sortedColumnKey,
         sortedAscending: sortedAscending,
         col: col,
+        sortNullOnTop: sortNullOnTop,
       );
     }
   }
