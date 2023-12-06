@@ -53,7 +53,7 @@ class FileField extends StringField {
     super.fieldGlobalKey,
     super.focusNode,
     super.invalidateNonEmptyValuesIfHiddenInForm,
-    super.defaultValue = null,
+    super.defaultValue = '',
     super.backgroundColor,
     super.actionsGetter,
     super.viewWidgetBuilder,

@@ -21,6 +21,8 @@ final _percentFormatter = NumberFormat.decimalPercentPattern(decimalDigits: 1);
 
 Set<int> _ongoingDownloads = {};
 
+bool saveFileFromZeroDefaultAutoOpenOnFinish = false;
+
 Future<bool> saveFileFromZero ({
   required BuildContext context,
   required FutureOr<List<int>> Function() data,
@@ -31,7 +33,7 @@ Future<bool> saveFileFromZero ({
   ValueNotifier<int?>? fileSize,
   VoidCallback? onCancel,
   FutureOr<List<int>> Function()? onRetry,
-  bool autoOpenOnFinish = false,
+  bool? autoOpenOnFinish,
   bool showSnackBars = true,
   bool showDownloadSnackBar = true,
   bool showResultSnackBar = true, // TODO 3 implement output pickers in not web (optional)
@@ -182,15 +184,19 @@ Future<bool> saveFileFromZero ({
       await file.writeAsBytes(bytes);
 
       // get pretty path to show to user
-      if (Platform.isWindows) {
-        uiPath = localizations.translate('documents');
+      if (PlatformExtended.customDownloadsDirectory!=null) {
+        uiPath = file.absolute.path;
       } else {
-        uiPath = localizations.translate('downloads');
+        if (Platform.isWindows) {
+          uiPath = localizations.translate('documents');
+        } else {
+          uiPath = localizations.translate('downloads');
+        }
+        if (pathAppend!=null) {
+          uiPath = p.join(uiPath, pathAppend);
+        }
+        uiPath = p.join(uiPath, name);
       }
-      if (pathAppend!=null) {
-        uiPath = p.join(uiPath, pathAppend);
-      }
-      uiPath = p.join(uiPath, name);
 
     }
 
@@ -208,7 +214,7 @@ Future<bool> saveFileFromZero ({
   downloadSnackBarController?.dismiss();
   // show results snackBar
   bool retry = false;
-  if (success && autoOpenOnFinish) {
+  if (success && (autoOpenOnFinish??saveFileFromZeroDefaultAutoOpenOnFinish)) {
     if (Platform.isAndroid){
       await OpenFile.open(file!.absolute.path);
     } else{

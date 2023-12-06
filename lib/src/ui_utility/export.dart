@@ -164,7 +164,6 @@ class Export extends StatefulWidget { //TODO 3 internationalize
   static Future<String> getDefaultDirectoryPath([String? addon]) async{
     String result = (await PlatformExtended.getDownloadsDirectory()).absolute.path;
     if (addon!=null){
-      if (!addon.endsWith('/')) addon += '/';
       result = p.join(result, addon);
     }
     return result;

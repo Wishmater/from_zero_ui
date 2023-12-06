@@ -1578,7 +1578,9 @@ class PlatformExtended {
     return !PlatformExtended.isMobile;
   }
 
+  static String? customDownloadsDirectory;
   static Future<Directory> getDownloadsDirectory() async {
+    if (customDownloadsDirectory!=null) return Directory(customDownloadsDirectory!);
     if (kIsWeb) {
       throw UnimplementedError('Web needs to download through the browser');
     }
