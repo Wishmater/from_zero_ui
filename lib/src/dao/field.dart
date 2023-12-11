@@ -332,7 +332,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       try {
         error = await e;
       } catch (e, st) {
-        final message = 'Error al ejecutar validación: ${ApiProviderBuilder.getErrorTitle(context, e, st)}\n${ApiProviderBuilder.getErrorSubtitle(context, error, st)}';
+        final message = 'Error al ejecutar validación: ${ApiProviderBuilder.getErrorTitle(context, e, st)}\n${ApiProviderBuilder.getErrorSubtitle(context, e, st)}';
         log (LgLvl.error, message, e: e, st: st, type: FzLgType.dao);
         result.add(ValidationError(field: field,
           error: message,
