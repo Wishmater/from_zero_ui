@@ -447,14 +447,15 @@ class _LifecycleHookState extends State<_LifecycleHook> {
 
 
 
-typedef ApiActionCallback<T> = void Function(BuildContext context, List<T> data);
-typedef ApiDisablingErrorCallback = String? Function(BuildContext context, List<dynamic> data);
+typedef ApiActionCallback<T, R> = R Function(BuildContext context, List<T> data);
 class APIActionFromZero<T> extends ActionFromZero {
 
   final List<ValueNotifier> dependedNotifiers;
   final List<ApiProvider<T>> Function(List<dynamic> values) providersBuilder;
-  final ApiActionCallback<T>? onTapApi;
-  final ApiDisablingErrorCallback? disablingErrorBuilder;
+  final ApiActionCallback<T, void>? onTapApi;
+  final ApiActionCallback<T, String?>? disablingErrorBuilder;
+  final ApiActionCallback<T, String?>? titleApiBuilder;
+  final ApiActionCallback<T, Widget?>? iconApiBuilder;
 
   APIActionFromZero({
     required super.title,
@@ -464,6 +465,8 @@ class APIActionFromZero<T> extends ActionFromZero {
     super. breakpoints,
     this.dependedNotifiers = const [],
     this.disablingErrorBuilder,
+    this.titleApiBuilder,
+    this.iconApiBuilder,
     super.key,
   });
 
@@ -512,8 +515,8 @@ class APIActionFromZero<T> extends ActionFromZero {
             };
             return ActionFromZero.defaultIconBuilder(
               context: context,
-              title: title,
-              icon: icon,
+              title: titleApiBuilder?.call(context, data) ?? title,
+              icon: iconApiBuilder?.call(context, data) ?? icon,
               onTap: onTap,
               disablingError: disablingErrorBuilder?.call(context, data),
               color: color,
@@ -523,7 +526,14 @@ class APIActionFromZero<T> extends ActionFromZero {
             onTap = null;
             return Stack(
               children: [
-                ActionFromZero.defaultIconBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', color: color),
+                ActionFromZero.defaultIconBuilder(
+                  context: context,
+                  title: title,
+                  icon: icon,
+                  onTap: null,
+                  disablingError: '',
+                  color: color,
+                ),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: ApiProviderBuilder.defaultLoadingBuilder(context, progress, size: 32),
@@ -533,8 +543,16 @@ class APIActionFromZero<T> extends ActionFromZero {
             );
           },
           errorBuilder: (context, error, stackTrace, onRetry) {
+            // TODO 1 this error will be completely buried
             onTap = null;
-            return ActionFromZero.defaultIconBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', color: color);
+            return ActionFromZero.defaultIconBuilder(
+              context: context,
+              title: title,
+              icon: icon,
+              onTap: null,
+              disablingError: '',
+              color: color,
+            );
           },
         );
       },
@@ -562,8 +580,8 @@ class APIActionFromZero<T> extends ActionFromZero {
             };
             return ActionFromZero.defaultButtonBuilder(
               context: context,
-              title: title,
-              icon: icon,
+              title: titleApiBuilder?.call(context, data) ?? title,
+              icon: iconApiBuilder?.call(context, data) ?? icon,
               onTap: onTap,
               disablingError: disablingErrorBuilder?.call(context, data),
               color: color,
@@ -573,7 +591,14 @@ class APIActionFromZero<T> extends ActionFromZero {
             onTap = null;
             return Stack(
               children: [
-                ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', color: color),
+                ActionFromZero.defaultButtonBuilder(
+                  context: context,
+                  title: title,
+                  icon: icon,
+                  onTap: null,
+                  disablingError: '',
+                  color: color,
+                ),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: ApiProviderBuilder.defaultLoadingBuilder(context, progress, size: 34),
@@ -583,8 +608,16 @@ class APIActionFromZero<T> extends ActionFromZero {
             );
           },
           errorBuilder: (context, error, stackTrace, onRetry) {
+            // TODO 1 this error will be completely buried
             onTap = null;
-            return ActionFromZero.defaultButtonBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', color: color);
+            return ActionFromZero.defaultButtonBuilder(
+              context: context,
+              title: title,
+              icon: icon,
+              onTap: null,
+              disablingError: '',
+              color: color,
+            );
           },
         );
       },
@@ -612,8 +645,8 @@ class APIActionFromZero<T> extends ActionFromZero {
             };
             return ActionFromZero.defaultOverflowBuilder(
               context: context,
-              title: title,
-              icon: icon,
+              title: titleApiBuilder?.call(context, data) ?? title,
+              icon: iconApiBuilder?.call(context, data) ?? icon,
               onTap: onTap,
               disablingError: disablingErrorBuilder?.call(context, data),
               forceIconSpace: forceIconSpace,
@@ -623,7 +656,14 @@ class APIActionFromZero<T> extends ActionFromZero {
             onTap = null;
             return Stack(
               children: [
-                ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', forceIconSpace: forceIconSpace),
+                ActionFromZero.defaultOverflowBuilder(
+                  context: context,
+                  title: title,
+                  icon: icon,
+                  onTap: null,
+                  disablingError: '',
+                  forceIconSpace: forceIconSpace,
+                ),
                 Positioned.fill(
                   child: IgnorePointer(
                     child: ApiProviderBuilder.defaultLoadingBuilder(context, progress, size: 32),
@@ -633,8 +673,16 @@ class APIActionFromZero<T> extends ActionFromZero {
             );
           },
           errorBuilder: (context, error, stackTrace, onRetry) {
+            // TODO 1 this error will be completely buried
             onTap = null;
-            return ActionFromZero.defaultOverflowBuilder(context: context, title: title, icon: icon, onTap: null, disablingError: '', forceIconSpace: forceIconSpace);
+            return ActionFromZero.defaultOverflowBuilder(
+              context: context,
+              title: title,
+              icon: icon,
+              onTap: null,
+              disablingError: '',
+              forceIconSpace: forceIconSpace,
+            );
           },
         );
       },
