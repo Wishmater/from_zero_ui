@@ -67,7 +67,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     DAOValueGetter<String, ModelType>?  editDialogTitle,
     DAOValueGetter<String, ModelType>?  saveConfirmationDialogTitle,
     DAOValueGetter<String, ModelType>?  saveButtonTitle,
-    DAOValueGetter<String, ModelType>?  saveConfirmationDialogDescription,
+    DAOValueGetter<Widget, ModelType>?  saveConfirmationDialogDescription,
   }) {
     // assert(!_isInitialized, 'Attempted to initialize DAO twice: ${this.runtimeType}: ${this.classUiName}');
     _isInitialized = true;
@@ -154,7 +154,7 @@ abstract class LazyDAO<ModelType> extends DAO<ModelType> {
     DAOValueGetter<String, ModelType>? editDialogTitle,
     DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle,
     DAOValueGetter<String, ModelType>? saveButtonTitle,
-    DAOValueGetter<String, ModelType>? saveConfirmationDialogDescription,
+    DAOValueGetter<Widget, ModelType>? saveConfirmationDialogDescription,
   }) {
     final result = copyWithLazyData();
     if (id!=null

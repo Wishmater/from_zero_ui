@@ -79,7 +79,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
   DAOValueGetter<String, ModelType>? editDialogTitle;
   DAOValueGetter<String, ModelType>? saveButtonTitle;
   DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle;
-  DAOValueGetter<String, ModelType>? saveConfirmationDialogDescription;
+  DAOValueGetter<Widget, ModelType>? saveConfirmationDialogDescription;
   FutureOr<String>? get defaultExportPath => null;
 
 
@@ -168,7 +168,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     DAOValueGetter<String, ModelType>? editDialogTitle,
     DAOValueGetter<String, ModelType>? saveConfirmationDialogTitle,
     DAOValueGetter<String, ModelType>? saveButtonTitle,
-    DAOValueGetter<String, ModelType>? saveConfirmationDialogDescription,
+    DAOValueGetter<Widget, ModelType>? saveConfirmationDialogDescription,
   }) {
     final result = DAO<ModelType>(
       id: id??this.id,
@@ -585,9 +585,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(validation
-                            ? (saveConfirmationDialogDescription?.call(this) ?? ("${FromZeroLocalizations.of(context).translate("confirm_save_desc")}\r\n$shownName"))
-                            : 'Debe resolver los siguientes errores de validación:',), // TODO 3 internationalize
+                        validation
+                            ? (saveConfirmationDialogDescription?.call(this) ?? Text("${FromZeroLocalizations.of(context).translate("confirm_save_desc")}\r\n$shownName"))
+                            : const Text('Debe resolver los siguientes errores de validación:',), // TODO 3 internationalize
                         SaveConfirmationValidationMessage(allErrors: validationErrors),
                       ],
                     ),
