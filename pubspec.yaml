@@ -64,10 +64,11 @@ dependencies:
   dio_smart_retry: ^5.0.0
   sanitize_filename: ^1.0.5
   archive: ^3.3.7 # used to unzip the update on Windows
-  excel:
+  excel: # ^4.0.2
+#    path: ../excel/
     git:
-      url: https://github.com/Z32D/excel
-      ref: 9e78666f14f5068521fc7cd5952585e15e4b3b6a
+      url: https://github.com/Wishmater/excel
+      ref: a166206797368ee3f75092ec7e32c20e3c3546c1
   pdf: # 3.10.5
     git:
       url: https://github.com/Wishmater/dart_pdf

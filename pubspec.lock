@@ -253,12 +253,11 @@ packages:
   excel:
     dependency: "direct main"
     description:
-      path: "."
-      ref: "9e78666f14f5068521fc7cd5952585e15e4b3b6a"
-      resolved-ref: "9e78666f14f5068521fc7cd5952585e15e4b3b6a"
-      url: "https://github.com/Z32D/excel"
-    source: git
-    version: "2.0.0-null-safety-4"
+      name: excel
+      sha256: c299b5ccf14bb7f24fe64ca1a15e4a3796ab563575087ce3f7e07fc2e3429db5
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.2"
   extended_image:
     dependency: "direct main"
     description:

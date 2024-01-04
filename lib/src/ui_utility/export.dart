@@ -7,6 +7,7 @@ import 'package:dartx/dartx.dart';
 import 'package:date/date.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' as material;
 import 'package:flutter/rendering.dart';
 import 'package:flutter/rendering.dart' as rendering;
 import 'package:flutter/services.dart';
@@ -413,7 +414,7 @@ class ExportState extends State<Export> {
               } else if(!widthSetted) {
                 final percentage = (col?.width??(col?.flex??0)) * 100 / flexMultiplier;
                 double w = (tableWidth * percentage / 100);
-                sheetObject.setColWidth(j, w/6.4);
+                sheetObject.setColumnWidth(j, w/6.4);
                 if(j==keys.length-1){
                   widthSetted = true;
                 }
@@ -471,14 +472,10 @@ class ExportState extends State<Export> {
                 if (formatter!=null) {
                   final pattern = formatter.toString().split(',');
                   pattern.removeAt(0);
-                  cellStyle.numFormat = pattern.join(',').replaceAll(')', '').trim();
+                  String formatCode = pattern.join(',').replaceAll(')', '').trim();
+                  cellStyle.numberFormat = CustomNumericNumFormat(formatCode: formatCode);
                 } else {
-                  cellStyle.numFormat = "###,###,###,###,##0.00";
-                }
-                if (cellStyle.numFormat!=null) {
-                  if(!excel.numFormats.contains(cellStyle.numFormat)) {
-                    excel.addNumFormats(cellStyle.numFormat!);
-                  }
+                  cellStyle.numberFormat = NumFormat.standard_4;
                 }
               } else if (col is BoolColModel && (row.values[key] is bool || row.values[key] is ContainsValue<bool>)) {
                 cellValue = col.getValueString(row, key);
@@ -491,18 +488,28 @@ class ExportState extends State<Export> {
               } else {
                 cellValue = row.values[key];
               }
-              if (cellValue==null || cellValue is num) {
-                cell.value = cellValue ?? '';
+              if (cellValue==null) {
+                cell.value = null;
+              } else if (cellValue is bool) {
+                cell.value = BoolCellValue(cellValue);
+              } else if (cellValue is int) {
+                cell.value = IntCellValue(cellValue);
+              } else if (cellValue is double) {
+                cell.value = DoubleCellValue(cellValue);
+              } else if (cellValue is Date) {
+                cell.value = DateCellValue(year: cellValue.year, month: cellValue.month, day: cellValue.day);
+              } else if (cellValue is DateTime) {
+                cell.value = DateTimeCellValue.fromDateTime(cellValue);
               } else if (cellValue is List) {
-                cell.value = ListField.listToStringAll(cellValue);
-              } else {
-                cell.value = cellValue.toString();
+                cell.value = TextCellValue(ListField.listToStringAll(cellValue));
+              } else { // includes String
+                cell.value = TextCellValue(cellValue.toString());
               }
               cell.cellStyle = cellStyle;
             } else {
               flexCalc = true;
               Data cell = sheetObject.cell(CellIndex.indexByColumnRow(rowIndex: i+1, columnIndex: j));
-              cell.value = ' ';
+              cell.value = null;
             }
           }
         }
@@ -809,7 +816,7 @@ class ExportState extends State<Export> {
                     Container(
                       width: 256,
                       decoration: BoxDecoration(
-                        border: Border.all(width: 1, color: Theme.of(context).dividerColor),
+                        border: material.Border.all(width: 1, color: Theme.of(context).dividerColor),
                         borderRadius: const BorderRadius.all(Radius.circular(4)),
                       ),
                       child: Row(
