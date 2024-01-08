@@ -253,10 +253,11 @@ packages:
   excel:
     dependency: "direct main"
     description:
-      name: excel
-      sha256: c299b5ccf14bb7f24fe64ca1a15e4a3796ab563575087ce3f7e07fc2e3429db5
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: a166206797368ee3f75092ec7e32c20e3c3546c1
+      resolved-ref: a166206797368ee3f75092ec7e32c20e3c3546c1
+      url: "https://github.com/Wishmater/excel"
+    source: git
     version: "4.0.2"
   extended_image:
     dependency: "direct main"
