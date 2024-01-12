@@ -2844,6 +2844,48 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     return columns;
   }
 
+
+  static Widget tableAsViewBuilder(DAO dao, ListField e, BuildContext context, ScrollController? mainScrollController) {
+    const ViewWidgetBuilder<ComparableList<DAO<dynamic>>> temp = ListField.defaultViewWidgetBuilder; // hack to allow correct equality with static function
+    if (e.viewWidgetBuilder != temp) {
+      return e.buildViewWidget(context,
+        linkToInnerDAOs: dao.viewDialogLinksToInnerDAOs,
+        showViewButtons: dao.viewDialogShowsViewButtons,
+      );
+    }
+    if (e.dao is LazyDAO) (e.dao as LazyDAO).ensureInitialized();
+    final newField = e.copyWith(
+      tableCellsEditable: false,
+      allowAddNew: false,
+      actionViewBreakpoints: dao.viewDialogLinksToInnerDAOs&&dao.viewDialogShowsViewButtons
+          ? {0: ActionState.icon}
+          : dao.viewDialogLinksToInnerDAOs
+          ? {0: ActionState.popup}
+          : {0: ActionState.none},
+      actionDeleteBreakpoints: {0: ActionState.none},
+      actionDuplicateBreakpoints: {0: ActionState.none},
+      actionEditBreakpoints: {0: ActionState.none},
+      rowTapType: e.rowTapType==RowTapType.edit ? RowTapType.view : e.rowTapType,
+    ) ..availableObjectsPoolGetter = null
+      ..availableObjectsPoolProvider = null
+      ..actionsGetter = null;
+    newField.dao = e.dao;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 16,),
+        ...newField.buildFieldEditorWidgets(context,
+          dense: false,
+          addCard: false,
+          asSliver: false,
+          expandToFillContainer: false,
+          mainScrollController: mainScrollController,
+        ),
+        const SizedBox(height: 16,),
+      ],
+    );
+  }
+
 }
 
 
