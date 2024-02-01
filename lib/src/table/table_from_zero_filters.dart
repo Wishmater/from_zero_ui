@@ -1,4 +1,5 @@
 
+import 'package:date/date.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -375,11 +376,20 @@ class FilterNumberLessThan extends FilterNumber {
 
 
 abstract class FilterDate extends ConditionFilter {
-  DateTime? query;
+  DateTime? _query;
+  DateTime? get query => _query;
+  set query(DateTime? value) {
+    _query = value;
+    _queryDate = value?.toDate();
+  }
+  Date? _queryDate;
+  Date? get queryDate => _queryDate;
+
   FilterDate({
     required super.extra,
-    required this.query,
-  });
+    required DateTime? query,
+  })  : _query = query,
+        _queryDate = query?.toDate();
 
   @override
   Widget buildFormWidget({required BuildContext context, VoidCallback? onValueChanged, VoidCallback? onDelete,}) {
@@ -483,7 +493,7 @@ abstract class FilterDate extends ConditionFilter {
     );
   }
 }
-bool isSameDay(DateTime a, DateTime b) {
+bool _isSameDay(DateTime a, DateTime b) {
   return a.year == b.year && a.month == b.month && a.day == b.day;
 }
 
@@ -525,9 +535,13 @@ class FilterDateAfter extends FilterDate {
     if (query==null) return true;
     final v = col!=null ? col.getValue(row, key) : row.values[key];
     final value = (v is ContainsValue) ? v.value : v;
-    if (value is! DateTime) return false;
-    bool result = value.isAfter(query!) || (extra&&isSameDay(value, query!));
-    return result;
+    if (value is DateTime) {
+      return value.isAfter(query!) || (extra&&_isSameDay(value, query!));
+    } else if (value is Date) {
+      return value.isAfter(queryDate!) || (extra&&value==queryDate!);
+    } else {
+      return false;
+    }
   }
 }
 
@@ -548,8 +562,12 @@ class FilterDateBefore extends FilterDate {
     if (query==null) return true;
     final v = col!=null ? col.getValue(row, key) : row.values[key];
     final value = (v is ContainsValue) ? v.value : v;
-    if (value is! DateTime) return false;
-    bool result = value.isBefore(query!) || (extra&&isSameDay(value, query!));
-    return result;
+    if (value is DateTime) {
+      return value.isBefore(query!) || (extra&&_isSameDay(value, query!));
+    } else if (value is Date) {
+      return value.isBefore(queryDate!) || (extra&&value==queryDate!);
+    } else {
+      return false;
+    }
   }
 }
