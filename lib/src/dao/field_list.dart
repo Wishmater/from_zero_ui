@@ -175,6 +175,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
 
   @override
   bool get userInteracted => super.userInteracted || objects.any((e) => e.userInteracted);
+  @override
+  bool get passedFirstEdit => super.passedFirstEdit || objects.any((e) => e.props.values.any((e) => e.passedFirstEdit));
 
   late ValueNotifier<Map<T, bool>> selectedObjects;
 

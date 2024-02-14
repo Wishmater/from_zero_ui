@@ -42,11 +42,13 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   bool validateOnlyOnConfirm;
   bool passedFirstEdit = false;
   bool userInteracted = false;
+
   bool isRequired = false;
   List<ValidationError> validationErrors = [];
   FieldValueGetter<SimpleColModel, Field> colModelBuilder;
   bool invalidateNonEmptyValuesIfHiddenInForm;
   ContextFulFieldValueGetter<Color?, Field>? backgroundColor;
+
   ContextFulFieldValueGetter<List<ActionFromZero>, Field>? actionsGetter;
   List<ActionFromZero> buildActions(BuildContext context, FocusNode? focusNode) {
     return actionsGetter?.call(dao.contextForValidation ?? context, this, dao).map((e) {
@@ -59,13 +61,16 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       );
     }).toList() ?? [];
   }
+
   ViewWidgetBuilder<T> viewWidgetBuilder;
   OnFieldValueChanged<T?>? onValueChanged;
+
   FocusNode? _focusNode;
   FocusNode get focusNode {
     _focusNode ??= FocusNode();
     return _focusNode!;
   }
+
   GlobalKey? _fieldGlobalKey;
   GlobalKey get fieldGlobalKey {
     _fieldGlobalKey ??= GlobalKey();
@@ -90,6 +95,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       notifyListeners();
     }
   }
+
   void addUndoEntry(T? value) {
     if (undoValues.isEmpty || undoValues.last!=value) {
       undoValues.add(value);
