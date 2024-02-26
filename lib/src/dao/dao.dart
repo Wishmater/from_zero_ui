@@ -2065,6 +2065,9 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       SizedBox(height: bottomSpace,),
     ];
   }
+
+  /// should be overriden by children to provide retry functionalities for errors that occur during validation
+  Widget buildValidationInternalErrorRetryButton(InternalError e) => const SizedBox.shrink();
   
 }
 

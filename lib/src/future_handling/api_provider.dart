@@ -332,7 +332,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
   }
 
   static Widget defaultErrorBuilder(BuildContext context, Object? error, StackTrace? stackTrace, VoidCallback? onRetry) {
-    final isRetryable = isErrorRetryable(context, error, stackTrace);
+    final isRetryable = isErrorRetryable(error, stackTrace);
     return ErrorSign(
       key: ValueKey(error),
       icon: getErrorIcon(context, error, stackTrace),
@@ -411,7 +411,7 @@ class ApiProviderBuilder<T> extends ConsumerWidget {
       return "Por favor, notifique a su administrador de sistema";
     }
   }
-  static bool isErrorRetryable(BuildContext context, Object? error, StackTrace? stackTrace) {
+  static bool isErrorRetryable(Object? error, StackTrace? stackTrace) {
     if (error is DioException) {
       if (error.response!=null) {
         if (error.response!.statusCode==404) {

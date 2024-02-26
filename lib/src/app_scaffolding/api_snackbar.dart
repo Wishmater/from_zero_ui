@@ -274,7 +274,7 @@ class APISnackBarState<T> extends ConsumerState<APISnackBar<T>> with TickerProvi
       if (error is String) {
         title = error;
       } else {
-        final isRetryable = ApiProviderBuilder.isErrorRetryable(context, error, stackTrace);
+        final isRetryable = ApiProviderBuilder.isErrorRetryable(error, stackTrace);
         showRetry = !kReleaseMode || isRetryable;
         showErrorDetails = !kReleaseMode || (!isRetryable && ApiProviderBuilder.shouldShowErrorDetails(context, error, stackTrace));
         icon = ApiProviderBuilder.getErrorIcon(context, error, stackTrace);

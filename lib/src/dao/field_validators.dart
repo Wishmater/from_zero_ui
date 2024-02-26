@@ -156,6 +156,23 @@ class ForcedValueError<T extends Comparable> extends InvalidatingError<T> {
   }
 }
 
+class InternalError extends ValidationError {
+  Object e;
+  StackTrace? st;
+
+  InternalError({
+    required super.field,
+    required super.error,
+    required this.e,
+    this.st,
+    super.severity = ValidationErrorSeverity.error,
+    super.isVisibleAsSaveConfirmation,
+    super.isVisibleAsHintMessage,
+    super.isVisibleAsTooltip,
+  });
+
+}
+
 
 
 ValidationError? fieldValidatorRequired<T extends Comparable>(BuildContext context, DAO dao, Field<T> field, {
@@ -435,12 +452,13 @@ class SingleValidationMessageState extends State<SingleValidationMessage> with S
 
   @override
   Widget build(BuildContext context) {
-    widget.error.animationController = animationController;
+    final error = widget.error;
+    error.animationController = animationController;
     return AnimatedBuilder(
       animation: animationController,
-      key: ValueKey(widget.error.severity.toString() + widget.error.error),
+      key: ValueKey(error.severity.toString() + error.error),
       builder: (context, child) {
-        final baseColor = ValidationMessage.severityColors[Theme.of(context).brightness]![widget.error.severity]!;
+        final baseColor = ValidationMessage.severityColors[Theme.of(context).brightness]![error.severity]!;
         double value = animationController.value;
         int i;
         for (i=0; i<=ValidationMessage.animationCount && value>ValidationMessage.animationCountRate; i++) {
@@ -454,24 +472,39 @@ class SingleValidationMessageState extends State<SingleValidationMessage> with S
           begin: baseColor.withOpacity(0),
           end: baseColor,
         ).transform(Curves.easeOutQuad.transform(value));
+        Widget content = Text(error.toString(),
+          style: (widget.errorTextStyle ?? Theme.of(context).textTheme.titleMedium!).copyWith(
+            height: 1.1,
+            color: error.isBlocking
+                ? Colors.white
+                : color,
+          ),
+        );
+        if (error is InternalError) {
+          content = Wrap(
+            textDirection: TextDirection.rtl,
+            verticalDirection: VerticalDirection.up,
+            runSpacing: 8,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: error.field.dao.buildValidationInternalErrorRetryButton(error),
+              ),
+              content,
+            ],
+          );
+        }
         return Padding(
           padding: const EdgeInsets.only(bottom: 4,),
           child: Container(
             padding: const EdgeInsets.only(left: 8, right: 8, bottom: 4, top: 2),
             decoration: BoxDecoration(
               borderRadius: const BorderRadius.all(Radius.circular(12)),
-              color: widget.error.isBlocking
+              color: error.isBlocking
                   ? color
                   : Colors.transparent,
             ),
-            child: Text(widget.error.toString(),
-              style: (widget.errorTextStyle ?? Theme.of(context).textTheme.titleMedium!).copyWith(
-                height: 1.1,
-                color: widget.error.isBlocking
-                    ? Colors.white
-                    : color,
-              ),
-            ),
+            child: content,
           ),
         );
       },
