@@ -1373,6 +1373,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool? showEditButton,
     bool? showDeleteButton,
     bool showDefaultSnackBars = true,
+    bool popAfterEditOrDeleteActions = true,
   }) {
     return [
       if (showEditButton ?? viewDialogShowsEditButton ?? canSave)
@@ -1391,7 +1392,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                   value.value = tempProps[key]!.value;
                 }
               });
-              Navigator.of(context).pop();
+              if (popAfterEditOrDeleteActions) Navigator.of(context).pop();
             }
           },
         ),
@@ -1403,7 +1404,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
           onTap: (context) async {
             final result = await maybeDelete(context);
             if (result) {
-              Navigator.of(context).pop();
+              if (popAfterEditOrDeleteActions) Navigator.of(context).pop();
             }
           },
         ),
