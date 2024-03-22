@@ -7,6 +7,7 @@ import 'package:dartx/dartx.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
 import 'package:from_zero_ui/src/table/manage_popup.dart';
 import 'package:from_zero_ui/util/comparable_list.dart';
@@ -24,7 +25,7 @@ typedef OnCellHoverCallback = OnRowHoverCallback? Function(dynamic key,);
 typedef WidthGetter = double Function(List<dynamic> currentColumnKeys);
 
 
-class TableFromZero<T> extends StatefulWidget {
+class TableFromZero<T> extends ConsumerStatefulWidget {
 
   final List<RowModel<T>> rows;
   final Map<dynamic, ColModel>? columns;
@@ -70,6 +71,7 @@ class TableFromZero<T> extends StatefulWidget {
   final bool allowCustomization;
   final String? Function(RowModel<T> row)? rowDisabledValidator;
   final String? Function(RowModel<T> row)? rowTooltipGetter;
+  final String? syncId;
 
   const TableFromZero({
     required this.rows,
@@ -114,11 +116,67 @@ class TableFromZero<T> extends StatefulWidget {
     this.allowCustomization = true,
     this.rowDisabledValidator,
     this.rowTooltipGetter,
+    this.syncId,
     super.key,
   });
 
   @override
   TableFromZeroState<T> createState() => TableFromZeroState<T>();
+
+  static final syncProvider = StateProvider.family<List<TableController>, String>((ref, syncId) => [],);
+
+  static void addControllerToSync(WidgetRef ref, TableController controller, String syncId, {
+    StateController<List<TableController>>? notifier,
+  }) {
+    notifier ??= ref.read(syncProvider.call(syncId).notifier);
+    notifier!.state = [...notifier.state, controller];
+    if (notifier.state.length>1) syncControllersSpecific(notifier.state.first, controller);
+  }
+
+  static void removeControllerFromSync(WidgetRef ref, TableController controller, String syncId, {
+    StateController<List<TableController>>? notifier,
+  }) {
+    notifier ??= ref.read(syncProvider.call(syncId).notifier);
+    notifier!.state = notifier.state.where((e) => e!=controller).toList();
+  }
+
+  static void syncControllers(WidgetRef ref, String syncId, {
+    TableController? original,
+  }) {
+    final controllers = ref.read(syncProvider.call(syncId));
+    if (controllers.isNotEmpty) {
+      original ??= controllers.first;
+      for (int i=0; i<controllers.length; i++) {
+        if (controllers[i] != original) {
+          syncControllersSpecific(original, controllers[i],
+            relevantColumns: _getRelevantColumns(original),
+          );
+        }
+      }
+    }
+  }
+
+  // for now, only column visibility is synced, but this could be used to sync other properties in the future
+  static void syncControllersSpecific(TableController original, TableController mirror, {
+    Map<dynamic, bool>? relevantColumns,
+  }) {
+    relevantColumns ??= _getRelevantColumns(original);
+    mirror.currentColumnKeys = mirror.columnKeys!.where((e) {
+      return relevantColumns!.containsKey(e)
+          ? relevantColumns[e]!
+          : mirror.currentColumnKeys!.contains(e);
+    }).toList();
+    mirror.filter(); // TODO 2 PERFORMANCE do we need to re-filter?
+  }
+
+  static Map<dynamic, bool> _getRelevantColumns(TableController controller) {
+    final currentColumnKeys = controller.currentColumnKeys ?? [];
+    final columnKeys = controller.columnKeys ?? [];
+    return {
+      for (final e in columnKeys)
+        e: currentColumnKeys.contains(e),
+    };
+  }
 
 }
 
@@ -139,7 +197,7 @@ class TrackingScrollControllerFomZero extends TrackingScrollController {
 }
 
 
-class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderStateMixin {
+class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerProviderStateMixin {
 
   static const bool showFiltersLoading = false;
   static const double _checkmarkWidth = 40;
@@ -252,6 +310,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
     if (widget.tableController?.currentState==this) {
       widget.tableController!.currentState = null;
     }
+    if (widget.tableController!=null && widget.syncId!=null && _syncNotifier!=null) {
+      TableFromZero.removeControllerFromSync(ref, widget.tableController!, widget.syncId!,
+        notifier: _syncNotifier,
+      );
+    }
   }
 
   double lastPosition = 0;
@@ -283,8 +346,15 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       notifyListeners: false,
       isFirstInit: true,
     );
+    if (widget.tableController!=null && widget.syncId!=null) {
+      _syncNotifier = ref.read(TableFromZero.syncProvider.call(widget.syncId!).notifier);
+      TableFromZero.addControllerToSync(ref, widget.tableController!, widget.syncId!,
+        notifier: _syncNotifier,
+      );
+    }
   }
 
+  StateController<List<TableController>>? _syncNotifier;
   @override
   void didUpdateWidget(TableFromZero<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -292,6 +362,19 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
       init(notifyListeners: false);
     } else if (widget.headerRowModel!=null || widget.headerWidgetAddon!=null) {
       initHeaderRowModel();
+    }
+    if (widget.tableController!=oldWidget.tableController || widget.syncId!=oldWidget.syncId) {
+      if (oldWidget.tableController!=null && oldWidget.syncId!=null) {
+        TableFromZero.removeControllerFromSync(ref, oldWidget.tableController!, oldWidget.syncId!,
+          notifier: _syncNotifier,
+        );
+      }
+      _syncNotifier = ref.read(TableFromZero.syncProvider.call(widget.syncId!).notifier);
+      if (widget.tableController!=null && widget.syncId!=null) {
+        TableFromZero.addControllerToSync(ref, widget.tableController!, widget.syncId!,
+          notifier: _syncNotifier,
+        );
+      }
     }
   }
 
@@ -1782,6 +1865,11 @@ class TableFromZeroState<T> extends State<TableFromZero<T>> with TickerProviderS
             filter();
           }
         });
+      }
+      if (widget.syncId!=null && result.modified && mounted) {
+        TableFromZero.syncControllers(ref, widget.syncId!,
+          original: controller,
+        );
       }
     }
   }
