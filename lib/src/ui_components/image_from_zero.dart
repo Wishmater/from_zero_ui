@@ -192,7 +192,7 @@ class ImageFromZeroState extends State<ImageFromZero> with TickerProviderStateMi
       );
     } else if (widget.sourceType==ImageSourceType.file) {
       result = ExtendedImage.file(
-        getFileCompilingWebAsNull(widget.url)!,
+        kIsWeb ? null : (getFileCompilingWebAsNull(widget.url)! as dynamic), // hack to prevent dart:io from blowing up on web, alternatively search for a package that does this cleanly
         fit: BoxFit.contain,
         enableSlideOutPage: true,
         loadStateChanged: _loadStateChanged,
