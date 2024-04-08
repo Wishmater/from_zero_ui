@@ -541,6 +541,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     String? Function(RowModel<T> row)? rowDisabledValidator,
     String? Function(RowModel<T> row)? rowTooltipGetter,
     void Function(List<RowModel<T>> rows)? onSort,
+    bool? showBigAddButtonIfEmpty,
   }) {
     return ListField<T, U>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -624,6 +625,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       rowDisabledValidator: rowDisabledValidator ?? this.rowDisabledValidator,
       rowTooltipGetter: rowTooltipGetter ?? this.rowTooltipGetter,
       onSort: onSort ?? this.onSort,
+      showBigAddButtonIfEmpty: showBigAddButtonIfEmpty ?? this.showBigAddButtonIfEmpty,
     );
   }
 
@@ -2336,7 +2338,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   child: Material(
                     color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
                     child: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
-                        ? showBigAddButtonIfEmpty ? const SizedBox.shrink() : ContextMenuFromZero(
+                        ? !showBigAddButtonIfEmpty ? const SizedBox.shrink() : ContextMenuFromZero(
                             actions: actions,
                             onShowMenu: () => _errorWidgetFocusNode.requestFocus(),
                             child: buildAddAddon(context: context, collapsed: collapsed),
