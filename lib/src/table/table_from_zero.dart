@@ -369,11 +369,13 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
           notifier: _syncNotifier,
         );
       }
-      _syncNotifier = ref.read(TableFromZero.syncProvider.call(widget.syncId!).notifier);
-      if (widget.tableController!=null && widget.syncId!=null) {
-        TableFromZero.addControllerToSync(ref, widget.tableController!, widget.syncId!,
-          notifier: _syncNotifier,
-        );
+      if (widget.syncId!=null) {
+        _syncNotifier = ref.read(TableFromZero.syncProvider.call(widget.syncId!).notifier);
+        if (widget.tableController!=null && widget.syncId!=null) {
+          TableFromZero.addControllerToSync(ref, widget.tableController!, widget.syncId!,
+            notifier: _syncNotifier,
+          );
+        }
       }
     }
   }
