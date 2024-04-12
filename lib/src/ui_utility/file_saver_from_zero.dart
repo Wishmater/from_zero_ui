@@ -238,8 +238,6 @@ Future<bool> saveFileFromZero ({
             onPressed: () async {
               if (Platform.isAndroid){
                 final res = await OpenFile.open(file!.absolute.path);
-                print (res);
-                print ('${res.message} -- ${res.type}');
               } else{
                 await launch(file!.absolute.path);
               }
