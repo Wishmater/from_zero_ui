@@ -50,6 +50,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   set allowAddNew(bool? value) {
     _allowAddNew = value;
   }
+  bool showBigAddButtonIfEmpty;
   bool collapsed;
   bool allowMultipleSelection;
   bool selectionDefault;
@@ -307,6 +308,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.rowDisabledValidator,
     this.rowTooltipGetter,
     this.onSort,
+    this.showBigAddButtonIfEmpty = true,
   }) :  assert(availableObjectsPoolGetter==null || availableObjectsPoolProvider==null),
         tableFilterable = tableFilterable ?? false,
         showEditDialogOnAdd = showEditDialogOnAdd ?? (displayType==ListFieldDisplayType.table && !tableCellsEditable),
@@ -539,6 +541,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     String? Function(RowModel<T> row)? rowDisabledValidator,
     String? Function(RowModel<T> row)? rowTooltipGetter,
     void Function(List<RowModel<T>> rows)? onSort,
+    bool? showBigAddButtonIfEmpty,
   }) {
     return ListField<T, U>(
       uiNameGetter: uiNameGetter??this.uiNameGetter,
@@ -622,6 +625,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       rowDisabledValidator: rowDisabledValidator ?? this.rowDisabledValidator,
       rowTooltipGetter: rowTooltipGetter ?? this.rowTooltipGetter,
       onSort: onSort ?? this.onSort,
+      showBigAddButtonIfEmpty: showBigAddButtonIfEmpty ?? this.showBigAddButtonIfEmpty,
     );
   }
 
@@ -2334,7 +2338,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                   child: Material(
                     color: enabled ? Theme.of(context).cardColor : Theme.of(context).canvasColor,
                     child: (allowAddNew||hasAvailableObjectsPool)&&objects.isEmpty
-                        ? ContextMenuFromZero(
+                        ? !showBigAddButtonIfEmpty ? const SizedBox.shrink() : ContextMenuFromZero(
                             actions: actions,
                             onShowMenu: () => _errorWidgetFocusNode.requestFocus(),
                             child: buildAddAddon(context: context, collapsed: collapsed),
@@ -2447,7 +2451,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     );
     List<Widget> resultList = [
       result,
-      if (enabled && (allowAddNew||hasAvailableObjectsPool) && showAddButtonAtEndOfTable && !collapsed && !dense)
+      if (showAddButtonAtEndOfTable && enabled && (allowAddNew||hasAvailableObjectsPool) && !collapsed && !dense)
         buildAddAddon(
           context: context,
           collapsed: collapsed,
