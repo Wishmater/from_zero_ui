@@ -532,33 +532,42 @@ class WindowBar extends StatelessWidget {
 
   /// used when trying to close the window
   static Future<void> smartMultiPop(GoRouter goRouter) async {
-    final navigator = goRouter.routerDelegate.navigatorKey.currentState!;
-    while (true) {
+    try {
+      final navigator = goRouter.routerDelegate.navigatorKey.currentState!;
+      while (true) {
 
-      final goRoute = goRouter.routerDelegate.currentConfiguration.last.route;
-      log (LgLvl.finer, 'Trying to pop ${goRouter.routerDelegate.currentConfiguration.last.matchedLocation}', type: FzLgType.routing);
-      if (await navigator.maybePop()) {
-        final previousGoRouteFromZero = goRoute is GoRouteFromZero ? goRoute : null;
-        final newGoRoute = goRouter.routerDelegate.currentConfiguration.last.route;
-        final newGoRouteFromZero = newGoRoute is GoRouteFromZero ? newGoRoute : null;
-        if (newGoRoute==goRoute) {
-          // if route refused to pop, or popped route was a modal, stop iteration
-          log(LgLvl.finer, '  Route refused to pop, or popped route was a modal, stopping iteration...', type: FzLgType.routing);
+        final goRoute = goRouter.routerDelegate.currentConfiguration.last.route;
+        log (LgLvl.fine, 'Trying to pop ${goRouter.routerDelegate.currentConfiguration.last.matchedLocation}', type: FzLgType.routing);
+        if (await navigator.maybePop()) {
+          final previousGoRouteFromZero = goRoute is GoRouteFromZero ? goRoute : null;
+          final newGoRoute = goRouter.routerDelegate.currentConfiguration.last.route;
+          final newGoRouteFromZero = newGoRoute is GoRouteFromZero ? newGoRoute : null;
+          if (newGoRoute==goRoute) {
+            // if route refused to pop, or popped route was a modal, stop iteration
+            log(LgLvl.finer, 'Route refused to pop, or popped route was a modal, stopping iteration...', type: FzLgType.routing);
+            return;
+          }
+          if (previousGoRouteFromZero?.pageScaffoldId!=newGoRouteFromZero?.pageScaffoldId) {
+            // if new route is a different scaffold ID, stop iteration
+            log(LgLvl.finer, 'New route is a different scaffold ID, stopping iteration...', type: FzLgType.routing);
+            return;
+          }
+        } else {
+          // if successfully popped last route, exit app (maybePop only false when popDisposition==bubble)
+          log (LgLvl.finer, 'Successfully popped last route, exiting app...', type: FzLgType.routing);
+          FromZeroAppContentWrapper.exitApp(0);
           return;
         }
-        if (previousGoRouteFromZero?.pageScaffoldId!=newGoRouteFromZero?.pageScaffoldId) {
-          // if new route is a different scaffold ID, stop iteration
-          log(LgLvl.finer, '  New route is a different scaffold ID, stopping iteration...', type: FzLgType.routing);
-          return;
-        }
-      } else {
-        // if successfully popped last route, exit app (maybePop only false when popDisposition==bubble)
-        log (LgLvl.finer, '  Successfully popped last route, exiting app...', type: FzLgType.routing);
-        FromZeroAppContentWrapper.exitApp(0);
-        return;
+        log (LgLvl.finer, 'Popped successfully, continuing popping iteration...', type: FzLgType.routing);
+
       }
-      log (LgLvl.finer, '  Popped successfully, continuing popping iteration...', type: FzLgType.routing);
-
+    } catch (e, st) {
+      log (LgLvl.error, 'Error while processing smartMultiPop, defaulting to exiting app...',
+        e: e,
+        st: st,
+        type: FzLgType.routing,
+      );
+      FromZeroAppContentWrapper.exitApp(0);
     }
   }
 }
