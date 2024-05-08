@@ -74,7 +74,7 @@ String? defaultLogGetString(LgLvl level, Object? msg, {
   int extraTraceLineOffset = 0,
   FlutterErrorDetails? details,
 }) {
-  String? message = mlogGetMessage(level, msg,
+  String? message = LogOptions.instance.builder.messageBuilder(level, msg,
     type: type,
     e: e,
     st: st,
