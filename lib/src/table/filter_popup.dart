@@ -32,7 +32,10 @@ abstract class TableFromZeroFilterPopup {
         e: Map<Object?, bool>.from(valueFilters[e]!),
     };
     ScrollController filtersScrollController = ScrollController();
-    TableController filterTableController = TableController();
+    TableController filterTableController = TableController(
+      initialValueFilters: {colKey: {}}, // make sure to disregard initialValueFilters in the original column
+      initialValueFiltersExcludeAllElse: false,
+    );
     final modified = ValueNotifier(false);
     List<ConditionFilter> possibleConditionFilters = col?.getAvailableConditionFilters()
         ?? getDefaultAvailableConditionFilters();
@@ -51,8 +54,9 @@ abstract class TableFromZeroFilterPopup {
       rowValues: relevantRows.allFiltered.map((e) => e.values),
       key: colKey,
       operationCounter: ValueNotifier(0),
-      sort: true,
+      // sort: true,
       sortAscending: col?.defaultSortAscending ?? true,
+      possibleValues: col?.possibleValues,
       // TODO 3 performance pass a state into that is unmounted when the filterView pops, so it can cancel calculations
     ).then((result) {
       availableFilters.value = {
@@ -181,10 +185,9 @@ abstract class TableFromZeroFilterPopup {
                               const SliverToBoxAdapter(child: Divider(height: 32,)),
                             TableFromZero(
                               tableController: filterTableController,
-                              columns: col==null ? null : {colKey: col},
                               showHeaders: false,
                               emptyWidget: const SizedBox.shrink(),
-                              initialSortedColumn: colKey,
+                              initialSortedColumn: col?.possibleValues!=null ? null : colKey,
                               rows: (col ?? SimpleColModel(name: ''))
                                   .buildFilterPopupRowModels(availableFilters[colKey] ?? [], newValueFilters, colKey, modified),
                               // override style and text alignment

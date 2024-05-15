@@ -28,14 +28,14 @@ typedef WidthGetter = double Function(List<dynamic> currentColumnKeys);
 class TableFromZero<T> extends ConsumerStatefulWidget {
 
   final List<RowModel<T>> rows;
-  final Map<dynamic, ColModel>? columns;
+  final Map<dynamic, ColModel<dynamic>>? columns;
   final bool enabled;
   final WidthGetter? minWidthGetter;
   final WidthGetter? maxWidthGetter;
   final bool ignoreWidthGettersIfEmpty;
   final bool enableFixedHeightForListRows;
   final bool showHeaders;
-  final RowModel? headerRowModel;
+  final RowModel<dynamic>? headerRowModel;
   final bool enableStickyHeaders;
   final double stickyOffset;
   final double footerStickyOffset;
@@ -58,7 +58,7 @@ class TableFromZero<T> extends ConsumerStatefulWidget {
   final Widget? Function(BuildContext context, RowModel<T> row, dynamic colKey)? cellBuilder;
   final Widget? Function(BuildContext context, RowModel<T> row, int index, double? minWidth,
       Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder,)? rowBuilder;
-  final Widget? Function(BuildContext context, RowModel row, double? minWidth)? headerRowBuilder;
+  final Widget? Function(BuildContext context, RowModel<dynamic> row, double? minWidth)? headerRowBuilder;
   final void Function(List<RowModel<T>> rows)? onSort;
   final List<RowModel<T>> Function(List<RowModel<T>>)? onFilter;
   final TableController<T>? tableController;
@@ -449,17 +449,24 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     } else if (isFirstInit) {
       filtersAltered = true;
     }
+
     if (widget.tableController?.valueFilters==null) {
-      filtersAltered = widget.tableController?.initialValueFilters!=null;
-      valueFilters = {
-        for (final e in widget.columns?.keys ?? [])
-          e: widget.tableController?.initialValueFilters?[e] ?? {},
-      };
+      valueFilters = {};
+      if (widget.columns!=null) {
+        for (final e in widget.columns!.keys) {
+          final colFilters = widget.tableController?.initialValueFilters?[e]
+              ?? widget.columns?[e]?.initialValueFilters;
+          if (colFilters!=null) filtersAltered = true;
+          valueFilters[e] = colFilters ?? {};
+        }
+      }
     } else {
       filtersAltered = isFirstInit;
       for (final e in widget.columns?.keys ?? []) {
         if (!valueFilters.containsKey(e)) {
-          valueFilters[e] = widget.tableController?.initialValueFilters?[e] ?? {};
+          valueFilters[e] = widget.tableController?.initialValueFilters?[e]
+              ?? widget.columns?[e]?.initialValueFilters
+              ?? {};
           filtersAltered = true;
         }
       }
@@ -528,22 +535,25 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
         final Map<dynamic, Map<dynamic, Field>> fieldAliases = {
           for (final key in widget.columns!.keys) key: {},
         };
-        final Map<dynamic, Map<dynamic, DAO>> daoAliases = {
+        final Map<dynamic, Map<dynamic, DAO<dynamic>>> daoAliases = {
           for (final key in widget.columns!.keys) key: {},
         };
-        availableFiltersIsolateController = cancelable_compute.compute(getAvailableFilters,
-            [
-              widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
-              rows.map((e) {
-                return e.values.map((key, value) {
-                  return MapEntry(key, _sanitizeValueForIsolate(key, value, // TODO 2 performance, maybe allow to manually disable sanitization
-                    fieldAliases: fieldAliases[key]!,
-                    daoAliases: daoAliases[key]!,
-                  ),);
-                });
-              }).toList(),
-              fieldAliases.isEmpty && daoAliases.isEmpty,
-            ]);
+        availableFiltersIsolateController = cancelable_compute.compute(getAvailableFilters, [
+          widget.columns!.map((key, value) => MapEntry(key, [
+            value.filterEnabled,
+            value.defaultSortAscending,
+            value.possibleValues,
+          ]),),
+          rows.map((e) {
+            return e.values.map((key, value) {
+              return MapEntry(key, _sanitizeValueForIsolate(key, value, // TODO 2 performance, maybe allow to manually disable sanitization
+                fieldAliases: fieldAliases[key]!,
+                daoAliases: daoAliases[key]!,
+              ),);
+            });
+          }).toList(),
+          fieldAliases.isEmpty && daoAliases.isEmpty,
+        ]);
         final computationResult = await availableFiltersIsolateController!.value;
         if (computationResult==null) return; // cancelled
         computedAvailableFilters = computationResult.map((key, value) {
@@ -556,8 +566,12 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
           }
         });
         if (valueFiltersApplied.values.where((e) => e==true).isNotEmpty) {
-          validInitialFiltersIsolateController = cancelable_compute.compute(_getValidInitialFilters,
-              [valueFilters, computedAvailableFilters],);
+          validInitialFiltersIsolateController = cancelable_compute.compute(_getValidInitialFilters, [
+            valueFilters,
+            computedAvailableFilters,
+            _getColPossibleValues(),
+            _getColInitialValueFiltersExcludeAllElse(),
+          ],);
           computedValidInitialFilters = await validInitialFiltersIsolateController!.value;
         }
       } catch (e, st) {
@@ -571,16 +585,23 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     } else {
       computedAvailableFilters = await getAvailableFilters(
           [
-            widget.columns!.map((key, value) => MapEntry(key, [value.filterEnabled, value.defaultSortAscending])),
+            widget.columns!.map((key, value) => MapEntry(key, [
+              value.filterEnabled,
+              value.defaultSortAscending,
+              value.possibleValues,
+            ]),),
             rows.map((e) => e.values).toList(),
             true,
           ],
           artifitialThrottle: true,
           state: this,
       );
-      computedValidInitialFilters = _getValidInitialFilters(
-          [valueFilters, computedAvailableFilters],
-      );
+      computedValidInitialFilters = _getValidInitialFilters([
+        valueFilters,
+        computedAvailableFilters,
+        _getColPossibleValues(),
+        _getColInitialValueFiltersExcludeAllElse(),
+      ],);
     }
     if (mounted) {
       availableFilters.value = computedAvailableFilters;
@@ -629,20 +650,21 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     bool artifitialThrottle = false,
     State? state, // for cancelling if unmounted
   }) async {
-    final Map<dynamic, List<bool?>> columnOptions = params[0];
+    final Map<dynamic, List<dynamic>> columnOptions = params[0];
     final List<Map<dynamic, dynamic>> rowValues = params[1];
-    final bool sort = params[2];
+    // final bool sort = params[2];
     Map<dynamic, List<dynamic>> availableFilters = {};
     ValueNotifier<int> operationCounter = ValueNotifier(0);
     for (final e in columnOptions.entries) {
       final key = e.key;
       final options = e.value;
-      if (options[0] ?? true) { // filterEnabled
+      if ((options[0] as bool?) ?? true) { // filterEnabled
         availableFilters[key] = await getAvailableFiltersForColumn(
           rowValues: rowValues,
           key: key,
-          sort: sort,
-          sortAscending: options[1] ?? true,
+          // sort: sort,
+          sortAscending: (options[1] as bool?) ?? true,
+          possibleValues: (options[2] as Iterable?),
           operationCounter: operationCounter,
           state: state,
         );
@@ -658,70 +680,108 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
   static Future<List<dynamic>> getAvailableFiltersForColumn({
     required Iterable<Map<dynamic, dynamic>> rowValues,
     required dynamic key,
-    bool sort = true,
+    // bool sort = true,
     bool sortAscending = true,
+    Iterable<dynamic>? possibleValues,
     ValueNotifier<int>? operationCounter, // if null artifitial throttle is disabled
     State? state, // for cancelling if unmounted
   }) async {
     final artifitialThrottle = operationCounter!=null;
-    Set<dynamic> available = {};
-    for (final row in rowValues) {
-      final element = row[key];
-      if (element is List || element is ComparableList || element is ListField) {
-        final List list = element is List ? element
-            : element is ComparableList ? element.list
-            : element is ListField ? element.objects : [];
-        for (final e in list) {
-          available.add(e);
-          if (artifitialThrottle) {
-            operationCounter.value+=available.length;
-            if (operationCounter.value>5000000) {
-              operationCounter.value = 0;
-              await Future.delayed(const Duration(milliseconds: 50));
-              if (state!=null && !state.mounted) {
-                return [];
+    if (possibleValues!=null) {
+      return possibleValues.toList();
+    } else {
+      final available = <dynamic>{};
+      for (final row in rowValues) {
+        final element = row[key];
+        if (element is List || element is ComparableList || element is ListField) {
+          final list = element is List ? element
+              : element is ComparableList ? element.list
+              : element is ListField ? element.objects
+              : <dynamic>[];
+          for (final e in list) {
+            available.add(e);
+            if (artifitialThrottle) {
+              operationCounter.value += available.length;
+              if (operationCounter.value>5000000) {
+                operationCounter.value = 0;
+                await Future<void>.delayed(const Duration(milliseconds: 50));
+                if (state!=null && !state.mounted) {
+                  return [];
+                }
               }
             }
           }
+        } else {
+          available.add(element);
         }
-      } else {
-        available.add(element);
-      }
-      if (artifitialThrottle) {
-        operationCounter.value+=available.length;
-        if (operationCounter.value>5000000) {
-          operationCounter.value = 0;
-          await Future.delayed(const Duration(milliseconds: 50));
-          if (state!=null && !state.mounted) {
-            return [];
+        if (artifitialThrottle) {
+          operationCounter.value += available.length;
+          if (operationCounter.value>5000000) {
+            operationCounter.value = 0;
+            await Future<void>.delayed(const Duration(milliseconds: 50));
+            if (state!=null && !state.mounted) {
+              return [];
+            }
           }
         }
       }
+      return available.toList();
+      // // it shouldn't be needed to sort at this point, because sorting will be done
+      // // in filterDialog anywhere, which is the only place that visually shows available
+      // List<dynamic> availableSorted;
+      // if (sort) {
+      //   if (artifitialThrottle) {
+      //     availableSorted = available.sortedWith((a, b) => defaultComparator(a, b, sortAscending));
+      //   } else {
+      //     availableSorted = available.toList()..sort((a, b) => defaultComparator(a, b, sortAscending));
+      //   }
+      // } else {
+      //   availableSorted = available.toList();
+      // }
+      // return availableSorted;
     }
-    List<dynamic> availableSorted;
-    if (sort) {
-      if (artifitialThrottle) {
-        availableSorted = available.sortedWith((a, b) => defaultComparator(a, b, sortAscending));
-      } else {
-        availableSorted = available.toList()..sort((a, b) => defaultComparator(a, b, sortAscending));
-      }
-    } else {
-      availableSorted = available.toList();
-    }
-    return availableSorted;
+  }
+
+  Map<dynamic, Iterable<dynamic>?> _getColPossibleValues() {
+    if (widget.columns==null) return {};
+    return {
+      for (final e in widget.columns!.keys)
+        e: widget.columns![e]!.possibleValues,
+    };
+  }
+  Map<dynamic, bool?> _getColInitialValueFiltersExcludeAllElse() {
+    if (widget.columns==null) return {};
+    return {
+      for (final e in widget.columns!.keys)
+        e: widget.tableController?.initialValueFiltersExcludeAllElse
+            ?? widget.columns![e]!.initialValueFiltersExcludeAllElse,
+    };
   }
   static Map<dynamic, Map<Object?, bool>>? _getValidInitialFilters(List<dynamic> params) {
-    Map<dynamic, Map<Object?, bool>> initialFilters = params[0];
-    Map<dynamic, List<dynamic>> availableFilters = params[1];
-    bool removed = false;
+    final Map<dynamic, Map<Object?, bool>> initialFilters = params[0];
+    final Map<dynamic, List<dynamic>> availableFilters = params[1];
+    final Map<dynamic, Iterable<dynamic>?> colPossibleValues = params[2];
+    final Map<dynamic, bool?> colInitialValueFiltersExcludeAllElse = params[3];
+    bool changed = false;
     initialFilters.forEach((col, filters) {
       filters.removeWhere((key, value) {
         bool remove = !(availableFilters[col]?.contains(key)??false);
-        removed = remove;
+        if (remove) changed = true;
         return remove;
       });
+      final possibleValues = colPossibleValues[col];
+      if (possibleValues!=null) {
+        final initialValueFiltersExcludeAllElse =
+            colInitialValueFiltersExcludeAllElse[col] ?? false;
+        for (final e in possibleValues) {
+          if (!filters.containsKey(e)) {
+            filters[e] = !initialValueFiltersExcludeAllElse;
+            changed = true;
+          }
+        }
+      }
     });
-    return removed ? initialFilters : null;
+    return changed ? initialFilters : null;
   }
 
 
@@ -2431,7 +2491,8 @@ class TableController<T> extends ChangeNotifier {
   List<List<RowModel<T>> Function(List<RowModel<T>>)> extraFilters;
   Map<dynamic, List<ConditionFilter>>? initialConditionFilters;
   Map<dynamic, Map<Object?, bool>>? initialValueFilters;
-  bool initialValueFiltersExcludeAllElse;
+  /// defaults to false, if not specified here or in Column
+  bool? initialValueFiltersExcludeAllElse;
 
   List<dynamic>? columnKeys;
   List<dynamic>? currentColumnKeys;
@@ -2448,7 +2509,7 @@ class TableController<T> extends ChangeNotifier {
     this.initialValueFilters,
     this.sortedAscending = true,
     this.sortedColumn,
-    this.initialValueFiltersExcludeAllElse = false,
+    this.initialValueFiltersExcludeAllElse,
   })  : extraFilters = extraFilters ?? [];
 
   TableController<T> copyWith({

@@ -133,6 +133,14 @@ abstract class ColModel<T>{
   bool? get filterEnabled => null;
   bool Function(RowModel<T> row)? get rowCountSelector;
   ShowFilterPopupCallback? get showFilterPopupCallback;
+  /// exhaustive list of all possible values cells of this column can take
+  /// if a row has a value not declared here, the row will be filtered out,
+  /// because the valueFilter for said value will be treated as false.
+  Iterable<dynamic>? get possibleValues;
+  /// same as TableController.initialValueFilters, both shouldn't be specified,
+  /// but if they do, the values in TableController take priority
+  Map<Object?, bool>? get initialValueFilters;
+  bool? get initialValueFiltersExcludeAllElse;
 
   Object? getValue(RowModel row, dynamic key) {
     return row.values[key];
@@ -424,6 +432,12 @@ class SimpleColModel<T> extends ColModel<T>{
   bool Function(RowModel<T> row)? rowCountSelector;
   @override
   ShowFilterPopupCallback? showFilterPopupCallback;
+  @override
+  Iterable<dynamic>? possibleValues;
+  @override
+  Map<Object?, bool>? initialValueFilters;
+  @override
+  bool? initialValueFiltersExcludeAllElse;
   SimpleColModel({
     required this.name,
     this.compactName,
@@ -441,6 +455,9 @@ class SimpleColModel<T> extends ColModel<T>{
     this.filterEnabled,
     this.rowCountSelector,
     this.showFilterPopupCallback,
+    this.possibleValues,
+    this.initialValueFilters,
+    this.initialValueFiltersExcludeAllElse,
   });
   SimpleColModel<T> copyWith({
     String? name,
