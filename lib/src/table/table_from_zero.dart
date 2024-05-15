@@ -72,6 +72,7 @@ class TableFromZero<T> extends ConsumerStatefulWidget {
   final String? Function(RowModel<T> row)? rowDisabledValidator;
   final String? Function(RowModel<T> row)? rowTooltipGetter;
   final String? syncId;
+  final bool waitForFirstFilterToRender;
 
   const TableFromZero({
     required this.rows,
@@ -117,6 +118,7 @@ class TableFromZero<T> extends ConsumerStatefulWidget {
     this.rowDisabledValidator,
     this.rowTooltipGetter,
     this.syncId,
+    this.waitForFirstFilterToRender = false,
     super.key,
   });
 
@@ -199,7 +201,7 @@ class TrackingScrollControllerFomZero extends TrackingScrollController {
 
 class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerProviderStateMixin {
 
-  static const bool showFiltersLoading = false;
+  late bool showFiltersLoading = widget.waitForFirstFilterToRender;
   static const double _checkmarkWidth = 40;
   static const double _dropdownButtonWidth = 28;
   static const double _depthPadding = 16;
@@ -478,6 +480,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
         initFilters(widget.rows.map((e) => e.allRows).flatten().toList(), // passing sorted would count only visible rows
           filterAfter: filtersAltered,
         ).then((value) {
+          showFiltersLoading = false; // this assumes we now only want to show filters loading before first render
           if (mounted && filtersAltered) {
             setState(() {});
           }
@@ -800,56 +803,67 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
         : widget.maxWidthGetter?.call(currentColumnKeys??[]);
     Widget result;
 
-    // if (!(widget.implicitlyAnimated ?? allFiltered.length<10)) {
+    if (widget.waitForFirstFilterToRender && showFiltersLoading) {
 
-      if (widget.enableFixedHeightForListRows && allFiltered.isNotEmpty) {
-        result = SliverFixedExtentList(
-          itemExtent: allFiltered.first.height??36,
-          delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int i) => _getRow(context, allFiltered.isEmpty ? null : allFiltered[i], i, minWidth),
-            childCount: childCount,
-          ),
-        );
-      } else {
-        result = SliverList(
-          delegate: SliverChildBuilderDelegate(
-                (BuildContext context, int i) => _getRow(context, allFiltered.isEmpty ? null : allFiltered[i], i, minWidth),
-            childCount: childCount,
-          ),
-        );
-      }
+      result = const SliverToBoxAdapter(
+        child: SizedBox(
+          height: 128,
+          child: LoadingSign(),
+        ),
+      );
 
-    // }  else {
-    //
-    //   TODO 3 re-implement implicit animation with animated_list_plus
-    //   result = SliverImplicitlyAnimatedList<RowModel<T>>(
-    //     items: allFiltered.isEmpty ? [] : allFiltered,
-    //     areItemsTheSame: (a, b) => a==b,
-    //     insertDuration: Duration(milliseconds: 400),
-    //     updateDuration: Duration(milliseconds: 400),
-    //     itemBuilder: (context, animation, item, index) {
-    //       return SlideTransition(
-    //         position: Tween<Offset>(begin: Offset(-0.33, 0), end: Offset(0, 0)).animate(animation),
-    //         child: SizeFadeTransition(
-    //           sizeFraction: 0.7,
-    //           curve: Curves.easeOutCubic,
-    //           animation: animation,
-    //           child: _getRow(context, item, index, minWidth),
-    //         ),
-    //       );
-    //     },
-    //     updateItemBuilder: (context, animation, item) {
-    //       return SlideTransition(
-    //         position: Tween<Offset>(begin: Offset(-0.10, 0), end: Offset(0, 0)).animate(animation),
-    //         child: FadeTransition(
-    //           opacity: animation,
-    //           child: _getRow(context, item, -1, minWidth),
-    //         ),
-    //       );
-    //     },
-    //   );
-    //
-    // }
+    } else {
+      // if (!(widget.implicitlyAnimated ?? allFiltered.length<10)) {
+
+        if (widget.enableFixedHeightForListRows && allFiltered.isNotEmpty) {
+          result = SliverFixedExtentList(
+            itemExtent: allFiltered.first.height??36,
+            delegate: SliverChildBuilderDelegate(
+                  (BuildContext context, int i) => _getRow(context, allFiltered.isEmpty ? null : allFiltered[i], i, minWidth),
+              childCount: childCount,
+            ),
+          );
+        } else {
+          result = SliverList(
+            delegate: SliverChildBuilderDelegate(
+                  (BuildContext context, int i) => _getRow(context, allFiltered.isEmpty ? null : allFiltered[i], i, minWidth),
+              childCount: childCount,
+            ),
+          );
+        }
+
+      // }  else {
+      //
+      //   TODO 3 re-implement implicit animation with animated_list_plus
+      //   result = SliverImplicitlyAnimatedList<RowModel<T>>(
+      //     items: allFiltered.isEmpty ? [] : allFiltered,
+      //     areItemsTheSame: (a, b) => a==b,
+      //     insertDuration: Duration(milliseconds: 400),
+      //     updateDuration: Duration(milliseconds: 400),
+      //     itemBuilder: (context, animation, item, index) {
+      //       return SlideTransition(
+      //         position: Tween<Offset>(begin: Offset(-0.33, 0), end: Offset(0, 0)).animate(animation),
+      //         child: SizeFadeTransition(
+      //           sizeFraction: 0.7,
+      //           curve: Curves.easeOutCubic,
+      //           animation: animation,
+      //           child: _getRow(context, item, index, minWidth),
+      //         ),
+      //       );
+      //     },
+      //     updateItemBuilder: (context, animation, item) {
+      //       return SlideTransition(
+      //         position: Tween<Offset>(begin: Offset(-0.10, 0), end: Offset(0, 0)).animate(animation),
+      //         child: FadeTransition(
+      //           opacity: animation,
+      //           child: _getRow(context, item, -1, minWidth),
+      //         ),
+      //       );
+      //     },
+      //   );
+      //
+      // }
+    }
 
     Widget? header = showHeaders
         ? headerRowModel!=null
@@ -1087,6 +1101,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
       if (widget.allowCustomization) {
         rowActions = addManageActions(context,
           actions: rowActions,
+          showFiltersLoading: showFiltersLoading,
           controller: widget.tableController ?? (TableController()
             ..currentState = this
             ..columnKeys = columnKeys
@@ -1861,6 +1876,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     if (widget.allowCustomization) {
       colActions = addManageActions(context,
         actions: colActions,
+        showFiltersLoading: showFiltersLoading,
         controller: widget.tableController ?? (TableController()
           ..currentState = this
           ..columnKeys = columnKeys
@@ -2048,6 +2064,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     Map<dynamic, List<dynamic>>? availableFilters,
     dynamic colKey,
     ColModel? col,
+    bool showFiltersLoading = false,
   }) {
     final clearFiltersAction = getClearAllFiltersAction(controller: controller);
     final manageActions = [
