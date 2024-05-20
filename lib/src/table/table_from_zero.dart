@@ -416,7 +416,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
         final e = newKeys[i];
         if (!columnKeys!.contains(e)) {
           columnKeys!.insert(min(i, columnKeys!.length), e);
-          if (!currentColumnKeys!.contains(e)) {
+          if (!widget.columns![e]!.initiallyHidden && !currentColumnKeys!.contains(e)) {
             currentColumnKeys!.insert(min(i, currentColumnKeys!.length), e);
           }
         }

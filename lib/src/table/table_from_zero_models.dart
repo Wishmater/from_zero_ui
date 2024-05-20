@@ -141,6 +141,7 @@ abstract class ColModel<T>{
   /// but if they do, the values in TableController take priority
   Map<Object?, bool>? get initialValueFilters;
   bool? get initialValueFiltersExcludeAllElse;
+  bool get initiallyHidden;
 
   Object? getValue(RowModel row, dynamic key) {
     return row.values[key];
@@ -438,6 +439,8 @@ class SimpleColModel<T> extends ColModel<T>{
   Map<Object?, bool>? initialValueFilters;
   @override
   bool? initialValueFiltersExcludeAllElse;
+  @override
+  bool initiallyHidden;
   SimpleColModel({
     required this.name,
     this.compactName,
@@ -458,6 +461,7 @@ class SimpleColModel<T> extends ColModel<T>{
     this.possibleValues,
     this.initialValueFilters,
     this.initialValueFiltersExcludeAllElse,
+    this.initiallyHidden = false,
   });
   SimpleColModel<T> copyWith({
     String? name,
