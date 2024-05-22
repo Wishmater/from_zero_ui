@@ -342,9 +342,9 @@ class StringField extends Field<String> {
                     TransparentTapGestureRecognizer: GestureRecognizerFactoryWithHandlers<TransparentTapGestureRecognizer>(
                           () => TransparentTapGestureRecognizer(debugOwner: this),
                           (TapGestureRecognizer instance) {
-                        instance // hack to fix textField breaking when window loses focus on desktop
-                          .onTapDown = (details) => controller.notifyListeners();
-                      },
+                            instance // hack to fix textField breaking when window loses focus on desktop
+                              .onTapDown = (details) => controller.notifyListeners();
+                          },
                     ),
                   },
                   child: Builder(
@@ -472,7 +472,12 @@ class StringField extends Field<String> {
       onEditingComplete: onEditingComplete,
       obscureText: obfuscate,
       onChanged: onChanged,
-      inputFormatters: inputFormatters,
+      inputFormatters: [
+        if (maxLines!=null)
+          LineLimitTextFormatter(maxLines),
+        if (inputFormatters!=null)
+          ...inputFormatters,
+      ],
       minLines: minLines,
       textAlign: textAlign,
       keyboardType: keyboardType,
@@ -555,19 +560,55 @@ class StringField extends Field<String> {
 class UpperCaseTextFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    return TextEditingValue(
-      text: newValue.text.toUpperCase(),
-      selection: newValue.selection,
-    );
+    final upperCased = newValue.text.toUpperCase();
+    if (upperCased!=newValue.text) {
+      return TextEditingValue(
+        text: upperCased,
+        selection: newValue.selection,
+      );
+    }
+    return newValue;
   }
 }
 class LowerCaseTextFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
-    return TextEditingValue(
-      text: newValue.text.toLowerCase(),
-      selection: newValue.selection,
-    );
+    final lowerCased = newValue.text.toLowerCase();
+    if (lowerCased!=newValue.text) {
+      return TextEditingValue(
+        text: lowerCased,
+        selection: newValue.selection,
+      );
+    }
+    return newValue;
   }
 }
+class LineLimitTextFormatter extends TextInputFormatter {
+  int? lineLimit;
+  LineLimitTextFormatter(this.lineLimit);
+  @override
+  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+    if (lineLimit==null || lineLimit!<1) return newValue;
+    int lineCount = 0;
+    final characters = newValue.text.characters.toList();
+    for (int i=0; i<characters.length; i++) {
+      if (characters[i]=='\n' || characters[i]=='\r') {
+        lineCount++;
+        if (lineCount >= lineLimit!) {
+          final newText = newValue.text.substring(0, i)
+              + newValue.text.substring(i).replaceAll(RegExp(r'\r\n|\r|\n|/'), ' ');
+          return TextEditingValue(
+            text: newText,
+            selection: newValue.selection,
+          );
+        }
+        if (characters[i]=='\r' && characters.length>i+1 && characters[i+1]=='\n') {
+          i++; // count \r\n as a single line break
+        }
+      }
+    }
+    return newValue;
+  }
+}
+
 
