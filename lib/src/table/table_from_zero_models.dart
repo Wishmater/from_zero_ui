@@ -479,6 +479,11 @@ class SimpleColModel<T> extends ColModel<T>{
     bool? filterEnabled,
     bool Function(RowModel<T> row)? rowCountSelector,
     ShowFilterPopupCallback? showFilterPopupCallback,
+    String? compactName,
+    Iterable<dynamic>? possibleValues,
+    Map<Object?, bool>? initialValueFilters,
+    bool? initialValueFiltersExcludeAllElse,
+    bool? initiallyHidden,
   }){
     return SimpleColModel<T>(
       name: name ?? this.name,
@@ -496,6 +501,11 @@ class SimpleColModel<T> extends ColModel<T>{
       filterEnabled: filterEnabled ?? this.filterEnabled,
       rowCountSelector: rowCountSelector ?? this.rowCountSelector,
       showFilterPopupCallback: showFilterPopupCallback ?? this.showFilterPopupCallback,
+      compactName: compactName ?? this.compactName,
+      possibleValues: possibleValues ?? this.possibleValues,
+      initiallyHidden: initiallyHidden ?? this.initiallyHidden,
+      initialValueFilters: initialValueFilters ?? this.initialValueFilters,
+      initialValueFiltersExcludeAllElse: initialValueFiltersExcludeAllElse ?? this.initialValueFiltersExcludeAllElse,
     );
   }
 }
@@ -522,6 +532,10 @@ class NumColModel<T> extends SimpleColModel<T> {
     this.formatter,
     super.defaultSortAscending = false,
     super.alignment = TextAlign.right,
+    super.possibleValues,
+    super.initiallyHidden,
+    super.initialValueFilters,
+    super.initialValueFiltersExcludeAllElse,
   });
   @override
   NumColModel<T> copyWith({
@@ -541,6 +555,11 @@ class NumColModel<T> extends SimpleColModel<T> {
     bool Function(RowModel<T> row)? rowCountSelector,
     ShowFilterPopupCallback? showFilterPopupCallback,
     NumberFormat? formatter,
+    String? compactName,
+    Iterable<dynamic>? possibleValues,
+    Map<Object?, bool>? initialValueFilters,
+    bool? initialValueFiltersExcludeAllElse,
+    bool? initiallyHidden,
   }){
     return NumColModel<T>(
       name: name ?? this.name,
@@ -559,6 +578,11 @@ class NumColModel<T> extends SimpleColModel<T> {
       rowCountSelector: rowCountSelector ?? this.rowCountSelector,
       showFilterPopupCallback: showFilterPopupCallback ?? this.showFilterPopupCallback,
       formatter: formatter ?? this.formatter,
+      compactName: compactName ?? this.compactName,
+      possibleValues: possibleValues ?? this.possibleValues,
+      initiallyHidden: initiallyHidden ?? this.initiallyHidden,
+      initialValueFilters: initialValueFilters ?? this.initialValueFilters,
+      initialValueFiltersExcludeAllElse: initialValueFiltersExcludeAllElse ?? this.initialValueFiltersExcludeAllElse,
     );
   }
   @override
@@ -656,6 +680,10 @@ class BoolColModel<T> extends SimpleColModel<T> {
     this.falseValue = 'NO', // TODO 3 internationalize
     super.defaultSortAscending = false,
     super.alignment = TextAlign.center,
+    super.possibleValues,
+    super.initiallyHidden,
+    super.initialValueFilters,
+    super.initialValueFiltersExcludeAllElse,
   });
   @override
   BoolColModel<T> copyWith({
@@ -676,6 +704,11 @@ class BoolColModel<T> extends SimpleColModel<T> {
     ShowFilterPopupCallback? showFilterPopupCallback,
     String? trueValue,
     String? falseValue,
+    String? compactName,
+    Iterable<dynamic>? possibleValues,
+    Map<Object?, bool>? initialValueFilters,
+    bool? initialValueFiltersExcludeAllElse,
+    bool? initiallyHidden,
   }){
     return BoolColModel<T>(
       name: name ?? this.name,
@@ -695,6 +728,11 @@ class BoolColModel<T> extends SimpleColModel<T> {
       showFilterPopupCallback: showFilterPopupCallback ?? this.showFilterPopupCallback,
       trueValue: trueValue ?? this.trueValue,
       falseValue: falseValue ?? this.falseValue,
+      compactName: compactName ?? this.compactName,
+      possibleValues: possibleValues ?? this.possibleValues,
+      initiallyHidden: initiallyHidden ?? this.initiallyHidden,
+      initialValueFilters: initialValueFilters ?? this.initialValueFilters,
+      initialValueFiltersExcludeAllElse: initialValueFiltersExcludeAllElse ?? this.initialValueFiltersExcludeAllElse,
     );
   }
   @override
@@ -738,6 +776,10 @@ class DateColModel<T> extends SimpleColModel<T> {
     super.showFilterPopupCallback,
     this.formatter,
     super.defaultSortAscending = false,
+    super.possibleValues,
+    super.initiallyHidden,
+    super.initialValueFilters,
+    super.initialValueFiltersExcludeAllElse,
   });
   @override
   DateColModel<T> copyWith({
@@ -757,6 +799,11 @@ class DateColModel<T> extends SimpleColModel<T> {
     bool Function(RowModel<T> row)? rowCountSelector,
     ShowFilterPopupCallback? showFilterPopupCallback,
     DateFormat? formatter,
+    String? compactName,
+    Iterable<dynamic>? possibleValues,
+    Map<Object?, bool>? initialValueFilters,
+    bool? initialValueFiltersExcludeAllElse,
+    bool? initiallyHidden,
   }){
     return DateColModel<T>(
       name: name ?? this.name,
@@ -775,6 +822,11 @@ class DateColModel<T> extends SimpleColModel<T> {
       rowCountSelector: rowCountSelector ?? this.rowCountSelector,
       showFilterPopupCallback: showFilterPopupCallback ?? this.showFilterPopupCallback,
       formatter: formatter ?? this.formatter,
+      compactName: compactName ?? this.compactName,
+      possibleValues: possibleValues ?? this.possibleValues,
+      initiallyHidden: initiallyHidden ?? this.initiallyHidden,
+      initialValueFilters: initialValueFilters ?? this.initialValueFilters,
+      initialValueFiltersExcludeAllElse: initialValueFiltersExcludeAllElse ?? this.initialValueFiltersExcludeAllElse,
     );
   }
   @override
