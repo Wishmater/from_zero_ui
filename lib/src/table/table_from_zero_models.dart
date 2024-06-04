@@ -119,6 +119,7 @@ abstract class RowModel<T> {
 abstract class ColModel<T>{
   String get name;
   String? get compactName;
+  String? get tooltip;
   Color? get backgroundColor => null;
   TextStyle? get textStyle => null;
   TextAlign? get alignment => null;
@@ -406,6 +407,8 @@ class SimpleColModel<T> extends ColModel<T>{
   @override
   String? compactName;
   @override
+  String? tooltip;
+  @override
   Color? backgroundColor;
   @override
   TextStyle? textStyle;
@@ -444,6 +447,7 @@ class SimpleColModel<T> extends ColModel<T>{
   SimpleColModel({
     required this.name,
     this.compactName,
+    this.tooltip,
     this.backgroundColor,
     this.textStyle,
     this.alignment,
@@ -465,6 +469,7 @@ class SimpleColModel<T> extends ColModel<T>{
   });
   SimpleColModel<T> copyWith({
     String? name,
+    String? tooltip,
     Color? backgroundColor,
     TextStyle? textStyle,
     TextAlign? alignment,
@@ -487,6 +492,7 @@ class SimpleColModel<T> extends ColModel<T>{
   }){
     return SimpleColModel<T>(
       name: name ?? this.name,
+      tooltip: tooltip ?? this.tooltip,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       textStyle: textStyle ?? this.textStyle,
       alignment: alignment ?? this.alignment,
@@ -517,6 +523,7 @@ class NumColModel<T> extends SimpleColModel<T> {
   NumColModel({
     required super.name,
     super.compactName,
+    super.tooltip,
     super.backgroundColor,
     super.textStyle,
     super.flex,
@@ -540,6 +547,7 @@ class NumColModel<T> extends SimpleColModel<T> {
   @override
   NumColModel<T> copyWith({
     String? name,
+    String? tooltip,
     Color? backgroundColor,
     TextStyle? textStyle,
     TextAlign? alignment,
@@ -563,6 +571,7 @@ class NumColModel<T> extends SimpleColModel<T> {
   }){
     return NumColModel<T>(
       name: name ?? this.name,
+      tooltip: tooltip ?? this.tooltip,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       textStyle: textStyle ?? this.textStyle,
       alignment: alignment ?? this.alignment,
@@ -663,6 +672,7 @@ class BoolColModel<T> extends SimpleColModel<T> {
   String falseValue;
   BoolColModel({
     required super.name,
+    super.tooltip,
     super.compactName,
     super.backgroundColor,
     super.textStyle,
@@ -688,6 +698,7 @@ class BoolColModel<T> extends SimpleColModel<T> {
   @override
   BoolColModel<T> copyWith({
     String? name,
+    String? tooltip,
     Color? backgroundColor,
     TextStyle? textStyle,
     TextAlign? alignment,
@@ -712,6 +723,7 @@ class BoolColModel<T> extends SimpleColModel<T> {
   }){
     return BoolColModel<T>(
       name: name ?? this.name,
+      tooltip: tooltip ?? this.tooltip,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       textStyle: textStyle ?? this.textStyle,
       alignment: alignment ?? this.alignment,
@@ -761,6 +773,7 @@ class DateColModel<T> extends SimpleColModel<T> {
   DateColModel({
     required super.name,
     super.compactName,
+    super.tooltip,
     super.backgroundColor,
     super.textStyle,
     super.flex,
@@ -784,6 +797,7 @@ class DateColModel<T> extends SimpleColModel<T> {
   @override
   DateColModel<T> copyWith({
     String? name,
+    String? tooltip,
     Color? backgroundColor,
     TextStyle? textStyle,
     TextAlign? alignment,
@@ -807,6 +821,7 @@ class DateColModel<T> extends SimpleColModel<T> {
   }){
     return DateColModel<T>(
       name: name ?? this.name,
+      tooltip: tooltip ?? this.tooltip,
       backgroundColor: backgroundColor ?? this.backgroundColor,
       textStyle: textStyle ?? this.textStyle,
       alignment: alignment ?? this.alignment,

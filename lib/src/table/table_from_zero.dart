@@ -1679,6 +1679,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     final col = widget.columns?[colKey];
     final compactName = col?.compactName ?? col?.name ?? ColModel.getRowValueString(row, colKey, col);
     final name = col?.name ?? ColModel.getRowValueString(row, colKey, col);
+    final tooltip = col?.tooltip;
     bool export = context.findAncestorWidgetOfExactType<Export>()!=null;
     if (!filterGlobalKeys.containsKey(colKey)) {
       filterGlobalKeys[colKey] = GlobalKey();
@@ -1833,6 +1834,12 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
         ),
       ),
     );
+    if (tooltip!=null) {
+      result = TooltipFromZero(
+        message: tooltip,
+        child: result,
+      );
+    }
     List<Widget> colActions = [
       if (col?.sortEnabled ?? true)
         ActionFromZero(
