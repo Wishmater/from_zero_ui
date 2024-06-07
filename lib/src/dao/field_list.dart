@@ -1787,19 +1787,21 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }) {
     focusNode ??= this.focusNode;
     List<Widget> result;
-    if (objects.length>1 || tableCellsEditable || !hasAvailableObjectsPool) {
-      return buildWidgetsAsTable(context,
-        addCard: addCard,
-        asSliver: asSliver,
-        expandToFillContainer: expandToFillContainer,
-        dense: dense,
-        focusNode: focusNode,
-        collapsible: collapsible,
-        collapsed: collapsed,
-        fieldGlobalKey: fieldGlobalKey,
-        mainScrollController: mainScrollController,
-      );
-    } else if (expandToFillContainer) {
+    // // WTFF was the point of this ???
+    // if (objects.length>1 || tableCellsEditable || !hasAvailableObjectsPool) {
+    //   return buildWidgetsAsTable(context,
+    //     addCard: addCard,
+    //     asSliver: asSliver,
+    //     expandToFillContainer: expandToFillContainer,
+    //     dense: dense,
+    //     focusNode: focusNode,
+    //     collapsible: collapsible,
+    //     collapsed: collapsed,
+    //     fieldGlobalKey: fieldGlobalKey,
+    //     mainScrollController: mainScrollController,
+    //   );
+    // } else
+    if (expandToFillContainer) {
       result = [LayoutBuilder(
         builder: (context, constraints) {
           return _buildWidgetsAsCombo(context,
@@ -1833,7 +1835,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }
   Widget _buildWidgetsAsCombo(BuildContext context, {
     required FocusNode focusNode,
-    bool addCard=true,
+    bool addCard = true,
     bool asSliver = true,
     bool expandToFillContainer = true,
     bool dense = false,
@@ -1850,14 +1852,19 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         final visibleValidationErrors = passedFirstEdit
             ? validationErrors
             : validationErrors.where((e) => e.isBeforeEditing);
-        Widget result = ComboField.buttonContentBuilder(context, uiName, hint, objects.firstOrNull, enabled, false, dense: dense,);
-        final onTap = () async {
+        final name = ListField.listToStringSmart(objects,
+          context: context,
+          modelNameSingular: objectTemplate.classUiName,
+          modelNamePlural: objectTemplate.classUiNamePlural,
+        );
+        Widget result = ComboField.buttonContentBuilder(context, uiName, hint, name, enabled, false, dense: dense,);
+        Future<void> onTap() async {
           final toRemoveAfter = objects;
           final result = await maybeAddRow(context, 0);
           if (result!=null) {
             removeRows(toRemoveAfter);
           }
-        };
+        }
         if (addCard) {
           result = InkWell(
             key: headerGlobalKey,
