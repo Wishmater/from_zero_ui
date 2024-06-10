@@ -1037,7 +1037,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
         for (final e in widget.rowActions)
           e: e.getStateForMaxWidth(constraints?.maxWidth??double.infinity),
       };
-      List<Widget> rowActions = row==headerRowModel ? []
+      List<ActionFromZero> rowActions = row==headerRowModel ? []
           : widget.rowActions.map((e) => e.copyWith(
               onTap: (context) {
                 e.onRowTap?.call(context, row as RowModel<T>);
@@ -1047,9 +1047,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
             ),).toList();
       for (final e in rowActions) {
         if (!rowActionStates.containsKey(e)) {
-          rowActionStates[e] = e is ActionFromZero
-              ? e.getStateForMaxWidth(constraints?.maxWidth??double.infinity)
-              : ActionState.none;
+          rowActionStates[e] = e.getStateForMaxWidth(constraints?.maxWidth??double.infinity);
         }
       }
       final expandActions = [
@@ -1840,7 +1838,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
         child: result,
       );
     }
-    List<Widget> colActions = [
+    List<ActionFromZero> colActions = [
       if (col?.sortEnabled ?? true)
         ActionFromZero(
           title: 'Ordenar Ascendente', // TODO 3 internationalize
@@ -2065,8 +2063,8 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     return widget.columns?[key]?.flex ?? 1;
   }
 
-  static List<Widget> addManageActions(BuildContext context, {
-    required List<Widget> actions,
+  static List<ActionFromZero> addManageActions(BuildContext context, {
+    required List<ActionFromZero> actions,
     required TableController controller,
     Map<dynamic, List<dynamic>>? availableFilters,
     dynamic colKey,
@@ -2164,8 +2162,8 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
       setState(filter);
     }
   }
-  static List<Widget> addExportExcelAction(BuildContext context, {
-    required List<Widget> actions,
+  static List<ActionFromZero> addExportExcelAction(BuildContext context, {
+    required List<ActionFromZero> actions,
     required TableController tableController,
     required FutureOr<String> exportPathForExcel,
   }) {

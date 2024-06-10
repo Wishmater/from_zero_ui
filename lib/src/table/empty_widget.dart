@@ -10,7 +10,7 @@ class TableEmptyWidget<T> extends StatelessWidget {
   final TableController<T> tableController;
   final String? title;
   final String? subtitle;
-  final List<Widget>? actions;
+  final List<ActionFromZero>? actions;
   final FutureOr<String>? exportPathForExcel;
   final VoidCallback? onShowMenu;
   final Widget? retryButton;
@@ -29,7 +29,7 @@ class TableEmptyWidget<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = tableController.currentState;
-    List<Widget> actions = this.actions ?? [];
+    List<ActionFromZero> actions = this.actions ?? [];
     if (tableController.currentState?.widget.allowCustomization??false) {
       actions = TableFromZeroState.addManageActions(context,
         actions: actions,

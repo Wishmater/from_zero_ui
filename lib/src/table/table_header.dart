@@ -9,7 +9,7 @@ class TableHeaderFromZero<T> extends StatefulWidget {
 
   final TableController<T> controller;
   final Widget? title;
-  final List<Widget>? actions;
+  final List<ActionFromZero>? actions;
   final Widget? leading;
   final VoidCallback? onShowAppbarContextMenu;
   final bool showElementCount;
@@ -71,7 +71,7 @@ class TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
     Widget result = AnimatedBuilder(
       animation: widget.controller,
       builder: (context, child) {
-        List<Widget> actions = widget.actions ?? [];
+        List<ActionFromZero> actions = widget.actions ?? [];
         if (widget.controller.currentState?.widget.allowCustomization??false) {
           actions = TableFromZeroState.addManageActions(context,
             actions: actions,
