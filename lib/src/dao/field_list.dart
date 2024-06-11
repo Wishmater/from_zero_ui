@@ -62,6 +62,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   ListFieldDisplayType displayType;
   bool validateChildren;
   String Function(ListField<T, U> field) toStringGetter;
+  Map<double, ActionState>? actionAddBreakpoints;
   Map<double, ActionState> actionViewBreakpoints;
   Map<double, ActionState> actionEditBreakpoints;
   Map<double, ActionState> actionDuplicateBreakpoints;
@@ -248,6 +249,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.displayType = ListFieldDisplayType.table,
     this.toStringGetter = defaultToString,
     RowTapType? rowTapType,
+    this.actionAddBreakpoints,
     Map<double, ActionState>? actionViewBreakpoints,
     Map<double, ActionState>? actionEditBreakpoints,
     Map<double, ActionState>? actionDuplicateBreakpoints,
@@ -475,6 +477,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     FieldValueGetter<bool, Field>? hiddenInViewGetter,
     FieldValueGetter<bool, Field>? hiddenInFormGetter,
     bool? collapsible,
+    Map<double, ActionState>? actionAddBreakpoints,
     Map<double, ActionState>? actionViewBreakpoints,
     Map<double, ActionState>? actionEditBreakpoints,
     Map<double, ActionState>? actionDuplicateBreakpoints,
@@ -559,6 +562,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       hiddenInViewGetter: hiddenInViewGetter ?? hiddenGetter ?? this.hiddenInViewGetter,
       hiddenInFormGetter: hiddenInFormGetter ?? hiddenGetter ?? this.hiddenInFormGetter,
       collapsible: collapsible ?? this.collapsible,
+      actionAddBreakpoints: actionAddBreakpoints ?? this.actionAddBreakpoints,
       actionViewBreakpoints: actionViewBreakpoints ?? this.actionViewBreakpoints,
       actionEditBreakpoints: actionEditBreakpoints ?? this.actionEditBreakpoints,
       actionDuplicateBreakpoints: actionDuplicateBreakpoints ?? this.actionDuplicateBreakpoints,
@@ -742,15 +746,20 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     });
   }
 
-  Future<dynamic> maybeAddRow(BuildContext context, [int? insertIndex]) async {
+  Future<dynamic> maybeAddRow(BuildContext context, {
+    int? insertIndex,
+    bool replaceAllRows = false,
+  }) async {
     focusNode.requestFocus();
     final objectTemplate = this.objectTemplate;
     T emptyDAO = (objectTemplate.copyWith() as T)..id=null;
     if (emptyDAO is LazyDAO) (emptyDAO as LazyDAO).ensureInitialized();
     emptyDAO.contextForValidation = dao.contextForValidation;
+    assert (!replaceAllRows || hasAvailableObjectsPool, "Can't replace all rows without an availableObjects pool");
     if (hasAvailableObjectsPool) {
       dynamic selected;
-      if (showObjectsFromAvailablePoolAsTable) {
+      if (showObjectsFromAvailablePoolAsTable || replaceAllRows) {
+        final allowAddMultipleFromAvailablePool = this.allowAddMultipleFromAvailablePool || replaceAllRows;
         final ValueNotifier<Map<T, bool>> selectedObjects = ValueNotifier({});
         ValueNotifier<List<T>?> availableData = ValueNotifier(null);
         emptyDAO.onDidSave = (BuildContext context, U? model, DAO<U> dao) {
@@ -783,6 +792,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                           });
                           return _availablePoolTableDataBuilder(context, data, emptyDAO,
                             selectedObjects: selectedObjects,
+                            replaceAllRows: replaceAllRows,
                           );
                         },
                       )
@@ -796,6 +806,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                           });
                           return _availablePoolTableDataBuilder(context, data, emptyDAO,
                             selectedObjects: selectedObjects,
+                            replaceAllRows: replaceAllRows,
                           );
                         },
                       ),
@@ -834,7 +845,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                 builder: (context, values, child) {
                                   List<T>? availableData = values[0];
                                   Map<T, bool> selectedObjects = values[1];
-                                  final selected = availableData==null ? [] : availableData.where((e) {
+                                  final selected = availableData==null ? <T>[] : availableData.where((e) {
                                     return selectedObjects[e] ?? selectionDefault;
                                   }).toList();
                                   return DialogButton.accept(
@@ -928,15 +939,25 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       }
       if (selected!=null) {
         if (selected is T) {
-          if (transformSelectedFromAvailablePool!=null) {
-            selected = transformSelectedFromAvailablePool!(selected);
+          selected = [selected];
+        }
+        selected as List<T>;
+        if (transformSelectedFromAvailablePool!=null) {
+          selected = selected.map((e) => transformSelectedFromAvailablePool!(e)).toList();
+        }
+        if (replaceAllRows) {
+          final toRemove = <T>[];
+          for (final e in objects) {
+            if (!selected.contains(e)) toRemove.add(e);
           }
-          addRow(selected, insertIndex);
+          removeRows(toRemove);
+          final toAdd = <T>[];
+          for (final e in selected) {
+            if (!objects.contains(e)) toAdd.add(e);
+          }
+          addRows(toAdd, insertIndex);
         } else {
-          if (transformSelectedFromAvailablePool!=null) {
-            selected = (selected as List<T>).map((e) => transformSelectedFromAvailablePool!(e)).toList();
-          }
-          addRows(selected as List<T>, insertIndex);
+          addRows(selected, insertIndex);
         }
         return selected;
       }
@@ -974,10 +995,18 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }
   Widget _availablePoolTableDataBuilder(BuildContext context, List<T> data, T emptyDAO, {
     ValueNotifier<Map<T, bool>>? selectedObjects,
+    bool replaceAllRows = false,
   }) {
+    final allowAddMultipleFromAvailablePool = this.allowAddMultipleFromAvailablePool || replaceAllRows;
     ScrollController scrollController = ScrollController();
-    if (!allowDuplicateObjectsFromAvailablePool) {
+    if (!allowDuplicateObjectsFromAvailablePool && !replaceAllRows) {
       data = data.where((e) => !objects.contains(e)).toList();
+    }
+    if (replaceAllRows) {
+      selectedObjects ??= ValueNotifier({});
+      for (final e in objects) {
+        selectedObjects.value[e] = true;
+      }
     }
     final listField = ListField<T, U>(
       uiNameGetter: (field, dao) => emptyDAO.classUiName,
@@ -1577,7 +1606,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                       icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
                                       breakpoints: {0: ActionState.popup,},
                                       onTap: (context) async {
-                                        final result = await maybeAddRow(dao.contextForValidation ?? context, i);
+                                        final result = await maybeAddRow(dao.contextForValidation ?? context, insertIndex: i);
                                         if (result!=null) {
                                           userInteracted = true;
                                         }
@@ -1859,11 +1888,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         );
         Widget result = ComboField.buttonContentBuilder(context, uiName, hint, name, enabled, false, dense: dense,);
         Future<void> onTap() async {
-          final toRemoveAfter = objects;
-          final result = await maybeAddRow(context, 0);
-          if (result!=null) {
-            removeRows(toRemoveAfter);
-          }
+          return maybeAddRow(context,
+            insertIndex: 0,
+            replaceAllRows: hasAvailableObjectsPool,
+          );
         }
         if (addCard) {
           result = InkWell(
@@ -2267,7 +2295,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                 breakpoints: {0: ActionState.popup,},
                 onRowTap: (context, row) async {
                   row.focusNode.requestFocus();
-                  final result = await maybeAddRow(dao.contextForValidation ?? context, objects.indexOf(row.id)+1);
+                  final result = await maybeAddRow(dao.contextForValidation ?? context, insertIndex: objects.indexOf(row.id)+1);
                   if (result!=null) {
                     userInteracted = true;
                   }
@@ -2771,6 +2799,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         ActionFromZero(
           title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
           icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
+          breakpoints: actionAddBreakpoints,
           onTap: (context) async {
             focusNode?.requestFocus();
             final result = await maybeAddRow(dao.contextForValidation ?? context);
