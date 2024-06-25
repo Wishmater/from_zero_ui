@@ -267,7 +267,7 @@ class ActionFromZero extends StatelessWidget {
                 data: Theme.of(context).iconTheme.copyWith(
                   color: !enabled || onTap==null
                       ? Theme.of(context).disabledColor
-                      : Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.white,
+                      : Theme.of(context).brightness==Brightness.light ? Colors.black45 : Colors.grey.shade300,
                 ),
                 child: icon,
               ),
