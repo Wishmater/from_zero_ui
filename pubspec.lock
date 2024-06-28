@@ -254,8 +254,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: a166206797368ee3f75092ec7e32c20e3c3546c1
-      resolved-ref: a166206797368ee3f75092ec7e32c20e3c3546c1
+      ref: a970b49aa6f8f69c978e644904f28bb174af1d03
+      resolved-ref: a970b49aa6f8f69c978e644904f28bb174af1d03
       url: "https://github.com/Wishmater/excel"
     source: git
     version: "4.0.2"
