@@ -222,6 +222,7 @@ class BoolField extends Field<BoolComparable> {
     bool showViewButtons=false,
     bool dense = false,
     bool? hidden,
+    int autoSizeTextMaxLines = 1,
   }) {
     if (hidden ?? fieldParam.hiddenInView) {
       return const SizedBox.shrink();

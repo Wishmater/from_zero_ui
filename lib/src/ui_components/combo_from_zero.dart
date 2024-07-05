@@ -481,8 +481,9 @@ class ComboFromZeroPopupState<T> extends State<ComboFromZeroPopup<T>> {
             tableHorizontalPadding: 8,
             initialSortedColumn: widget.sort ? 0 : -1,
             enableFixedHeightForListRows: widget.useFixedRowHeight,
-            cellBuilder: widget.popupWidgetBuilder==null ? null
-                : (context, row, colKey) => widget.popupWidgetBuilder!(row.id as T),
+            cellBuilder: widget.popupWidgetBuilder==null
+                ? null
+                : (context, row, colKey, col) => widget.popupWidgetBuilder!(row.id as T),
             rows: rows,
             onFilter: (filtered) {
               List<RowModel<T?>> starts = [];

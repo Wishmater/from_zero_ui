@@ -5,7 +5,7 @@ typedef FieldValidator<T extends Comparable> = FutureOr<ValidationError?> Functi
 typedef FieldValueGetter<T, R extends Field> = T Function(R field, DAO dao);
 typedef ContextFulFieldValueGetter<T, R extends Field> = T Function(BuildContext context, R field, DAO dao);
 typedef OnFieldValueChanged<T> = void Function(DAO dao, Field field, T value);
-typedef ViewWidgetBuilder<T extends Comparable> = Widget Function(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons, bool dense, bool? hidden});
+typedef ViewWidgetBuilder<T extends Comparable> = Widget Function(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons, bool dense, bool? hidden, int autoSizeTextMaxLines,});
 bool trueFieldGetter(_, __) => true;
 bool falseFieldGetter(_, __) => false;
 List defaultValidatorsGetter(_, __) => [];
@@ -423,12 +423,14 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool showViewButtons=false,
     bool dense = false,
     bool? hidden,
+    int autoSizeTextMaxLines = 1,
   }) {
     return viewWidgetBuilder(context, this,
       linkToInnerDAOs: linkToInnerDAOs,
       showViewButtons: showViewButtons,
       dense: dense,
       hidden: hidden,
+      autoSizeTextMaxLines: autoSizeTextMaxLines,
     );
   }
   static Widget defaultViewWidgetBuilder<T extends Comparable>
@@ -438,6 +440,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool dense = false,
     bool? hidden,
     String? subtitle,
+    int autoSizeTextMaxLines = 1,
   }) {
     if (hidden ?? field.hiddenInView) {
       return const SizedBox.shrink();
@@ -474,7 +477,8 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                         height: 1.1,
                       ),
                       textAlign: field.getColModel().alignment,
-                      maxLines: 1,
+                      maxLines: autoSizeTextMaxLines,
+                      softWrap: autoSizeTextMaxLines>1,
                       minFontSize: 15,
                       overflowReplacement: TooltipFromZero(
                         message: message,
@@ -486,9 +490,9 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
                             fontSize: 15,
                           ),
                           textAlign: field.getColModel().alignment,
-                          maxLines: 1,
-                          softWrap: false,
-                          overflow: TextOverflow.fade,
+                          maxLines: autoSizeTextMaxLines,
+                          softWrap: autoSizeTextMaxLines>1,
+                          overflow: autoSizeTextMaxLines>1 ? TextOverflow.clip : TextOverflow.fade,
                         ),
                       ),
                     )

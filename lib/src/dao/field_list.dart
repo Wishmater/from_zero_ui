@@ -70,6 +70,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   Map<String, ColModel> Function(DAO dao, ListField<T, U> listField, T objectTemplate)? tableColumnsBuilder;
   RowModel<T> Function(T element, BuildContext context, ListField<T, U> field, DAO dao, Map<String, ColModel> columns, ValueChanged<RowModel<T>>? onRowTap, Widget? rowAddonWidget)? tableRowBuilder;
   Widget? Function(BuildContext context, RowModel<T> row, int index, double? minWidth, Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder)? tableRowWidgetBuilder;
+  Widget? Function(BuildContext context, RowModel<T> row, dynamic colKey, ColModel? col, CellBuilder<T> defaultBuilder)? tableCellBuilder;
   /// this means that save() will be called on the object when adding a row
   /// and delete() will be called when removing a row, default false
   final bool? _skipDeleteConfirmation;
@@ -257,6 +258,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     this.tableColumnsBuilder,
     this.tableRowBuilder,
     this.tableRowWidgetBuilder,
+    this.tableCellBuilder,
     this.showTableHeaders = true,
     this.showTableHeaderAddon = true,
     this.showElementCount = true,
@@ -485,6 +487,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     Map<String, ColModel> Function(DAO dao, ListField<T, U> listField, T objectTemplate)? tableColumnsBuilder,
     RowModel<T> Function(T element, BuildContext context, ListField<T, U> field, DAO dao, Map<String, ColModel> columns, ValueChanged<RowModel<T>>? onRowTap, Widget? rowAddonWidget)? tableRowBuilder,
     Widget? Function(BuildContext context, RowModel<T> row, int index, double? minWidth, Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder)? tableRowWidgetBuilder,
+    Widget? Function(BuildContext context, RowModel<T> row, dynamic colKey, ColModel? col, CellBuilder<T> defaultBuilder)? tableCellBuilder,
     bool? skipDeleteConfirmation,
     bool? showTableHeaders,
     bool? showTableHeaderAddon,
@@ -619,6 +622,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       tableColumnsBuilder: tableColumnsBuilder ?? this.tableColumnsBuilder,
       tableRowBuilder: tableRowBuilder ?? this.tableRowBuilder,
       tableRowWidgetBuilder: tableRowWidgetBuilder ?? this.tableRowWidgetBuilder,
+      tableCellBuilder: tableCellBuilder ?? this.tableCellBuilder,
       tableFooterStickyOffset: tableFooterStickyOffset ?? this.tableFooterStickyOffset,
       tableHorizontalPadding: tableHorizontalPadding ?? this.tableHorizontalPadding,
       rowAddonField: rowAddonField ?? this.rowAddonField,
@@ -2231,6 +2235,35 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           return result;
         }
         final extraRowActions = extraRowActionsBuilder?.call(dao.contextForValidation ?? context, this, dao) ?? [];
+        final defaultCellBuilder = tableCellsEditable
+            ? (BuildContext context, RowModel<T> row, dynamic colKey, ColModel? col) {
+                final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
+                  expandToFillContainer: false,
+                  addCard: false,
+                  asSliver: false,
+                  dense: true,
+                  ignoreHidden: true,
+                );
+                return SizedBox(
+                  height: row.height,
+                  child: OverflowBox(
+                    minHeight: rowHeight, maxHeight: double.infinity,
+                    alignment: const Alignment(0, -0.4),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: widgets,
+                    ),
+                  ),
+                );
+              }
+            : (BuildContext context, RowModel<T> row, dynamic colKey, ColModel? col) {
+                return (row.values[colKey] as Field).buildViewWidget(context,
+                  linkToInnerDAOs: false,
+                  showViewButtons: false,
+                  dense: true,
+                  hidden: false,
+                );
+              };
         Widget result = TableFromZero<T>(
           scrollController: mainScrollController,
           minWidthGetter: getMinWidth,
@@ -2257,33 +2290,9 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               ? (row) => row.id.canSave ? null : ''
               : null),
           rowTooltipGetter: rowTooltipGetter,
-          cellBuilder: tableCellsEditable ? (context, row, colKey) {
-            final widgets = (row.values[colKey] as Field).buildFieldEditorWidgets(context,
-              expandToFillContainer: false,
-              addCard: false,
-              asSliver: false,
-              dense: true,
-              ignoreHidden: true,
-            );
-            return SizedBox(
-              height: row.height,
-              child: OverflowBox(
-                minHeight: rowHeight, maxHeight: double.infinity,
-                alignment: const Alignment(0, -0.4),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: widgets,
-                ),
-              ),
-            );
-          } : (context, row, colKey) {
-            return (row.values[colKey] as Field).buildViewWidget(context,
-              linkToInnerDAOs: false,
-              showViewButtons: false,
-              dense: true,
-              hidden: false,
-            );
-          },
+          cellBuilder: tableCellBuilder==null
+              ? defaultCellBuilder
+              : (context, row, colKey, col) => tableCellBuilder!(context, row, colKey, col, defaultCellBuilder),
           rowActions: [
             ...extraRowActions,
             if (extraRowActions.isNotEmpty)
@@ -2551,6 +2560,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool showViewButtons=false,
     bool dense = false,
     bool? hidden,
+    int autoSizeTextMaxLines = 1,
   }) {
     if (dense) {
       return Field.defaultViewWidgetBuilder(context, fieldParam,

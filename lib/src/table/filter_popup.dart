@@ -191,7 +191,7 @@ abstract class TableFromZeroFilterPopup {
                               rows: (col ?? SimpleColModel(name: ''))
                                   .buildFilterPopupRowModels(availableFilters[colKey] ?? [], newValueFilters, colKey, modified),
                               // override style and text alignment
-                              cellBuilder: (context, row, colKey) {
+                              cellBuilder: (context, row, colKey, col) {
                                 var message = ColModel.getRowValueString(row, colKey, col);
                                 var textStyle = const TextStyle(fontSize: 16);
                                 if (message.isBlank) {

@@ -23,6 +23,7 @@ typedef OnHeaderHoverCallback = void Function(dynamic key, bool selected);
 typedef OnCellTapCallback = ValueChanged<RowModel>? Function(dynamic key,);
 typedef OnCellHoverCallback = OnRowHoverCallback? Function(dynamic key,);
 typedef WidthGetter = double Function(List<dynamic> currentColumnKeys);
+typedef CellBuilder<T> = Widget? Function(BuildContext context, RowModel<T> row, dynamic colKey, ColModel? col);
 
 
 class TableFromZero<T> extends ConsumerStatefulWidget {
@@ -55,7 +56,7 @@ class TableFromZero<T> extends ConsumerStatefulWidget {
   final Widget? verticalDivider;
   final bool showFirstHorizontalDivider;
   final List<RowAction<T>> rowActions;
-  final Widget? Function(BuildContext context, RowModel<T> row, dynamic colKey)? cellBuilder;
+  final CellBuilder<T>? cellBuilder;
   final Widget? Function(BuildContext context, RowModel<T> row, int index, double? minWidth,
       Widget Function(BuildContext context, RowModel<T> row, int index, double? minWidth) defaultRowBuilder,)? rowBuilder;
   final Widget? Function(BuildContext context, RowModel<dynamic> row, double? minWidth)? headerRowBuilder;
@@ -1280,8 +1281,11 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
               width: double.infinity,
               child: row==headerRowModel
                   ? defaultHeaderCellBuilder(context, headerRowModel!, colKey)
-                  : widget.cellBuilder?.call(context, row as RowModel<T>, colKey)
-                      ?? TableFromZeroState.defaultCellBuilder<T>(context, row as RowModel<T>, colKey, col, _getStyle(context, row, colKey, rowDisabledReason!=null), _getAlignment(colKey)),
+                  : widget.cellBuilder?.call(context, row as RowModel<T>, colKey, col)
+                       ?? TableFromZeroState.defaultCellBuilder<T>(context, row as RowModel<T>, colKey, col,
+                            getStyle(context, row, colKey, col, widget.rowStyleTakesPriorityOverColumn, rowDisabledReason!=null),
+                            getAlignment(colKey, col),
+                          ),
           ),
         );
         if (row.onCellTap!=null || row.onCellDoubleTap!=null || row.onCellLongPress!=null || row.onCellHover!=null){
@@ -1687,7 +1691,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
       color: theme.textTheme.bodyLarge!.color!
           .withOpacity(theme.brightness==Brightness.light ? 0.7 : 0.8),
     );
-    final alignment = _getAlignment(colKey);
+    final alignment = getAlignment(colKey, col);
     Widget result = Align(
       alignment: alignment==TextAlign.center ? Alignment.center
           : alignment==TextAlign.left||alignment==TextAlign.start ? Alignment.centerLeft
@@ -1957,9 +1961,10 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     }
   }
 
-  static Widget defaultCellBuilder<T>(BuildContext context, RowModel<T> row, dynamic colKey, ColModel? col, TextStyle? style, TextAlign alignment) {
+  static Widget defaultCellBuilder<T>(BuildContext context, RowModel<T> row, dynamic colKey, ColModel? col, TextStyle? style, TextAlign alignment, {
+    int autoSizeTextMaxLines = 1,
+  }) {
     final message = ColModel.getRowValueString(row, colKey, col);
-    const autoSizeTextMaxLines = 1;
     Widget result = AutoSizeText(
       message,
       style: style,
@@ -2039,16 +2044,16 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     }
   }
 
-  TextAlign _getAlignment(dynamic colKey){
-    return widget.columns?[colKey]?.alignment ?? TextAlign.left;
+  static TextAlign getAlignment(dynamic colKey, ColModel? col){
+    return col?.alignment ?? TextAlign.left;
   }
 
-  TextStyle? _getStyle(BuildContext context, RowModel<T> row, dynamic key, bool isDisabled){
+  static TextStyle? getStyle(BuildContext context, RowModel row, dynamic colKey, ColModel? col, bool rowStyleTakesPriorityOverColumn, bool isDisabled){
     TextStyle? style;
-    if (widget.rowStyleTakesPriorityOverColumn) {
-      style = row.textStyle ?? widget.columns?[key]?.textStyle;
+    if (rowStyleTakesPriorityOverColumn) {
+      style = row.textStyle ?? col?.textStyle;
     } else {
-      style = widget.columns?[key]?.textStyle ?? row.textStyle;
+      style = col?.textStyle ?? row.textStyle;
     }
     if (isDisabled) {
       style ??= Theme.of(context).textTheme.bodyLarge;
