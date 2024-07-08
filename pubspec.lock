@@ -29,7 +29,7 @@ packages:
     dependency: "direct main"
     description:
       name: auto_size_text
-      sha256: "3f5261cd3fb5f2a9ab4e2fc3fba84fd9fcaac8821f20a1d4e71f557521b22599"
+      sha256: "3f5261cd3fb5f2a9ab4e2fc3fba84fd9.fcaac8821f20a1d4e71f557521b22599"
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
@@ -486,8 +486,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: f82cb53d7c47b3e17beffd29a468512a75b75f04
-      resolved-ref: f82cb53d7c47b3e17beffd29a468512a75b75f04
+      ref: "930195d75698fab1b1d4bc38776714457665ccdd"
+      resolved-ref: "930195d75698fab1b1d4bc38776714457665ccdd"
       url: "https://github.com/ross96D/mlog"
     source: git
     version: "1.0.0"
