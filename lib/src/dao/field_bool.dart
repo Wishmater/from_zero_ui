@@ -1,4 +1,5 @@
 import 'package:auto_size_text/auto_size_text.dart';
+import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -510,52 +511,56 @@ class BoolField extends Field<BoolComparable> {
           case BoolFieldDisplayType.compactCheckBox:
             result = FocusTraversalGroup(
               policy: hackFocusTraversalPolicy,
-              child: Stack(
-                children: [
-                  CheckboxListTile(
-                    focusNode: focusNode,
-                    value: value!.value,
-                    dense: true,
-                    subtitle: const SizedBox.shrink(),
-                    controlAffinity: ListTileControlAffinity.leading,
-                    contentPadding: EdgeInsets.only(left: (maxWidth/2)-20, top: dense ? 8 : 14),
-                    tileColor: dense && visibleValidationErrors.isNotEmpty
-                        ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
-                        : backgroundColor?.call(context, this, dao),
-                    checkColor: selectedColor?.call(context, this, dao),
-                    onChanged: !enabled ? null : (value) {
-                      focusNode.requestFocus();
-                      userInteracted = true;
-                      this.value = value!.comparable;
-                    },
-                  ),
-                  Positioned.fill(
-                    child: IgnorePointer(
-                      child: Padding(
-                        padding: EdgeInsets.only(left: 2, right: 2, top: 0, bottom: dense ? 30 : 22),
-                        child: Center(
-                          child: AutoSizeText(uiNameValue,
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            softWrap: false,
-                            style: TextStyle(
-                              height: 1,
-                              color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
-                            ),
-                            overflowReplacement: AutoSizeText(uiNameValue,
+              child: OverflowBox(
+                minWidth: minWidth.coerceAtMost(maxWidth),
+                maxWidth: maxWidth,
+                child: Stack(
+                  children: [
+                    CheckboxListTile(
+                      focusNode: focusNode,
+                      value: value!.value,
+                      dense: true,
+                      subtitle: const SizedBox.shrink(),
+                      controlAffinity: ListTileControlAffinity.leading,
+                      contentPadding: EdgeInsets.only(left: ((maxWidth/2)-16).coerceAtLeast(0), top: dense ? 8 : 14),
+                      tileColor: dense && visibleValidationErrors.isNotEmpty
+                          ? ValidationMessage.severityColors[theme.brightness.inverse]![visibleValidationErrors.first.severity]!.withOpacity(0.2)
+                          : backgroundColor?.call(context, this, dao),
+                      checkColor: selectedColor?.call(context, this, dao),
+                      onChanged: !enabled ? null : (value) {
+                        focusNode.requestFocus();
+                        userInteracted = true;
+                        this.value = value!.comparable;
+                      },
+                    ),
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: Padding(
+                          padding: EdgeInsets.only(left: 2, right: 2, top: 0, bottom: dense ? 30 : 22),
+                          child: Center(
+                            child: AutoSizeText(uiNameValue,
                               textAlign: TextAlign.center,
-                              maxLines: 2,
+                              maxLines: 1,
+                              softWrap: false,
                               style: TextStyle(
                                 height: 1,
                                 color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                              ),
+                              overflowReplacement: AutoSizeText(uiNameValue,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                style: TextStyle(
+                                  height: 1,
+                                  color: theme.textTheme.bodyLarge!.color!.withOpacity(enabled ? 1 : 0.75),
+                                ),
                               ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           case BoolFieldDisplayType.compactSwitch:

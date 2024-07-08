@@ -2909,11 +2909,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     final newField = e.copyWith(
       tableCellsEditable: false,
       allowAddNew: false,
-      actionViewBreakpoints: dao.viewDialogLinksToInnerDAOs&&dao.viewDialogShowsViewButtons
+      actionViewBreakpoints: dao.viewDialogLinksToInnerDAOs && dao.viewDialogShowsViewButtons
           ? {0: ActionState.icon}
           : dao.viewDialogLinksToInnerDAOs
-          ? {0: ActionState.popup}
-          : {0: ActionState.none},
+              ? {0: ActionState.popup}
+              : {0: ActionState.none},
       actionDeleteBreakpoints: {0: ActionState.none},
       actionDuplicateBreakpoints: {0: ActionState.none},
       actionEditBreakpoints: {0: ActionState.none},
