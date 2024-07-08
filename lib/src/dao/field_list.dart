@@ -2461,6 +2461,15 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               ),
             );
           }
+          if (!enabled) {
+            result = IgnorePointer(
+              child: result,
+            );
+            // result = MouseRegion(
+            //   cursor: SystemMouseCursors.forbidden,
+            //   child: result,
+            // );
+          }
           result = SizedBox(
             width: getMaxWidth(columns.keys),
             child: TooltipFromZero(
@@ -2473,15 +2482,6 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               child: result,
             ),
           );
-          if (!enabled) {
-            result = IgnorePointer(
-              child: result,
-            );
-            // result = MouseRegion(
-            //   cursor: SystemMouseCursors.forbidden,
-            //   child: result,
-            // );
-          }
           if (addCard) {
             result = Card(
               clipBehavior: Clip.hardEdge,
