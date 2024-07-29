@@ -1569,6 +1569,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     bool applyAlternateBackground = true,
     bool initialAlternateBackground = false,
   }) {
+    if (!context.mounted) return const SizedBox.shrink(); // hack to prevent error when getting Theme from a dirty context
     if (useIntrinsicWidth==null && (titleMaxWidth!=null
         || dao.props.values.where((e) => e is ListField && e.buildViewWidgetAsTable).isNotEmpty)) {
       useIntrinsicWidth ??= false;
