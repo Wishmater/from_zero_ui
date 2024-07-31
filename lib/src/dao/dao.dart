@@ -897,7 +897,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       validateNonEditedFields: false,
     );
     final focusNode = FocusNode();
-    final pageController = PreloadPageController();
+    PreloadPageController? pageController;
     Widget content = LayoutBuilder(
       builder: (context, constraints) {
         Widget result = AnimatedBuilder(
@@ -1072,7 +1072,8 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                                         }).toList(),
                                                         onTap: (value) async {
                                                           DefaultTabController.of(context).index = value;
-                                                          final future = pageController.animateToPage(value,
+                                                          pageController ??= PreloadPageController();
+                                                          final future = pageController!.animateToPage(value,
                                                             duration: kTabScrollDuration,
                                                             curve: Curves.ease,
                                                           );
@@ -1100,6 +1101,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                                 content: Builder(
                                   builder: (context) {
                                     final tabController = DefaultTabController.of(context);
+                                    pageController ??= PreloadPageController(initialPage: tabController.index);
                                     return AnimatedBuilder(
                                       animation: tabController,
                                       builder: (context, child) {
