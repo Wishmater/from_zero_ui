@@ -2078,6 +2078,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     T objectTemplate = this.objectTemplate;
     if (transformSelectedFromAvailablePool!=null) {
       objectTemplate = transformSelectedFromAvailablePool!(objectTemplate);
+      objectTemplate.parentDAO = dao;
     }
     final allowAddNew = this.allowAddNew;
     Widget result;
