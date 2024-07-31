@@ -755,7 +755,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool replaceAllRows = false,
   }) async {
     focusNode.requestFocus();
-    final objectTemplate = this.objectTemplate;
+    T objectTemplate = this.objectTemplate;
     T emptyDAO = (objectTemplate.copyWith() as T)..id=null;
     if (emptyDAO is LazyDAO) (emptyDAO as LazyDAO).ensureInitialized();
     emptyDAO.contextForValidation = dao.contextForValidation;
@@ -1001,6 +1001,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     ValueNotifier<Map<T, bool>>? selectedObjects,
     bool replaceAllRows = false,
   }) {
+    T objectTemplate = emptyDAO;
+    if (transformSelectedFromAvailablePool!=null) {
+      objectTemplate = transformSelectedFromAvailablePool!(objectTemplate);
+      objectTemplate.parentDAO = dao;
+    }
     final allowAddMultipleFromAvailablePool = this.allowAddMultipleFromAvailablePool || replaceAllRows;
     ScrollController scrollController = ScrollController();
     if (!allowDuplicateObjectsFromAvailablePool && !replaceAllRows) {
@@ -1013,7 +1018,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       }
     }
     final listField = ListField<T, U>(
-      uiNameGetter: (field, dao) => emptyDAO.classUiName,
+      uiNameGetter: (field, dao) => objectTemplate.classUiName,
       objectTemplateGetter: (field, dao) => emptyDAO,
       tableCellsEditable: false,
       collapsible: false,
@@ -1062,13 +1067,18 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     );
   }
   Widget _availablePoolComboDataBuilder(BuildContext context, List<T> data, T emptyDAO) {
+    T objectTemplate = emptyDAO;
+    if (transformSelectedFromAvailablePool!=null) {
+      objectTemplate = transformSelectedFromAvailablePool!(objectTemplate);
+      objectTemplate.parentDAO = dao;
+    }
     if (!allowDuplicateObjectsFromAvailablePool) {
       data = data.where((e) => !objects.contains(e)).toList();
     }
     return ComboFromZeroPopup<T>(
       possibleValues: data,
       showSearchBox: true,
-      title: '${FromZeroLocalizations.of(context).translate("add_add")} ${emptyDAO.classUiName}',
+      title: '${FromZeroLocalizations.of(context).translate("add_add")} ${objectTemplate.classUiName}',
       extraWidget: allowAddNew ? (context, onSelected) {
         return Align(
           alignment: Alignment.centerRight,
@@ -1312,6 +1322,8 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     var displayType = dense // TODO 2 maybe combo should also be allowed to build in dense if it has less than 2 elements
         ? ListFieldDisplayType.popupButton
         : this.displayType;
+    var objectTemplate = this.objectTemplate;
+
     return switch (displayType) {
       ListFieldDisplayType.table => buildWidgetsAsTable(context,
         addCard: addCard,
@@ -1517,6 +1529,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     bool dense = false,
     FocusNode? focusNode,
   }) {
+    T objectTemplate = this.objectTemplate;
+    if (transformSelectedFromAvailablePool!=null) {
+      objectTemplate = transformSelectedFromAvailablePool!(objectTemplate);
+      objectTemplate.parentDAO = dao;
+    }
     focusNode ??= this.focusNode;
     Widget result;
     pageNotifier ??= ValueNotifier(0);
@@ -1525,7 +1542,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
       builder: (context, child) {
         final tabBarScrollController = ScrollController();
         final userActions = buildActions(dao.contextForValidation ?? context, focusNode);
-        final defaultActions = buildDefaultActions(context);
+        final defaultActions = buildDefaultActions(context, objectTemplate: objectTemplate);
         final allActions = [
           ...userActions,
           if (userActions.isNotEmpty && defaultActions.isNotEmpty)
@@ -1606,7 +1623,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                 actions: [
                                   if ((allowAddNew||hasAvailableObjectsPool))
                                     ActionFromZero(
-                                      title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
+                                      title: '${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate!.uiName}',
                                       icon: Icon(Icons.add, color: Theme.of(context).colorScheme.secondary),
                                       breakpoints: {0: ActionState.popup,},
                                       onTap: (context) async {
@@ -1644,7 +1661,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                                       duplicateRows([e]);
                                     },
                                   ),
-                                  if (objectTemplate.canDelete || hasAvailableObjectsPool)
+                                  if (objectTemplate!.canDelete || hasAvailableObjectsPool)
                                     ActionFromZero(
                                       icon: Icon(!hasAvailableObjectsPool ? Icons.delete_forever_outlined : Icons.clear),
                                       title: FromZeroLocalizations.of(context).translate('delete'),
@@ -2086,7 +2103,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
     final allowAddNew = this.allowAddNew;
     Widget result;
     final actions = buildActions(dao.contextForValidation ?? context, focusNode);
-    final defaultActions = buildDefaultActions(context, focusNode: focusNode);
+    final defaultActions = buildDefaultActions(context, focusNode: focusNode, objectTemplate: objectTemplate);
     if (actions.isNotEmpty && defaultActions.isNotEmpty) {
       actions.add(ActionFromZero.divider(breakpoints: actions.first.breakpoints,));
     }
@@ -2390,7 +2407,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
                         ? !showBigAddButtonIfEmpty ? const SizedBox.shrink() : ContextMenuFromZero(
                             actions: actions,
                             onShowMenu: () => _errorWidgetFocusNode.requestFocus(),
-                            child: buildAddAddon(context: context, collapsed: collapsed),
+                            child: buildAddAddon(context: context, collapsed: collapsed, objectTemplate: objectTemplate),
                           )
                         : TableEmptyWidget(
                             tableController: tableController,
@@ -2504,6 +2521,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
         buildAddAddon(
           context: context,
           collapsed: collapsed,
+          objectTemplate: objectTemplate,
         ),
       if (!dense)
         ValidationMessage(errors: listFieldValidationErrors, passedFirstEdit: passedFirstEdit,),
@@ -2517,9 +2535,11 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   Widget buildAddAddon({
     required BuildContext context,
     required bool? collapsed,
+    T? objectTemplate,
     VoidCallback? onPressed,
     bool addonEnabled = true,
   }) {
+    objectTemplate ??= this.objectTemplate;
     collapsed ??= this.collapsed;
     return AnimatedBuilder(
       animation: this,
@@ -2545,7 +2565,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
               padding: const EdgeInsets.only(top: 10, bottom: 10,),
               child: Padding(
                 padding: const EdgeInsets.only(bottom: 2),
-                child: Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate.uiName}',
+                child: Text('${FromZeroLocalizations.of(context).translate('add')} ${objectTemplate!.uiName}',
                   style: const TextStyle(
                     fontSize: 16,
                   ),
@@ -2755,9 +2775,12 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
   }
 
   @override
-  List<ActionFromZero> buildDefaultActions(BuildContext context, {FocusNode? focusNode}) {
+  List<ActionFromZero> buildDefaultActions(BuildContext context, {
+    FocusNode? focusNode,
+    T? objectTemplate,
+  }) {
     focusNode ??= this.focusNode;
-    final objectTemplate = this.objectTemplate;
+    objectTemplate ??= this.objectTemplate;
     final allowAddNew = this.allowAddNew;
     List<T> currentSelected = [];
     // TODO 3 re-implement multiple edition, test well. Enabling this might break current uses of selection (when selecion is used for external purposes, like in PageSend EntidadContacto selection)
