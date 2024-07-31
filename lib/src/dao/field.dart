@@ -4,7 +4,7 @@ part of 'dao.dart';
 typedef FieldValidator<T extends Comparable> = FutureOr<ValidationError?> Function(BuildContext context, DAO dao, Field<T> field);
 typedef FieldValueGetter<T, R extends Field> = T Function(R field, DAO dao);
 typedef ContextFulFieldValueGetter<T, R extends Field> = T Function(BuildContext context, R field, DAO dao);
-typedef OnFieldValueChanged<T> = void Function(DAO dao, Field field, T value);
+typedef OnFieldValueChanged<T> = void Function(DAO dao, Field field, T value, T previousValue);
 typedef ViewWidgetBuilder<T extends Comparable> = Widget Function(BuildContext context, Field<T> field, {bool linkToInnerDAOs, bool showViewButtons, bool dense, bool? hidden, int autoSizeTextMaxLines,});
 bool trueFieldGetter(_, __) => true;
 bool falseFieldGetter(_, __) => false;
@@ -85,13 +85,14 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     if (_value!=value) {
       passedFirstEdit = true;
       addUndoEntry(_value);
+      final previousValue = _value;
       _value = value;
       if (dao.contextForValidation!=null) {
         dao.validate(dao.contextForValidation,
           validateNonEditedFields: false,
         );
       }
-      onValueChanged?.call(dao, this, _value);
+      onValueChanged?.call(dao, this, _value, previousValue);
       notifyListeners();
     }
   }
@@ -214,12 +215,15 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
   int compareTo(other) => other is Field ? value==null||(value is String && (value! as String).isEmpty) ? 1 : other.value==null ? -1 : value!.compareTo(other.value) : 1;
 
   void revertChanges() {
+    final previousValue = _value;
     _value = dbValue;
     undoValues.clear();
     dao.removeAllUndoEntries(this);
     redoValues.clear();
     dao.removeAllRedoEntries(this);
-    onValueChanged?.call(dao, this, _value);
+    if (previousValue!=_value) {
+      onValueChanged?.call(dao, this, _value, previousValue);
+    }
     notifyListeners();
   }
 
@@ -237,6 +241,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool requestFocus = true,
   }) {
     assert(undoValues.isNotEmpty);
+    final previousValue = _value;
     redoValues.add(currentValue);
     dao.addRedoEntry(this);
     _value = undoValues.removeLast();
@@ -246,7 +251,9 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     if (requestFocus) {
       this.requestFocus();
     }
-    onValueChanged?.call(dao, this, _value);
+    if (previousValue!=_value) {
+      onValueChanged?.call(dao, this, _value, previousValue);
+    }
     notifyListeners();
   }
 
@@ -264,6 +271,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool requestFocus = true,
   }) {
     assert(redoValues.isNotEmpty);
+    final previousValue = _value;
     undoValues.add(currentValue);
     dao.addUndoEntry(this);
     _value = redoValues.removeLast();
@@ -273,7 +281,9 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     if (requestFocus) {
       this.requestFocus();
     }
-    onValueChanged?.call(dao, this, _value);
+    if (previousValue!=_value) {
+      onValueChanged?.call(dao, this, _value, previousValue);
+    }
     notifyListeners();
   }
 

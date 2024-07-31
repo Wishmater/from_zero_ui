@@ -1890,7 +1890,10 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           modelNameSingular: objectTemplate.classUiName,
           modelNamePlural: objectTemplate.classUiNamePlural,
         );
-        Widget result = ComboField.buttonContentBuilder(context, uiName, hint, name, enabled, false, dense: dense,);
+        Widget result = Padding(
+          padding: clearable ? const EdgeInsets.only(right: 76) : const EdgeInsets.only(right: 32),
+          child: ComboField.buttonContentBuilder(context, uiName, hint, name, enabled, false, dense: dense,),
+        );
         Future<void> onTap() async {
           return maybeAddRow(context,
             insertIndex: 0,

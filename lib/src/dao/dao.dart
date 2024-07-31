@@ -424,20 +424,22 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         if (e is StringField) {
           e.valUpdateTimer?.cancel();
           if (e.controller.text != e.value) {
+            final previousValue = e._value;
             e._value = e.controller.text;
             e.passedFirstEdit = true;
             e.addUndoEntry(e._value);
-            e.onValueChanged?.call(e.dao, e, e._value);
+            e.onValueChanged?.call(e.dao, e, e._value, previousValue);
             e.notifyListeners();
           }
         } else if (e is NumField) {
           e.valUpdateTimer?.cancel();
           final numVal = e.getTextVal(e.controller.text);
           while (numVal != e.value) {
+            final previousValue = e._value;
             e._value = numVal;
             e.passedFirstEdit = true;
             e.addUndoEntry(e._value);
-            e.onValueChanged?.call(e.dao, e, e._value);
+            e.onValueChanged?.call(e.dao, e, e._value, previousValue);
             e.notifyListeners();
           }
         }
