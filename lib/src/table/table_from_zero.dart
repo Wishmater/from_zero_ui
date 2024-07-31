@@ -74,6 +74,7 @@ class TableFromZero<T> extends ConsumerStatefulWidget {
   final String? Function(RowModel<T> row)? rowTooltipGetter;
   final String? syncId;
   final bool waitForFirstFilterToRender;
+  final EdgeInsets emptyWidgetPadding;
 
   const TableFromZero({
     required this.rows,
@@ -120,6 +121,7 @@ class TableFromZero<T> extends ConsumerStatefulWidget {
     this.rowTooltipGetter,
     this.syncId,
     this.waitForFirstFilterToRender = false,
+    this.emptyWidgetPadding = const EdgeInsets.only(top: 4, bottom: 4),
     super.key,
   });
 
@@ -976,7 +978,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
 
       return Container(
         color: _getMaterialColor(),
-        padding: const EdgeInsets.only(top: 4, bottom: 4),
+        padding: widget.emptyWidgetPadding,
         child: widget.emptyWidget ?? TableEmptyWidget(
           tableController: widget.tableController ?? TableController()
             ..currentState = this

@@ -2290,6 +2290,7 @@ class ListField<T extends DAO<U>, U> extends Field<ComparableList<T>> {
           cellPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
           backgroundColor: backgroundColor?.call(context, this, dao),
           ignoreWidthGettersIfEmpty: ignoreWidthGettersIfEmpty ?? !addCard,
+          emptyWidgetPadding: showBigAddButtonIfEmpty ? const EdgeInsets.only(top: 4) : EdgeInsets.zero,
           rowDisabledValidator: rowDisabledValidator ?? (this.onRowTap==null && rowTapType==RowTapType.edit
               ? (row) => row.id.canSave ? null : ''
               : null),
