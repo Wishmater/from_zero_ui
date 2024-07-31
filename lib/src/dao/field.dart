@@ -439,6 +439,7 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     bool showViewButtons=false,
     bool dense = false,
     bool? hidden,
+    String? message,
     String? subtitle,
     int autoSizeTextMaxLines = 1,
   }) {
@@ -450,16 +451,17 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     final onTap = linkToInnerDAOs
         ? ()=>(field.value! as DAO).pushViewDialog(context)
         : null;
-    String message;
-    if (field.value is DAO) {
-      message = dense ? (field.value! as DAO).uiNameDense : (field.value! as DAO).uiName;
-    } else if (field is DateField) {
-      message = field.value==null ? ''
-          : dense
-              ? field.formatterDense.format(field.value!)
-              : field.formatter.format(field.value!);
-    } else {
-      message = field.toString();
+    if (message==null) {
+      if (field.value is DAO) {
+        message = dense ? (field.value! as DAO).uiNameDense : (field.value! as DAO).uiName;
+      } else if (field is DateField) {
+        message = field.value==null ? ''
+            : dense
+                ? field.formatterDense.format(field.value!)
+                : field.formatter.format(field.value!);
+      } else {
+        message = field.toString();
+      }
     }
     return InkWellTranslucent(
       onTap: onTap,
