@@ -582,17 +582,22 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       ? (saveConfirmationDialogTitle?.call(this) ?? FromZeroLocalizations.of(context).translate("confirm_save_title"))
                       : 'Error de Validación', // TODO 3 internationalize
                   ),
-                  content: IntrinsicWidth(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        validation
-                            ? (saveConfirmationDialogDescription?.call(this) ?? Text("${FromZeroLocalizations.of(context).translate("confirm_save_desc")}\r\n$shownName"))
-                            : const Text('Debe resolver los siguientes errores de validación:',), // TODO 3 internationalize
-                        SaveConfirmationValidationMessage(allErrors: validationErrors),
-                      ],
-                    ),
+                  content: AnimatedBuilder(
+                    animation: this,
+                    builder: (context, child) {
+                      return IntrinsicWidth(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            validation
+                                ? (saveConfirmationDialogDescription?.call(this) ?? Text("${FromZeroLocalizations.of(context).translate("confirm_save_desc")}\r\n$shownName"))
+                                : const Text('Debe resolver los siguientes errores de validación:',), // TODO 3 internationalize
+                            SaveConfirmationValidationMessage(allErrors: validationErrors),
+                          ],
+                        ),
+                      );
+                    },
                   ),
                   dialogActions: [
                     const DialogButton.cancel(),
