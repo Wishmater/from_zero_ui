@@ -74,13 +74,15 @@ String? defaultLogGetString(LgLvl level, Object? msg, {
   int extraTraceLineOffset = 0,
   FlutterErrorDetails? details,
 }) {
-  String? message = LogOptions.instance.builder.messageBuilder(level, msg,
+  if (level.value > LogOptions.instance.getLvlForType(type).value) {
+    return null;
+  }
+  String message = LogOptions.instance.builder.messageBuilder(level, msg,
     type: type,
     e: e,
     st: st,
     extraTraceLineOffset: extraTraceLineOffset,
   );
-  if (message==null) return null;
   if (details!=null) {
     message = addFlutterDetailsToMlog(message, details);
   }
