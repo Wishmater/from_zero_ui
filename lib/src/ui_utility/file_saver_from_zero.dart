@@ -327,13 +327,23 @@ Future<bool> requestDefaultFilePermission() async {
   } else if (Platform.isAndroid) {
     final androidInfo = await DeviceInfoPlugin().androidInfo;
     if (androidInfo.version.sdkInt >= 29) {
+      log(LgLvl.finer, 'Requesting default file permission, not needed on Android sdk >= 29, returning true...',
+        type: FzLgType.appUpdate,
+      );
       // apparently, in Android 10+, we implicitly have access to files we own (created by us)
       // we only need to request file permissions in older versions https://stackoverflow.com/a/73630987
       // also: on Android 13+ (sdkVersion 33), we would need to ask for granular
       // permissions, if we wanted to access other app's files: https://github.com/Baseflow/flutter-permission-handler/issues/907#issuecomment-1326089512
       return true;
     } else {
-      return (await Permission.storage.request()).isGranted;
+      log(LgLvl.finer, 'Requesting file permission, on Android sdk < 29, we need to actually request it and wait for it...',
+        type: FzLgType.appUpdate,
+      );
+      final result = (await Permission.storage.request()).isGranted;
+      log(LgLvl.fine, 'Request for file permission returned $result',
+        type: FzLgType.appUpdate,
+      );
+      return result;
     }
   } else {
     return true;

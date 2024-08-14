@@ -154,20 +154,18 @@ class FromZeroAppContentWrapper extends ConsumerStatefulWidget {
         log(LgLvl.fine, 'Running process: taskkill /IM "$windowsProcessName" /F', type: FzLgType.routing);
         // this ensures the process is completely killed and doesn't hang in older Windows versions
         final result = Process.runSync('cmd', ['/c', 'taskkill', '/IM', '$windowsProcessName', '/F']);
-        log(LgLvl.error, 'Finished taskkill process with code: ${result.exitCode}\n   stderr:\n${result.stderr}\n   stdout:\n${result.stdout}', type: FzLgType.routing);
-        log(LgLvl.error, "Seems like killing the process didn't work...", type: FzLgType.routing);
-        log(LgLvl.error, 'Exiting the normal dart way (debugger(); + exit(0);)...', type: FzLgType.routing);
-        debugger(); exit(0);
-      } else {
-        _exit(code);
+        log(LgLvl.error, 'Seems like killing the process didn\'t work...'
+            '\nFinished taskkill process with code: ${result.exitCode}'
+            '\n   stderr:\n${result.stderr}\n   stdout:\n${result.stdout}',
+          type: FzLgType.routing,
+        );
       }
-    } else {
-      _exit(code);
     }
+    _exit(code);
   }
   static void _exit(int code) {
     log(LgLvl.fine, 'Exiting the normal dart way (debugger(); + exit(0);)...', type: FzLgType.routing);
-    debugger(); exit(0);
+    debugger(); exit(code);
   }
 
   static Future<Map<String, int>> getWindowsProcessess() async {

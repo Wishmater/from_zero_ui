@@ -55,7 +55,7 @@ class UpdateFromZero{
             final archive = ZipDecoder().decodeBytes(bytes);
             String tempDirectory = (await getTemporaryDirectory()).absolute.path;
             File extracted = File(p.join(tempDirectory, archive.first.name.substring(0, archive.first.name.length-1)));
-            try{ extracted.deleteSync(recursive: true); } catch(_){}
+            try{ await extracted.delete(recursive: true); } catch(_){}
           }
           file.delete(recursive: true);
         }
@@ -192,9 +192,10 @@ class UpdateFromZero{
   static Future<void> finishUpdate(String newAppPath, String oldAppPath) async{
     await Future.delayed(const Duration(seconds: 1));
     Directory oldAppDirectory = Directory(oldAppPath);
-    oldAppDirectory.listSync().forEach((element) {
-      element.deleteSync(recursive: true);
-    });
+    final list = await oldAppDirectory.list().toList();
+    for (final element in list) {
+      await element.delete(recursive: true);
+    }
     Directory newAppDirectory = Directory(newAppPath);
     copyDirectory(newAppDirectory, oldAppDirectory);
     var executableFile = oldAppDirectory.listSync()
