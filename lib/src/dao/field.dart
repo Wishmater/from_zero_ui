@@ -358,7 +358,11 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
       }
       if (currentValidationId!=dao.validationCallCount) return [];
       if (error!=null) {
-        result.add(error);
+        if (error is MultiValidationError) {
+          result.addAll(error.errors);
+        } else {
+          result.add(error);
+        }
       }
     }
     return result;

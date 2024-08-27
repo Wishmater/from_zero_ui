@@ -173,6 +173,15 @@ class InternalError extends ValidationError {
 
 }
 
+class MultiValidationError extends ValidationError {
+  final List<ValidationError> errors;
+
+  MultiValidationError({
+    required super.field,
+    required this.errors,
+  })  : super(error: '',);
+}
+
 
 
 ValidationError? fieldValidatorRequired<T extends Comparable>(BuildContext context, DAO dao, Field<T> field, {
