@@ -1932,6 +1932,17 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
                       child: Center(child: child),
                     );
                   },
+                  layoutBuilder: (currentChild, previousChildren) {
+                    // only allow 2 widgets to be here, to avoid building the widet
+                    // for the same Field twice, which causes duplicate GlobalKey assertion
+                    return Stack(
+                      alignment: Alignment.center,
+                      children: <Widget>[
+                        if (previousChildren.isNotEmpty) previousChildren.last,
+                        if (currentChild != null) currentChild,
+                      ],
+                    );
+                  },
                 ),
               ),
             ];
