@@ -1590,6 +1590,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: fieldGroups.map((group) {
+        if (!context.mounted) return const SizedBox.shrink(); // hack to prevent error when getting Theme from a dirty context
         final fields = group.props.values.where((e) => !e.hiddenInView);
         Widget result;
         if (fields.isEmpty) {
@@ -1598,6 +1599,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
         result = Column(
           mainAxisSize: MainAxisSize.min,
           children: fields.map((e) {
+            if (!context.mounted) return const SizedBox.shrink(); // hack to prevent error when getting Theme from a dirty context
             clear = !clear;
             if (e is ListField && e.buildViewWidgetAsTable) {
               clear = false;
