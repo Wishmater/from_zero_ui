@@ -48,16 +48,16 @@ class UpdateFromZero{
       File file = File(await getDownloadPath());
       if (file.existsSync()) {
         if (!kIsWeb && Platform.isAndroid && await requestDefaultFilePermission()) {
-          file.delete(recursive: true);
+          file.delete();
         } else {
           if (file.path.endsWith('.zip')) {
             final bytes = file.readAsBytesSync();
             final archive = ZipDecoder().decodeBytes(bytes);
             String tempDirectory = (await getTemporaryDirectory()).absolute.path;
             File extracted = File(p.join(tempDirectory, archive.first.name.substring(0, archive.first.name.length-1)));
-            try{ await extracted.delete(recursive: true); } catch(_){}
+            try{ await extracted.delete(); } catch(_){}
           }
-          file.delete(recursive: true);
+          file.delete();
         }
       }
     }
@@ -194,7 +194,7 @@ class UpdateFromZero{
     Directory oldAppDirectory = Directory(oldAppPath);
     final list = await oldAppDirectory.list().toList();
     for (final element in list) {
-      await element.delete(recursive: true);
+      await element.delete();
     }
     Directory newAppDirectory = Directory(newAppPath);
     copyDirectory(newAppDirectory, oldAppDirectory);
