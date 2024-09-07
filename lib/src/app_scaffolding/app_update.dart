@@ -13,7 +13,6 @@ import 'package:intl/intl.dart';
 import 'package:mlog/mlog.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:r_upgrade/r_upgrade.dart';
 
 class UpdateFromZero{
@@ -46,18 +45,18 @@ class UpdateFromZero{
     if (_checkUpdate==null){
       _checkUpdate = _checkUpdateInternal();
       File file = File(await getDownloadPath());
-      if (file.existsSync()) {
+      if (await file.exists()) {
         if (!kIsWeb && Platform.isAndroid && await requestDefaultFilePermission()) {
-          file.delete(recursive: true);
+          await file.delete();
         } else {
           if (file.path.endsWith('.zip')) {
-            final bytes = file.readAsBytesSync();
+            final bytes = await file.readAsBytes();
             final archive = ZipDecoder().decodeBytes(bytes);
             String tempDirectory = (await getTemporaryDirectory()).absolute.path;
             File extracted = File(p.join(tempDirectory, archive.first.name.substring(0, archive.first.name.length-1)));
             try{ await extracted.delete(recursive: true); } catch(_){}
           }
-          file.delete(recursive: true);
+          await file.delete();
         }
       }
     }
@@ -104,7 +103,7 @@ class UpdateFromZero{
     return false;
   }
 
-  Future<Response?> executeUpdate(BuildContext context, {ProgressCallback? onReceiveProgress}) async{
+  Future<Response<dynamic>?> executeUpdate(BuildContext context, {ProgressCallback? onReceiveProgress}) async{
     if (updateAvailable==true && !kIsWeb){
       log (LgLvl.fine, 'Downloading Update...', type: FzLgType.appUpdate);
       final downloadPath = await getDownloadPath();
@@ -133,16 +132,16 @@ class UpdateFromZero{
             // Assume update is a zip file and manually extract it
             appWindow.title = FromZeroLocalizations.of(context).translate('processing_update');
             final file = File(downloadPath);
-            final bytes = file.readAsBytesSync();
+            final bytes = await file.readAsBytes();
             final archive = ZipDecoder().decodeBytes(bytes);
             final tempDirectory = (await getTemporaryDirectory()).absolute.path;
             for (final file in archive) {
               final filename = file.name;
               if (file.isFile) {
                 final data = file.content as List<int>;
-                File('$tempDirectory/$filename')
-                  ..createSync(recursive: true)
-                  ..writeAsBytesSync(data);
+                final newFile = File('$tempDirectory/$filename');
+                await newFile.create(recursive: true);
+                await newFile.writeAsBytes(data);
               } else {
                 Directory('$tempDirectory/$filename')
                   .create(recursive: true);
@@ -152,9 +151,9 @@ class UpdateFromZero{
             String newAppDirectory = p.join(tempDirectory, archive.first.name);
             String scriptPath = Platform.script.path.substring(1, Platform.script.path.indexOf(Platform.script.pathSegments.last))
                 .replaceAll('%20', ' ');
-            var executableFile = Directory(newAppDirectory).listSync()
+            final executableFile = await Directory(newAppDirectory).list()
                 .firstWhere((element) => element.path.endsWith('.exe'));
-            argumentsFile.writeAsStringSync("$newAppDirectory\n$scriptPath");
+            await argumentsFile.writeAsString("$newAppDirectory\n$scriptPath");
             log(LgLvl.fine, executableFile.absolute.path.replaceAll('/', r'\'), type: FzLgType.appUpdate);
             Process.start(executableFile.absolute.path.replaceAll('/', r'\'), [],
               workingDirectory: scriptPath.replaceAll('/', r'\'),
@@ -198,7 +197,7 @@ class UpdateFromZero{
     }
     Directory newAppDirectory = Directory(newAppPath);
     copyDirectory(newAppDirectory, oldAppDirectory);
-    var executableFile = oldAppDirectory.listSync()
+    var executableFile = await oldAppDirectory.list()
         .firstWhere((element) => element.path.endsWith('.exe'));
     Process.start(executableFile.absolute.path.replaceAll('/', r'\'), [],
         workingDirectory: oldAppPath.replaceAll('/', r'\'),
@@ -207,18 +206,17 @@ class UpdateFromZero{
     FromZeroAppContentWrapper.exitApp(0);
   }
 
-  static void copyDirectory(Directory source, Directory destination) =>
-      source.listSync(recursive: false)
-          .forEach((var entity) {
-        if (entity is Directory) {
-          var newDirectory = Directory(p.join(destination.absolute.path, p.basename(entity.path)));
-          newDirectory.createSync();
-
-          copyDirectory(entity.absolute, newDirectory);
-        } else if (entity is File) {
-          entity.copySync(p.join(destination.path, p.basename(entity.path)));
-        }
-      });
+  static Future<void> copyDirectory(Directory source, Directory destination) async {
+    await for (final entity in source.list()) {
+      if (entity is Directory) {
+        var newDirectory = Directory(p.join(destination.absolute.path, p.basename(entity.path)));
+        await newDirectory.create();
+        await copyDirectory(entity.absolute, newDirectory);
+      } else if (entity is File) {
+        await entity.copy(p.join(destination.path, p.basename(entity.path)));
+      }
+    }
+  }
 
 }
 

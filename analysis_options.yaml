@@ -25,7 +25,6 @@ analyzer:
 
     avoid_dynamic_calls             : warning
     require_trailing_commas			: warning
-    avoid_slow_async_io  			: warning
     avoid_type_to_string  			: warning
     literal_only_boolean_expressions: warning
     no_adjacent_strings_in_list		: warning
@@ -65,7 +64,6 @@ linter:
     - avoid_field_initializers_in_const_classes
     - avoid_dynamic_calls
     - require_trailing_commas
-    - avoid_slow_async_io
     - avoid_type_to_string
     - literal_only_boolean_expressions
     - no_adjacent_strings_in_list
