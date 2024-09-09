@@ -151,19 +151,17 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
           //   log (LgLvl.info, 'Dio Connection Error caught in ApiState<$State>',
           //     e: err,
           //     type: FzLgType.network,
-          //     // st: stack, // stackTrace is ommited since it's useless anyways (shows async future internals)
           //   );
           // } else {
           //   log (LgLvl.warning, 'Dio Error with response caught in ApiState<$State> future',
           //     e: err,
           //     type: FzLgType.network,
-          //     // st: stack, // stackTrace is ommited since it's useless anyways (shows async future internals)
           //   );
           // }
         } else {
           log (LgLvl.error, 'Error caught in ApiState<$State> future',
             e: err,
-            // st: stack, // stackTrace is ommited since it's useless anyways (shows async future internals)
+            st: stack,
           );
         }
         if (_running) {
