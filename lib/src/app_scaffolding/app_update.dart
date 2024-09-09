@@ -46,7 +46,7 @@ class UpdateFromZero{
       _checkUpdate = _checkUpdateInternal();
       File file = File(await getDownloadPath());
       if (await file.exists()) {
-        if (!kIsWeb && Platform.isAndroid && await requestDefaultFilePermission()) {
+        if (!kIsWeb && Platform.isAndroid && await requestDefaultFilePermission(lgType: FzLgType.appUpdate)) {
           await file.delete();
         } else {
           if (file.path.endsWith('.zip')) {
@@ -107,7 +107,7 @@ class UpdateFromZero{
     if (updateAvailable==true && !kIsWeb){
       log (LgLvl.fine, 'Downloading Update...', type: FzLgType.appUpdate);
       final downloadPath = await getDownloadPath();
-      if (!await requestDefaultFilePermission()) {
+      if (!await requestDefaultFilePermission(lgType: FzLgType.appUpdate)) {
         return null;
       }
       final download = dio.download(
@@ -126,7 +126,7 @@ class UpdateFromZero{
               || appDownloadUrl.endsWith('.msix')) {
             // Update is a windows native installer, just run it and let it do its magic
             Process.start(downloadPath.replaceAll('/', r'\'), [],);
-            await Future.delayed(const Duration(seconds: 1));
+            await Future<void>.delayed(const Duration(seconds: 1));
             FromZeroAppContentWrapper.exitApp(0);
           } else {
             // Assume update is a zip file and manually extract it
@@ -158,17 +158,17 @@ class UpdateFromZero{
             Process.start(executableFile.absolute.path.replaceAll('/', r'\'), [],
               workingDirectory: scriptPath.replaceAll('/', r'\'),
             );
-            await Future.delayed(const Duration(seconds: 1));
+            await Future<void>.delayed(const Duration(seconds: 1));
             FromZeroAppContentWrapper.exitApp(0);
           }
 
         } else if (Platform.isAndroid) {
 
-          if (await requestDefaultFilePermission()){
+          if (await requestDefaultFilePermission(lgType: FzLgType.appUpdate)){
             // this requires adding the following permission to manifest, which causes problems with google play upload
             // <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"></uses-permission>
             RUpgrade.installByPath(downloadPath);
-            await Future.delayed(const Duration(seconds: 1));
+            await Future<void>.delayed(const Duration(seconds: 1));
             // FromZeroAppContentWrapper.exitApp(0);
           }
 
@@ -189,10 +189,9 @@ class UpdateFromZero{
   }
 
   static Future<void> finishUpdate(String newAppPath, String oldAppPath) async{
-    await Future.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(seconds: 1));
     Directory oldAppDirectory = Directory(oldAppPath);
-    final list = await oldAppDirectory.list().toList();
-    for (final element in list) {
+    await for (final element in oldAppDirectory.list()) {
       await element.delete(recursive: true);
     }
     Directory newAppDirectory = Directory(newAppPath);
@@ -202,7 +201,7 @@ class UpdateFromZero{
     Process.start(executableFile.absolute.path.replaceAll('/', r'\'), [],
         workingDirectory: oldAppPath.replaceAll('/', r'\'),
     );
-    await Future.delayed(const Duration(seconds: 1));
+    await Future<void>.delayed(const Duration(seconds: 1));
     FromZeroAppContentWrapper.exitApp(0);
   }
 

@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:dartx/dartx.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -77,6 +78,13 @@ String? defaultLogGetString(LgLvl level, Object? msg, {
   if (level.value > LogOptions.instance.getLvlForType(type).value) {
     return null;
   }
+  if (e is DioException) {
+    if (msg is String) {
+      msg += ' (${e.type})'
+          '\n  ${e.requestOptions.uri}'
+          '${e.response==null ? '' : '  ${e.response!.statusCode} - ${_parseDioErrorResponse(e.response!.data)}'}';
+    }
+  }
   String message = LogOptions.instance.builder.messageBuilder(level, msg,
     type: type,
     e: e,
@@ -87,6 +95,10 @@ String? defaultLogGetString(LgLvl level, Object? msg, {
     message = addFlutterDetailsToMlog(message, details);
   }
   return message;
+}
+String _parseDioErrorResponse(dynamic data) {
+  if (data is List<int>) return utf8.decode(data, allowMalformed: true);
+  return data.toString();
 }
 
 String addFlutterDetailsToMlog(String msg, FlutterErrorDetails details) {
@@ -104,7 +116,8 @@ String addFlutterDetailsToMlog(String msg, FlutterErrorDetails details) {
 enum FzLgType {
   routing('fzRouting', '[FZ_ROUTING]'),
   appUpdate('fzAppUpdate', ' [FZ_APP_UPDATE] '),
-  dao('fzDao', ' [FZ_DAO] ');
+  dao('fzDao', ' [FZ_DAO] '),
+  network('network', '[NETWORK]');
 
   final String name;
   final String print;

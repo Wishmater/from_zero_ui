@@ -321,14 +321,16 @@ Future<bool> saveFileFromZero ({
 }
 
 
-Future<bool> requestDefaultFilePermission() async {
+Future<bool> requestDefaultFilePermission({
+  Object? lgType,
+}) async {
   if (kIsWeb) {
     return true;
   } else if (Platform.isAndroid) {
     final androidInfo = await DeviceInfoPlugin().androidInfo;
     if (androidInfo.version.sdkInt >= 29) {
       log(LgLvl.finer, 'Requesting default file permission, not needed on Android sdk >= 29, returning true...',
-        type: FzLgType.appUpdate,
+        type: lgType,
       );
       // apparently, in Android 10+, we implicitly have access to files we own (created by us)
       // we only need to request file permissions in older versions https://stackoverflow.com/a/73630987
@@ -337,11 +339,11 @@ Future<bool> requestDefaultFilePermission() async {
       return true;
     } else {
       log(LgLvl.finer, 'Requesting file permission, on Android sdk < 29, we need to actually request it and wait for it...',
-        type: FzLgType.appUpdate,
+        type: lgType,
       );
       final result = (await Permission.storage.request()).isGranted;
       log(LgLvl.fine, 'Request for file permission returned $result',
-        type: FzLgType.appUpdate,
+        type: lgType,
       );
       return result;
     }

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
+import 'package:mlog/mlog.dart';
 
 
 typedef ApiProvider<T> = AutoDisposeStateNotifierProvider<ApiState<T>, AsyncValue<T>>;
@@ -144,12 +145,36 @@ class ApiState<State> extends StateNotifier<AsyncValue<State>> {
           state = AsyncValue<State>.data(event);
         }
       } catch (err, stack) {
+        if (err is DioException) {
+          // // this logging should be done in DIO interceptors. That is the only way to ensure it is logged only once for each call.
+          // if (err.response==null) {
+          //   log (LgLvl.info, 'Dio Connection Error caught in ApiState<$State>',
+          //     e: err,
+          //     type: FzLgType.network,
+          //     // st: stack, // stackTrace is ommited since it's useless anyways (shows async future internals)
+          //   );
+          // } else {
+          //   log (LgLvl.warning, 'Dio Error with response caught in ApiState<$State> future',
+          //     e: err,
+          //     type: FzLgType.network,
+          //     // st: stack, // stackTrace is ommited since it's useless anyways (shows async future internals)
+          //   );
+          // }
+        } else {
+          log (LgLvl.error, 'Error caught in ApiState<$State> future',
+            e: err,
+            // st: stack, // stackTrace is ommited since it's useless anyways (shows async future internals)
+          );
+        }
         if (_running) {
           state = AsyncValue<State>.error(err, stackTrace: stack);
         }
         cancel();
       }
     } catch (err, stack) {
+      log (LgLvl.error, 'Error caught before running ApiState<$State> future. This should never happen',
+        e: err, st: stack,
+      );
       state = AsyncValue.error(err, stackTrace: stack);
     }
   }

@@ -349,7 +349,9 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
         error = await e;
       } catch (e, st) {
         final message = 'Error al ejecutar validación: ${ApiProviderBuilder.getErrorTitle(context, e, st)}\n${ApiProviderBuilder.getErrorSubtitle(context, e, st)}';
-        log (LgLvl.info, message, e: e, st: st, type: FzLgType.dao);
+        if (e is! DioException) { // we trust DioExceptions are logged in interceptors
+          log (LgLvl.error, message, e: e, st: st, type: FzLgType.dao);
+        }
         result.add(InternalError(field: field,
           error: message,
           e: e,
