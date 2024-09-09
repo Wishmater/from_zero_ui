@@ -351,13 +351,13 @@ class AsyncBuilderAnimationWrapper extends StatelessWidget {
   Widget build(BuildContext context) {
     final notifyResize = applyAnimatedContainerFromChildSize ? ChangeNotifier() : null;
     Widget result = child;
+    if (loadingState!=null) {
+      result = KeyedSubtree(
+        key: child.key ?? ValueKey(loadingState),
+        child: result,
+      );
+    }
     if (animatedSwitcherType!=AnimatedSwitcherType.none && transitionDuration!=Duration.zero) {
-      if (loadingState!=null) {
-        result = KeyedSubtree(
-          key: child.key ?? ValueKey(loadingState),
-          child: result,
-        );
-      }
       if (animatedSwitcherType==AnimatedSwitcherType.normal) {
         result = AnimatedSwitcher(
           duration: transitionDuration,
