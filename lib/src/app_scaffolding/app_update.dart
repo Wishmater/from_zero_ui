@@ -44,10 +44,41 @@ class UpdateFromZero{
   Future<UpdateFromZero> checkUpdate() async{
     if (_checkUpdate==null){
       _checkUpdate = _checkUpdateInternal();
-      File file = File(await getDownloadPath());
-      if (await file.exists()) {
-        if (!kIsWeb && Platform.isAndroid && await requestDefaultFilePermission(lgType: FzLgType.appUpdate)) {
-          await file.delete();
+      bool? permission, forcedPermission;
+      int i = 0;
+      while (true) {
+        if (kIsWeb) break;
+        var filePath = await getDownloadPath();
+        if (i > 0) {
+          filePath = '${p.withoutExtension(filePath)} ($i)${p.extension(filePath)}';
+        }
+        File file = File(filePath);
+        if (!await file.exists()) break;
+        if (Platform.isAndroid) {
+          permission ??= await requestDefaultFilePermission(
+            lgType: FzLgType.appUpdate,
+          );
+          try {
+            await file.delete();
+          } catch (e, st) {
+            log(LgLvl.info, 'Failed to delete previous update file. In android version 29+ this probably means a different app created the file.',
+              e: e,
+              st: st,
+              type: FzLgType.appUpdate,
+            );
+            // log(LgLvl.warning, 'Failed to delete previous update file once, retrying after forcing permission request',
+            //   e: e,
+            //   st: st,
+            //   type: FzLgType.appUpdate,
+            // );
+            // forcedPermission ??= await requestDefaultFilePermission(
+            //   forceRequestOnAndroid29Plus: true,
+            //   lgType: FzLgType.appUpdate,
+            // );
+            // if (forcedPermission) {
+            //   await file.delete();
+            // }
+          }
         } else {
           if (file.path.endsWith('.zip')) {
             final bytes = await file.readAsBytes();
@@ -58,6 +89,7 @@ class UpdateFromZero{
           }
           await file.delete();
         }
+        i++;
       }
     }
     return _checkUpdate!;
@@ -106,9 +138,19 @@ class UpdateFromZero{
   Future<Response<dynamic>?> executeUpdate(BuildContext context, {ProgressCallback? onReceiveProgress}) async{
     if (updateAvailable==true && !kIsWeb){
       log (LgLvl.fine, 'Downloading Update...', type: FzLgType.appUpdate);
-      final downloadPath = await getDownloadPath();
+      String downloadPath;
       if (!await requestDefaultFilePermission(lgType: FzLgType.appUpdate)) {
         return null;
+      }
+      int i = 0;
+      while (true) {
+        downloadPath = await getDownloadPath();
+        if (i > 0) {
+          downloadPath = '${p.withoutExtension(downloadPath)} ($i)${p.extension(downloadPath)}';
+        }
+        File file = File(downloadPath);
+        if (!await file.exists()) break;
+        i++;
       }
       final download = dio.download(
         appDownloadUrl,

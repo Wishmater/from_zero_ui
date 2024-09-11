@@ -323,12 +323,13 @@ Future<bool> saveFileFromZero ({
 
 Future<bool> requestDefaultFilePermission({
   Object? lgType,
+  bool forceRequestOnAndroid29Plus = false,
 }) async {
   if (kIsWeb) {
     return true;
   } else if (Platform.isAndroid) {
     final androidInfo = await DeviceInfoPlugin().androidInfo;
-    if (androidInfo.version.sdkInt >= 29) {
+    if (!forceRequestOnAndroid29Plus && androidInfo.version.sdkInt >= 29) {
       log(LgLvl.finer, 'Requesting default file permission, not needed on Android sdk >= 29, returning true...',
         type: lgType,
       );
@@ -338,14 +339,19 @@ Future<bool> requestDefaultFilePermission({
       // permissions, if we wanted to access other app's files: https://github.com/Baseflow/flutter-permission-handler/issues/907#issuecomment-1326089512
       return true;
     } else {
-      log(LgLvl.finer, 'Requesting file permission, on Android sdk < 29, we need to actually request it and wait for it...',
+      log(LgLvl.finer, 'Requesting file permission, '
+          '${androidInfo.version.sdkInt < 29
+              ? 'on Android sdk < 29, we need to actually request it and wait for it...'
+              : 'android version is >=29 but forceRequestOnAndroid29Pluswas passed as true'}',
         type: lgType,
       );
-      final result = (await Permission.storage.request()).isGranted;
+      final result = androidInfo.version.sdkInt < 29
+          ? await Permission.storage.request() // deprecated on >=29 and always returns false
+          : await Permission.manageExternalStorage.request(); // this permisison is excessive, but its all we can do, also we would need to add it to the manifest :))
       log(LgLvl.fine, 'Request for file permission returned $result',
         type: lgType,
       );
-      return result;
+      return result.isGranted;
     }
   } else {
     return true;
