@@ -2565,6 +2565,7 @@ class TableController<T> extends ChangeNotifier {
       ..currentState = currentState ?? this.currentState;
   }
 
+  bool get mounted => currentState!=null;
   List<RowModel<T>> get filtered => currentState!.filtered;
   List<RowModel<T>> get allFiltered => currentState!.allFiltered;
   Map<dynamic, ColModel>? get columns => currentState?.widget.columns;
