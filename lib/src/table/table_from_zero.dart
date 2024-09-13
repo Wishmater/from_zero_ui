@@ -994,8 +994,10 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
             ?? _defaultRowBuilder.call(context, headerRowModel!, index, minWidth);
       } else {
         if (_enableSkipFrameWidgetForRows) {
-          return SkipFrameWidget(
+          return FrameThrottleWidget(
             key: ValueKey(row),
+            transitionDuration: const Duration(milliseconds: 150),
+            maxWidgetsBuiltPerFrame: 5,
             paceholderBuilder: (context) {
               return SizedBox(
                 height: row.height,

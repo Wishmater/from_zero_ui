@@ -1040,42 +1040,61 @@ class _AnimatedIconFromZeroState extends State<AnimatedIconFromZero> with Single
 
 
 
-class SkipFrameWidget extends StatefulWidget {
+class FrameThrottleWidget extends StatefulWidget {
 
+  /// if skipCount==1, the widget will only wait a frame if maxWidgetsBuiltPerFrame
+  /// were already built in the current frame, otherwise it will build normally
+  /// to always skip at least a frame, set frameSkipCount = 2
   final int frameSkipCount;
   final WidgetBuilder paceholderBuilder;
   final WidgetBuilder childBuilder;
   final InitiallyAnimatedWidgetBuilder? transitionBuilder;
-  final Duration duration;
+  final Duration transitionDuration;
   final Curve curve;
+  /// maxWidgetsBuiltPerFrame assumes it is the same for all widgets, if we want
+  /// widgets of different values to coexist, this code would be more complicated
+  /// also consider providing a "skipGroupKey" to separate into different queues
+  final int maxWidgetsBuiltPerFrame;
 
-  const SkipFrameWidget({
+  const FrameThrottleWidget({
     required this.paceholderBuilder,
     required this.childBuilder,
     this.frameSkipCount = 1,
     this.transitionBuilder,
-    this.duration = const Duration(milliseconds: 250,),
+    this.transitionDuration = const Duration(milliseconds: 250,),
     this.curve = Curves.easeOutCubic,
+    this.maxWidgetsBuiltPerFrame = 1,
     super.key,
   });
 
   @override
-  SkipFrameWidgetState createState() => SkipFrameWidgetState();
+  FrameThrottleWidgetState createState() => FrameThrottleWidgetState();
 
 }
 
-class SkipFrameWidgetState extends State<SkipFrameWidget> {
+class FrameThrottleWidgetState extends State<FrameThrottleWidget> {
 
-  static final maxWidgetsBuiltPerFrame = 5;
-  static final statesWantingToBuild = <SkipFrameWidgetState>[];
+  // global queue ftw
+  static int widgetsBuildThisFrame = 0;
+  static final statesWantingToBuild = <FrameThrottleWidgetState>[];
   late int skipFramesLeft;
+  bool builtPlaceHolder = false;
 
   @override
   void initState() {
     super.initState();
     skipFramesLeft = widget.frameSkipCount;
-    if (statesWantingToBuild.isEmpty) skipNextFrame();
-    statesWantingToBuild.add(this);
+    if (widgetsBuildThisFrame < widget.maxWidgetsBuiltPerFrame) {
+      widgetsBuildThisFrame++;
+      skipFramesLeft--;
+    }
+    if (skipFramesLeft > 0) {
+      statesWantingToBuild.add(this);
+    }
+    if (!_queueInitialized) {
+      _queueInitialized = true;
+      _processQueueAfterFrame();
+    }
   }
 
   @override
@@ -1084,43 +1103,42 @@ class SkipFrameWidgetState extends State<SkipFrameWidget> {
     statesWantingToBuild.remove(this);
   }
 
-  static void skipNextFrame() {
+  static bool _queueInitialized = false;
+  static void _processQueueAfterFrame() {
     WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      for (int i=0; i<maxWidgetsBuiltPerFrame; i++) {
-        if (statesWantingToBuild.isEmpty) return;
-        if (statesWantingToBuild.first.skipFramesLeft > 0) {
-          statesWantingToBuild.first.skipFramesLeft--;
-          if (statesWantingToBuild.first.skipFramesLeft==0) {
-            statesWantingToBuild.first.setState(() {});
-            statesWantingToBuild.removeAt(0);
-          }
+      widgetsBuildThisFrame = 0;
+      for (int i=0; i<statesWantingToBuild.length; i++) {
+        final e = statesWantingToBuild[i];
+        e.skipFramesLeft--;
+        if (widgetsBuildThisFrame < e.widget.maxWidgetsBuiltPerFrame
+            && e.skipFramesLeft <= 0) {
+          statesWantingToBuild.first.setState(() {});
+          statesWantingToBuild.removeAt(i);
+          i--;
+          widgetsBuildThisFrame++;
         }
       }
-      if (statesWantingToBuild.isNotEmpty) {
-        for (int i=0; i<statesWantingToBuild.length; i++) {
-          if (statesWantingToBuild[i].skipFramesLeft > 1) {
-            statesWantingToBuild[i].skipFramesLeft--;
-          }
-        }
-        skipNextFrame();
-      }
+      _processQueueAfterFrame();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     if (skipFramesLeft > 0) {
+      builtPlaceHolder = true;
       return widget.paceholderBuilder(context);
-    } else {
+    }
+    if (builtPlaceHolder) {
       return InitiallyAnimatedWidget(
         builder: widget.transitionBuilder ?? (animation, child) {
           return FadeTransition(opacity: animation, child: child,);
         },
-        duration: widget.duration,
+        duration: widget.transitionDuration,
         curve: widget.curve,
         child: widget.childBuilder(context),
       );
     }
+    return widget.childBuilder(context);
   }
 
 }
