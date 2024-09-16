@@ -125,11 +125,11 @@ class UpdateFromZero{
       final response = await dio.get(versionJsonUrl);
       versionInfo = response.data;
     }
-    ver = versionInfo![_getPlatformString()];
+    ver = versionInfo![getPlatformString()];
     updateAvailable = ver != null ? ver! > currentVersion : false;
     return this;
   }
-  String _getPlatformString() {
+  String getPlatformString() {
     if (kIsWeb) {
       return 'web';
     } else if (Platform.isWindows) {
