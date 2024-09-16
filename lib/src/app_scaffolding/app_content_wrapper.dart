@@ -68,11 +68,44 @@ void defaultLog(LgLvl level, Object? msg, {
   }
 }
 
+Map<String, dynamic>? defaultLogGetMap(JsonMessageBuilder builder, LgLvl level, Object? msg, {
+  Object? type,
+  Object? e,
+  StackTrace? st,
+  int extraTraceLineOffset = 0,
+  FlutterErrorDetails? details,
+}) {
+  if (level.value > LogOptions.instance.getLvlForType(type).value) {
+    return null;
+  }
+  final map = builder.mapBuilder(level, msg,
+    type: type,
+    e: e,
+    st: st,
+    extraTraceLineOffset: extraTraceLineOffset,
+  );
+  if (e is DioException) {
+    map['data_dio_url'] = e.requestOptions.uri.toString();
+    map['data_dio_error_type'] = e.type.toString();
+    if (e.response!=null) {
+      if (e.response!.statusCode!=null) {
+        map['data_dio_response_status_code'] = e.response!.statusCode;
+      }
+      map['data_dio_response_data'] = _parseDioErrorResponse(e.response!.data);
+    }
+  }
+  if (details!=null) {
+    map['data_flutter_error_details'] = getFlutterDetailsString(details);
+  }
+  return map;
+}
+
 String? defaultLogGetString(LgLvl level, Object? msg, {
   Object? type,
   Object? e,
   StackTrace? st,
   int extraTraceLineOffset = 0,
+  Map<String, dynamic>? jsonMap,
   FlutterErrorDetails? details,
 }) {
   if (level.value > LogOptions.instance.getLvlForType(type).value) {
@@ -85,12 +118,17 @@ String? defaultLogGetString(LgLvl level, Object? msg, {
           '${e.response==null ? '' : '  ${e.response!.statusCode} - ${_parseDioErrorResponse(e.response!.data)}'}';
     }
   }
-  String message = LogOptions.instance.builder.messageBuilder(level, msg,
-    type: type,
-    e: e,
-    st: st,
-    extraTraceLineOffset: extraTraceLineOffset,
-  );
+  String message;
+  if (jsonMap!=null) {
+    message = json.encode(jsonMap);
+  } else {
+    message = LogOptions.instance.builder.messageBuilder(level, msg,
+      type: type,
+      e: e,
+      st: st,
+      extraTraceLineOffset: extraTraceLineOffset,
+    );
+  }
   if (details!=null) {
     message = addFlutterDetailsToMlog(message, details);
   }
@@ -101,11 +139,14 @@ String _parseDioErrorResponse(dynamic data) {
   return data.toString();
 }
 
-String addFlutterDetailsToMlog(String msg, FlutterErrorDetails details) {
-  String detailsString = '\n${TextTreeRenderer(
+String getFlutterDetailsString(FlutterErrorDetails details) {
+  return TextTreeRenderer(
     wrapWidthProperties: 100,
     maxDescendentsTruncatableNode: 5,
-  ).render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error)).trimRight()}';
+  ).render(details.toDiagnosticsNode(style: DiagnosticsTreeStyle.error)).trimRight();
+}
+String addFlutterDetailsToMlog(String msg, FlutterErrorDetails details) {
+  String detailsString = '\n${getFlutterDetailsString(details)}';
   detailsString = detailsString.splitMapJoin('\n', onNonMatch: (e) {
     return '    $e';
   },);
