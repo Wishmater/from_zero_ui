@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:from_zero_ui/from_zero_ui.dart';
@@ -201,7 +202,22 @@ Future<bool> saveFileFromZero ({
     }
 
   } catch (e, st) {
-    log (LgLvl.error, 'Error while saving file:', e: e, st: st);
+    if (e is DioException) {
+      // // this logging should be done in DIO interceptors. That is the only way to ensure it is logged only once for each call.
+      // if (e.response==null) {
+      //   log (LgLvl.info, 'Dio Connection Error caught in ApiState<$State>',
+      //     e: e,
+      //     type: FzLgType.network,
+      //   );
+      // } else {
+      //   log (LgLvl.warning, 'Dio Error with response caught in ApiState<$State> future',
+      //     e: e,
+      //     type: FzLgType.network,
+      //   );
+      // }
+    } else {
+      log (LgLvl.error, 'Error while saving file:', e: e, st: st);
+    }
     error = e;
     stackTrace = st;
     success = false;
