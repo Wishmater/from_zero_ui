@@ -22,6 +22,7 @@ class UpdateFromZero{
   String appDownloadUrl;
   Dio dio;
   Map<String, dynamic>? versionInfo;
+  late int? ver;
   late bool updateAvailable;
 
   UpdateFromZero(this.currentVersion, this.versionJsonUrl, this.appDownloadUrl, {
@@ -99,8 +100,8 @@ class UpdateFromZero{
       final response = await dio.get(versionJsonUrl);
       versionInfo = response.data;
     }
-    int? ver = versionInfo![_getPlatformString()];
-    updateAvailable = ver != null ?  ver > currentVersion : false;
+    ver = versionInfo![_getPlatformString()];
+    updateAvailable = ver != null ? ver! > currentVersion : false;
     return this;
   }
   String _getPlatformString() {
@@ -166,11 +167,16 @@ class UpdateFromZero{
           if (appDownloadUrl.endsWith('.exe')
               || appDownloadUrl.endsWith('.msi')
               || appDownloadUrl.endsWith('.msix')) {
+
+            log (LgLvl.info, 'App Update downloaded correctly, running windows installer...', type: FzLgType.appUpdate);
             // Update is a windows native installer, just run it and let it do its magic
             Process.start(downloadPath.replaceAll('/', r'\'), [],);
             await Future<void>.delayed(const Duration(seconds: 1));
             FromZeroAppContentWrapper.exitApp(0);
+
           } else {
+
+            log (LgLvl.info, 'App Update downloaded correctly, manually extracting zip file on windows...', type: FzLgType.appUpdate);
             // Assume update is a zip file and manually extract it
             appWindow.title = FromZeroLocalizations.of(context).translate('processing_update');
             final file = File(downloadPath);
@@ -206,12 +212,15 @@ class UpdateFromZero{
 
         } else if (Platform.isAndroid) {
 
+          log (LgLvl.info, 'App Update downloaded correctly, requesting apk install on android...', type: FzLgType.appUpdate);
           if (await requestDefaultFilePermission(lgType: FzLgType.appUpdate)){
             // this requires adding the following permission to manifest, which causes problems with google play upload
             // <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"></uses-permission>
             RUpgrade.installByPath(downloadPath);
             await Future<void>.delayed(const Duration(seconds: 1));
             // FromZeroAppContentWrapper.exitApp(0);
+          } else {
+            log (LgLvl.warning, 'Permission to install apk deinied on android...', type: FzLgType.appUpdate);
           }
 
         }
