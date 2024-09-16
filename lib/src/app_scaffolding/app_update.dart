@@ -45,7 +45,8 @@ class UpdateFromZero{
   Future<UpdateFromZero> checkUpdate() async{
     if (_checkUpdate==null){
       _checkUpdate = _checkUpdateInternal();
-      bool? permission, forcedPermission;
+      bool? permission;
+      // bool? forcedPermission;
       int i = 0;
       while (true) {
         if (kIsWeb) break;
@@ -82,13 +83,37 @@ class UpdateFromZero{
           }
         } else {
           if (file.path.endsWith('.zip')) {
-            final bytes = await file.readAsBytes();
-            final archive = ZipDecoder().decodeBytes(bytes);
-            String tempDirectory = (await getTemporaryDirectory()).absolute.path;
-            File extracted = File(p.join(tempDirectory, archive.first.name.substring(0, archive.first.name.length-1)));
-            try{ await extracted.delete(recursive: true); } catch(_){}
+            try{
+              final bytes = await file.readAsBytes();
+              final archive = ZipDecoder().decodeBytes(bytes);
+              String tempDirectory = (await getTemporaryDirectory()).absolute.path;
+              File extracted = File(p.join(tempDirectory, archive.first.name.substring(0, archive.first.name.length-1)));
+              try{
+                await extracted.delete(recursive: true);
+              } catch(e, st) {
+                log(LgLvl.warning, 'Failed to delete previously extracted update files after update was manually applied on windows.',
+                  e: e,
+                  st: st,
+                  type: FzLgType.appUpdate,
+                );
+              }
+            } catch(e, st){
+              log(LgLvl.warning, 'Error while parsing previously downloaded update zip file on windows.',
+                e: e,
+                st: st,
+                type: FzLgType.appUpdate,
+              );
+            }
           }
-          await file.delete();
+          try {
+            await file.delete();
+          } catch (e, st) {
+            log(LgLvl.info, 'Failed to delete previous update file on windows.',
+              e: e,
+              st: st,
+              type: FzLgType.appUpdate,
+            );
+          }
         }
         i++;
       }
