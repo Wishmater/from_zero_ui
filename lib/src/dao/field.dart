@@ -342,13 +342,17 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     for (final e in field.validators) {
       futureErrors.add(e(context, dao, field));
     }
+    // make sure all of them are awaited; if we await them one by one, we run the risk of the errors bubbling up
+    await Future.wait<ValidationError?>(futureErrors.map((e) async => e));
     final result = <ValidationError>[];
     for (final e in futureErrors) {
       ValidationError? error;
       try {
         error = await e;
       } catch (e, st) {
-        final message = 'Error al ejecutar validación: ${ApiProviderBuilder.getErrorTitle(context, e, st)}\n${ApiProviderBuilder.getErrorSubtitle(context, e, st)}';
+        final message = 'Error al ejecutar validación: '
+            '${ApiProviderBuilder.getErrorTitle(context, e, st)}'
+            '\n${ApiProviderBuilder.getErrorSubtitle(context, e, st)}';
         if (e is! DioException) { // we trust DioExceptions are logged in interceptors
           log (LgLvl.error, message, e: e, st: st, type: FzLgType.dao);
         }
