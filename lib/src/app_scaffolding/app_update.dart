@@ -106,7 +106,7 @@ class UpdateFromZero{
             }
           }
           try {
-            await file.delete();
+            await file.delete(recursive: true);
           } catch (e, st) {
             log(LgLvl.info, 'Failed to delete previous update file on windows.',
               e: e,
