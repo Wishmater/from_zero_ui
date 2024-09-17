@@ -1774,33 +1774,50 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable {
     ];
     Widget result;
     if (verticalLayout) {
-      result = Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: getChildren(),
-      );
+      final children = getChildren();
+      if (children.length==1) {
+        result = children.first;
+      } else {
+        result = Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: children,
+        );
+      }
     } else {
       if (group.useLayoutFromZero) {
-        result = FlexibleLayoutFromZero(
-          crossAxisAlignment: group.primary ? CrossAxisAlignment.center : CrossAxisAlignment.start,
-          children: getChildren(useLayoutFromZero: true)
-              .cast<FlexibleLayoutItemFromZero>(),
-        );
-      } else {
-        ScrollController scrollController = ScrollController();
-        result = ScrollbarFromZero(
-          controller: scrollController,
-          opacityGradientDirection: OpacityGradient.horizontal,
-          child: SingleChildScrollView(
-            controller: scrollController,
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: getChildren(),
+        final children = getChildren(useLayoutFromZero: true).cast<FlexibleLayoutItemFromZero>();
+        if (children.length==1) {
+          result = children.first;
+        } else {
+          result = ValidationMessageProxy(
+            fields: fields,
+            child: FlexibleLayoutFromZero(
+              crossAxisAlignment: group.primary ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+              children: children,
             ),
-          ),
-        );
+          );
+        }
+      } else {
+        final children = getChildren();
+        if (children.length==1) {
+          result = children.first;
+        } else {
+          ScrollController scrollController = ScrollController();
+          result = ScrollbarFromZero(
+            controller: scrollController,
+            opacityGradientDirection: OpacityGradient.horizontal,
+            child: SingleChildScrollView(
+              controller: scrollController,
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: children,
+              ),
+            ),
+          );
+        }
       }
     }
     if (!wrapInLayoutFromZeroItem) {

@@ -1,3 +1,4 @@
+import 'package:dartx/dartx.dart';
 import 'package:email_validator/email_validator.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
@@ -187,6 +188,7 @@ class MultiValidationError extends ValidationError {
 ValidationError? fieldValidatorRequired<T extends Comparable>(BuildContext context, DAO dao, Field<T> field, {
   String? errorMessage,
   ValidationErrorSeverity severity = ValidationErrorSeverity.error,
+  bool? isVisibleAsHintMessage,
 }) {
   return field.value==null||field.value!.toString().trim().isEmpty
       ? ValidationError(
@@ -336,7 +338,180 @@ class FieldDiffMessage<T extends Comparable> extends StatelessWidget {
 }
 
 
-class ValidationMessage extends StatefulWidget {
+
+
+class ValidationMessageProxy extends StatefulWidget {
+
+  final Map<String, Field> fields;
+  final Widget child;
+  final bool hideNotVisibleAsHintMessage;
+
+  const ValidationMessageProxy({
+    required this.fields,
+    required this.child,
+    this.hideNotVisibleAsHintMessage = true,
+    super.key,
+  });
+
+  @override
+  State<ValidationMessageProxy> createState() => _ValidationMessageProxyState();
+}
+class _ValidationMessageProxyState extends State<ValidationMessageProxy> {
+
+  final fieldWeights = <String, double>{};
+  final fieldOffsets = <String, double>{};
+  double maxWidth = 0;
+
+  void updateDataForField(_) {
+    if (!mounted) return;
+    maxWidth = context.size?.width ?? 0;
+    final renderObject = context.findRenderObject();
+    for (final entry in widget.fields.entries) {
+      final key = entry.key;
+      final field = entry.value;
+      context.findRenderObject();
+      final fieldContext = field.fieldGlobalKey.currentContext;
+      if (fieldContext==null) return;
+      final size = fieldContext.size;
+      if (size==null) return;
+      if (size.width!=fieldWeights[key]) {
+        setState(() {
+          fieldWeights[key] = size.width;
+        });
+      }
+      final box = fieldContext.findRenderObject() as RenderBox?;
+      if (box==null) return;
+      final position = box.localToGlobal(Offset.zero, ancestor: renderObject,);
+      if (position.dx!=fieldOffsets[key]) {
+        setState(() {
+          fieldOffsets[key] = position.dx;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final children = <Widget>[];
+    final arrows = <Widget>[];
+    double totalWeight = 0;
+    for (final entry in widget.fields.entries) {
+      final key = entry.key;
+      final field = entry.value;
+      final visibleErrors = field.validationErrors.where((e) {
+        return (e.isBeforeEditing || field.passedFirstEdit)
+            && (!widget.hideNotVisibleAsHintMessage || e.isVisibleAsHintMessage);
+      },).toList();
+      if (visibleErrors.isEmpty) continue;
+      final weight = fieldWeights[key];
+      if (weight==null) continue;
+      var fieldOffset = fieldOffsets[key];
+      if (fieldOffset==null) continue;
+      totalWeight += weight;
+    }
+    double partialWeight = 0;
+    bool needsUpdate = false;
+    for (final entry in widget.fields.entries) {
+      final key = entry.key;
+      final field = entry.value;
+      final visibleErrors = field.validationErrors.where((e) {
+        return (e.isBeforeEditing || field.passedFirstEdit)
+            && (!widget.hideNotVisibleAsHintMessage || e.isVisibleAsHintMessage);
+      },).toList();
+      if (visibleErrors.isEmpty) continue;
+      needsUpdate = true;
+      final fieldWidth = fieldWeights[key];
+      if (fieldWidth==null) continue;
+      final fieldStartingOffset = fieldOffsets[key];
+      if (fieldStartingOffset==null) continue;
+      // final fieldEndingOffset = fieldStartingOffset + fieldWidth;
+      // final fieldCenter = fieldStartingOffset + (fieldWidth / 2);
+      final itemSartingOffset = maxWidth * (partialWeight / totalWeight);
+      partialWeight += fieldWidth;
+      final itemEndingOffset = maxWidth * (partialWeight / totalWeight);
+      final itemWidth = maxWidth * (fieldWidth / totalWeight);
+      // final itemCenter = itemSartingOffset + (itemWidth / 2);
+      var arrowOffset = fieldStartingOffset + (fieldWidth/2).coerceAtMost(32);
+      if (arrowOffset < itemSartingOffset) arrowOffset = itemSartingOffset + 32;
+      const double arrowWidth = 24;
+      const double arrowHeight = 24;
+      ValidationErrorSeverity? maxSeverity;
+      for (final err in visibleErrors) {
+        final severity = err.severity;
+        if (maxSeverity==null || maxSeverity.weight > severity.weight) {
+          maxSeverity = severity;
+        }
+      }
+      var color = ValidationMessage.severityColors[Theme.of(context).brightness]![maxSeverity!]!;
+      if (maxSeverity.weight>=100) color = color.withOpacity(0.6);
+      final double xAlignment = fieldStartingOffset<=itemSartingOffset ? -1
+          : ((fieldStartingOffset - itemSartingOffset) / (itemWidth-fieldWidth)) * 2 - 1;
+      children.add(Container(
+        width: maxWidth,
+        padding: EdgeInsets.only(
+          left: itemSartingOffset,
+          right: maxWidth - itemEndingOffset,
+        ),
+        alignment: Alignment(xAlignment.clamp(-1, 1), -1),
+        child: IntrinsicWidth(
+          child: ValidationMessage(
+            errors: visibleErrors,
+            passedFirstEdit: field.passedFirstEdit,
+            checkForProxyAbove: false,
+          ),
+        ),
+      ),);
+      arrows.add(Positioned(
+        height: arrowHeight,
+        width: arrowWidth,
+        top: - arrowHeight / 2,
+        left: arrowOffset - arrowWidth / 2,
+        child: DecoratedBox(
+          decoration: ShapeDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter, end: Alignment.bottomCenter,
+              colors: [color, color, color.withOpacity(0)],
+              stops: const [0, 0.5, 0.7],
+            ),
+            shape: const BeveledRectangleBorder(
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.elliptical(arrowWidth / 2, arrowHeight),
+                topRight: Radius.elliptical(arrowWidth / 2, arrowHeight),
+              ),
+            ),
+          ),
+        ),
+      ),);
+    }
+    if (needsUpdate) {
+      WidgetsBinding.instance.addPostFrameCallback(updateDataForField);
+    }
+    if (children.isEmpty) {
+      return widget.child;
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        widget.child,
+        if (children.isNotEmpty)
+          const SizedBox(height: 6,),
+        if (children.isNotEmpty)
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            // fit: StackFit.expand,
+            children: [
+              ...arrows,
+              ...children,
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+
+class ValidationMessage extends StatelessWidget {
 
   static final Map<Brightness, Map<ValidationErrorSeverity, Color>> severityColors = {
     Brightness.light: {
@@ -364,6 +539,7 @@ class ValidationMessage extends StatefulWidget {
   final TextStyle? errorTextStyle;
   final bool animate;
   final bool hideNotVisibleAsHintMessage;
+  final bool checkForProxyAbove;
 
   const ValidationMessage({
     required this.errors,
@@ -371,26 +547,27 @@ class ValidationMessage extends StatefulWidget {
     this.animate = true,
     this.errorTextStyle,
     this.hideNotVisibleAsHintMessage = true,
+    this.checkForProxyAbove = true,
     super.key,
   });
 
   @override
-  State<ValidationMessage> createState() => _ValidationMessageState();
-
-}
-
-class _ValidationMessageState extends State<ValidationMessage> with SingleTickerProviderStateMixin {
-
-  @override
   Widget build(BuildContext context) {
+    if (checkForProxyAbove) {
+      final proxy = context.findAncestorWidgetOfExactType<ValidationMessageProxy>();
+      if (proxy!=null) { // TODO 2 maybe check that this specific field is in the proxy
+        return const SizedBox.shrink();
+      }
+    }
     final children = <Widget>[];
     final seenStrings = <String>[];
-    for (final e in widget.errors) {
-      if ((e.isBeforeEditing || widget.passedFirstEdit)
-          && (!widget.hideNotVisibleAsHintMessage || e.isVisibleAsHintMessage) && !seenStrings.contains(e.error)) {
+    for (final e in errors) {
+      if ((e.isBeforeEditing || passedFirstEdit)
+          && (!hideNotVisibleAsHintMessage || e.isVisibleAsHintMessage)
+          && !seenStrings.contains(e.error)) {
         seenStrings.add(e.error);
         children.add(InitiallyAnimatedWidget(
-          duration: Duration(milliseconds: widget.animate ? 300 : 0),
+          duration: Duration(milliseconds: animate ? 300 : 0),
           curve: Curves.easeOutCubic,
           builder: (animationController, child) {
             return SizeTransition(
@@ -402,8 +579,8 @@ class _ValidationMessageState extends State<ValidationMessage> with SingleTicker
           },
           child: SingleValidationMessage(
             error: e,
-            errorTextStyle: widget.errorTextStyle,
-            animate: widget.animate,
+            errorTextStyle: errorTextStyle,
+            animate: animate,
           ),
         ),);
       }
