@@ -342,8 +342,10 @@ class Field<T extends Comparable> extends ChangeNotifier implements Comparable, 
     for (final e in field.validators) {
       futureErrors.add(e(context, dao, field));
     }
-    // make sure all of them are awaited; if we await them one by one, we run the risk of the errors bubbling up
-    await Future.wait<ValidationError?>(futureErrors.map((e) async => e));
+    // make sure all of them are awaited; if we only await them one by one,
+    // we run the risk of a specific error bubbling up before it is awaited
+    // they will be awaited individually later, and errors will be handled then
+    try { await Future.wait<ValidationError?>(futureErrors.map((e) async => e)); } catch (_) { }
     final result = <ValidationError>[];
     for (final e in futureErrors) {
       ValidationError? error;
