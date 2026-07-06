@@ -4,7 +4,7 @@ pkgs.mkShell {
 
   buildInputs = with pkgs; [
 
-    flutter
+    flutter344
 
     cmake
     clang
