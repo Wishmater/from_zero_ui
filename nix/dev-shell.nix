@@ -1,4 +1,6 @@
-{ pkgs ? import <nixpkgs> { } }:
+{
+  pkgs ? import <nixpkgs> { },
+}:
 
 pkgs.mkShell {
 
@@ -18,11 +20,11 @@ pkgs.mkShell {
     libsepol
     libthai
     libdatrie
-    xorg.libXdmcp
+    libXdmcp
     lerc
     libxkbcommon
     libepoxy
-    xorg.libXtst
+    libXtst
 
   ];
 
