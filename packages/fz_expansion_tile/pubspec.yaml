@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  flutter_font_icons: ^2.2.5
+  flutter_font_icons: ^3.0.0
 
   fz_actions:
     path: ../fz_actions
