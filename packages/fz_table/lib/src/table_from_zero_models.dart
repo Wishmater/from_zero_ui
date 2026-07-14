@@ -154,11 +154,11 @@ abstract class ColModel<T> {
   bool? get initialValueFiltersExcludeAllElse;
   bool get initiallyHidden;
 
-  Object? getValue(RowModel<T> row, dynamic key) {
+  Object? getValue(RowModel<dynamic> row, dynamic key) {
     return row.values[key];
   }
 
-  String getValueString(RowModel<T> row, dynamic key) {
+  String getValueString(RowModel<dynamic> row, dynamic key) {
     final value = getValue(row, key);
     if (value is List || value is ComparableList) {
       final List<dynamic> list = value is List
@@ -630,7 +630,7 @@ class NumColModel<T> extends SimpleColModel<T> {
   }
 
   @override
-  String getValueString(RowModel<T> row, dynamic key) {
+  String getValueString(RowModel<dynamic> row, dynamic key) {
     final value = getValue(row, key);
     if (value is List || value is ComparableList) {
       final List<dynamic> list = value is List
@@ -804,7 +804,7 @@ class BoolColModel<T> extends SimpleColModel<T> {
   }
 
   @override
-  String getValueString(RowModel<T> row, dynamic key) {
+  String getValueString(RowModel<dynamic> row, dynamic key) {
     final value = getValue(row, key);
     if (value is bool) {
       return value ? trueValue : falseValue;
@@ -912,7 +912,7 @@ class DateColModel<T> extends SimpleColModel<T> {
     List<RowModel<T>>? reFiltered,
   }) => '';
   @override
-  String getValueString(RowModel<T> row, dynamic key) {
+  String getValueString(RowModel<dynamic> row, dynamic key) {
     final value = getValue(row, key);
     if (value is List || value is ComparableList) {
       final List<dynamic> list = value is List
