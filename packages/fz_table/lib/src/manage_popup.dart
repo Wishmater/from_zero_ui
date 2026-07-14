@@ -82,11 +82,8 @@ abstract class TableFromZeroManagePopup {
                               );
                             },
                             itemCount: columnKeys.length,
-                            onReorder: (int oldIndex, int newIndex) {
+                            onReorderItem: (int oldIndex, int newIndex) {
                               setState(() {
-                                if (oldIndex < newIndex) {
-                                  newIndex -= 1;
-                                }
                                 final item = columnKeys.removeAt(oldIndex);
                                 columnKeys.insert(newIndex, item);
                                 modified = true;

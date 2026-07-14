@@ -7,6 +7,7 @@ import 'package:collection/collection.dart' show DeepCollectionEquality;
 import 'package:dartx/dartx.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fz_actions/fz_actions.dart';
@@ -1631,7 +1632,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
               padding: EdgeInsets.symmetric(
                 horizontal: widget.tableHorizontalPadding,
               ),
-              cacheExtent: 99999999,
+              scrollCacheExtent: ScrollCacheExtent.pixels(double.infinity),
             ),
           );
         } else {
