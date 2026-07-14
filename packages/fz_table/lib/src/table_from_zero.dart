@@ -1632,7 +1632,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
               padding: EdgeInsets.symmetric(
                 horizontal: widget.tableHorizontalPadding,
               ),
-              scrollCacheExtent: ScrollCacheExtent.pixels(double.infinity),
+              scrollCacheExtent: ScrollCacheExtent.pixels(999999),
             ),
           );
         } else {
