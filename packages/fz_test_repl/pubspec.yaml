@@ -1,0 +1,17 @@
+name: fz_test_repl
+description: Interactive REPL for driving Flutter integration tests. Lets you inspect and interact with a running app via terminal commands.
+publish_to: 'none'
+version: 0.1.0
+resolution: workspace
+
+environment:
+  sdk: "^3.9.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_test:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_lints: ^5.0.0

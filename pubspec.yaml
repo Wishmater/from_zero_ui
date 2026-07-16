@@ -47,6 +47,7 @@ workspace:
   - packages/fz_simple_shadow
   - packages/fz_snackbar
   - packages/fz_table
+  - packages/fz_test_repl
   - packages/fz_theme
   - packages/fz_translucent_ink_well
   - packages/fz_ui_scale
