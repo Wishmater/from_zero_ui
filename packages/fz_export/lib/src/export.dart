@@ -590,7 +590,7 @@ class ExportState extends State<Export> {
           }
         }
       };
-      final rows = List<SimpleRowModel<dynamic>>.from(value.currentState!.filtered);
+      final rows = List<RowModel<dynamic>>.from(value.currentState!.filtered);
       if (value.currentState!.widget.columns != null) {
         final headerRow = SimpleRowModel(
           id: value.currentState!.widget.columns,
