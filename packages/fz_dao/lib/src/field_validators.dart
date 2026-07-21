@@ -614,7 +614,7 @@ class ValidationMessage extends StatelessWidget {
               return SizeTransition(
                 sizeFactor: animationController,
                 axis: Axis.vertical,
-                axisAlignment: -1,
+                alignment: Alignment.topCenter,
                 child: child,
               );
             },

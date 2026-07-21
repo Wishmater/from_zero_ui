@@ -2277,7 +2277,7 @@ class DAO<ModelType> extends ChangeNotifier implements Comparable<dynamic> {
                           return SizeTransition(
                             sizeFactor: animation,
                             axis: Axis.vertical,
-                            axisAlignment: -1,
+                            alignment: Alignment.topCenter,
                             child: Center(child: child),
                           );
                         },
