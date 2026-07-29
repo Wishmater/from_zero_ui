@@ -9,6 +9,7 @@ environment:
 workspace:
   - packages/fz_actions
   - packages/fz_animated_switcher_image
+  - packages/fz_animated_widgets
   - packages/fz_animations
   - packages/fz_api_handling
   - packages/fz_app_update
@@ -32,9 +33,11 @@ workspace:
   - packages/fz_future_handling
   - packages/fz_gesture_relayer
   - packages/fz_focus_traversal
+  - packages/fz_icons
   - packages/fz_image
   - packages/fz_localizations
   - packages/fz_logo
+  - packages/fz_motion_widgets
   - packages/fz_notification_relayer
   - packages/fz_number_format
   - packages/fz_opacity_gradient
@@ -44,8 +47,10 @@ workspace:
   - packages/fz_scaffold
   - packages/fz_scrollbar
   - packages/fz_selectable_icon
+  - packages/fz_shapes
   - packages/fz_simple_shadow
   - packages/fz_snackbar
+  - packages/fz_state_positioning
   - packages/fz_table
   - packages/fz_theme
   - packages/fz_translucent_ink_well
@@ -66,6 +71,8 @@ dependencies:
     path: packages/fz_actions
   fz_animated_switcher_image:
     path: packages/fz_animated_switcher_image
+  fz_animated_widgets:
+    path: packages/fz_animated_widgets
   fz_animations:
     path: packages/fz_animations
   fz_api_handling:
@@ -112,12 +119,16 @@ dependencies:
     path: packages/fz_gesture_relayer
   fz_focus_traversal:
     path: packages/fz_focus_traversal
+  fz_icons:
+    path: packages/fz_icons
   fz_image:
     path: packages/fz_image
   fz_localizations:
     path: packages/fz_localizations
   fz_logo:
     path: packages/fz_logo
+  fz_motion_widgets:
+    path: packages/fz_motion_widgets
   fz_notification_relayer:
     path: packages/fz_notification_relayer
   fz_number_format:
@@ -136,10 +147,14 @@ dependencies:
     path: packages/fz_scrollbar
   fz_selectable_icon:
     path: packages/fz_selectable_icon
+  fz_shapes:
+    path: packages/fz_shapes
   fz_simple_shadow:
     path: packages/fz_simple_shadow
   fz_snackbar:
     path: packages/fz_snackbar
+  fz_state_positioning:
+    path: packages/fz_state_positioning
   fz_table:
     path: packages/fz_table
   fz_theme:

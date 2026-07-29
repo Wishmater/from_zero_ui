@@ -1,0 +1,18 @@
+name: fz_shapes
+description: Custom shape borders including ExternalRoundedCornersBorder (supports negative radius) and GradientBorderSide, plus clipping utilities.
+publish_to: 'none'
+version: 0.1.0
+resolution: workspace
+
+environment:
+  sdk: "^3.9.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  collection: ^1.18.0
+  dartx: ^1.2.0
+
+dev_dependencies:
+  flutter_lints: ^5.0.0

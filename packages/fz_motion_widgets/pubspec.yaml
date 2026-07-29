@@ -1,0 +1,23 @@
+name: fz_motion_widgets
+description: Animated widget variants using the motor physics-based animation library. Includes MotionContainer, MotionOpacity, MotionPadding, MotionAlign, MotionPositioned, MotionDivider, MotionFractionallySizedBox, and AnimatedIntrinsicSize.
+publish_to: 'none'
+version: 0.1.0
+resolution: workspace
+
+environment:
+  sdk: "^3.9.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  dartx: ^1.2.0
+  motor: ^1.0.0-dev.4
+
+  fz_shapes:
+    path: ../fz_shapes
+  fz_state_positioning:
+    path: ../fz_state_positioning
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
