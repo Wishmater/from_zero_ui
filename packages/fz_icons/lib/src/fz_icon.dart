@@ -3,9 +3,9 @@ import "dart:io";
 import "package:dartx/dartx_io.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:fz_icons/src/popup_tooltip_from_zero.dart";
 import "package:fz_icons/src/symbol_icon.dart";
 import "package:fz_icons/src/text_icon.dart";
-import "package:fz_tooltip/fz_tooltip.dart";
 import "package:xdg_icons/xdg_icons.dart";
 
 enum IconType {
@@ -87,13 +87,7 @@ class FzIcon extends StatelessWidget {
     final iconUsageLog = _iconUsageLog ?? IconUsageLog();
     Widget result = buildContent(context, iconUsageLog);
     if (FzIcon.defaultShowDebugTooltip && _iconUsageLog == null) {
-      final debugText = buildDebugTooltipText(iconUsageLog);
-      if (debugText != null) {
-        result = TooltipFromZero(
-          message: debugText,
-          child: result,
-        );
-      }
+      result = buildIconDebugTooltip(context, result, iconUsageLog);
     }
     return result;
   }
@@ -189,58 +183,164 @@ class FzIcon extends StatelessWidget {
     return notFoundBuilder?.call(context) ?? SizedBox.shrink();
   }
 
-  String? buildDebugTooltipText(IconUsageLog iconUsageLog) {
-    final types = <String>[];
-    final priorities = iconPriorities ?? FzIcon.defaultIconPriority;
-
-    IconType? showing;
-    for (final iconType in priorities) {
-      switch (iconType) {
-        case IconType.direct:
-          if (directImageData == null || directImageData!.isEmpty) continue;
-          types.add('Direct');
-          for (final e in directImageData!) {
-            final error = iconUsageLog.directImageDataErrors[e];
-            if (error != null) {
-              types.add('  $e: $error');
-            } else if (showing == null) {
-              types.add('  $e: SHOWING');
-              showing = iconType;
-            }
+  Widget buildIconDebugTooltip(BuildContext context, Widget child, IconUsageLog iconUsageLog) {
+    return PopupTooltipFromZero(
+      child: child,
+      tooltipBuilder: (context) {
+        final theme = Theme.of(context);
+        final tooltipContent = <Widget>[];
+        var remainingIconPriorities = iconPriorities ?? FzIcon.defaultIconPriority;
+        bool passSuccess = false;
+        while (remainingIconPriorities.isNotEmpty) {
+          final iconType = remainingIconPriorities.first;
+          remainingIconPriorities = remainingIconPriorities.sublist(1);
+          switch (iconType) {
+            case IconType.direct:
+              if (directImageData == null || directImageData!.isEmpty) {
+                continue;
+              }
+              if (tooltipContent.isNotEmpty) {
+                tooltipContent.add(Divider());
+              }
+              tooltipContent.add(
+                Text(
+                  "Direct",
+                  style: theme.textTheme.bodyLarge,
+                ),
+              );
+              for (final e in directImageData!) {
+                final error = iconUsageLog.directImageDataErrors[e];
+                final lineContent = <InlineSpan>[];
+                lineContent.add(TextSpan(text: e.toString()));
+                if (error != null) {
+                  lineContent.addAll([
+                    TextSpan(text: "   "),
+                    TextSpan(
+                      text: error,
+                      style: theme.textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.error),
+                    ),
+                  ]);
+                } else if (!passSuccess) {
+                  lineContent.addAll([
+                    TextSpan(text: "   "),
+                    TextSpan(
+                      text: "SHOWING",
+                      style: theme.textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.primary),
+                    ),
+                  ]);
+                }
+                tooltipContent.add(Text.rich(TextSpan(children: lineContent)));
+                if (error == null) passSuccess = true;
+              }
+            case IconType.flutter:
+              if (flutterIcon == null) {
+                continue;
+              }
+              if (tooltipContent.isNotEmpty) {
+                tooltipContent.add(Divider());
+              }
+              tooltipContent.addAll([
+                Text(
+                  "Flutter",
+                  style: theme.textTheme.bodyLarge,
+                ),
+                if (!passSuccess)
+                  Text(
+                    "SHOWING",
+                    style: theme.textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.primary),
+                  ),
+              ]);
+              passSuccess = true;
+            case IconType.linux:
+              if (iconNames == null || iconNames!.isEmpty) {
+                continue;
+              }
+              if (tooltipContent.isNotEmpty) {
+                tooltipContent.add(Divider());
+              }
+              tooltipContent.add(
+                Text(
+                  "Linux",
+                  style: theme.textTheme.bodyLarge,
+                ),
+              );
+              for (final e in iconNames!) {
+                final error = iconUsageLog.iconNamesErrors[e];
+                final lineContent = <InlineSpan>[];
+                lineContent.add(TextSpan(text: e));
+                if (error != null) {
+                  lineContent.addAll([
+                    TextSpan(text: "   "),
+                    TextSpan(
+                      text: error,
+                      style: theme.textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.error),
+                    ),
+                  ]);
+                } else if (!passSuccess) {
+                  lineContent.addAll([
+                    TextSpan(text: "   "),
+                    TextSpan(
+                      text: "SHOWING",
+                      style: theme.textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.primary),
+                    ),
+                  ]);
+                }
+                tooltipContent.add(Text.rich(TextSpan(children: lineContent)));
+                if (error == null) passSuccess = true;
+              }
+            case IconType.nerdFont:
+              if (textIcon == null) {
+                continue;
+              }
+              if (tooltipContent.isNotEmpty) {
+                tooltipContent.add(Divider());
+              }
+              tooltipContent.add(
+                Text(
+                  "Nerd Font",
+                  style: theme.textTheme.bodyLarge,
+                ),
+              );
+              final error = iconUsageLog.textIconError;
+              final lineContent = <InlineSpan>[];
+              lineContent.add(TextSpan(text: "$textIcon  "));
+              if (error != null) {
+                lineContent.addAll([
+                  TextSpan(text: "   "),
+                  TextSpan(
+                    text: error,
+                    style: theme.textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.error),
+                  ),
+                ]);
+              } else if (!passSuccess) {
+                lineContent.addAll([
+                  TextSpan(text: "   "),
+                  TextSpan(
+                    text: "SHOWING",
+                    style: theme.textTheme.bodyMedium!.copyWith(color: Theme.of(context).colorScheme.primary),
+                  ),
+                ]);
+              }
+              tooltipContent.add(Text.rich(TextSpan(children: lineContent)));
+              if (error == null) passSuccess = true;
           }
-        case IconType.flutter:
-          if (flutterIcon == null) continue;
-          types.add('Flutter');
-          if (showing == null) {
-            types.add('  SHOWING');
-            showing = iconType;
-          }
-        case IconType.linux:
-          if (iconNames == null || iconNames!.isEmpty) continue;
-          types.add('Linux');
-          for (final e in iconNames!) {
-            final error = iconUsageLog.iconNamesErrors[e];
-            if (error != null) {
-              types.add('  $e: $error');
-            } else if (showing == null) {
-              types.add('  $e: SHOWING');
-              showing = iconType;
-            }
-          }
-        case IconType.nerdFont:
-          if (textIcon == null) continue;
-          types.add('Nerd Font');
-          final error = iconUsageLog.textIconError;
-          if (error != null) {
-            types.add('  $textIcon: $error');
-          } else if (showing == null) {
-            types.add('  $textIcon: SHOWING');
-            showing = iconType;
-          }
-      }
-    }
-    if (types.isEmpty) return null;
-    return 'Icon debug:\n${types.join('\n')}';
+        }
+        if (tooltipContent.isEmpty) {
+          tooltipContent.add(Text("< no icons set >"));
+        }
+        tooltipContent.insertAll(0, [
+          Text("Icon types debug info"),
+          Divider(),
+        ]);
+        return IntrinsicWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: tooltipContent,
+          ),
+        );
+      },
+    );
   }
 }
 
