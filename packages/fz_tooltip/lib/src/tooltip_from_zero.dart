@@ -93,6 +93,7 @@ class TooltipFromZero extends StatefulWidget {
   /// override the default values _and_ the values in [TooltipTheme.of].
   const TooltipFromZero({
     required this.message,
+    this.builder,
     this.height,
     this.padding,
     this.margin,
@@ -118,6 +119,12 @@ class TooltipFromZero extends StatefulWidget {
   /// The text to display in the tooltip.
   /// If null, tooltip is disabled
   final String? message;
+
+  /// An optional builder for custom tooltip content.
+  ///
+  /// When provided, [builder] is rendered instead of the default [message] text.
+  /// The [message] is still used for accessibility/semantics.
+  final WidgetBuilder? builder;
 
   /// The height of the tooltip's [child].
   ///
@@ -471,6 +478,7 @@ class _TooltipFromZeroState extends State<TooltipFromZero> with SingleTickerProv
       textDirection: Directionality.of(context),
       child: _TooltipOverlay(
         message: widget.message!,
+        builder: widget.builder,
         height: height,
         padding: padding,
         margin: margin,
@@ -723,6 +731,7 @@ class _TooltipOverlay extends StatefulWidget {
     required this.target,
     required this.verticalOffset,
     required this.preferBelow,
+    this.builder,
     this.padding,
     this.margin,
     this.decoration,
@@ -735,6 +744,7 @@ class _TooltipOverlay extends StatefulWidget {
   });
 
   final String message;
+  final WidgetBuilder? builder;
   final double height;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
@@ -772,7 +782,6 @@ class _TooltipOverlayState extends State<_TooltipOverlay> {
 
   @override
   Widget build(BuildContext context) {
-    final scrollController = ScrollController();
     Widget result = IgnorePointer(
       ignoring: !opaque,
       child: GestureDetector(
@@ -799,42 +808,50 @@ class _TooltipOverlayState extends State<_TooltipOverlay> {
                 decoration: widget.decoration,
                 margin: widget.margin,
                 clipBehavior: Clip.hardEdge,
-                child: Theme(
-                  data: Theme.of(context).copyWith(
-                    scrollbarTheme: Theme.of(context).scrollbarTheme.copyWith(
-                      crossAxisMargin: 4,
-                      trackColor: WidgetStateProperty.resolveWith((states) {
-                        return widget.textStyle?.color?.withValues(alpha: 0.2);
-                      }),
-                      thumbColor: WidgetStateProperty.resolveWith((states) {
-                        if (states.contains(WidgetState.dragged)) {
-                          return widget.textStyle?.color?.withValues(alpha: 0.6);
-                        }
-                        if (states.contains(WidgetState.hovered)) {
-                          return widget.textStyle?.color?.withValues(alpha: 0.5);
-                        }
-                        return widget.textStyle?.color?.withValues(alpha: 0.4);
-                      }),
-                    ),
-                  ),
-                  child: ScrollbarFromZero(
-                    controller: scrollController,
-                    child: Container(
-                      padding: widget.padding,
-                      child: Center(
-                        widthFactor: 1.0,
-                        heightFactor: 1.0,
-                        child: SingleChildScrollView(
-                          controller: scrollController,
-                          child: Text(
-                            widget.message,
-                            style: widget.textStyle,
+                child: widget.builder != null
+                    ? Container(
+                        padding: widget.padding,
+                        child: widget.builder!(context),
+                      )
+                    : (() {
+                        final scrollController = ScrollController();
+                        return Theme(
+                        data: Theme.of(context).copyWith(
+                          scrollbarTheme: Theme.of(context).scrollbarTheme.copyWith(
+                            crossAxisMargin: 4,
+                            trackColor: WidgetStateProperty.resolveWith((states) {
+                              return widget.textStyle?.color?.withValues(alpha: 0.2);
+                            }),
+                            thumbColor: WidgetStateProperty.resolveWith((states) {
+                              if (states.contains(WidgetState.dragged)) {
+                                return widget.textStyle?.color?.withValues(alpha: 0.6);
+                              }
+                              if (states.contains(WidgetState.hovered)) {
+                                return widget.textStyle?.color?.withValues(alpha: 0.5);
+                              }
+                              return widget.textStyle?.color?.withValues(alpha: 0.4);
+                            }),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-                ),
+                        child: ScrollbarFromZero(
+                          controller: scrollController,
+                          child: Container(
+                            padding: widget.padding,
+                            child: Center(
+                              widthFactor: 1.0,
+                              heightFactor: 1.0,
+                              child: SingleChildScrollView(
+                                controller: scrollController,
+                                child: Text(
+                                  widget.message,
+                                  style: widget.textStyle,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    })(),
               ),
             ),
           ),

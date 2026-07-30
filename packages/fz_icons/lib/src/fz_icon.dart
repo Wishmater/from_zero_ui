@@ -3,9 +3,9 @@ import "dart:io";
 import "package:dartx/dartx_io.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:fz_icons/src/popup_tooltip_from_zero.dart";
 import "package:fz_icons/src/symbol_icon.dart";
 import "package:fz_icons/src/text_icon.dart";
+import "package:fz_tooltip/fz_tooltip.dart";
 import "package:xdg_icons/xdg_icons.dart";
 
 enum IconType {
@@ -184,9 +184,10 @@ class FzIcon extends StatelessWidget {
   }
 
   Widget buildIconDebugTooltip(BuildContext context, Widget child, IconUsageLog iconUsageLog) {
-    return PopupTooltipFromZero(
+    return TooltipFromZero(
+      message: "Icon debug info",
       child: child,
-      tooltipBuilder: (context) {
+      builder: (context) {
         final theme = Theme.of(context);
         final tooltipContent = <Widget>[];
         var remainingIconPriorities = iconPriorities ?? FzIcon.defaultIconPriority;
