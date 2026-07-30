@@ -16,6 +16,8 @@ dependencies:
 
   fz_actions:
     path: ../fz_actions
+  fz_bitsdojo_window:
+    path: ../fz_bitsdojo_window
   fz_platform:
     path: ../fz_platform
   fz_popup:

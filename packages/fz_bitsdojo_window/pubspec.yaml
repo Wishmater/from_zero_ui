@@ -1,5 +1,5 @@
-name: fz_scrollbar
-description: Custom scrollbar with scroll controller for FromZero UI.
+name: fz_bitsdojo_window
+description: Bitsdojo window integration for FromZero UI. (DEPRECATED)
 publish_to: 'none'
 version: 0.1.0
 resolution: workspace
@@ -11,12 +11,11 @@ dependencies:
   flutter:
     sdk: flutter
 
-  fz_bitsdojo_window:
-    path: ../fz_bitsdojo_window
+  bitsdojo_window: ^0.1.6
+  bitsdojo_window_platform_interface: ^0.1.2
+
   fz_platform:
     path: ../fz_platform
-  fz_opacity_gradient:
-    path: ../fz_opacity_gradient
 
 dev_dependencies:
   flutter_lints: ^5.0.0

@@ -5,6 +5,7 @@ export 'package:fz_animations/fz_animations.dart';
 export 'package:fz_api_handling/fz_api_handling.dart';
 export 'package:fz_app_update/fz_app_update.dart';
 export 'package:fz_appbar/fz_appbar.dart';
+export 'package:fz_bitsdojo_window/fz_bitsdojo_window.dart';
 export 'package:fz_combo/fz_combo.dart';
 export 'package:fz_comparable_list/fz_comparable_list.dart';
 export 'package:fz_copy_ensure_visible/fz_copy_ensure_visible.dart';

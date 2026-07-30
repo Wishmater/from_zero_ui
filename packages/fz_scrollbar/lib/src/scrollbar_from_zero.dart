@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:fz_bitsdojo_window/fz_bitsdojo_window.dart';
 import 'package:fz_opacity_gradient/fz_opacity_gradient.dart';
 import 'package:fz_platform/fz_platform.dart';
 
@@ -143,10 +144,10 @@ class ScrollbarFromZeroState extends State<ScrollbarFromZero> {
     if (widget.mainScrollbar) {
       final theme = Theme.of(context);
       result = Theme(
-        key: ValueKey(PlatformExtended.appWindow?.isMaximized ?? true),
+        key: ValueKey(WindowExtended.appWindow?.isMaximized ?? true),
         data: theme.copyWith(
           scrollbarTheme: theme.scrollbarTheme.copyWith(
-            crossAxisMargin: PlatformExtended.appWindow?.isMaximized ?? true
+            crossAxisMargin: WindowExtended.appWindow?.isMaximized ?? true
                 ? theme.scrollbarTheme.crossAxisMargin
                 : theme.scrollbarTheme.crossAxisMargin?.clamp(6, double.infinity),
           ),

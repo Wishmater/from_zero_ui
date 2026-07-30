@@ -23,6 +23,8 @@ dependencies:
     path: ../fz_actions
   fz_animations:
     path: ../fz_animations
+  fz_bitsdojo_window:
+    path: ../fz_bitsdojo_window
   fz_appbar:
     path: ../fz_appbar
   fz_dialog:

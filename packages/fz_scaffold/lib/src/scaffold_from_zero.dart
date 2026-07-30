@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fz_actions/fz_actions.dart';
 import 'package:fz_animations/no_fading_transitions.dart' as no_fading_transitions;
 import 'package:fz_appbar/fz_appbar.dart';
+import 'package:fz_bitsdojo_window/fz_bitsdojo_window.dart';
 import 'package:fz_dialog/fz_dialog.dart';
 import 'package:fz_localizations/fz_localizations.dart';
 import 'package:fz_platform/fz_platform.dart';
@@ -154,7 +155,7 @@ class ScaffoldFromZero extends ConsumerStatefulWidget {
            appbarHeight ??
            (appbarType == AppbarType.none
                ? 0
-               : (48 + (PlatformExtended.appWindow?.titleBarHeight ?? 8))), //useCompactDrawerInsteadOfClose ? 56 : 0
+               : (48 + (WindowExtended.appWindow?.titleBarHeight ?? 8))), //useCompactDrawerInsteadOfClose ? 56 : 0
        titleTransitionBuilder = titleTransitionBuilder ?? defaultTitleTransitionBuilder,
        drawerContentTransitionBuilder = drawerContentTransitionBuilder ?? defaultDrawerContentTransitionBuilder,
        bodyTransitionBuilder = bodyTransitionBuilder ?? defaultBodyTransitionBuilder;
@@ -447,9 +448,9 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
       appbarChangeNotifier.safeAreaOffset = MediaQuery.paddingOf(context).top;
       // TODO: 2 expose both the breakponint and the collapsedHeight (or maybe even a list of breakpoint->height)
       appbarChangeNotifier.appbarHeight = MediaQuery.sizeOf(context).height < 384
-          ? min(widget.appbarHeight, 34 + (PlatformExtended.appWindow?.titleBarHeight ?? 8))
+          ? min(widget.appbarHeight, 34 + (WindowExtended.appWindow?.titleBarHeight ?? 8))
           : MediaQuery.sizeOf(context).height < 512
-          ? min(widget.appbarHeight, 40 + (PlatformExtended.appWindow?.titleBarHeight ?? 8))
+          ? min(widget.appbarHeight, 40 + (WindowExtended.appWindow?.titleBarHeight ?? 8))
           : widget.appbarHeight;
     });
     final mediaQuery = MediaQuery.of(context);
@@ -904,7 +905,7 @@ class ScaffoldFromZeroState extends ConsumerState<ScaffoldFromZero> {
                                 ? 8
                                 : (Theme.of(context).scrollbarTheme.thickness?.resolve({}) ?? 8) +
                                       (Theme.of(context).scrollbarTheme.crossAxisMargin ?? 0).clamp(
-                                        (PlatformExtended.appWindow?.isMaximized ?? true) ? 0 : 6,
+                                        (WindowExtended.appWindow?.isMaximized ?? true) ? 0 : 6,
                                         double.infinity,
                                       ),
                             title: child!,

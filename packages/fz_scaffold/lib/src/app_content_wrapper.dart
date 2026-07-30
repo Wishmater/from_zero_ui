@@ -10,6 +10,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart' show ChangeNotifierProvider;
+import 'package:fz_bitsdojo_window/fz_bitsdojo_window.dart';
 import 'package:fz_dialog/fz_dialog.dart';
 import 'package:fz_log/fz_log.dart';
 import 'package:fz_platform/fz_platform.dart';
@@ -163,7 +164,7 @@ class FromZeroAppContentWrapperState extends ConsumerState<FromZeroAppContentWra
     final scaffoldChangeNotifier = ref.read(
       fromZeroScaffoldChangeNotifierProvider,
     );
-    bool showWindowButtons = PlatformExtended.appWindow != null && scaffoldChangeNotifier.showWindowBarOnDesktop;
+    bool showWindowButtons = WindowExtended.appWindow != null && scaffoldChangeNotifier.showWindowBarOnDesktop;
     ScrollBehavior scrollConfiguration = ScrollConfiguration.of(
       context,
     ).copyWith(scrollbars: false);
@@ -369,7 +370,7 @@ class WindowBar extends StatelessWidget {
     return Container(
       height:
           height ??
-          (PlatformExtended.appWindow == null
+          (WindowExtended.appWindow == null
               ? 32
               : appWindow.isMaximized
               ? appWindow.titleBarHeight * 0.66
@@ -412,7 +413,7 @@ class WindowBar extends StatelessWidget {
                 ),
               ),
             Expanded(child: Container()),
-            if (PlatformExtended.appWindow != null && showMinimize)
+            if (WindowExtended.appWindow != null && showMinimize)
               MinimizeWindowButton(
                 animate: true,
                 onPressed: () {
@@ -428,7 +429,7 @@ class WindowBar extends StatelessWidget {
                   iconMouseDown: iconColor,
                 ),
               ),
-            if (PlatformExtended.appWindow != null && showMaximizeOrRestore)
+            if (WindowExtended.appWindow != null && showMaximizeOrRestore)
               WindowButton(
                 animate: true,
                 iconBuilder: (buttonContext) => appWindow.isMaximized
@@ -448,7 +449,7 @@ class WindowBar extends StatelessWidget {
                   iconMouseDown: iconColor,
                 ),
               ),
-            if (PlatformExtended.appWindow != null && showClose)
+            if (WindowExtended.appWindow != null && showClose)
               CloseWindowButton(
                 animate: true,
                 onPressed: () async {

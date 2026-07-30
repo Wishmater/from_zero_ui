@@ -1,16 +1,9 @@
 import 'dart:io';
 
-import 'package:bitsdojo_window/bitsdojo_window.dart' as bitsdojo;
-import 'package:bitsdojo_window_platform_interface/window.dart' as bitsdojo_window;
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart' as path_provider;
 
-bool windowsDesktopBitsdojoWorking = true;
-
 class PlatformExtended {
-  static final _appWindow = kIsWeb || !PlatformExtended.isWindows ? null : bitsdojo.appWindow;
-  static bitsdojo_window.DesktopWindow? get appWindow => !windowsDesktopBitsdojoWorking ? null : _appWindow;
-
   static bool get isWindows {
     if (kIsWeb) {
       return defaultTargetPlatform == TargetPlatform.windows;

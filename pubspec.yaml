@@ -14,6 +14,7 @@ workspace:
   - packages/fz_api_handling
   - packages/fz_app_update
   - packages/fz_appbar
+  - packages/fz_bitsdojo_window
   - packages/fz_combo
   - packages/fz_comparable_list
   - packages/fz_copy_ensure_visible
@@ -81,6 +82,8 @@ dependencies:
     path: packages/fz_app_update
   fz_appbar:
     path: packages/fz_appbar
+  fz_bitsdojo_window:
+    path: packages/fz_bitsdojo_window
   fz_combo:
     path: packages/fz_combo
   fz_comparable_list:
