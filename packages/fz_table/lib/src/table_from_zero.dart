@@ -3,12 +3,13 @@ import 'dart:math';
 
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cancelable_compute/cancelable_compute.dart' as cancelable_compute;
+import 'package:collection/collection.dart' show DeepCollectionEquality;
 import 'package:dartx/dartx.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_font_icons/flutter_font_icons.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart' show StateProvider, StateController;
 import 'package:fz_actions/fz_actions.dart';
 import 'package:fz_appbar/fz_appbar.dart';
 import 'package:fz_comparable_list/fz_comparable_list.dart';
@@ -171,60 +172,93 @@ class TableFromZero<T> extends ConsumerStatefulWidget {
   @override
   TableFromZeroState<T> createState() => TableFromZeroState<T>();
 
-  static final syncProvider = StateProvider.family<List<TableController<dynamic>>, String>((ref, syncId) => []);
+  // TODO: 1 this is a memory leak, and it's also weird that it persists forever.
+  // Try a completely different approach: create a SyncingController,
+  // that supports providing that same controller to multiple Tables and syncs them.
+  static final Map<String, List<TableController<dynamic>>> syncProvider = {};
 
   static void addControllerToSync(
     WidgetRef ref,
     TableController<dynamic> controller,
     String syncId, {
-    StateController<List<TableController<dynamic>>>? notifier,
+    bool delaySetState = false,
   }) {
-    notifier ??= ref.read(syncProvider.call(syncId).notifier);
-    notifier!.state = [...notifier.state, controller];
-    if (notifier.state.length > 1) syncControllersSpecific(notifier.state.first, controller);
+    syncProvider[syncId] ??= [];
+    syncProvider[syncId]!.add(controller);
+    controller.addListener(() {
+      for (final e in syncProvider[syncId]!) {
+        if (e == controller) continue;
+        syncControllersSpecific(controller, e);
+      }
+    });
+    syncControllersSpecific(syncProvider[syncId]!.first, controller, delaySetState: delaySetState);
   }
 
   static void removeControllerFromSync(
     WidgetRef ref,
     TableController<dynamic> controller,
-    String syncId, {
-    StateController<List<TableController<dynamic>>>? notifier,
-  }) {
-    notifier ??= ref.read(syncProvider.call(syncId).notifier);
-    notifier!.state = notifier.state.where((e) => e != controller).toList();
+    String syncId,
+  ) {
+    syncProvider[syncId]!.remove(controller);
   }
 
   static void syncControllers(
     WidgetRef ref,
     String syncId, {
     TableController<dynamic>? original,
+    bool delaySetState = false,
   }) {
-    final controllers = ref.read(syncProvider.call(syncId));
-    if (controllers.isNotEmpty) {
+    final controllers = syncProvider[syncId];
+    if (controllers != null && controllers.isNotEmpty) {
       original ??= controllers.first;
-      for (int i = 0; i < controllers.length; i++) {
-        if (controllers[i] != original) {
-          syncControllersSpecific(
-            original,
-            controllers[i],
-            relevantColumns: _getRelevantColumns(original),
-          );
-        }
+      for (final e in controllers) {
+        if (e == original) continue;
+        syncControllersSpecific(original, e, delaySetState: delaySetState);
       }
     }
   }
 
-  // for now, only column visibility is synced, but this could be used to sync other properties in the future
   static void syncControllersSpecific(
     TableController<dynamic> original,
     TableController<dynamic> mirror, {
-    Map<dynamic, bool>? relevantColumns,
+    bool delaySetState = false,
   }) {
-    relevantColumns ??= _getRelevantColumns(original);
+    bool needsSort = false;
+    // bool needsFilter = false;
+    bool needsRebuild = false;
+    if (mirror.sortedColumn != original.sortedColumn) {
+      mirror.sortedColumn = original.sortedColumn;
+      needsSort = true;
+    }
+    if (mirror.sortedAscending != original.sortedAscending) {
+      mirror.sortedAscending = original.sortedAscending;
+      needsSort = true;
+    }
+    final initialMirrorColumnKeys = mirror.columnKeys;
+    final relevantColumns = _getRelevantColumns(original);
     mirror.currentColumnKeys = mirror.columnKeys!.where((e) {
-      return relevantColumns!.containsKey(e) ? relevantColumns[e]! : mirror.currentColumnKeys!.contains(e);
+      return relevantColumns.containsKey(e) ? relevantColumns[e]! : mirror.currentColumnKeys!.contains(e);
     }).toList();
-    mirror.filter(); // PERF: 2 do we need to re-filter?
+    final apply = () {
+      if (!DeepCollectionEquality().equals(initialMirrorColumnKeys, mirror.currentColumnKeys)) {
+        needsRebuild = true;
+      }
+      if (needsSort) {
+        mirror.sort(); // we should do notifyListeners=false, but we can't because someone might be listening
+      }
+      // else if (needsFilter) {
+      //   mirror.filter();
+      // }
+      else if (needsRebuild) {
+        // ignore: invalid_use_of_protected_member
+        mirror.currentState?.setState(() {});
+      }
+    };
+    if (delaySetState) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => apply());
+    } else {
+      apply();
+    }
   }
 
   static Map<dynamic, bool> _getRelevantColumns(TableController<dynamic> controller) {
@@ -368,13 +402,8 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     if (widget.tableController?.currentState == this) {
       widget.tableController!.currentState = null;
     }
-    if (widget.tableController != null && widget.syncId != null && _syncNotifier != null) {
-      TableFromZero.removeControllerFromSync(
-        ref,
-        widget.tableController!,
-        widget.syncId!,
-        notifier: _syncNotifier,
-      );
+    if (widget.tableController != null && widget.syncId != null) {
+      TableFromZero.removeControllerFromSync(ref, widget.tableController!, widget.syncId!);
     }
   }
 
@@ -405,19 +434,15 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     sortedAscending = widget.columns?[sortedColumn]?.defaultSortAscending ?? true;
     init(notifyListeners: false, isFirstInit: true);
     if (widget.tableController != null && widget.syncId != null) {
-      _syncNotifier = ref.read(
-        TableFromZero.syncProvider.call(widget.syncId!).notifier,
-      );
       TableFromZero.addControllerToSync(
         ref,
         widget.tableController!,
         widget.syncId!,
-        notifier: _syncNotifier,
+        delaySetState: true,
       );
     }
   }
 
-  StateController<List<TableController<dynamic>>>? _syncNotifier;
   @override
   void didUpdateWidget(TableFromZero<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -428,23 +453,15 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
     }
     if (widget.tableController != oldWidget.tableController || widget.syncId != oldWidget.syncId) {
       if (oldWidget.tableController != null && oldWidget.syncId != null) {
-        TableFromZero.removeControllerFromSync(
-          ref,
-          oldWidget.tableController!,
-          oldWidget.syncId!,
-          notifier: _syncNotifier,
-        );
+        TableFromZero.removeControllerFromSync(ref, oldWidget.tableController!, oldWidget.syncId!);
       }
       if (widget.syncId != null) {
-        _syncNotifier = ref.read(
-          TableFromZero.syncProvider.call(widget.syncId!).notifier,
-        );
         if (widget.tableController != null && widget.syncId != null) {
           TableFromZero.addControllerToSync(
             ref,
             widget.tableController!,
             widget.syncId!,
-            notifier: _syncNotifier,
+            delaySetState: true,
           );
         }
       }
@@ -1615,7 +1632,7 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
               padding: EdgeInsets.symmetric(
                 horizontal: widget.tableHorizontalPadding,
               ),
-              cacheExtent: 99999999,
+              scrollCacheExtent: ScrollCacheExtent.pixels(999999),
             ),
           );
         } else {
@@ -2186,6 +2203,8 @@ class TableFromZeroState<T> extends ConsumerState<TableFromZero<T>> with TickerP
             setState(() {
               currentColumnKeys?.remove(colKey);
             });
+            // ignore: invalid_use_of_protected_member
+            widget.tableController?.notifyListeners();
           },
         ),
     ];
@@ -2972,26 +2991,27 @@ class TableController<T> extends ChangeNotifier {
   }
 
   bool get mounted => currentState != null;
+  bool get expandableRowsExist => currentState!._expandableRowsExist ?? false;
   List<RowModel<T>> get filtered => currentState!.filtered;
   List<RowModel<T>> get allFiltered => currentState!.allFiltered;
   Map<dynamic, ColModel<dynamic>>? get columns => currentState?.widget.columns;
 
   /// Call this if the rows change, to re-initialize rows
   void reInit() => currentState?.isStateInvalidated = true;
-  void sort() {
+  void sort({bool notifyListeners = true}) {
     if (currentState?.mounted ?? false) {
       // ignore: invalid_use_of_protected_member
       currentState!.setState(() {
-        currentState!.sort();
+        currentState!.sort(notifyListeners: notifyListeners);
       });
     }
   }
 
-  void filter() {
+  void filter({bool notifyListeners = true}) {
     if (currentState?.mounted ?? false) {
       // ignore: invalid_use_of_protected_member
       currentState!.setState(() {
-        currentState!.filter();
+        currentState!.filter(notifyListeners: notifyListeners);
       });
     }
   }

@@ -143,7 +143,7 @@ class TableHeaderFromZeroState<T> extends State<TableHeaderFromZero<T>> {
           child: subtitle,
           transitionBuilder: (child, animation) {
             return SizeTransition(
-              axisAlignment: -1,
+              alignment: Alignment.topCenter,
               sizeFactor: animation,
               child: child,
             );

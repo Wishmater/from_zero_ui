@@ -6,6 +6,7 @@ import 'package:animations/animations.dart';
 import 'package:dartx/dartx.dart';
 import 'package:date/date.dart';
 import 'package:excel/excel.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart' as material;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' as rendering;
@@ -445,10 +446,8 @@ class ExportState extends State<Export> {
 
     var excel = Excel.createExcel();
     widget.excelSheets!()!.forEach((key, value) {
-      Sheet sheetObject = excel[key];
-      bool flexCalc = false;
-      bool widthSetted = false;
-      double flexMultiplier = 0;
+      final sheetObjectPrimary = excel[key];
+      final Sheet? sheetObjectSecondary = !value.expandableRowsExist ? null : excel['$key Simple'];
       final tableWidth = value.currentState!.widget.minWidthGetter!(
         value.currentState!.currentColumnKeys?.toList() ??
             (value.currentState!.widget.columns?.keys.where(
@@ -456,153 +455,166 @@ class ExportState extends State<Export> {
             ))?.toList() ??
             [],
       );
-      for (var i = value.currentState!.widget.columns == null ? 0 : -1; i < value.currentState!.filtered.length; ++i) {
-        RowModel<dynamic> row;
-        if (i == -1) {
-          row = SimpleRowModel(
-            id: value.currentState!.widget.columns,
-            values: value.currentState!.widget.columns!.map((key, value) => MapEntry(key, value.name)),
-          );
-        } else {
-          row = value.currentState!.filtered[i];
+      final colKeys =
+          (value.currentState!.currentColumnKeys ??
+                  value.currentState!.widget.columns?.keys.where(
+                    (e) => value.currentState!.widget.columns![e]!.flex != 0,
+                  ))
+              ?.toList();
+      if (colKeys != null && value.currentState!.widget.columns != null) {
+        double totalFlex = 0;
+        for (final key in colKeys) {
+          final col = value.currentState!.widget.columns![key]!;
+          totalFlex += col.width ?? col.flex ?? 0;
         }
-        if (row.alwaysOnTop == null) {
-          final keys =
-              value.currentState!.currentColumnKeys ??
-              (value.currentState!.widget.columns?.keys.where(
-                        (e) => value.currentState!.widget.columns![e]!.flex != 0,
-                      ) ??
-                      row.values.keys)
-                  .toList();
-          for (int j = 0; j < keys.length + 1; j++) {
-            if (j < keys.length) {
-              final key = keys[j];
-              ColModel<dynamic>? col = value.currentState!.widget.columns == null
-                  ? null
-                  : value.currentState!.widget.columns![key];
-              if (!flexCalc) {
-                flexMultiplier += col?.width ?? (col?.flex ?? 0);
-              } else if (!widthSetted) {
-                final percentage = (col?.width ?? (col?.flex ?? 0)) * 100 / flexMultiplier;
-                double w = (tableWidth * percentage / 100);
-                sheetObject.setColumnWidth(j, w / 6.4);
-                if (j == keys.length - 1) {
-                  widthSetted = true;
-                }
-              }
-              Color? backgroundColor;
-              if (i == -1) {
-                backgroundColor = col?.backgroundColor;
-                if (backgroundColor != null) {
-                  backgroundColor = backgroundColor.withValues(alpha: backgroundColor.a * 0.5);
-                }
-              } else {
-                if (value.currentState!.widget.rowStyleTakesPriorityOverColumn) {
-                  backgroundColor = row.backgroundColor ?? col?.backgroundColor;
-                } else {
-                  backgroundColor = col?.backgroundColor ?? row.backgroundColor;
-                }
-              }
-              if (backgroundColor != null) {
-                backgroundColor = Color.alphaBlend(backgroundColor, Colors.white);
-              }
-              TextStyle? style;
-              if (value.currentState!.widget.rowStyleTakesPriorityOverColumn) {
-                style = row.textStyle ?? col?.textStyle;
-              } else {
-                style = col?.textStyle ?? row.textStyle;
-              }
-              TextAlign? alignment = col?.alignment;
-              CellStyle cellStyle = CellStyle();
-              Data cell = sheetObject.cell(CellIndex.indexByColumnRow(rowIndex: i + 1, columnIndex: j));
-              if (style != null) {
-                if (i != -1) {
-                  cellStyle.isBold =
-                      FontWeight.values.indexOf(style.fontWeight ?? FontWeight.w100) > 4 || (style.fontSize ?? 1) >= 16;
-                }
-              }
-              if (alignment == TextAlign.right || alignment == TextAlign.end) {
-                cellStyle.horizontalAlignment = HorizontalAlign.Right;
-              }
-              if (backgroundColor != null) {
-                cellStyle.backgroundColor = ExcelColor.fromHexString(backgroundColor.toHex(includeAlpha: false));
-              }
-              cellStyle.fontSize = 12;
-              final dynamic cellValue;
-              if (col is DateColModel &&
-                  (row.values[key] is DateTime ||
-                      row.values[key] is Date ||
-                      row.values[key] is ContainsValue<DateTime>)) {
-                final DateTime dateTime = row.values[key] is DateTime
-                    ? row.values[key]
-                    : row.values[key] is Date
-                    ? (row.values[key] as Date).toDateTime()
-                    : (row.values[key] as ContainsValue<DateTime>).value;
-                cellValue = (col.formatter ?? dateFormat).format(dateTime);
-              } else if (col is NumColModel &&
-                  (row.values[key] is double ||
-                      (row.values[key] is ContainsValue<num> &&
-                          ((row.values[key] as ContainsValue<num>).value is double)))) {
-                cellValue = row.values[key] is double ? row.values[key] : (row.values[key] as ContainsValue<num>).value;
-                final formatter = col.formatter;
-                if (formatter != null) {
-                  final pattern = formatter.toString().split(',');
-                  pattern.removeAt(0);
-                  String formatCode = pattern.join(',').replaceAll(')', '').trim();
-                  cellStyle.numberFormat = CustomNumericNumFormat(formatCode: formatCode);
-                } else {
-                  cellStyle.numberFormat = NumFormat.standard_4;
-                }
-              } else if (col is BoolColModel && (row.values[key] is bool || row.values[key] is ContainsValue<bool>)) {
-                cellValue = col.getValueString(row, key);
-              } else if (row.values[key] is ContainsValue) {
-                cellValue = (row.values[key] as ContainsValue).value == null
-                    ? null
-                    : (row.values[key] as ContainsValue).value is num
-                    ? (row.values[key] as ContainsValue).value
-                    : row.values[key].toString();
-              } else {
-                cellValue = row.values[key];
-              }
-              if (cellValue == null) {
-                cell.value = null;
-              } else if (cellValue is bool) {
-                cell.value = BoolCellValue(cellValue);
-              } else if (cellValue is int) {
-                cell.value = IntCellValue(cellValue);
-              } else if (cellValue is double) {
-                cell.value = DoubleCellValue(cellValue);
-              } else if (cellValue is Date) {
-                cell.value = DateCellValue(year: cellValue.year, month: cellValue.month, day: cellValue.day);
-              } else if (cellValue is DateTime) {
-                cell.value = DateTimeCellValue.fromDateTime(cellValue);
-              } else if (cellValue is List) {
-                cell.value = TextCellValue(ListField.listToStringAll(cellValue));
-              } else {
-                // includes String
-                cell.value = TextCellValue(cellValue.toString());
-              }
-              cell.cellStyle = cellStyle;
-            } else {
-              flexCalc = true;
-              Data cell = sheetObject.cell(CellIndex.indexByColumnRow(rowIndex: i + 1, columnIndex: j));
-              cell.value = null;
-            }
-          }
+        int j = 0;
+        for (final key in colKeys) {
+          final col = value.currentState!.widget.columns![key]!;
+          final percentage = (col.width ?? col.flex ?? 0) / totalFlex;
+          final width = tableWidth * percentage;
+          sheetObjectPrimary.setColumnWidth(j, width / 6.4);
+          sheetObjectSecondary?.setColumnWidth(j, width / 6.4);
+          j++;
         }
       }
-      /*double flexMultiplier = 6.4;
-      if (value.columns==null || value.columns!.values.where((element) => element.flex!=null&&element.flex!>10).length==0)
-        flexMultiplier *= 10.0;
-      if (value.columns!=null){
-        for (var i = 0; i < value.columns!.length; ++i) {
-          ColModel? col = value.columns![i];
-          log(value.columns![i]);
-          double w = ((col?.width??(col?.flex??1.0))*flexMultiplier).toDouble();
-          //log(w);
-          sheetObject.setColWidth(i, w);
+      final buildExcelRow = (Sheet sheetObject, RowModel<dynamic> row, int rowIndex, {bool isExpandable = false}) {
+        final keys = colKeys ?? row.values.keys.toList();
+        for (int j = 0; j < keys.length + 1; j++) {
+          if (j < keys.length) {
+            final key = keys[j];
+            ColModel<dynamic>? col = value.currentState!.widget.columns == null
+                ? null
+                : value.currentState!.widget.columns![key];
+            Color? backgroundColor;
+            if (rowIndex == 0 && value.currentState!.widget.columns != null) {
+              // header row
+              backgroundColor = col?.backgroundColor;
+              if (backgroundColor != null) {
+                backgroundColor = backgroundColor.withValues(alpha: backgroundColor.a * 0.5);
+              }
+            } else {
+              if (value.currentState!.widget.rowStyleTakesPriorityOverColumn) {
+                backgroundColor = row.backgroundColor ?? col?.backgroundColor;
+              } else {
+                backgroundColor = col?.backgroundColor ?? row.backgroundColor;
+              }
+            }
+            if (backgroundColor != null) {
+              backgroundColor = Color.alphaBlend(backgroundColor, Colors.white);
+            }
+            TextStyle? style;
+            if (value.currentState!.widget.rowStyleTakesPriorityOverColumn) {
+              style = row.textStyle ?? col?.textStyle;
+            } else {
+              style = col?.textStyle ?? row.textStyle;
+            }
+            TextAlign? alignment = col?.alignment;
+            CellStyle cellStyle = CellStyle();
+            Data cell = sheetObject.cell(CellIndex.indexByColumnRow(rowIndex: rowIndex, columnIndex: j));
+            if (style != null) {
+              cellStyle.isBold =
+                  FontWeight.values.indexOf(style.fontWeight ?? FontWeight.w100) > 4 || (style.fontSize ?? 1) >= 20;
+            }
+            if (alignment == TextAlign.right || alignment == TextAlign.end) {
+              cellStyle.horizontalAlignment = HorizontalAlign.Right;
+            }
+            if (backgroundColor != null) {
+              cellStyle.backgroundColor = ExcelColor.fromHexString(backgroundColor.toHex(includeAlpha: false));
+            }
+            cellStyle.fontSize = 12;
+            final dynamic cellValue;
+            if (col is DateColModel &&
+                (row.values[key] is DateTime ||
+                    row.values[key] is Date ||
+                    row.values[key] is ContainsValue<DateTime>)) {
+              final DateTime dateTime = row.values[key] is DateTime
+                  ? row.values[key]
+                  : row.values[key] is Date
+                  ? (row.values[key] as Date).toDateTime()
+                  : (row.values[key] as ContainsValue<DateTime>).value;
+              cellValue = (col.formatter ?? dateFormat).format(dateTime);
+            } else if (col is NumColModel &&
+                (row.values[key] is double ||
+                    (row.values[key] is ContainsValue<num> &&
+                        ((row.values[key] as ContainsValue<num>).value is double)))) {
+              cellValue = row.values[key] is double ? row.values[key] : (row.values[key] as ContainsValue<num>).value;
+              final formatter = col.formatter;
+              if (formatter != null) {
+                final pattern = formatter.toString().split(',');
+                pattern.removeAt(0);
+                String formatCode = pattern.join(',').replaceAll(')', '').trim();
+                cellStyle.numberFormat = CustomNumericNumFormat(formatCode: formatCode);
+              } else {
+                cellStyle.numberFormat = NumFormat.standard_4;
+              }
+            } else if (col is BoolColModel && (row.values[key] is bool || row.values[key] is ContainsValue<bool>)) {
+              cellValue = col.getValueString(row, key);
+            } else if (row.values[key] is ContainsValue) {
+              cellValue = (row.values[key] as ContainsValue).value == null
+                  ? null
+                  : (row.values[key] as ContainsValue).value is num
+                  ? (row.values[key] as ContainsValue).value
+                  : row.values[key].toString();
+            } else {
+              cellValue = row.values[key];
+            }
+            if (cellValue == null) {
+              cell.value = null;
+            } else if (cellValue is bool) {
+              cell.value = BoolCellValue(cellValue);
+            } else if (cellValue is int) {
+              cell.value = IntCellValue(cellValue);
+            } else if (cellValue is double) {
+              cell.value = DoubleCellValue(cellValue);
+            } else if (cellValue is Date) {
+              cell.value = DateCellValue(year: cellValue.year, month: cellValue.month, day: cellValue.day);
+            } else if (cellValue is DateTime) {
+              cell.value = DateTimeCellValue.fromDateTime(cellValue);
+            } else if (cellValue is List) {
+              String value = ListField.listToStringAll(cellValue);
+              if (isExpandable && j == 0) {
+                value = '    $value';
+              }
+              cell.value = TextCellValue(value);
+            } else {
+              String value = cellValue.toString();
+              if (isExpandable && j == 0) {
+                value = '    $value';
+              }
+              cell.value = TextCellValue(value);
+            }
+            cell.cellStyle = cellStyle;
+          } else {
+            Data cell = sheetObject.cell(CellIndex.indexByColumnRow(rowIndex: rowIndex, columnIndex: j));
+            cell.value = null;
+          }
         }
-      }*/
+      };
+      final rows = List<RowModel<dynamic>>.from(value.currentState!.filtered);
+      if (value.currentState!.widget.columns != null) {
+        final headerRow = SimpleRowModel(
+          id: value.currentState!.widget.columns,
+          values: value.currentState!.widget.columns!.map((key, value) => MapEntry(key, value.name)),
+        );
+        rows.insert(0, headerRow);
+      }
+      int excelIndex = 0;
+      int expandableOffset = 0;
+      for (final row in rows) {
+        if (row.alwaysOnTop != null) continue;
+        if (value.expandableRowsExist) {
+          buildExcelRow(sheetObjectSecondary!, row, excelIndex); // secondary does NOT include expandable rows
+          buildExcelRow(sheetObjectPrimary, row, excelIndex + expandableOffset);
+          for (final e in row.children) {
+            expandableOffset++;
+            buildExcelRow(sheetObjectPrimary, e, excelIndex + expandableOffset, isExpandable: true);
+          }
+          expandableOffset++;
+        } else {
+          buildExcelRow(sheetObjectPrimary, row, excelIndex);
+        }
+        excelIndex++;
+      }
     });
     excel.delete('Sheet1');
     final path = await widget.path;
@@ -612,7 +624,7 @@ class ExportState extends State<Export> {
       context: context,
       name: '${widget.title}.xlsx',
       pathAppend: path,
-      data: () async => excel.encode()!,
+      data: () async => compute((excel) => excel.encode()!, excel),
     );
     doneExports =
         childrenCount?.call(

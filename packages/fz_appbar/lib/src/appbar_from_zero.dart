@@ -1,9 +1,8 @@
-import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fz_actions/fz_actions.dart';
-import 'package:fz_platform/fz_platform.dart';
+import 'package:fz_bitsdojo_window/fz_bitsdojo_window.dart';
 import 'package:fz_popup/fz_popup.dart';
 import 'package:fz_scaffold/fz_scaffold.dart';
 
@@ -149,7 +148,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
               builder: _buildWithConstraints,
             ),
     );
-    if (widget.mainAppbar && PlatformExtended.appWindow != null) {
+    if (widget.mainAppbar && WindowExtended.appWindow != null) {
       result = MouseRegion(
         opaque: false,
         onEnter: (event) {
@@ -167,7 +166,7 @@ class AppbarFromZeroState extends State<AppbarFromZero> {
   }
 
   Widget _buildWithConstraints(BuildContext context, BoxConstraints? constraints) {
-    bool showWindowButtons = widget.mainAppbar && widget.mainAppbarShowButtons && PlatformExtended.appWindow != null;
+    bool showWindowButtons = widget.mainAppbar && widget.mainAppbarShowButtons && WindowExtended.appWindow != null;
     final double titleBarHeight = !showWindowButtons
         ? 0
         : appWindow.isMaximized

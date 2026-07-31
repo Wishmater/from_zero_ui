@@ -11,6 +11,8 @@ dependencies:
   flutter:
     sdk: flutter
 
+  fz_bitsdojo_window:
+    path: ../fz_bitsdojo_window
   fz_platform:
     path: ../fz_platform
   fz_opacity_gradient:

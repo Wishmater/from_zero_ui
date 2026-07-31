@@ -1,0 +1,29 @@
+name: fz_icons
+description: Icon rendering utilities including FzIcon (multi-source icon resolver), SymbolIcon (material symbols enhancer), TextIcon, and ComposedIcon.
+publish_to: 'none'
+version: 0.1.0
+resolution: workspace
+
+environment:
+  sdk: "^3.9.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  dartx: ^1.2.0
+  material_symbols_icons:
+    git:
+      url: https://github.com/Wishmater/material_symbols_icons
+      tag_pattern: "{{version}}"
+    version: ^4.2873.2
+  xdg_icons: ^0.1.2
+
+  fz_tooltip:
+    path: ../fz_tooltip
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+
+dependency_overrides:
+  analyzer: ^8.0.0 # material_symbols_icons has an outdated version, remove when it is updated

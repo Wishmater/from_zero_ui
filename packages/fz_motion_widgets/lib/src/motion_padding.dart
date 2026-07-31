@@ -1,0 +1,97 @@
+import "package:flutter/material.dart";
+import "package:fz_motion_widgets/src/converters.dart";
+import "package:fz_motion_widgets/src/motion_util.dart";
+import "package:fz_motion_widgets/src/motion_utils.dart";
+import "package:motor/motor.dart" hide EdgeInsetsMotionConverter;
+
+class MotionPadding extends StatefulWidget {
+  final Motion motion;
+  final bool active;
+  final ValueChanged<AnimationStatus>? onAnimationStatusChanged;
+
+  final EdgeInsetsGeometry padding;
+
+  final EdgeInsetsGeometry? fromPadding;
+
+  final Widget? child;
+
+  const MotionPadding({
+    required this.motion,
+    required this.padding,
+    this.active = true,
+    this.onAnimationStatusChanged,
+    this.fromPadding,
+    this.child,
+    super.key,
+  });
+
+  @override
+  State<MotionPadding> createState() => _MotionPaddingState();
+}
+
+class _MotionPaddingState extends State<MotionPadding> with TickerProviderStateMixin {
+  late final MotionController<EdgeInsetsGeometry> padding;
+
+  void _onControllerTick() => setState(() {});
+
+  // AnimationStatus? _lastStatus;
+  void _onControllerStatus(AnimationStatus status) {
+    if (widget.onAnimationStatusChanged == null) return;
+    // final status = consolidateAnimationStatus([
+    //   padding.status,
+    // ]);
+    // if (status == _lastStatus) return;
+    // _lastStatus = status;
+    widget.onAnimationStatusChanged!(status);
+  }
+
+  T registerController<T extends MotionController>(T controller) {
+    return controller
+      ..addListener(_onControllerTick)
+      ..addStatusListener(_onControllerStatus);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    padding = MotionController(
+      vsync: this,
+      motion: widget.active ? widget.motion : const InstantMotion(),
+      converter: EdgeInsetsMotionConverter(),
+      initialValue: widget.fromPadding ?? widget.padding,
+    )..pipe(registerController);
+    if (widget.fromPadding != null) {
+      padding.animateTo(widget.padding);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant MotionPadding oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active != oldWidget.active) {
+      if (widget.active) {
+        padding.motion = widget.motion;
+      } else {
+        padding.motion = const InstantMotion();
+      }
+    }
+    if (widget.padding != oldWidget.padding) {
+      padding.animateTo(widget.padding);
+    }
+  }
+
+  @override
+  void dispose() {
+    padding.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: padding.value,
+      child: widget.child,
+    );
+  }
+}
+

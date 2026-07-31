@@ -135,3 +135,70 @@ extension ReadFutureWidgetProviderContainer on ProviderContainer {
     }
   }
 }
+
+/// Unified wrapper around [Ref]/[WidgetRef]/[ProviderContainer] providing
+/// a common interface for provider operations without coupling to a specific
+/// Riverpod type.
+///
+/// Use [RefWrapperRefExtension] or [RefWrapperProviderContainerExtension]
+/// to obtain a [RefWrapper] from a [Ref], [WidgetRef], or [ProviderContainer].
+abstract class RefWrapper {
+  T read<T>(ProviderListenable<T> provider);
+  void invalidate(ProviderOrFamily provider);
+  T refresh<T>(Refreshable<T> provider);
+  Future<T> readFuture<T extends Object>(ApiProviderInstance<T> provider);
+}
+
+final class _RefRefWrapper implements RefWrapper {
+  final Ref _ref;
+  _RefRefWrapper(this._ref);
+
+  @override
+  T read<T>(ProviderListenable<T> provider) => _ref.read(provider);
+  @override
+  void invalidate(ProviderOrFamily provider) => _ref.invalidate(provider);
+  @override
+  T refresh<T>(Refreshable<T> provider) => _ref.refresh(provider);
+  @override
+  Future<T> readFuture<T extends Object>(ApiProviderInstance<T> provider) => _ref.readFuture(provider);
+}
+
+final class _WidgetRefRefWrapper implements RefWrapper {
+  final WidgetRef _ref;
+  _WidgetRefRefWrapper(this._ref);
+
+  @override
+  T read<T>(ProviderListenable<T> provider) => _ref.read(provider);
+  @override
+  void invalidate(ProviderOrFamily provider) => _ref.invalidate(provider);
+  @override
+  T refresh<T>(Refreshable<T> provider) => _ref.refresh(provider);
+  @override
+  Future<T> readFuture<T extends Object>(ApiProviderInstance<T> provider) => _ref.readFuture(provider);
+}
+
+final class _ProviderContainerRefWrapper implements RefWrapper {
+  final ProviderContainer _container;
+  _ProviderContainerRefWrapper(this._container);
+
+  @override
+  T read<T>(ProviderListenable<T> provider) => _container.read(provider);
+  @override
+  void invalidate(ProviderOrFamily provider) => _container.invalidate(provider);
+  @override
+  T refresh<T>(Refreshable<T> provider) => _container.refresh(provider);
+  @override
+  Future<T> readFuture<T extends Object>(ApiProviderInstance<T> provider) => _container.readFuture(provider);
+}
+
+extension RefWrapperRefExtension on Ref {
+  RefWrapper get wrap => _RefRefWrapper(this);
+}
+
+extension RefWrapperWidgetRefExtension on WidgetRef {
+  RefWrapper get wrap => _WidgetRefRefWrapper(this);
+}
+
+extension RefWrapperProviderContainerExtension on ProviderContainer {
+  RefWrapper get wrap => _ProviderContainerRefWrapper(this);
+}

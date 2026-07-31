@@ -1,10 +1,12 @@
-{ pkgs ? import <nixpkgs> { } }:
+{
+  pkgs ? import <nixpkgs> { },
+}:
 
 pkgs.mkShell {
 
   buildInputs = with pkgs; [
 
-    flutter
+    flutter344
 
     cmake
     clang
@@ -18,11 +20,11 @@ pkgs.mkShell {
     libsepol
     libthai
     libdatrie
-    xorg.libXdmcp
+    libXdmcp
     lerc
     libxkbcommon
     libepoxy
-    xorg.libXtst
+    libXtst
 
   ];
 

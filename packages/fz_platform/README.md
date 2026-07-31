@@ -1,6 +1,6 @@
 # fz_platform
 
-Platform detection and utilities. Provides `PlatformExtended` with web-safe platform checks and `windowsDesktopBitsdojoWorking` for desktop window support.
+Platform detection and utilities. Provides `PlatformExtended` with web-safe platform checks and download directory utilities.
 
 ## Usage
 
@@ -10,9 +10,7 @@ import 'package:fz_platform/fz_platform.dart';
 if (PlatformExtended.isMobile) {
   // iOS or Android
 } else if (PlatformExtended.isWindows) {
-  if (PlatformExtended.appWindow != null) {
-    appWindow.maximize();
-  }
+  // Windows desktop
 }
 
 // Override download directory

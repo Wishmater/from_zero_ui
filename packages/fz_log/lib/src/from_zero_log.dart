@@ -109,34 +109,29 @@ String? defaultLogGetString(
   StackTrace? st,
   Map<String, Object>? data,
   int extraTraceLineOffset = 0,
-  Map<String, dynamic>? jsonMap,
   FlutterErrorDetails? details,
+  MessageBuilder? messageBuilder,
 }) {
   if (level.value > LogOptions.instance.getLvlForType(type).value) {
     return null;
   }
   if (e is DioException) {
-    if (msg is String) {
-      msg +=
-          ' (${e.type})'
-          '\n  ${e.requestOptions.uri}'
-          '${e.response == null ? '' : '  ${e.response!.statusCode} - ${_parseDioErrorResponse(e.response!.data)}'}';
-    }
+    msg ??= '';
+    msg +=
+        ' (${e.type})'
+        '\n  ${e.requestOptions.uri}'
+        '${e.response == null ? '' : '  ${e.response!.statusCode} - ${_parseDioErrorResponse(e.response!.data)}'}';
   }
-  String message;
-  if (jsonMap != null) {
-    message = json.encode(jsonMap);
-  } else {
-    message = LogBuilder(
-      level: level,
-      message: msg,
-      error: e,
-      stackTrace: st,
-      type: type,
-      extra: data,
-      extraTraceLineOffset: extraTraceLineOffset + 1,
-    ).buildMessage();
-  }
+  String message = LogBuilder(
+    level: level,
+    message: msg,
+    error: e,
+    stackTrace: st,
+    type: type,
+    extra: data,
+    extraTraceLineOffset: extraTraceLineOffset + 1,
+    messageBuilder: messageBuilder,
+  ).buildMessage();
   if (details != null) {
     message = addFlutterDetailsToMlog(message, details);
   }
