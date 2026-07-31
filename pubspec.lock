@@ -238,10 +238,10 @@ packages:
     dependency: transitive
     description:
       name: decimal
-      sha256: "24a261d5d5c87e86c7651c417a5dbdf8bcd7080dd592533910e8d0505a279f21"
+      sha256: "2c3c8b74f2948066d3f42585477aec9cfc48fefd7a723a4d4274a6c71a5c0df7"
       url: "https://pub.dev"
     source: hosted
-    version: "2.3.3"
+    version: "3.2.6"
   desktop_drop:
     dependency: transitive
     description:
@@ -523,10 +523,10 @@ packages:
     dependency: transitive
     description:
       name: humanizer
-      sha256: "08728a4b6d62accd7d09e668bd54e81e6e09a82c8cfda30553224b3eb868d4f2"
+      sha256: c2402d0a27d62a4452e7b58df41b09e8933a0d05eac9dc84eae446128277ab6e
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.0"
+    version: "3.0.1"
   image:
     dependency: transitive
     description:
