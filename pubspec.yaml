@@ -35,7 +35,6 @@ workspace:
   - packages/fz_focus_traversal
   - packages/fz_future_handling
   - packages/fz_gesture_relayer
-  - packages/fz_focus_traversal
   - packages/fz_icons
   - packages/fz_image
   - packages/fz_localizations

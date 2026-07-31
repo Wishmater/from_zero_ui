@@ -7,6 +7,7 @@ import "dart:async";
 import "package:flutter/widgets.dart";
 import "package:flutter_riverpod/flutter_riverpod.dart";
 import "package:fz_riverpod/src/fz_notifier.dart";
+import "package:riverpod/misc.dart";
 
 /// Extension on [Ref] to add a dispose delay.
 extension AddDisposeDelayRef on Ref {
@@ -146,7 +147,7 @@ abstract class RefWrapper {
   T read<T>(ProviderListenable<T> provider);
   void invalidate(ProviderOrFamily provider);
   T refresh<T>(Refreshable<T> provider);
-  Future<T> readFuture<T extends Object>(ApiProviderInstance<T> provider);
+  Future<T> readFuture<T>(NotifierProvider<FzAsyncNotifier<T>, T?> provider);
 }
 
 final class _RefRefWrapper implements RefWrapper {
@@ -160,7 +161,7 @@ final class _RefRefWrapper implements RefWrapper {
   @override
   T refresh<T>(Refreshable<T> provider) => _ref.refresh(provider);
   @override
-  Future<T> readFuture<T extends Object>(ApiProviderInstance<T> provider) => _ref.readFuture(provider);
+  Future<T> readFuture<T>(NotifierProvider<FzAsyncNotifier<T>, T?> provider) => _ref.readFuture(provider);
 }
 
 final class _WidgetRefRefWrapper implements RefWrapper {
@@ -174,7 +175,7 @@ final class _WidgetRefRefWrapper implements RefWrapper {
   @override
   T refresh<T>(Refreshable<T> provider) => _ref.refresh(provider);
   @override
-  Future<T> readFuture<T extends Object>(ApiProviderInstance<T> provider) => _ref.readFuture(provider);
+  Future<T> readFuture<T>(NotifierProvider<FzAsyncNotifier<T>, T?> provider) => _ref.readFuture(provider);
 }
 
 final class _ProviderContainerRefWrapper implements RefWrapper {
@@ -188,7 +189,7 @@ final class _ProviderContainerRefWrapper implements RefWrapper {
   @override
   T refresh<T>(Refreshable<T> provider) => _container.refresh(provider);
   @override
-  Future<T> readFuture<T extends Object>(ApiProviderInstance<T> provider) => _container.readFuture(provider);
+  Future<T> readFuture<T>(NotifierProvider<FzAsyncNotifier<T>, T?> provider) => _container.readFuture(provider);
 }
 
 extension RefWrapperRefExtension on Ref {
