@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fz_scaffold/fz_scaffold.dart';
 import 'package:fz_snackbar/fz_snackbar.dart';
@@ -22,7 +23,7 @@ Future<T?> showPopupFromZero<T>({
   return showDialog<T>(
     context: context,
     barrierColor: barrierColor ?? Colors.black.withValues(alpha: 0.2),
-    barrierDismissible: barrierDismissible,
+    barrierDismissible: false,
     useSafeArea: false,
     builder: (context) {
       return PopupFromZero(
@@ -35,6 +36,7 @@ Future<T?> showPopupFromZero<T>({
         anchorAlignment: anchorAlignment,
         popupAlignment: popupAlignment,
         offsetCorrection: offsetCorrection,
+        barrierDismissible: barrierDismissible,
       );
     },
   );
@@ -50,6 +52,7 @@ class PopupFromZero extends StatefulWidget {
   final Alignment anchorAlignment;
   final Alignment popupAlignment;
   final Offset offsetCorrection;
+  final bool barrierDismissible;
 
   const PopupFromZero({
     required this.builder,
@@ -61,6 +64,7 @@ class PopupFromZero extends StatefulWidget {
     this.anchorAlignment = Alignment.topCenter,
     this.popupAlignment = Alignment.bottomCenter,
     this.offsetCorrection = Offset.zero,
+    this.barrierDismissible = false,
     super.key,
   }) : assert(anchorKey != null || (referencePosition != null && referenceSize != null));
 
@@ -254,6 +258,20 @@ class PopupFromZeroState extends State<PopupFromZero> {
             return Stack(
               fit: StackFit.expand,
               children: [
+                RawGestureDetector(
+                  gestures: <Type, GestureRecognizerFactory>{
+                    if (widget.barrierDismissible)
+                      PanGestureRecognizer: GestureRecognizerFactoryWithHandlers<PanGestureRecognizer>(
+                        // ignore: unnecessary_lambdas
+                        () => PanGestureRecognizer(allowedButtonsFilter: (_) => true),
+                        (PanGestureRecognizer instance) {
+                          instance.onDown = (_) {
+                            Navigator.of(context).pop();
+                          };
+                        },
+                      ),
+                  },
+                ),
                 AnimatedPositioned(
                   duration: animation.isCompleted ? const Duration(milliseconds: 250) : Duration.zero,
                   curve: Curves.easeOutCubic,
