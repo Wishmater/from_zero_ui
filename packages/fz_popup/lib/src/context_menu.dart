@@ -86,8 +86,13 @@ class ContextMenuFromZeroState extends ConsumerState<ContextMenuFromZero> {
     onShowMenu?.call();
     Offset? mousePosition;
     if (useCursorLocation) {
+      double? scale;
+      try {
+        // TODO: 1 decouple this :)))
+        scale = ref.read(fromZeroScreenProvider).scale;
+      } catch (_) {}
       // ignore: deprecated_member_use
-      if ((ref.read(fromZeroScreenProvider).scale ?? MediaQuery.textScaleFactorOf(context)) == 1) {
+      if ((scale ?? MediaQuery.textScaleFactorOf(context)) == 1) {
         mousePosition = tapDownDetails?.globalPosition;
       } else {
         try {
