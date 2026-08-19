@@ -21,12 +21,14 @@ class ContextMenuFromZero extends ConsumerStatefulWidget {
   final Offset offsetCorrection;
   final Color? barrierColor;
   final bool useCursorLocation;
+  final AnimationStyle? popupAnimationStyle;
 
   /// Default true. Set to false so menu will only be shown manually. Useful when stacking with a button.
   final bool addGestureDetector;
   final bool enabled;
   final bool addAncestorContextMenuActions;
   final bool addOnTapDown;
+  final bool showOnClickUp;
 
   /// Default true. This blocks GestureDetectors behind it.
   final VoidCallback? onShowMenu;
@@ -46,6 +48,13 @@ class ContextMenuFromZero extends ConsumerStatefulWidget {
     this.addGestureDetector = true,
     this.onShowMenu,
     this.addOnTapDown = true,
+    this.showOnClickUp = false,
+    this.popupAnimationStyle = const AnimationStyle(
+      duration: Duration(milliseconds: 100),
+      reverseDuration: Duration(milliseconds: 100),
+      curve: Curves.easeOutQuint,
+      reverseCurve: Curves.easeInQuint,
+    ),
     super.key,
   }) : addAncestorContextMenuActions = addAncestorContextMenuActions ?? contextMenuWidget == null {
     for (int i = 0; i < actions.length; i++) {
@@ -81,6 +90,12 @@ class ContextMenuFromZeroState extends ConsumerState<ContextMenuFromZero> {
     Alignment popupAlignment = Alignment.bottomRight,
     Offset offsetCorrection = Offset.zero,
     Color? barrierColor,
+    AnimationStyle animationStyle = const AnimationStyle(
+      duration: Duration(milliseconds: 100),
+      reverseDuration: Duration(milliseconds: 100),
+      curve: Curves.easeOutQuint,
+      reverseCurve: Curves.easeInQuint,
+    ),
   }) {
     actions = actions.where((e) => e.getStateForMaxWidth(0).shownOnContextMenu).toList();
     onShowMenu?.call();
@@ -119,6 +134,7 @@ class ContextMenuFromZeroState extends ConsumerState<ContextMenuFromZero> {
       anchorAlignment: anchorAlignment,
       offsetCorrection: offsetCorrection,
       barrierColor: barrierColor,
+      animationStyle: animationStyle,
       builder: (popupContext) {
         final scrollController = ScrollController();
         if (contextMenuWidget != null) {
@@ -214,8 +230,17 @@ class ContextMenuFromZeroState extends ConsumerState<ContextMenuFromZero> {
             instance.onTapDown = onTapDown;
           }
           instance
-            ..onSecondaryTapDown = onTapDown
-            ..onSecondaryTap = showContextMenu;
+            ..onSecondaryTapDown = (TapDownDetails details) {
+              onTapDown(details);
+              if (!widget.showOnClickUp) {
+                showContextMenu();
+              }
+            }
+            ..onSecondaryTap = () {
+              if (widget.showOnClickUp) {
+                showContextMenu();
+              }
+            };
         },
       );
       result = RawGestureDetector(

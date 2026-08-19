@@ -18,6 +18,7 @@ Future<T?> showPopupFromZero<T>({
   Offset offsetCorrection = Offset.zero,
   Color? barrierColor,
   bool barrierDismissible = true,
+  AnimationStyle? animationStyle,
   // TODO: 2 add an option to highlight the anchor (don't paint barrier over it), default true in ContextMenuFromZero
 }) async {
   return showDialog<T>(
@@ -25,6 +26,7 @@ Future<T?> showPopupFromZero<T>({
     barrierColor: barrierColor ?? Colors.black.withValues(alpha: 0.2),
     barrierDismissible: false,
     useSafeArea: false,
+    animationStyle: animationStyle,
     builder: (context) {
       return PopupFromZero(
         anchorKey: anchorKey,
